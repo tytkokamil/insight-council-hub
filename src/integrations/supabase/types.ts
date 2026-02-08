@@ -170,7 +170,6 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
-          role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           user_id: string
         }
@@ -179,7 +178,6 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id: string
         }
@@ -188,7 +186,6 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           user_id?: string
         }
@@ -250,12 +247,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       decision_category:
