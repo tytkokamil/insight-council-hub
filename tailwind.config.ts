@@ -39,7 +39,7 @@ export default {
   				'serif'
   			],
   			mono: [
-  				'SF Mono',
+  				'JetBrains Mono',
   				'ui-monospace',
   				'SFMono-Regular',
   				'Menlo',
