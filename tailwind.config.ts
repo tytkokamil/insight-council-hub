@@ -15,17 +15,14 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'DM Sans',
+  				'Roboto',
   				'ui-sans-serif',
   				'system-ui',
-  				'-apple-system',
-  				'BlinkMacSystemFont',
-  				'Segoe UI',
-  				'Roboto',
-  				'Helvetica Neue',
-  				'Arial',
-  				'Noto Sans',
-  				'sans-serif'
+  				'sans-serif',
+  				'Apple Color Emoji',
+  				'Segoe UI Emoji',
+  				'Segoe UI Symbol',
+  				'Noto Color Emoji'
   			],
   			display: [
   				'Space Grotesk',
@@ -128,7 +125,7 @@ export default {
   					height: '0'
   				}
   			},
-  			'float': {
+  			float: {
   				'0%, 100%': {
   					transform: 'translateY(0px)'
   				},
@@ -158,7 +155,7 @@ export default {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-  			'float': 'float 6s ease-in-out infinite',
+  			float: 'float 6s ease-in-out infinite',
   			'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
   			'slide-up': 'slide-up 0.5s ease-out'
   		},
