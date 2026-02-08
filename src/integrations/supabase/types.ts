@@ -14,7 +14,242 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          decision_id: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          decision_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          decision_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_reviews: {
+        Row: {
+          created_at: string
+          decision_id: string
+          feedback: string | null
+          id: string
+          reviewed_at: string | null
+          reviewer_id: string
+          status: Database["public"]["Enums"]["decision_status"]
+          step_order: number
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id: string
+          status?: Database["public"]["Enums"]["decision_status"]
+          step_order?: number
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          feedback?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string
+          status?: Database["public"]["Enums"]["decision_status"]
+          step_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_reviews_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decisions: {
+        Row: {
+          ai_impact_score: number | null
+          ai_risk_factors: string[] | null
+          ai_risk_score: number | null
+          ai_success_factors: string[] | null
+          assignee_id: string | null
+          category: Database["public"]["Enums"]["decision_category"]
+          context: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          options: Json | null
+          outcome: string | null
+          priority: Database["public"]["Enums"]["decision_priority"]
+          status: Database["public"]["Enums"]["decision_status"]
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ai_impact_score?: number | null
+          ai_risk_factors?: string[] | null
+          ai_risk_score?: number | null
+          ai_success_factors?: string[] | null
+          assignee_id?: string | null
+          category?: Database["public"]["Enums"]["decision_category"]
+          context?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          options?: Json | null
+          outcome?: string | null
+          priority?: Database["public"]["Enums"]["decision_priority"]
+          status?: Database["public"]["Enums"]["decision_status"]
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ai_impact_score?: number | null
+          ai_risk_factors?: string[] | null
+          ai_risk_score?: number | null
+          ai_success_factors?: string[] | null
+          assignee_id?: string | null
+          category?: Database["public"]["Enums"]["decision_category"]
+          context?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          options?: Json | null
+          outcome?: string | null
+          priority?: Database["public"]["Enums"]["decision_priority"]
+          status?: Database["public"]["Enums"]["decision_status"]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decisions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +258,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      decision_category:
+        | "strategic"
+        | "budget"
+        | "hr"
+        | "technical"
+        | "operational"
+        | "marketing"
+      decision_priority: "low" | "medium" | "high" | "critical"
+      decision_status:
+        | "draft"
+        | "review"
+        | "approved"
+        | "implemented"
+        | "rejected"
+      user_role: "admin" | "decision_maker" | "reviewer" | "observer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +399,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      decision_category: [
+        "strategic",
+        "budget",
+        "hr",
+        "technical",
+        "operational",
+        "marketing",
+      ],
+      decision_priority: ["low", "medium", "high", "critical"],
+      decision_status: [
+        "draft",
+        "review",
+        "approved",
+        "implemented",
+        "rejected",
+      ],
+      user_role: ["admin", "decision_maker", "reviewer", "observer"],
+    },
   },
 } as const
