@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
+import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -26,6 +27,7 @@ const Decisions = () => {
   const [decisions, setDecisions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewDialog, setShowNewDialog] = useState(false);
+  const [selectedDecision, setSelectedDecision] = useState<any>(null);
   const { user } = useAuth();
 
   const fetchDecisions = async () => {
@@ -105,6 +107,7 @@ const Decisions = () => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
                   className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
+                  onClick={() => setSelectedDecision(decision)}
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
@@ -167,6 +170,13 @@ const Decisions = () => {
         open={showNewDialog}
         onOpenChange={setShowNewDialog}
         onCreated={fetchDecisions}
+      />
+
+      <DecisionDetailDialog
+        decision={selectedDecision}
+        open={!!selectedDecision}
+        onOpenChange={(open) => { if (!open) setSelectedDecision(null); }}
+        onUpdated={fetchDecisions}
       />
     </AppLayout>
   );

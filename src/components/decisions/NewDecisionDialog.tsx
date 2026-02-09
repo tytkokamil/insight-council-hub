@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { decisionTemplates } from "@/lib/decisionTemplates";
+import { FileText } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -22,6 +24,18 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showTemplates, setShowTemplates] = useState(true);
+
+  const applyTemplate = (t: typeof decisionTemplates[0]) => {
+    setTitle(t.name);
+    setDescription(t.description);
+    setCategory(t.category);
+    setPriority(t.priority);
+    const due = new Date();
+    due.setDate(due.getDate() + t.defaultDurationDays);
+    setDueDate(due.toISOString().split("T")[0]);
+    setShowTemplates(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,23 +43,33 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setLoading(true);
     setError("");
 
-    const { error: err } = await supabase.from("decisions").insert([{
+    const { data, error: err } = await supabase.from("decisions").insert([{
       title: title.trim(),
       description: description.trim() || null,
       category: category as any,
       priority: priority as any,
       due_date: dueDate || null,
       created_by: user.id,
-    }]);
+    }]).select().single();
 
     if (err) {
       setError(err.message);
     } else {
+      // Audit log
+      if (data) {
+        await supabase.from("audit_logs").insert({
+          decision_id: data.id,
+          user_id: user.id,
+          action: "created",
+          new_value: title.trim(),
+        });
+      }
       setTitle("");
       setDescription("");
       setCategory("operational");
       setPriority("medium");
       setDueDate("");
+      setShowTemplates(true);
       onOpenChange(false);
       onCreated();
     }
@@ -60,6 +84,31 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         <DialogHeader>
           <DialogTitle className="font-display text-xl">Neue Entscheidung</DialogTitle>
         </DialogHeader>
+
+        {showTemplates && !title && (
+          <div className="space-y-2 mb-4">
+            <p className="text-xs text-muted-foreground font-medium">Vorlage verwenden:</p>
+            <div className="grid grid-cols-2 gap-2">
+              {decisionTemplates.map((t) => (
+                <button
+                  key={t.name}
+                  onClick={() => applyTemplate(t)}
+                  className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/50 transition-colors text-left"
+                >
+                  <FileText className="w-4 h-4 text-primary shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium">{t.name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{t.category}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setShowTemplates(false)} className="text-xs text-primary hover:underline">
+              Ohne Vorlage fortfahren →
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
             <label className="text-sm text-muted-foreground mb-1 block">Titel *</label>

@@ -14,12 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          decision_id: string
+          field_name: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          decision_id: string
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          decision_id?: string
+          field_name?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           content: string
           created_at: string
           decision_id: string
           id: string
+          type: Database["public"]["Enums"]["comment_type"]
           updated_at: string
           user_id: string
         }
@@ -28,6 +70,7 @@ export type Database = {
           created_at?: string
           decision_id: string
           id?: string
+          type?: Database["public"]["Enums"]["comment_type"]
           updated_at?: string
           user_id: string
         }
@@ -36,6 +79,7 @@ export type Database = {
           created_at?: string
           decision_id?: string
           id?: string
+          type?: Database["public"]["Enums"]["comment_type"]
           updated_at?: string
           user_id?: string
         }
@@ -279,6 +323,7 @@ export type Database = {
       }
     }
     Enums: {
+      comment_type: "comment" | "feedback" | "risk_flag"
       decision_category:
         | "strategic"
         | "budget"
@@ -421,6 +466,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      comment_type: ["comment", "feedback", "risk_flag"],
       decision_category: [
         "strategic",
         "budget",

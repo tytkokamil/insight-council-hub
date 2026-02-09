@@ -1,0 +1,129 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Brain, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
+  const [loading, setLoading] = useState(false);
+  const [analysis, setAnalysis] = useState<any>(
+    decision.ai_risk_score ? {
+      risk_score: decision.ai_risk_score,
+      impact_score: decision.ai_impact_score,
+      risk_factors: decision.ai_risk_factors || [],
+      success_factors: decision.ai_success_factors || [],
+    } : null
+  );
+  const { toast } = useToast();
+
+  const runAnalysis = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-decision", {
+        body: {
+          title: decision.title,
+          description: decision.description,
+          category: decision.category,
+          priority: decision.priority,
+          context: decision.context,
+        },
+      });
+
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      setAnalysis(data);
+
+      // Save to DB
+      await supabase.from("decisions").update({
+        ai_risk_score: data.risk_score,
+        ai_impact_score: data.impact_score,
+        ai_risk_factors: data.risk_factors,
+        ai_success_factors: data.success_factors,
+      }).eq("id", decision.id);
+
+      onUpdated();
+      toast({ title: "KI-Analyse abgeschlossen", description: data.summary });
+    } catch (e: any) {
+      toast({ title: "Fehler", description: e.message || "KI-Analyse fehlgeschlagen", variant: "destructive" });
+    }
+    setLoading(false);
+  };
+
+  const scoreColor = (score: number) =>
+    score > 60 ? "text-destructive" : score > 40 ? "text-warning" : "text-success";
+
+  return (
+    <div className="space-y-4 mt-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-medium">KI-gestützte Risikoanalyse</h3>
+        <Button size="sm" onClick={runAnalysis} disabled={loading} className="gap-1">
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Brain className="w-3.5 h-3.5" />}
+          {loading ? "Analysiere..." : analysis ? "Erneut analysieren" : "Analyse starten"}
+        </Button>
+      </div>
+
+      {analysis ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-muted/30">
+              <p className="text-xs text-muted-foreground mb-1">Risiko-Score</p>
+              <p className={`text-2xl font-bold font-display ${scoreColor(analysis.risk_score)}`}>
+                {analysis.risk_score}%
+              </p>
+              <div className="w-full h-2 rounded-full bg-muted mt-2 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${analysis.risk_score > 60 ? "bg-destructive" : analysis.risk_score > 40 ? "bg-warning" : "bg-success"}`}
+                  style={{ width: `${analysis.risk_score}%` }}
+                />
+              </div>
+            </div>
+            <div className="p-4 rounded-lg bg-muted/30">
+              <p className="text-xs text-muted-foreground mb-1">Impact-Score</p>
+              <p className={`text-2xl font-bold font-display ${scoreColor(100 - analysis.impact_score)}`}>
+                {analysis.impact_score}%
+              </p>
+              <div className="w-full h-2 rounded-full bg-muted mt-2 overflow-hidden">
+                <div className="h-full rounded-full bg-primary" style={{ width: `${analysis.impact_score}%` }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-medium text-destructive flex items-center gap-1 mb-2">
+                <AlertTriangle className="w-3 h-3" /> Risikofaktoren
+              </p>
+              <ul className="space-y-1">
+                {(analysis.risk_factors || []).map((f: string, i: number) => (
+                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <span className="text-destructive mt-0.5">•</span> {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-success flex items-center gap-1 mb-2">
+                <CheckCircle2 className="w-3 h-3" /> Erfolgsfaktoren
+              </p>
+              <ul className="space-y-1">
+                {(analysis.success_factors || []).map((f: string, i: number) => (
+                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
+                    <span className="text-success mt-0.5">•</span> {f}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          <Brain className="w-10 h-10 mx-auto mb-2 opacity-30" />
+          <p className="text-sm">Starte die KI-Analyse, um automatische Risiko- und Impact-Bewertungen zu erhalten.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AiAnalysisPanel;
