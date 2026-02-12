@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp } from "lucide-react";
+import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
+import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -23,25 +24,29 @@ const priorityStyles: Record<string, string> = {
 const Dashboard = () => {
   const [decisions, setDecisions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDecision, setSelectedDecision] = useState<any>(null);
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("decisions")
-        .select("*, profiles!decisions_assignee_id_fkey(full_name)")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (data) setDecisions(data);
-    };
-    fetch();
-  }, []);
+  const fetchDecisions = async () => {
+    const { data } = await supabase
+      .from("decisions")
+      .select("*, profiles!decisions_assignee_id_fkey(full_name)")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setDecisions(data);
+  };
+
+  useEffect(() => { fetchDecisions(); }, []);
+
+  const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
 
   const stats = [
-    { label: "Gesamt", value: decisions.length, icon: FileText, trend: "" },
-    { label: "In Review", value: decisions.filter(d => d.status === "review").length, icon: Clock, trend: "" },
-    { label: "Genehmigt", value: decisions.filter(d => d.status === "approved").length, icon: CheckCircle2, trend: "" },
-    { label: "Umgesetzt", value: decisions.filter(d => d.status === "implemented").length, icon: TrendingUp, trend: "" },
+    { label: "Gesamt", value: decisions.length, icon: FileText },
+    { label: "In Review", value: decisions.filter(d => d.status === "review").length, icon: Clock },
+    { label: "Genehmigt", value: decisions.filter(d => d.status === "approved").length, icon: CheckCircle2 },
+    { label: "Hohes Risiko", value: highRiskDecisions.length, icon: AlertTriangle },
   ];
+
+  const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <AppLayout>
@@ -74,6 +79,27 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {highRiskDecisions.length > 0 && (
+        <div className="glass-card p-5 mb-6 border-destructive/30">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <h3 className="text-sm font-medium text-destructive">Hohes Risiko – Aufmerksamkeit erforderlich</h3>
+          </div>
+          <div className="space-y-2">
+            {highRiskDecisions.slice(0, 3).map((d) => (
+              <div
+                key={d.id}
+                className="flex items-center justify-between p-2.5 rounded-lg bg-destructive/5 hover:bg-destructive/10 cursor-pointer transition-colors"
+                onClick={() => setSelectedDecision(d)}
+              >
+                <span className="text-sm font-medium">{d.title}</span>
+                <span className="text-sm text-destructive font-bold">{d.ai_risk_score}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -100,10 +126,17 @@ const Dashboard = () => {
             </tr>
           </thead>
           <tbody>
-            {decisions.length === 0 ? (
+            {filtered.length === 0 ? (
               <tr><td colSpan={7} className="p-8 text-center text-muted-foreground">Noch keine Entscheidungen vorhanden.</td></tr>
-            ) : decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase())).map((decision, i) => (
-              <motion.tr key={decision.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors">
+            ) : filtered.map((decision, i) => (
+              <motion.tr
+                key={decision.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
+                onClick={() => setSelectedDecision(decision)}
+              >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><FileText className="w-5 h-5 text-muted-foreground" /></div>
@@ -131,6 +164,13 @@ const Dashboard = () => {
           </tbody>
         </table>
       </div>
+
+      <DecisionDetailDialog
+        decision={selectedDecision}
+        open={!!selectedDecision}
+        onOpenChange={(open) => { if (!open) setSelectedDecision(null); }}
+        onUpdated={fetchDecisions}
+      />
     </AppLayout>
   );
 };
