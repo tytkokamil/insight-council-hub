@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useTeams, useDependencies, useReviews, useProfiles, useNotifications, buildProfileMap } from "@/hooks/useDecisions";
 
 interface PersonBottleneck {
   userId: string;
@@ -36,31 +36,23 @@ const BottleneckIntelligence = () => {
   const [personBottlenecks, setPersonBottlenecks] = useState<PersonBottleneck[]>([]);
   const [categoryBottlenecks, setCategoryBottlenecks] = useState<CategoryBottleneck[]>([]);
   const [teamFrictions, setTeamFrictions] = useState<TeamFriction[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: teams = [], isLoading: teamLoading } = useTeams();
+  const { data: deps = [], isLoading: depLoading } = useDependencies();
+  const { data: reviews = [], isLoading: revLoading } = useReviews();
+  const { data: profiles = [], isLoading: profLoading } = useProfiles();
+  const { data: notifications = [] } = useNotifications();
+
+  const loading = decLoading || teamLoading || depLoading || revLoading || profLoading;
 
   useEffect(() => {
-    const analyze = async () => {
-      const [decRes, profRes, teamRes, depRes, revRes, notifRes, memberRes] = await Promise.all([
-        supabase.from("decisions").select("id, title, status, created_at, implemented_at, due_date, category, priority, assignee_id, created_by, team_id, escalation_level"),
-        supabase.from("profiles").select("user_id, full_name"),
-        supabase.from("teams").select("id, name"),
-        supabase.from("decision_dependencies").select("id, source_decision_id, target_decision_id, dependency_type"),
-        supabase.from("decision_reviews").select("id, decision_id, reviewer_id, status, reviewed_at, created_at"),
-        supabase.from("notifications").select("id, type, decision_id, user_id").eq("type", "escalation"),
-        supabase.from("team_members").select("team_id, user_id"),
-      ]);
+    if (loading) return;
 
-      const decisions = decRes.data || [];
-      const profiles = profRes.data || [];
-      const teams = teamRes.data || [];
-      const deps = depRes.data || [];
-      const reviews = revRes.data || [];
-      const escalations = notifRes.data || [];
-      const members = memberRes.data || [];
-
-      const nameMap = Object.fromEntries(profiles.map(p => [p.user_id, p.full_name || "Unbekannt"]));
-      const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
-      const now = Date.now();
+    const nameMap = buildProfileMap(profiles);
+    const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
+    const now = Date.now();
+    const escalations = notifications.filter(n => n.type === "escalation");
 
       // ── PERSON BOTTLENECKS ──
       const personStats: Record<string, { totalDays: number; count: number; openCount: number; blockingCount: number }> = {};
@@ -177,12 +169,8 @@ const BottleneckIntelligence = () => {
         })
         .sort((a, b) => b.score - a.score);
 
-      setTeamFrictions(teamResults);
-      setLoading(false);
-    };
-
-    analyze();
-  }, []);
+    setTeamFrictions(teamResults);
+  }, [loading, decisions, teams, deps, reviews, profiles, notifications]);
 
   const percentileColor = (p: string) =>
     p === "Langsam" ? "text-destructive bg-destructive/10" : p === "Durchschnitt" ? "text-warning bg-warning/10" : "text-success bg-success/10";

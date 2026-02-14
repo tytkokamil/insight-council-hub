@@ -1,13 +1,12 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
 import { de } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useDecisions, useDependencies } from "@/hooks/useDecisions";
 
 interface TimelineDecision {
   id: string;
@@ -27,28 +26,18 @@ interface TimelineDecision {
 }
 
 const PredictiveTimeline = () => {
-  const { user } = useAuth();
-  const [decisions, setDecisions] = useState<TimelineDecision[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"predicted" | "priority" | "overdue">("predicted");
 
-  useEffect(() => {
-    if (user) loadData();
-  }, [user]);
+  const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
+  const { data: deps = [], isLoading: depLoading } = useDependencies();
 
-  const loadData = async () => {
-    setLoading(true);
+  const loading = decLoading || depLoading;
 
-    const [{ data: allDecisions }, { data: deps }] = await Promise.all([
-      supabase.from("decisions").select("*"),
-      supabase.from("decision_dependencies").select("*"),
-    ]);
-
-    if (!allDecisions) { setLoading(false); return; }
+  const decisions = useMemo(() => {
+    if (loading || allDecisions.length === 0) return [];
 
     const now = new Date();
 
-    // Calculate historical averages per category & priority for prediction
     const implemented = allDecisions.filter(d => d.status === "implemented" && d.implemented_at);
     const avgByKey: Record<string, number[]> = {};
     implemented.forEach(d => {
@@ -74,7 +63,7 @@ const PredictiveTimeline = () => {
     };
 
     // Blocked decision IDs
-    const blockedIds = new Set((deps || []).map(d => d.target_decision_id));
+    const blockedIds = new Set((deps).map(d => d.target_decision_id));
 
     const open = allDecisions.filter(d => !["implemented", "rejected"].includes(d.status));
     const timeline: TimelineDecision[] = open.map(d => {
@@ -116,11 +105,8 @@ const PredictiveTimeline = () => {
         ai_risk_score: d.ai_risk_score, escalation_level: d.escalation_level,
         daysOpen, predictedDaysLeft, predictedEnd, confidence, warning,
       };
-    });
-
-    setDecisions(timeline);
-    setLoading(false);
-  };
+    return timeline;
+  }, [loading, allDecisions, deps]);
 
   const sorted = useMemo(() => {
     const copy = [...decisions];

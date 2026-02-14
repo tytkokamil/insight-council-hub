@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Timer } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useTeams } from "@/hooks/useDecisions";
 
 interface CostEntry {
   id: string;
@@ -38,71 +38,63 @@ const categoryMultiplier: Record<string, number> = {
 };
 
 const OpportunityCostRadar = () => {
-  const [entries, setEntries] = useState<CostEntry[]>([]);
-  const [totalDailyCost, setTotalDailyCost] = useState(0);
-  const [totalAccumulated, setTotalAccumulated] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"urgency" | "daily" | "total">("urgency");
 
-  useEffect(() => {
-    const calculate = async () => {
-      const [decRes, teamRes] = await Promise.all([
-        supabase.from("decisions").select("id, title, status, priority, category, created_at, due_date, team_id")
-          .in("status", ["draft", "review", "approved"]),
-        supabase.from("teams").select("id, name, hourly_rate"),
-      ]);
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: teams = [], isLoading: teamLoading } = useTeams();
 
-      const decisions = decRes.data || [];
-      const teams = teamRes.data || [];
-      const teamMap = Object.fromEntries(teams.map(t => [t.id, { name: t.name, rate: t.hourly_rate || 75 }]));
-      const now = Date.now();
+  const loading = decLoading || teamLoading;
 
-      const results: CostEntry[] = decisions.map(d => {
-        const daysOpen = Math.max(1, Math.floor((now - new Date(d.created_at).getTime()) / 86400000));
-        const team = d.team_id ? teamMap[d.team_id] : null;
-        const baseRate = team?.rate || 75;
-        const pMult = priorityMultiplier[d.priority] || 1;
-        const cMult = categoryMultiplier[d.category] || 1;
+  const { entries, totalDailyCost, totalAccumulated } = useMemo(() => {
+    if (loading) return { entries: [] as CostEntry[], totalDailyCost: 0, totalAccumulated: 0 };
 
-        // Daily cost = base_rate * 2 people * 2h/day * priority_mult * category_mult
-        const dailyCost = Math.round(baseRate * 2 * 2 * pMult * cMult);
-        const totalCost = dailyCost * daysOpen;
+    const openDecisions = decisions.filter(d => ["draft", "review", "approved"].includes(d.status));
+    const teamMap = Object.fromEntries(teams.map(t => [t.id, { name: t.name, rate: t.hourly_rate || 75 }]));
+    const now = Date.now();
 
-        const isOverdue = d.due_date ? new Date(d.due_date).getTime() < now : false;
-        const overdueDays = isOverdue && d.due_date
-          ? Math.floor((now - new Date(d.due_date).getTime()) / 86400000)
-          : 0;
+    const results: CostEntry[] = openDecisions.map(d => {
+      const daysOpen = Math.max(1, Math.floor((now - new Date(d.created_at).getTime()) / 86400000));
+      const team = d.team_id ? teamMap[d.team_id] : null;
+      const baseRate = team?.rate || 75;
+      const pMult = priorityMultiplier[d.priority] || 1;
+      const cMult = categoryMultiplier[d.category] || 1;
 
-        // Urgency score: combines cost, overdue, and priority
-        const urgencyScore = Math.round(
-          (dailyCost / 100) * pMult + (isOverdue ? overdueDays * 10 : 0) + (daysOpen > 14 ? daysOpen * 2 : 0)
-        );
+      const dailyCost = Math.round(baseRate * 2 * 2 * pMult * cMult);
+      const totalCost = dailyCost * daysOpen;
 
-        return {
-          id: d.id,
-          title: d.title,
-          status: d.status,
-          priority: d.priority,
-          category: d.category,
-          daysOpen,
-          dailyCost,
-          totalCost,
-          dueDate: d.due_date,
-          isOverdue,
-          urgencyScore,
-          teamName: team?.name || null,
-        };
-      });
+      const isOverdue = d.due_date ? new Date(d.due_date).getTime() < now : false;
+      const overdueDays = isOverdue && d.due_date
+        ? Math.floor((now - new Date(d.due_date).getTime()) / 86400000)
+        : 0;
 
-      results.sort((a, b) => b.urgencyScore - a.urgencyScore);
-      setEntries(results);
-      setTotalDailyCost(results.reduce((s, e) => s + e.dailyCost, 0));
-      setTotalAccumulated(results.reduce((s, e) => s + e.totalCost, 0));
-      setLoading(false);
+      const urgencyScore = Math.round(
+        (dailyCost / 100) * pMult + (isOverdue ? overdueDays * 10 : 0) + (daysOpen > 14 ? daysOpen * 2 : 0)
+      );
+
+      return {
+        id: d.id,
+        title: d.title,
+        status: d.status,
+        priority: d.priority,
+        category: d.category,
+        daysOpen,
+        dailyCost,
+        totalCost,
+        dueDate: d.due_date,
+        isOverdue,
+        urgencyScore,
+        teamName: team?.name || null,
+      };
+    });
+
+    results.sort((a, b) => b.urgencyScore - a.urgencyScore);
+
+    return {
+      entries: results,
+      totalDailyCost: results.reduce((s, e) => s + e.dailyCost, 0),
+      totalAccumulated: results.reduce((s, e) => s + e.totalCost, 0),
     };
-
-    calculate();
-  }, []);
+  }, [loading, decisions, teams]);
 
   const sorted = [...entries].sort((a, b) => {
     if (sortBy === "daily") return b.dailyCost - a.dailyCost;
