@@ -70,9 +70,8 @@ const Decisions = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Entscheidungsregister</p>
-          <h1 className="font-display text-xl font-bold">Entscheidungen</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{decisions.length} insgesamt</p>
+          <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Überblick über alle Entscheidungen</p>
         </div>
         <div className="flex items-center gap-2">
           {decisions.length > 0 && (
