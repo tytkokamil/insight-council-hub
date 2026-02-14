@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 import { Trophy, Medal, Zap, Target } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 
 interface LeaderEntry {
@@ -48,45 +48,48 @@ const LeaderboardWidget = () => {
   }, [allDecisions, profileMap]);
 
   const rankIcons = [
-    <Trophy className="w-4 h-4 text-yellow-500" />,
-    <Medal className="w-4 h-4 text-gray-400" />,
-    <Medal className="w-4 h-4 text-amber-700" />,
+    <Trophy className="w-4 h-4 text-warning" />,
+    <Medal className="w-4 h-4 text-muted-foreground" />,
+    <Medal className="w-4 h-4 text-warning/60" />,
   ];
 
   if (leaders.length === 0) return null;
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-          <Trophy className="w-4 h-4 text-yellow-500" />
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+            <Trophy className="w-4 h-4 text-warning" />
+          </div>
+          <CardTitle className="text-sm">Decision Leaderboard</CardTitle>
         </div>
-        <h3 className="text-sm font-semibold">Decision Leaderboard</h3>
-      </div>
-
-      <div className="space-y-2">
-        {leaders.map((leader, i) => (
-          <div key={leader.userId} className={`flex items-center gap-3 p-2.5 rounded-lg ${i === 0 ? "bg-yellow-500/5 border border-yellow-500/20" : "bg-muted/20"}`}>
-            <div className="w-6 flex justify-center shrink-0">
-              {i < 3 ? rankIcons[i] : <span className="text-xs text-muted-foreground font-bold">#{i + 1}</span>}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{leader.name}</p>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Target className="w-3 h-3" /> {leader.implemented} umgesetzt</span>
-                {leader.avgVelocity > 0 && (
-                  <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> {leader.avgVelocity}d Ø</span>
-                )}
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {leaders.map((leader, i) => (
+            <div key={leader.userId} className={`flex items-center gap-3 p-3 rounded-lg ${i === 0 ? "bg-warning/5 border border-warning/20" : "bg-muted/30"}`}>
+              <div className="w-6 flex justify-center shrink-0">
+                {i < 3 ? rankIcons[i] : <span className="text-xs text-muted-foreground font-bold">#{i + 1}</span>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{leader.name}</p>
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                  <span className="flex items-center gap-1"><Target className="w-3 h-3" /> {leader.implemented} umgesetzt</span>
+                  {leader.avgVelocity > 0 && (
+                    <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> {leader.avgVelocity}d Ø</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-sm font-bold">{leader.decisions}</p>
+                <p className="text-xs text-muted-foreground">gesamt</p>
               </div>
             </div>
-            <div className="text-right shrink-0">
-              <p className="text-sm font-bold">{leader.decisions}</p>
-              <p className="text-xs text-muted-foreground">gesamt</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
