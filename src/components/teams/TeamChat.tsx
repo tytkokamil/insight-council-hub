@@ -57,10 +57,29 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     }
   };
 
+  const markAsRead = async () => {
+    if (!user) return;
+    const now = new Date().toISOString();
+    // Upsert last_read_at
+    const { data: existing } = await supabase
+      .from("team_chat_reads")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from("team_chat_reads").update({ last_read_at: now }).eq("id", existing.id);
+    } else {
+      await supabase.from("team_chat_reads").insert({ team_id: teamId, user_id: user.id, last_read_at: now });
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
     fetchProfiles();
     fetchDecisions();
+    markAsRead();
 
     const channel = supabase
       .channel(`team-chat-${teamId}`)
@@ -71,6 +90,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         filter: `team_id=eq.${teamId}`,
       }, (payload) => {
         setMessages((prev) => [...prev, payload.new as TeamMessage]);
+        markAsRead(); // auto-mark as read when chat is open
       })
       .on("postgres_changes", {
         event: "DELETE",

@@ -559,6 +559,35 @@ export type Database = {
           },
         ]
       }
+      team_chat_reads: {
+        Row: {
+          id: string
+          last_read_at: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_read_at?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_read_at?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_chat_reads_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_invitations: {
         Row: {
           accepted_at: string | null
