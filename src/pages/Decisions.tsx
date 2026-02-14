@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { exportCSV, exportPDF } from "@/lib/exportDecisions";
+import { toast } from "sonner";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -42,6 +45,27 @@ const Decisions = () => {
     d.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const prepareExport = () =>
+    filtered.map((d) => ({
+      ...d,
+      description: d.description,
+      context: d.context,
+      outcome: d.outcome,
+      outcome_notes: d.outcome_notes,
+      team_name: d.team_id ? teamMap[d.team_id] : undefined,
+      assignee_name: d.assignee_id ? profileMap[d.assignee_id] : undefined,
+      creator_name: profileMap[d.created_by],
+    }));
+
+  const handleExportCSV = () => {
+    exportCSV(prepareExport());
+    toast.success("CSV-Export heruntergeladen");
+  };
+
+  const handleExportPDF = () => {
+    exportPDF(prepareExport());
+  };
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
@@ -50,10 +74,32 @@ const Decisions = () => {
           <h1 className="font-display text-xl font-bold">Entscheidungen</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{decisions.length} insgesamt</p>
         </div>
-        <Button onClick={() => setShowNewDialog(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Neue Entscheidung
-        </Button>
+        <div className="flex items-center gap-2">
+          {decisions.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="w-4 h-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportCSV} className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  Als CSV exportieren
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  Als PDF exportieren
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <Button onClick={() => setShowNewDialog(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Neue Entscheidung
+          </Button>
+        </div>
       </div>
 
       {decisions.length === 0 ? (
