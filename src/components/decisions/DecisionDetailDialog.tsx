@@ -9,7 +9,9 @@ import ReviewPanel from "./ReviewPanel";
 import AiAnalysisPanel from "./AiAnalysisPanel";
 import AuditTrailPanel from "./AuditTrailPanel";
 import ImpactTrackerPanel from "./ImpactTrackerPanel";
-import { MessageSquare, GitPullRequest, Brain, History, Target } from "lucide-react";
+import StakeholderAlignmentPanel from "./StakeholderAlignmentPanel";
+import WhatIfSimulatorPanel from "./WhatIfSimulatorPanel";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -81,21 +83,27 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
         </div>
 
         <Tabs defaultValue="discussion" className="mt-4">
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="discussion" className="text-xs gap-1">
-              <MessageSquare className="w-3.5 h-3.5" /> Diskussion
+          <TabsList className="w-full flex flex-wrap gap-1 h-auto p-1">
+            <TabsTrigger value="discussion" className="text-xs gap-1 flex-1 min-w-0">
+              <MessageSquare className="w-3 h-3" /> Diskussion
             </TabsTrigger>
-            <TabsTrigger value="review" className="text-xs gap-1">
-              <GitPullRequest className="w-3.5 h-3.5" /> Review
+            <TabsTrigger value="review" className="text-xs gap-1 flex-1 min-w-0">
+              <GitPullRequest className="w-3 h-3" /> Review
             </TabsTrigger>
-            <TabsTrigger value="ai" className="text-xs gap-1">
-              <Brain className="w-3.5 h-3.5" /> KI-Analyse
+            <TabsTrigger value="ai" className="text-xs gap-1 flex-1 min-w-0">
+              <Brain className="w-3 h-3" /> KI
             </TabsTrigger>
-            <TabsTrigger value="impact" className="text-xs gap-1">
-              <Target className="w-3.5 h-3.5" /> Impact
+            <TabsTrigger value="alignment" className="text-xs gap-1 flex-1 min-w-0">
+              <Users className="w-3 h-3" /> Alignment
             </TabsTrigger>
-            <TabsTrigger value="audit" className="text-xs gap-1">
-              <History className="w-3.5 h-3.5" /> Historie
+            <TabsTrigger value="whatif" className="text-xs gap-1 flex-1 min-w-0">
+              <GitBranch className="w-3 h-3" /> What-If
+            </TabsTrigger>
+            <TabsTrigger value="impact" className="text-xs gap-1 flex-1 min-w-0">
+              <Target className="w-3 h-3" /> Impact
+            </TabsTrigger>
+            <TabsTrigger value="audit" className="text-xs gap-1 flex-1 min-w-0">
+              <History className="w-3 h-3" /> Historie
             </TabsTrigger>
           </TabsList>
           <TabsContent value="discussion">
@@ -106,6 +114,12 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           </TabsContent>
           <TabsContent value="ai">
             <AiAnalysisPanel decision={decision} onUpdated={onUpdated} />
+          </TabsContent>
+          <TabsContent value="alignment">
+            <StakeholderAlignmentPanel decisionId={decision.id} />
+          </TabsContent>
+          <TabsContent value="whatif">
+            <WhatIfSimulatorPanel decision={decision} />
           </TabsContent>
           <TabsContent value="impact">
             <ImpactTrackerPanel decision={decision} onUpdated={onUpdated} />

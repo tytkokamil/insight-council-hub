@@ -8,12 +8,14 @@ import {
   TrendingUp,
   Settings,
   LogOut,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const navItems = [
   { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
   { icon: FileText, label: "Decisions", path: "/decisions" },
+  { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
   { icon: Settings, label: "Settings", path: "/settings" },
