@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, FileText, Trash2 } from "lucide-react";
+import { Send, FileText, Trash2, Paperclip, Image, File, X, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface TeamMessage {
   id: string;
@@ -12,6 +13,9 @@ interface TeamMessage {
   user_id: string;
   content: string;
   decision_id: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  file_type: string | null;
   created_at: string;
 }
 
@@ -20,6 +24,8 @@ interface TeamChatProps {
   teamName: string;
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
@@ -27,7 +33,10 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const [decisions, setDecisions] = useState<Record<string, string>>({});
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -36,7 +45,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
       .eq("team_id", teamId)
       .order("created_at", { ascending: true })
       .limit(200);
-    if (data) setMessages(data);
+    if (data) setMessages(data as TeamMessage[]);
   };
 
   const fetchProfiles = async () => {
@@ -60,7 +69,6 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const markAsRead = async () => {
     if (!user) return;
     const now = new Date().toISOString();
-    // Upsert last_read_at
     const { data: existing } = await supabase
       .from("team_chat_reads")
       .select("id")
@@ -90,7 +98,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         filter: `team_id=eq.${teamId}`,
       }, (payload) => {
         setMessages((prev) => [...prev, payload.new as TeamMessage]);
-        markAsRead(); // auto-mark as read when chat is open
+        markAsRead();
       })
       .on("postgres_changes", {
         event: "DELETE",
@@ -109,15 +117,66 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Datei zu groß (max. 10 MB)");
+      return;
+    }
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setFilePreview(url);
+    } else {
+      setFilePreview(null);
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    if (filePreview) URL.revokeObjectURL(filePreview);
+    setFilePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadFile = async (file: File): Promise<{ url: string; name: string; type: string } | null> => {
+    if (!user) return null;
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/${teamId}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
+    if (error) {
+      toast.error("Datei-Upload fehlgeschlagen");
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+    return { url: urlData.publicUrl, name: file.name, type: file.type };
+  };
+
   const handleSend = async () => {
-    if (!newMessage.trim() || !user) return;
+    if ((!newMessage.trim() && !selectedFile) || !user) return;
     setSending(true);
+
+    let fileData: { url: string; name: string; type: string } | null = null;
+    if (selectedFile) {
+      fileData = await uploadFile(selectedFile);
+      if (!fileData && !newMessage.trim()) {
+        setSending(false);
+        return;
+      }
+    }
+
     await supabase.from("team_messages").insert({
       team_id: teamId,
       user_id: user.id,
-      content: newMessage.trim(),
+      content: newMessage.trim() || (fileData ? fileData.name : ""),
+      file_url: fileData?.url ?? null,
+      file_name: fileData?.name ?? null,
+      file_type: fileData?.type ?? null,
     });
+
     setNewMessage("");
+    clearFile();
     setSending(false);
   };
 
@@ -136,6 +195,35 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const name = profiles[userId];
     if (!name) return "??";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
+  const isImage = (type: string | null) => type?.startsWith("image/");
+
+  const renderAttachment = (msg: TeamMessage) => {
+    if (!msg.file_url) return null;
+    if (isImage(msg.file_type)) {
+      return (
+        <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="block mt-1.5">
+          <img
+            src={msg.file_url}
+            alt={msg.file_name || "Bild"}
+            className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border"
+          />
+        </a>
+      );
+    }
+    return (
+      <a
+        href={msg.file_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition-colors max-w-[240px]"
+      >
+        <File className="w-4 h-4 text-primary shrink-0" />
+        <span className="text-xs truncate">{msg.file_name || "Datei"}</span>
+        <Download className="w-3.5 h-3.5 text-muted-foreground shrink-0 ml-auto" />
+      </a>
+    );
   };
 
   return (
@@ -172,11 +260,14 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
                       </button>
                     )}
                   </div>
-                  <div className={`inline-block px-3 py-2 rounded-xl text-sm ${
-                    isOwn ? "bg-primary text-primary-foreground" : "bg-muted/60"
-                  }`}>
-                    {msg.content}
-                  </div>
+                  {msg.content && !(msg.file_url && msg.content === msg.file_name) && (
+                    <div className={`inline-block px-3 py-2 rounded-xl text-sm ${
+                      isOwn ? "bg-primary text-primary-foreground" : "bg-muted/60"
+                    }`}>
+                      {msg.content}
+                    </div>
+                  )}
+                  {renderAttachment(msg)}
                   {msg.decision_id && decisions[msg.decision_id] && (
                     <div className="mt-1 flex items-center gap-1 text-[10px] text-primary">
                       <FileText className="w-3 h-3" />
@@ -190,9 +281,42 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         )}
       </div>
 
+      {/* File preview */}
+      {selectedFile && (
+        <div className="px-4 py-2 border-t border-border bg-muted/30 flex items-center gap-2">
+          {filePreview ? (
+            <img src={filePreview} alt="Vorschau" className="w-10 h-10 rounded object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+              <File className="w-5 h-5 text-muted-foreground" />
+            </div>
+          )}
+          <span className="text-xs truncate flex-1">{selectedFile.name}</span>
+          <button onClick={clearFile} className="text-muted-foreground hover:text-destructive">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-border px-4 py-3">
         <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+            onChange={handleFileSelect}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            title="Datei anhängen"
+          >
+            <Paperclip className="w-4 h-4" />
+          </Button>
           <input
             type="text"
             value={newMessage}
@@ -203,7 +327,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
           />
           <Button
             onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
+            disabled={(!newMessage.trim() && !selectedFile) || sending}
             size="icon"
             className="h-10 w-10 shrink-0"
           >
