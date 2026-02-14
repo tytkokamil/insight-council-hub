@@ -1,56 +1,21 @@
 import { motion } from "framer-motion";
 import {
-  Brain,
-  FileText,
-  TrendingUp,
-  Sparkles,
-  Clock,
-  Target,
-  Zap,
-  Shield,
+  Brain, FileText, TrendingUp, Sparkles, Clock, Target, Zap, Shield,
 } from "lucide-react";
 
 const capabilities = [
-  {
-    icon: Brain,
-    title: "Risiko-Scoring",
-    description: "Automatische Bewertung von Risiken basierend auf historischen Daten und Kontext.",
-  },
-  {
-    icon: FileText,
-    title: "CEO Briefing",
-    description: "Tägliches KI-generiertes Executive Summary aller kritischen Entscheidungen.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Predictive Timeline",
-    description: "Vorhersage wann Entscheidungen abgeschlossen werden basierend auf Team-Velocity.",
-  },
-  {
-    icon: Target,
-    title: "Decision DNA",
-    description: "Analysiere Muster in deinen Entscheidungen und lerne aus vergangenen Outcomes.",
-  },
-  {
-    icon: Shield,
-    title: "Compliance Audit",
-    description: "Lückenlose Dokumentation für regulatorische Anforderungen und Governance.",
-  },
-  {
-    icon: Zap,
-    title: "Strategy Alignment",
-    description: "Verknüpfe jede Entscheidung mit strategischen Zielen und messe den Impact.",
-  },
+  { icon: Brain, title: "Risiko-Scoring", description: "Automatische Bewertung von Risiken basierend auf historischen Daten und Kontext." },
+  { icon: FileText, title: "CEO Briefing", description: "Tägliches KI-generiertes Executive Summary aller kritischen Entscheidungen." },
+  { icon: TrendingUp, title: "Predictive Timeline", description: "Vorhersage wann Entscheidungen abgeschlossen werden basierend auf Team-Velocity." },
+  { icon: Target, title: "Decision DNA", description: "Analysiere Muster in deinen Entscheidungen und lerne aus vergangenen Outcomes." },
+  { icon: Shield, title: "Compliance Audit", description: "Lückenlose Dokumentation für regulatorische Anforderungen und Governance." },
+  { icon: Zap, title: "Strategy Alignment", description: "Verknüpfe jede Entscheidung mit strategischen Zielen und messe den Impact." },
 ];
 
 const AIShowcaseSection = () => {
   return (
     <section className="py-28 relative overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="floating-orb w-[500px] h-[500px] bg-primary/10 -top-20 -right-40" />
-        <div className="floating-orb w-[400px] h-[400px] bg-accent/8 bottom-0 -left-40" style={{ animationDelay: "3s" }} />
-      </div>
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-3xl" />
+      <div className="absolute inset-0 mesh-gradient opacity-30" />
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
@@ -118,7 +83,7 @@ const AIShowcaseSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 + i * 0.08 }}
-                className="group p-4 rounded-xl border border-border/40 bg-card/40 backdrop-blur-sm hover:bg-card/70 hover:border-border/70 transition-all duration-300"
+                className="group p-4 rounded-xl border border-border bg-card hover:border-primary/20 hover:shadow-md transition-all duration-300"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center mb-3 group-hover:bg-primary/15 transition-colors">
                   <cap.icon className="w-4.5 h-4.5 text-primary" />

@@ -31,7 +31,7 @@ const AnimatedNumber = ({ value, suffix, inView }: { value: number; suffix: stri
 const StatsSection = () => {
   return (
     <section className="py-28 relative overflow-hidden">
-      <div className="absolute inset-0 mesh-gradient opacity-30" />
+      <div className="absolute inset-0 mesh-gradient opacity-20" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -47,7 +47,7 @@ const StatsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="text-center p-6 rounded-2xl border border-border/30 bg-card/30 backdrop-blur-sm hover:border-border/50 transition-all duration-300"
+              className="text-center p-6 rounded-2xl border border-border bg-card hover:border-primary/20 hover:shadow-md transition-all duration-300"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/8 mb-5">
                 <stat.icon className="w-5.5 h-5.5 text-primary" />

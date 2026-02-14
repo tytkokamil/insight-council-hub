@@ -5,12 +5,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 const CTASection = () => {
   return (
     <section className="py-32 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0">
-        <div className="floating-orb w-[500px] h-[500px] bg-primary/15 top-0 left-1/4" />
-        <div className="floating-orb w-[400px] h-[400px] bg-accent/10 bottom-0 right-1/4" style={{ animationDelay: "3s" }} />
-      </div>
-      <div className="absolute inset-0 bg-background/70 backdrop-blur-3xl" />
+      <div className="absolute inset-0 mesh-gradient opacity-30" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -20,9 +15,9 @@ const CTASection = () => {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-4xl mx-auto text-center"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border/50 bg-card/40 backdrop-blur-sm mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/80 backdrop-blur-sm mb-10">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium tracking-wide uppercase">Get Started Today</span>
+            <span className="text-xs font-medium tracking-wide uppercase text-muted-foreground">Get Started Today</span>
           </div>
 
           <h2 className="font-display text-4xl md:text-6xl font-bold mb-7 tracking-tight leading-[0.95]">
@@ -48,7 +43,7 @@ const CTASection = () => {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
             {["14-day free trial", "No credit card", "Cancel anytime"].map((text, i) => (
               <span key={i} className="flex items-center gap-1.5">
-                <div className="w-1 h-1 rounded-full bg-success" />
+                <div className="w-1 h-1 rounded-full bg-primary" />
                 {text}
               </span>
             ))}
