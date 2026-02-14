@@ -5,22 +5,19 @@ const testimonials = [
   {
     name: "Dr. Sarah Lindner",
     role: "VP Operations, Siemens Digital",
-    quote:
-      "DecisionOS hat unsere Entscheidungszyklen von 3 Wochen auf 4 Tage reduziert. Der KI Co-Pilot allein spart uns hunderte Stunden pro Quartal.",
+    quote: "DecisionOS hat unsere Entscheidungszyklen von 3 Wochen auf 4 Tage reduziert. Der KI Co-Pilot allein spart uns hunderte Stunden pro Quartal.",
     avatar: "SL",
   },
   {
     name: "Marcus Weber",
     role: "CTO, TechScale GmbH",
-    quote:
-      "Der Decision Graph war ein Gamechanger. Wir sehen endlich wie unsere technischen Entscheidungen zusammenhängen und können Konflikte frühzeitig erkennen.",
+    quote: "Der Decision Graph war ein Gamechanger. Wir sehen endlich wie unsere technischen Entscheidungen zusammenhängen und können Konflikte frühzeitig erkennen.",
     avatar: "MW",
   },
   {
     name: "Anna Richter",
     role: "Head of Strategy, FinBridge AG",
-    quote:
-      "Die Szenario-Engine hat uns geholfen, eine €50M Investitionsentscheidung mit vollem Confidence zu treffen. Unverzichtbar für unser C-Level.",
+    quote: "Die Szenario-Engine hat uns geholfen, eine €50M Investitionsentscheidung mit vollem Confidence zu treffen. Unverzichtbar für unser C-Level.",
     avatar: "AR",
   },
 ];
@@ -28,7 +25,7 @@ const testimonials = [
 const TestimonialsSection = () => {
   return (
     <section className="py-28 relative overflow-hidden">
-      <div className="absolute inset-0 mesh-gradient opacity-30" />
+      <div className="absolute inset-0 mesh-gradient opacity-20" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -55,15 +52,12 @@ const TestimonialsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="relative p-6 rounded-2xl border border-border/40 bg-card/50 backdrop-blur-sm hover:border-border/60 transition-all duration-300 group"
+              className="relative p-6 rounded-2xl border border-border bg-card hover:border-primary/20 hover:shadow-md transition-all duration-300 group"
             >
-              <Quote className="w-8 h-8 text-primary/10 absolute top-5 right-5" />
+              <Quote className="w-8 h-8 text-primary/8 absolute top-5 right-5" />
               <div className="flex gap-0.5 mb-4">
                 {[...Array(5)].map((_, si) => (
-                  <Star
-                    key={si}
-                    className="w-3.5 h-3.5 fill-primary text-primary"
-                  />
+                  <Star key={si} className="w-3.5 h-3.5 fill-primary text-primary" />
                 ))}
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed mb-6">
