@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -11,6 +12,30 @@ import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
 import { toast } from "sonner";
+
+const STATUS_OPTIONS = [
+  { value: "draft", label: "Entwurf" },
+  { value: "review", label: "Review" },
+  { value: "approved", label: "Genehmigt" },
+  { value: "implemented", label: "Umgesetzt" },
+  { value: "rejected", label: "Abgelehnt" },
+];
+
+const PRIORITY_OPTIONS = [
+  { value: "low", label: "Niedrig" },
+  { value: "medium", label: "Mittel" },
+  { value: "high", label: "Hoch" },
+  { value: "critical", label: "Kritisch" },
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "strategic", label: "Strategisch" },
+  { value: "budget", label: "Budget" },
+  { value: "hr", label: "Personal" },
+  { value: "technical", label: "Technisch" },
+  { value: "operational", label: "Operativ" },
+  { value: "marketing", label: "Marketing" },
+];
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -39,11 +64,34 @@ const Decisions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
+  const [filterStatus, setFilterStatus] = useState<string[]>([]);
+  const [filterPriority, setFilterPriority] = useState<string[]>([]);
+  const [filterCategory, setFilterCategory] = useState<string[]>([]);
+  const [filterTeam, setFilterTeam] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuth();
 
-  const filtered = decisions.filter((d) =>
-    d.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const activeFilterCount = filterStatus.length + filterPriority.length + filterCategory.length + filterTeam.length;
+
+  const toggleFilter = (arr: string[], val: string, setter: (v: string[]) => void) => {
+    setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
+  };
+
+  const clearAllFilters = () => {
+    setFilterStatus([]);
+    setFilterPriority([]);
+    setFilterCategory([]);
+    setFilterTeam([]);
+  };
+
+  const filtered = decisions.filter((d) => {
+    if (!d.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (filterStatus.length > 0 && !filterStatus.includes(d.status)) return false;
+    if (filterPriority.length > 0 && !filterPriority.includes(d.priority)) return false;
+    if (filterCategory.length > 0 && !filterCategory.includes(d.category)) return false;
+    if (filterTeam.length > 0 && (!d.team_id || !filterTeam.includes(d.team_id))) return false;
+    return true;
+  });
 
   const prepareExport = () =>
     filtered.map((d) => ({
@@ -141,10 +189,81 @@ const Decisions = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input type="text" placeholder="Entscheidungen durchsuchen..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
             </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="w-4 h-4" />
-              Filter
-            </Button>
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2 relative">
+                  <Filter className="w-4 h-4" />
+                  Filter
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-3" align="end">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold">Filter</span>
+                  {activeFilterCount > 0 && (
+                    <button onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <X className="w-3 h-3" /> Zurücksetzen
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Status</p>
+                    <div className="flex flex-wrap gap-1">
+                      {STATUS_OPTIONS.map(o => (
+                        <button key={o.value} onClick={() => toggleFilter(filterStatus, o.value, setFilterStatus)}
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterStatus.includes(o.value) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Priorität</p>
+                    <div className="flex flex-wrap gap-1">
+                      {PRIORITY_OPTIONS.map(o => (
+                        <button key={o.value} onClick={() => toggleFilter(filterPriority, o.value, setFilterPriority)}
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterPriority.includes(o.value) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Kategorie</p>
+                    <div className="flex flex-wrap gap-1">
+                      {CATEGORY_OPTIONS.map(o => (
+                        <button key={o.value} onClick={() => toggleFilter(filterCategory, o.value, setFilterCategory)}
+                          className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterCategory.includes(o.value) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {teams.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5">Team</p>
+                      <div className="flex flex-wrap gap-1">
+                        {teams.map(t => (
+                          <button key={t.id} onClick={() => toggleFilter(filterTeam, t.id, setFilterTeam)}
+                            className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterTeam.includes(t.id) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
+                            {t.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <Card className="overflow-hidden">
