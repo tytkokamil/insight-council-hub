@@ -102,36 +102,37 @@ const Decisions = () => {
       </div>
 
       {decisions.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card>
-            <CardContent className="p-10">
-              <div className="max-w-md mx-auto text-center">
-                <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <BarChart3 className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Erstelle deine erste Entscheidung und lass KI automatisch Risiken, Optionen und Empfehlungen analysieren.
-                </p>
-                <Button onClick={() => setShowNewDialog(true)} className="gap-2 mb-6">
-                  <Plus className="w-4 h-4" />
-                  Erste Entscheidung erstellen
-                </Button>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: Zap, label: "KI-Risikoanalyse" },
-                    { icon: GitBranch, label: "Abhängigkeitsgraph" },
-                    { icon: Target, label: "Impact-Tracking" },
-                  ].map((f, i) => (
-                    <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border">
-                      <f.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
-                      <p className="text-xs text-muted-foreground">{f.label}</p>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="max-w-lg mx-auto text-center">
+            <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <BarChart3 className="w-7 h-7 text-primary" />
+            </div>
+            <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Erstelle deine erste Entscheidung und lass KI automatisch Risiken, Optionen und Empfehlungen analysieren.
+            </p>
+            <Button onClick={() => setShowNewDialog(true)} className="gap-2 mb-8">
+              <Plus className="w-4 h-4" />
+              Erste Entscheidung erstellen
+            </Button>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { icon: Zap, label: "KI-Risikoanalyse", desc: "Automatische Risikobewertung" },
+                { icon: GitBranch, label: "Abhängigkeitsgraph", desc: "Verknüpfungen erkennen" },
+                { icon: Target, label: "Impact-Tracking", desc: "Auswirkungen messen" },
+              ].map((f, i) => (
+                <Card key={i} className="text-left">
+                  <CardContent className="p-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
+                      <f.icon className="w-4 h-4 text-primary" />
                     </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    <p className="text-sm font-semibold">{f.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         </motion.div>
       ) : (
         <>
