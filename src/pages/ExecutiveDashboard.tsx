@@ -4,7 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
-import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -20,9 +20,9 @@ import {
 const ExecutiveDashboard = () => {
   const { user } = useAuth();
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
-  const { data: deps = [] } = useDependencies();
+  const { data: deps = [] } = useFilteredDependencies();
   const { data: teams = [] } = useTeams();
-  const { data: reviews = [] } = useReviews();
+  const { data: reviews = [] } = useFilteredReviews();
 
   if (loadingDec) {
     return (

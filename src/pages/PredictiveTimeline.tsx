@@ -6,7 +6,7 @@ import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
 import { de } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useDecisions, useDependencies } from "@/hooks/useDecisions";
+import { useDecisions, useFilteredDependencies } from "@/hooks/useDecisions";
 
 interface TimelineDecision {
   id: string;
@@ -29,7 +29,7 @@ const PredictiveTimeline = () => {
   const [sortBy, setSortBy] = useState<"predicted" | "priority" | "overdue">("predicted");
 
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
-  const { data: deps = [], isLoading: depLoading } = useDependencies();
+  const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
 
   const loading = decLoading || depLoading;
 

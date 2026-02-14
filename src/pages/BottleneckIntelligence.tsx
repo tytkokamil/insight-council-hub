@@ -5,7 +5,7 @@ import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, Arrow
 import { Card, CardContent } from "@/components/ui/card";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { useDecisions, useTeams, useDependencies, useReviews, useProfiles, useNotifications, buildProfileMap } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews, useProfiles, useFilteredNotifications, buildProfileMap } from "@/hooks/useDecisions";
 
 interface PersonBottleneck {
   userId: string;
@@ -40,10 +40,10 @@ const BottleneckIntelligence = () => {
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
-  const { data: deps = [], isLoading: depLoading } = useDependencies();
-  const { data: reviews = [], isLoading: revLoading } = useReviews();
+  const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
+  const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
   const { data: profiles = [], isLoading: profLoading } = useProfiles();
-  const { data: notifications = [] } = useNotifications();
+  const { data: notifications = [] } = useFilteredNotifications();
 
   const loading = decLoading || teamLoading || depLoading || revLoading || profLoading;
 
