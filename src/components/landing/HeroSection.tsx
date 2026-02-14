@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles, Zap, Shield, BarChart3 } from "lucide-react";
+import ProductTourModal from "./ProductTourModal";
 
 const HeroSection = () => {
+  const [showTour, setShowTour] = useState(false);
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Ambient background */}
@@ -71,7 +74,7 @@ const HeroSection = () => {
               Start Free Trial
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button variant="hero-outline" size="xl" className="rounded-2xl">
+            <Button variant="hero-outline" size="xl" className="rounded-2xl" onClick={() => setShowTour(true)}>
               <Play className="w-5 h-5" />
               Watch Demo
             </Button>
@@ -127,6 +130,8 @@ const HeroSection = () => {
           </div>
         </motion.div>
       </div>
+
+      <ProductTourModal open={showTour} onOpenChange={setShowTour} />
     </section>
   );
 };
