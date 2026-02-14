@@ -21,6 +21,7 @@ import PredictiveTimeline from "./pages/PredictiveTimeline";
 import Strategy from "./pages/Strategy";
 import FrictionMap from "./pages/FrictionMap";
 import HealthHeatmap from "./pages/HealthHeatmap";
+import DecisionDNA from "./pages/DecisionDNA";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
             <Route path="/friction" element={<ProtectedRoute><FrictionMap /></ProtectedRoute>} />
             <Route path="/health" element={<ProtectedRoute><HealthHeatmap /></ProtectedRoute>} />
+            <Route path="/dna" element={<ProtectedRoute><DecisionDNA /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
