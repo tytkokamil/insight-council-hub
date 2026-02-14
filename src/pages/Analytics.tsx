@@ -4,6 +4,7 @@ import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle, 
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import AppLayout from "@/components/layout/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { useDecisions } from "@/hooks/useDecisions";
 
@@ -87,96 +88,108 @@ const Analytics = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {summaryCards.map((card, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{card.label}</p>
-                <p className="font-display text-3xl font-bold">{card.value}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <card.icon className="w-5 h-5 text-primary" />
-              </div>
-            </div>
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{card.label}</p>
+                    <p className="font-display text-3xl font-bold">{card.value}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <card.icon className="w-5 h-5 text-primary" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-lg mb-4">Status-Verteilung</h3>
-          {statusData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={statusData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  {statusData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-4">Status-Verteilung</h3>
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={statusData} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                    {statusData.map((_, i) => (<Cell key={i} fill={COLORS[i % COLORS.length]} />))}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-lg mb-4">Übersicht nach Status</h3>
-          {stats.total > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[
-                { name: "Entwurf", count: stats.draft },
-                { name: "Review", count: stats.review },
-                { name: "Genehmigt", count: stats.approved },
-                { name: "Umgesetzt", count: stats.implemented },
-                { name: "Abgelehnt", count: stats.rejected },
-              ]}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
-                <XAxis dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} />
-                <YAxis stroke="hsl(215, 20%, 55%)" fontSize={12} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="count" fill="hsl(192, 91%, 56%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-4">Übersicht nach Status</h3>
+            {stats.total > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={[
+                  { name: "Entwurf", count: stats.draft },
+                  { name: "Review", count: stats.review },
+                  { name: "Genehmigt", count: stats.approved },
+                  { name: "Umgesetzt", count: stats.implemented },
+                  { name: "Abgelehnt", count: stats.rejected },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
+                  <XAxis dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} />
+                  <YAxis stroke="hsl(215, 20%, 55%)" fontSize={12} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="count" fill="hsl(192, 91%, 56%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-lg mb-4">Kategorien</h3>
-          {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
-                <XAxis type="number" stroke="hsl(215, 20%, 55%)" fontSize={12} />
-                <YAxis type="category" dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} width={100} />
-                <Tooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="value" fill="hsl(280, 65%, 60%)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-4">Kategorien</h3>
+            {categoryData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={categoryData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
+                  <XAxis type="number" stroke="hsl(215, 20%, 55%)" fontSize={12} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} width={100} />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Bar dataKey="value" fill="hsl(280, 65%, 60%)" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine Daten</div>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="glass-card p-6">
-          <h3 className="font-display font-semibold text-lg mb-4">KI-Risikoverteilung</h3>
-          {riskDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={riskDistribution} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                  <Cell fill="hsl(142, 71%, 45%)" />
-                  <Cell fill="hsl(38, 92%, 50%)" />
-                  <Cell fill="hsl(0, 72%, 51%)" />
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine KI-Analysen vorhanden</div>
-          )}
-        </div>
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="font-display font-semibold text-lg mb-4">KI-Risikoverteilung</h3>
+            {riskDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={riskDistribution} cx="50%" cy="50%" outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
+                    <Cell fill="hsl(142, 71%, 45%)" />
+                    <Cell fill="hsl(38, 92%, 50%)" />
+                    <Cell fill="hsl(0, 72%, 51%)" />
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">Noch keine KI-Analysen vorhanden</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );

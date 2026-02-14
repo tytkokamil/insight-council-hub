@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Timer } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -122,39 +123,45 @@ const OpportunityCostRadar = () => {
 
       {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Flame className="w-4 h-4 text-destructive" />
-            <span className="text-xs text-muted-foreground">Tägliche Verluste</span>
-          </div>
-          <p className="font-display text-3xl font-bold text-destructive">
-            {totalDailyCost.toLocaleString("de-DE")} €
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">pro Tag durch offene Entscheidungen</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <Card><CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Flame className="w-4 h-4 text-destructive" />
+              <span className="text-xs text-muted-foreground">Tägliche Verluste</span>
+            </div>
+            <p className="font-display text-3xl font-bold text-destructive">
+              {totalDailyCost.toLocaleString("de-DE")} €
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">pro Tag durch offene Entscheidungen</p>
+          </CardContent></Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-warning" />
-            <span className="text-xs text-muted-foreground">Kumulierte Kosten</span>
-          </div>
-          <p className="font-display text-3xl font-bold text-warning">
-            {totalAccumulated.toLocaleString("de-DE")} €
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">bisher aufgelaufen</p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card><CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-4 h-4 text-warning" />
+              <span className="text-xs text-muted-foreground">Kumulierte Kosten</span>
+            </div>
+            <p className="font-display text-3xl font-bold text-warning">
+              {totalAccumulated.toLocaleString("de-DE")} €
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">bisher aufgelaufen</p>
+          </CardContent></Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <Timer className="w-4 h-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Offene Entscheidungen</span>
-          </div>
-          <p className="font-display text-3xl font-bold">
-            {entries.length}
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
-            davon {entries.filter(e => e.isOverdue).length} überfällig
-          </p>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card><CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Timer className="w-4 h-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Offene Entscheidungen</span>
+            </div>
+            <p className="font-display text-3xl font-bold">
+              {entries.length}
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              davon {entries.filter(e => e.isOverdue).length} überfällig
+            </p>
+          </CardContent></Card>
         </motion.div>
       </div>
 
@@ -186,62 +193,60 @@ const OpportunityCostRadar = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.03 }}
-            className="glass-card p-4 hover:border-primary/20 transition-colors"
           >
-            <div className="flex items-center gap-4">
-              {/* Rank */}
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                i < 3 ? "bg-destructive/20 text-destructive" : "bg-muted/30 text-muted-foreground"
-              }`}>
-                {i + 1}
-              </div>
+            <Card className="hover:border-primary/20 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+                    i < 3 ? "bg-destructive/20 text-destructive" : "bg-muted/30 text-muted-foreground"
+                  }`}>
+                    {i + 1}
+                  </div>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="text-sm font-semibold truncate">{entry.title}</p>
-                  {entry.isOverdue && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">
-                      ÜBERFÄLLIG
-                    </span>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <p className="text-sm font-semibold truncate">{entry.title}</p>
+                      {entry.isOverdue && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">
+                          ÜBERFÄLLIG
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span className={`capitalize font-medium ${priorityColor[entry.priority]}`}>● {entry.priority}</span>
+                      <span className="capitalize">{entry.category}</span>
+                      {entry.teamName && <span>{entry.teamName}</span>}
+                      <span><Clock className="w-3 h-3 inline mr-0.5" />{entry.daysOpen}d offen</span>
+                    </div>
+                  </div>
+
+                  <div className="w-32 shrink-0 hidden md:block">
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        className={`h-full rounded-full ${entry.dailyCost / maxDailyCost > 0.7 ? "bg-destructive" : entry.dailyCost / maxDailyCost > 0.4 ? "bg-warning" : "bg-primary"}`}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(entry.dailyCost / maxDailyCost) * 100}%` }}
+                        transition={{ duration: 0.6, delay: i * 0.03 }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 w-24">
+                    <p className={`text-sm font-bold ${entry.dailyCost > 1000 ? "text-destructive" : entry.dailyCost > 500 ? "text-warning" : "text-muted-foreground"}`}>
+                      {entry.dailyCost.toLocaleString("de-DE")} €
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">pro Tag</p>
+                  </div>
+
+                  <div className="text-right shrink-0 w-28 hidden lg:block">
+                    <p className="text-sm font-medium">
+                      {entry.totalCost.toLocaleString("de-DE")} €
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">kumuliert</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span className={`capitalize font-medium ${priorityColor[entry.priority]}`}>● {entry.priority}</span>
-                  <span className="capitalize">{entry.category}</span>
-                  {entry.teamName && <span>{entry.teamName}</span>}
-                  <span><Clock className="w-3 h-3 inline mr-0.5" />{entry.daysOpen}d offen</span>
-                </div>
-              </div>
-
-              {/* Cost bar */}
-              <div className="w-32 shrink-0 hidden md:block">
-                <div className="h-2 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    className={`h-full rounded-full ${entry.dailyCost / maxDailyCost > 0.7 ? "bg-destructive" : entry.dailyCost / maxDailyCost > 0.4 ? "bg-warning" : "bg-primary"}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(entry.dailyCost / maxDailyCost) * 100}%` }}
-                    transition={{ duration: 0.6, delay: i * 0.03 }}
-                  />
-                </div>
-              </div>
-
-              {/* Daily cost */}
-              <div className="text-right shrink-0 w-24">
-                <p className={`text-sm font-bold ${entry.dailyCost > 1000 ? "text-destructive" : entry.dailyCost > 500 ? "text-warning" : "text-muted-foreground"}`}>
-                  {entry.dailyCost.toLocaleString("de-DE")} €
-                </p>
-                <p className="text-[10px] text-muted-foreground">pro Tag</p>
-              </div>
-
-              {/* Total cost */}
-              <div className="text-right shrink-0 w-28 hidden lg:block">
-                <p className="text-sm font-medium">
-                  {entry.totalCost.toLocaleString("de-DE")} €
-                </p>
-                <p className="text-[10px] text-muted-foreground">kumuliert</p>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </motion.div>
         ))}
       </div>

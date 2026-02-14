@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
   AlertTriangle, CheckCircle2, ArrowRight, BarChart3,
@@ -13,7 +14,7 @@ interface Trait {
   id: string;
   label: string;
   description: string;
-  score: number; // 0-100, higher = more of this trait
+  score: number;
   sentiment: "positive" | "negative" | "neutral";
   icon: any;
   insight: string;
@@ -270,34 +271,34 @@ const DecisionDNA = () => {
       </div>
 
       {/* Archetype Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-6 mb-6 border border-primary/20"
-      >
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
-            <Dna className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Organisations-Archetyp</p>
-            <h2 className="font-display text-2xl font-bold">{overallArchetype}</h2>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">{archetypeDescription}</p>
-        <div className="flex items-center gap-4 mt-3 text-xs">
-          <span className="flex items-center gap-1 text-success">
-            <TrendingUp className="w-3 h-3" />
-            {traits.filter(t => t.sentiment === "positive").length} Stärken
-          </span>
-          <span className="flex items-center gap-1 text-destructive">
-            <TrendingDown className="w-3 h-3" />
-            {traits.filter(t => t.sentiment === "negative").length} Schwächen
-          </span>
-          <span className="flex items-center gap-1 text-warning">
-            {traits.filter(t => t.sentiment === "neutral").length} Neutral
-          </span>
-        </div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="mb-6 border-primary/20">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                <Dna className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Organisations-Archetyp</p>
+                <h2 className="font-display text-2xl font-bold">{overallArchetype}</h2>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">{archetypeDescription}</p>
+            <div className="flex items-center gap-4 mt-3 text-xs">
+              <span className="flex items-center gap-1 text-success">
+                <TrendingUp className="w-3 h-3" />
+                {traits.filter(t => t.sentiment === "positive").length} Stärken
+              </span>
+              <span className="flex items-center gap-1 text-destructive">
+                <TrendingDown className="w-3 h-3" />
+                {traits.filter(t => t.sentiment === "negative").length} Schwächen
+              </span>
+              <span className="flex items-center gap-1 text-warning">
+                {traits.filter(t => t.sentiment === "neutral").length} Neutral
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* DNA Traits */}
@@ -309,72 +310,76 @@ const DecisionDNA = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className={`glass-card p-4 border ${sentimentBg(trait.sentiment)}`}
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${sentimentColor(trait.sentiment)}`}>
-                <trait.icon className="w-4 h-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold">{trait.label}</p>
-                <p className="text-[10px] text-muted-foreground">{trait.description}</p>
-              </div>
-              <span className={`font-display text-xl font-bold ${sentimentColor(trait.sentiment)}`}>
-                {trait.score}
-              </span>
-            </div>
+            <Card className={`border ${sentimentBg(trait.sentiment)}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${sentimentColor(trait.sentiment)}`}>
+                    <trait.icon className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">{trait.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{trait.description}</p>
+                  </div>
+                  <span className={`font-display text-xl font-bold ${sentimentColor(trait.sentiment)}`}>
+                    {trait.score}
+                  </span>
+                </div>
 
-            {/* Score bar */}
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
-              <motion.div
-                className={`h-full rounded-full ${scoreBarColor(trait.score)}`}
-                initial={{ width: 0 }}
-                animate={{ width: `${trait.score}%` }}
-                transition={{ duration: 0.6, delay: i * 0.05 + 0.2 }}
-              />
-            </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
+                  <motion.div
+                    className={`h-full rounded-full ${scoreBarColor(trait.score)}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${trait.score}%` }}
+                    transition={{ duration: 0.6, delay: i * 0.05 + 0.2 }}
+                  />
+                </div>
 
-            <p className="text-xs text-muted-foreground">{trait.insight}</p>
+                <p className="text-xs text-muted-foreground">{trait.insight}</p>
+              </CardContent>
+            </Card>
           </motion.div>
         ))}
       </div>
 
       {/* Category Speed Profile */}
       <h2 className="font-display text-lg font-semibold mb-3">Geschwindigkeitsprofil nach Kategorie</h2>
-      <div className="glass-card p-5 mb-6">
-        <div className="space-y-3">
-          {categoryProfiles.map((cat, i) => {
-            const maxDays = Math.max(...categoryProfiles.map(c => c.avgDays), 1);
-            return (
-              <motion.div
-                key={cat.category}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-4"
-              >
-                <span className="text-sm font-medium w-24 shrink-0">{cat.label}</span>
-                <div className="flex-1 h-6 rounded-lg bg-muted/30 overflow-hidden relative">
-                  <motion.div
-                    className={`h-full rounded-lg ${cat.avgDays > 20 ? "bg-destructive/60" : cat.avgDays > 10 ? "bg-warning/50" : "bg-success/40"}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(cat.avgDays / maxDays) * 100}%` }}
-                    transition={{ duration: 0.6, delay: i * 0.05 }}
-                  />
-                  <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">
-                    Ø {cat.avgDays}d • {cat.implementRate}% umgesetzt • {cat.total} total
-                  </span>
-                </div>
-                {cat.escalationRate > 25 && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">
-                    {cat.escalationRate}% eskaliert
-                  </span>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+      <Card className="mb-6">
+        <CardContent className="p-5">
+          <div className="space-y-3">
+            {categoryProfiles.map((cat, i) => {
+              const maxDays = Math.max(...categoryProfiles.map(c => c.avgDays), 1);
+              return (
+                <motion.div
+                  key={cat.category}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-4"
+                >
+                  <span className="text-sm font-medium w-24 shrink-0">{cat.label}</span>
+                  <div className="flex-1 h-6 rounded-lg bg-muted/30 overflow-hidden relative">
+                    <motion.div
+                      className={`h-full rounded-lg ${cat.avgDays > 20 ? "bg-destructive/60" : cat.avgDays > 10 ? "bg-warning/50" : "bg-success/40"}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(cat.avgDays / maxDays) * 100}%` }}
+                      transition={{ duration: 0.6, delay: i * 0.05 }}
+                    />
+                    <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">
+                      Ø {cat.avgDays}d • {cat.implementRate}% umgesetzt • {cat.total} total
+                    </span>
+                  </div>
+                  {cat.escalationRate > 25 && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">
+                      {cat.escalationRate}% eskaliert
+                    </span>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recommendations */}
       <h2 className="font-display text-lg font-semibold mb-3">Empfehlungen</h2>
@@ -385,20 +390,25 @@ const DecisionDNA = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + i * 0.05 }}
-            className="glass-card p-4 flex items-start gap-3"
           >
-            <ArrowRight className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium">{trait.label} verbessern</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{trait.insight}</p>
-            </div>
+            <Card>
+              <CardContent className="p-4 flex items-start gap-3">
+                <ArrowRight className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">{trait.label} verbessern</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{trait.insight}</p>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
         ))}
         {traits.filter(t => t.sentiment === "negative").length === 0 && (
-          <div className="glass-card p-4 text-center text-sm text-success">
-            <CheckCircle2 className="w-5 h-5 mx-auto mb-1" />
-            Keine kritischen Schwächen identifiziert. Weiter so!
-          </div>
+          <Card>
+            <CardContent className="p-4 text-center text-sm text-success">
+              <CheckCircle2 className="w-5 h-5 mx-auto mb-1" />
+              Keine kritischen Schwächen identifiziert. Weiter so!
+            </CardContent>
+          </Card>
         )}
       </div>
     </AppLayout>
