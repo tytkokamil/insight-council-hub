@@ -141,8 +141,8 @@ const SettingsPage = () => {
   return (
     <AppLayout>
       <div className="mb-6">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Konfiguration</p>
         <h1 className="font-display text-2xl font-bold">Einstellungen</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Profil, Sicherheit und KI-Konfiguration</p>
       </div>
 
       <div className="max-w-2xl space-y-4">
