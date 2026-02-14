@@ -8,6 +8,8 @@ import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import VelocityScoreWidget from "@/components/dashboard/VelocityScoreWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
+import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
+import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -82,9 +84,15 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* New Feature Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+      {/* Feature Widgets Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+        <MomentumScoreWidget />
+        <DecisionCostWidget />
         <VelocityScoreWidget />
+      </div>
+
+      {/* Feature Widgets Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
         <EscalationWidget />
         <LeaderboardWidget />
       </div>

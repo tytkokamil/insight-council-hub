@@ -62,6 +62,27 @@ export type Database = {
           },
         ]
       }
+      briefings: {
+        Row: {
+          content: Json
+          generated_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content: Json
+          generated_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content?: Json
+          generated_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -134,6 +155,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "decision_reviews_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      decision_scenarios: {
+        Row: {
+          ai_analysis: Json | null
+          created_at: string
+          created_by: string
+          decision_id: string
+          description: string | null
+          id: string
+          impact: string | null
+          outcome_if_negative: string | null
+          outcome_if_positive: string | null
+          probability: number | null
+          title: string
+        }
+        Insert: {
+          ai_analysis?: Json | null
+          created_at?: string
+          created_by: string
+          decision_id: string
+          description?: string | null
+          id?: string
+          impact?: string | null
+          outcome_if_negative?: string | null
+          outcome_if_positive?: string | null
+          probability?: number | null
+          title: string
+        }
+        Update: {
+          ai_analysis?: Json | null
+          created_at?: string
+          created_by?: string
+          decision_id?: string
+          description?: string | null
+          id?: string
+          impact?: string | null
+          outcome_if_negative?: string | null
+          outcome_if_positive?: string | null
+          probability?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_scenarios_decision_id_fkey"
             columns: ["decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
@@ -301,6 +372,44 @@ export type Database = {
         }
         Relationships: []
       }
+      stakeholder_positions: {
+        Row: {
+          concerns: string | null
+          created_at: string
+          decision_id: string
+          id: string
+          position: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concerns?: string | null
+          created_at?: string
+          decision_id: string
+          id?: string
+          position: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concerns?: string | null
+          created_at?: string
+          decision_id?: string
+          id?: string
+          position?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_positions_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           id: string
@@ -335,6 +444,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          hourly_rate: number | null
           id: string
           name: string
           updated_at: string
@@ -343,6 +453,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          hourly_rate?: number | null
           id?: string
           name: string
           updated_at?: string
@@ -351,6 +462,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          hourly_rate?: number | null
           id?: string
           name?: string
           updated_at?: string

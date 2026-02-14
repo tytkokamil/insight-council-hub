@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Decisions from "./pages/Decisions";
 import Teams from "./pages/Teams";
 import Analytics from "./pages/Analytics";
+import Briefing from "./pages/Briefing";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
             <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/briefing" element={<ProtectedRoute><Briefing /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
