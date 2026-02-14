@@ -121,6 +121,48 @@ export type Database = {
           },
         ]
       }
+      decision_dependencies: {
+        Row: {
+          created_at: string
+          created_by: string
+          dependency_type: string
+          id: string
+          source_decision_id: string
+          target_decision_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          dependency_type?: string
+          id?: string
+          source_decision_id: string
+          target_decision_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          dependency_type?: string
+          id?: string
+          source_decision_id?: string
+          target_decision_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_dependencies_source_decision_id_fkey"
+            columns: ["source_decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_dependencies_target_decision_id_fkey"
+            columns: ["target_decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decision_reviews: {
         Row: {
           created_at: string
