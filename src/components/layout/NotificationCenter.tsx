@@ -129,15 +129,15 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-2 right-2 mb-1 z-50 w-80 max-h-[420px] rounded-xl border border-border bg-card shadow-lg overflow-hidden"
-            style={{ minWidth: 320, left: collapsed ? 0 : undefined }}
+            className="fixed bottom-16 z-[100] w-80 max-h-[420px] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+            style={{ left: collapsed ? 64 : 248 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
               <h3 className="text-sm font-semibold">Benachrichtigungen</h3>
               <div className="flex items-center gap-1">
                 {unreadCount > 0 && (
