@@ -163,6 +163,48 @@ export type Database = {
           },
         ]
       }
+      decision_goal_links: {
+        Row: {
+          created_at: string
+          decision_id: string
+          goal_id: string
+          id: string
+          impact_weight: number | null
+          linked_by: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          goal_id: string
+          id?: string
+          impact_weight?: number | null
+          linked_by: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          goal_id?: string
+          id?: string
+          impact_weight?: number | null
+          linked_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_goal_links_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_goal_links_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decision_reviews: {
         Row: {
           created_at: string
@@ -448,6 +490,71 @@ export type Database = {
             columns: ["decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      strategic_goals: {
+        Row: {
+          created_at: string
+          created_by: string
+          current_value: number | null
+          description: string | null
+          due_date: string | null
+          goal_type: string
+          id: string
+          owner_id: string | null
+          quarter: string | null
+          status: string
+          target_value: number | null
+          team_id: string | null
+          title: string
+          unit: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          current_value?: number | null
+          description?: string | null
+          due_date?: string | null
+          goal_type?: string
+          id?: string
+          owner_id?: string | null
+          quarter?: string | null
+          status?: string
+          target_value?: number | null
+          team_id?: string | null
+          title: string
+          unit?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          current_value?: number | null
+          description?: string | null
+          due_date?: string | null
+          goal_type?: string
+          id?: string
+          owner_id?: string | null
+          quarter?: string | null
+          status?: string
+          target_value?: number | null
+          team_id?: string | null
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "strategic_goals_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
             referencedColumns: ["id"]
           },
         ]
