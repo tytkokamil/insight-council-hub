@@ -115,9 +115,9 @@ const OpportunityCostRadar = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Opportunity Cost Radar™</h1>
-        <p className="text-muted-foreground">Live-Ranking nach wirtschaftlicher Dringlichkeit</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
+        <h1 className="font-display text-xl font-bold">Opportunity Cost Radar</h1>
       </div>
 
       {/* Summary cards */}

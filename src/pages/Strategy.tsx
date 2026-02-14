@@ -145,8 +145,8 @@ const Strategy = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl font-bold">Strategy Link Layer™</h1>
-          <p className="text-muted-foreground">Verknüpfe Entscheidungen mit strategischen Zielen</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategie</p>
+          <h1 className="font-display text-xl font-bold">Strategy Link Layer</h1>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="gap-2">
           <Plus className="w-4 h-4" /> Neues Ziel

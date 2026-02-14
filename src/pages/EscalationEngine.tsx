@@ -93,8 +93,8 @@ const EscalationEngine = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-3xl font-bold">Autonomous Escalation Engine™</h1>
-          <p className="text-muted-foreground">Teilautonome Prozesssteuerung für Entscheidungen</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Automatisierung</p>
+          <h1 className="font-display text-xl font-bold">Escalation Engine</h1>
         </div>
         <Button onClick={runEngine} disabled={running} className="gap-2">
           {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}

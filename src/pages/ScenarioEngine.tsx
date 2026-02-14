@@ -160,10 +160,9 @@ const ScenarioEngine = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold flex items-center gap-2">
-            <FlaskConical className="w-8 h-8 text-primary" /> Scenario Engine 2.0™
-          </h1>
-          <p className="text-muted-foreground mt-1">Simulieren Sie unternehmensweite Auswirkungen wenn Entscheidungen verschoben werden.</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Simulation</p>
+          <h1 className="font-display text-xl font-bold">Scenario Engine</h1>
+          <p className="text-sm text-muted-foreground mt-1">Simuliere unternehmensweite Auswirkungen wenn Entscheidungen verschoben werden.</p>
         </div>
 
         {loading ? (

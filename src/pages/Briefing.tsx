@@ -60,8 +60,8 @@ const Briefing = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sun className="w-6 h-6 text-warning" />
-              <h1 className="font-display text-3xl font-bold">Morning Brief</h1>
+              <Sun className="w-5 h-5 text-warning" />
+              <h1 className="font-display text-xl font-bold">Morning Brief</h1>
             </div>
             <p className="text-muted-foreground text-sm">{today}</p>
           </div>

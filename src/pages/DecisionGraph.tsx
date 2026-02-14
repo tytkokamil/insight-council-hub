@@ -220,10 +220,8 @@ const DecisionGraph = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-3xl font-bold">Decision Graph™</h1>
-          <p className="text-muted-foreground">
-            Das neuronale Netzwerk deiner Entscheidungen
-          </p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Netzwerk</p>
+          <h1 className="font-display text-xl font-bold">Decision Graph</h1>
         </div>
         <div className="flex items-center gap-4 text-xs">
           {Object.entries(statusColors).map(([status, color]) => (

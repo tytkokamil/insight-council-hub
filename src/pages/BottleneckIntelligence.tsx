@@ -195,9 +195,9 @@ const BottleneckIntelligence = () => {
   if (personBottlenecks.length === 0 && categoryBottlenecks.length === 0 && teamFrictions.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">Bottleneck Intelligence™</h1>
-          <p className="text-muted-foreground">KI-gestützte Engpass-Erkennung in deiner Organisation</p>
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Engpass-Erkennung</p>
+          <h1 className="font-display text-xl font-bold">Bottleneck Intelligence</h1>
         </div>
         <EmptyAnalysisState
           icon={Zap}
@@ -211,9 +211,9 @@ const BottleneckIntelligence = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Bottleneck Intelligence™</h1>
-        <p className="text-muted-foreground">KI-gestützte Engpass-Erkennung in deiner Organisation</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Engpass-Erkennung</p>
+        <h1 className="font-display text-xl font-bold">Bottleneck Intelligence</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">

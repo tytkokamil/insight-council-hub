@@ -155,14 +155,10 @@ const WarRoom = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-destructive/20 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-destructive" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-display font-bold">Executive War Room™</h1>
-            <p className="text-sm text-muted-foreground">30-Sekunden Komplettübersicht · {format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: de })} Uhr</p>
-          </div>
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kommandozentrale</p>
+          <h1 className="font-display text-xl font-bold">War Room</h1>
+          <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: de })} Uhr</p>
         </div>
 
         {loading ? (
