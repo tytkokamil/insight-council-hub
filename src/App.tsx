@@ -13,6 +13,7 @@ import Teams from "./pages/Teams";
 import Analytics from "./pages/Analytics";
 import Briefing from "./pages/Briefing";
 import SettingsPage from "./pages/SettingsPage";
+import DecisionGraph from "./pages/DecisionGraph";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/briefing" element={<ProtectedRoute><Briefing /></ProtectedRoute>} />
+            <Route path="/graph" element={<ProtectedRoute><DecisionGraph /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
