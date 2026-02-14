@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTeamContext } from "@/hooks/useTeamContext";
 
 export const DECISIONS_KEY = ["decisions"] as const;
 export const TEAMS_KEY = ["teams"] as const;
@@ -8,19 +9,29 @@ export const REVIEWS_KEY = ["reviews"] as const;
 export const PROFILES_KEY = ["profiles"] as const;
 export const NOTIFICATIONS_KEY = ["notifications"] as const;
 
-export const useDecisions = () =>
-  useQuery({
-    queryKey: DECISIONS_KEY,
+export const useDecisions = () => {
+  const { selectedTeamId } = useTeamContext();
+  return useQuery({
+    queryKey: [...DECISIONS_KEY, selectedTeamId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("decisions")
         .select("*")
         .order("created_at", { ascending: false });
+
+      if (selectedTeamId) {
+        query = query.eq("team_id", selectedTeamId);
+      } else {
+        query = query.is("team_id", null);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
     staleTime: 30_000,
   });
+};
 
 export const useTeams = () =>
   useQuery({
