@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,23 +19,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-
-type Decision = {
-  id: string;
-  title: string;
-  status: string;
-  priority: string;
-  category: string;
-  due_date: string | null;
-  team_id: string | null;
-  ai_risk_score: number | null;
-  ai_impact_score: number | null;
-  created_at: string;
-  escalation_level: number | null;
-};
+import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 
 type DelayImpact = {
-  decision: Decision;
+  decision: any;
   delayWeeks: number;
   costPerWeek: number;
   totalCost: number;
@@ -56,12 +42,11 @@ type SimulationResult = {
 };
 
 const ScenarioEngine = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [deps, setDeps] = useState<{ source_decision_id: string; target_decision_id: string }[]>([]);
-  const [teams, setTeams] = useState<{ id: string; name: string; hourly_rate: number | null }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: decisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: deps = [], isLoading: loadingDeps } = useDependencies();
+  const { data: teams = [], isLoading: loadingTeams } = useTeams();
+  const loading = loadingDec || loadingDeps || loadingTeams;
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
 
@@ -70,21 +55,7 @@ const ScenarioEngine = () => {
   const [scope, setScope] = useState<"all" | "overdue" | "critical">("overdue");
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      supabase.from("decisions").select("id,title,status,priority,category,due_date,team_id,ai_risk_score,ai_impact_score,created_at,escalation_level"),
-      supabase.from("decision_dependencies").select("source_decision_id,target_decision_id"),
-      supabase.from("teams").select("id,name,hourly_rate"),
-    ]).then(([dRes, depRes, tRes]) => {
-      setDecisions((dRes.data || []) as Decision[]);
-      setDeps(depRes.data || []);
-      setTeams((tRes.data || []) as any);
-      setLoading(false);
-    });
-  }, [user]);
-
-  const getTargetDecisions = (): Decision[] => {
+  const getTargetDecisions = () => {
     let pool = decisions.filter(d => d.status !== "implemented");
     if (scope === "overdue") pool = pool.filter(d => d.due_date && new Date(d.due_date) < new Date());
     if (scope === "critical") pool = pool.filter(d => d.priority === "critical" || d.priority === "high");

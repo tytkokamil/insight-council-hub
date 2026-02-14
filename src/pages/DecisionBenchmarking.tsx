@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -10,29 +8,20 @@ import { BarChart3, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Clock 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useReviews, useDependencies } from "@/hooks/useDecisions";
 
 const INDUSTRY_BENCHMARKS = {
   average: {
     label: "Branchen-Durchschnitt",
-    approvalRate: 62,
-    avgDaysToDecision: 14,
-    implementationRate: 48,
-    overdueRate: 35,
-    escalationRate: 22,
-    reviewCoverage: 55,
-    riskMitigationRate: 40,
-    crossTeamCollaboration: 30,
+    approvalRate: 62, avgDaysToDecision: 14, implementationRate: 48,
+    overdueRate: 35, escalationRate: 22, reviewCoverage: 55,
+    riskMitigationRate: 40, crossTeamCollaboration: 30,
   },
   highPerformance: {
     label: "High-Performance (Top 10%)",
-    approvalRate: 85,
-    avgDaysToDecision: 5,
-    implementationRate: 78,
-    overdueRate: 8,
-    escalationRate: 5,
-    reviewCoverage: 92,
-    riskMitigationRate: 75,
-    crossTeamCollaboration: 70,
+    approvalRate: 85, avgDaysToDecision: 5, implementationRate: 78,
+    overdueRate: 8, escalationRate: 5, reviewCoverage: 92,
+    riskMitigationRate: 75, crossTeamCollaboration: 70,
   },
 };
 
@@ -50,48 +39,40 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
 };
 
 const DecisionBenchmarking = () => {
-  const { user } = useAuth();
-  const [metrics, setMetrics] = useState<Record<string, number> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: reviews = [], isLoading: loadingRev } = useReviews();
+  const { data: deps = [], isLoading: loadingDeps } = useDependencies();
+  const loading = loadingDec || loadingRev || loadingDeps;
 
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      setLoading(true);
-      const { data: decisions } = await supabase.from("decisions").select("*");
-      const { data: reviews } = await supabase.from("decision_reviews").select("*");
-      const { data: deps } = await supabase.from("decision_dependencies").select("*");
+  const metrics = useMemo(() => {
+    if (allDecisions.length === 0) return null;
+    const all = allDecisions;
+    const total = all.length || 1;
+    const approved = all.filter(d => d.status === "approved" || d.status === "implemented").length;
+    const implemented = all.filter(d => d.status === "implemented").length;
+    const overdue = all.filter(d => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
+    const escalated = all.filter(d => (d.escalation_level ?? 0) > 0).length;
+    const withReview = new Set(reviews.map(r => r.decision_id)).size;
+    const lowRiskHandled = all.filter(d => (d.ai_risk_score ?? 50) < 30 && (d.status === "approved" || d.status === "implemented")).length;
+    const lowRiskTotal = all.filter(d => (d.ai_risk_score ?? 50) < 30).length || 1;
+    const crossTeam = deps.length;
 
-      const all = decisions || [];
-      const total = all.length || 1;
-      const approved = all.filter(d => d.status === "approved" || d.status === "implemented").length;
-      const implemented = all.filter(d => d.status === "implemented").length;
-      const overdue = all.filter(d => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
-      const escalated = all.filter(d => (d.escalation_level ?? 0) > 0).length;
-      const withReview = new Set((reviews || []).map(r => r.decision_id)).size;
-      const lowRiskHandled = all.filter(d => (d.ai_risk_score ?? 50) < 30 && (d.status === "approved" || d.status === "implemented")).length;
-      const lowRiskTotal = all.filter(d => (d.ai_risk_score ?? 50) < 30).length || 1;
-      const crossTeam = (deps || []).length;
+    const implDurations = all
+      .filter(d => d.implemented_at)
+      .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
+    const avgDays = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 18;
 
-      const implDurations = all
-        .filter(d => d.implemented_at)
-        .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
-      const avgDays = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 18;
-
-      setMetrics({
-        approvalRate: Math.round((approved / total) * 100),
-        avgDaysToDecision: avgDays,
-        implementationRate: Math.round((implemented / total) * 100),
-        overdueRate: Math.round((overdue / total) * 100),
-        escalationRate: Math.round((escalated / total) * 100),
-        reviewCoverage: Math.round((withReview / total) * 100),
-        riskMitigationRate: Math.round((lowRiskHandled / lowRiskTotal) * 100),
-        crossTeamCollaboration: Math.min(100, Math.round((crossTeam / total) * 100)),
-      });
-      setLoading(false);
+    return {
+      approvalRate: Math.round((approved / total) * 100),
+      avgDaysToDecision: avgDays,
+      implementationRate: Math.round((implemented / total) * 100),
+      overdueRate: Math.round((overdue / total) * 100),
+      escalationRate: Math.round((escalated / total) * 100),
+      reviewCoverage: Math.round((withReview / total) * 100),
+      riskMitigationRate: Math.round((lowRiskHandled / lowRiskTotal) * 100),
+      crossTeamCollaboration: Math.min(100, Math.round((crossTeam / total) * 100)),
     };
-    load();
-  }, [user]);
+  }, [allDecisions, reviews, deps]);
 
   const getTrend = (key: string, value: number) => {
     const meta = METRIC_LABELS[key];
@@ -122,10 +103,7 @@ const DecisionBenchmarking = () => {
   const radarData = metrics
     ? Object.keys(METRIC_LABELS).map(key => {
         const meta = METRIC_LABELS[key];
-        const normalize = (v: number) => {
-          if (meta.lowerIsBetter) return Math.max(0, 100 - v);
-          return v;
-        };
+        const normalize = (v: number) => meta.lowerIsBetter ? Math.max(0, 100 - v) : v;
         return {
           metric: meta.label,
           "Ihr Unternehmen": normalize(metrics[key]),
