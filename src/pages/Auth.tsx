@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Sparkles, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 
@@ -73,86 +74,117 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+      {/* Subtle background accents */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-[420px] relative z-10"
       >
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-7 h-7 text-primary" />
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+            <LayoutDashboard className="w-6 h-6 text-primary" />
           </div>
-          <h1 className="font-display text-3xl font-bold">DecisionOS</h1>
-          <p className="text-muted-foreground mt-2">
-            {isLogin ? "Willkommen zurück" : "Konto erstellen"}
+          <h1 className="font-display text-2xl font-bold">DecisionOS</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {isLogin ? "Melde dich an, um fortzufahren" : "Erstelle dein Konto"}
           </p>
         </div>
 
-        <div className="glass-card p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Vollständiger Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
-                />
-              </div>
-            )}
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="email"
-                placeholder="E-Mail-Adresse"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
-              />
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="password"
-                placeholder="Passwort"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-11 pl-10 pr-4 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
-              />
+        {/* Form Card */}
+        <Card>
+          <CardContent className="p-6">
+            {/* Tab Toggle */}
+            <div className="flex bg-muted rounded-lg p-1 mb-6">
+              <button
+                onClick={() => { setIsLogin(true); setError(""); setSuccess(""); }}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                  isLogin ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Anmelden
+              </button>
+              <button
+                onClick={() => { setIsLogin(false); setError(""); setSuccess(""); }}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                  !isLogin ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Registrieren
+              </button>
             </div>
 
-            {error && (
-              <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-lg">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="text-success text-sm bg-success/10 p-3 rounded-lg">
-                {success}
-              </div>
-            )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Vollständiger Name"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
 
-            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
-              {loading ? "Laden..." : isLogin ? "Anmelden" : "Registrieren"}
-            </Button>
-          </form>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">E-Mail</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    placeholder="name@beispiel.de"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => { setIsLogin(!isLogin); setError(""); setSuccess(""); }}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isLogin ? "Noch kein Konto? Jetzt registrieren" : "Bereits registriert? Anmelden"}
-            </button>
-          </div>
-        </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Passwort</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="password"
+                    placeholder="Mindestens 6 Zeichen"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {success && (
+                <div className="text-success text-sm bg-success/10 border border-success/20 p-3 rounded-lg">
+                  {success}
+                </div>
+              )}
+
+              <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                {loading ? "Laden..." : isLogin ? "Anmelden" : "Registrieren"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <p className="text-xs text-muted-foreground text-center mt-6">
+          Decision Intelligence Platform
+        </p>
       </motion.div>
     </div>
   );
