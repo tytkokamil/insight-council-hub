@@ -1,64 +1,47 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Zap, TrendingDown, TrendingUp, Minus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useDecisions } from "@/hooks/useDecisions";
 
 const VelocityScoreWidget = () => {
-  const [avgDays, setAvgDays] = useState<number | null>(null);
-  const [categoryBreakdown, setCategoryBreakdown] = useState<{ category: string; avgDays: number }[]>([]);
-  const [trend, setTrend] = useState<"up" | "down" | "flat">("flat");
+  const { data: allDecisions = [] } = useDecisions();
 
-  useEffect(() => {
-    const fetchVelocity = async () => {
-      const { data } = await supabase
-        .from("decisions")
-        .select("status, category, created_at, implemented_at")
-        .eq("status", "implemented");
+  const { avgDays, categoryBreakdown, trend } = useMemo(() => {
+    const implemented = allDecisions.filter(d => d.status === "implemented" && d.implemented_at);
+    if (implemented.length === 0) return { avgDays: null, categoryBreakdown: [], trend: "flat" as const };
 
-      if (!data || data.length === 0) return;
+    const durations = implemented.map(d => ({
+      days: (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24),
+      category: d.category,
+      created_at: d.created_at,
+    }));
 
-      const durations = data
-        .filter(d => d.implemented_at)
-        .map(d => {
-          const created = new Date(d.created_at).getTime();
-          const implemented = new Date(d.implemented_at).getTime();
-          return { days: (implemented - created) / (1000 * 60 * 60 * 24), category: d.category, created_at: d.created_at };
-        });
+    const avg = Math.round(durations.reduce((s, d) => s + d.days, 0) / durations.length * 10) / 10;
 
-      if (durations.length === 0) return;
+    const catMap: Record<string, number[]> = {};
+    durations.forEach(d => {
+      if (!catMap[d.category]) catMap[d.category] = [];
+      catMap[d.category].push(d.days);
+    });
+    const breakdown = Object.entries(catMap).map(([category, days]) => ({
+      category,
+      avgDays: Math.round(days.reduce((s, d) => s + d, 0) / days.length * 10) / 10,
+    })).sort((a, b) => a.avgDays - b.avgDays);
 
-      const avg = Math.round(durations.reduce((s, d) => s + d.days, 0) / durations.length * 10) / 10;
-      setAvgDays(avg);
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 86400000;
+    const sixtyDaysAgo = now - 60 * 86400000;
+    const recent = durations.filter(d => new Date(d.created_at).getTime() > thirtyDaysAgo);
+    const older = durations.filter(d => { const t = new Date(d.created_at).getTime(); return t > sixtyDaysAgo && t <= thirtyDaysAgo; });
+    let t: "up" | "down" | "flat" = "flat";
+    if (recent.length > 0 && older.length > 0) {
+      const recentAvg = recent.reduce((s, d) => s + d.days, 0) / recent.length;
+      const olderAvg = older.reduce((s, d) => s + d.days, 0) / older.length;
+      t = recentAvg < olderAvg - 0.5 ? "up" : recentAvg > olderAvg + 0.5 ? "down" : "flat";
+    }
 
-      // Category breakdown
-      const catMap: Record<string, number[]> = {};
-      durations.forEach(d => {
-        if (!catMap[d.category]) catMap[d.category] = [];
-        catMap[d.category].push(d.days);
-      });
-      const breakdown = Object.entries(catMap).map(([category, days]) => ({
-        category,
-        avgDays: Math.round(days.reduce((s, d) => s + d, 0) / days.length * 10) / 10,
-      })).sort((a, b) => a.avgDays - b.avgDays);
-      setCategoryBreakdown(breakdown);
-
-      // Trend: compare last 30 days vs previous 30 days
-      const now = Date.now();
-      const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-      const sixtyDaysAgo = now - 60 * 24 * 60 * 60 * 1000;
-      const recent = durations.filter(d => new Date(d.created_at).getTime() > thirtyDaysAgo);
-      const older = durations.filter(d => {
-        const t = new Date(d.created_at).getTime();
-        return t > sixtyDaysAgo && t <= thirtyDaysAgo;
-      });
-      if (recent.length > 0 && older.length > 0) {
-        const recentAvg = recent.reduce((s, d) => s + d.days, 0) / recent.length;
-        const olderAvg = older.reduce((s, d) => s + d.days, 0) / older.length;
-        setTrend(recentAvg < olderAvg - 0.5 ? "up" : recentAvg > olderAvg + 0.5 ? "down" : "flat");
-      }
-    };
-    fetchVelocity();
-  }, []);
+    return { avgDays: avg, categoryBreakdown: breakdown, trend: t };
+  }, [allDecisions]);
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const trendColor = trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";

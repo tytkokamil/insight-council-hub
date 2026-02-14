@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -24,40 +24,18 @@ const priorityStyles: Record<string, string> = {
 };
 
 const Decisions = () => {
-  const [decisions, setDecisions] = useState<any[]>([]);
+  const { data: decisions = [] } = useDecisions();
+  const { data: teams = [] } = useTeams();
+  const { data: profiles = [] } = useProfiles();
+  const invalidate = useInvalidateDecisions();
+  const profileMap = buildProfileMap(profiles);
+  const teamMap: Record<string, string> = {};
+  teams.forEach(t => { teamMap[t.id] = t.name; });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
   const { user } = useAuth();
-
-  const fetchDecisions = async () => {
-    const { data } = await supabase
-      .from("decisions")
-      .select("*, teams(name)")
-      .order("created_at", { ascending: false });
-    if (!data) return;
-
-    const assigneeIds = [...new Set(data.map(d => d.assignee_id).filter(Boolean))];
-    let profileMap: Record<string, string> = {};
-    if (assigneeIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", assigneeIds);
-      if (profiles) {
-        profiles.forEach(p => { profileMap[p.user_id] = p.full_name || "—"; });
-      }
-    }
-
-    setDecisions(data.map(d => ({
-      ...d,
-      profiles: { full_name: d.assignee_id ? profileMap[d.assignee_id] || "Nicht zugewiesen" : "Nicht zugewiesen" }
-    })));
-  };
-
-  useEffect(() => {
-    fetchDecisions();
-  }, []);
 
   const filtered = decisions.filter((d) =>
     d.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -135,7 +113,7 @@ const Decisions = () => {
                       <div>
                         <p className="font-medium">{decision.title}</p>
                         <p className="text-sm text-muted-foreground">
-                          {decision.profiles?.full_name || "Nicht zugewiesen"}
+                          {decision.assignee_id ? profileMap[decision.assignee_id] || "Nicht zugewiesen" : "Nicht zugewiesen"}
                         </p>
                       </div>
                     </div>
@@ -154,9 +132,9 @@ const Decisions = () => {
                     <span className="text-sm capitalize">{decision.category}</span>
                   </td>
                   <td className="p-4">
-                    {decision.teams?.name ? (
+                    {decision.team_id && teamMap[decision.team_id] ? (
                       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-accent/50 text-accent-foreground">
-                        {decision.teams.name}
+                        {teamMap[decision.team_id]}
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
@@ -196,14 +174,14 @@ const Decisions = () => {
       <NewDecisionDialog
         open={showNewDialog}
         onOpenChange={setShowNewDialog}
-        onCreated={fetchDecisions}
+        onCreated={invalidate}
       />
 
       <DecisionDetailDialog
         decision={selectedDecision}
         open={!!selectedDecision}
         onOpenChange={(open) => { if (!open) setSelectedDecision(null); }}
-        onUpdated={fetchDecisions}
+        onUpdated={invalidate}
       />
     </AppLayout>
   );
