@@ -8,7 +8,8 @@ import DiscussionPanel from "./DiscussionPanel";
 import ReviewPanel from "./ReviewPanel";
 import AiAnalysisPanel from "./AiAnalysisPanel";
 import AuditTrailPanel from "./AuditTrailPanel";
-import { MessageSquare, GitPullRequest, Brain, History } from "lucide-react";
+import ImpactTrackerPanel from "./ImpactTrackerPanel";
+import { MessageSquare, GitPullRequest, Brain, History, Target } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -80,7 +81,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
         </div>
 
         <Tabs defaultValue="discussion" className="mt-4">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="discussion" className="text-xs gap-1">
               <MessageSquare className="w-3.5 h-3.5" /> Diskussion
             </TabsTrigger>
@@ -89,6 +90,9 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             </TabsTrigger>
             <TabsTrigger value="ai" className="text-xs gap-1">
               <Brain className="w-3.5 h-3.5" /> KI-Analyse
+            </TabsTrigger>
+            <TabsTrigger value="impact" className="text-xs gap-1">
+              <Target className="w-3.5 h-3.5" /> Impact
             </TabsTrigger>
             <TabsTrigger value="audit" className="text-xs gap-1">
               <History className="w-3.5 h-3.5" /> Historie
@@ -102,6 +106,9 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           </TabsContent>
           <TabsContent value="ai">
             <AiAnalysisPanel decision={decision} onUpdated={onUpdated} />
+          </TabsContent>
+          <TabsContent value="impact">
+            <ImpactTrackerPanel decision={decision} onUpdated={onUpdated} />
           </TabsContent>
           <TabsContent value="audit">
             <AuditTrailPanel decisionId={decision.id} />

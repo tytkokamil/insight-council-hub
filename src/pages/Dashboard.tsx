@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
+import VelocityScoreWidget from "@/components/dashboard/VelocityScoreWidget";
+import EscalationWidget from "@/components/dashboard/EscalationWidget";
+import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -77,6 +80,13 @@ const Dashboard = () => {
             </div>
           </motion.div>
         ))}
+      </div>
+
+      {/* New Feature Widgets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+        <VelocityScoreWidget />
+        <EscalationWidget />
+        <LeaderboardWidget />
       </div>
 
       {highRiskDecisions.length > 0 && (
