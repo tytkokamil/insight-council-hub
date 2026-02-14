@@ -24,6 +24,7 @@ import HealthHeatmap from "./pages/HealthHeatmap";
 import DecisionDNA from "./pages/DecisionDNA";
 import EscalationEngine from "./pages/EscalationEngine";
 import DecisionBenchmarking from "./pages/DecisionBenchmarking";
+import ScenarioEngine from "./pages/ScenarioEngine";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/dna" element={<ProtectedRoute><DecisionDNA /></ProtectedRoute>} />
             <Route path="/engine" element={<ProtectedRoute><EscalationEngine /></ProtectedRoute>} />
             <Route path="/benchmarking" element={<ProtectedRoute><DecisionBenchmarking /></ProtectedRoute>} />
+            <Route path="/scenarios" element={<ProtectedRoute><ScenarioEngine /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

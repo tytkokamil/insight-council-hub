@@ -20,6 +20,7 @@ import {
   Dna,
   Zap,
   Trophy,
+  FlaskConical,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ const navItems = [
   { icon: Dna, label: "DNA", path: "/dna" },
   { icon: Zap, label: "Engine", path: "/engine" },
   { icon: Trophy, label: "Benchmarking", path: "/benchmarking" },
+  { icon: FlaskConical, label: "Szenarien", path: "/scenarios" },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
