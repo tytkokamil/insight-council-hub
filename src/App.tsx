@@ -14,6 +14,7 @@ import Analytics from "./pages/Analytics";
 import Briefing from "./pages/Briefing";
 import SettingsPage from "./pages/SettingsPage";
 import DecisionGraph from "./pages/DecisionGraph";
+import BottleneckIntelligence from "./pages/BottleneckIntelligence";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/briefing" element={<ProtectedRoute><Briefing /></ProtectedRoute>} />
             <Route path="/graph" element={<ProtectedRoute><DecisionGraph /></ProtectedRoute>} />
+            <Route path="/bottlenecks" element={<ProtectedRoute><BottleneckIntelligence /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

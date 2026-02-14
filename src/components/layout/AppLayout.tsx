@@ -10,6 +10,7 @@ import {
   LogOut,
   Sun,
   GitBranch,
+  Radar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,6 +18,7 @@ const navItems = [
   { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
   { icon: FileText, label: "Decisions", path: "/decisions" },
   { icon: GitBranch, label: "Graph", path: "/graph" },
+  { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
