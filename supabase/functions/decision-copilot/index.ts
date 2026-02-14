@@ -1,17 +1,76 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface AiSettings { provider: string; api_key: string | null; model: string | null; }
+const DEFAULT_MODELS: Record<string, string> = { openai: "gpt-4o", anthropic: "claude-sonnet-4-20250514", google: "gemini-2.5-flash" };
+
+async function getUserAiSettings(userId: string): Promise<AiSettings> {
+  const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data } = await client.from("user_ai_settings").select("provider, api_key, model").eq("user_id", userId).single();
+  return data || { provider: "lovable", api_key: null, model: null };
+}
+
+function extractUserId(req: Request): string | null {
+  const auth = req.headers.get("authorization");
+  if (!auth) return null;
+  try { return JSON.parse(atob(auth.replace("Bearer ", "").split(".")[1])).sub; } catch { return null; }
+}
+
+async function callProvider(settings: AiSettings, messages: any[], tools: any[], toolChoice: any): Promise<any> {
+  const { provider, api_key, model: userModel } = settings;
+  const model = userModel || DEFAULT_MODELS[provider] || "";
+
+  if (provider === "openai") {
+    const body: any = { model, messages }; if (tools?.length) { body.tools = tools; body.tool_choice = toolChoice; }
+    const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${api_key}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`OpenAI error (${r.status}): ${await r.text()}`);
+    const d = await r.json(); const tc = d.choices?.[0]?.message?.tool_calls?.[0];
+    return tc ? JSON.parse(tc.function.arguments) : d.choices?.[0]?.message?.content;
+  }
+  if (provider === "anthropic") {
+    const sys = messages.find((m: any) => m.role === "system")?.content || "";
+    const msgs = messages.filter((m: any) => m.role !== "system").map((m: any) => ({ role: m.role, content: m.content }));
+    const aTools = tools?.map((t: any) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+    const body: any = { model, max_tokens: 4096, system: sys, messages: msgs };
+    if (aTools?.length) { body.tools = aTools; if (toolChoice) body.tool_choice = { type: "tool", name: toolChoice.function.name }; }
+    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": api_key!, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Anthropic error (${r.status}): ${await r.text()}`);
+    const d = await r.json(); const tb = d.content?.find((b: any) => b.type === "tool_use");
+    return tb ? tb.input : d.content?.find((b: any) => b.type === "text")?.text;
+  }
+  if (provider === "google") {
+    const sys = messages.find((m: any) => m.role === "system")?.content;
+    const contents = messages.filter((m: any) => m.role !== "system").map((m: any) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+    const body: any = { contents }; if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+    if (tools?.length) { body.tools = [{ functionDeclarations: tools.map((t: any) => ({ name: t.function.name, description: t.function.description, parameters: t.function.parameters })) }]; if (toolChoice) body.toolConfig = { functionCallingConfig: { mode: "ANY", allowedFunctionNames: [toolChoice.function.name] } }; }
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${api_key}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Google error (${r.status}): ${await r.text()}`);
+    const d = await r.json(); const part = d.candidates?.[0]?.content?.parts?.[0];
+    return part?.functionCall ? part.functionCall.args : part?.text;
+  }
+
+  // Lovable AI Gateway
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY"); if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+  const body: any = { model: "google/gemini-3-flash-preview", messages }; if (tools?.length) { body.tools = tools; body.tool_choice = toolChoice; }
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (r.status === 429) throw new Error("RATE_LIMIT"); if (r.status === 402) throw new Error("PAYMENT_REQUIRED");
+  if (!r.ok) throw new Error(`AI gateway error (${r.status}): ${await r.text()}`);
+  const d = await r.json(); const tc = d.choices?.[0]?.message?.tool_calls?.[0];
+  return tc ? JSON.parse(tc.function.arguments) : d.choices?.[0]?.message?.content;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { decision, teamMembers, historicalStats } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const userId = extractUserId(req);
+    const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
     const prompt = `Du bist ein KI-Co-Pilot für Geschäftsentscheidungen. Analysiere diese Entscheidung und gib strategische Steuerungsempfehlungen.
 
@@ -27,134 +86,63 @@ ENTSCHEIDUNG:
 - KI-Impact-Score: ${decision.ai_impact_score ?? "Nicht analysiert"}
 - Eskalationslevel: ${decision.escalation_level || 0}
 
-TEAM-MITGLIEDER (verfügbar für Delegation/Review):
-${teamMembers?.map((m: any) => `- ${m.name} (Rolle: ${m.role})`).join("\n") || "Keine Teammitglieder"}
+TEAM-MITGLIEDER:
+${teamMembers?.map((m: any) => `- ${m.name} (Rolle: ${m.role})`).join("\n") || "Keine"}
 
 HISTORISCHE STATISTIKEN:
-- Durchschnittliche Entscheidungsdauer (Tage): ${historicalStats?.avgDurationDays ?? "Unbekannt"}
-- Ablehnungsrate (%): ${historicalStats?.rejectionRate ?? "Unbekannt"}
-- Durchschnittliche Reviews pro Entscheidung: ${historicalStats?.avgReviews ?? "Unbekannt"}
-- Häufigste Ablehnungsgründe: ${historicalStats?.topRejectionReasons?.join(", ") || "Keine Daten"}
+- Avg. Dauer (Tage): ${historicalStats?.avgDurationDays ?? "Unbekannt"}
+- Ablehnungsrate: ${historicalStats?.rejectionRate ?? "Unbekannt"}%
+- Avg. Reviews: ${historicalStats?.avgReviews ?? "Unbekannt"}
 
 Generiere konkrete, umsetzbare Empfehlungen.`;
 
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "copilot_recommendations",
-          description: "Generate AI Co-Pilot steering recommendations",
-          parameters: {
-            type: "object",
-            properties: {
-              rejection_probability: {
-                type: "number",
-                description: "Estimated rejection probability 0-100 based on historical patterns and decision characteristics",
-              },
-              rejection_reasons: {
-                type: "array",
-                items: { type: "string" },
-                description: "2-3 most likely reasons for rejection in German",
-              },
-              delegation_suggestion: {
-                type: "object",
-                properties: {
-                  recommended_person: { type: "string", description: "Name of recommended person or 'Beibehalten' if current owner is best" },
-                  reason: { type: "string", description: "Why this person, in German, 1 sentence" },
-                },
-                required: ["recommended_person", "reason"],
-                additionalProperties: false,
-              },
-              reviewer_suggestions: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string", description: "Reviewer name" },
-                    reason: { type: "string", description: "Why this reviewer, in German, 1 sentence" },
-                    priority: { type: "string", description: "hoch, mittel, niedrig" },
-                  },
-                  required: ["name", "reason", "priority"],
-                  additionalProperties: false,
-                },
-                description: "2-3 suggested reviewers",
-              },
-              process_optimizations: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    action: { type: "string", description: "Concrete action in German" },
-                    impact: { type: "string", description: "Expected impact: hoch, mittel, niedrig" },
-                    effort: { type: "string", description: "Required effort: gering, mittel, hoch" },
-                  },
-                  required: ["action", "impact", "effort"],
-                  additionalProperties: false,
-                },
-                description: "3-5 process optimization tips",
-              },
-              next_best_action: {
-                type: "string",
-                description: "The single most important next step in German, max 2 sentences",
-              },
-              confidence: {
-                type: "number",
-                description: "Overall confidence in recommendations 0-100",
-              },
+    const tools = [{
+      type: "function",
+      function: {
+        name: "copilot_recommendations",
+        description: "Generate AI Co-Pilot steering recommendations",
+        parameters: {
+          type: "object",
+          properties: {
+            rejection_probability: { type: "number" },
+            rejection_reasons: { type: "array", items: { type: "string" } },
+            delegation_suggestion: {
+              type: "object",
+              properties: { recommended_person: { type: "string" }, reason: { type: "string" } },
+              required: ["recommended_person", "reason"], additionalProperties: false,
             },
-            required: ["rejection_probability", "rejection_reasons", "delegation_suggestion", "reviewer_suggestions", "process_optimizations", "next_best_action", "confidence"],
-            additionalProperties: false,
+            reviewer_suggestions: {
+              type: "array",
+              items: { type: "object", properties: { name: { type: "string" }, reason: { type: "string" }, priority: { type: "string" } }, required: ["name", "reason", "priority"], additionalProperties: false },
+            },
+            process_optimizations: {
+              type: "array",
+              items: { type: "object", properties: { action: { type: "string" }, impact: { type: "string" }, effort: { type: "string" } }, required: ["action", "impact", "effort"], additionalProperties: false },
+            },
+            next_best_action: { type: "string" },
+            confidence: { type: "number" },
           },
+          required: ["rejection_probability", "rejection_reasons", "delegation_suggestion", "reviewer_suggestions", "process_optimizations", "next_best_action", "confidence"],
+          additionalProperties: false,
         },
       },
+    }];
+
+    const messages = [
+      { role: "system", content: "Du bist ein strategischer KI-Co-Pilot für Entscheidungsmanagement. Antworte NUR mit dem Tool-Call." },
+      { role: "user", content: prompt },
     ];
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "Du bist ein strategischer KI-Co-Pilot für Entscheidungsmanagement. Antworte NUR mit dem Tool-Call." },
-          { role: "user", content: prompt },
-        ],
-        tools,
-        tool_choice: { type: "function", function: { name: "copilot_recommendations" } },
-      }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit erreicht. Bitte versuche es später erneut." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "KI-Kontingent aufgebraucht." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      throw new Error("AI gateway error");
-    }
-
-    const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) throw new Error("No tool call in response");
-
-    const result = JSON.parse(toolCall.function.arguments);
+    const result = await callProvider(settings, messages, tools, { type: "function", function: { name: "copilot_recommendations" } });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("decision-copilot error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const msg = e instanceof Error ? e.message : "Unknown error";
+    if (msg === "RATE_LIMIT") return new Response(JSON.stringify({ error: "Rate limit erreicht." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (msg === "PAYMENT_REQUIRED") return new Response(JSON.stringify({ error: "KI-Kontingent aufgebraucht." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
