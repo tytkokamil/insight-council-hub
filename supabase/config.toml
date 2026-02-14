@@ -1,1 +1,7 @@
 project_id = "eczokjetjzicfrofdrci"
+
+[functions.analyze-decision]
+verify_jwt = false
+
+[functions.check-escalations]
+verify_jwt = false
