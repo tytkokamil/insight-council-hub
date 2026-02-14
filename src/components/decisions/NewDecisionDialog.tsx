@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTeamContext } from "@/hooks/useTeamContext";
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { FileText, Users } from "lucide-react";
 
@@ -17,12 +18,13 @@ const priorities = ["low", "medium", "high", "critical"] as const;
 
 const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { user } = useAuth();
+  const { selectedTeamId } = useTeamContext();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("operational");
   const [priority, setPriority] = useState<string>("medium");
   const [dueDate, setDueDate] = useState("");
-  const [teamId, setTeamId] = useState<string>("");
+  const [teamId, setTeamId] = useState<string>(selectedTeamId || "");
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,11 +32,12 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
   useEffect(() => {
     if (open) {
+      setTeamId(selectedTeamId || "");
       supabase.from("teams").select("id, name").order("name").then(({ data }) => {
         if (data) setTeams(data);
       });
     }
-  }, [open]);
+  }, [open, selectedTeamId]);
 
   const applyTemplate = (t: typeof decisionTemplates[0]) => {
     setTitle(t.name);
