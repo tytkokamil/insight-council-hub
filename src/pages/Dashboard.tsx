@@ -34,10 +34,27 @@ const Dashboard = () => {
   const fetchDecisions = async () => {
     const { data } = await supabase
       .from("decisions")
-      .select("*, profiles!decisions_assignee_id_fkey(full_name)")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(10);
-    if (data) setDecisions(data);
+    if (!data) return;
+
+    const assigneeIds = [...new Set(data.map(d => d.assignee_id).filter(Boolean))];
+    let profileMap: Record<string, string> = {};
+    if (assigneeIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", assigneeIds);
+      if (profiles) {
+        profiles.forEach(p => { profileMap[p.user_id] = p.full_name || "—"; });
+      }
+    }
+
+    setDecisions(data.map(d => ({
+      ...d,
+      profiles: { full_name: d.assignee_id ? profileMap[d.assignee_id] || "—" : "—" }
+    })));
   };
 
   useEffect(() => { fetchDecisions(); }, []);
