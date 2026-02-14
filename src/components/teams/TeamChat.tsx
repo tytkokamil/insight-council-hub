@@ -35,8 +35,48 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const [sending, setSending] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.types.includes("Files")) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Datei zu groß (max. 10 MB)");
+      return;
+    }
+    setSelectedFile(file);
+    if (file.type.startsWith("image/")) {
+      setFilePreview(URL.createObjectURL(file));
+    } else {
+      setFilePreview(null);
+    }
+  };
 
   const fetchMessages = async () => {
     const { data } = await supabase
@@ -227,7 +267,22 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-[500px]">
+    <div
+      className="flex flex-col h-[500px] relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drop overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm">
+          <div className="text-center">
+            <Paperclip className="w-8 h-8 text-primary mx-auto mb-2" />
+            <p className="text-sm font-medium text-primary">Datei hier ablegen</p>
+          </div>
+        </div>
+      )}
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages.length === 0 ? (
