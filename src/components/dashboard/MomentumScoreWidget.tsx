@@ -1,48 +1,165 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Activity, Zap, Target, HeartPulse, TrendingUp } from "lucide-react";
+import { Activity, Zap, Target, HeartPulse, TrendingUp, ShieldAlert, GitPullRequest, Lightbulb, ArrowUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
+interface MomentumBreakdown {
+  velocity: number;
+  bottleneckRate: number;
+  reviewEfficiency: number;
+  escalationRate: number;
+  decisionQuality: number;
+}
+
+interface Recommendation {
+  text: string;
+  impact: number; // how many points the score would increase
+  type: "velocity" | "bottleneck" | "review" | "escalation" | "quality";
+}
 
 const MomentumScoreWidget = () => {
   const [score, setScore] = useState<number | null>(null);
-  const [breakdown, setBreakdown] = useState({ velocity: 0, quality: 0, throughput: 0, health: 0 });
+  const [breakdown, setBreakdown] = useState<MomentumBreakdown>({
+    velocity: 0, bottleneckRate: 0, reviewEfficiency: 0, escalationRate: 0, decisionQuality: 0,
+  });
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [predictedScore, setPredictedScore] = useState<number | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     const calculate = async () => {
-      const { data: decisions } = await supabase
-        .from("decisions")
-        .select("status, created_at, implemented_at, ai_impact_score, actual_impact_score, due_date");
+      const [decRes, revRes, escRes, depRes] = await Promise.all([
+        supabase.from("decisions").select("id, title, status, created_at, implemented_at, ai_impact_score, actual_impact_score, due_date, escalation_level, assignee_id, created_by"),
+        supabase.from("decision_reviews").select("id, decision_id, status, reviewed_at, created_at"),
+        supabase.from("notifications").select("id, type, created_at").eq("type", "escalation"),
+        supabase.from("decision_dependencies").select("id, source_decision_id, target_decision_id, dependency_type"),
+      ]);
 
-      if (!decisions || decisions.length === 0) return;
+      const decisions = decRes.data || [];
+      const reviews = revRes.data || [];
+      const escalations = escRes.data || [];
+      const deps = depRes.data || [];
 
-      const now = Date.now();
+      if (decisions.length === 0) return;
+
       const total = decisions.length;
       const implemented = decisions.filter(d => d.status === "implemented");
+      const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
+      const now = Date.now();
+      const recs: Recommendation[] = [];
 
-      // Velocity (0-25)
-      const vels = implemented.filter(d => d.implemented_at).map(d =>
-        (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24)
-      );
+      // ── 1. VELOCITY (0-20) ──
+      // Average days from created → implemented (lower = better)
+      const vels = implemented
+        .filter(d => d.implemented_at)
+        .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
       const avgVel = vels.length > 0 ? vels.reduce((s, v) => s + v, 0) / vels.length : 30;
-      const velocity = Math.max(0, Math.min(25, Math.round(25 * (1 - avgVel / 60))));
+      const velocity = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(avgVel, 60) / 60))));
 
-      // Quality (0-25)
+      if (avgVel > 14) {
+        const slowest = active
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          .slice(0, 3);
+        const potentialGain = Math.min(6, Math.round((avgVel - 7) / 5));
+        recs.push({
+          text: `${slowest.length} älteste Entscheidungen beschleunigen → Velocity +${potentialGain}`,
+          impact: potentialGain,
+          type: "velocity",
+        });
+      }
+
+      // ── 2. BOTTLENECK RATE (0-20) ──
+      // How many decisions are blocked by dependencies
+      const blockedIds = new Set(
+        deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id)
+      );
+      const blockedActive = active.filter(d => blockedIds.has(d.id));
+      const bottleneckRatio = active.length > 0 ? blockedActive.length / active.length : 0;
+      const bottleneckRate = Math.max(0, Math.min(20, Math.round(20 * (1 - bottleneckRatio))));
+
+      // Find who's causing most blocks
+      if (bottleneckRatio > 0.15) {
+        const sourceCount: Record<string, number> = {};
+        deps.filter(d => d.dependency_type === "blocks").forEach(d => {
+          sourceCount[d.source_decision_id] = (sourceCount[d.source_decision_id] || 0) + 1;
+        });
+        const topBlocker = Object.entries(sourceCount).sort((a, b) => b[1] - a[1])[0];
+        if (topBlocker) {
+          const blockerDec = decisions.find(d => d.id === topBlocker[0]);
+          recs.push({
+            text: `"${blockerDec?.title?.slice(0, 30) || "Entscheidung"}..." lösen → ${topBlocker[1]} Blockaden aufheben`,
+            impact: Math.min(5, topBlocker[1] * 2),
+            type: "bottleneck",
+          });
+        }
+      }
+
+      // ── 3. REVIEW EFFICIENCY (0-20) ──
+      // How fast are reviews completed
+      const completedReviews = reviews.filter(r => r.reviewed_at);
+      const reviewTimes = completedReviews.map(r =>
+        (new Date(r.reviewed_at!).getTime() - new Date(r.created_at).getTime()) / 86400000
+      );
+      const avgReviewTime = reviewTimes.length > 0 ? reviewTimes.reduce((s, v) => s + v, 0) / reviewTimes.length : 7;
+      const pendingReviews = reviews.filter(r => !r.reviewed_at);
+      const reviewEfficiency = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(avgReviewTime, 14) / 14))));
+
+      if (pendingReviews.length > 2) {
+        recs.push({
+          text: `${pendingReviews.length} ausstehende Reviews abschließen → Effizienz steigt`,
+          impact: Math.min(4, pendingReviews.length),
+          type: "review",
+        });
+      }
+
+      // ── 4. ESCALATION RATE (0-20) ──
+      // Fewer escalations = better
+      const recentEscalations = escalations.filter(e =>
+        new Date(e.created_at).getTime() > now - 30 * 86400000
+      );
+      const escalationRatio = total > 0 ? recentEscalations.length / total : 0;
+      const escalationRate = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(escalationRatio, 0.5) / 0.5))));
+
+      if (recentEscalations.length > 3) {
+        recs.push({
+          text: `${recentEscalations.length} Eskalationen in 30 Tagen – Prozesse straffen`,
+          impact: Math.min(4, Math.round(recentEscalations.length / 2)),
+          type: "escalation",
+        });
+      }
+
+      // ── 5. DECISION QUALITY (0-20) ──
+      // Post-outcome tracking: how accurate were AI predictions
       const withOutcome = implemented.filter(d => d.actual_impact_score != null && d.ai_impact_score);
-      const accs = withOutcome.map(d => 100 - Math.abs(d.ai_impact_score - d.actual_impact_score));
-      const avgAcc = accs.length > 0 ? accs.reduce((s, a) => s + a, 0) / accs.length : 50;
-      const quality = Math.round(avgAcc / 4);
+      const accuracies = withOutcome.map(d =>
+        100 - Math.abs((d.ai_impact_score || 0) - (d.actual_impact_score || 0))
+      );
+      const avgAccuracy = accuracies.length > 0 ? accuracies.reduce((s, a) => s + a, 0) / accuracies.length : 50;
+      const decisionQuality = Math.max(0, Math.min(20, Math.round(avgAccuracy / 5)));
 
-      // Throughput (0-25)
-      const throughput = Math.round((implemented.length / total) * 25);
+      const overdueActive = active.filter(d => d.due_date && new Date(d.due_date).getTime() < now);
+      if (overdueActive.length > 0) {
+        recs.push({
+          text: `${overdueActive.length} überfällige Entscheidungen abschließen`,
+          impact: Math.min(5, overdueActive.length * 2),
+          type: "quality",
+        });
+      }
 
-      // Health (0-25)
-      const overdue = decisions.filter(d => d.due_date && new Date(d.due_date).getTime() < now && !["implemented", "rejected"].includes(d.status));
-      const health = Math.round((1 - overdue.length / total) * 25);
+      // ── TOTAL ──
+      const totalScore = velocity + bottleneckRate + reviewEfficiency + escalationRate + decisionQuality;
+      setScore(totalScore);
+      setBreakdown({ velocity, bottleneckRate, reviewEfficiency, escalationRate, decisionQuality });
 
-      const total_score = velocity + quality + throughput + health;
-      setScore(total_score);
-      setBreakdown({ velocity, quality, throughput, health });
+      // Sort recommendations by impact
+      recs.sort((a, b) => b.impact - a.impact);
+      setRecommendations(recs.slice(0, 3));
+
+      // Predicted score if recommendations are followed
+      const totalImpact = recs.reduce((s, r) => s + r.impact, 0);
+      setPredictedScore(Math.min(100, totalScore + totalImpact));
     };
+
     calculate();
   }, []);
 
@@ -50,19 +167,28 @@ const MomentumScoreWidget = () => {
   const getBgColor = (s: number) => s > 70 ? "bg-success" : s > 40 ? "bg-warning" : "bg-destructive";
 
   const components = [
-    { label: "Velocity", value: breakdown.velocity, max: 25, icon: Zap },
-    { label: "Qualität", value: breakdown.quality, max: 25, icon: Target },
-    { label: "Durchsatz", value: breakdown.throughput, max: 25, icon: TrendingUp },
-    { label: "Gesundheit", value: breakdown.health, max: 25, icon: HeartPulse },
+    { label: "Velocity", value: breakdown.velocity, max: 20, icon: Zap, desc: "Entscheidungsgeschwindigkeit" },
+    { label: "Bottleneck", value: breakdown.bottleneckRate, max: 20, icon: ShieldAlert, desc: "Blockaden-Freiheit" },
+    { label: "Review", value: breakdown.reviewEfficiency, max: 20, icon: GitPullRequest, desc: "Review-Effizienz" },
+    { label: "Eskalation", value: breakdown.escalationRate, max: 20, icon: HeartPulse, desc: "Eskalations-Freiheit" },
+    { label: "Qualität", value: breakdown.decisionQuality, max: 20, icon: Target, desc: "Outcome-Genauigkeit" },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass-card p-5 cursor-pointer"
+      onClick={() => setShowDetails(!showDetails)}
+    >
       <div className="flex items-center gap-2 mb-3">
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
           <Activity className="w-4 h-4 text-primary" />
         </div>
-        <h3 className="text-sm font-semibold">Momentum Score</h3>
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold">Momentum Score™</h3>
+          <p className="text-[10px] text-muted-foreground">5-Faktor Organisationsgesundheit</p>
+        </div>
       </div>
 
       {score !== null ? (
@@ -70,22 +196,73 @@ const MomentumScoreWidget = () => {
           <div className="flex items-end gap-2 mb-1">
             <span className={`font-display text-4xl font-bold ${getColor(score)}`}>{score}</span>
             <span className="text-sm text-muted-foreground mb-1">/100</span>
+            {predictedScore && predictedScore > score && (
+              <div className="flex items-center gap-1 text-success text-xs mb-1 ml-auto">
+                <ArrowUp className="w-3 h-3" />
+                <span>→ {predictedScore} möglich</span>
+              </div>
+            )}
           </div>
           <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-4">
-            <div className={`h-full rounded-full transition-all ${getBgColor(score)}`} style={{ width: `${score}%` }} />
+            <motion.div
+              className={`h-full rounded-full ${getBgColor(score)}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${score}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
           </div>
+
+          {/* Factor bars */}
           <div className="space-y-2">
             {components.map(c => (
               <div key={c.label} className="flex items-center gap-2">
                 <c.icon className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span className="text-xs text-muted-foreground w-16">{c.label}</span>
+                <span className="text-xs text-muted-foreground w-20 truncate" title={c.desc}>{c.label}</span>
                 <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-primary" style={{ width: `${(c.value / c.max) * 100}%` }} />
+                  <motion.div
+                    className={`h-full rounded-full ${c.value / c.max > 0.7 ? "bg-success" : c.value / c.max > 0.4 ? "bg-warning" : "bg-destructive"}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(c.value / c.max) * 100}%` }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                  />
                 </div>
                 <span className="text-xs font-medium w-8 text-right">{c.value}/{c.max}</span>
               </div>
             ))}
           </div>
+
+          {/* Predictive Recommendations */}
+          {showDetails && recommendations.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-4 pt-3 border-t border-border space-y-2"
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <Lightbulb className="w-3.5 h-3.5 text-warning" />
+                <span className="text-xs font-semibold">Prädiktive Empfehlungen</span>
+              </div>
+              {recommendations.map((rec, i) => (
+                <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-muted/20 text-xs">
+                  <ArrowUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                  <span className="flex-1 text-muted-foreground">{rec.text}</span>
+                  <span className="text-success font-bold shrink-0">+{rec.impact}</span>
+                </div>
+              ))}
+              {predictedScore && (
+                <p className="text-[10px] text-muted-foreground text-center mt-1">
+                  Wenn du diese 3 Maßnahmen umsetzt, steigt dein Score auf{" "}
+                  <span className="text-success font-bold">{predictedScore}</span>
+                </p>
+              )}
+            </motion.div>
+          )}
+
+          {!showDetails && recommendations.length > 0 && (
+            <p className="text-[10px] text-muted-foreground text-center mt-3">
+              Klicken für Empfehlungen
+            </p>
+          )}
         </>
       ) : (
         <p className="text-xs text-muted-foreground">Berechne...</p>
