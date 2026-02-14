@@ -4,7 +4,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 
 interface TeamFriction {
   teamId: string;
@@ -34,8 +34,8 @@ const FrictionMap = () => {
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
-  const { data: reviews = [], isLoading: revLoading } = useReviews();
-  const { data: deps = [], isLoading: depLoading } = useDependencies();
+  const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
+  const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
 
   const loading = decLoading || teamLoading || revLoading || depLoading;
 

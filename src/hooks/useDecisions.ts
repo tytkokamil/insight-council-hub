@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
 
@@ -55,6 +56,20 @@ export const useDependencies = () =>
     staleTime: 30_000,
   });
 
+/** Dependencies filtered to only include those where both source and target are in the current decision set */
+export const useFilteredDependencies = () => {
+  const { data: decisions = [] } = useDecisions();
+  const { data: allDeps = [], isLoading } = useDependencies();
+
+  const filtered = useMemo(() => {
+    if (decisions.length === 0) return allDeps;
+    const decIds = new Set(decisions.map(d => d.id));
+    return allDeps.filter(dep => decIds.has(dep.source_decision_id) || decIds.has(dep.target_decision_id));
+  }, [decisions, allDeps]);
+
+  return { data: filtered, isLoading };
+};
+
 export const useReviews = () =>
   useQuery({
     queryKey: REVIEWS_KEY,
@@ -65,6 +80,34 @@ export const useReviews = () =>
     },
     staleTime: 30_000,
   });
+
+/** Reviews filtered to only include those for decisions in the current team context */
+export const useFilteredReviews = () => {
+  const { data: decisions = [] } = useDecisions();
+  const { data: allReviews = [], isLoading } = useReviews();
+
+  const filtered = useMemo(() => {
+    if (decisions.length === 0) return allReviews;
+    const decIds = new Set(decisions.map(d => d.id));
+    return allReviews.filter(r => decIds.has(r.decision_id));
+  }, [decisions, allReviews]);
+
+  return { data: filtered, isLoading };
+};
+
+/** Notifications filtered to only include those for decisions in the current team context */
+export const useFilteredNotifications = () => {
+  const { data: decisions = [] } = useDecisions();
+  const { data: allNotifs = [], isLoading } = useNotifications();
+
+  const filtered = useMemo(() => {
+    if (decisions.length === 0) return allNotifs;
+    const decIds = new Set(decisions.map(d => d.id));
+    return allNotifs.filter(n => !n.decision_id || decIds.has(n.decision_id));
+  }, [decisions, allNotifs]);
+
+  return { data: filtered, isLoading };
+};
 
 export const useProfiles = () =>
   useQuery({

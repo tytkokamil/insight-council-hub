@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { useDecisions, useDependencies, useNotifications } from "@/hooks/useDecisions";
+import { useDecisions, useFilteredDependencies, useFilteredNotifications } from "@/hooks/useDecisions";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
 interface CriticalDecision {
@@ -41,8 +41,8 @@ const WarRoom = () => {
   const [checkingAdmin, setCheckingAdmin] = useState(true);
 
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
-  const { data: allDeps = [], isLoading: loadingDeps } = useDependencies();
-  const { data: allNotifications = [], isLoading: loadingNotif } = useNotifications();
+  const { data: allDeps = [], isLoading: loadingDeps } = useFilteredDependencies();
+  const { data: allNotifications = [], isLoading: loadingNotif } = useFilteredNotifications();
   const loading = loadingDec || loadingDeps || loadingNotif || checkingAdmin;
 
   useEffect(() => {

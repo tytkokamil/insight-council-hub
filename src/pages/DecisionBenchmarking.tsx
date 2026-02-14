@@ -8,7 +8,7 @@ import { BarChart3, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Clock 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { useDecisions, useReviews, useDependencies } from "@/hooks/useDecisions";
+import { useDecisions, useFilteredReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 
 const INDUSTRY_BENCHMARKS = {
   average: {
@@ -40,8 +40,8 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
 
 const DecisionBenchmarking = () => {
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
-  const { data: reviews = [], isLoading: loadingRev } = useReviews();
-  const { data: deps = [], isLoading: loadingDeps } = useDependencies();
+  const { data: reviews = [], isLoading: loadingRev } = useFilteredReviews();
+  const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
   const loading = loadingDec || loadingRev || loadingDeps;
 
   const metrics = useMemo(() => {

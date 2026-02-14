@@ -19,7 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
+import { useDecisions, useFilteredDependencies, useTeams } from "@/hooks/useDecisions";
 
 type DelayImpact = {
   decision: any;
@@ -44,7 +44,7 @@ type SimulationResult = {
 const ScenarioEngine = () => {
   const { toast } = useToast();
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
-  const { data: deps = [], isLoading: loadingDeps } = useDependencies();
+  const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
   const loading = loadingDec || loadingDeps || loadingTeams;
   const [simulating, setSimulating] = useState(false);

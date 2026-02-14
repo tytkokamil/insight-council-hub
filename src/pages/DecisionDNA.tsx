@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 
 interface Trait {
   id: string;
@@ -36,8 +36,8 @@ const DecisionDNA = () => {
   const [archetypeDescription, setArchetypeDescription] = useState("");
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
-  const { data: reviews = [], isLoading: revLoading } = useReviews();
-  const { data: deps = [], isLoading: depLoading } = useDependencies();
+  const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
+  const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
 
   const loading = decLoading || revLoading || depLoading || teamLoading;
