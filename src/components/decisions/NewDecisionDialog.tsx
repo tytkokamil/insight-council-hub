@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { decisionTemplates } from "@/lib/decisionTemplates";
-import { FileText } from "lucide-react";
+import { FileText, Users } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -22,9 +22,19 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [category, setCategory] = useState<string>("operational");
   const [priority, setPriority] = useState<string>("medium");
   const [dueDate, setDueDate] = useState("");
+  const [teamId, setTeamId] = useState<string>("");
+  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showTemplates, setShowTemplates] = useState(true);
+
+  useEffect(() => {
+    if (open) {
+      supabase.from("teams").select("id, name").order("name").then(({ data }) => {
+        if (data) setTeams(data);
+      });
+    }
+  }, [open]);
 
   const applyTemplate = (t: typeof decisionTemplates[0]) => {
     setTitle(t.name);
@@ -49,6 +59,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       category: category as any,
       priority: priority as any,
       due_date: dueDate || null,
+      team_id: teamId || null,
       created_by: user.id,
     }]).select().single();
 
@@ -69,6 +80,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       setCategory("operational");
       setPriority("medium");
       setDueDate("");
+      setTeamId("");
       setShowTemplates(true);
       onOpenChange(false);
       onCreated();
@@ -132,9 +144,20 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               </select>
             </div>
           </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
-            <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
+              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+            </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">
+                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Team</span>
+              </label>
+              <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className={inputClass}>
+                <option value="" className="bg-card">Kein Team (öffentlich)</option>
+                {teams.map((t) => (<option key={t.id} value={t.id} className="bg-card">{t.name}</option>))}
+              </select>
+            </div>
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">

@@ -33,7 +33,7 @@ const Decisions = () => {
   const fetchDecisions = async () => {
     const { data } = await supabase
       .from("decisions")
-      .select("*, profiles!decisions_assignee_id_fkey(full_name)")
+      .select("*, profiles!decisions_assignee_id_fkey(full_name), teams(name)")
       .order("created_at", { ascending: false });
     if (data) setDecisions(data);
   };
@@ -85,6 +85,7 @@ const Decisions = () => {
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Priorität</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Kategorie</th>
+              <th className="text-left p-4 text-sm font-medium text-muted-foreground">Team</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">AI Risiko</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground">Fällig</th>
               <th className="text-left p-4 text-sm font-medium text-muted-foreground"></th>
@@ -93,7 +94,7 @@ const Decisions = () => {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                <td colSpan={8} className="p-8 text-center text-muted-foreground">
                   {decisions.length === 0
                     ? "Noch keine Entscheidungen. Erstelle deine erste!"
                     : "Keine Ergebnisse gefunden."}
@@ -134,6 +135,15 @@ const Decisions = () => {
                   </td>
                   <td className="p-4">
                     <span className="text-sm capitalize">{decision.category}</span>
+                  </td>
+                  <td className="p-4">
+                    {decision.teams?.name ? (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-accent/50 text-accent-foreground">
+                        {decision.teams.name}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
