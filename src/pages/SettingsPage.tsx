@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
-import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles } from "lucide-react";
+import UserAvatar from "@/components/shared/UserAvatar";
+import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AI_PROVIDERS = [
@@ -45,6 +46,9 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [fullName, setFullName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -64,10 +68,13 @@ const SettingsPage = () => {
     const fetchData = async () => {
       if (!user) return;
       const [profileRes, aiRes] = await Promise.all([
-        supabase.from("profiles").select("full_name").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single(),
         supabase.from("user_ai_settings").select("*").eq("user_id", user.id).single(),
       ]);
-      if (profileRes.data) setFullName(profileRes.data.full_name || "");
+      if (profileRes.data) {
+        setFullName(profileRes.data.full_name || "");
+        setAvatarUrl(profileRes.data.avatar_url || null);
+      }
       if (aiRes.data) {
         setAiProvider(aiRes.data.provider || "lovable");
         setAiApiKey(aiRes.data.api_key || "");
@@ -131,12 +138,43 @@ const SettingsPage = () => {
     setSavingAi(false);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Fehler", description: "Bitte wähle eine Bilddatei.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Fehler", description: "Maximale Dateigröße: 2 MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingAvatar(true);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/avatar.${ext}`;
+    
+    // Remove old avatar files in user folder
+    const { data: existingFiles } = await supabase.storage.from("avatars").list(user.id);
+    if (existingFiles?.length) {
+      await supabase.storage.from("avatars").remove(existingFiles.map(f => `${user.id}/${f.name}`));
+    }
+    
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Fehler", description: "Upload fehlgeschlagen.", variant: "destructive" });
+      setUploadingAvatar(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
+    const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    await supabase.from("profiles").update({ avatar_url: newUrl }).eq("user_id", user.id);
+    setAvatarUrl(newUrl);
+    setUploadingAvatar(false);
+    toast({ title: "Gespeichert", description: "Profilbild aktualisiert." });
+  };
+
   const selectedProvider = AI_PROVIDERS.find((p) => p.id === aiProvider);
   const inputClass = "w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all";
-
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() ?? "??";
 
   return (
     <AppLayout>
@@ -151,8 +189,20 @@ const SettingsPage = () => {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-primary">{initials}</span>
+                <div className="relative group">
+                  <UserAvatar avatarUrl={avatarUrl} fullName={fullName} email={user?.email} size="lg" />
+                  <button
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    className="absolute inset-0 rounded-lg bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                  >
+                    {uploadingAvatar ? (
+                      <Loader2 className="w-4 h-4 text-white animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4 text-white" />
+                    )}
+                  </button>
+                  <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-lg">{fullName || "Unbekannt"}</h2>

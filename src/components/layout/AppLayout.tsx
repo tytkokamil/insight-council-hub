@@ -8,6 +8,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
+import UserAvatar from "@/components/shared/UserAvatar";
 import NotificationCenter from "./NotificationCenter";
 import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
@@ -62,11 +63,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const { theme, toggleTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
       supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
         setIsAdmin((data?.length ?? 0) > 0);
+      });
+      supabase.from("profiles").select("avatar_url").eq("user_id", user.id).single().then(({ data }) => {
+        setAvatarUrl(data?.avatar_url || null);
       });
     }
   }, [user]);
@@ -75,10 +80,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     await signOut();
     navigate("/auth");
   };
-
-  const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
-    : user?.email?.slice(0, 2).toUpperCase() ?? "??";
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -190,9 +191,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         {/* User */}
         <div className="px-2 py-3 border-t border-border">
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-[11px] font-semibold text-primary">{initials}</span>
-            </div>
+            <UserAvatar avatarUrl={avatarUrl} fullName={user?.user_metadata?.full_name} email={user?.email} />
             <AnimatePresence>
               {!collapsed && (
                 <motion.div

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Send, FileText, Trash2, Paperclip, File, X, Download, Link2 } from "lucide-react";
+import UserAvatar from "@/components/shared/UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<Record<string, { name: string; avatar: string | null }>>({});
   const [decisions, setDecisions] = useState<Record<string, string>>({});
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -129,10 +130,10 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   };
 
   const fetchProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, full_name");
+    const { data } = await supabase.from("profiles").select("user_id, full_name, avatar_url");
     if (data) {
-      const map: Record<string, string> = {};
-      data.forEach((p) => { map[p.user_id] = p.full_name || "Unbekannt"; });
+      const map: Record<string, { name: string; avatar: string | null }> = {};
+      data.forEach((p) => { map[p.user_id] = { name: p.full_name || "Unbekannt", avatar: p.avatar_url }; });
       setProfiles(map);
     }
   };
@@ -299,11 +300,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     }
   };
 
-  const getInitials = (userId: string) => {
-    const name = profiles[userId];
-    if (!name) return "??";
-    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-  };
+  const getProfileName = (userId: string) => profiles[userId]?.name || "Unbekannt";
 
   const isImage = (type: string | null) => type?.startsWith("image/");
 
@@ -365,12 +362,10 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
             const isOwn = msg.user_id === user?.id;
             return (
               <div key={msg.id} className={`flex gap-2.5 group ${isOwn ? "flex-row-reverse" : ""}`}>
-                <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-semibold text-primary">{getInitials(msg.user_id)}</span>
-                </div>
+                <UserAvatar avatarUrl={profiles[msg.user_id]?.avatar} fullName={profiles[msg.user_id]?.name} size="sm" />
                 <div className={`max-w-[70%] ${isOwn ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[11px] font-medium">{profiles[msg.user_id] || "Unbekannt"}</span>
+                    <span className="text-[11px] font-medium">{getProfileName(msg.user_id)}</span>
                     <span className="text-[10px] text-muted-foreground">
                       {format(new Date(msg.created_at), "HH:mm", { locale: de })}
                     </span>
