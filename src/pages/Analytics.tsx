@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle } from "lucide-react";
+import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle, BarChart3 } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
@@ -9,11 +11,13 @@ const COLORS = ["hsl(192, 91%, 56%)", "hsl(38, 92%, 50%)", "hsl(142, 71%, 45%)",
 
 const Analytics = () => {
   const [decisions, setDecisions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDecisions = async () => {
       const { data } = await supabase.from("decisions").select("status, category, priority, ai_risk_score, ai_impact_score, created_at");
       if (data) setDecisions(data);
+      setLoading(false);
     };
     fetchDecisions();
   }, []);
@@ -64,6 +68,25 @@ const Analytics = () => {
   ];
 
   const tooltipStyle = { background: "hsl(222, 47%, 8%)", border: "1px solid hsl(215, 28%, 17%)", borderRadius: "8px" };
+
+  if (loading) return <AnalysisPageSkeleton cards={4} sections={0} showChart />;
+
+  if (decisions.length === 0) {
+    return (
+      <AppLayout>
+        <div className="mb-8">
+          <h1 className="font-display text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">Einblicke in deine Entscheidungsprozesse</p>
+        </div>
+        <EmptyAnalysisState
+          icon={BarChart3}
+          title="Noch keine Analyse-Daten"
+          description="Erstelle Entscheidungen, um Statistiken und Diagramme zu sehen."
+          hint="Daten werden automatisch analysiert, sobald Entscheidungen vorhanden sind"
+        />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

@@ -6,6 +6,8 @@ import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
   AlertTriangle, CheckCircle2, ArrowRight, BarChart3,
 } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 interface Trait {
   id: string;
@@ -257,15 +259,7 @@ const DecisionDNA = () => {
   const scoreBarColor = (score: number) =>
     score >= 70 ? "bg-success" : score >= 45 ? "bg-warning" : "bg-destructive";
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground text-sm">Analysiere Organisations-DNA...</div>
-        </div>
-      </AppLayout>
-    );
-  }
+  if (loading) return <AnalysisPageSkeleton cards={3} sections={2} />;
 
   if (traits.length === 0) {
     return (
@@ -274,11 +268,12 @@ const DecisionDNA = () => {
           <h1 className="font-display text-3xl font-bold">Decision DNA™</h1>
           <p className="text-muted-foreground">Organisations-Diagnostik</p>
         </div>
-        <div className="glass-card p-12 text-center">
-          <Dna className="w-12 h-12 text-primary mx-auto mb-4 opacity-40" />
-          <h3 className="font-display text-xl font-semibold mb-2">Noch keine Daten</h3>
-          <p className="text-muted-foreground">Erstelle Entscheidungen, damit die DNA-Analyse starten kann.</p>
-        </div>
+        <EmptyAnalysisState
+          icon={Dna}
+          title="Noch keine DNA-Daten"
+          description="Erstelle Entscheidungen, damit die DNA-Analyse deiner Organisation starten kann."
+          hint="Die DNA-Analyse braucht mindestens eine Entscheidung"
+        />
       </AppLayout>
     );
   }

@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 type Dimension = "team" | "category" | "priority";
 
@@ -159,12 +161,21 @@ const HealthHeatmap = () => {
     { key: "priority", label: "Priorität" },
   ];
 
-  if (loading) {
+  if (loading) return <AnalysisPageSkeleton cards={4} sections={1} showChart />;
+
+  if (decisions.length === 0) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground text-sm">Analysiere Decision Health...</div>
+        <div className="mb-8">
+          <h1 className="font-display text-3xl font-bold">Decision Health Heatmap™</h1>
+          <p className="text-muted-foreground">Wo ist das Unternehmen stark – und wo schwach?</p>
         </div>
+        <EmptyAnalysisState
+          icon={Heart}
+          title="Keine Health-Daten"
+          description="Erstelle Entscheidungen und Teams, um die Gesundheits-Heatmap zu generieren."
+          hint="Die Heatmap zeigt Health Scores pro Team und Kategorie"
+        />
       </AppLayout>
     );
   }

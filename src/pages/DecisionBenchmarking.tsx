@@ -8,6 +8,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart3, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 const INDUSTRY_BENCHMARKS = {
   average: {
@@ -157,8 +159,15 @@ const DecisionBenchmarking = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">Lade Benchmark-Daten…</div>
-        ) : metrics ? (
+          <AnalysisPageSkeleton cards={3} sections={1} showChart />
+        ) : !metrics ? (
+          <EmptyAnalysisState
+            icon={Trophy}
+            title="Noch keine Benchmarks"
+            description="Erstelle Entscheidungen, um deine Organisation mit Branchen-Benchmarks zu vergleichen."
+            hint="Benchmarking wird automatisch berechnet, sobald genug Daten vorhanden sind"
+          />
+        ) : (
           <>
             {/* Overall Score */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -320,7 +329,7 @@ const DecisionBenchmarking = () => {
               </CardContent>
             </Card>
           </>
-        ) : null}
+        )}
       </div>
     </AppLayout>
   );

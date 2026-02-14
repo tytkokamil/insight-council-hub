@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 interface PersonBottleneck {
   userId: string;
@@ -200,12 +202,21 @@ const BottleneckIntelligence = () => {
     );
   };
 
-  if (loading) {
+  if (loading) return <AnalysisPageSkeleton cards={3} sections={3} />;
+
+  if (personBottlenecks.length === 0 && categoryBottlenecks.length === 0 && teamFrictions.length === 0) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground text-sm">Analysiere Bottlenecks...</div>
+        <div className="mb-8">
+          <h1 className="font-display text-3xl font-bold">Bottleneck Intelligence™</h1>
+          <p className="text-muted-foreground">KI-gestützte Engpass-Erkennung in deiner Organisation</p>
         </div>
+        <EmptyAnalysisState
+          icon={Zap}
+          title="Keine Engpässe erkannt"
+          description="Erstelle Entscheidungen und weise sie Teams zu, um strukturelle Bottlenecks zu identifizieren."
+          hint="Engpässe werden automatisch erkannt, sobald genug Daten vorhanden sind"
+        />
       </AppLayout>
     );
   }

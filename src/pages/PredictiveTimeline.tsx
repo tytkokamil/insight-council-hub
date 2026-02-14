@@ -3,6 +3,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
 import { de } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -196,9 +198,14 @@ const PredictiveTimeline = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Activity className="w-8 h-8 animate-pulse text-primary" />
-          </div>
+          <AnalysisPageSkeleton cards={4} sections={1} />
+        ) : decisions.length === 0 ? (
+          <EmptyAnalysisState
+            icon={Calendar}
+            title="Keine offenen Entscheidungen"
+            description="Die Timeline zeigt Prognosen für offene Entscheidungen. Erstelle eine neue Entscheidung, um die Vorhersage zu starten."
+            hint="Historische Daten verbessern die Prognose-Genauigkeit"
+          />
         ) : (
           <>
             {/* Summary Cards */}

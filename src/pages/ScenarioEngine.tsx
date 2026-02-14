@@ -18,6 +18,8 @@ import {
   LineChart, Line, Legend, Cell,
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 type Decision = {
   id: string;
@@ -194,7 +196,14 @@ const ScenarioEngine = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">Lade Daten…</div>
+          <AnalysisPageSkeleton cards={4} sections={1} />
+        ) : decisions.length === 0 ? (
+          <EmptyAnalysisState
+            icon={FlaskConical}
+            title="Keine Entscheidungen vorhanden"
+            description="Erstelle Entscheidungen, um Delay-Szenarien und Kaskadeneffekte zu simulieren."
+            hint="Die Simulation analysiert Kosten und Risiken bei Verzögerungen"
+          />
         ) : (
           <>
             {/* Controls */}
