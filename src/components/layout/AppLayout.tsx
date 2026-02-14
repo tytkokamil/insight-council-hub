@@ -95,7 +95,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
-                  className="font-mono font-semibold text-sm tracking-tight whitespace-nowrap text-primary"
+                  className="font-display font-semibold text-sm tracking-tight whitespace-nowrap text-primary"
                 >
                   DecisionOS
                 </motion.span>
@@ -123,7 +123,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="px-2 mb-1.5 text-[9px] font-mono font-semibold uppercase tracking-[0.15em] text-primary/50"
+                      className="px-2 mb-1.5 text-[9px] font-medium uppercase tracking-[0.2em] text-muted-foreground/60"
                     >
                       {group.label}
                     </motion.p>
@@ -150,7 +150,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              className="whitespace-nowrap font-mono"
+                              className="whitespace-nowrap"
                             >
                               {item.label}
                             </motion.span>
@@ -169,7 +169,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         <div className="px-2 py-3 border-t border-border">
           <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/30 transition-colors">
             <div className="w-7 h-7 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-mono font-bold text-primary">{initials}</span>
+              <span className="text-[10px] font-semibold text-primary">{initials}</span>
             </div>
             <AnimatePresence>
               {!collapsed && (
@@ -182,7 +182,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                   <p className="text-xs font-medium truncate">
                     {user?.user_metadata?.full_name || user?.email}
                   </p>
-                  <p className="text-[9px] font-mono text-primary/60">● online</p>
+                  <p className="text-[9px] text-primary/60">● online</p>
                 </motion.div>
               )}
             </AnimatePresence>
