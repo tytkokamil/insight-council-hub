@@ -143,7 +143,9 @@ export type Database = {
       }
       decisions: {
         Row: {
+          actual_impact_score: number | null
           ai_impact_score: number | null
+          ai_options: Json | null
           ai_risk_factors: string[] | null
           ai_risk_score: number | null
           ai_success_factors: string[] | null
@@ -154,9 +156,13 @@ export type Database = {
           created_by: string
           description: string | null
           due_date: string | null
+          escalation_level: number | null
           id: string
+          implemented_at: string | null
+          last_escalated_at: string | null
           options: Json | null
           outcome: string | null
+          outcome_notes: string | null
           priority: Database["public"]["Enums"]["decision_priority"]
           status: Database["public"]["Enums"]["decision_status"]
           team_id: string | null
@@ -164,7 +170,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          actual_impact_score?: number | null
           ai_impact_score?: number | null
+          ai_options?: Json | null
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
@@ -175,9 +183,13 @@ export type Database = {
           created_by: string
           description?: string | null
           due_date?: string | null
+          escalation_level?: number | null
           id?: string
+          implemented_at?: string | null
+          last_escalated_at?: string | null
           options?: Json | null
           outcome?: string | null
+          outcome_notes?: string | null
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -185,7 +197,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          actual_impact_score?: number | null
           ai_impact_score?: number | null
+          ai_options?: Json | null
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
@@ -196,9 +210,13 @@ export type Database = {
           created_by?: string
           description?: string | null
           due_date?: string | null
+          escalation_level?: number | null
           id?: string
+          implemented_at?: string | null
+          last_escalated_at?: string | null
           options?: Json | null
           outcome?: string | null
+          outcome_notes?: string | null
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -211,6 +229,47 @@ export type Database = {
             columns: ["team_id"]
             isOneToOne: false
             referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          decision_id: string | null
+          id: string
+          message: string | null
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id?: string | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string | null
+          id?: string
+          message?: string | null
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
             referencedColumns: ["id"]
           },
         ]
