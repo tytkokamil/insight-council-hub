@@ -1,31 +1,15 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Sparkles,
-  BarChart3,
-  FileText,
-  Users,
-  TrendingUp,
-  Settings,
-  LogOut,
-  Sun,
-  GitBranch,
-  Radar,
-  DollarSign,
-  Shield,
-  Calendar,
-  Crosshair,
-  Flame,
-  Activity,
-  Dna,
-  Zap,
-  Trophy,
-  FlaskConical,
+  Sparkles, BarChart3, FileText, Users, TrendingUp, Settings, LogOut, Sun,
+  GitBranch, Radar, DollarSign, Shield, Calendar, Crosshair, Flame, Activity,
+  Dna, Zap, Trophy, FlaskConical, Target,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
+  { icon: Target, label: "Executive", path: "/executive" },
   { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
   { icon: FileText, label: "Decisions", path: "/decisions" },
   { icon: GitBranch, label: "Graph", path: "/graph" },
