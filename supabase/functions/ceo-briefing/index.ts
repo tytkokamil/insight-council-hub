@@ -6,6 +6,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface AiSettings { provider: string; api_key: string | null; model: string | null; }
+const DEFAULT_MODELS: Record<string, string> = { openai: "gpt-4o", anthropic: "claude-sonnet-4-20250514", google: "gemini-2.5-flash" };
+
+async function getAiSettings(userId: string): Promise<AiSettings> {
+  const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data } = await client.from("user_ai_settings").select("provider, api_key, model").eq("user_id", userId).single();
+  return data || { provider: "lovable", api_key: null, model: null };
+}
+
+async function callAiProvider(settings: AiSettings, messages: any[], tools: any[], toolChoice: any): Promise<any> {
+  const { provider, api_key, model: userModel } = settings;
+  const model = userModel || DEFAULT_MODELS[provider] || "";
+  if (provider === "openai") {
+    const body: any = { model, messages }; if (tools?.length) { body.tools = tools; body.tool_choice = toolChoice; }
+    const r = await fetch("https://api.openai.com/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${api_key}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`OpenAI error (${r.status})`); const d = await r.json(); const tc = d.choices?.[0]?.message?.tool_calls?.[0]; return tc ? JSON.parse(tc.function.arguments) : null;
+  }
+  if (provider === "anthropic") {
+    const sys = messages.find((m: any) => m.role === "system")?.content || ""; const msgs = messages.filter((m: any) => m.role !== "system").map((m: any) => ({ role: m.role, content: m.content }));
+    const aTools = tools?.map((t: any) => ({ name: t.function.name, description: t.function.description, input_schema: t.function.parameters }));
+    const body: any = { model, max_tokens: 4096, system: sys, messages: msgs }; if (aTools?.length) { body.tools = aTools; if (toolChoice) body.tool_choice = { type: "tool", name: toolChoice.function.name }; }
+    const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "x-api-key": api_key!, "anthropic-version": "2023-06-01", "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Anthropic error (${r.status})`); const d = await r.json(); const tb = d.content?.find((b: any) => b.type === "tool_use"); return tb ? tb.input : null;
+  }
+  if (provider === "google") {
+    const sys = messages.find((m: any) => m.role === "system")?.content; const contents = messages.filter((m: any) => m.role !== "system").map((m: any) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+    const body: any = { contents }; if (sys) body.systemInstruction = { parts: [{ text: sys }] };
+    if (tools?.length) { body.tools = [{ functionDeclarations: tools.map((t: any) => ({ name: t.function.name, description: t.function.description, parameters: t.function.parameters })) }]; if (toolChoice) body.toolConfig = { functionCallingConfig: { mode: "ANY", allowedFunctionNames: [toolChoice.function.name] } }; }
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${api_key}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`Google error (${r.status})`); const d = await r.json(); const part = d.candidates?.[0]?.content?.parts?.[0]; return part?.functionCall ? part.functionCall.args : null;
+  }
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY"); if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+  const body: any = { model: "google/gemini-3-flash-preview", messages }; if (tools?.length) { body.tools = tools; body.tool_choice = toolChoice; }
+  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (!r.ok) return null; const d = await r.json(); const tc = d.choices?.[0]?.message?.tool_calls?.[0]; return tc ? JSON.parse(tc.function.arguments) : null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -94,7 +131,9 @@ serve(async (req) => {
 
     const momentumScore = velocityScore + qualityScore + throughputScore + healthScore;
 
-    // Generate CEO Morning Brief via AI
+    // Generate CEO Morning Brief via AI (with BYOK support)
+    const aiSettings = await getAiSettings(user.id);
+
     const briefingPrompt = `Du bist der KI-Berater für ein Entscheidungsmanagement-System. Erstelle ein prägnantes Morning Briefing.
 
 Daten:
@@ -103,55 +142,39 @@ Daten:
 - In Review: ${decisions.filter(d => d.status === "review").length}
 - Überfällig: ${overdue.length}
 - Momentum Score: ${momentumScore}/100
-- Ø Entscheidungsgeschwindigkeit: ${Math.round(avgVelocity * 10) / 10} Tage
-- Gesamte Verzögerungskosten: ${totalDelayCost}€
+- Ø Geschwindigkeit: ${Math.round(avgVelocity * 10) / 10} Tage
+- Verzögerungskosten: ${totalDelayCost}€
 - Top überfällige: ${overdue.slice(0, 3).map(d => d.title).join(", ") || "Keine"}
-- Eskalationen: ${notifications?.length || 0} ungelesene
+- Eskalationen: ${notifications?.length || 0} ungelesene`;
 
-Erstelle ein kurzes, actionables Briefing.`;
-
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: "Du bist ein C-Level Business Advisor. Sei direkt, prägnant, actionable. Nutze Emojis sparsam. Max 200 Wörter." },
-          { role: "user", content: briefingPrompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "morning_brief",
-            description: "Structured CEO morning briefing",
-            parameters: {
-              type: "object",
-              properties: {
-                headline: { type: "string", description: "One-line headline summarizing the day, in German" },
-                urgent_actions: { type: "array", items: { type: "string" }, description: "2-3 urgent action items in German" },
-                wins: { type: "array", items: { type: "string" }, description: "1-2 recent wins or positive trends in German" },
-                risks: { type: "array", items: { type: "string" }, description: "1-2 risks to watch in German" },
-                recommendation: { type: "string", description: "One key recommendation for today in German" },
-              },
-              required: ["headline", "urgent_actions", "wins", "risks", "recommendation"],
-              additionalProperties: false,
-            },
+    const briefTools = [{
+      type: "function",
+      function: {
+        name: "morning_brief",
+        description: "Structured CEO morning briefing",
+        parameters: {
+          type: "object",
+          properties: {
+            headline: { type: "string" },
+            urgent_actions: { type: "array", items: { type: "string" } },
+            wins: { type: "array", items: { type: "string" } },
+            risks: { type: "array", items: { type: "string" } },
+            recommendation: { type: "string" },
           },
-        }],
-        tool_choice: { type: "function", function: { name: "morning_brief" } },
-      }),
-    });
+          required: ["headline", "urgent_actions", "wins", "risks", "recommendation"],
+          additionalProperties: false,
+        },
+      },
+    }];
 
     let briefing = null;
-    if (aiResponse.ok) {
-      const aiData = await aiResponse.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      if (toolCall) {
-        briefing = JSON.parse(toolCall.function.arguments);
-      }
+    try {
+      briefing = await callAiProvider(aiSettings,
+        [{ role: "system", content: "Du bist ein C-Level Business Advisor. Sei direkt, prägnant. Max 200 Wörter." }, { role: "user", content: briefingPrompt }],
+        briefTools, { type: "function", function: { name: "morning_brief" } }
+      );
+    } catch (aiErr) {
+      console.error("AI briefing failed:", aiErr);
     }
 
     // Save briefing
