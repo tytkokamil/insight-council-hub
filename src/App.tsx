@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Index from "./pages/Index";
@@ -39,6 +40,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <TeamProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
@@ -64,6 +66,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </TeamProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

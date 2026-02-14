@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import NotificationCenter from "./NotificationCenter";
+import TeamSwitcher from "./TeamSwitcher";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navGroups = [
@@ -121,6 +122,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             </button>
           </div>
         </div>
+
+        {/* Team Switcher */}
+        <TeamSwitcher collapsed={collapsed} />
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
