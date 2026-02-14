@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sparkles,
@@ -15,6 +15,7 @@ import {
   Shield,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const navItems = [
   { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
@@ -22,7 +23,7 @@ const navItems = [
   { icon: GitBranch, label: "Graph", path: "/graph" },
   { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
   { icon: DollarSign, label: "Kosten", path: "/costs" },
-  { icon: Shield, label: "War Room", path: "/warroom" },
+  { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
@@ -33,6 +34,15 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
+        setIsAdmin((data?.length ?? 0) > 0);
+      });
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -59,7 +69,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </Link>
 
         <nav className="flex-1 space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
             const active = location.pathname === item.path;
             return (
               <Link
