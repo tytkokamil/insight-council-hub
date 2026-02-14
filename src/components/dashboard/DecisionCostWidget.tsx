@@ -1,41 +1,24 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { DollarSign, AlertTriangle } from "lucide-react";
+import { useDecisions } from "@/hooks/useDecisions";
 
 const DecisionCostWidget = () => {
-  const [totalCost, setTotalCost] = useState(0);
-  const [delayedCount, setDelayedCount] = useState(0);
-  const [topCosts, setTopCosts] = useState<any[]>([]);
+  const { data: allDecisions = [] } = useDecisions();
 
-  useEffect(() => {
-    const fetchCosts = async () => {
-      const { data } = await supabase
-        .from("decisions")
-        .select("title, priority, created_at, due_date, status")
-        .in("status", ["draft", "review"]);
+  const openDecisions = allDecisions.filter(d => d.status === "draft" || d.status === "review");
+  const now = Date.now();
+  const defaultRate = 75;
+  let totalCost = 0;
+  const costs: any[] = [];
 
-      if (!data) return;
+  openDecisions.forEach(d => {
+    const daysOpen = (now - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    const cost = Math.round(daysOpen * 2 * 2 * defaultRate);
+    totalCost += cost;
+    costs.push({ title: d.title, days: Math.round(daysOpen), cost, priority: d.priority });
+  });
 
-      const now = Date.now();
-      const defaultRate = 75; // €/hour default
-      let total = 0;
-      const costs: any[] = [];
-
-      data.forEach(d => {
-        const daysOpen = (now - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
-        // 2 people, 2h/day overhead
-        const cost = Math.round(daysOpen * 2 * 2 * defaultRate);
-        total += cost;
-        costs.push({ title: d.title, days: Math.round(daysOpen), cost, priority: d.priority });
-      });
-
-      setTotalCost(total);
-      setDelayedCount(data.length);
-      setTopCosts(costs.sort((a, b) => b.cost - a.cost).slice(0, 3));
-    };
-    fetchCosts();
-  }, []);
+  const topCosts = costs.sort((a, b) => b.cost - a.cost).slice(0, 3);
 
   const formatCost = (cost: number) => {
     if (cost >= 1000) return `${(cost / 1000).toFixed(1)}k€`;
@@ -55,7 +38,7 @@ const DecisionCostWidget = () => {
         <span className="font-display text-3xl font-bold text-destructive">{formatCost(totalCost)}</span>
       </div>
       <p className="text-xs text-muted-foreground mb-3">
-        {delayedCount} offene Entscheidungen verursachen Kosten
+        {openDecisions.length} offene Entscheidungen verursachen Kosten
       </p>
 
       {topCosts.length > 0 && (

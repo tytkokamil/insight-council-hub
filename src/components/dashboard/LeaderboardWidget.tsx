@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Medal, Zap, Target } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 
 interface LeaderEntry {
   userId: string;
@@ -12,54 +12,40 @@ interface LeaderEntry {
 }
 
 const LeaderboardWidget = () => {
-  const [leaders, setLeaders] = useState<LeaderEntry[]>([]);
+  const { data: allDecisions = [] } = useDecisions();
+  const { data: profiles = [] } = useProfiles();
+  const profileMap = buildProfileMap(profiles);
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      const { data: decisions } = await supabase
-        .from("decisions")
-        .select("created_by, status, created_at, implemented_at");
+  const leaders = useMemo(() => {
+    if (allDecisions.length === 0) return [];
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name");
+    const userMap: Record<string, { decisions: number; implemented: number; velocities: number[] }> = {};
 
-      if (!decisions || !profiles) return;
-
-      const profileMap: Record<string, string> = {};
-      profiles.forEach(p => { profileMap[p.user_id] = p.full_name || "Unbekannt"; });
-
-      const userMap: Record<string, { decisions: number; implemented: number; velocities: number[] }> = {};
-
-      decisions.forEach(d => {
-        if (!userMap[d.created_by]) userMap[d.created_by] = { decisions: 0, implemented: 0, velocities: [] };
-        userMap[d.created_by].decisions++;
-        if (d.status === "implemented") {
-          userMap[d.created_by].implemented++;
-          if (d.implemented_at) {
-            const days = (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
-            userMap[d.created_by].velocities.push(days);
-          }
+    allDecisions.forEach(d => {
+      if (!userMap[d.created_by]) userMap[d.created_by] = { decisions: 0, implemented: 0, velocities: [] };
+      userMap[d.created_by].decisions++;
+      if (d.status === "implemented") {
+        userMap[d.created_by].implemented++;
+        if (d.implemented_at) {
+          const days = (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          userMap[d.created_by].velocities.push(days);
         }
-      });
+      }
+    });
 
-      const leaderboard: LeaderEntry[] = Object.entries(userMap)
-        .map(([userId, stats]) => ({
-          userId,
-          name: profileMap[userId] || "Unbekannt",
-          decisions: stats.decisions,
-          implemented: stats.implemented,
-          avgVelocity: stats.velocities.length > 0
-            ? Math.round(stats.velocities.reduce((s, v) => s + v, 0) / stats.velocities.length * 10) / 10
-            : 0,
-        }))
-        .sort((a, b) => b.implemented - a.implemented || a.avgVelocity - b.avgVelocity)
-        .slice(0, 5);
-
-      setLeaders(leaderboard);
-    };
-    fetchLeaderboard();
-  }, []);
+    return Object.entries(userMap)
+      .map(([userId, stats]) => ({
+        userId,
+        name: profileMap[userId] || "Unbekannt",
+        decisions: stats.decisions,
+        implemented: stats.implemented,
+        avgVelocity: stats.velocities.length > 0
+          ? Math.round(stats.velocities.reduce((s, v) => s + v, 0) / stats.velocities.length * 10) / 10
+          : 0,
+      }))
+      .sort((a, b) => b.implemented - a.implemented || a.avgVelocity - b.avgVelocity)
+      .slice(0, 5);
+  }, [allDecisions, profileMap]);
 
   const rankIcons = [
     <Trophy className="w-4 h-4 text-yellow-500" />,

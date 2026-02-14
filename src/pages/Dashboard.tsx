@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import VelocityScoreWidget from "@/components/dashboard/VelocityScoreWidget";
@@ -10,6 +9,7 @@ import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
+import { useDecisions, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -27,45 +27,22 @@ const priorityStyles: Record<string, string> = {
 };
 
 const Dashboard = () => {
-  const [decisions, setDecisions] = useState<any[]>([]);
+  const { data: allDecisions = [] } = useDecisions();
+  const { data: profiles = [] } = useProfiles();
+  const invalidate = useInvalidateDecisions();
+  const profileMap = buildProfileMap(profiles);
+
+  const decisions = allDecisions.slice(0, 10);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
-
-  const fetchDecisions = async () => {
-    const { data } = await supabase
-      .from("decisions")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(10);
-    if (!data) return;
-
-    const assigneeIds = [...new Set(data.map(d => d.assignee_id).filter(Boolean))];
-    let profileMap: Record<string, string> = {};
-    if (assigneeIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", assigneeIds);
-      if (profiles) {
-        profiles.forEach(p => { profileMap[p.user_id] = p.full_name || "—"; });
-      }
-    }
-
-    setDecisions(data.map(d => ({
-      ...d,
-      profiles: { full_name: d.assignee_id ? profileMap[d.assignee_id] || "—" : "—" }
-    })));
-  };
-
-  useEffect(() => { fetchDecisions(); }, []);
 
   const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
 
   const stats = [
-    { label: "Gesamt", value: decisions.length, icon: FileText },
-    { label: "In Review", value: decisions.filter(d => d.status === "review").length, icon: Clock },
-    { label: "Genehmigt", value: decisions.filter(d => d.status === "approved").length, icon: CheckCircle2 },
-    { label: "Hohes Risiko", value: highRiskDecisions.length, icon: AlertTriangle },
+    { label: "Gesamt", value: allDecisions.length, icon: FileText },
+    { label: "In Review", value: allDecisions.filter(d => d.status === "review").length, icon: Clock },
+    { label: "Genehmigt", value: allDecisions.filter(d => d.status === "approved").length, icon: CheckCircle2 },
+    { label: "Hohes Risiko", value: allDecisions.filter(d => (d.ai_risk_score || 0) > 60).length, icon: AlertTriangle },
   ];
 
   const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -101,14 +78,12 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Feature Widgets Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         <MomentumScoreWidget />
         <DecisionCostWidget />
         <VelocityScoreWidget />
       </div>
 
-      {/* Feature Widgets Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
         <EscalationWidget />
         <LeaderboardWidget />
@@ -177,7 +152,7 @@ const Dashboard = () => {
                     <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center"><FileText className="w-5 h-5 text-muted-foreground" /></div>
                     <div>
                       <p className="font-medium">{decision.title}</p>
-                      <p className="text-sm text-muted-foreground">{decision.profiles?.full_name || "—"}</p>
+                      <p className="text-sm text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
                     </div>
                   </div>
                 </td>
@@ -204,7 +179,7 @@ const Dashboard = () => {
         decision={selectedDecision}
         open={!!selectedDecision}
         onOpenChange={(open) => { if (!open) setSelectedDecision(null); }}
-        onUpdated={fetchDecisions}
+        onUpdated={invalidate}
       />
     </AppLayout>
   );

@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,38 +16,14 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
 } from "recharts";
 
-type Decision = {
-  id: string; title: string; status: string; priority: string; category: string;
-  due_date: string | null; team_id: string | null; ai_risk_score: number | null;
-  ai_impact_score: number | null; created_at: string; escalation_level: number | null;
-  implemented_at: string | null; updated_at: string;
-};
-
 const ExecutiveDashboard = () => {
   const { user } = useAuth();
-  const [decisions, setDecisions] = useState<Decision[]>([]);
-  const [deps, setDeps] = useState<any[]>([]);
-  const [teams, setTeams] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: decisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: deps = [] } = useDependencies();
+  const { data: teams = [] } = useTeams();
+  const { data: reviews = [] } = useReviews();
 
-  useEffect(() => {
-    if (!user) return;
-    Promise.all([
-      supabase.from("decisions").select("*"),
-      supabase.from("decision_dependencies").select("*"),
-      supabase.from("teams").select("id,name,hourly_rate"),
-      supabase.from("decision_reviews").select("*"),
-    ]).then(([dR, depR, tR, rR]) => {
-      setDecisions((dR.data || []) as Decision[]);
-      setDeps(depR.data || []);
-      setTeams(tR.data || []);
-      setReviews(rR.data || []);
-      setLoading(false);
-    });
-  }, [user]);
-
-  if (loading) {
+  if (loadingDec) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div>
@@ -70,7 +45,7 @@ const ExecutiveDashboard = () => {
     .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
   const avgVelocity = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 0;
 
-  // Costs (opportunity cost of open decisions)
+  // Costs
   const openDecisions = decisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
   const totalOpportunityCost = openDecisions.reduce((sum, d) => {
     const team = teams.find((t: any) => t.id === d.team_id);
@@ -87,11 +62,9 @@ const ExecutiveDashboard = () => {
     (implRate * 0.4) + ((100 - overdueRate) * 0.3) + ((100 - escRate) * 0.2) + (approved.length / total * 100 * 0.1)
   )));
 
-  // DNA Archetype
   const riskAppetite = decisions.filter(d => (d.ai_risk_score ?? 0) > 50 && (d.status === "approved" || d.status === "implemented")).length / (decisions.filter(d => (d.ai_risk_score ?? 0) > 50).length || 1) * 100;
   const archetype = healthScore >= 75 ? "High-Performance" : riskAppetite < 30 ? "Konservativ" : overdueRate > 30 ? "Bottleneck-anfällig" : "Balanced";
 
-  // Radar data
   const radarData = [
     { metric: "Umsetzung", value: Math.round(implRate) },
     { metric: "Geschwindigkeit", value: Math.max(0, 100 - avgVelocity * 3) },
@@ -101,20 +74,12 @@ const ExecutiveDashboard = () => {
     { metric: "Termintreue", value: Math.round(100 - overdueRate) },
   ];
 
-  // Activity trend (last 8 weeks)
   const now = Date.now();
   const activityData = Array.from({ length: 8 }, (_, i) => {
     const weekStart = now - (7 - i) * 7 * 86400000;
     const weekEnd = weekStart + 7 * 86400000;
-    const created = decisions.filter(d => {
-      const t = new Date(d.created_at).getTime();
-      return t >= weekStart && t < weekEnd;
-    }).length;
-    const resolved = decisions.filter(d => {
-      if (!d.implemented_at) return false;
-      const t = new Date(d.implemented_at).getTime();
-      return t >= weekStart && t < weekEnd;
-    }).length;
+    const created = decisions.filter(d => { const t = new Date(d.created_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
+    const resolved = decisions.filter(d => { if (!d.implemented_at) return false; const t = new Date(d.implemented_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
     return { week: `W${8 - (7 - i)}`, erstellt: created, umgesetzt: resolved };
   });
 
@@ -166,7 +131,7 @@ const ExecutiveDashboard = () => {
           ))}
         </div>
 
-        {/* Main Row: Health + Radar + Costs */}
+        {/* Main Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Organisation Health Score</CardTitle></CardHeader>
