@@ -31,11 +31,35 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [showTemplates, setShowTemplates] = useState(true);
 
   useEffect(() => {
-    if (open) {
+    if (open && user) {
       setTeamId(selectedTeamId || "");
-      supabase.from("teams").select("id, name").order("name").then(({ data }) => {
-        if (data) setTeams(data);
-      });
+      const fetchTeams = async () => {
+        // Check if admin
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin");
+        const isAdmin = (roleData?.length ?? 0) > 0;
+
+        if (isAdmin) {
+          const { data } = await supabase.from("teams").select("id, name").order("name");
+          if (data) setTeams(data);
+        } else {
+          const { data: memberTeams } = await supabase
+            .from("team_members")
+            .select("team_id")
+            .eq("user_id", user.id);
+          const ids = memberTeams?.map((t) => t.team_id) || [];
+          if (ids.length > 0) {
+            const { data } = await supabase.from("teams").select("id, name").in("id", ids).order("name");
+            if (data) setTeams(data);
+          } else {
+            setTeams([]);
+          }
+        }
+      };
+      fetchTeams();
     }
   }, [open, selectedTeamId]);
 
