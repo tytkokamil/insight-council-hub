@@ -16,6 +16,7 @@ import SettingsPage from "./pages/SettingsPage";
 import DecisionGraph from "./pages/DecisionGraph";
 import BottleneckIntelligence from "./pages/BottleneckIntelligence";
 import OpportunityCostRadar from "./pages/OpportunityCostRadar";
+import WarRoom from "./pages/WarRoom";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/graph" element={<ProtectedRoute><DecisionGraph /></ProtectedRoute>} />
             <Route path="/bottlenecks" element={<ProtectedRoute><BottleneckIntelligence /></ProtectedRoute>} />
             <Route path="/costs" element={<ProtectedRoute><OpportunityCostRadar /></ProtectedRoute>} />
+            <Route path="/warroom" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
