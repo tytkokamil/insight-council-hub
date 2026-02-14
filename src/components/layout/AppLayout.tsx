@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Terminal,
+  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, Terminal,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -55,6 +56,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
@@ -102,12 +104,21 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               )}
             </AnimatePresence>
           </Link>
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground shrink-0"
-          >
-            <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`} />
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={toggleTheme}
+              className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+              title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+            >
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`} />
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
