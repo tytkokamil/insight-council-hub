@@ -12,6 +12,7 @@ import {
   GitBranch,
   Radar,
   DollarSign,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -21,6 +22,7 @@ const navItems = [
   { icon: GitBranch, label: "Graph", path: "/graph" },
   { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
   { icon: DollarSign, label: "Kosten", path: "/costs" },
+  { icon: Shield, label: "War Room", path: "/warroom" },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
