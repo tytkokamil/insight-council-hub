@@ -1,26 +1,16 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle, BarChart3 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useDecisions } from "@/hooks/useDecisions";
 
 const COLORS = ["hsl(192, 91%, 56%)", "hsl(38, 92%, 50%)", "hsl(142, 71%, 45%)", "hsl(0, 72%, 51%)", "hsl(215, 28%, 55%)", "hsl(280, 65%, 60%)"];
 
 const Analytics = () => {
-  const [decisions, setDecisions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDecisions = async () => {
-      const { data } = await supabase.from("decisions").select("status, category, priority, ai_risk_score, ai_impact_score, created_at");
-      if (data) setDecisions(data);
-      setLoading(false);
-    };
-    fetchDecisions();
-  }, []);
+  const { data: decisions = [], isLoading: loading } = useDecisions();
 
   const stats = {
     total: decisions.length,

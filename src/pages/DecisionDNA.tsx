@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
   AlertTriangle, CheckCircle2, ArrowRight, BarChart3,
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
 
 interface Trait {
   id: string;
@@ -31,30 +31,18 @@ interface CategoryProfile {
 const DecisionDNA = () => {
   const [traits, setTraits] = useState<Trait[]>([]);
   const [categoryProfiles, setCategoryProfiles] = useState<CategoryProfile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [overallArchetype, setOverallArchetype] = useState("");
   const [archetypeDescription, setArchetypeDescription] = useState("");
 
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: reviews = [], isLoading: revLoading } = useReviews();
+  const { data: deps = [], isLoading: depLoading } = useDependencies();
+  const { data: teams = [], isLoading: teamLoading } = useTeams();
+
+  const loading = decLoading || revLoading || depLoading || teamLoading;
+
   useEffect(() => {
-    const analyze = async () => {
-      const [decRes, reviewRes, depRes, teamRes, memberRes] = await Promise.all([
-        supabase.from("decisions").select("id, status, priority, category, team_id, created_at, due_date, implemented_at, escalation_level, ai_risk_score, ai_impact_score, actual_impact_score"),
-        supabase.from("decision_reviews").select("id, decision_id, status, created_at, reviewed_at"),
-        supabase.from("decision_dependencies").select("id, source_decision_id, target_decision_id"),
-        supabase.from("teams").select("id, name"),
-        supabase.from("team_members").select("id, team_id, user_id"),
-      ]);
-
-      const decisions = decRes.data || [];
-      const reviews = reviewRes.data || [];
-      const deps = depRes.data || [];
-      const teams = teamRes.data || [];
-      const members = memberRes.data || [];
-
-      if (decisions.length === 0) {
-        setLoading(false);
-        return;
-      }
+    if (loading || decisions.length === 0) return;
 
       const now = Date.now();
       const total = decisions.length;
@@ -244,11 +232,7 @@ const DecisionDNA = () => {
         setArchetypeDescription("Die Organisation zeigt gemischte Muster. Fokus auf die identifizierten Schwachstellen legen.");
       }
 
-      setLoading(false);
-    };
-
-    analyze();
-  }, []);
+  }, [loading, decisions, reviews, deps, teams]);
 
   const sentimentColor = (s: string) =>
     s === "positive" ? "text-success" : s === "negative" ? "text-destructive" : "text-warning";

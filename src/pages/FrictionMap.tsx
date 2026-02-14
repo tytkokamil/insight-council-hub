@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useTeams, useDependencies, useReviews } from "@/hooks/useDecisions";
 
 interface TeamFriction {
   teamId: string;
@@ -30,25 +30,20 @@ interface CrossTeamFriction {
 const FrictionMap = () => {
   const [teamFriction, setTeamFriction] = useState<TeamFriction[]>([]);
   const [crossFriction, setCrossFriction] = useState<CrossTeamFriction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"teams" | "heatmap">("teams");
 
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: teams = [], isLoading: teamLoading } = useTeams();
+  const { data: reviews = [], isLoading: revLoading } = useReviews();
+  const { data: deps = [], isLoading: depLoading } = useDependencies();
+
+  const loading = decLoading || teamLoading || revLoading || depLoading;
+
   useEffect(() => {
-    const analyze = async () => {
-      const [decRes, teamRes, reviewRes, depRes] = await Promise.all([
-        supabase.from("decisions").select("id, title, status, priority, category, team_id, created_at, due_date, escalation_level, updated_at"),
-        supabase.from("teams").select("id, name"),
-        supabase.from("decision_reviews").select("id, decision_id, reviewer_id, status, created_at, reviewed_at, step_order"),
-        supabase.from("decision_dependencies").select("id, source_decision_id, target_decision_id, dependency_type"),
-      ]);
+    if (loading || decisions.length === 0) return;
 
-      const decisions = decRes.data || [];
-      const teams = teamRes.data || [];
-      const reviews = reviewRes.data || [];
-      const deps = depRes.data || [];
-
-      const now = Date.now();
-      const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
+    const now = Date.now();
+    const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
 
       // Per-team friction analysis
       const teamStats: Record<string, {
@@ -183,12 +178,8 @@ const FrictionMap = () => {
         };
       }).sort((a, b) => b.avgDelay - a.avgDelay);
 
-      setCrossFriction(crossResults);
-      setLoading(false);
-    };
-
-    analyze();
-  }, []);
+    setCrossFriction(crossResults);
+  }, [loading, decisions, teams, reviews, deps]);
 
   const maxFriction = Math.max(...teamFriction.map(t => t.frictionScore), 1);
 
