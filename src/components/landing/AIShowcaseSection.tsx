@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import {
   Brain,
   FileText,
-  LineChart,
+  TrendingUp,
   Sparkles,
   Clock,
   Target,
@@ -22,7 +22,7 @@ const capabilities = [
     description: "Tägliches KI-generiertes Executive Summary aller kritischen Entscheidungen.",
   },
   {
-    icon: LineChart,
+    icon: TrendingUp,
     title: "Predictive Timeline",
     description: "Vorhersage wann Entscheidungen abgeschlossen werden basierend auf Team-Velocity.",
   },
