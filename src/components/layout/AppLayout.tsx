@@ -19,6 +19,7 @@ import {
   Activity,
   Dna,
   Zap,
+  Trophy,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,7 @@ const navItems = [
   { icon: Activity, label: "Health", path: "/health" },
   { icon: Dna, label: "DNA", path: "/dna" },
   { icon: Zap, label: "Engine", path: "/engine" },
+  { icon: Trophy, label: "Benchmarking", path: "/benchmarking" },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },
