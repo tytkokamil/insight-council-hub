@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
+import { Plus, Search, Filter, ChevronDown, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Sparkles, ArrowRight, BarChart3, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import VelocityScoreWidget from "@/components/dashboard/VelocityScoreWidget";
@@ -10,6 +11,7 @@ import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
 import { useDecisions, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useAuth } from "@/hooks/useAuth";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -31,6 +33,8 @@ const Dashboard = () => {
   const { data: profiles = [] } = useProfiles();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const decisions = allDecisions.slice(0, 10);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,13 +43,78 @@ const Dashboard = () => {
   const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
 
   const stats = [
-    { label: "Gesamt", value: allDecisions.length, icon: FileText },
-    { label: "In Review", value: allDecisions.filter(d => d.status === "review").length, icon: Clock },
-    { label: "Genehmigt", value: allDecisions.filter(d => d.status === "approved").length, icon: CheckCircle2 },
-    { label: "Hohes Risiko", value: allDecisions.filter(d => (d.ai_risk_score || 0) > 60).length, icon: AlertTriangle },
+    { label: "Gesamt", value: allDecisions.length, icon: FileText, gradient: "from-primary/20 to-primary/5" },
+    { label: "In Review", value: allDecisions.filter(d => d.status === "review").length, icon: Clock, gradient: "from-warning/20 to-warning/5" },
+    { label: "Genehmigt", value: allDecisions.filter(d => d.status === "approved").length, icon: CheckCircle2, gradient: "from-success/20 to-success/5" },
+    { label: "Hohes Risiko", value: allDecisions.filter(d => (d.ai_risk_score || 0) > 60).length, icon: AlertTriangle, gradient: "from-destructive/20 to-destructive/5" },
   ];
 
   const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
+
+  // Empty welcome state
+  if (allDecisions.length === 0) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-lg"
+          >
+            {/* Animated orb */}
+            <div className="relative w-28 h-28 mx-auto mb-8">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/30 to-accent/20 blur-2xl animate-glow-pulse" />
+              <div className="relative w-28 h-28 rounded-3xl bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/20 flex items-center justify-center backdrop-blur-sm">
+                <Sparkles className="w-12 h-12 text-primary" />
+              </div>
+            </div>
+
+            <h1 className="font-display text-4xl font-bold mb-3">
+              Willkommen, {firstName}!
+            </h1>
+            <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+              Dein Decision-Intelligence-System ist bereit. Erstelle deine erste Entscheidung und lass KI deine strategischen Prozesse optimieren.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+              <Button variant="hero" size="lg" onClick={() => navigate("/decisions")} className="gap-2 px-8">
+                <Plus className="w-5 h-5" />
+                Erste Entscheidung erstellen
+              </Button>
+              <Button variant="glass" size="lg" onClick={() => navigate("/teams")} className="gap-2">
+                Team einladen
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Quick feature cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+              {[
+                { icon: Zap, title: "KI-Analyse", desc: "Automatische Risikobewertung" },
+                { icon: BarChart3, title: "Analytics", desc: "Echtzeit-Entscheidungsdaten" },
+                { icon: TrendingUp, title: "Predictions", desc: "Vorhersagen & Szenarien" },
+              ].map((f, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.1 }}
+                  className="glass-card p-4 text-left"
+                >
+                  <f.icon className="w-5 h-5 text-primary mb-2" />
+                  <p className="text-sm font-semibold">{f.title}</p>
+                  <p className="text-xs text-muted-foreground">{f.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -64,14 +133,15 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-5">
-            <div className="flex items-start justify-between">
+          <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass-card p-5 relative overflow-hidden">
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-50`} />
+            <div className="relative flex items-start justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
                 <p className="font-display text-3xl font-bold">{stat.value}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <stat.icon className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-background/50 backdrop-blur-sm flex items-center justify-center">
+                <stat.icon className="w-5 h-5 text-foreground/70" />
               </div>
             </div>
           </motion.div>
