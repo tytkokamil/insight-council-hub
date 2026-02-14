@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Shield, AlertTriangle, Clock, TrendingUp, Users, Zap,
-  ChevronRight, Activity, Target, Flame, ArrowUpRight,
+  ChevronRight, Activity, Target, Flame, ArrowUpRight, Lock,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
@@ -35,13 +35,20 @@ interface SystemicRisk {
 
 const WarRoom = () => {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [criticals, setCriticals] = useState<CriticalDecision[]>([]);
   const [risks, setRisks] = useState<SystemicRisk[]>([]);
   const [stats, setStats] = useState({ total: 0, open: 0, avgDays: 0, implementedThisMonth: 0, rejectedThisMonth: 0, escalations: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) loadData();
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
+      const admin = (data?.length ?? 0) > 0;
+      setIsAdmin(admin);
+      if (admin) loadData();
+      else setLoading(false);
+    });
   }, [user]);
 
   const loadData = async () => {
@@ -182,6 +189,14 @@ const WarRoom = () => {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Activity className="w-8 h-8 animate-pulse text-primary" />
+          </div>
+        ) : isAdmin === false ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-40" />
+            <h2 className="text-lg font-semibold mb-2">Zugang beschränkt</h2>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Das Executive War Room ist nur für Administratoren zugänglich. Kontaktiere deinen Admin, um Zugang zu erhalten.
+            </p>
           </div>
         ) : (
           <>
