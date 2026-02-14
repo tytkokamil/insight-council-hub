@@ -8,6 +8,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
+import NotificationCenter from "./NotificationCenter";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navGroups = [
@@ -175,6 +176,11 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             );
           })}
         </nav>
+
+        {/* Notifications */}
+        <div className="py-2 border-t border-border">
+          <NotificationCenter collapsed={collapsed} />
+        </div>
 
         {/* User */}
         <div className="px-2 py-3 border-t border-border">
