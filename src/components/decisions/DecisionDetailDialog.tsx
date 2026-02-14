@@ -12,7 +12,8 @@ import ImpactTrackerPanel from "./ImpactTrackerPanel";
 import StakeholderAlignmentPanel from "./StakeholderAlignmentPanel";
 import WhatIfSimulatorPanel from "./WhatIfSimulatorPanel";
 import DependenciesPanel from "./DependenciesPanel";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2 } from "lucide-react";
+import CoPilotPanel from "./CoPilotPanel";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -106,6 +107,9 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             <TabsTrigger value="impact" className="text-xs gap-1 flex-1 min-w-0">
               <Target className="w-3 h-3" /> Impact
             </TabsTrigger>
+            <TabsTrigger value="copilot" className="text-xs gap-1 flex-1 min-w-0">
+              <Compass className="w-3 h-3" /> Co-Pilot
+            </TabsTrigger>
             <TabsTrigger value="audit" className="text-xs gap-1 flex-1 min-w-0">
               <History className="w-3 h-3" /> Historie
             </TabsTrigger>
@@ -130,6 +134,9 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           </TabsContent>
           <TabsContent value="impact">
             <ImpactTrackerPanel decision={decision} onUpdated={onUpdated} />
+          </TabsContent>
+          <TabsContent value="copilot">
+            <CoPilotPanel decision={decision} />
           </TabsContent>
           <TabsContent value="audit">
             <AuditTrailPanel decisionId={decision.id} />
