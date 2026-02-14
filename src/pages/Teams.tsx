@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Users as UsersIcon, UserPlus, ArrowRight, Mail } from "lucide-react";
+import { Plus, Users as UsersIcon, UserPlus, ArrowRight, Mail, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
@@ -24,78 +24,72 @@ const Teams = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-3xl font-bold">Teams</h1>
-          <p className="text-muted-foreground">Verwalte deine Teams und Mitglieder</p>
+          <p className="font-mono text-[10px] text-primary/50 uppercase tracking-widest mb-1">Team Management</p>
+          <h1 className="font-display text-2xl font-bold">Teams</h1>
         </div>
-        <Button variant="hero" size="lg" onClick={() => setShowCreate(true)}>
-          <Plus className="w-5 h-5" />
-          Neues Team
+        <Button variant="hero" onClick={() => setShowCreate(true)}>
+          <Plus className="w-4 h-4" />
+          New Team
         </Button>
       </div>
 
       {teams.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-12"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="cmd-card p-10">
           <div className="max-w-md mx-auto text-center">
-            <div className="relative w-20 h-20 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/10 blur-xl animate-glow-pulse" />
-              <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/5 border border-primary/20 flex items-center justify-center">
-                <UsersIcon className="w-9 h-9 text-primary" />
-              </div>
+            <div className="w-14 h-14 mx-auto mb-5 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <UsersIcon className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="font-display text-2xl font-bold mb-2">Erstelle dein erstes Team</h3>
-            <p className="text-muted-foreground mb-8 leading-relaxed">
-              Teams ermöglichen kollaborative Entscheidungsprozesse. Lade Mitglieder per E-Mail ein und teile Entscheidungen teamübergreifend.
+            <p className="font-mono text-[10px] text-primary/50 uppercase tracking-widest mb-2">No teams</p>
+            <h3 className="font-display text-xl font-bold mb-2">Create Your First Team</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Teams enable collaborative decision-making. Invite members via email and share decisions across teams.
             </p>
-            <Button variant="hero" size="lg" onClick={() => setShowCreate(true)} className="gap-2 mb-8">
-              <Plus className="w-5 h-5" />
-              Team erstellen
+            <Button variant="hero" onClick={() => setShowCreate(true)} className="gap-2 mb-6">
+              <Plus className="w-4 h-4" />
+              Create Team
             </Button>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               {[
-                { icon: Mail, label: "E-Mail Einladungen" },
-                { icon: UsersIcon, label: "Team-basierte Sichtbarkeit" },
+                { icon: Mail, label: "Email Invites" },
+                { icon: UsersIcon, label: "Team Visibility" },
               ].map((f, i) => (
-                <div key={i} className="p-3 rounded-xl bg-muted/30 border border-border/50">
-                  <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                  <p className="text-xs text-muted-foreground">{f.label}</p>
+                <div key={i} className="p-2.5 rounded-md bg-muted/30 border border-border">
+                  <f.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
+                  <p className="text-[10px] font-mono text-muted-foreground">{f.label}</p>
                 </div>
               ))}
             </div>
           </div>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {teams.map((team, i) => (
             <motion.div
               key={team.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card p-6 hover:border-primary/30 transition-all cursor-pointer group"
+              transition={{ delay: i * 0.05 }}
+              className="cmd-card p-5 hover:border-primary/30 transition-all cursor-pointer group"
               onClick={() => setSelectedTeam(team)}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 flex items-center justify-center">
-                  <UsersIcon className="w-6 h-6 text-primary" />
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-10 h-10 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <UsersIcon className="w-5 h-5 text-primary" />
                 </div>
-                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setSelectedTeam(team); }}>
-                  <UserPlus className="w-4 h-4" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setSelectedTeam(team); }}>
+                  <UserPlus className="w-3.5 h-3.5" />
                 </Button>
               </div>
-              <h3 className="font-display font-semibold text-lg mb-1">{team.name}</h3>
-              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{team.description || "Keine Beschreibung"}</p>
+              <h3 className="font-display font-semibold mb-0.5">{team.name}</h3>
+              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{team.description || "No description"}</p>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UsersIcon className="w-4 h-4" />
-                  {team.team_members?.[0]?.count || 0} Mitglieder
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-1.5">
+                  <UsersIcon className="w-3 h-3" />
+                  {team.team_members?.[0]?.count || 0} members
+                </span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             </motion.div>
           ))}

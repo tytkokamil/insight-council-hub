@@ -18,6 +18,9 @@ export default {
   			display: ['Space Grotesk', 'Inter', 'sans-serif'],
   			mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
   		},
+  		fontSize: {
+  			'2xs': '0.625rem',
+  		},
   		colors: {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',

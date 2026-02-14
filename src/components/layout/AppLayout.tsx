@@ -1,9 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  Sparkles, BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
+  BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun,
+  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Terminal,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const navGroups = [
   {
-    label: "Übersicht",
+    label: "COMMAND",
     items: [
       { icon: Target, label: "Executive", path: "/executive" },
       { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
@@ -20,7 +20,7 @@ const navGroups = [
     ],
   },
   {
-    label: "Analyse",
+    label: "ANALYSIS",
     items: [
       { icon: GitBranch, label: "Graph", path: "/graph" },
       { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
@@ -31,18 +31,18 @@ const navGroups = [
     ],
   },
   {
-    label: "Intelligence",
+    label: "INTEL",
     items: [
       { icon: Dna, label: "DNA", path: "/dna" },
       { icon: Zap, label: "Engine", path: "/engine" },
-      { icon: Trophy, label: "Benchmarking", path: "/benchmarking" },
-      { icon: FlaskConical, label: "Szenarien", path: "/scenarios" },
+      { icon: Trophy, label: "Benchmark", path: "/benchmarking" },
+      { icon: FlaskConical, label: "Scenarios", path: "/scenarios" },
       { icon: Calendar, label: "Timeline", path: "/timeline" },
-      { icon: Crosshair, label: "Strategie", path: "/strategy" },
+      { icon: Crosshair, label: "Strategy", path: "/strategy" },
     ],
   },
   {
-    label: "Verwaltung",
+    label: "SYSTEM",
     items: [
       { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
       { icon: Users, label: "Teams", path: "/teams" },
@@ -72,27 +72,22 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   };
 
   const initials = user?.user_metadata?.full_name
-    ? user.user_metadata.full_name
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+    ? user.user_metadata.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() ?? "??";
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
+      {/* Sidebar — Command Strip */}
       <motion.aside
-        animate={{ width: collapsed ? 68 : 260 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative border-r border-border/50 bg-card/30 backdrop-blur-sm flex flex-col shrink-0 overflow-hidden"
+        animate={{ width: collapsed ? 56 : 240 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="relative border-r border-border bg-card flex flex-col shrink-0 overflow-hidden"
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 h-16 border-b border-border/30">
-          <Link to="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-              <Sparkles className="w-4.5 h-4.5 text-primary" />
+        <div className="flex items-center justify-between px-3 h-14 border-b border-border">
+          <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden">
+            <div className="w-8 h-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Terminal className="w-4 h-4 text-primary" />
             </div>
             <AnimatePresence>
               {!collapsed && (
@@ -100,7 +95,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                   initial={{ opacity: 0, width: 0 }}
                   animate={{ opacity: 1, width: "auto" }}
                   exit={{ opacity: 0, width: 0 }}
-                  className="font-display font-bold text-base tracking-tight whitespace-nowrap"
+                  className="font-mono font-semibold text-sm tracking-tight whitespace-nowrap text-primary"
                 >
                   DecisionOS
                 </motion.span>
@@ -109,14 +104,14 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           </Link>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-7 h-7 rounded-lg hover:bg-muted/50 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground shrink-0"
+            className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground shrink-0"
           >
-            <ChevronLeft className={`w-4 h-4 transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
+            <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`} />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 px-2 py-3 space-y-4 overflow-y-auto overflow-x-hidden">
           {navGroups.map((group) => {
             const visibleItems = group.items.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin);
             if (visibleItems.length === 0) return null;
@@ -128,42 +123,34 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/50"
+                      className="px-2 mb-1.5 text-[9px] font-mono font-semibold uppercase tracking-[0.15em] text-primary/50"
                     >
                       {group.label}
                     </motion.p>
                   )}
                 </AnimatePresence>
-                <div className="space-y-0.5">
+                <div className="space-y-px">
                   {visibleItems.map((item) => {
                     const active = location.pathname === item.path;
                     return (
                       <Link
                         key={item.path}
                         to={item.path}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 group relative ${
                           active
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:bg-muted/30 hover:text-foreground"
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border border-transparent"
                         }`}
                         title={collapsed ? item.label : undefined}
                       >
-                        {/* Active indicator */}
-                        {active && (
-                          <motion.div
-                            layoutId="activeNav"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-primary"
-                            transition={{ type: "spring", stiffness: 350, damping: 30 }}
-                          />
-                        )}
-                        <item.icon className={`w-4 h-4 shrink-0 ${active ? "" : "group-hover:scale-105"} transition-transform`} />
+                        <item.icon className="w-3.5 h-3.5 shrink-0" />
                         <AnimatePresence>
                           {!collapsed && (
                             <motion.span
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              className="whitespace-nowrap"
+                              className="whitespace-nowrap font-mono"
                             >
                               {item.label}
                             </motion.span>
@@ -179,10 +166,10 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </nav>
 
         {/* User */}
-        <div className="px-3 py-4 border-t border-border/30">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-muted/20 transition-colors">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <span className="text-xs font-semibold text-primary">{initials}</span>
+        <div className="px-2 py-3 border-t border-border">
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/30 transition-colors">
+            <div className="w-7 h-7 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-mono font-bold text-primary">{initials}</span>
             </div>
             <AnimatePresence>
               {!collapsed && (
@@ -192,16 +179,16 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                   exit={{ opacity: 0 }}
                   className="flex-1 min-w-0"
                 >
-                  <p className="text-sm font-medium truncate">
+                  <p className="text-xs font-medium truncate">
                     {user?.user_metadata?.full_name || user?.email}
                   </p>
-                  <p className="text-[10px] text-muted-foreground">Online</p>
+                  <p className="text-[9px] font-mono text-primary/60">● online</p>
                 </motion.div>
               )}
             </AnimatePresence>
             {!collapsed && (
-              <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-muted/30">
-                <LogOut className="w-4 h-4" />
+              <button onClick={handleSignOut} className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md hover:bg-muted/30">
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -210,7 +197,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <div className="p-8 max-w-[1400px] mx-auto">
+        <div className="p-6 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>
