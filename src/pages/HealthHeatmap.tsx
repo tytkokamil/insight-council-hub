@@ -1,10 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import { useDecisions, useTeams } from "@/hooks/useDecisions";
 
 type Dimension = "team" | "category" | "priority";
 
@@ -28,24 +28,11 @@ const priorityLabels: Record<string, string> = {
 };
 
 const HealthHeatmap = () => {
-  const [decisions, setDecisions] = useState<any[]>([]);
-  const [teams, setTeams] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: decisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: teams = [], isLoading: loadingTeams } = useTeams();
+  const loading = loadingDec || loadingTeams;
   const [rowDim, setRowDim] = useState<Dimension>("team");
   const [colDim, setColDim] = useState<Dimension>("category");
-
-  useEffect(() => {
-    const fetch = async () => {
-      const [decRes, teamRes] = await Promise.all([
-        supabase.from("decisions").select("id, title, status, priority, category, team_id, created_at, due_date, implemented_at, updated_at"),
-        supabase.from("teams").select("id, name"),
-      ]);
-      setDecisions(decRes.data || []);
-      setTeams(teamRes.data || []);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
 
   const teamMap = useMemo(() => Object.fromEntries(teams.map(t => [t.id, t.name])), [teams]);
 
@@ -93,7 +80,7 @@ const HealthHeatmap = () => {
 
         const durations = matching
           .filter(d => d.status === "implemented" && d.implemented_at)
-          .map(d => (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / 86400000);
+          .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
         const avgDays = durations.length > 0
           ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length * 10) / 10
           : 0;
@@ -102,8 +89,6 @@ const HealthHeatmap = () => {
         const rejectedRate = total > 0 ? Math.round((rejected / total) * 100) : 0;
         const implementRate = total > 0 ? (implemented / total) : 0;
 
-        // Health score: higher is better
-        // Based on: implementation rate (+), low overdue (+), low rejection (+), fast resolution (+)
         let healthScore = 0;
         if (total > 0) {
           healthScore = Math.round(
@@ -141,7 +126,6 @@ const HealthHeatmap = () => {
     return "text-destructive";
   };
 
-  // Global stats
   const totalDec = decisions.length;
   const implementedDec = decisions.filter(d => d.status === "implemented").length;
   const overallHealth = totalDec > 0 ? Math.round((implementedDec / totalDec) * 100) : 0;
@@ -150,7 +134,6 @@ const HealthHeatmap = () => {
     d.status !== "implemented" && d.status !== "rejected"
   ).length;
 
-  // Best/worst cells
   const cellEntries = Object.entries(heatmap.cells).filter(([, c]) => c.total > 0);
   const bestCell = cellEntries.length > 0 ? cellEntries.reduce((a, b) => a[1].healthScore > b[1].healthScore ? a : b) : null;
   const worstCell = cellEntries.length > 0 ? cellEntries.reduce((a, b) => a[1].healthScore < b[1].healthScore ? a : b) : null;

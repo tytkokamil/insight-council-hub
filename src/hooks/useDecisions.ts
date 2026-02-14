@@ -6,6 +6,7 @@ export const TEAMS_KEY = ["teams"] as const;
 export const DEPENDENCIES_KEY = ["dependencies"] as const;
 export const REVIEWS_KEY = ["reviews"] as const;
 export const PROFILES_KEY = ["profiles"] as const;
+export const NOTIFICATIONS_KEY = ["notifications"] as const;
 
 export const useDecisions = () =>
   useQuery({
@@ -71,6 +72,17 @@ export const buildProfileMap = (profiles: { user_id: string; full_name: string |
   profiles.forEach(p => { map[p.user_id] = p.full_name || "Unbekannt"; });
   return map;
 };
+
+export const useNotifications = () =>
+  useQuery({
+    queryKey: NOTIFICATIONS_KEY,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("notifications").select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
 
 /** Hook to invalidate all decision-related caches */
 export const useInvalidateDecisions = () => {

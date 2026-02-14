@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
+import { useDecisions, useDependencies, useNotifications } from "@/hooks/useDecisions";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
 interface CriticalDecision {
   id: string;
@@ -36,52 +38,51 @@ interface SystemicRisk {
 const WarRoom = () => {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [criticals, setCriticals] = useState<CriticalDecision[]>([]);
-  const [risks, setRisks] = useState<SystemicRisk[]>([]);
-  const [stats, setStats] = useState({ total: 0, open: 0, avgDays: 0, implementedThisMonth: 0, rejectedThisMonth: 0, escalations: 0 });
-  const [loading, setLoading] = useState(true);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
+
+  const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: allDeps = [], isLoading: loadingDeps } = useDependencies();
+  const { data: allNotifications = [], isLoading: loadingNotif } = useNotifications();
+  const loading = loadingDec || loadingDeps || loadingNotif || checkingAdmin;
 
   useEffect(() => {
     if (!user) return;
     supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
-      const admin = (data?.length ?? 0) > 0;
-      setIsAdmin(admin);
-      if (admin) loadData();
-      else setLoading(false);
+      setIsAdmin((data?.length ?? 0) > 0);
+      setCheckingAdmin(false);
     });
   }, [user]);
 
-  const loadData = async () => {
-    setLoading(true);
+  const escalationNotifications = useMemo(() =>
+    allNotifications.filter(n => n.type === "escalation"), [allNotifications]);
 
-    const [{ data: decisions }, { data: notifications }, { data: deps }] = await Promise.all([
-      supabase.from("decisions").select("*"),
-      supabase.from("notifications").select("*").eq("type", "escalation"),
-      supabase.from("decision_dependencies").select("*"),
-    ]);
-
-    if (!decisions) { setLoading(false); return; }
+  const { criticals, risks, stats } = useMemo(() => {
+    if (!isAdmin || allDecisions.length === 0) {
+      return {
+        criticals: [] as CriticalDecision[],
+        risks: [] as SystemicRisk[],
+        stats: { total: 0, open: 0, avgDays: 0, implementedThisMonth: 0, rejectedThisMonth: 0, escalations: 0 },
+      };
+    }
 
     const now = new Date();
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Stats
-    const open = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
-    const implemented = decisions.filter(d => d.status === "implemented" && new Date(d.created_at) >= thisMonth);
-    const rejected = decisions.filter(d => d.status === "rejected" && new Date(d.created_at) >= thisMonth);
+    const open = allDecisions.filter(d => !["implemented", "rejected"].includes(d.status));
+    const implemented = allDecisions.filter(d => d.status === "implemented" && new Date(d.created_at) >= thisMonth);
+    const rejected = allDecisions.filter(d => d.status === "rejected" && new Date(d.created_at) >= thisMonth);
     const durations = open.map(d => differenceInDays(now, new Date(d.created_at)));
     const avgDays = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
 
-    setStats({
-      total: decisions.length,
+    const computedStats = {
+      total: allDecisions.length,
       open: open.length,
       avgDays,
       implementedThisMonth: implemented.length,
       rejectedThisMonth: rejected.length,
-      escalations: (notifications || []).filter(n => new Date(n.created_at) >= thisMonth).length,
-    });
+      escalations: escalationNotifications.filter(n => new Date(n.created_at) >= thisMonth).length,
+    };
 
-    // Critical decisions - scored by urgency
+    // Critical decisions
     const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
     const scored = open.map(d => {
       const daysOpen = differenceInDays(now, new Date(d.created_at));
@@ -96,74 +97,52 @@ const WarRoom = () => {
       return { ...d, daysOpen, overdue, urgencyScore } as CriticalDecision;
     });
     scored.sort((a, b) => b.urgencyScore - a.urgencyScore);
-    setCriticals(scored.slice(0, 5));
 
     // Systemic risks
     const detectedRisks: SystemicRisk[] = [];
-
-    // Stale decisions (>14 days in draft/review)
     const stale = open.filter(d => differenceInDays(now, new Date(d.created_at)) > 14 && ["draft", "review"].includes(d.status));
     if (stale.length > 0) {
       detectedRisks.push({
-        type: "stale",
-        severity: stale.length > 3 ? "critical" : stale.length > 1 ? "high" : "medium",
-        title: "Stagnierende Entscheidungen",
-        detail: `${stale.length} Entscheidungen seit >14 Tagen ohne Fortschritt`,
-        metric: `${stale.length} blockiert`,
+        type: "stale", severity: stale.length > 3 ? "critical" : stale.length > 1 ? "high" : "medium",
+        title: "Stagnierende Entscheidungen", detail: `${stale.length} Entscheidungen seit >14 Tagen ohne Fortschritt`, metric: `${stale.length} blockiert`,
       });
     }
 
-    // Escalation surge
-    const recentEscalations = (notifications || []).filter(n => differenceInDays(now, new Date(n.created_at)) <= 7).length;
+    const recentEscalations = escalationNotifications.filter(n => differenceInDays(now, new Date(n.created_at)) <= 7).length;
     if (recentEscalations > 2) {
       detectedRisks.push({
-        type: "escalation",
-        severity: recentEscalations > 5 ? "critical" : "high",
-        title: "Eskalationswelle",
-        detail: `${recentEscalations} Eskalationen in den letzten 7 Tagen`,
-        metric: `${recentEscalations} diese Woche`,
+        type: "escalation", severity: recentEscalations > 5 ? "critical" : "high",
+        title: "Eskalationswelle", detail: `${recentEscalations} Eskalationen in den letzten 7 Tagen`, metric: `${recentEscalations} diese Woche`,
       });
     }
 
-    // Dependency bottleneck
-    const blockedIds = new Set((deps || []).map(d => d.target_decision_id));
+    const blockedIds = new Set(allDeps.map(d => d.target_decision_id));
     const blockedOpen = open.filter(d => blockedIds.has(d.id));
     if (blockedOpen.length > 1) {
       detectedRisks.push({
-        type: "bottleneck",
-        severity: blockedOpen.length > 3 ? "critical" : "high",
-        title: "Abhängigkeits-Engpass",
-        detail: `${blockedOpen.length} offene Entscheidungen werden durch Abhängigkeiten blockiert`,
-        metric: `${blockedOpen.length} blockiert`,
+        type: "bottleneck", severity: blockedOpen.length > 3 ? "critical" : "high",
+        title: "Abhängigkeits-Engpass", detail: `${blockedOpen.length} offene Entscheidungen werden durch Abhängigkeiten blockiert`, metric: `${blockedOpen.length} blockiert`,
       });
     }
 
-    // High rejection rate
-    const recentTotal = decisions.filter(d => new Date(d.created_at) >= thisMonth).length;
+    const recentTotal = allDecisions.filter(d => new Date(d.created_at) >= thisMonth).length;
     const rejRate = recentTotal > 0 ? (rejected.length / recentTotal) * 100 : 0;
     if (rejRate > 30 && recentTotal >= 3) {
       detectedRisks.push({
-        type: "quality",
-        severity: rejRate > 50 ? "critical" : "high",
-        title: "Hohe Ablehnungsrate",
-        detail: `${Math.round(rejRate)}% der Entscheidungen diesen Monat wurden abgelehnt`,
-        metric: `${Math.round(rejRate)}%`,
+        type: "quality", severity: rejRate > 50 ? "critical" : "high",
+        title: "Hohe Ablehnungsrate", detail: `${Math.round(rejRate)}% der Entscheidungen diesen Monat wurden abgelehnt`, metric: `${Math.round(rejRate)}%`,
       });
     }
 
     if (detectedRisks.length === 0) {
       detectedRisks.push({
-        type: "quality",
-        severity: "medium",
-        title: "Keine kritischen Risiken",
-        detail: "Das System läuft stabil. Weiter beobachten.",
-        metric: "✓ OK",
+        type: "quality", severity: "medium",
+        title: "Keine kritischen Risiken", detail: "Das System läuft stabil. Weiter beobachten.", metric: "✓ OK",
       });
     }
 
-    setRisks(detectedRisks);
-    setLoading(false);
-  };
+    return { criticals: scored.slice(0, 5), risks: detectedRisks, stats: computedStats };
+  }, [allDecisions, allDeps, escalationNotifications, isAdmin]);
 
   const severityColor = (s: string) =>
     s === "critical" ? "border-destructive bg-destructive/10" : s === "high" ? "border-warning bg-warning/10" : "border-border bg-muted/30";
@@ -187,9 +166,7 @@ const WarRoom = () => {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <Activity className="w-8 h-8 animate-pulse text-primary" />
-          </div>
+          <AnalysisPageSkeleton cards={6} sections={2} />
         ) : isAdmin === false ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-40" />
