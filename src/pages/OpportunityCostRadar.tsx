@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Timer } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 interface CostEntry {
   id: string;
@@ -117,15 +119,7 @@ const OpportunityCostRadar = () => {
 
   const maxDailyCost = Math.max(...entries.map(e => e.dailyCost), 1);
 
-  if (loading) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground text-sm">Berechne Opportunitätskosten...</div>
-        </div>
-      </AppLayout>
-    );
-  }
+  if (loading) return <AnalysisPageSkeleton cards={3} sections={2} />;
 
   return (
     <AppLayout>
@@ -261,11 +255,12 @@ const OpportunityCostRadar = () => {
       </div>
 
       {entries.length === 0 && (
-        <div className="glass-card p-12 text-center">
-          <DollarSign className="w-12 h-12 text-success mx-auto mb-4 opacity-40" />
-          <h3 className="font-display text-xl font-semibold mb-2">Keine offenen Kosten</h3>
-          <p className="text-muted-foreground">Alle Entscheidungen sind abgeschlossen. Hervorragend!</p>
-        </div>
+        <EmptyAnalysisState
+          icon={DollarSign}
+          title="Keine offenen Kosten"
+          description="Alle Entscheidungen sind abgeschlossen oder es gibt noch keine offenen Entscheidungen."
+          hint="Offene Entscheidungen generieren automatisch Opportunity-Costs"
+        />
       )}
     </AppLayout>
   );

@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock } from "lucide-react";
+import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 interface TeamFriction {
   teamId: string;
@@ -248,12 +250,23 @@ const FrictionMap = () => {
     return "bg-muted/20";
   };
 
-  if (loading) {
+  if (loading) return <AnalysisPageSkeleton cards={4} sections={2} />;
+
+  if (teamFriction.length === 0) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground text-sm">Analysiere organisatorische Reibung...</div>
+        <div className="mb-8">
+          <h1 className="font-display text-3xl font-bold">Organizational Friction Map™</h1>
+          <p className="text-muted-foreground">Wo entstehen Reibungsverluste in der Organisation?</p>
         </div>
+        <EmptyAnalysisState
+          icon={Flame}
+          title="Keine Friction-Daten"
+          description="Erstelle Teams und weise ihnen Entscheidungen zu, um Reibungspunkte zu identifizieren."
+          ctaLabel="Teams erstellen"
+          ctaRoute="/teams"
+          hint="Friction wird automatisch analysiert, sobald Teams Entscheidungen bearbeiten"
+        />
       </AppLayout>
     );
   }
