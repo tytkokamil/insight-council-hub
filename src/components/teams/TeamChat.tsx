@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Send, FileText, Trash2, Paperclip, Image, File, X, Download } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Send, FileText, Trash2, Paperclip, File, X, Download, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,52 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const [decisions, setDecisions] = useState<Record<string, string>>({});
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<globalThis.File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [linkedDecisionId, setLinkedDecisionId] = useState<string | null>(null);
+  const [showLinkMenu, setShowLinkMenu] = useState(false);
+  const [linkFilter, setLinkFilter] = useState("");
+  const [linkMenuIndex, setLinkMenuIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const linkMenuRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
+
+  // Detect /link command in input
+  const linkMatch = newMessage.match(/\/link\s*(.*)/i);
+  const isLinkMode = !!linkMatch;
+
+  useEffect(() => {
+    if (isLinkMode) {
+      setShowLinkMenu(true);
+      setLinkFilter(linkMatch![1] || "");
+      setLinkMenuIndex(0);
+    } else {
+      setShowLinkMenu(false);
+      setLinkFilter("");
+    }
+  }, [newMessage]);
+
+  const filteredDecisions = useMemo(() => {
+    const entries = Object.entries(decisions);
+    if (!linkFilter) return entries;
+    const lower = linkFilter.toLowerCase();
+    return entries.filter(([, title]) => title.toLowerCase().includes(lower));
+  }, [decisions, linkFilter]);
+
+  const selectDecision = (id: string, title: string) => {
+    setLinkedDecisionId(id);
+    setNewMessage(newMessage.replace(/\/link\s*.*/i, "").trimEnd());
+    setShowLinkMenu(false);
+    toast.success(`Entscheidung verknüpft: ${title}`);
+    inputRef.current?.focus();
+  };
+
+  const clearLinkedDecision = () => {
+    setLinkedDecisionId(null);
+  };
 
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
@@ -180,7 +220,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const uploadFile = async (file: File): Promise<{ url: string; name: string; type: string } | null> => {
+  const uploadFile = async (file: globalThis.File): Promise<{ url: string; name: string; type: string } | null> => {
     if (!user) return null;
     const ext = file.name.split(".").pop();
     const path = `${user.id}/${teamId}/${Date.now()}.${ext}`;
@@ -194,28 +234,32 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   };
 
   const handleSend = async () => {
-    if ((!newMessage.trim() && !selectedFile) || !user) return;
+    if ((!newMessage.trim() && !selectedFile && !linkedDecisionId) || !user) return;
     setSending(true);
 
     let fileData: { url: string; name: string; type: string } | null = null;
     if (selectedFile) {
       fileData = await uploadFile(selectedFile);
-      if (!fileData && !newMessage.trim()) {
+      if (!fileData && !newMessage.trim() && !linkedDecisionId) {
         setSending(false);
         return;
       }
     }
 
+    const content = newMessage.trim() || (fileData ? fileData.name : (linkedDecisionId ? `📋 ${decisions[linkedDecisionId] || "Entscheidung"}` : ""));
+
     await supabase.from("team_messages").insert({
       team_id: teamId,
       user_id: user.id,
-      content: newMessage.trim() || (fileData ? fileData.name : ""),
+      content,
+      decision_id: linkedDecisionId,
       file_url: fileData?.url ?? null,
       file_name: fileData?.name ?? null,
       file_type: fileData?.type ?? null,
     });
 
     setNewMessage("");
+    setLinkedDecisionId(null);
     clearFile();
     setSending(false);
   };
@@ -225,6 +269,30 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showLinkMenu && filteredDecisions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setLinkMenuIndex((i) => Math.min(i + 1, filteredDecisions.length - 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setLinkMenuIndex((i) => Math.max(i - 1, 0));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const [id, title] = filteredDecisions[linkMenuIndex];
+        selectDecision(id, title);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setShowLinkMenu(false);
+        setNewMessage(newMessage.replace(/\/link\s*.*/i, ""));
+        return;
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -324,9 +392,9 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
                   )}
                   {renderAttachment(msg)}
                   {msg.decision_id && decisions[msg.decision_id] && (
-                    <div className="mt-1 flex items-center gap-1 text-[10px] text-primary">
-                      <FileText className="w-3 h-3" />
-                      <span>{decisions[msg.decision_id]}</span>
+                    <div className="mt-1 flex items-center gap-1.5 text-[11px] text-primary bg-primary/5 border border-primary/20 rounded-md px-2 py-1 inline-flex">
+                      <Link2 className="w-3 h-3" />
+                      <span className="font-medium">{decisions[msg.decision_id]}</span>
                     </div>
                   )}
                 </div>
@@ -335,6 +403,19 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
           })
         )}
       </div>
+
+      {/* Linked decision preview */}
+      {linkedDecisionId && (
+        <div className="px-4 py-2 border-t border-border bg-primary/5 flex items-center gap-2">
+          <Link2 className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-xs font-medium text-primary truncate flex-1">
+            {decisions[linkedDecisionId] || "Entscheidung"}
+          </span>
+          <button onClick={clearLinkedDecision} className="text-muted-foreground hover:text-destructive">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* File preview */}
       {selectedFile && (
@@ -354,7 +435,36 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
       )}
 
       {/* Input */}
-      <div className="border-t border-border px-4 py-3">
+      <div className="border-t border-border px-4 py-3 relative">
+        {/* /link autocomplete menu */}
+        {showLinkMenu && (
+          <div
+            ref={linkMenuRef}
+            className="absolute bottom-full left-4 right-4 mb-1 bg-popover border border-border rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-50"
+          >
+            {filteredDecisions.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-muted-foreground">
+                Keine Entscheidungen gefunden
+              </div>
+            ) : (
+              filteredDecisions.map(([id, title], i) => (
+                <button
+                  key={id}
+                  onClick={() => selectDecision(id, title)}
+                  className={`w-full text-left px-3 py-2 text-sm flex items-center gap-2 hover:bg-accent transition-colors ${
+                    i === linkMenuIndex ? "bg-accent" : ""
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span className="truncate">{title}</span>
+                </button>
+              ))
+            )}
+            <div className="px-3 py-1.5 border-t border-border text-[10px] text-muted-foreground">
+              ↑↓ navigieren · Enter auswählen · Esc abbrechen
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <input
             ref={fileInputRef}
@@ -373,16 +483,17 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
             <Paperclip className="w-4 h-4" />
           </Button>
           <input
+            ref={inputRef}
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Nachricht schreiben..."
+            placeholder="Nachricht schreiben... /link zum Verknüpfen"
             className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
           <Button
             onClick={handleSend}
-            disabled={(!newMessage.trim() && !selectedFile) || sending}
+            disabled={(!newMessage.trim() && !selectedFile && !linkedDecisionId) || sending}
             size="icon"
             className="h-10 w-10 shrink-0"
           >
