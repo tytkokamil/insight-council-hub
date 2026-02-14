@@ -10,6 +10,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { supabase } from "@/integrations/supabase/client";
 import NotificationCenter from "./NotificationCenter";
 import TeamSwitcher from "./TeamSwitcher";
+import CommandPalette from "./CommandPalette";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navGroups = [
@@ -225,6 +226,8 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           {children}
         </div>
       </main>
+
+      <CommandPalette />
     </div>
   );
 };
