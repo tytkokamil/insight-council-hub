@@ -5,7 +5,6 @@ import {
   GitBranch,
   AlertTriangle,
   TrendingUp,
-  Swords,
   BarChart3,
   Sparkles,
   Shield,
@@ -14,8 +13,7 @@ import {
   Zap,
   ArrowRight,
   CheckCircle2,
-  XCircle,
-  Activity,
+  XOctagon,
 } from "lucide-react";
 
 const features = [
@@ -40,7 +38,7 @@ const features = [
   {
     id: "war-room",
     label: "War Room",
-    icon: Swords,
+    icon: Zap,
     title: "Krisenmanagement in Echtzeit",
     description:
       "Wenn es brennt, zählt jede Sekunde. Der War Room bündelt kritische Entscheidungen, eskaliert automatisch und koordiniert dein Team.",
@@ -148,7 +146,7 @@ const WarRoomPreview = () => (
       <span className="ml-auto text-[10px] text-destructive/70">LIVE</span>
     </motion.div>
     {[
-      { title: "Server Migration", urgency: "Kritisch", time: "2h überfällig", icon: XCircle, color: "text-destructive" },
+      { title: "Server Migration", urgency: "Kritisch", time: "2h überfällig", icon: XOctagon, color: "text-destructive" },
       { title: "Vendor Vertrag", urgency: "Hoch", time: "Deadline heute", icon: AlertTriangle, color: "text-warning" },
       { title: "Security Patch", urgency: "Kritisch", time: "Eskaliert", icon: Shield, color: "text-destructive" },
     ].map((item, i) => (

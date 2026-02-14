@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion, animate } from "framer-motion";
 import { TrendingUp, Clock, Target, Users } from "lucide-react";
 import { useEffect, useRef } from "react";
 
