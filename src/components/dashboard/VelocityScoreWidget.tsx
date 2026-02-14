@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Zap, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
 
 const VelocityScoreWidget = () => {
@@ -48,39 +49,42 @@ const VelocityScoreWidget = () => {
   const trendLabel = trend === "up" ? "Schneller als letzten Monat" : trend === "down" ? "Langsamer als letzten Monat" : "Stabil";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Zap className="w-4 h-4 text-primary" />
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Zap className="w-4 h-4 text-primary" />
+          </div>
+          <CardTitle className="text-sm">Decision Velocity</CardTitle>
         </div>
-        <h3 className="text-sm font-semibold">Decision Velocity</h3>
-      </div>
-
-      {avgDays !== null ? (
-        <>
-          <div className="flex items-end gap-2 mb-2">
-            <span className="font-display text-3xl font-bold">{avgDays}</span>
-            <span className="text-sm text-muted-foreground mb-1">Tage Ø</span>
-          </div>
-          <div className={`flex items-center gap-1 text-xs ${trendColor} mb-3`}>
-            <TrendIcon className="w-3 h-3" />
-            <span>{trendLabel}</span>
-          </div>
-          {categoryBreakdown.length > 0 && (
-            <div className="space-y-1.5 pt-2 border-t border-border">
-              {categoryBreakdown.slice(0, 4).map(c => (
-                <div key={c.category} className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground capitalize">{c.category}</span>
-                  <span className="text-xs font-medium">{c.avgDays}d</span>
-                </div>
-              ))}
+      </CardHeader>
+      <CardContent>
+        {avgDays !== null ? (
+          <>
+            <div className="flex items-end gap-2 mb-2">
+              <span className="font-display text-3xl font-bold">{avgDays}</span>
+              <span className="text-sm text-muted-foreground mb-1">Tage Ø</span>
             </div>
-          )}
-        </>
-      ) : (
-        <p className="text-xs text-muted-foreground">Noch keine implementierten Entscheidungen.</p>
-      )}
-    </motion.div>
+            <div className={`flex items-center gap-1 text-xs ${trendColor} mb-4`}>
+              <TrendIcon className="w-3.5 h-3.5" />
+              <span>{trendLabel}</span>
+            </div>
+            {categoryBreakdown.length > 0 && (
+              <div className="space-y-2 pt-3 border-t border-border">
+                {categoryBreakdown.slice(0, 4).map(c => (
+                  <div key={c.category} className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground capitalize">{c.category}</span>
+                    <span className="text-xs font-medium">{c.avgDays}d</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">Noch keine implementierten Entscheidungen.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

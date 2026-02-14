@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { DollarSign, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
 
 const DecisionCostWidget = () => {
@@ -26,35 +27,38 @@ const DecisionCostWidget = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-          <DollarSign className="w-4 h-4 text-destructive" />
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+            <DollarSign className="w-4 h-4 text-destructive" />
+          </div>
+          <CardTitle className="text-sm">Verzögerungskosten</CardTitle>
         </div>
-        <h3 className="text-sm font-semibold">Verzögerungskosten</h3>
-      </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-end gap-2 mb-1">
+          <span className="font-display text-3xl font-bold text-destructive">{formatCost(totalCost)}</span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          {openDecisions.length} offene Entscheidungen verursachen Kosten
+        </p>
 
-      <div className="flex items-end gap-2 mb-1">
-        <span className="font-display text-3xl font-bold text-destructive">{formatCost(totalCost)}</span>
-      </div>
-      <p className="text-xs text-muted-foreground mb-3">
-        {openDecisions.length} offene Entscheidungen verursachen Kosten
-      </p>
-
-      {topCosts.length > 0 && (
-        <div className="space-y-1.5 pt-2 border-t border-border">
-          {topCosts.map((c, i) => (
-            <div key={i} className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <AlertTriangle className={`w-3 h-3 shrink-0 ${c.priority === "critical" ? "text-destructive" : c.priority === "high" ? "text-warning" : "text-muted-foreground"}`} />
-                <span className="text-xs truncate">{c.title}</span>
+        {topCosts.length > 0 && (
+          <div className="space-y-2 pt-3 border-t border-border">
+            {topCosts.map((c, i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${c.priority === "critical" ? "text-destructive" : c.priority === "high" ? "text-warning" : "text-muted-foreground"}`} />
+                  <span className="text-xs truncate">{c.title}</span>
+                </div>
+                <span className="text-xs font-bold text-destructive shrink-0 ml-2">{formatCost(c.cost)}</span>
               </div>
-              <span className="text-xs font-bold text-destructive shrink-0 ml-2">{formatCost(c.cost)}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </motion.div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

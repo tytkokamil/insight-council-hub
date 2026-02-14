@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Activity, Zap, Target, HeartPulse, TrendingUp, ShieldAlert, GitPullRequest, Lightbulb, ArrowUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -120,76 +121,78 @@ const MomentumScoreWidget = () => {
   ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 cursor-pointer" onClick={() => setShowDetails(!showDetails)}>
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Activity className="w-4 h-4 text-primary" />
-        </div>
-        <div className="flex-1">
-          <h3 className="text-sm font-semibold">Momentum Score™</h3>
-          <p className="text-[10px] text-muted-foreground">5-Faktor Organisationsgesundheit</p>
-        </div>
-      </div>
-
-      {score !== null ? (
-        <>
-          <div className="flex items-end gap-2 mb-1">
-            <span className={`font-display text-4xl font-bold ${getColor(score)}`}>{score}</span>
-            <span className="text-sm text-muted-foreground mb-1">/100</span>
-            {predictedScore && predictedScore > score && (
-              <div className="flex items-center gap-1 text-success text-xs mb-1 ml-auto">
-                <ArrowUp className="w-3 h-3" />
-                <span>→ {predictedScore} möglich</span>
-              </div>
-            )}
+    <Card className="cursor-pointer hover:border-primary/20 transition-colors" onClick={() => setShowDetails(!showDetails)}>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-primary" />
           </div>
-          <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-4">
-            <motion.div className={`h-full rounded-full ${getBgColor(score)}`} initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 1, ease: "easeOut" }} />
+          <div className="flex-1">
+            <CardTitle className="text-sm">Momentum Score™</CardTitle>
+            <p className="text-xs text-muted-foreground">5-Faktor Organisationsgesundheit</p>
           </div>
-
-          <div className="space-y-2">
-            {components.map(c => (
-              <div key={c.label} className="flex items-center gap-2">
-                <c.icon className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span className="text-xs text-muted-foreground w-20 truncate" title={c.desc}>{c.label}</span>
-                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                  <motion.div className={`h-full rounded-full ${c.value / c.max > 0.7 ? "bg-success" : c.value / c.max > 0.4 ? "bg-warning" : "bg-destructive"}`} initial={{ width: 0 }} animate={{ width: `${(c.value / c.max) * 100}%` }} transition={{ duration: 0.8, delay: 0.2 }} />
+        </div>
+      </CardHeader>
+      <CardContent>
+        {score !== null ? (
+          <>
+            <div className="flex items-end gap-2 mb-1">
+              <span className={`font-display text-4xl font-bold ${getColor(score)}`}>{score}</span>
+              <span className="text-sm text-muted-foreground mb-1">/100</span>
+              {predictedScore && predictedScore > score && (
+                <div className="flex items-center gap-1 text-success text-xs mb-1 ml-auto">
+                  <ArrowUp className="w-3 h-3" />
+                  <span>→ {predictedScore} möglich</span>
                 </div>
-                <span className="text-xs font-medium w-8 text-right">{c.value}/{c.max}</span>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+            <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-4">
+              <motion.div className={`h-full rounded-full ${getBgColor(score)}`} initial={{ width: 0 }} animate={{ width: `${score}%` }} transition={{ duration: 1, ease: "easeOut" }} />
+            </div>
 
-          {showDetails && recommendations.length > 0 && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 pt-3 border-t border-border space-y-2">
-              <div className="flex items-center gap-1.5 mb-1">
-                <Lightbulb className="w-3.5 h-3.5 text-warning" />
-                <span className="text-xs font-semibold">Prädiktive Empfehlungen</span>
-              </div>
-              {recommendations.map((rec, i) => (
-                <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-muted/20 text-xs">
-                  <ArrowUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
-                  <span className="flex-1 text-muted-foreground">{rec.text}</span>
-                  <span className="text-success font-bold shrink-0">+{rec.impact}</span>
+            <div className="space-y-2.5">
+              {components.map(c => (
+                <div key={c.label} className="flex items-center gap-2">
+                  <c.icon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <span className="text-xs text-muted-foreground w-20 truncate" title={c.desc}>{c.label}</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <motion.div className={`h-full rounded-full ${c.value / c.max > 0.7 ? "bg-success" : c.value / c.max > 0.4 ? "bg-warning" : "bg-destructive"}`} initial={{ width: 0 }} animate={{ width: `${(c.value / c.max) * 100}%` }} transition={{ duration: 0.8, delay: 0.2 }} />
+                  </div>
+                  <span className="text-xs font-medium w-8 text-right text-muted-foreground">{c.value}/{c.max}</span>
                 </div>
               ))}
-              {predictedScore && (
-                <p className="text-[10px] text-muted-foreground text-center mt-1">
-                  Wenn du diese 3 Maßnahmen umsetzt, steigt dein Score auf{" "}
-                  <span className="text-success font-bold">{predictedScore}</span>
-                </p>
-              )}
-            </motion.div>
-          )}
+            </div>
 
-          {!showDetails && recommendations.length > 0 && (
-            <p className="text-[10px] text-muted-foreground text-center mt-3">Klicken für Empfehlungen</p>
-          )}
-        </>
-      ) : (
-        <p className="text-xs text-muted-foreground">Berechne...</p>
-      )}
-    </motion.div>
+            {showDetails && recommendations.length > 0 && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 pt-3 border-t border-border space-y-2">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Lightbulb className="w-3.5 h-3.5 text-warning" />
+                  <span className="text-xs font-semibold">Prädiktive Empfehlungen</span>
+                </div>
+                {recommendations.map((rec, i) => (
+                  <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs">
+                    <ArrowUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                    <span className="flex-1 text-muted-foreground">{rec.text}</span>
+                    <span className="text-success font-bold shrink-0">+{rec.impact}</span>
+                  </div>
+                ))}
+                {predictedScore && (
+                  <p className="text-xs text-muted-foreground text-center mt-1">
+                    Score-Potenzial: <span className="text-success font-bold">{predictedScore}</span>
+                  </p>
+                )}
+              </motion.div>
+            )}
+
+            {!showDetails && recommendations.length > 0 && (
+              <p className="text-xs text-muted-foreground text-center mt-3">Klicken für Empfehlungen</p>
+            )}
+          </>
+        ) : (
+          <p className="text-xs text-muted-foreground">Berechne...</p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
