@@ -8,26 +8,46 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-const navItems = [
-  { icon: Target, label: "Executive", path: "/executive" },
-  { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-  { icon: FileText, label: "Decisions", path: "/decisions" },
-  { icon: GitBranch, label: "Graph", path: "/graph" },
-  { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
-  { icon: DollarSign, label: "Kosten", path: "/costs" },
-  { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
-  { icon: Calendar, label: "Timeline", path: "/timeline" },
-  { icon: Crosshair, label: "Strategie", path: "/strategy" },
-  { icon: Flame, label: "Friction", path: "/friction" },
-  { icon: Activity, label: "Health", path: "/health" },
-  { icon: Dna, label: "DNA", path: "/dna" },
-  { icon: Zap, label: "Engine", path: "/engine" },
-  { icon: Trophy, label: "Benchmarking", path: "/benchmarking" },
-  { icon: FlaskConical, label: "Szenarien", path: "/scenarios" },
-  { icon: Sun, label: "Briefing", path: "/briefing" },
-  { icon: Users, label: "Teams", path: "/teams" },
-  { icon: TrendingUp, label: "Analytics", path: "/analytics" },
-  { icon: Settings, label: "Settings", path: "/settings" },
+const navGroups = [
+  {
+    label: "Übersicht",
+    items: [
+      { icon: Target, label: "Executive", path: "/executive" },
+      { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
+      { icon: FileText, label: "Decisions", path: "/decisions" },
+      { icon: Sun, label: "Briefing", path: "/briefing" },
+    ],
+  },
+  {
+    label: "Analyse",
+    items: [
+      { icon: GitBranch, label: "Graph", path: "/graph" },
+      { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
+      { icon: DollarSign, label: "Kosten", path: "/costs" },
+      { icon: Flame, label: "Friction", path: "/friction" },
+      { icon: Activity, label: "Health", path: "/health" },
+      { icon: TrendingUp, label: "Analytics", path: "/analytics" },
+    ],
+  },
+  {
+    label: "Intelligence",
+    items: [
+      { icon: Dna, label: "DNA", path: "/dna" },
+      { icon: Zap, label: "Engine", path: "/engine" },
+      { icon: Trophy, label: "Benchmarking", path: "/benchmarking" },
+      { icon: FlaskConical, label: "Szenarien", path: "/scenarios" },
+      { icon: Calendar, label: "Timeline", path: "/timeline" },
+      { icon: Crosshair, label: "Strategie", path: "/strategy" },
+    ],
+  },
+  {
+    label: "Verwaltung",
+    items: [
+      { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
+      { icon: Users, label: "Teams", path: "/teams" },
+      { icon: Settings, label: "Settings", path: "/settings" },
+    ],
+  },
 ];
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
@@ -68,22 +88,33 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <span className="font-display font-bold text-lg">DecisionOS</span>
         </Link>
 
-        <nav className="flex-1 space-y-1">
-          {navItems.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin).map((item) => {
-            const active = location.pathname === item.path;
+        <nav className="flex-1 space-y-5 overflow-y-auto">
+          {navGroups.map((group) => {
+            const visibleItems = group.items.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin);
+            if (visibleItems.length === 0) return null;
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                {item.label}
-              </Link>
+              <div key={group.label}>
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">{group.label}</p>
+                <div className="space-y-0.5">
+                  {visibleItems.map((item) => {
+                    const active = location.pathname === item.path;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          active
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        }`}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
