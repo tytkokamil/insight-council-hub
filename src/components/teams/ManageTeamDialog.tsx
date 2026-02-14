@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { UserPlus, Trash2, User, Mail, Clock, Check } from "lucide-react";
+import { UserPlus, Trash2, User, Mail, Clock, Check, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import TeamChat from "./TeamChat";
 
 interface Props {
   team: any;
@@ -93,74 +95,91 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border max-w-md">
+      <DialogContent className="glass-card border-border max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">{team.name}</DialogTitle>
           <p className="text-sm text-muted-foreground">{team.description || "Keine Beschreibung"}</p>
         </DialogHeader>
 
-        <div className="space-y-4 mt-2">
-          {/* Invite by email */}
-          <form onSubmit={sendInvite} className="space-y-2">
-            <label className="text-sm font-medium flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              Per E-Mail einladen
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="email@beispiel.de"
-                className={inputClass}
-                required
-              />
-              <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()}>
-                {inviting ? "..." : <UserPlus className="w-4 h-4" />}
-              </Button>
-            </div>
-          </form>
+        <Tabs defaultValue="members" className="mt-2">
+          <TabsList className="w-full">
+            <TabsTrigger value="members" className="flex-1 gap-1.5">
+              <User className="w-3.5 h-3.5" /> Mitglieder
+            </TabsTrigger>
+            <TabsTrigger value="chat" className="flex-1 gap-1.5">
+              <MessageCircle className="w-3.5 h-3.5" /> Chat
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Pending invitations */}
-          {pendingInvites.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
-                Ausstehende Einladungen ({pendingInvites.length})
-              </h3>
-              {pendingInvites.map((inv) => (
-                <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm flex-1 truncate">{inv.email}</span>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => cancelInvite(inv.id)}>
-                    <Trash2 className="w-3.5 h-3.5" />
+          <TabsContent value="members" className="mt-4">
+            <div className="space-y-4">
+              {/* Invite by email */}
+              <form onSubmit={sendInvite} className="space-y-2">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Per E-Mail einladen
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="email@beispiel.de"
+                    className={inputClass}
+                    required
+                  />
+                  <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()}>
+                    {inviting ? "..." : <UserPlus className="w-4 h-4" />}
                   </Button>
                 </div>
-              ))}
-            </div>
-          )}
+              </form>
 
-          {/* Current members */}
-          <div className="space-y-2 border-t border-border pt-3">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-              <Check className="w-3.5 h-3.5" />
-              Mitglieder ({members.length})
-            </h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {members.map((m) => (
-                <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm flex-1">{m.profiles?.full_name || "Unbekannt"}</span>
-                  {m.user_id !== user?.id && (
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => removeMember(m.id)} disabled={loading}>
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  )}
+              {/* Pending invitations */}
+              {pendingInvites.length > 0 && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5" />
+                    Ausstehende Einladungen ({pendingInvites.length})
+                  </h3>
+                  {pendingInvites.map((inv) => (
+                    <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm flex-1 truncate">{inv.email}</span>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => cancelInvite(inv.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Current members */}
+              <div className="space-y-2 border-t border-border pt-3">
+                <h3 className="text-sm font-medium flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5" />
+                  Mitglieder ({members.length})
+                </h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {members.map((m) => (
+                    <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm flex-1">{m.profiles?.full_name || "Unbekannt"}</span>
+                      {m.user_id !== user?.id && (
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => removeMember(m.id)} disabled={loading}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="chat" className="mt-0">
+            <TeamChat teamId={team.id} teamName={team.name} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
