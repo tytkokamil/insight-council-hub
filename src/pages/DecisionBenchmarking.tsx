@@ -130,10 +130,9 @@ const DecisionBenchmarking = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-display font-bold flex items-center gap-2">
-            <Trophy className="w-8 h-8 text-primary" /> Decision Benchmarking™
-          </h1>
-          <p className="text-muted-foreground mt-1">Vergleichen Sie Ihre Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen.</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vergleich</p>
+          <h1 className="font-display text-xl font-bold">Decision Benchmarking</h1>
+          <p className="text-sm text-muted-foreground mt-1">Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen.</p>
         </div>
 
         {loading ? (

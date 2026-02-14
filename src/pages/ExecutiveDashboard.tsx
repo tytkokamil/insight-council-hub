@@ -35,10 +35,9 @@ const ExecutiveDashboard = () => {
     return (
       <AppLayout>
         <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold flex items-center gap-2">
-            <Target className="w-8 h-8 text-primary" /> Executive Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">Unternehmensweite Entscheidungs-Intelligence auf einen Blick.</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
+          <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Unternehmensweite Entscheidungs-Intelligence auf einen Blick.</p>
         </div>
         <EmptyAnalysisState
           icon={Target}
@@ -116,10 +115,10 @@ const ExecutiveDashboard = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-display font-bold flex items-center gap-2">
-              <Target className="w-8 h-8 text-primary" /> Executive Dashboard
-            </h1>
-            <p className="text-muted-foreground mt-1">Unternehmensweite Entscheidungs-Intelligence auf einen Blick.</p>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
+              <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+            </div>
           </div>
           <Badge variant="outline" className="text-sm px-3 py-1">{archetype}</Badge>
         </div>

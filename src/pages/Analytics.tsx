@@ -64,9 +64,9 @@ const Analytics = () => {
   if (decisions.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Einblicke in deine Entscheidungsprozesse</p>
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
+          <h1 className="font-display text-xl font-bold">Analytics</h1>
         </div>
         <EmptyAnalysisState
           icon={BarChart3}
@@ -80,9 +80,9 @@ const Analytics = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Einblicke in deine Entscheidungsprozesse</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
+        <h1 className="font-display text-xl font-bold">Analytics</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

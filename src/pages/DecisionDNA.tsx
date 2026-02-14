@@ -248,9 +248,9 @@ const DecisionDNA = () => {
   if (traits.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">Decision DNA™</h1>
-          <p className="text-muted-foreground">Organisations-Diagnostik</p>
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
+          <h1 className="font-display text-xl font-bold">Decision DNA</h1>
         </div>
         <EmptyAnalysisState
           icon={Dna}
@@ -264,9 +264,9 @@ const DecisionDNA = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Decision DNA™</h1>
-        <p className="text-muted-foreground">Das genetische Profil deiner Organisation</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
+        <h1 className="font-display text-xl font-bold">Decision DNA</h1>
       </div>
 
       {/* Archetype Card */}

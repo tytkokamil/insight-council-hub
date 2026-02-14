@@ -175,14 +175,10 @@ const PredictiveTimeline = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Calendar className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-display font-bold">Predictive Decision Timeline™</h1>
-            <p className="text-sm text-muted-foreground">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
-          </div>
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
+          <h1 className="font-display text-xl font-bold">Predictive Timeline</h1>
+          <p className="text-sm text-muted-foreground mt-1">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
         </div>
 
         {loading ? (

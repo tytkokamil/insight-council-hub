@@ -246,9 +246,9 @@ const FrictionMap = () => {
   if (teamFriction.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">Organizational Friction Map™</h1>
-          <p className="text-muted-foreground">Wo entstehen Reibungsverluste in der Organisation?</p>
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
+          <h1 className="font-display text-xl font-bold">Friction Map</h1>
         </div>
         <EmptyAnalysisState
           icon={Flame}
@@ -264,9 +264,9 @@ const FrictionMap = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Organizational Friction Map™</h1>
-        <p className="text-muted-foreground">Wo entstehen Reibungsverluste in der Organisation?</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
+        <h1 className="font-display text-xl font-bold">Friction Map</h1>
       </div>
 
       {/* Summary */}

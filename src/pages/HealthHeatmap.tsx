@@ -149,9 +149,9 @@ const HealthHeatmap = () => {
   if (decisions.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold">Decision Health Heatmap™</h1>
-          <p className="text-muted-foreground">Wo ist das Unternehmen stark – und wo schwach?</p>
+        <div className="mb-6">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
+          <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
         </div>
         <EmptyAnalysisState
           icon={Heart}
@@ -165,9 +165,9 @@ const HealthHeatmap = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold">Decision Health Heatmap™</h1>
-        <p className="text-muted-foreground">Wo ist das Unternehmen stark – und wo schwach?</p>
+      <div className="mb-6">
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
+        <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
       </div>
 
       {/* Summary */}
