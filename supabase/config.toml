@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.decision-copilot]
 verify_jwt = false
+
+[functions.autonomous-escalation]
+verify_jwt = false
