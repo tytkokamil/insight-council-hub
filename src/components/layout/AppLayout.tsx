@@ -15,6 +15,7 @@ import {
   Shield,
   Calendar,
   Crosshair,
+  Flame,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ const navItems = [
   { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
   { icon: Calendar, label: "Timeline", path: "/timeline" },
   { icon: Crosshair, label: "Strategie", path: "/strategy" },
+  { icon: Flame, label: "Friction", path: "/friction" },
   { icon: Sun, label: "Briefing", path: "/briefing" },
   { icon: Users, label: "Teams", path: "/teams" },
   { icon: TrendingUp, label: "Analytics", path: "/analytics" },

@@ -19,6 +19,7 @@ import OpportunityCostRadar from "./pages/OpportunityCostRadar";
 import WarRoom from "./pages/WarRoom";
 import PredictiveTimeline from "./pages/PredictiveTimeline";
 import Strategy from "./pages/Strategy";
+import FrictionMap from "./pages/FrictionMap";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/warroom" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
             <Route path="/timeline" element={<ProtectedRoute><PredictiveTimeline /></ProtectedRoute>} />
             <Route path="/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
+            <Route path="/friction" element={<ProtectedRoute><FrictionMap /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
