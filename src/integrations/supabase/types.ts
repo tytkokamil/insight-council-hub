@@ -660,6 +660,9 @@ export type Database = {
           content: string
           created_at: string
           decision_id: string | null
+          file_name: string | null
+          file_type: string | null
+          file_url: string | null
           id: string
           team_id: string
           user_id: string
@@ -668,6 +671,9 @@ export type Database = {
           content: string
           created_at?: string
           decision_id?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           team_id: string
           user_id: string
@@ -676,6 +682,9 @@ export type Database = {
           content?: string
           created_at?: string
           decision_id?: string | null
+          file_name?: string | null
+          file_type?: string | null
+          file_url?: string | null
           id?: string
           team_id?: string
           user_id?: string
