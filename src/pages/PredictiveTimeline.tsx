@@ -105,6 +105,8 @@ const PredictiveTimeline = () => {
         ai_risk_score: d.ai_risk_score, escalation_level: d.escalation_level,
         daysOpen, predictedDaysLeft, predictedEnd, confidence, warning,
       };
+    });
+
     return timeline;
   }, [loading, allDecisions, deps]);
 
