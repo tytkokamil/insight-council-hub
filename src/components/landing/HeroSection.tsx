@@ -7,11 +7,11 @@ import ProductTourModal from "./ProductTourModal";
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 w-full">
       {/* Subtle ambient background */}
       <div className="absolute inset-0 mesh-gradient" />
-      <div className="floating-orb w-[600px] h-[600px] bg-primary/8 -top-40 -left-40" />
-      <div className="floating-orb w-[500px] h-[500px] bg-accent/6 top-1/3 -right-40" style={{ animationDelay: "2s" }} />
+      <div className="absolute w-[600px] h-[600px] bg-primary/8 -top-40 left-0 -translate-x-1/2 rounded-full blur-[80px] pointer-events-none animate-[float_8s_ease-in-out_infinite]" />
+      <div className="absolute w-[500px] h-[500px] bg-accent/6 top-1/3 right-0 translate-x-1/2 rounded-full blur-[80px] pointer-events-none animate-[float_8s_ease-in-out_infinite_2s]" />
 
       {/* Subtle dot pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--foreground)/0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
