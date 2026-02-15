@@ -296,7 +296,7 @@ const Decisions = () => {
                   <tr><td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">Keine Ergebnisse gefunden.</td></tr>
                 ) : (
                   filtered.map((decision) => (
-                    <tr key={decision.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedDecision(decision)}>
+                    <tr key={decision.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors row-highlight" onClick={() => setSelectedDecision(decision)}>
                       <td className="p-3">
                         <p className="text-sm font-medium">{decision.title}</p>
                         <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
