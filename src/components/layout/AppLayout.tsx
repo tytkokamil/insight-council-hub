@@ -13,6 +13,7 @@ import UserAvatar from "@/components/shared/UserAvatar";
 import NotificationCenter from "./NotificationCenter";
 import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { motion, AnimatePresence } from "framer-motion";
 
 const navGroups = [
@@ -225,6 +226,19 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Show onboarding for new users
+  useEffect(() => {
+    if (user && !localStorage.getItem(`onboarding_done_${user.id}`)) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
+  const completeOnboarding = () => {
+    if (user) localStorage.setItem(`onboarding_done_${user.id}`, "true");
+    setShowOnboarding(false);
+  };
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -343,6 +357,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       </main>
 
       <CommandPalette />
+      <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
     </div>
   );
 };
