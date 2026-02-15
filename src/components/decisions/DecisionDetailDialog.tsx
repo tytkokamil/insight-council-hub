@@ -27,16 +27,30 @@ interface Props {
 
 const statusOptions = ["draft", "review", "approved", "implemented", "rejected"] as const;
 
+const statusLabels: Record<string, string> = {
+  draft: "Entwurf",
+  review: "Review",
+  approved: "Genehmigt",
+  implemented: "Umgesetzt",
+  rejected: "Abgelehnt",
+};
+
 const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
   const { user } = useAuth();
   const [status, setStatus] = useState(decision?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [activeTab, setActiveTab] = useState("discussion");
 
   useEffect(() => {
     if (decision) setStatus(decision.status);
   }, [decision]);
+
+  // Reset to first tab when opening
+  useEffect(() => {
+    if (open) setActiveTab("discussion");
+  }, [open]);
 
   if (!decision) return null;
 
@@ -49,7 +63,6 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
       .eq("id", decision.id);
     if (!error) {
       setStatus(newStatus);
-      // Audit log
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
         user_id: user!.id,
@@ -64,6 +77,35 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   };
 
   const isOwner = user?.id === decision.created_by;
+
+  // Group tabs into categories for cleaner navigation
+  const tabGroups = [
+    {
+      label: "Kern",
+      tabs: [
+        { value: "discussion", icon: MessageSquare, label: "Diskussion" },
+        { value: "review", icon: GitPullRequest, label: "Review" },
+        { value: "ai", icon: Brain, label: "KI-Analyse" },
+      ],
+    },
+    {
+      label: "Intelligence",
+      tabs: [
+        { value: "alignment", icon: Users, label: "Alignment" },
+        { value: "whatif", icon: GitBranch, label: "What-If" },
+        { value: "dependencies", icon: Link2, label: "Graph" },
+        { value: "impact", icon: Target, label: "Impact" },
+      ],
+    },
+    {
+      label: "Strategie",
+      tabs: [
+        { value: "copilot", icon: Compass, label: "Co-Pilot" },
+        { value: "strategy", icon: Crosshair, label: "Strategie" },
+        { value: "audit", icon: History, label: "Historie" },
+      ],
+    },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,78 +134,51 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
               key={s}
               size="sm"
               variant={status === s ? "default" : "outline"}
-              className="text-xs capitalize h-7"
+              className="text-xs h-7"
               disabled={saving || (!isOwner && s !== "approved" && s !== "rejected")}
               onClick={() => handleStatusChange(s)}
             >
-              {s}
+              {statusLabels[s]}
             </Button>
           ))}
         </div>
 
-        <Tabs defaultValue="discussion" className="mt-4">
-          <TabsList className="w-full flex flex-wrap gap-1 h-auto p-1">
-            <TabsTrigger value="discussion" className="text-xs gap-1 flex-1 min-w-0">
-              <MessageSquare className="w-3 h-3" /> Diskussion
-            </TabsTrigger>
-            <TabsTrigger value="review" className="text-xs gap-1 flex-1 min-w-0">
-              <GitPullRequest className="w-3 h-3" /> Review
-            </TabsTrigger>
-            <TabsTrigger value="ai" className="text-xs gap-1 flex-1 min-w-0">
-              <Brain className="w-3 h-3" /> KI
-            </TabsTrigger>
-            <TabsTrigger value="alignment" className="text-xs gap-1 flex-1 min-w-0">
-              <Users className="w-3 h-3" /> Alignment
-            </TabsTrigger>
-            <TabsTrigger value="whatif" className="text-xs gap-1 flex-1 min-w-0">
-              <GitBranch className="w-3 h-3" /> What-If
-            </TabsTrigger>
-            <TabsTrigger value="dependencies" className="text-xs gap-1 flex-1 min-w-0">
-              <Link2 className="w-3 h-3" /> Graph
-            </TabsTrigger>
-            <TabsTrigger value="impact" className="text-xs gap-1 flex-1 min-w-0">
-              <Target className="w-3 h-3" /> Impact
-            </TabsTrigger>
-            <TabsTrigger value="copilot" className="text-xs gap-1 flex-1 min-w-0">
-              <Compass className="w-3 h-3" /> Co-Pilot
-            </TabsTrigger>
-            <TabsTrigger value="strategy" className="text-xs gap-1 flex-1 min-w-0">
-              <Crosshair className="w-3 h-3" /> Strategie
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="text-xs gap-1 flex-1 min-w-0">
-              <History className="w-3 h-3" /> Historie
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="discussion">
-            <DiscussionPanel decisionId={decision.id} />
-          </TabsContent>
-          <TabsContent value="review">
-            <ReviewPanel decision={decision} onUpdated={onUpdated} />
-          </TabsContent>
-          <TabsContent value="ai">
-            <AiAnalysisPanel decision={decision} onUpdated={onUpdated} />
-          </TabsContent>
-          <TabsContent value="alignment">
-            <StakeholderAlignmentPanel decisionId={decision.id} />
-          </TabsContent>
-          <TabsContent value="whatif">
-            <WhatIfSimulatorPanel decision={decision} />
-          </TabsContent>
-          <TabsContent value="dependencies">
-            <DependenciesPanel decisionId={decision.id} />
-          </TabsContent>
-          <TabsContent value="impact">
-            <ImpactTrackerPanel decision={decision} onUpdated={onUpdated} />
-          </TabsContent>
-          <TabsContent value="copilot">
-            <CoPilotPanel decision={decision} />
-          </TabsContent>
-          <TabsContent value="strategy">
-            <StrategyLinkPanel decisionId={decision.id} />
-          </TabsContent>
-          <TabsContent value="audit">
-            <AuditTrailPanel decisionId={decision.id} />
-          </TabsContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
+          {/* Grouped tab navigation */}
+          <div className="space-y-2 mb-4">
+            {tabGroups.map((group) => (
+              <div key={group.label}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 mb-1 px-1">{group.label}</p>
+                <div className="flex flex-wrap gap-1">
+                  {group.tabs.map((tab) => (
+                    <button
+                      key={tab.value}
+                      onClick={() => setActiveTab(tab.value)}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        activeTab === tab.value
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                      }`}
+                    >
+                      <tab.icon className="w-3 h-3" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <TabsContent value="discussion"><DiscussionPanel decisionId={decision.id} /></TabsContent>
+          <TabsContent value="review"><ReviewPanel decision={decision} onUpdated={onUpdated} /></TabsContent>
+          <TabsContent value="ai"><AiAnalysisPanel decision={decision} onUpdated={onUpdated} /></TabsContent>
+          <TabsContent value="alignment"><StakeholderAlignmentPanel decisionId={decision.id} /></TabsContent>
+          <TabsContent value="whatif"><WhatIfSimulatorPanel decision={decision} /></TabsContent>
+          <TabsContent value="dependencies"><DependenciesPanel decisionId={decision.id} /></TabsContent>
+          <TabsContent value="impact"><ImpactTrackerPanel decision={decision} onUpdated={onUpdated} /></TabsContent>
+          <TabsContent value="copilot"><CoPilotPanel decision={decision} /></TabsContent>
+          <TabsContent value="strategy"><StrategyLinkPanel decisionId={decision.id} /></TabsContent>
+          <TabsContent value="audit"><AuditTrailPanel decisionId={decision.id} /></TabsContent>
         </Tabs>
 
         {isOwner && (
