@@ -15,6 +15,14 @@ interface Props {
   teamId: string;
 }
 
+const STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: "draft", label: "Entwurf" },
+  { value: "review", label: "Review" },
+  { value: "approved", label: "Genehmigt" },
+  { value: "implemented", label: "✓ Umgesetzt" },
+  { value: "rejected", label: "✗ Abgelehnt" },
+];
+
 const statusLabels: Record<string, string> = {
   draft: "Entwurf",
   review: "Review",
@@ -81,6 +89,18 @@ const TeamTasksTab = ({ teamId }: Props) => {
     return m;
   }, [members]);
 
+  const changeStatus = async (decisionId: string, newStatus: string) => {
+    const updates: Record<string, any> = { status: newStatus, updated_at: new Date().toISOString() };
+    if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
+    const { error } = await supabase.from("decisions").update(updates).eq("id", decisionId);
+    if (error) {
+      toast.error("Statusänderung fehlgeschlagen");
+      return;
+    }
+    toast.success(`Status → ${statusLabels[newStatus] || newStatus}`);
+    fetchData();
+  };
+
   const assignDecision = async (decisionId: string, assigneeId: string | null) => {
     const { error } = await supabase
       .from("decisions")
@@ -129,7 +149,16 @@ const TeamTasksTab = ({ teamId }: Props) => {
             {isOverdue && <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />}
           </div>
           <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-            <span>{statusLabels[d.status] || d.status}</span>
+            <Select value={d.status} onValueChange={(v) => changeStatus(d.id, v)}>
+              <SelectTrigger className="h-6 w-[110px] text-[10px] px-2 border-dashed">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {d.due_date && (
               <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive" : ""}`}>
                 <Clock className="w-3 h-3" />
