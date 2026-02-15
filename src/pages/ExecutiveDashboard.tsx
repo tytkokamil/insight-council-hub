@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
@@ -6,12 +7,15 @@ import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   BarChart3, TrendingUp, AlertTriangle, CheckCircle2,
   Clock, DollarSign, Zap, Trophy, Dna, Activity, FlaskConical,
-  GitBranch, Flame, ArrowRight, Target,
+  GitBranch, Flame, ArrowRight, Target, FileDown, Loader2,
 } from "lucide-react";
+import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
+import { useToast } from "@/hooks/use-toast";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -19,6 +23,8 @@ import {
 
 const ExecutiveDashboard = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [exporting, setExporting] = useState(false);
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: deps = [] } = useFilteredDependencies();
   const { data: teams = [] } = useTeams();
@@ -119,7 +125,29 @@ const ExecutiveDashboard = () => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
             <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
           </div>
-          <Badge variant="outline" className="text-sm px-3 py-1">{archetype}</Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm px-3 py-1">{archetype}</Badge>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={exporting}
+              onClick={async () => {
+                setExporting(true);
+                try {
+                  const data = await fetchBoardReportData();
+                  generateBoardReport(data);
+                  toast({ title: "Exportiert", description: "Board Report als PDF heruntergeladen." });
+                } catch (e) {
+                  toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" });
+                }
+                setExporting(false);
+              }}
+              className="gap-2"
+            >
+              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+              Board Report
+            </Button>
+          </div>
         </div>
 
         {/* Top KPIs */}
