@@ -15,7 +15,9 @@ import {
 import "@xyflow/react/dist/style.css";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
-import { AlertTriangle, DollarSign, GitBranch, Info } from "lucide-react";
+import { AlertTriangle, DollarSign, GitBranch, Info, HelpCircle } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 
 const statusColors: Record<string, string> = {
   draft: "#6b7280",
@@ -221,6 +223,25 @@ const DecisionGraph = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Netzwerk</p>
           <h1 className="font-display text-xl font-bold">Decision Graph</h1>
+          {decisions.length > 0 && dependencies.length === 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="ml-3 gap-1.5 text-xs">
+                  <HelpCircle className="w-3.5 h-3.5" />
+                  Hinweis
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="start" className="max-w-xs text-sm space-y-2">
+                <p className="font-semibold flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 text-primary" />
+                  Keine Abhängigkeiten vorhanden
+                </p>
+                <p className="text-muted-foreground leading-relaxed">
+                  Öffne eine Entscheidung und wechsle zum Tab <span className="font-medium text-foreground">„Abhängigkeiten"</span>, um Verknüpfungen wie <span className="italic">blockiert</span>, <span className="italic">beeinflusst</span> oder <span className="italic">benötigt</span> zu erstellen.
+                </p>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
         <div className="flex items-center gap-4 text-xs">
           {Object.entries(statusColors).map(([status, color]) => (
@@ -344,17 +365,6 @@ const DecisionGraph = () => {
         </ReactFlow>
       </div>
 
-      {decisions.length > 0 && dependencies.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center bg-card/90 backdrop-blur-sm rounded-xl p-6 border border-border shadow-lg max-w-sm pointer-events-auto">
-            <GitBranch className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
-            <h3 className="font-display text-base font-semibold mb-2">Keine Abhängigkeiten</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Öffne eine Entscheidung und wechsle zum Tab <span className="font-medium text-foreground">„Abhängigkeiten"</span>, um Verknüpfungen wie <span className="italic">blockiert</span>, <span className="italic">beeinflusst</span> oder <span className="italic">benötigt</span> zu erstellen.
-            </p>
-          </div>
-        </div>
-      )}
 
       {decisions.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
