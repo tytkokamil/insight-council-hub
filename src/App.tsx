@@ -41,6 +41,7 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AuditTrail = lazy(() => import("./pages/AuditTrail"));
 const PilotSettings = lazy(() => import("./pages/PilotSettings"));
 const DecisionCalendar = lazy(() => import("./pages/DecisionCalendar"));
+const PatternEngine = lazy(() => import("./pages/PatternEngine"));
 
 const queryClient = new QueryClient();
 
@@ -90,6 +91,7 @@ const App = () => (
               <Route path="/audit" element={<P><AuditTrail /></P>} />
               <Route path="/pilot" element={<P><PilotSettings /></P>} />
               <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
+              <Route path="/patterns" element={<P><PatternEngine /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>

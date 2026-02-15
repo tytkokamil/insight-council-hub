@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog, Menu, X, History, Beaker,
+  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog, Menu, X, History, Beaker, Brain,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -48,6 +48,7 @@ const navGroups = [
       { icon: FlaskConical, label: "Szenarien", path: "/scenarios", featureKey: "scenarios" },
       { icon: CalendarDays, label: "Timeline", path: "/timeline", featureKey: "timeline" },
       { icon: Crosshair, label: "Strategie", path: "/strategy", featureKey: "strategy" },
+      { icon: Brain, label: "Patterns", path: "/patterns", featureKey: "patterns" },
     ],
   },
   {
