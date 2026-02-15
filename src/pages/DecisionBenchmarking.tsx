@@ -80,9 +80,9 @@ const DecisionBenchmarking = () => {
     const avg = INDUSTRY_BENCHMARKS.average[key as MetricKey] as number;
     const better = meta.lowerIsBetter ? value < avg : value > avg;
     const worse = meta.lowerIsBetter ? value > avg : value < avg;
-    if (better) return { icon: TrendingUp, color: "text-green-500", label: "Über Durchschnitt" };
-    if (worse) return { icon: TrendingDown, color: "text-red-500", label: "Unter Durchschnitt" };
-    return { icon: Minus, color: "text-yellow-500", label: "Im Durchschnitt" };
+    if (better) return { icon: TrendingUp, color: "text-success", label: "Über Durchschnitt" };
+    if (worse) return { icon: TrendingDown, color: "text-destructive", label: "Unter Durchschnitt" };
+    return { icon: Minus, color: "text-warning", label: "Im Durchschnitt" };
   };
 
   const getOverallScore = () => {
@@ -125,7 +125,7 @@ const DecisionBenchmarking = () => {
 
   const overallScore = getOverallScore();
   const scoreLabel = overallScore >= 75 ? "High-Performer" : overallScore >= 50 ? "Durchschnitt" : "Verbesserungspotenzial";
-  const scoreColor = overallScore >= 75 ? "text-green-500" : overallScore >= 50 ? "text-yellow-500" : "text-red-500";
+  const scoreColor = overallScore >= 75 ? "text-success" : overallScore >= 50 ? "text-warning" : "text-destructive";
 
   return (
     <AppLayout>
@@ -286,7 +286,7 @@ const DecisionBenchmarking = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Object.entries(METRIC_LABELS).map(([key, meta]) => {
                     const trend = getTrend(key, metrics[key]);
-                    if (trend.color !== "text-red-500") return null;
+                    if (trend.color !== "text-destructive") return null;
                     const hp = INDUSTRY_BENCHMARKS.highPerformance[key as MetricKey] as number;
                     const gap = meta.lowerIsBetter ? metrics[key] - hp : hp - metrics[key];
                     return (
@@ -303,9 +303,9 @@ const DecisionBenchmarking = () => {
                       </div>
                     );
                   }).filter(Boolean)}
-                  {Object.entries(METRIC_LABELS).every(([key]) => getTrend(key, metrics[key]).color !== "text-red-500") && (
-                    <div className="p-3 rounded-lg border border-green-500/30 bg-green-500/5 col-span-full">
-                      <p className="text-sm text-green-600 font-medium">🎉 Alle Metriken liegen im oder über dem Durchschnitt!</p>
+                  {Object.entries(METRIC_LABELS).every(([key]) => getTrend(key, metrics[key]).color !== "text-destructive") && (
+                    <div className="p-3 rounded-lg border border-success/30 bg-success/5 col-span-full">
+                      <p className="text-sm text-success font-medium">🎉 Alle Metriken liegen im oder über dem Durchschnitt!</p>
                     </div>
                   )}
                 </div>

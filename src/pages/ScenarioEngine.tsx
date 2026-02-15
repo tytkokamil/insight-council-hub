@@ -152,7 +152,7 @@ const ScenarioEngine = () => {
   };
 
   const severityColors: Record<string, string> = {
-    critical: "bg-red-500", high: "bg-orange-500", medium: "bg-yellow-500", low: "bg-green-500",
+    critical: "bg-destructive", high: "bg-warning", medium: "bg-accent", low: "bg-success",
   };
 
   const targetCount = getTargetDecisions().length;
@@ -237,14 +237,14 @@ const ScenarioEngine = () => {
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <AlertTriangle className="w-6 h-6 mx-auto text-orange-500 mb-1" />
+                      <AlertTriangle className="w-6 h-6 mx-auto text-warning mb-1" />
                       <div className="text-2xl font-bold">{result.avgRiskIncrease}%</div>
                       <p className="text-xs text-muted-foreground">Ø Risikoanstieg</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <Zap className="w-6 h-6 mx-auto text-red-500 mb-1" />
+                      <Zap className="w-6 h-6 mx-auto text-destructive mb-1" />
                       <div className="text-2xl font-bold">{result.criticalCount}</div>
                       <p className="text-xs text-muted-foreground">Kritische Auswirkungen</p>
                     </CardContent>

@@ -1,14 +1,14 @@
 export const priorityColor: Record<string, string> = {
   critical: "bg-destructive text-destructive-foreground",
-  high: "bg-orange-500 text-white dark:bg-orange-600",
+  high: "bg-warning text-warning-foreground",
   medium: "bg-primary text-primary-foreground",
   low: "bg-muted text-muted-foreground",
 };
 
 export const statusDot: Record<string, string> = {
   draft: "bg-muted-foreground",
-  review: "bg-yellow-500",
-  approved: "bg-green-500",
+  review: "bg-warning",
+  approved: "bg-success",
   implemented: "bg-primary",
   rejected: "bg-destructive",
 };

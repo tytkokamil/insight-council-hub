@@ -251,15 +251,15 @@ const DecisionGraph = () => {
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="hsl(215 19% 25%)" gap={24} size={1} />
+          <Background color="hsl(var(--border))" gap={24} size={1} />
           <Controls
             className="!bg-card !border-border !rounded-lg !shadow-lg"
-            style={{ button: { background: "hsl(217 32% 17%)", color: "white", borderColor: "hsl(215 19% 34%)" } } as any}
+            style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any}
           />
           <MiniMap
             className="!bg-card/80 !border-border !rounded-lg"
             nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"}
-            maskColor="hsl(222 47% 11% / 0.8)"
+            maskColor="hsl(var(--background) / 0.8)"
           />
 
           {/* Cascade Info Panel */}

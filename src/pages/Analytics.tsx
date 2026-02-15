@@ -60,7 +60,7 @@ const Analytics = () => {
     { label: "Ø Impact", value: `${avgImpact}%`, icon: TrendingUp },
   ];
 
-  const tooltipStyle = { background: "hsl(222, 47%, 8%)", border: "1px solid hsl(215, 28%, 17%)", borderRadius: "8px" };
+  const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" };
 
   if (loading) return <AnalysisPageSkeleton cards={4} sections={0} showChart />;
 
@@ -144,9 +144,9 @@ const Analytics = () => {
                   { name: "Umgesetzt", count: stats.implemented },
                   { name: "Abgelehnt", count: stats.rejected },
                 ]}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
-                  <XAxis dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} />
-                  <YAxis stroke="hsl(215, 20%, 55%)" fontSize={12} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="count" fill="hsl(192, 91%, 56%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -165,9 +165,9 @@ const Analytics = () => {
             {categoryData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={categoryData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 28%, 17%)" />
-                  <XAxis type="number" stroke="hsl(215, 20%, 55%)" fontSize={12} />
-                  <YAxis type="category" dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} width={100} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis type="category" dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} width={100} />
                   <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="value" fill="hsl(192, 91%, 56%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
