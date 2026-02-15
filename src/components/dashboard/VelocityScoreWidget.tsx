@@ -4,9 +4,10 @@ import { Zap, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
+import WidgetSkeleton from "./WidgetSkeleton";
 
 const VelocityScoreWidget = () => {
-  const { data: allDecisions = [] } = useDecisions();
+  const { data: allDecisions = [], isLoading } = useDecisions();
 
   const { avgDays, categoryBreakdown, trend } = useMemo(() => {
     const implemented = allDecisions.filter(d => d.status === "implemented" && d.implemented_at);
@@ -44,6 +45,8 @@ const VelocityScoreWidget = () => {
 
     return { avgDays: avg, categoryBreakdown: breakdown, trend: t };
   }, [allDecisions]);
+
+  if (isLoading) return <WidgetSkeleton rows={4} showScore />;
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const trendColor = trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";

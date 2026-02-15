@@ -3,9 +3,12 @@ import { DollarSign, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
+import WidgetSkeleton from "./WidgetSkeleton";
 
 const DecisionCostWidget = () => {
-  const { data: allDecisions = [] } = useDecisions();
+  const { data: allDecisions = [], isLoading } = useDecisions();
+
+  if (isLoading) return <WidgetSkeleton rows={3} showScore />;
 
   const openDecisions = allDecisions.filter(d => d.status === "draft" || d.status === "review");
   const now = Date.now();

@@ -6,11 +6,13 @@ import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import WidgetSkeleton from "./WidgetSkeleton";
 
 const EscalationWidget = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [overdue, setOverdue] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +35,7 @@ const EscalationWidget = () => {
         .order("due_date", { ascending: true })
         .limit(5);
       if (overdueDecisions) setOverdue(overdueDecisions);
+      setLoading(false);
     };
     fetchData();
   }, [user]);
@@ -48,6 +51,7 @@ const EscalationWidget = () => {
     return "border-primary/30 bg-primary/5";
   };
 
+  if (loading) return <WidgetSkeleton rows={4} showScore={false} />;
   if (notifications.length === 0 && overdue.length === 0) return null;
 
   return (
