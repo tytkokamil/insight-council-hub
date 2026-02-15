@@ -12,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2, ListTodo } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2, ListTodo, FileUp } from "lucide-react";
+import ImportDialog from "@/components/shared/ImportDialog";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
@@ -63,6 +64,7 @@ const Tasks = () => {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<string>("all");
+  const [showImport, setShowImport] = useState(false);
 
   const filteredTasks = filter === "all" ? tasks : tasks.filter((t) => t.status === filter);
 
@@ -167,10 +169,16 @@ const Tasks = () => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Aufgaben</p>
             <h1 className="font-display text-xl font-bold">Aufgaben-Board</h1>
           </div>
-          <Button size="sm" onClick={openCreate} className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" />
-            Neue Aufgabe
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
+              <FileUp className="w-3.5 h-3.5" />
+              Import
+            </Button>
+            <Button size="sm" onClick={openCreate} className="gap-1.5">
+              <Plus className="w-3.5 h-3.5" />
+              Neue Aufgabe
+            </Button>
+          </div>
         </div>
 
         {/* Filter */}
@@ -325,6 +333,7 @@ const Tasks = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <ImportDialog open={showImport} onOpenChange={setShowImport} mode="tasks" onImported={invalidate} />
     </AppLayout>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye, AlertCircle } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye, AlertCircle, FileUp } from "lucide-react";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +13,7 @@ import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
+import ImportDialog from "@/components/shared/ImportDialog";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
@@ -97,6 +98,7 @@ const Decisions = () => {
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
   const [editDecision, setEditDecision] = useState<any>(null);
   const [deleteDecision, setDeleteDecision] = useState<any>(null);
+  const [showImport, setShowImport] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterPriority, setFilterPriority] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
@@ -180,6 +182,10 @@ const Decisions = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+          <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2">
+            <FileUp className="w-4 h-4" />
+            Import
+          </Button>
           <Button onClick={() => setShowNewDialog(true)} className="gap-2">
             <Plus className="w-4 h-4" />
             Neue Entscheidung
@@ -391,6 +397,7 @@ const Decisions = () => {
       <DecisionDetailDialog decision={selectedDecision} open={!!selectedDecision} onOpenChange={(open) => { if (!open) setSelectedDecision(null); }} onUpdated={invalidate} />
       {editDecision && <EditDecisionDialog decision={editDecision} open={!!editDecision} onOpenChange={(open) => { if (!open) setEditDecision(null); }} onUpdated={invalidate} />}
       {deleteDecision && <DeleteDecisionDialog decision={deleteDecision} open={!!deleteDecision} onOpenChange={(open) => { if (!open) setDeleteDecision(null); }} onDeleted={invalidate} />}
+      <ImportDialog open={showImport} onOpenChange={setShowImport} mode="decisions" onImported={invalidate} />
     </AppLayout>
   );
 };
