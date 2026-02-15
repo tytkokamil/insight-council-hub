@@ -4,10 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { ClipboardList, User, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ClipboardList, User, Clock, AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
+import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 
 interface Props {
   teamId: string;
@@ -32,6 +34,8 @@ const TeamTasksTab = ({ teamId }: Props) => {
   const [decisions, setDecisions] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDecision, setEditDecision] = useState<any>(null);
+  const [deleteDecision, setDeleteDecision] = useState<any>(null);
 
   const fetchData = async () => {
     const [{ data: decs }, { data: mems }] = await Promise.all([
@@ -150,6 +154,12 @@ const TeamTasksTab = ({ teamId }: Props) => {
             ))}
           </SelectContent>
         </Select>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setEditDecision(d)}>
+          <Pencil className="w-3.5 h-3.5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive hover:text-destructive" onClick={() => setDeleteDecision(d)}>
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
       </div>
     );
   };
@@ -193,6 +203,23 @@ const TeamTasksTab = ({ teamId }: Props) => {
             {members.filter((m) => (grouped[m.user_id] || []).length === 0).map((m) => m.profiles?.full_name).join(", ")} – keine zugewiesenen Aufgaben
           </p>
         </div>
+      )}
+
+      {editDecision && (
+        <EditDecisionDialog
+          decision={editDecision}
+          open={!!editDecision}
+          onOpenChange={(open) => !open && setEditDecision(null)}
+          onUpdated={fetchData}
+        />
+      )}
+      {deleteDecision && (
+        <DeleteDecisionDialog
+          decision={deleteDecision}
+          open={!!deleteDecision}
+          onOpenChange={(open) => !open && setDeleteDecision(null)}
+          onDeleted={fetchData}
+        />
       )}
     </div>
   );
