@@ -1,7 +1,11 @@
 import { useState } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3, Activity, DollarSign } from "lucide-react";
+import {
+  Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2,
+  TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3, Activity, DollarSign,
+  ListChecks, Circle,
+} from "lucide-react";
 import { categoryLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +20,10 @@ import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   draft: { label: "Entwurf", variant: "secondary" },
@@ -36,30 +43,38 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
 const Dashboard = () => {
   const { data: allDecisions = [] } = useDecisions();
   const { data: profiles = [] } = useProfiles();
+  const { data: tasks = [] } = useTasks();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const decisions = allDecisions.slice(0, 10);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
 
+  // Personal data
+  const myDecisions = allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id);
+  const myOpenDecisions = myDecisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
+  const myTasks = tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id);
+  const myOpenTasks = myTasks.filter(t => t.status !== "done");
+  const myOverdueTasks = myOpenTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
+  const myDoneTasks = myTasks.filter(t => t.status === "done");
+
+  const decisions = allDecisions.slice(0, 10);
   const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
-
-  const stats = [
-    { label: "Gesamt", value: allDecisions.length, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-    { label: "In Review", value: allDecisions.filter(d => d.status === "review").length, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
-    { label: "Genehmigt", value: allDecisions.filter(d => d.status === "approved").length, icon: CheckCircle2, color: "text-success", bg: "bg-success/10" },
-    { label: "Hohes Risiko", value: allDecisions.filter(d => (d.ai_risk_score || 0) > 60).length, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10" },
-  ];
-
   const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
 
+  const stats = [
+    { label: "Meine Entscheidungen", value: myDecisions.length, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Offen", value: myOpenDecisions.length, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
+    { label: "Meine Aufgaben", value: myTasks.length, icon: ListChecks, color: "text-accent-foreground", bg: "bg-accent/30" },
+    { label: "Aufgaben offen", value: myOpenTasks.length, icon: Circle, color: myOverdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground", bg: myOverdueTasks.length > 0 ? "bg-destructive/10" : "bg-muted/50" },
+  ];
+
   // Empty welcome state
-  if (allDecisions.length === 0) {
+  if (allDecisions.length === 0 && tasks.length === 0) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
@@ -127,20 +142,26 @@ const Dashboard = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+            <h1 className="font-display text-2xl font-bold">Mein Arbeitsbereich</h1>
             <PageHint>
-              Dein Echtzeit-Überblick über alle Entscheidungen. Die KPI-Widgets zeigen Velocity, Momentum, Kosten und Eskalationen. Klicke auf eine Entscheidung, um Details zu sehen.
+              Dein persönlicher Überblick: Offene Aufgaben, laufende Entscheidungen und operative Metriken. Für die strategische Gesamtübersicht nutze das Executive Dashboard.
             </PageHint>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">Überblick über deine Entscheidungen</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Hallo {firstName} – das liegt heute an</p>
         </div>
-        <Button onClick={() => navigate("/decisions")} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Neue Entscheidung
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate("/tasks")} className="gap-2">
+            <ListChecks className="w-4 h-4" />
+            Aufgaben
+          </Button>
+          <Button onClick={() => navigate("/decisions")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Neue Entscheidung
+          </Button>
+        </div>
       </div>
 
-      {/* Stats row – always visible as key summary */}
+      {/* Personal Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, i) => (
           <Card key={i}>
@@ -157,9 +178,60 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* My Open Tasks – quick view */}
+      {myOpenTasks.length > 0 && (
+        <CollapsibleSection
+          title={`Meine offenen Aufgaben (${myOpenTasks.length})`}
+          subtitle={myOverdueTasks.length > 0 ? `${myOverdueTasks.length} überfällig` : "Alles im Zeitplan"}
+          icon={<ListChecks className="w-4 h-4 text-primary" />}
+          defaultOpen={true}
+          className="mb-8"
+        >
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {myOpenTasks.slice(0, 5).map(task => {
+                  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 cursor-pointer transition-colors"
+                      onClick={() => navigate("/tasks")}
+                    >
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${task.status === "in_progress" ? "bg-warning" : "bg-muted-foreground"}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{task.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {task.status === "in_progress" ? "In Arbeit" : "Offen"}
+                          {task.due_date && ` · Fällig: ${format(new Date(task.due_date), "dd.MM.", { locale: de })}`}
+                        </p>
+                      </div>
+                      {isOverdue && <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />}
+                      <Badge variant="outline" className={`text-[10px] shrink-0 ${
+                        task.priority === "critical" ? "text-destructive" :
+                        task.priority === "high" ? "text-warning" : ""
+                      }`}>
+                        {priorityConfig[task.priority]?.label || task.priority}
+                      </Badge>
+                    </div>
+                  );
+                })}
+                {myOpenTasks.length > 5 && (
+                  <div className="px-4 py-2 text-center">
+                    <Button variant="link" size="sm" onClick={() => navigate("/tasks")} className="text-xs">
+                      Alle {myOpenTasks.length} Aufgaben anzeigen <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleSection>
+      )}
+
       {/* Performance Widgets – collapsible */}
       <CollapsibleSection
-        title="Performance-Metriken"
+        title="Meine Performance"
         subtitle="Momentum, Kosten & Velocity"
         icon={<Activity className="w-4 h-4 text-primary" />}
         defaultOpen={false}
