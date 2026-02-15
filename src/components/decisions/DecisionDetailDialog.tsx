@@ -14,7 +14,9 @@ import WhatIfSimulatorPanel from "./WhatIfSimulatorPanel";
 import DependenciesPanel from "./DependenciesPanel";
 import CoPilotPanel from "./CoPilotPanel";
 import StrategyLinkPanel from "./StrategyLinkPanel";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair } from "lucide-react";
+import EditDecisionDialog from "./EditDecisionDialog";
+import DeleteDecisionDialog from "./DeleteDecisionDialog";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2 } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -29,6 +31,8 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const { user } = useAuth();
   const [status, setStatus] = useState(decision?.status || "draft");
   const [saving, setSaving] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
     if (decision) setStatus(decision.status);
@@ -65,7 +69,19 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card border-border max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">{decision.title}</DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="font-display text-xl">{decision.title}</DialogTitle>
+            {isOwner && (
+              <div className="flex items-center gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowEdit(true)}>
+                  <Pencil className="w-3.5 h-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
         </DialogHeader>
 
@@ -149,6 +165,13 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             <AuditTrailPanel decisionId={decision.id} />
           </TabsContent>
         </Tabs>
+
+        {isOwner && (
+          <>
+            <EditDecisionDialog decision={decision} open={showEdit} onOpenChange={setShowEdit} onUpdated={() => { onUpdated(); onOpenChange(false); }} />
+            <DeleteDecisionDialog decision={decision} open={showDelete} onOpenChange={setShowDelete} onDeleted={() => { onUpdated(); onOpenChange(false); }} />
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
