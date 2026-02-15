@@ -147,20 +147,26 @@ serve(async (req) => {
     const messages = [
       {
         role: "system",
-        content: `Du bist ein KI-Assistent für Entscheidungsmanagement. Analysiere den folgenden Dokumentinhalt und extrahiere alle Entscheidungen, die getroffen werden müssen oder erwähnt werden.
+        content: `Du bist ein Experte für Entscheidungsmanagement. Deine Aufgabe ist es, ALLE Entscheidungen, Aufgaben und To-Dos aus dem Dokument zu extrahieren – auch implizite.
 
-Regeln:
-- Extrahiere jede identifizierbare Entscheidung als eigenen Eintrag
+Wichtige Regeln:
+- Lies das GESAMTE Dokument sorgfältig durch, nicht nur den Anfang
+- Extrahiere JEDE identifizierbare Entscheidung, Aufgabe, Aktion oder To-Do als eigenen Eintrag
+- Auch indirekt formulierte Aufgaben erkennen (z.B. "wir müssen...", "es sollte...", "bis nächste Woche...", "jemand kümmert sich um...")
+- Tabellarische Daten: Jede Zeile kann eine eigene Entscheidung sein
+- Meeting-Protokolle: Jeden Beschluss und jede Aktion einzeln erfassen
+- E-Mails: Alle Anfragen, Genehmigungen und Aufträge extrahieren
 - Vergib passende Kategorien: strategic, budget, hr, technical, operational, marketing
-- Schätze die Priorität basierend auf Dringlichkeit und Auswirkung ein
+- Schätze die Priorität basierend auf Dringlichkeit und Auswirkung ein (low, medium, high, critical)
 - Falls ein Datum erkennbar ist, setze es als due_date (YYYY-MM-DD)
 - Titel sollten kurz und prägnant sein (max 80 Zeichen)
 - Beschreibungen sollten den Kontext aus dem Dokument enthalten
+- Liefere lieber zu viele als zu wenige Ergebnisse
 - Antworte auf Deutsch`,
       },
       {
         role: "user",
-        content: `Dateiname: ${fileName || "Unbekannt"}\n\nInhalt:\n${content.substring(0, 15000)}`,
+        content: `Dateiname: ${fileName || "Unbekannt"}\n\nInhalt:\n${content.substring(0, 60000)}`,
       },
     ];
 
