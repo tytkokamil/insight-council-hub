@@ -6,13 +6,14 @@ import {
   startOfWeek,
   endOfWeek,
   addDays,
+  subDays,
   addMonths,
   subMonths,
   addWeeks,
   subWeeks,
 } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
@@ -24,8 +25,11 @@ import { toast } from "sonner";
 import type { ViewMode } from "@/components/calendar/CalendarConstants";
 import MonthView from "@/components/calendar/MonthView";
 import WeekView from "@/components/calendar/WeekView";
+import DayView from "@/components/calendar/DayView";
 import CalendarLegend from "@/components/calendar/CalendarLegend";
 import CalendarFilterBar, { type CalendarFilters } from "@/components/calendar/CalendarFilterBar";
+import UnscheduledSidebar from "@/components/calendar/UnscheduledSidebar";
+import { exportDecisionsAsICS } from "@/components/calendar/exportICS";
 
 const DecisionCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -57,20 +61,28 @@ const DecisionCalendar = () => {
     setFilters({ status: new Set(), priority: new Set(), category: new Set() });
   }, []);
 
+  const applyFilters = useCallback((d: any) => {
+    if (filters.status.size > 0 && !filters.status.has(d.status)) return false;
+    if (filters.priority.size > 0 && !filters.priority.has(d.priority)) return false;
+    if (filters.category.size > 0 && !filters.category.has(d.category)) return false;
+    return true;
+  }, [filters]);
+
   const decisionsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const d of decisions ?? []) {
       if (!d.due_date) continue;
-      // Apply filters
-      if (filters.status.size > 0 && !filters.status.has(d.status)) continue;
-      if (filters.priority.size > 0 && !filters.priority.has(d.priority)) continue;
-      if (filters.category.size > 0 && !filters.category.has(d.category)) continue;
+      if (!applyFilters(d)) continue;
       const key = d.due_date;
       if (!map[key]) map[key] = [];
       map[key].push(d);
     }
     return map;
-  }, [decisions, filters]);
+  }, [decisions, applyFilters]);
+
+  const unscheduledDecisions = useMemo(() => {
+    return (decisions ?? []).filter((d) => !d.due_date && applyFilters(d));
+  }, [decisions, applyFilters]);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -95,17 +107,26 @@ const DecisionCalendar = () => {
   );
 
   const goBack = useCallback(() => {
-    setCurrentDate((d) => (viewMode === "month" ? subMonths(d, 1) : subWeeks(d, 1)));
+    setCurrentDate((d) => {
+      if (viewMode === "month") return subMonths(d, 1);
+      if (viewMode === "week") return subWeeks(d, 1);
+      return subDays(d, 1);
+    });
   }, [viewMode]);
 
   const goForward = useCallback(() => {
-    setCurrentDate((d) => (viewMode === "month" ? addMonths(d, 1) : addWeeks(d, 1)));
+    setCurrentDate((d) => {
+      if (viewMode === "month") return addMonths(d, 1);
+      if (viewMode === "week") return addWeeks(d, 1);
+      return addDays(d, 1);
+    });
   }, [viewMode]);
 
   const goToday = useCallback(() => setCurrentDate(new Date()), []);
 
   const headerLabel = useMemo(() => {
     if (viewMode === "month") return format(currentDate, "MMMM yyyy", { locale: de });
+    if (viewMode === "day") return format(currentDate, "EEEE, d. MMMM yyyy", { locale: de });
     const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
     const we = endOfWeek(currentDate, { weekStartsOn: 1 });
     return `${format(ws, "d. MMM", { locale: de })} – ${format(we, "d. MMM yyyy", { locale: de })}`;
@@ -174,6 +195,27 @@ const DecisionCalendar = () => {
     }
   }, [decisions, queryClient]);
 
+  const handleExportICS = useCallback(() => {
+    if (!decisions?.length) {
+      toast.error("Keine Entscheidungen zum Exportieren");
+      return;
+    }
+    exportDecisionsAsICS(decisions);
+    toast.success("Kalender exportiert", { description: "ICS-Datei wurde heruntergeladen" });
+  }, [decisions]);
+
+  const sharedDragProps = {
+    dragOverDate,
+    draggingId,
+    onDragStart: handleDragStart,
+    onDragEnd: handleDragEnd,
+    onDragOver: handleDragOver,
+    onDragLeave: handleDragLeave,
+    onDrop: handleDrop,
+    onDecisionClick: setSelectedDecision,
+    profileMap,
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -188,8 +230,12 @@ const DecisionCalendar = () => {
               Drag & Drop zum Verschieben von Deadlines
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
+            <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
+              <Download className="w-3.5 h-3.5" />
+              ICS
+            </Button>
             <div className="w-px h-6 bg-border" />
             <ToggleGroup
               type="single"
@@ -205,6 +251,10 @@ const DecisionCalendar = () => {
                 <Rows3 className="w-3.5 h-3.5" />
                 Woche
               </ToggleGroupItem>
+              <ToggleGroupItem value="day" aria-label="Tagesansicht" className="px-2.5 py-1.5 text-xs gap-1">
+                <CalendarRange className="w-3.5 h-3.5" />
+                Tag
+              </ToggleGroupItem>
             </ToggleGroup>
             <div className="w-px h-6 bg-border" />
             <Button variant="outline" size="sm" onClick={goToday}>Heute</Button>
@@ -218,36 +268,47 @@ const DecisionCalendar = () => {
           </div>
         </div>
 
-        {viewMode === "month" ? (
-          <MonthView
-            monthDays={monthDays}
-            currentDate={currentDate}
-            decisionsByDate={decisionsByDate}
-            dragOverDate={dragOverDate}
-            draggingId={draggingId}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onDecisionClick={setSelectedDecision}
-            profileMap={profileMap}
-          />
-        ) : (
-          <WeekView
-            weekDays={weekDays}
-            decisionsByDate={decisionsByDate}
-            dragOverDate={dragOverDate}
-            draggingId={draggingId}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onDecisionClick={setSelectedDecision}
-            profileMap={profileMap}
-          />
-        )}
+        <div className="flex gap-4">
+          {/* Main calendar view */}
+          <div className="flex-1 min-w-0">
+            {viewMode === "month" && (
+              <MonthView
+                monthDays={monthDays}
+                currentDate={currentDate}
+                decisionsByDate={decisionsByDate}
+                {...sharedDragProps}
+              />
+            )}
+            {viewMode === "week" && (
+              <WeekView
+                weekDays={weekDays}
+                decisionsByDate={decisionsByDate}
+                {...sharedDragProps}
+              />
+            )}
+            {viewMode === "day" && (
+              <DayView
+                day={currentDate}
+                decisionsByDate={decisionsByDate}
+                {...sharedDragProps}
+              />
+            )}
+          </div>
+
+          {/* Unscheduled sidebar */}
+          {unscheduledDecisions.length > 0 && (
+            <div className="w-56 shrink-0">
+              <UnscheduledSidebar
+                decisions={unscheduledDecisions}
+                draggingId={draggingId}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDecisionClick={setSelectedDecision}
+                profileMap={profileMap}
+              />
+            </div>
+          )}
+        </div>
 
         <CalendarLegend />
       </div>

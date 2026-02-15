@@ -16,4 +16,4 @@ export const statusDot: Record<string, string> = {
 export const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 export const WEEKDAYS_LONG = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
 
-export type ViewMode = "month" | "week";
+export type ViewMode = "month" | "week" | "day";
