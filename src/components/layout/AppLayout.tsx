@@ -284,16 +284,25 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background flex">
+      {/* Skip to content – Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Zum Inhalt springen
+      </a>
+
       {/* Mobile Header */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-40 h-14 bg-card border-b border-border flex items-center justify-between px-4">
+        <header className="fixed top-0 left-0 right-0 z-40 h-14 bg-card border-b border-border flex items-center justify-between px-4" role="banner">
           <button
             onClick={() => setMobileOpen(true)}
             className="w-9 h-9 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-foreground"
+            aria-label="Navigation öffnen"
           >
             <Menu className="w-5 h-5" />
           </button>
-          <Link to="/dashboard" className="flex items-center gap-2">
+          <Link to="/dashboard" className="flex items-center gap-2" aria-label="DecisionOS Startseite">
             <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
               <LayoutDashboard className="w-3.5 h-3.5 text-primary" />
             </div>
@@ -302,10 +311,11 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           <button
             onClick={toggleTheme}
             className="w-9 h-9 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground"
+            aria-label={theme === "dark" ? "Zu hellem Modus wechseln" : "Zu dunklem Modus wechseln"}
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-        </div>
+        </header>
       )}
 
       {/* Mobile Overlay */}
@@ -318,6 +328,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/50"
               onClick={() => setMobileOpen(false)}
+              aria-hidden="true"
             />
             <motion.aside
               initial={{ x: -280 }}
@@ -325,11 +336,14 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               exit={{ x: -280 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="fixed top-0 left-0 bottom-0 z-50 w-[280px] bg-card border-r border-border flex flex-col"
+              role="navigation"
+              aria-label="Hauptnavigation"
             >
               <div className="absolute top-3 right-3 z-10">
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+                  aria-label="Navigation schließen"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -351,6 +365,8 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           animate={{ width: collapsed ? 56 : 240 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="relative border-r border-border bg-card flex flex-col shrink-0 overflow-hidden"
+          role="navigation"
+          aria-label="Hauptnavigation"
         >
           <SidebarContent
             collapsed={collapsed}
@@ -360,10 +376,20 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </motion.aside>
       )}
 
-      {/* Main Content */}
-      <main className={`flex-1 overflow-auto ${isMobile ? "pt-14" : ""}`}>
+      {/* Main Content with page transition */}
+      <main id="main-content" className={`flex-1 overflow-auto ${isMobile ? "pt-14" : ""}`} role="main">
         <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 
