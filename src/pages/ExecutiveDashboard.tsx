@@ -8,13 +8,14 @@ import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   BarChart3, TrendingUp, AlertTriangle, CheckCircle2,
   Clock, DollarSign, Zap, Trophy, Dna, Activity, FlaskConical,
-  GitBranch, Flame, ArrowRight, Target, FileDown, Loader2,
+  GitBranch, Flame, ArrowRight, Target, FileDown, Loader2, ListChecks,
 } from "lucide-react";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,7 @@ const ExecutiveDashboard = () => {
   const { data: deps = [] } = useFilteredDependencies();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useFilteredReviews();
+  const { data: tasks = [] } = useTasks();
 
   if (loadingDec) {
     return (
@@ -66,6 +68,12 @@ const ExecutiveDashboard = () => {
   const critical = decisions.filter(d => d.priority === "critical");
   const highRisk = decisions.filter(d => (d.ai_risk_score ?? 0) > 60);
 
+  // Task stats
+  const doneTasks = tasks.filter(t => t.status === "done");
+  const openTasks = tasks.filter(t => t.status !== "done");
+  const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
+  const taskCompletionRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
   const implDurations = implemented
     .filter(d => d.implemented_at)
     .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
@@ -82,8 +90,9 @@ const ExecutiveDashboard = () => {
   const implRate = (implemented.length / total) * 100;
   const overdueRate = (overdue.length / total) * 100;
   const escRate = (escalated.length / total) * 100;
+  const taskHealth = tasks.length > 0 ? (taskCompletionRate * 0.5 + (100 - (overdueTasks.length / Math.max(1, openTasks.length)) * 100) * 0.5) : 50;
   const healthScore = Math.round(Math.max(0, Math.min(100,
-    (implRate * 0.4) + ((100 - overdueRate) * 0.3) + ((100 - escRate) * 0.2) + (approved.length / total * 100 * 0.1)
+    (implRate * 0.3) + ((100 - overdueRate) * 0.2) + ((100 - escRate) * 0.15) + (approved.length / total * 100 * 0.1) + (taskHealth * 0.25)
   )));
 
   const riskAppetite = decisions.filter(d => (d.ai_risk_score ?? 0) > 50 && (d.status === "approved" || d.status === "implemented")).length / (decisions.filter(d => (d.ai_risk_score ?? 0) > 50).length || 1) * 100;
@@ -96,6 +105,7 @@ const ExecutiveDashboard = () => {
     { metric: "Alignment", value: Math.round((reviews.length / total) * 100) },
     { metric: "Eskalation", value: Math.round(100 - escRate) },
     { metric: "Termintreue", value: Math.round(100 - overdueRate) },
+    { metric: "Tasks", value: taskCompletionRate },
   ];
 
   const now = Date.now();
@@ -104,7 +114,8 @@ const ExecutiveDashboard = () => {
     const weekEnd = weekStart + 7 * 86400000;
     const created = decisions.filter(d => { const t = new Date(d.created_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
     const resolved = decisions.filter(d => { if (!d.implemented_at) return false; const t = new Date(d.implemented_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
-    return { week: `W${8 - (7 - i)}`, erstellt: created, umgesetzt: resolved };
+    const tasksCompleted = tasks.filter(t => { if (!t.completed_at) return false; const ts = new Date(t.completed_at).getTime(); return ts >= weekStart && ts < weekEnd; }).length;
+    return { week: `W${8 - (7 - i)}`, erstellt: created, umgesetzt: resolved, tasks: tasksCompleted };
   });
 
   const quickLinks = [
@@ -159,13 +170,15 @@ const ExecutiveDashboard = () => {
         </div>
 
         {/* Top KPIs – always visible, compact */}
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
           {[
-            { label: "Gesamt", value: decisions.length, icon: BarChart3 },
+            { label: "Entscheidungen", value: decisions.length, icon: BarChart3 },
             { label: "Umgesetzt", value: implemented.length, icon: CheckCircle2, color: "text-success" },
             { label: "Überfällig", value: overdue.length, icon: Clock, color: overdue.length > 0 ? "text-destructive" : undefined },
             { label: "Eskaliert", value: escalated.length, icon: AlertTriangle, color: escalated.length > 0 ? "text-warning" : undefined },
-            { label: "Hohes Risiko", value: highRisk.length, icon: AlertTriangle, color: highRisk.length > 0 ? "text-destructive" : undefined },
+            { label: "Tasks", value: tasks.length, icon: ListChecks },
+            { label: "Tasks erledigt", value: doneTasks.length, icon: CheckCircle2, color: "text-success" },
+            { label: "Tasks überfällig", value: overdueTasks.length, icon: Clock, color: overdueTasks.length > 0 ? "text-destructive" : undefined },
             { label: "Ø Tage", value: avgVelocity, icon: TrendingUp },
           ].map((kpi, i) => (
             <Card key={i}>
@@ -198,6 +211,7 @@ const ExecutiveDashboard = () => {
                     <div className="flex justify-between"><span className="text-muted-foreground">Umsetzung</span><span>{Math.round(implRate)}%</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Termintreue</span><span>{Math.round(100 - overdueRate)}%</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Eskalation</span><span>{Math.round(escRate)}%</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Task-Rate</span><span>{taskCompletionRate}%</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Reviews</span><span>{reviews.length}</span></div>
                   </div>
                 </div>
@@ -255,6 +269,7 @@ const ExecutiveDashboard = () => {
                     <Tooltip contentStyle={tooltipStyle} />
                     <Area type="monotone" dataKey="erstellt" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
                     <Area type="monotone" dataKey="umgesetzt" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.2} />
+                    <Area type="monotone" dataKey="tasks" stroke="hsl(var(--warning))" fill="hsl(var(--warning))" fillOpacity={0.15} name="Tasks erledigt" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>

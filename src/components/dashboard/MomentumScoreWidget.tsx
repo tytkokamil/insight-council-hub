@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Activity, Zap, Target, HeartPulse, TrendingUp, ShieldAlert, GitPullRequest, Lightbulb, ArrowUp } from "lucide-react";
+import { Activity, Zap, Target, HeartPulse, TrendingUp, ShieldAlert, GitPullRequest, Lightbulb, ArrowUp, ListChecks } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -14,18 +15,20 @@ interface MomentumBreakdown {
   reviewEfficiency: number;
   escalationRate: number;
   decisionQuality: number;
+  taskExecution: number;
 }
 
 interface Recommendation {
   text: string;
   impact: number;
-  type: "velocity" | "bottleneck" | "review" | "escalation" | "quality";
+  type: "velocity" | "bottleneck" | "review" | "escalation" | "quality" | "tasks";
 }
 
 const MomentumScoreWidget = () => {
   const { data: decisions = [], isLoading: loadingDecisions } = useDecisions();
   const { data: deps = [], isLoading: loadingDeps } = useDependencies();
   const { data: reviews = [], isLoading: loadingReviews } = useReviews();
+  const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: escalations = [], isLoading: loadingEsc } = useQuery({
     queryKey: ["escalation-notifications"],
     queryFn: async () => {
@@ -37,38 +40,39 @@ const MomentumScoreWidget = () => {
 
   const [showDetails, setShowDetails] = useState(false);
 
-  const isLoading = loadingDecisions || loadingDeps || loadingReviews || loadingEsc;
+  const isLoading = loadingDecisions || loadingDeps || loadingReviews || loadingEsc || loadingTasks;
 
   const { score, breakdown, recommendations, predictedScore } = useMemo(() => {
-    if (decisions.length === 0) return { score: null, breakdown: { velocity: 0, bottleneckRate: 0, reviewEfficiency: 0, escalationRate: 0, decisionQuality: 0 }, recommendations: [], predictedScore: null };
+    if (decisions.length === 0 && tasks.length === 0) return { score: null, breakdown: { velocity: 0, bottleneckRate: 0, reviewEfficiency: 0, escalationRate: 0, decisionQuality: 0, taskExecution: 0 }, recommendations: [], predictedScore: null };
 
     const total = decisions.length;
     const implemented = decisions.filter(d => d.status === "implemented");
     const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
     const now = Date.now();
     const recs: Recommendation[] = [];
+    const MAX = 17; // 6 factors × 17 ≈ 100
 
     const vels = implemented.filter(d => d.implemented_at).map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
     const avgVel = vels.length > 0 ? vels.reduce((s, v) => s + v, 0) / vels.length : 30;
-    const velocity = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(avgVel, 60) / 60))));
+    const velocity = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - Math.min(avgVel, 60) / 60))));
 
     if (avgVel > 14) {
-      const potentialGain = Math.min(6, Math.round((avgVel - 7) / 5));
+      const potentialGain = Math.min(5, Math.round((avgVel - 7) / 5));
       recs.push({ text: `Älteste Entscheidungen beschleunigen → Velocity +${potentialGain}`, impact: potentialGain, type: "velocity" });
     }
 
     const blockedIds = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id));
     const blockedActive = active.filter(d => blockedIds.has(d.id));
     const bottleneckRatio = active.length > 0 ? blockedActive.length / active.length : 0;
-    const bottleneckRate = Math.max(0, Math.min(20, Math.round(20 * (1 - bottleneckRatio))));
+    const bottleneckRate = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - bottleneckRatio))));
 
     if (bottleneckRatio > 0.15) {
       const sourceCount: Record<string, number> = {};
-      deps.filter(d => d.dependency_type === "blocks").forEach(d => { sourceCount[d.source_decision_id] = (sourceCount[d.source_decision_id] || 0) + 1; });
+      deps.filter(d => d.dependency_type === "blocks").forEach(d => { sourceCount[d.source_decision_id ?? ""] = (sourceCount[d.source_decision_id ?? ""] || 0) + 1; });
       const topBlocker = Object.entries(sourceCount).sort((a, b) => b[1] - a[1])[0];
       if (topBlocker) {
         const blockerDec = decisions.find(d => d.id === topBlocker[0]);
-        recs.push({ text: `"${blockerDec?.title?.slice(0, 30) || "Entscheidung"}..." lösen → ${topBlocker[1]} Blockaden aufheben`, impact: Math.min(5, topBlocker[1] * 2), type: "bottleneck" });
+        recs.push({ text: `"${blockerDec?.title?.slice(0, 30) || "Entscheidung"}..." lösen → ${topBlocker[1]} Blockaden aufheben`, impact: Math.min(4, topBlocker[1] * 2), type: "bottleneck" });
       }
     }
 
@@ -76,7 +80,7 @@ const MomentumScoreWidget = () => {
     const reviewTimes = completedReviews.map(r => (new Date(r.reviewed_at!).getTime() - new Date(r.created_at).getTime()) / 86400000);
     const avgReviewTime = reviewTimes.length > 0 ? reviewTimes.reduce((s, v) => s + v, 0) / reviewTimes.length : 7;
     const pendingReviews = reviews.filter(r => !r.reviewed_at);
-    const reviewEfficiency = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(avgReviewTime, 14) / 14))));
+    const reviewEfficiency = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - Math.min(avgReviewTime, 14) / 14))));
 
     if (pendingReviews.length > 2) {
       recs.push({ text: `${pendingReviews.length} ausstehende Reviews abschließen → Effizienz steigt`, impact: Math.min(4, pendingReviews.length), type: "review" });
@@ -84,7 +88,7 @@ const MomentumScoreWidget = () => {
 
     const recentEscalations = escalations.filter(e => new Date(e.created_at).getTime() > now - 30 * 86400000);
     const escalationRatio = total > 0 ? recentEscalations.length / total : 0;
-    const escalationRate = Math.max(0, Math.min(20, Math.round(20 * (1 - Math.min(escalationRatio, 0.5) / 0.5))));
+    const escalationRate = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - Math.min(escalationRatio, 0.5) / 0.5))));
 
     if (recentEscalations.length > 3) {
       recs.push({ text: `${recentEscalations.length} Eskalationen in 30 Tagen – Prozesse straffen`, impact: Math.min(4, Math.round(recentEscalations.length / 2)), type: "escalation" });
@@ -93,37 +97,54 @@ const MomentumScoreWidget = () => {
     const withOutcome = implemented.filter(d => d.actual_impact_score != null && d.ai_impact_score);
     const accuracies = withOutcome.map(d => 100 - Math.abs((d.ai_impact_score || 0) - (d.actual_impact_score || 0)));
     const avgAccuracy = accuracies.length > 0 ? accuracies.reduce((s, a) => s + a, 0) / accuracies.length : 50;
-    const decisionQuality = Math.max(0, Math.min(20, Math.round(avgAccuracy / 5)));
+    const decisionQuality = Math.max(0, Math.min(MAX, Math.round(avgAccuracy / 5 * (MAX / 20))));
 
     const overdueActive = active.filter(d => d.due_date && new Date(d.due_date).getTime() < now);
     if (overdueActive.length > 0) {
       recs.push({ text: `${overdueActive.length} überfällige Entscheidungen abschließen`, impact: Math.min(5, overdueActive.length * 2), type: "quality" });
     }
 
-    const totalScore = velocity + bottleneckRate + reviewEfficiency + escalationRate + decisionQuality;
+    // Task Execution Factor
+    const doneTasks = tasks.filter(t => t.status === "done");
+    const openTasks = tasks.filter(t => t.status !== "done");
+    const taskCompletionRate = tasks.length > 0 ? doneTasks.length / tasks.length : 0.5;
+    const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date).getTime() < now);
+    const overdueTaskRate = openTasks.length > 0 ? overdueTasks.length / openTasks.length : 0;
+    const taskExecution = Math.max(0, Math.min(MAX, Math.round(MAX * (taskCompletionRate * 0.6 + (1 - overdueTaskRate) * 0.4))));
+
+    if (overdueTasks.length > 0) {
+      recs.push({ text: `${overdueTasks.length} überfällige Aufgaben erledigen → Task-Execution steigt`, impact: Math.min(4, overdueTasks.length), type: "tasks" });
+    }
+    if (openTasks.length > 5 && taskCompletionRate < 0.4) {
+      recs.push({ text: `${openTasks.length} offene Aufgaben abarbeiten → Durchsatz erhöhen`, impact: Math.min(5, Math.round(openTasks.length / 3)), type: "tasks" });
+    }
+
+    const totalScore = velocity + bottleneckRate + reviewEfficiency + escalationRate + decisionQuality + taskExecution;
     recs.sort((a, b) => b.impact - a.impact);
     const topRecs = recs.slice(0, 3);
     const totalImpact = topRecs.reduce((s, r) => s + r.impact, 0);
 
     return {
-      score: totalScore,
-      breakdown: { velocity, bottleneckRate, reviewEfficiency, escalationRate, decisionQuality },
+      score: Math.min(100, totalScore),
+      breakdown: { velocity, bottleneckRate, reviewEfficiency, escalationRate, decisionQuality, taskExecution },
       recommendations: topRecs,
       predictedScore: Math.min(100, totalScore + totalImpact),
     };
-  }, [decisions, deps, reviews, escalations]);
+  }, [decisions, deps, reviews, escalations, tasks]);
 
-  if (isLoading) return <WidgetSkeleton rows={5} showScore showProgress />;
+  if (isLoading) return <WidgetSkeleton rows={6} showScore showProgress />;
 
   const getColor = (s: number) => s > 70 ? "text-success" : s > 40 ? "text-warning" : "text-destructive";
   const getBgColor = (s: number) => s > 70 ? "bg-success" : s > 40 ? "bg-warning" : "bg-destructive";
 
+  const MAX = 17;
   const components = [
-    { label: "Velocity", value: breakdown.velocity, max: 20, icon: Zap, desc: "Entscheidungsgeschwindigkeit" },
-    { label: "Bottleneck", value: breakdown.bottleneckRate, max: 20, icon: ShieldAlert, desc: "Blockaden-Freiheit" },
-    { label: "Review", value: breakdown.reviewEfficiency, max: 20, icon: GitPullRequest, desc: "Review-Effizienz" },
-    { label: "Eskalation", value: breakdown.escalationRate, max: 20, icon: HeartPulse, desc: "Eskalations-Freiheit" },
-    { label: "Qualität", value: breakdown.decisionQuality, max: 20, icon: Target, desc: "Outcome-Genauigkeit" },
+    { label: "Velocity", value: breakdown.velocity, max: MAX, icon: Zap, desc: "Entscheidungsgeschwindigkeit" },
+    { label: "Bottleneck", value: breakdown.bottleneckRate, max: MAX, icon: ShieldAlert, desc: "Blockaden-Freiheit" },
+    { label: "Review", value: breakdown.reviewEfficiency, max: MAX, icon: GitPullRequest, desc: "Review-Effizienz" },
+    { label: "Eskalation", value: breakdown.escalationRate, max: MAX, icon: HeartPulse, desc: "Eskalations-Freiheit" },
+    { label: "Qualität", value: breakdown.decisionQuality, max: MAX, icon: Target, desc: "Outcome-Genauigkeit" },
+    { label: "Tasks", value: breakdown.taskExecution, max: MAX, icon: ListChecks, desc: "Aufgaben-Durchsatz" },
   ];
 
   return (
@@ -138,18 +159,19 @@ const MomentumScoreWidget = () => {
               <CardTitle className="text-sm">Momentum Score™</CardTitle>
               <ScoreMethodology
                 title="Momentum Score"
-                description="Aggregierter Gesundheitsindex (0–100) aus 5 gleichgewichteten Faktoren. Jeder Faktor wird auf 0–20 normalisiert."
+                description="Aggregierter Gesundheitsindex (0–100) aus 6 gleichgewichteten Faktoren. Jeder Faktor wird auf 0–17 normalisiert."
                 items={[
-                  { label: "Velocity", weight: "20 Punkte", formula: "20 × (1 − min(Ø Tage bis Umsetzung, 60) / 60)" },
-                  { label: "Bottleneck", weight: "20 Punkte", formula: "20 × (1 − Anteil blockierter aktiver Entscheidungen)" },
-                  { label: "Review", weight: "20 Punkte", formula: "20 × (1 − min(Ø Review-Dauer in Tagen, 14) / 14)" },
-                  { label: "Eskalation", weight: "20 Punkte", formula: "20 × (1 − min(Eskalationsquote 30d, 0.5) / 0.5)" },
-                  { label: "Qualität", weight: "20 Punkte", formula: "Ø(100 − |KI-Impact − Ist-Impact|) / 5" },
+                  { label: "Velocity", weight: "17 Punkte", formula: "17 × (1 − min(Ø Tage bis Umsetzung, 60) / 60)" },
+                  { label: "Bottleneck", weight: "17 Punkte", formula: "17 × (1 − Anteil blockierter aktiver Entscheidungen)" },
+                  { label: "Review", weight: "17 Punkte", formula: "17 × (1 − min(Ø Review-Dauer in Tagen, 14) / 14)" },
+                  { label: "Eskalation", weight: "17 Punkte", formula: "17 × (1 − min(Eskalationsquote 30d, 0.5) / 0.5)" },
+                  { label: "Qualität", weight: "17 Punkte", formula: "Ø(100 − |KI-Impact − Ist-Impact|) / 5 × 0.85" },
+                  { label: "Tasks", weight: "17 Punkte", formula: "17 × (Abschlussrate × 0.6 + Termintreue × 0.4)" },
                 ]}
-                source="Interne Berechnung auf Basis aller Entscheidungsdaten"
+                source="Interne Berechnung auf Basis aller Entscheidungs- und Aufgabendaten"
               />
             </div>
-            <p className="text-xs text-muted-foreground">5-Faktor Organisationsgesundheit</p>
+            <p className="text-xs text-muted-foreground">6-Faktor Organisationsgesundheit</p>
           </div>
         </div>
       </CardHeader>
