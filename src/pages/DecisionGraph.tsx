@@ -363,9 +363,25 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
   const positions: Record<string, { x: number; y: number }> = {};
   if (decisions.length === 0) return positions;
 
+  // If no dependencies, use a grid layout
+  if (deps.length === 0) {
+    const cols = Math.ceil(Math.sqrt(decisions.length));
+    const xGap = 300;
+    const yGap = 200;
+    decisions.forEach((d, i) => {
+      positions[d.id] = {
+        x: (i % cols) * xGap,
+        y: Math.floor(i / cols) * yGap,
+      };
+    });
+    return positions;
+  }
+
   // Build incoming edge counts
   const incoming: Record<string, number> = {};
   const outgoing: Record<string, string[]> = {};
+  const connectedIds = new Set<string>();
+
   decisions.forEach((d) => {
     incoming[d.id] = 0;
     outgoing[d.id] = [];
@@ -377,12 +393,18 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
     if (outgoing[dep.source_decision_id]) {
       outgoing[dep.source_decision_id].push(dep.target_decision_id);
     }
+    connectedIds.add(dep.source_decision_id);
+    connectedIds.add(dep.target_decision_id);
   });
 
-  // Topological layering
+  // Separate connected vs isolated nodes
+  const connected = decisions.filter(d => connectedIds.has(d.id));
+  const isolated = decisions.filter(d => !connectedIds.has(d.id));
+
+  // Topological layering for connected nodes
   const layers: string[][] = [];
   const assigned = new Set<string>();
-  let remaining = decisions.map((d) => d.id);
+  let remaining = connected.map((d) => d.id);
 
   while (remaining.length > 0) {
     const layer = remaining.filter(
@@ -394,7 +416,6 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
     );
 
     if (layer.length === 0) {
-      // Remaining nodes have circular deps, just add them
       layers.push(remaining.filter((id) => !assigned.has(id)));
       break;
     }
@@ -404,7 +425,7 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
     remaining = remaining.filter((id) => !assigned.has(id));
   }
 
-  // Position layers
+  // Position connected layers
   const xGap = 320;
   const yGap = 160;
 
@@ -417,6 +438,19 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
       };
     });
   });
+
+  // Position isolated nodes in a grid below the graph
+  if (isolated.length > 0) {
+    const maxLayerY = Math.max(0, ...Object.values(positions).map(p => p.y));
+    const gridStartY = maxLayerY + yGap * 2;
+    const cols = Math.min(4, Math.ceil(Math.sqrt(isolated.length)));
+    isolated.forEach((d, i) => {
+      positions[d.id] = {
+        x: (i % cols) * 280,
+        y: gridStartY + Math.floor(i / cols) * 180,
+      };
+    });
+  }
 
   return positions;
 }
