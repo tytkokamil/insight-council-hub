@@ -3,7 +3,7 @@ import { Building2, ChevronDown, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
-import { AnimatePresence, motion } from "framer-motion";
+
 
 interface Team {
   id: string;
@@ -56,7 +56,6 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const fetchUnreadCounts = useCallback(async () => {
     if (!user || teams.length === 0) return;
 
-    // Get last read timestamps
     const { data: reads } = await supabase
       .from("team_chat_reads")
       .select("team_id, last_read_at")
@@ -80,7 +79,7 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
       if (count && count > 0) counts[team.id] = count;
     }
     setUnreadCounts(counts);
-  }, [user, teams]);
+  }, [user?.id, teams]);
 
   useEffect(() => {
     fetchUnreadCounts();
@@ -127,72 +126,59 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
             </span>
           )}
         </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 flex items-center justify-between min-w-0"
-            >
-              <span className="truncate text-foreground">{label}</span>
-              <div className="flex items-center gap-1.5">
-                {totalUnread > 0 && (
-                  <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
-                    {totalUnread > 99 ? "99+" : totalUnread}
-                  </span>
-                )}
-                <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {!collapsed && (
+          <div className="flex-1 flex items-center justify-between min-w-0">
+            <span className="truncate text-foreground">{label}</span>
+            <div className="flex items-center gap-1.5">
+              {totalUnread > 0 && (
+                <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+            </div>
+          </div>
+        )}
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.12 }}
-            className="fixed z-[100] w-56 mt-1 rounded-lg border border-border bg-card shadow-xl overflow-hidden"
-            style={{ left: collapsed ? 64 : 12, marginTop: 4 }}
-          >
-            <div className="py-1">
+      {open && (
+        <div
+          className="fixed z-[100] w-56 mt-1 rounded-lg border border-border bg-card shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100"
+          style={{ left: collapsed ? 64 : 12, marginTop: 4 }}
+        >
+          <div className="py-1">
+            <button
+              onClick={() => { setSelectedTeamId(null); setOpen(false); }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-muted/50 ${
+                !selectedTeamId ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              Persönlich
+            </button>
+            {teams.length > 0 && (
+              <div className="border-t border-border/50 my-1" />
+            )}
+            {teams.map((team) => (
               <button
-                onClick={() => { setSelectedTeamId(null); setOpen(false); }}
+                key={team.id}
+                onClick={() => { setSelectedTeamId(team.id); setOpen(false); }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-muted/50 ${
-                  !selectedTeamId ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                  selectedTeamId === team.id ? "bg-primary/10 text-primary font-medium" : "text-foreground"
                 }`}
               >
-                <User className="w-3.5 h-3.5" />
-                Persönlich
+                <Building2 className="w-3.5 h-3.5" />
+                <span className="truncate flex-1 text-left">{team.name}</span>
+                {unreadCounts[team.id] > 0 && (
+                  <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                    {unreadCounts[team.id] > 99 ? "99+" : unreadCounts[team.id]}
+                  </span>
+                )}
               </button>
-              {teams.length > 0 && (
-                <div className="border-t border-border/50 my-1" />
-              )}
-              {teams.map((team) => (
-                <button
-                  key={team.id}
-                  onClick={() => { setSelectedTeamId(team.id); setOpen(false); }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-muted/50 ${
-                    selectedTeamId === team.id ? "bg-primary/10 text-primary font-medium" : "text-foreground"
-                  }`}
-                >
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span className="truncate flex-1 text-left">{team.name}</span>
-                  {unreadCounts[team.id] > 0 && (
-                    <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
-                      {unreadCounts[team.id] > 99 ? "99+" : unreadCounts[team.id]}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
