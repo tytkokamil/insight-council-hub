@@ -19,9 +19,10 @@ import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import { useDecisions, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
+import { useTeamContext } from "@/hooks/useTeamContext";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -44,34 +45,50 @@ const Dashboard = () => {
   const { data: allDecisions = [] } = useDecisions();
   const { data: profiles = [] } = useProfiles();
   const { data: tasks = [] } = useTasks();
+  const { data: teams = [] } = useTeams();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
+  const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
 
-  // Personal data
-  const myDecisions = allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id);
-  const myOpenDecisions = myDecisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
-  const myTasks = tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id);
-  const myOpenTasks = myTasks.filter(t => t.status !== "done");
-  const myOverdueTasks = myOpenTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
-  const myDoneTasks = myTasks.filter(t => t.status === "done");
+  const isPersonal = selectedTeamId === null;
+  const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
 
-  const decisions = allDecisions.slice(0, 10);
-  const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
-  const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Context-dependent filtering: personal = only mine, team = all team data
+  const contextDecisions = isPersonal
+    ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
+    : allDecisions;
+  const contextTasks = isPersonal
+    ? tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id)
+    : tasks;
 
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
+  const openDecisions = contextDecisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
+  const openTasks = contextTasks.filter(t => t.status !== "done");
+  const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
+  const doneTasks = contextTasks.filter(t => t.status === "done");
 
   const stats = [
-    { label: "Meine Entscheidungen", value: myDecisions.length, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Offen", value: myOpenDecisions.length, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
-    { label: "Meine Aufgaben", value: myTasks.length, icon: ListChecks, color: "text-accent-foreground", bg: "bg-accent/30" },
-    { label: "Aufgaben offen", value: myOpenTasks.length, icon: Circle, color: myOverdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground", bg: myOverdueTasks.length > 0 ? "bg-destructive/10" : "bg-muted/50" },
+    { label: isPersonal ? "Meine Entscheidungen" : "Entscheidungen", value: contextDecisions.length, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+    { label: "Offen", value: openDecisions.length, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
+    { label: isPersonal ? "Meine Aufgaben" : "Aufgaben", value: contextTasks.length, icon: ListChecks, color: "text-accent-foreground", bg: "bg-accent/30" },
+    { label: "Aufgaben offen", value: openTasks.length, icon: Circle, color: overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground", bg: overdueTasks.length > 0 ? "bg-destructive/10" : "bg-muted/50" },
   ];
+
+  const decisions = contextDecisions.slice(0, 10);
+  const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
+  const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
+  const dashboardTitle = isPersonal ? "Mein Arbeitsbereich" : `Team: ${currentTeam?.name || "—"}`;
+  const dashboardHint = isPersonal
+    ? "Dein persönlicher Überblick: Offene Aufgaben, laufende Entscheidungen und operative Metriken."
+    : "Team-Überblick: Alle Aufgaben und Entscheidungen dieses Teams.";
+  const dashboardSubtitle = isPersonal
+    ? `Hallo ${firstName} – das liegt heute an`
+    : `${contextDecisions.length} Entscheidungen · ${openTasks.length} offene Aufgaben`;
 
   // Empty welcome state
   if (allDecisions.length === 0 && tasks.length === 0) {
@@ -142,12 +159,12 @@ const Dashboard = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold">Mein Arbeitsbereich</h1>
+            <h1 className="font-display text-2xl font-bold">{dashboardTitle}</h1>
             <PageHint>
-              Dein persönlicher Überblick: Offene Aufgaben, laufende Entscheidungen und operative Metriken. Für die strategische Gesamtübersicht nutze das Executive Dashboard.
+              {dashboardHint} Für die strategische Gesamtübersicht nutze das Executive Dashboard.
             </PageHint>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">Hallo {firstName} – das liegt heute an</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{dashboardSubtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate("/tasks")} className="gap-2">
@@ -178,11 +195,11 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* My Open Tasks – quick view */}
-      {myOpenTasks.length > 0 && (
+      {/* Open Tasks – quick view */}
+      {openTasks.length > 0 && (
         <CollapsibleSection
-          title={`Meine offenen Aufgaben (${myOpenTasks.length})`}
-          subtitle={myOverdueTasks.length > 0 ? `${myOverdueTasks.length} überfällig` : "Alles im Zeitplan"}
+          title={`${isPersonal ? "Meine offenen" : "Offene"} Aufgaben (${openTasks.length})`}
+          subtitle={overdueTasks.length > 0 ? `${overdueTasks.length} überfällig` : "Alles im Zeitplan"}
           icon={<ListChecks className="w-4 h-4 text-primary" />}
           defaultOpen={true}
           className="mb-8"
@@ -190,7 +207,7 @@ const Dashboard = () => {
           <Card>
             <CardContent className="p-0">
               <div className="divide-y divide-border">
-                {myOpenTasks.slice(0, 5).map(task => {
+                {openTasks.slice(0, 5).map(task => {
                   const isOverdue = task.due_date && new Date(task.due_date) < new Date();
                   return (
                     <div
@@ -216,10 +233,10 @@ const Dashboard = () => {
                     </div>
                   );
                 })}
-                {myOpenTasks.length > 5 && (
+                {openTasks.length > 5 && (
                   <div className="px-4 py-2 text-center">
                     <Button variant="link" size="sm" onClick={() => navigate("/tasks")} className="text-xs">
-                      Alle {myOpenTasks.length} Aufgaben anzeigen <ArrowRight className="w-3 h-3 ml-1" />
+                      Alle {openTasks.length} Aufgaben anzeigen <ArrowRight className="w-3 h-3 ml-1" />
                     </Button>
                   </div>
                 )}
@@ -231,7 +248,7 @@ const Dashboard = () => {
 
       {/* Performance Widgets – collapsible */}
       <CollapsibleSection
-        title="Meine Performance"
+        title={isPersonal ? "Meine Performance" : "Team Performance"}
         subtitle="Momentum, Kosten & Velocity"
         icon={<Activity className="w-4 h-4 text-primary" />}
         defaultOpen={false}
@@ -274,8 +291,8 @@ const Dashboard = () => {
 
       {/* Recent Decisions */}
       <CollapsibleSection
-        title="Letzte Entscheidungen"
-        subtitle={`${allDecisions.length} insgesamt`}
+        title={isPersonal ? "Meine Entscheidungen" : "Team-Entscheidungen"}
+        subtitle={`${contextDecisions.length} insgesamt`}
         icon={<FileText className="w-4 h-4 text-muted-foreground" />}
         defaultOpen={true}
         className="mb-4"
