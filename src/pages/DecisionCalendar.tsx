@@ -16,7 +16,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3 } from "luci
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
-import { useDecisions } from "@/hooks/useDecisions";
+import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,7 +39,10 @@ const DecisionCalendar = () => {
     category: new Set(),
   });
   const { data: decisions } = useDecisions();
+  const { data: profiles } = useProfiles();
   const queryClient = useQueryClient();
+
+  const profileMap = useMemo(() => buildProfileMap(profiles ?? []), [profiles]);
 
   const handleFilterToggle = useCallback((type: keyof CalendarFilters, value: string) => {
     setFilters((prev) => {
@@ -228,6 +231,7 @@ const DecisionCalendar = () => {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onDecisionClick={setSelectedDecision}
+            profileMap={profileMap}
           />
         ) : (
           <WeekView
@@ -241,6 +245,7 @@ const DecisionCalendar = () => {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onDecisionClick={setSelectedDecision}
+            profileMap={profileMap}
           />
         )}
 

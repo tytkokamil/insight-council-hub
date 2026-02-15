@@ -16,6 +16,7 @@ interface WeekViewProps {
   onDragLeave: () => void;
   onDrop: (e: DragEvent, dateKey: string) => void;
   onDecisionClick: (id: string) => void;
+  profileMap?: Record<string, string>;
 }
 
 const WeekView = memo(({
@@ -29,6 +30,7 @@ const WeekView = memo(({
   onDragLeave,
   onDrop,
   onDecisionClick,
+  profileMap,
 }: WeekViewProps) => (
   <div className="border border-border rounded-xl overflow-hidden bg-card">
     <div className="grid grid-cols-7 border-b border-border">
@@ -83,6 +85,7 @@ const WeekView = memo(({
                   onDragStart={onDragStart}
                   onDragEnd={onDragEnd}
                   onClick={onDecisionClick}
+                  profileMap={profileMap}
                   showTime
                 />
               ))}

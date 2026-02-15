@@ -16,6 +16,7 @@ interface MonthViewProps {
   onDragLeave: () => void;
   onDrop: (e: DragEvent, dateKey: string) => void;
   onDecisionClick: (id: string) => void;
+  profileMap?: Record<string, string>;
 }
 
 const MonthView = memo(({
@@ -30,6 +31,7 @@ const MonthView = memo(({
   onDragLeave,
   onDrop,
   onDecisionClick,
+  profileMap,
 }: MonthViewProps) => (
   <div className="border border-border rounded-xl overflow-hidden bg-card">
     <div className="grid grid-cols-7 border-b border-border">
@@ -81,6 +83,7 @@ const MonthView = memo(({
                   onDragStart={onDragStart}
                   onDragEnd={onDragEnd}
                   onClick={onDecisionClick}
+                  profileMap={profileMap}
                 />
               ))}
               {dayDecisions.length > 3 && (
