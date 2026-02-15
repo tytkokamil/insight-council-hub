@@ -25,6 +25,7 @@ import type { ViewMode } from "@/components/calendar/CalendarConstants";
 import MonthView from "@/components/calendar/MonthView";
 import WeekView from "@/components/calendar/WeekView";
 import CalendarLegend from "@/components/calendar/CalendarLegend";
+import CalendarFilterBar, { type CalendarFilters } from "@/components/calendar/CalendarFilterBar";
 
 const DecisionCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,19 +33,41 @@ const DecisionCalendar = () => {
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<CalendarFilters>({
+    status: new Set(),
+    priority: new Set(),
+    category: new Set(),
+  });
   const { data: decisions } = useDecisions();
   const queryClient = useQueryClient();
+
+  const handleFilterToggle = useCallback((type: keyof CalendarFilters, value: string) => {
+    setFilters((prev) => {
+      const next = new Set(prev[type]);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return { ...prev, [type]: next };
+    });
+  }, []);
+
+  const handleFilterClear = useCallback(() => {
+    setFilters({ status: new Set(), priority: new Set(), category: new Set() });
+  }, []);
 
   const decisionsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const d of decisions ?? []) {
       if (!d.due_date) continue;
+      // Apply filters
+      if (filters.status.size > 0 && !filters.status.has(d.status)) continue;
+      if (filters.priority.size > 0 && !filters.priority.has(d.priority)) continue;
+      if (filters.category.size > 0 && !filters.category.has(d.category)) continue;
       const key = d.due_date;
       if (!map[key]) map[key] = [];
       map[key].push(d);
     }
     return map;
-  }, [decisions]);
+  }, [decisions, filters]);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -163,6 +186,8 @@ const DecisionCalendar = () => {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
+            <div className="w-px h-6 bg-border" />
             <ToggleGroup
               type="single"
               value={viewMode}
