@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3 } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3, Activity, DollarSign } from "lucide-react";
 import { categoryLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
+import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -123,7 +124,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-bold">Dashboard</h1>
@@ -139,8 +140,8 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 stagger-children">
+      {/* Stats row – always visible as key summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, i) => (
           <Card key={i}>
             <CardContent className="p-4">
@@ -156,112 +157,127 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 stagger-children">
-        <MomentumScoreWidget />
-        <DecisionCostWidget />
-        <VelocityScoreWidget />
-      </div>
+      {/* Performance Widgets – collapsible */}
+      <CollapsibleSection
+        title="Performance-Metriken"
+        subtitle="Momentum, Kosten & Velocity"
+        icon={<Activity className="w-4 h-4 text-primary" />}
+        defaultOpen={false}
+        className="mb-8"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+          <MomentumScoreWidget />
+          <DecisionCostWidget />
+          <VelocityScoreWidget />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <EscalationWidget />
+          <LeaderboardWidget />
+        </div>
+      </CollapsibleSection>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 stagger-children">
-        <EscalationWidget />
-        <LeaderboardWidget />
-      </div>
-
-      {/* High risk alert */}
+      {/* High risk alert – collapsible */}
       {highRiskDecisions.length > 0 && (
-        <Card className="mb-6 border-destructive/30">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4 text-destructive" />
+        <CollapsibleSection
+          title={`Hohes Risiko (${highRiskDecisions.length})`}
+          subtitle="Entscheidungen die Aufmerksamkeit erfordern"
+          icon={<AlertTriangle className="w-4 h-4 text-destructive" />}
+          defaultOpen={true}
+          className="mb-8"
+        >
+          <Card className="border-destructive/20">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                {highRiskDecisions.slice(0, 3).map((d) => (
+                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 hover:bg-destructive/10 cursor-pointer transition-colors" onClick={() => setSelectedDecision(d)}>
+                    <span className="text-sm font-medium">{d.title}</span>
+                    <Badge variant="destructive" className="font-mono">{d.ai_risk_score}%</Badge>
+                  </div>
+                ))}
               </div>
-              <div>
-                <h3 className="text-sm font-semibold">Hohes Risiko</h3>
-                <p className="text-xs text-muted-foreground">Diese Entscheidungen erfordern Aufmerksamkeit</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              {highRiskDecisions.slice(0, 3).map((d) => (
-                <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 hover:bg-destructive/10 cursor-pointer transition-colors" onClick={() => setSelectedDecision(d)}>
-                  <span className="text-sm font-medium">{d.title}</span>
-                  <Badge variant="destructive" className="font-mono">{d.ai_risk_score}%</Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </CollapsibleSection>
       )}
 
-      {/* Search */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input type="text" placeholder="Entscheidungen durchsuchen..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all placeholder:text-muted-foreground" />
+      {/* Recent Decisions */}
+      <CollapsibleSection
+        title="Letzte Entscheidungen"
+        subtitle={`${allDecisions.length} insgesamt`}
+        icon={<FileText className="w-4 h-4 text-muted-foreground" />}
+        defaultOpen={true}
+        className="mb-4"
+      >
+        {/* Search */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input type="text" placeholder="Entscheidungen durchsuchen..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all placeholder:text-muted-foreground" />
+          </div>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Filter className="w-4 h-4" />
+            Filter
+          </Button>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Filter className="w-4 h-4" />
-          Filter
-        </Button>
-      </div>
 
-      {/* Table */}
-      <Card className="overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Entscheidung</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Priorität</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Kategorie</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Risiko</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">Fällig</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody className="stagger-children">
-            {filtered.length === 0 ? (
-              <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">Keine Entscheidungen gefunden.</td></tr>
-            ) : filtered.map((decision) => {
-              const status = statusConfig[decision.status];
-              const priority = priorityConfig[decision.priority];
-              return (
-                 <tr
-                  key={decision.id}
-                  className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors row-highlight"
-                  onClick={() => setSelectedDecision(decision)}
-                >
-                  <td className="p-3">
-                    <p className="text-sm font-medium">{decision.title}</p>
-                    <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
-                  </td>
-                  <td className="p-3">
-                    <Badge variant={status?.variant || "secondary"} className="text-[10px]">
-                      {status?.label || decision.status}
-                    </Badge>
-                  </td>
-                  <td className="p-3">
-                    <span className={`text-xs font-semibold ${priority?.className || ""}`}>
-                      {priority?.label || decision.priority}
-                    </span>
-                  </td>
-                  <td className="p-3"><span className="text-xs text-muted-foreground">{categoryLabels[decision.category] || decision.category}</span></td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <div className={`h-full rounded-full ${(decision.ai_risk_score||0) > 60 ? "bg-destructive" : (decision.ai_risk_score||0) > 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${decision.ai_risk_score||0}%` }} />
+        {/* Table */}
+        <Card className="overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Entscheidung</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Priorität</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Kategorie</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Risiko</th>
+                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Fällig</th>
+                <th className="p-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">Keine Entscheidungen gefunden.</td></tr>
+              ) : filtered.map((decision) => {
+                const status = statusConfig[decision.status];
+                const priority = priorityConfig[decision.priority];
+                return (
+                  <tr
+                    key={decision.id}
+                    className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
+                    onClick={() => setSelectedDecision(decision)}
+                  >
+                    <td className="p-3">
+                      <p className="text-sm font-medium">{decision.title}</p>
+                      <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
+                    </td>
+                    <td className="p-3">
+                      <Badge variant={status?.variant || "secondary"} className="text-[10px]">
+                        {status?.label || decision.status}
+                      </Badge>
+                    </td>
+                    <td className="p-3 hidden md:table-cell">
+                      <span className={`text-xs font-semibold ${priority?.className || ""}`}>
+                        {priority?.label || decision.priority}
+                      </span>
+                    </td>
+                    <td className="p-3 hidden lg:table-cell"><span className="text-xs text-muted-foreground">{categoryLabels[decision.category] || decision.category}</span></td>
+                    <td className="p-3 hidden lg:table-cell">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className={`h-full rounded-full ${(decision.ai_risk_score||0) > 60 ? "bg-destructive" : (decision.ai_risk_score||0) > 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${decision.ai_risk_score||0}%` }} />
+                        </div>
+                        <span className="text-xs text-muted-foreground font-medium">{decision.ai_risk_score||0}%</span>
                       </div>
-                      <span className="text-xs text-muted-foreground font-medium">{decision.ai_risk_score||0}%</span>
-                    </div>
-                  </td>
-                  <td className="p-3"><span className="text-xs text-muted-foreground">{decision.due_date || "—"}</span></td>
-                  <td className="p-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </Card>
+                    </td>
+                    <td className="p-3 hidden md:table-cell"><span className="text-xs text-muted-foreground">{decision.due_date || "—"}</span></td>
+                    <td className="p-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      </CollapsibleSection>
 
       <DecisionDetailDialog
         decision={selectedDecision}
