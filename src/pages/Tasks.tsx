@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useProfiles, buildProfileMap } from "@/hooks/useDecisions";
@@ -12,8 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2, ListTodo, FileUp } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
+  ListTodo, FileUp, Search, LayoutGrid, List, ArrowUpDown,
+} from "lucide-react";
 import ImportDialog from "@/components/shared/ImportDialog";
+import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
@@ -42,12 +47,22 @@ const CATEGORY_LABELS: Record<string, string> = {
   budget: "Budget",
 };
 
+const SORT_OPTIONS = [
+  { value: "created", label: "Erstellt" },
+  { value: "priority", label: "Priorität" },
+  { value: "due_date", label: "Fällig" },
+  { value: "title", label: "Titel" },
+] as const;
+
+const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
 const emptyForm = {
   title: "",
   description: "",
   priority: "medium" as string,
   category: "general" as string,
   due_date: "",
+  assignee_id: "" as string,
 };
 
 const Tasks = () => {
@@ -65,8 +80,39 @@ const Tasks = () => {
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<string>("all");
   const [showImport, setShowImport] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<string>("created");
 
-  const filteredTasks = filter === "all" ? tasks : tasks.filter((t) => t.status === filter);
+  const filteredAndSortedTasks = useMemo(() => {
+    let result = filter === "all" ? tasks : tasks.filter((t) => t.status === filter);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(t =>
+        t.title.toLowerCase().includes(q) ||
+        t.description?.toLowerCase().includes(q) ||
+        CATEGORY_LABELS[t.category]?.toLowerCase().includes(q)
+      );
+    }
+
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case "priority":
+          return (PRIORITY_ORDER[a.priority] ?? 2) - (PRIORITY_ORDER[b.priority] ?? 2);
+        case "due_date": {
+          if (!a.due_date && !b.due_date) return 0;
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        }
+        case "title":
+          return a.title.localeCompare(b.title, "de");
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  }, [tasks, filter, searchQuery, sortBy]);
 
   const openCreate = () => {
     setForm(emptyForm);
@@ -80,6 +126,7 @@ const Tasks = () => {
       priority: t.priority,
       category: t.category,
       due_date: t.due_date || "",
+      assignee_id: t.assignee_id || "",
     });
     setEditTask(t);
   };
@@ -97,6 +144,7 @@ const Tasks = () => {
           priority: form.priority as Task["priority"],
           category: form.category as Task["category"],
           due_date: form.due_date || null,
+          assignee_id: form.assignee_id || null,
         })
         .eq("id", editTask.id);
       if (error) toast.error("Fehler beim Aktualisieren");
@@ -108,6 +156,7 @@ const Tasks = () => {
         priority: form.priority as Task["priority"],
         category: form.category as Task["category"],
         due_date: form.due_date || null,
+        assignee_id: form.assignee_id || null,
         created_by: user.id,
         team_id: selectedTeamId || null,
       }]);
@@ -162,7 +211,7 @@ const Tasks = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -181,31 +230,73 @@ const Tasks = () => {
           </div>
         </div>
 
-        {/* Filter */}
-        <div className="flex gap-2 flex-wrap">
-          {([["all", "Alle"], ["open", "Offen"], ["in_progress", "In Arbeit"], ["done", "Erledigt"]] as const).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                filter === key ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {label} ({counts[key]})
-            </button>
-          ))}
+        {/* Toolbar: Filter + Search + Sort + View Toggle */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex gap-2 flex-wrap flex-1">
+            {([["all", "Alle"], ["open", "Offen"], ["in_progress", "In Arbeit"], ["done", "Erledigt"]] as const).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  filter === key ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                }`}
+              >
+                {label} ({counts[key]})
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Suchen..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8 h-8 w-[180px] text-xs"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="h-8 w-[120px] text-xs gap-1">
+                <ArrowUpDown className="w-3 h-3" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)} className="border border-border rounded-lg">
+              <ToggleGroupItem value="list" className="px-2 py-1 h-8" aria-label="Listenansicht">
+                <List className="w-3.5 h-3.5" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="kanban" className="px-2 py-1 h-8" aria-label="Kanban-Ansicht">
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
         </div>
 
-        {/* Task List */}
-        {filteredTasks.length === 0 ? (
+        {/* Content */}
+        {filteredAndSortedTasks.length === 0 && viewMode === "list" ? (
           <div className="text-center py-16">
             <ListTodo className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-sm font-medium">Keine Aufgaben</p>
-            <p className="text-xs text-muted-foreground mt-1">Erstelle deine erste Aufgabe</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {searchQuery ? "Keine Treffer für diese Suche" : "Erstelle deine erste Aufgabe"}
+            </p>
           </div>
+        ) : viewMode === "kanban" ? (
+          <TaskKanbanBoard
+            tasks={filteredAndSortedTasks}
+            profileMap={profileMap}
+            onStatusChange={changeStatus}
+            onEdit={openEdit}
+            onDelete={setDeleteTask}
+          />
         ) : (
           <div className="space-y-2">
-            {filteredTasks.map((task) => {
+            {filteredAndSortedTasks.map((task) => {
               const pc = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
               const sc = STATUS_CONFIG[task.status];
               const StatusIcon = sc.icon;
@@ -304,9 +395,23 @@ const Tasks = () => {
                 </Select>
               </div>
             </div>
-            <div>
-              <Label>Fälligkeitsdatum</Label>
-              <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Fälligkeitsdatum</Label>
+                <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
+              </div>
+              <div>
+                <Label>Zuständig</Label>
+                <Select value={form.assignee_id || "__none__"} onValueChange={(v) => setForm({ ...form, assignee_id: v === "__none__" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="Niemand" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Niemand</SelectItem>
+                    {profiles.map(p => (
+                      <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || "Unbekannt"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <DialogFooter>
