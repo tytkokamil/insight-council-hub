@@ -59,7 +59,9 @@ const MonthView = memo(({
               "min-h-[100px] md:min-h-[120px] border-b border-r border-border p-1.5 transition-all duration-150",
               !inMonth && "bg-muted/30",
               today && "bg-primary/5",
-              isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40"
+              isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
+              !isDropTarget && !today && inMonth && dayDecisions.length >= 4 && "bg-primary/[0.12]",
+              !isDropTarget && !today && inMonth && dayDecisions.length >= 2 && dayDecisions.length < 4 && "bg-primary/[0.06]",
             )}
           >
             <div className="flex items-center justify-between mb-1">
