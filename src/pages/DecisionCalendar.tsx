@@ -131,10 +131,25 @@ const DecisionCalendar = () => {
     if (error) {
       toast.error("Fehler beim Verschieben", { description: error.message });
     } else {
+      queryClient.invalidateQueries({ queryKey: ["decisions"] });
       toast.success("Fälligkeitsdatum geändert", {
         description: `„${decision.title}" → ${formattedNew}`,
+        action: {
+          label: "Rückgängig",
+          onClick: async () => {
+            const { error: undoError } = await supabase
+              .from("decisions")
+              .update({ due_date: oldDate })
+              .eq("id", decisionId);
+            if (undoError) {
+              toast.error("Rückgängig fehlgeschlagen");
+            } else {
+              toast.success("Rückgängig gemacht");
+              queryClient.invalidateQueries({ queryKey: ["decisions"] });
+            }
+          },
+        },
       });
-      queryClient.invalidateQueries({ queryKey: ["decisions"] });
     }
   }, [decisions, queryClient]);
 
