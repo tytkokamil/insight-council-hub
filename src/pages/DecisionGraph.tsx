@@ -344,6 +344,18 @@ const DecisionGraph = () => {
         </ReactFlow>
       </div>
 
+      {decisions.length > 0 && dependencies.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center bg-card/90 backdrop-blur-sm rounded-xl p-6 border border-border shadow-lg max-w-sm pointer-events-auto">
+            <GitBranch className="w-10 h-10 text-primary mx-auto mb-3 opacity-60" />
+            <h3 className="font-display text-base font-semibold mb-2">Keine Abhängigkeiten</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Öffne eine Entscheidung und wechsle zum Tab <span className="font-medium text-foreground">„Abhängigkeiten"</span>, um Verknüpfungen wie <span className="italic">blockiert</span>, <span className="italic">beeinflusst</span> oder <span className="italic">benötigt</span> zu erstellen.
+            </p>
+          </div>
+        </div>
+      )}
+
       {decisions.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center">
