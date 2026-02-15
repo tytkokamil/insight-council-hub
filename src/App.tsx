@@ -33,6 +33,7 @@ import ResetPassword from "./pages/ResetPassword";
 import AdminUsers from "./pages/AdminUsers";
 import AuditTrail from "./pages/AuditTrail";
 import PilotSettings from "./pages/PilotSettings";
+import DecisionCalendar from "./pages/DecisionCalendar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
               <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
               <Route path="/pilot" element={<ProtectedRoute><PilotSettings /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><DecisionCalendar /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
