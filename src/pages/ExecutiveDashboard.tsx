@@ -131,11 +131,11 @@ const ExecutiveDashboard = () => {
 
   const radarData = [
     { metric: "Umsetzung", value: Math.round(implRate) },
-    { metric: "Geschwindigkeit", value: Math.max(0, 100 - avgVelocity * 3) },
-    { metric: "Risikomgmt", value: Math.round(100 - (highRisk.length / total * 100)) },
+    { metric: "Speed", value: Math.max(0, 100 - avgVelocity * 3) },
+    { metric: "Risiko", value: Math.round(100 - (highRisk.length / total * 100)) },
     { metric: "Alignment", value: Math.round((reviews.length / total) * 100) },
     { metric: "Eskalation", value: Math.round(100 - escRate) },
-    { metric: "Termintreue", value: Math.round(100 - overdueRate) },
+    { metric: "Termine", value: Math.round(100 - overdueRate) },
     { metric: "Tasks", value: taskCompletionRate },
   ];
 
