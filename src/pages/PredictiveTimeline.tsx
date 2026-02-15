@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
-import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
+import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
@@ -220,8 +221,13 @@ const PredictiveTimeline = () => {
               </div>
             </div>
 
+            <CollapsibleSection
+              title="Gantt-Prognose"
+              subtitle="Timeline aller offenen Entscheidungen"
+              icon={<BarChart3 className="w-4 h-4 text-primary" />}
+            >
             {/* Sort Controls */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-4">
               {([
                 { key: "predicted", label: "Nach Prognose" },
                 { key: "priority", label: "Nach Priorität" },
@@ -334,6 +340,7 @@ const PredictiveTimeline = () => {
                 <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> Warnung</span>
               </div>
             </div>
+            </CollapsibleSection>
           </>
         )}
       </div>

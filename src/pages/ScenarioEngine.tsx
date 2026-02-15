@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useFilteredDependencies, useTeams } from "@/hooks/useDecisions";
 
 type DelayImpact = {
@@ -273,6 +274,11 @@ const ScenarioEngine = () => {
                   </Card>
                 )}
 
+                <CollapsibleSection
+                  title="Detailanalyse"
+                  subtitle="Charts & Kaskadeneffekte"
+                  icon={<GitBranch className="w-4 h-4 text-primary" />}
+                >
                 <Tabs defaultValue="timeline">
                   <TabsList>
                     <TabsTrigger value="timeline">Kosten-Timeline</TabsTrigger>
@@ -361,6 +367,7 @@ const ScenarioEngine = () => {
                     </div>
                   </TabsContent>
                 </Tabs>
+                </CollapsibleSection>
               </>
             )}
           </>
