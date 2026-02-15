@@ -35,7 +35,7 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
-              Enterprise Decision Platform
+              Enterprise Decision Management
             </span>
           </motion.div>
 
@@ -46,9 +46,9 @@ const HeroSection = () => {
             transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-7 leading-[0.95]"
           >
-            Decisions that
+            Nie wieder verlorene
             <br />
-            <span className="gradient-text">move forward.</span>
+            <span className="gradient-text">Entscheidungen.</span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -58,8 +58,8 @@ const HeroSection = () => {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed text-balance"
           >
-            Transform chaotic ad-hoc decisions into structured, AI-powered workflows.
-            Full transparency, complete audit trails, and intelligent insights.
+            Schluss mit Ad-hoc-Chaos. DecisionOS macht jede Geschäftsentscheidung
+            nachvollziehbar, KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -70,12 +70,12 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
             <Button variant="hero" size="xl" className="rounded-2xl">
-              Start Free Trial
+              Kostenlos starten
               <ArrowRight className="w-5 h-5" />
             </Button>
             <Button variant="hero-outline" size="xl" className="rounded-2xl" onClick={() => setShowTour(true)}>
               <Play className="w-5 h-5" />
-              Watch Demo
+              Demo ansehen
             </Button>
           </motion.div>
 
@@ -87,9 +87,9 @@ const HeroSection = () => {
             className="mt-20 flex flex-wrap items-center justify-center gap-10 text-muted-foreground"
           >
             {[
-              { icon: Shield, text: "GDPR Compliant" },
+              { icon: Shield, text: "DSGVO-konform" },
               { icon: Zap, text: "SOC 2 Ready" },
-              { icon: Shield, text: "Enterprise Security" },
+              { icon: Shield, text: "Enterprise-Sicherheit" },
             ].map((badge, i) => (
               <div key={i} className="flex items-center gap-2.5">
                 <badge.icon className="w-4 h-4 text-muted-foreground/50" />
@@ -147,22 +147,22 @@ const DashboardPreview = () => {
           <span className="font-display font-semibold text-sm">Decision Dashboard</span>
         </div>
         <div className="flex gap-2">
-          <div className="px-3 py-1 rounded-full text-xs bg-success/10 text-success font-medium">12 Approved</div>
+          <div className="px-3 py-1 rounded-full text-xs bg-success/10 text-success font-medium">12 Genehmigt</div>
           <div className="px-3 py-1 rounded-full text-xs bg-warning/10 text-warning font-medium">5 In Review</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
-          { title: "Q4 Budget Allocation", status: "Approved", priority: "High", progress: 85 },
-          { title: "New Market Entry", status: "In Review", priority: "Critical", progress: 60 },
-          { title: "Tech Stack Migration", status: "Draft", priority: "Medium", progress: 30 },
+          { title: "Q4 Budget-Freigabe", status: "Genehmigt", priority: "Hoch", progress: 85 },
+          { title: "Neuer Markteintritt", status: "In Review", priority: "Kritisch", progress: 60 },
+          { title: "Tech Stack Migration", status: "Entwurf", priority: "Mittel", progress: 30 },
         ].map((decision, i) => (
           <div key={i} className="p-4 rounded-xl bg-muted/30 border border-border space-y-3 hover:border-primary/20 transition-colors">
             <div className="flex items-start justify-between">
               <span className="font-medium text-sm">{decision.title}</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                decision.status === 'Approved' ? 'bg-success/10 text-success' :
+                decision.status === 'Genehmigt' ? 'bg-success/10 text-success' :
                 decision.status === 'In Review' ? 'bg-warning/10 text-warning' :
                 'bg-muted text-muted-foreground'
               }`}>

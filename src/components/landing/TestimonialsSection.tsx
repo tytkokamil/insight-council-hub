@@ -24,7 +24,7 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-28 relative overflow-hidden">
+    <section id="testimonials" className="py-28 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-20" />
 
       <div className="container mx-auto px-4 relative z-10">
@@ -36,7 +36,7 @@ const TestimonialsSection = () => {
           className="text-center max-w-3xl mx-auto mb-16"
         >
           <p className="text-sm font-medium text-primary mb-4 tracking-wide uppercase">
-            Trusted by Leaders
+            Kundenstimmen
           </p>
           <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
             Was Enterprise-Teams
