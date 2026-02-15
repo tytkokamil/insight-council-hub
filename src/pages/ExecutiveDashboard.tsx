@@ -200,27 +200,25 @@ const ExecutiveDashboard = () => {
           </div>
         </div>
 
-        {/* Top KPIs – always visible, compact */}
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+        {/* Top KPIs – clean horizontal strip */}
+        <div className="flex items-stretch gap-0 rounded-xl border border-border bg-card overflow-hidden divide-x divide-border">
           {[
             { label: "Entscheidungen", value: decisions.length, icon: BarChart3 },
             { label: "Umgesetzt", value: implemented.length, icon: CheckCircle2, color: "text-success" },
             { label: "Überfällig", value: overdue.length, icon: Clock, color: overdue.length > 0 ? "text-destructive" : undefined },
             { label: "Eskaliert", value: escalated.length, icon: AlertTriangle, color: escalated.length > 0 ? "text-warning" : undefined },
             { label: "Tasks", value: tasks.length, icon: ListChecks },
-            { label: "Tasks erledigt", value: doneTasks.length, icon: CheckCircle2, color: "text-success" },
-            { label: "Tasks überfällig", value: overdueTasks.length, icon: Clock, color: overdueTasks.length > 0 ? "text-destructive" : undefined },
-            { label: "Ø Tage", value: avgVelocity, icon: TrendingUp },
+            { label: "Erledigt", value: doneTasks.length, icon: CheckCircle2, color: "text-success" },
+            { label: "Überfällig", value: overdueTasks.length, icon: Clock, color: overdueTasks.length > 0 ? "text-destructive" : undefined },
+            { label: "Ø Velocity", value: `${avgVelocity}d`, icon: TrendingUp },
           ].map((kpi, i) => (
-            <Card key={i}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <kpi.icon className={`w-4 h-4 ${kpi.color || "text-muted-foreground"}`} />
-                  <span className="text-xs text-muted-foreground">{kpi.label}</span>
-                </div>
-                <div className="text-2xl font-bold font-display">{kpi.value}</div>
-              </CardContent>
-            </Card>
+            <div key={i} className="flex-1 min-w-0 px-4 py-3 text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                <kpi.icon className={`w-3.5 h-3.5 ${kpi.color || "text-muted-foreground"}`} />
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap">{kpi.label}</span>
+              </div>
+              <div className={`text-xl font-bold font-display ${kpi.color || ""}`}>{kpi.value}</div>
+            </div>
           ))}
         </div>
 
