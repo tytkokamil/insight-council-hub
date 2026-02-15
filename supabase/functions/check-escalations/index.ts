@@ -6,6 +6,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const DEFAULT_SLA = {
+  escalation_hours_warn: 48,
+  escalation_hours_urgent: 24,
+  escalation_hours_overdue: 0,
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -16,15 +22,35 @@ serve(async (req) => {
 
     const now = new Date();
 
-    // Find decisions that are overdue or near deadline and not yet implemented/rejected
-    const { data: decisions, error } = await supabase
-      .from("decisions")
-      .select("id, title, priority, due_date, created_by, assignee_id, escalation_level, status")
-      .in("status", ["draft", "review", "approved"])
-      .not("due_date", "is", null);
+    // Fetch decisions and SLA configs in parallel
+    const [decResult, slaResult] = await Promise.all([
+      supabase.from("decisions")
+        .select("id, title, priority, category, due_date, created_by, assignee_id, escalation_level, status")
+        .in("status", ["draft", "review", "approved"])
+        .not("due_date", "is", null),
+      supabase.from("sla_configs")
+        .select("category, priority, escalation_hours_warn, escalation_hours_urgent, escalation_hours_overdue"),
+    ]);
 
-    if (error) throw error;
-    if (!decisions || decisions.length === 0) {
+    const decisions = decResult.data || [];
+    const slaConfigs = slaResult.data || [];
+
+    if (decResult.error) throw decResult.error;
+
+    // Build SLA lookup
+    const slaMap: Record<string, typeof DEFAULT_SLA> = {};
+    slaConfigs.forEach(s => {
+      slaMap[`${s.category}:${s.priority}`] = {
+        escalation_hours_warn: s.escalation_hours_warn,
+        escalation_hours_urgent: s.escalation_hours_urgent,
+        escalation_hours_overdue: s.escalation_hours_overdue,
+      };
+    });
+
+    const getSla = (category: string, priority: string) =>
+      slaMap[`${category}:${priority}`] || DEFAULT_SLA;
+
+    if (decisions.length === 0) {
       return new Response(JSON.stringify({ message: "No decisions to escalate" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -36,34 +62,23 @@ serve(async (req) => {
       const dueDate = new Date(decision.due_date);
       const hoursUntilDue = (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60);
       const currentLevel = decision.escalation_level || 0;
+      const sla = getSla(decision.category, decision.priority);
 
       let newLevel = 0;
 
-      // Escalation rules based on priority
-      if (decision.priority === "critical") {
-        if (hoursUntilDue < 0) newLevel = 3; // overdue
-        else if (hoursUntilDue < 24) newLevel = 2;
-        else if (hoursUntilDue < 48) newLevel = 1;
-      } else if (decision.priority === "high") {
-        if (hoursUntilDue < 0) newLevel = 3;
-        else if (hoursUntilDue < 24) newLevel = 1;
-        else if (hoursUntilDue < 48) newLevel = 1;
-      } else {
-        if (hoursUntilDue < 0) newLevel = 2;
-        else if (hoursUntilDue < 24) newLevel = 1;
-      }
+      // Escalation rules using configurable SLA thresholds
+      if (hoursUntilDue <= sla.escalation_hours_overdue) newLevel = 3;
+      else if (hoursUntilDue <= sla.escalation_hours_urgent) newLevel = 2;
+      else if (hoursUntilDue <= sla.escalation_hours_warn) newLevel = 1;
 
       if (newLevel > currentLevel) {
-        // Update escalation level
-        await supabase
-          .from("decisions")
+        await supabase.from("decisions")
           .update({ escalation_level: newLevel, last_escalated_at: now.toISOString() })
           .eq("id", decision.id);
 
-        // Create notification for creator
         const levelLabels = ["", "⚠️ Bald fällig", "🔴 Dringend", "🚨 Überfällig"];
         const notifTitle = `${levelLabels[newLevel]}: ${decision.title}`;
-        const notifMessage = hoursUntilDue < 0
+        const notifMessage = hoursUntilDue <= 0
           ? `Diese Entscheidung ist seit ${Math.abs(Math.round(hoursUntilDue))}h überfällig!`
           : `Nur noch ${Math.round(hoursUntilDue)}h bis zur Deadline.`;
 

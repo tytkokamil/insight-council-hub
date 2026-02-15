@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2, RotateCcw } from "lucide-react";
+import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2, RotateCcw, Clock } from "lucide-react";
+import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import { useToast } from "@/hooks/use-toast";
 
 const AI_PROVIDERS = [
@@ -396,6 +397,22 @@ const SettingsPage = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* SLA Configuration */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}>
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-semibold">SLA-Konfiguration</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Konfiguriere Eskalationszeiten und Delegationsregeln pro Kategorie und Priorität.
+              </p>
+              <SlaConfigPanel />
             </CardContent>
           </Card>
         </motion.div>

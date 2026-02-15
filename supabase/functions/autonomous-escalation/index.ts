@@ -6,6 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Default SLA values as fallback
+const DEFAULT_SLA = {
+  escalation_hours_warn: 48,
+  escalation_hours_urgent: 24,
+  escalation_hours_overdue: 0,
+  reassign_days: 7,
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -17,8 +25,8 @@ serve(async (req) => {
     const now = new Date();
     const actions: any[] = [];
 
-    // 1. Fetch all open decisions with reviews
-    const [decRes, reviewRes, memberRes] = await Promise.all([
+    // 1. Fetch all open decisions, reviews, members, AND SLA configs
+    const [decRes, reviewRes, memberRes, slaRes] = await Promise.all([
       supabase.from("decisions")
         .select("id, title, priority, category, due_date, created_by, assignee_id, escalation_level, status, ai_risk_score, team_id, created_at")
         .in("status", ["draft", "review", "approved"]),
@@ -26,11 +34,28 @@ serve(async (req) => {
         .select("id, decision_id, reviewer_id, status, step_order, reviewed_at"),
       supabase.from("team_members")
         .select("team_id, user_id"),
+      supabase.from("sla_configs")
+        .select("category, priority, escalation_hours_warn, escalation_hours_urgent, escalation_hours_overdue, reassign_days"),
     ]);
 
     const decisions = decRes.data || [];
     const reviews = reviewRes.data || [];
     const members = memberRes.data || [];
+    const slaConfigs = slaRes.data || [];
+
+    // Build SLA lookup map: "category:priority" -> config
+    const slaMap: Record<string, typeof DEFAULT_SLA> = {};
+    slaConfigs.forEach(s => {
+      slaMap[`${s.category}:${s.priority}`] = {
+        escalation_hours_warn: s.escalation_hours_warn,
+        escalation_hours_urgent: s.escalation_hours_urgent,
+        escalation_hours_overdue: s.escalation_hours_overdue,
+        reassign_days: s.reassign_days,
+      };
+    });
+
+    const getSla = (category: string, priority: string) =>
+      slaMap[`${category}:${priority}`] || DEFAULT_SLA;
 
     // Group reviews by decision
     const reviewsByDec: Record<string, any[]> = {};
@@ -53,26 +78,21 @@ serve(async (req) => {
       const currentLevel = dec.escalation_level || 0;
       const riskScore = dec.ai_risk_score || 0;
       const decReviews = reviewsByDec[dec.id] || [];
+      const sla = getSla(dec.category, dec.priority);
 
-      // === ACTION 1: Smart Escalation (enhanced from original) ===
+      // === ACTION 1: Smart Escalation using configurable SLA ===
       let newLevel = 0;
-      if (dec.priority === "critical") {
-        if (hoursUntilDue < 0) newLevel = 3;
-        else if (hoursUntilDue < 24) newLevel = 2;
-        else if (hoursUntilDue < 48) newLevel = 1;
-      } else if (dec.priority === "high") {
-        if (hoursUntilDue < 0) newLevel = 3;
-        else if (hoursUntilDue < 24) newLevel = 1;
-      } else {
-        if (hoursUntilDue < 0) newLevel = 2;
-        else if (hoursUntilDue < 24) newLevel = 1;
+      if (dueDate) {
+        if (hoursUntilDue <= sla.escalation_hours_overdue) newLevel = 3;
+        else if (hoursUntilDue <= sla.escalation_hours_urgent) newLevel = 2;
+        else if (hoursUntilDue <= sla.escalation_hours_warn) newLevel = 1;
       }
 
-      // Bonus escalation for stale decisions (open > 14 days without progress)
-      if (daysOpen > 14 && dec.status === "draft") {
+      // Bonus escalation for stale decisions
+      if (daysOpen > sla.reassign_days * 2 && dec.status === "draft") {
         newLevel = Math.max(newLevel, 2);
       }
-      if (daysOpen > 21 && dec.status === "review") {
+      if (daysOpen > sla.reassign_days * 3 && dec.status === "review") {
         newLevel = Math.max(newLevel, 2);
       }
 
@@ -83,9 +103,9 @@ serve(async (req) => {
 
         const levelLabels = ["", "⚠️ Bald fällig", "🔴 Dringend", "🚨 Überfällig"];
         const notifTitle = `${levelLabels[newLevel]}: ${dec.title}`;
-        const notifMessage = hoursUntilDue < 0
+        const notifMessage = hoursUntilDue <= 0
           ? `Überfällig seit ${Math.abs(Math.round(hoursUntilDue))}h!`
-          : daysOpen > 14
+          : daysOpen > sla.reassign_days * 2
           ? `Seit ${daysOpen} Tagen offen ohne Fortschritt.`
           : `Nur noch ${Math.round(hoursUntilDue)}h bis zur Deadline.`;
 
@@ -99,16 +119,15 @@ serve(async (req) => {
           });
         }
 
-        actions.push({ type: "escalation", decision_id: dec.id, title: dec.title, from_level: currentLevel, to_level: newLevel });
+        actions.push({ type: "escalation", decision_id: dec.id, title: dec.title, from_level: currentLevel, to_level: newLevel, sla });
       }
 
-      // === ACTION 2: Auto-Reassign for stale assignments ===
-      if (dec.assignee_id && daysOpen > 7 && dec.status === "draft" && dec.team_id) {
+      // === ACTION 2: Auto-Reassign using configurable reassign_days ===
+      if (dec.assignee_id && daysOpen > sla.reassign_days && dec.status === "draft" && dec.team_id) {
         const teamMemberIds = teamMembers[dec.team_id] || [];
         const otherMembers = teamMemberIds.filter(id => id !== dec.assignee_id && id !== dec.created_by);
 
         if (otherMembers.length > 0) {
-          // Pick a random team member to reassign
           const newAssignee = otherMembers[Math.floor(Math.random() * otherMembers.length)];
 
           await supabase.from("decisions")
@@ -119,18 +138,17 @@ serve(async (req) => {
             user_id: newAssignee, decision_id: dec.id,
             type: "auto_reassign",
             title: `🔄 Auto-Reassign: ${dec.title}`,
-            message: `Diese Entscheidung wurde dir automatisch zugewiesen, da der vorherige Bearbeiter seit ${daysOpen} Tagen inaktiv war.`,
+            message: `Diese Entscheidung wurde dir automatisch zugewiesen, da der vorherige Bearbeiter seit ${daysOpen} Tagen inaktiv war. (SLA: ${sla.reassign_days} Tage)`,
           });
 
-          // Notify old assignee
           await supabase.from("notifications").insert({
             user_id: dec.assignee_id, decision_id: dec.id,
             type: "auto_reassign",
             title: `🔄 Reassigned: ${dec.title}`,
-            message: `Diese Entscheidung wurde automatisch neu zugewiesen, da keine Aktivität seit ${daysOpen} Tagen stattfand.`,
+            message: `Diese Entscheidung wurde automatisch neu zugewiesen, da keine Aktivität seit ${daysOpen} Tagen stattfand. (SLA: ${sla.reassign_days} Tage)`,
           });
 
-          actions.push({ type: "auto_reassign", decision_id: dec.id, title: dec.title, old_assignee: dec.assignee_id, new_assignee: newAssignee });
+          actions.push({ type: "auto_reassign", decision_id: dec.id, title: dec.title, old_assignee: dec.assignee_id, new_assignee: newAssignee, sla_reassign_days: sla.reassign_days });
         }
       }
 
@@ -139,7 +157,6 @@ serve(async (req) => {
         const pendingReviews = decReviews.filter(r => !r.reviewed_at && r.step_order > 1);
 
         if (pendingReviews.length > 0) {
-          // Auto-approve remaining review steps for low-risk decisions
           for (const review of pendingReviews) {
             await supabase.from("decision_reviews")
               .update({
@@ -150,7 +167,6 @@ serve(async (req) => {
               .eq("id", review.id);
           }
 
-          // Move decision to approved
           await supabase.from("decisions")
             .update({ status: "approved" })
             .eq("id", dec.id);
