@@ -388,6 +388,36 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          escalations: boolean
+          id: string
+          review_requests: boolean
+          team_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          escalations?: boolean
+          id?: string
+          review_requests?: boolean
+          team_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          escalations?: boolean
+          id?: string
+          review_requests?: boolean
+          team_updates?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
