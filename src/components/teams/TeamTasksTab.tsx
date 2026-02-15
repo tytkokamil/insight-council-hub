@@ -90,6 +90,8 @@ const TeamTasksTab = ({ teamId }: Props) => {
   }, [members]);
 
   const changeStatus = async (decisionId: string, newStatus: string) => {
+    const oldDecision = decisions.find((d) => d.id === decisionId);
+    const oldStatus = oldDecision?.status;
     const updates: Record<string, any> = { status: newStatus, updated_at: new Date().toISOString() };
     if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
     const { error } = await supabase.from("decisions").update(updates).eq("id", decisionId);
@@ -97,8 +99,21 @@ const TeamTasksTab = ({ teamId }: Props) => {
       toast.error("Statusänderung fehlgeschlagen");
       return;
     }
-    toast.success(`Status → ${statusLabels[newStatus] || newStatus}`);
     fetchData();
+    toast.success(`Status → ${statusLabels[newStatus] || newStatus}`, {
+      action: oldStatus
+        ? {
+            label: "Rückgängig",
+            onClick: async () => {
+              const undoUpdates: Record<string, any> = { status: oldStatus, updated_at: new Date().toISOString() };
+              if (oldStatus !== "implemented") undoUpdates.implemented_at = null;
+              await supabase.from("decisions").update(undoUpdates).eq("id", decisionId);
+              toast.success(`Status zurückgesetzt → ${statusLabels[oldStatus]}`);
+              fetchData();
+            },
+          }
+        : undefined,
+    });
   };
 
   const assignDecision = async (decisionId: string, assigneeId: string | null) => {
