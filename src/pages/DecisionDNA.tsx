@@ -4,12 +4,13 @@ import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
-  AlertTriangle, CheckCircle2, ArrowRight, BarChart3,
+  AlertTriangle, CheckCircle2, ArrowRight, BarChart3, ListChecks,
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import { motion } from "framer-motion";
 
 interface Trait { id: string; label: string; description: string; score: number; sentiment: "positive" | "negative" | "neutral"; icon: any; insight: string; }
@@ -25,7 +26,8 @@ const DecisionDNA = () => {
   const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
   const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
-  const loading = decLoading || revLoading || depLoading || teamLoading;
+  const { data: tasks = [], isLoading: taskLoading } = useTasks();
+  const loading = decLoading || revLoading || depLoading || teamLoading || taskLoading;
 
   useEffect(() => {
     if (loading || decisions.length === 0) return;
@@ -71,6 +73,16 @@ const DecisionDNA = () => {
       { id: "review_culture", label: reviewCoverage > 60 ? "Starke Review-Kultur" : reviewCoverage > 30 ? "Partielle Reviews" : "Schwache Review-Kultur", description: "Review-Abdeckung", score: reviewCoverage, sentiment: reviewCoverage > 50 ? "positive" : reviewCoverage > 25 ? "neutral" : "negative", icon: Users, insight: `${reviewCoverage}% mit Review.` },
     ];
     if (predAccuracy !== null) computedTraits.push({ id: "prediction_accuracy", label: predAccuracy > 75 ? "Präzise Prognosen" : "Moderate Vorhersagequalität", description: "KI vs. tatsächliche Ergebnisse", score: predAccuracy, sentiment: predAccuracy > 60 ? "positive" : "neutral", icon: BarChart3, insight: `${predAccuracy}% Genauigkeit.` });
+
+    // Task Execution Trait
+    const doneTasks = tasks.filter(t => t.status === "done");
+    const openTasks = tasks.filter(t => t.status !== "done");
+    const taskRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 50;
+    const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date!).getTime() < now && t.status !== "done");
+    const taskOverdueRate = openTasks.length > 0 ? Math.round((overdueTasks.length / openTasks.length) * 100) : 0;
+    const taskScore = Math.round(taskRate * 0.6 + (100 - taskOverdueRate) * 0.4);
+    computedTraits.push({ id: "task_execution", label: taskScore > 70 ? "Starke Task-Execution" : taskScore > 45 ? "Moderate Task-Execution" : "Schwache Task-Execution", description: "Aufgaben-Abschluss & Termintreue", score: taskScore, sentiment: taskScore > 60 ? "positive" : taskScore > 40 ? "neutral" : "negative", icon: ListChecks, insight: `${taskRate}% Abschlussrate, ${overdueTasks.length} überfällig.` });
+
     setTraits(computedTraits);
 
     const categories = ["strategic", "budget", "hr", "technical", "operational", "marketing"];
@@ -85,13 +97,14 @@ const DecisionDNA = () => {
 
     const negTraits = computedTraits.filter(t => t.sentiment === "negative");
     const posTraits = computedTraits.filter(t => t.sentiment === "positive");
-    if (posTraits.length >= 5) { setOverallArchetype("High-Performance Organisation"); setArchetypeDescription("Schnelle Entscheidungen, starke Umsetzung, gute Vernetzung."); }
+    if (posTraits.length >= 6) { setOverallArchetype("High-Performance Organisation"); setArchetypeDescription("Schnelle Entscheidungen, starke Umsetzung, gute Vernetzung und hoher Task-Durchsatz."); }
     else if (isRiskAverse && velocityScore < 50) { setOverallArchetype("Konservativ-Analytisch"); setArchetypeDescription("Gründlich aber langsam."); }
     else if (escalationRate > 30 && overdueRate > 30) { setOverallArchetype("Unter Druck"); setArchetypeDescription("Hohe Eskalation und überfällige Entscheidungen."); }
     else if (crossTeamScore < 15 && reviewCoverage < 30) { setOverallArchetype("Silo-getrieben"); setArchetypeDescription("Teams arbeiten isoliert."); }
-    else if (velocityScore > 70 && implRate > 60) { setOverallArchetype("Agil & Umsetzungsstark"); setArchetypeDescription("Schnell mit hoher Umsetzungsrate."); }
+    else if (velocityScore > 70 && implRate > 60 && taskScore > 60) { setOverallArchetype("Agil & Umsetzungsstark"); setArchetypeDescription("Schnell mit hoher Umsetzungsrate und solidem Task-Durchsatz."); }
+    else if (taskScore < 40 && implRate > 50) { setOverallArchetype("Entscheidungsstark, Umsetzungsschwach"); setArchetypeDescription("Gute Entscheidungsrate, aber schwache Aufgaben-Execution."); }
     else { setOverallArchetype("In Entwicklung"); setArchetypeDescription("Gemischte Muster – Fokus auf Schwachstellen."); }
-  }, [loading, decisions, reviews, deps, teams]);
+  }, [loading, decisions, reviews, deps, teams, tasks]);
 
   const sentimentColor = (s: string) => s === "positive" ? "text-success" : s === "negative" ? "text-destructive" : "text-warning";
   const sentimentBg = (s: string) => s === "positive" ? "bg-success/15 border-success/25" : s === "negative" ? "bg-destructive/15 border-destructive/25" : "bg-warning/15 border-warning/25";
