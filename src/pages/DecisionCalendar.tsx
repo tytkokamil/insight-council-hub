@@ -244,11 +244,9 @@ const DecisionCalendar = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Planung</p>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                <CalendarDays className="w-6 h-6 text-primary" />
-                Entscheidungskalender
-              </h1>
+              <h1 className="font-display text-xl font-bold">Entscheidungskalender</h1>
               <PageHint>
                 Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich.
               </PageHint>

@@ -93,11 +93,9 @@ const AuditTrail = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Protokoll</p>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <History className="w-5 h-5 text-primary" />
-              Audit Trail
-            </h1>
+            <h1 className="font-display text-xl font-bold">Audit Trail</h1>
             <PageHint>
               Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert.
             </PageHint>

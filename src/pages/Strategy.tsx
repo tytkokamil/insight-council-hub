@@ -159,7 +159,7 @@ const Strategy = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategie</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Strategy Link Layer</h1>
+            <h1 className="font-display text-xl font-bold">Strategie-Verknüpfung</h1>
             <PageHint>
               Verknüpfe Entscheidungen mit strategischen Zielen (OKRs, KPIs, Revenue). Verfolge den Fortschritt und sieh, welche Entscheidungen den größten Impact haben.
             </PageHint>
@@ -178,7 +178,7 @@ const Strategy = () => {
           { icon: TrendingUp, label: "Ø Fortschritt", value: `${avgProgress}%`, color: "text-warning" },
           { icon: AlertTriangle, label: "Gefährdet", value: atRiskCount, color: "text-destructive" },
         ].map((card, i) => (
-          <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card p-4">
+          <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
@@ -190,7 +190,7 @@ const Strategy = () => {
 
       {/* Create Form */}
       {showCreate && (
-        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="glass-card p-5 mb-6 space-y-4">
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="rounded-lg border border-border bg-card p-5 mb-6 space-y-4">
           <h3 className="font-display font-semibold text-sm">Neues strategisches Ziel</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -254,7 +254,7 @@ const Strategy = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
-              className="glass-card overflow-hidden"
+              className="rounded-lg border border-border bg-card overflow-hidden"
             >
               <div
                 className="p-4 cursor-pointer hover:bg-muted/10 transition-colors"
@@ -353,7 +353,7 @@ const Strategy = () => {
       </div>
 
       {goals.length === 0 && !showCreate && (
-        <div className="glass-card p-12 text-center">
+        <div className="rounded-lg border border-border bg-card p-12 text-center">
           <Target className="w-12 h-12 text-primary mx-auto mb-4 opacity-40" />
           <h3 className="font-display text-xl font-semibold mb-2">Keine strategischen Ziele</h3>
           <p className="text-muted-foreground mb-4">Erstelle OKRs, Revenue-Ziele oder KPIs und verknüpfe sie mit Entscheidungen.</p>
