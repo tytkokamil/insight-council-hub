@@ -4,6 +4,7 @@ import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog, Menu, X, History, Beaker, Brain,
+  ListTodo,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -25,6 +26,7 @@ const navGroups = [
       { icon: Target, label: "Executive", path: "/executive", featureKey: "executive" },
       { icon: BarChart3, label: "Dashboard", path: "/dashboard", featureKey: "dashboard" },
       { icon: FileText, label: "Entscheidungen", path: "/decisions", featureKey: "decisions" },
+      { icon: ListTodo, label: "Aufgaben", path: "/tasks", featureKey: "tasks" },
       { icon: Calendar, label: "Kalender", path: "/calendar", featureKey: "calendar" },
       { icon: Sun, label: "Briefing", path: "/briefing", featureKey: "briefing" },
     ],
