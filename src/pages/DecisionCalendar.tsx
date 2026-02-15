@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, DragEvent } from "react";
 import {
   format,
   startOfMonth,
@@ -12,7 +12,7 @@ import {
   isToday,
 } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -24,6 +24,9 @@ import AppLayout from "@/components/layout/AppLayout";
 import { useDecisions } from "@/hooks/useDecisions";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const priorityColor: Record<string, string> = {
   critical: "bg-destructive text-destructive-foreground",
@@ -45,14 +48,15 @@ const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 const DecisionCalendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
+  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const { data: decisions } = useDecisions();
+  const queryClient = useQueryClient();
 
-  // Filter decisions that have a due_date
   const decisionsWithDue = useMemo(() => {
     return (decisions ?? []).filter((d) => d.due_date);
   }, [decisions]);
 
-  // Group decisions by date string
   const decisionsByDate = useMemo(() => {
     const map: Record<string, typeof decisionsWithDue> = {};
     for (const d of decisionsWithDue) {
@@ -63,7 +67,6 @@ const DecisionCalendar = () => {
     return map;
   }, [decisionsWithDue]);
 
-  // Build calendar grid (always start week on Monday)
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
@@ -84,6 +87,57 @@ const DecisionCalendar = () => {
     [decisions, selectedDecision]
   );
 
+  // Drag handlers
+  const handleDragStart = useCallback((e: DragEvent, decisionId: string) => {
+    e.dataTransfer.setData("text/plain", decisionId);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggingId(decisionId);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingId(null);
+    setDragOverDate(null);
+  }, []);
+
+  const handleDragOver = useCallback((e: DragEvent, dateKey: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverDate(dateKey);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverDate(null);
+  }, []);
+
+  const handleDrop = useCallback(async (e: DragEvent, newDateKey: string) => {
+    e.preventDefault();
+    setDragOverDate(null);
+    setDraggingId(null);
+
+    const decisionId = e.dataTransfer.getData("text/plain");
+    if (!decisionId) return;
+
+    const decision = decisions?.find((d) => d.id === decisionId);
+    if (!decision || decision.due_date === newDateKey) return;
+
+    const oldDate = decision.due_date;
+    const formattedNew = format(new Date(newDateKey), "dd.MM.yyyy", { locale: de });
+
+    const { error } = await supabase
+      .from("decisions")
+      .update({ due_date: newDateKey })
+      .eq("id", decisionId);
+
+    if (error) {
+      toast.error("Fehler beim Verschieben", { description: error.message });
+    } else {
+      toast.success("Fälligkeitsdatum geändert", {
+        description: `„${decision.title}" → ${formattedNew}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["decisions"] });
+    }
+  }, [decisions, queryClient]);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -95,32 +149,20 @@ const DecisionCalendar = () => {
               Entscheidungskalender
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Alle Entscheidungen mit Fälligkeitsdatum auf einen Blick
+              Alle Entscheidungen mit Fälligkeitsdatum auf einen Blick · <span className="text-primary">Drag & Drop</span> zum Verschieben
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentMonth(new Date())}
-            >
+            <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
               Heute
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             <span className="text-sm font-semibold min-w-[140px] text-center">
               {format(currentMonth, "MMMM yyyy", { locale: de })}
             </span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-            >
+            <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
@@ -147,14 +189,19 @@ const DecisionCalendar = () => {
               const dayDecisions = decisionsByDate[dateKey] ?? [];
               const inMonth = isSameMonth(day, currentMonth);
               const today = isToday(day);
+              const isDropTarget = dragOverDate === dateKey;
 
               return (
                 <div
                   key={idx}
+                  onDragOver={(e) => handleDragOver(e, dateKey)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, dateKey)}
                   className={cn(
-                    "min-h-[100px] md:min-h-[120px] border-b border-r border-border p-1.5 transition-colors",
+                    "min-h-[100px] md:min-h-[120px] border-b border-r border-border p-1.5 transition-all duration-150",
                     !inMonth && "bg-muted/30",
-                    today && "bg-primary/5"
+                    today && "bg-primary/5",
+                    isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40"
                   )}
                 >
                   {/* Day number */}
@@ -180,13 +227,18 @@ const DecisionCalendar = () => {
                     {dayDecisions.slice(0, 3).map((decision) => (
                       <Tooltip key={decision.id}>
                         <TooltipTrigger asChild>
-                          <button
+                          <div
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, decision.id)}
+                            onDragEnd={handleDragEnd}
                             onClick={() => setSelectedDecision(decision.id)}
                             className={cn(
-                              "w-full text-left rounded px-1.5 py-0.5 text-[11px] font-medium truncate flex items-center gap-1 hover:opacity-80 transition-opacity",
-                              priorityColor[decision.priority] || priorityColor.medium
+                              "w-full text-left rounded px-1.5 py-0.5 text-[11px] font-medium truncate flex items-center gap-1 cursor-grab active:cursor-grabbing hover:opacity-90 transition-all",
+                              priorityColor[decision.priority] || priorityColor.medium,
+                              draggingId === decision.id && "opacity-40 scale-95"
                             )}
                           >
+                            <GripVertical className="w-3 h-3 shrink-0 opacity-50" />
                             <span
                               className={cn(
                                 "w-1.5 h-1.5 rounded-full shrink-0",
@@ -194,26 +246,19 @@ const DecisionCalendar = () => {
                               )}
                             />
                             <span className="truncate">{decision.title}</span>
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent side="right" className="max-w-[250px]">
                           <p className="font-semibold text-sm">{decision.title}</p>
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className="text-[10px] capitalize">
-                              {decision.status}
-                            </Badge>
-                            <Badge variant="outline" className="text-[10px] capitalize">
-                              {decision.priority}
-                            </Badge>
-                            <Badge variant="outline" className="text-[10px] capitalize">
-                              {decision.category}
-                            </Badge>
+                            <Badge variant="outline" className="text-[10px] capitalize">{decision.status}</Badge>
+                            <Badge variant="outline" className="text-[10px] capitalize">{decision.priority}</Badge>
+                            <Badge variant="outline" className="text-[10px] capitalize">{decision.category}</Badge>
                           </div>
                           {decision.description && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                              {decision.description}
-                            </p>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{decision.description}</p>
                           )}
+                          <p className="text-[10px] text-muted-foreground mt-1.5 italic">Ziehen zum Verschieben</p>
                         </TooltipContent>
                       </Tooltip>
                     ))}
@@ -256,7 +301,6 @@ const DecisionCalendar = () => {
         </div>
       </div>
 
-      {/* Decision Detail Dialog */}
       {selectedDecisionData && (
         <DecisionDetailDialog
           decision={selectedDecisionData}
