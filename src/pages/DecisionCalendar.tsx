@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, DragEvent } from "react";
+import { useState, useMemo, useCallback, DragEvent, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   format,
   startOfMonth,
@@ -270,29 +271,39 @@ const DecisionCalendar = () => {
 
         <div className="flex gap-4">
           {/* Main calendar view */}
-          <div className="flex-1 min-w-0">
-            {viewMode === "month" && (
-              <MonthView
-                monthDays={monthDays}
-                currentDate={currentDate}
-                decisionsByDate={decisionsByDate}
-                {...sharedDragProps}
-              />
-            )}
-            {viewMode === "week" && (
-              <WeekView
-                weekDays={weekDays}
-                decisionsByDate={decisionsByDate}
-                {...sharedDragProps}
-              />
-            )}
-            {viewMode === "day" && (
-              <DayView
-                day={currentDate}
-                decisionsByDate={decisionsByDate}
-                {...sharedDragProps}
-              />
-            )}
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={viewMode}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+              >
+                {viewMode === "month" && (
+                  <MonthView
+                    monthDays={monthDays}
+                    currentDate={currentDate}
+                    decisionsByDate={decisionsByDate}
+                    {...sharedDragProps}
+                  />
+                )}
+                {viewMode === "week" && (
+                  <WeekView
+                    weekDays={weekDays}
+                    decisionsByDate={decisionsByDate}
+                    {...sharedDragProps}
+                  />
+                )}
+                {viewMode === "day" && (
+                  <DayView
+                    day={currentDate}
+                    decisionsByDate={decisionsByDate}
+                    {...sharedDragProps}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Unscheduled sidebar */}
