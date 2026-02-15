@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
+import { useTasks, type Task } from "@/hooks/useTasks";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -45,6 +46,7 @@ const DecisionCalendar = () => {
     category: new Set(),
   });
   const { data: decisions } = useDecisions();
+  const { data: allTasks = [] } = useTasks();
   const { data: profiles } = useProfiles();
   const queryClient = useQueryClient();
 
@@ -69,6 +71,17 @@ const DecisionCalendar = () => {
     if (filters.category.size > 0 && !filters.category.has(d.category)) return false;
     return true;
   }, [filters]);
+
+  const tasksByDate = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    for (const t of allTasks) {
+      if (!t.due_date) continue;
+      const key = t.due_date;
+      if (!map[key]) map[key] = [];
+      map[key].push(t);
+    }
+    return map;
+  }, [allTasks]);
 
   const decisionsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
@@ -216,6 +229,7 @@ const DecisionCalendar = () => {
     onDrop: handleDrop,
     onDecisionClick: setSelectedDecision,
     profileMap,
+    tasksByDate,
   };
 
   return (

@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { CheckSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { priorityColor, statusDot } from "./CalendarConstants";
 
@@ -33,6 +34,10 @@ const CalendarLegend = memo(() => (
         {label}
       </div>
     ))}
+    <span className="ml-4 font-semibold flex items-center gap-1">
+      <CheckSquare className="w-3 h-3" />
+      = Aufgabe
+    </span>
   </div>
 ));
 

@@ -4,10 +4,13 @@ import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { WEEKDAYS_LONG } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
+import TaskPill from "./TaskPill";
+import type { Task } from "@/hooks/useTasks";
 
 interface WeekViewProps {
   weekDays: Date[];
   decisionsByDate: Record<string, any[]>;
+  tasksByDate?: Record<string, Task[]>;
   dragOverDate: string | null;
   draggingId: string | null;
   onDragStart: (e: DragEvent, id: string) => void;
@@ -22,6 +25,7 @@ interface WeekViewProps {
 const WeekView = memo(({
   weekDays,
   decisionsByDate,
+  tasksByDate = {},
   dragOverDate,
   draggingId,
   onDragStart,
@@ -61,6 +65,7 @@ const WeekView = memo(({
       {weekDays.map((day, idx) => {
         const dateKey = format(day, "yyyy-MM-dd");
         const dayDecisions = decisionsByDate[dateKey] ?? [];
+        const dayTasks = tasksByDate[dateKey] ?? [];
         const today = isToday(day);
         const isDropTarget = dragOverDate === dateKey;
 
@@ -89,9 +94,12 @@ const WeekView = memo(({
                   showTime
                 />
               ))}
-              {dayDecisions.length === 0 && (
+              {dayTasks.map((task) => (
+                <TaskPill key={task.id} task={task} profileMap={profileMap} />
+              ))}
+              {dayDecisions.length === 0 && dayTasks.length === 0 && (
                 <p className="text-[11px] text-muted-foreground/40 text-center pt-8">
-                  Keine Deadlines
+                  Keine Einträge
                 </p>
               )}
             </div>

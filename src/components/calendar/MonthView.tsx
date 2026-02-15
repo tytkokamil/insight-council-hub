@@ -3,11 +3,14 @@ import { format, isSameMonth, isToday } from "date-fns";
 import { cn } from "@/lib/utils";
 import { WEEKDAYS } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
+import TaskPill from "./TaskPill";
+import type { Task } from "@/hooks/useTasks";
 
 interface MonthViewProps {
   monthDays: Date[];
   currentDate: Date;
   decisionsByDate: Record<string, any[]>;
+  tasksByDate?: Record<string, Task[]>;
   dragOverDate: string | null;
   draggingId: string | null;
   onDragStart: (e: DragEvent, id: string) => void;
@@ -23,6 +26,7 @@ const MonthView = memo(({
   monthDays,
   currentDate,
   decisionsByDate,
+  tasksByDate = {},
   dragOverDate,
   draggingId,
   onDragStart,
@@ -45,6 +49,8 @@ const MonthView = memo(({
       {monthDays.map((day, idx) => {
         const dateKey = format(day, "yyyy-MM-dd");
         const dayDecisions = decisionsByDate[dateKey] ?? [];
+        const dayTasks = tasksByDate[dateKey] ?? [];
+        const totalItems = dayDecisions.length + dayTasks.length;
         const inMonth = isSameMonth(day, currentDate);
         const today = isToday(day);
         const isDropTarget = dragOverDate === dateKey;
@@ -60,8 +66,6 @@ const MonthView = memo(({
               !inMonth && "bg-muted/30",
               today && "bg-primary/5",
               isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
-              !isDropTarget && !today && inMonth && dayDecisions.length >= 4 && "bg-primary/[0.12]",
-              !isDropTarget && !today && inMonth && dayDecisions.length >= 2 && dayDecisions.length < 4 && "bg-primary/[0.06]",
             )}
           >
             <div className="flex items-center justify-between mb-1">
@@ -72,8 +76,8 @@ const MonthView = memo(({
               )}>
                 {format(day, "d")}
               </span>
-              {dayDecisions.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">{dayDecisions.length}</span>
+              {totalItems > 0 && (
+                <span className="text-[10px] text-muted-foreground">{totalItems}</span>
               )}
             </div>
             <div className="space-y-0.5">
@@ -88,9 +92,12 @@ const MonthView = memo(({
                   profileMap={profileMap}
                 />
               ))}
-              {dayDecisions.length > 3 && (
+              {dayTasks.slice(0, Math.max(0, 3 - dayDecisions.length)).map((task) => (
+                <TaskPill key={task.id} task={task} profileMap={profileMap} />
+              ))}
+              {totalItems > 3 && (
                 <span className="text-[10px] text-muted-foreground pl-1.5">
-                  +{dayDecisions.length - 3} weitere
+                  +{totalItems - 3} weitere
                 </span>
               )}
             </div>
