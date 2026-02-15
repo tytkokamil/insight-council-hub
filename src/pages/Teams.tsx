@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageHint from "@/components/shared/PageHint";
-import { Plus, Users as UsersIcon, UserPlus, ArrowRight, Mail } from "lucide-react";
+import { Plus, Users as UsersIcon, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
-import ManageTeamDialog from "@/components/teams/ManageTeamDialog";
 
 const Teams = () => {
+  const navigate = useNavigate();
   const [teams, setTeams] = useState<any[]>([]);
   const [showCreate, setShowCreate] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<any>(null);
 
   const fetchTeams = async () => {
     const { data } = await supabase
@@ -82,15 +82,12 @@ const Teams = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card className="hover:border-primary/30 transition-all cursor-pointer group" onClick={() => setSelectedTeam(team)}>
+              <Card className="hover:border-primary/30 transition-all cursor-pointer group" onClick={() => navigate(`/teams/${team.id}`)}>
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                       <UsersIcon className="w-5 h-5 text-primary" />
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); setSelectedTeam(team); }}>
-                      <UserPlus className="w-3.5 h-3.5" />
-                    </Button>
                   </div>
                   <h3 className="font-display font-semibold mb-0.5">{team.name}</h3>
                   <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{team.description || "Keine Beschreibung"}</p>
@@ -109,7 +106,6 @@ const Teams = () => {
       )}
 
       <CreateTeamDialog open={showCreate} onOpenChange={setShowCreate} onCreated={fetchTeams} />
-      <ManageTeamDialog team={selectedTeam} open={!!selectedTeam} onOpenChange={(o) => { if (!o) setSelectedTeam(null); }} onUpdated={fetchTeams} />
     </AppLayout>
   );
 };
