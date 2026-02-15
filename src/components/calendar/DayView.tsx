@@ -79,9 +79,6 @@ const DayView = memo(({
         )}>
           {format(day, "d. MMMM yyyy", { locale: de })}
         </p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {dayDecisions.length} {dayDecisions.length === 1 ? "Entscheidung" : "Entscheidungen"}
-        </p>
       </div>
 
       <div
