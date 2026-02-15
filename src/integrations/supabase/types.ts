@@ -519,6 +519,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sla_configs: {
+        Row: {
+          category: string
+          created_at: string
+          escalation_hours_overdue: number
+          escalation_hours_urgent: number
+          escalation_hours_warn: number
+          id: string
+          priority: string
+          reassign_days: number
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          escalation_hours_overdue?: number
+          escalation_hours_urgent?: number
+          escalation_hours_warn?: number
+          id?: string
+          priority: string
+          reassign_days?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          escalation_hours_overdue?: number
+          escalation_hours_urgent?: number
+          escalation_hours_warn?: number
+          id?: string
+          priority?: string
+          reassign_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stakeholder_positions: {
         Row: {
           concerns: string | null
