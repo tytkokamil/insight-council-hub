@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, memo } from "react";
 import { Building2, ChevronDown, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,7 @@ interface Team {
   name: string;
 }
 
-const TeamSwitcher = ({ collapsed }: { collapsed: boolean }) => {
+const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const { user } = useAuth();
   const { selectedTeamId, setSelectedTeamId } = useTeamContext();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -45,7 +45,7 @@ const TeamSwitcher = ({ collapsed }: { collapsed: boolean }) => {
       setTeams(data || []);
     };
     fetchTeams();
-  }, [user]);
+  }, [user?.id]);
 
   const fetchUnreadCounts = useCallback(async () => {
     if (!user || teams.length === 0) return;
@@ -189,6 +189,6 @@ const TeamSwitcher = ({ collapsed }: { collapsed: boolean }) => {
       </AnimatePresence>
     </div>
   );
-};
+});
 
 export default TeamSwitcher;

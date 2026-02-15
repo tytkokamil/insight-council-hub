@@ -266,10 +266,10 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await signOut();
     navigate("/auth");
-  };
+  }, [signOut, navigate]);
 
   const sidebarProps = {
     isAdmin,
