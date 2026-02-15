@@ -8,35 +8,49 @@ import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import { lazy, Suspense } from "react";
+import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
+
+// Eagerly loaded (critical path)
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Decisions from "./pages/Decisions";
-import Teams from "./pages/Teams";
-import Analytics from "./pages/Analytics";
-import Briefing from "./pages/Briefing";
-import SettingsPage from "./pages/SettingsPage";
-import DecisionGraph from "./pages/DecisionGraph";
-import BottleneckIntelligence from "./pages/BottleneckIntelligence";
-import OpportunityCostRadar from "./pages/OpportunityCostRadar";
-import WarRoom from "./pages/WarRoom";
-import PredictiveTimeline from "./pages/PredictiveTimeline";
-import Strategy from "./pages/Strategy";
-import FrictionMap from "./pages/FrictionMap";
-import HealthHeatmap from "./pages/HealthHeatmap";
-import DecisionDNA from "./pages/DecisionDNA";
-import EscalationEngine from "./pages/EscalationEngine";
-import DecisionBenchmarking from "./pages/DecisionBenchmarking";
-import ScenarioEngine from "./pages/ScenarioEngine";
-import ExecutiveDashboard from "./pages/ExecutiveDashboard";
-import ResetPassword from "./pages/ResetPassword";
-import AdminUsers from "./pages/AdminUsers";
-import AuditTrail from "./pages/AuditTrail";
-import PilotSettings from "./pages/PilotSettings";
-import DecisionCalendar from "./pages/DecisionCalendar";
 import NotFound from "./pages/NotFound";
 
+// Lazy loaded pages
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Decisions = lazy(() => import("./pages/Decisions"));
+const Teams = lazy(() => import("./pages/Teams"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Briefing = lazy(() => import("./pages/Briefing"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const DecisionGraph = lazy(() => import("./pages/DecisionGraph"));
+const BottleneckIntelligence = lazy(() => import("./pages/BottleneckIntelligence"));
+const OpportunityCostRadar = lazy(() => import("./pages/OpportunityCostRadar"));
+const WarRoom = lazy(() => import("./pages/WarRoom"));
+const PredictiveTimeline = lazy(() => import("./pages/PredictiveTimeline"));
+const Strategy = lazy(() => import("./pages/Strategy"));
+const FrictionMap = lazy(() => import("./pages/FrictionMap"));
+const HealthHeatmap = lazy(() => import("./pages/HealthHeatmap"));
+const DecisionDNA = lazy(() => import("./pages/DecisionDNA"));
+const EscalationEngine = lazy(() => import("./pages/EscalationEngine"));
+const DecisionBenchmarking = lazy(() => import("./pages/DecisionBenchmarking"));
+const ScenarioEngine = lazy(() => import("./pages/ScenarioEngine"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AuditTrail = lazy(() => import("./pages/AuditTrail"));
+const PilotSettings = lazy(() => import("./pages/PilotSettings"));
+const DecisionCalendar = lazy(() => import("./pages/DecisionCalendar"));
+
 const queryClient = new QueryClient();
+
+const P = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute>
+    <Suspense fallback={<PageLoadingFallback />}>
+      {children}
+    </Suspense>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <ThemeProvider>
@@ -52,30 +66,30 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
-              <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/briefing" element={<ProtectedRoute><Briefing /></ProtectedRoute>} />
-              <Route path="/graph" element={<ProtectedRoute><DecisionGraph /></ProtectedRoute>} />
-              <Route path="/bottlenecks" element={<ProtectedRoute><BottleneckIntelligence /></ProtectedRoute>} />
-              <Route path="/costs" element={<ProtectedRoute><OpportunityCostRadar /></ProtectedRoute>} />
-              <Route path="/warroom" element={<ProtectedRoute><WarRoom /></ProtectedRoute>} />
-              <Route path="/timeline" element={<ProtectedRoute><PredictiveTimeline /></ProtectedRoute>} />
-              <Route path="/strategy" element={<ProtectedRoute><Strategy /></ProtectedRoute>} />
-              <Route path="/friction" element={<ProtectedRoute><FrictionMap /></ProtectedRoute>} />
-              <Route path="/health" element={<ProtectedRoute><HealthHeatmap /></ProtectedRoute>} />
-              <Route path="/dna" element={<ProtectedRoute><DecisionDNA /></ProtectedRoute>} />
-              <Route path="/engine" element={<ProtectedRoute><EscalationEngine /></ProtectedRoute>} />
-              <Route path="/benchmarking" element={<ProtectedRoute><DecisionBenchmarking /></ProtectedRoute>} />
-              <Route path="/scenarios" element={<ProtectedRoute><ScenarioEngine /></ProtectedRoute>} />
-              <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-              <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
-              <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
-              <Route path="/pilot" element={<ProtectedRoute><PilotSettings /></ProtectedRoute>} />
-              <Route path="/calendar" element={<ProtectedRoute><DecisionCalendar /></ProtectedRoute>} />
+              <Route path="/reset-password" element={<Suspense fallback={<PageLoadingFallback />}><ResetPassword /></Suspense>} />
+              <Route path="/dashboard" element={<P><Dashboard /></P>} />
+              <Route path="/decisions" element={<P><Decisions /></P>} />
+              <Route path="/teams" element={<P><Teams /></P>} />
+              <Route path="/analytics" element={<P><Analytics /></P>} />
+              <Route path="/briefing" element={<P><Briefing /></P>} />
+              <Route path="/graph" element={<P><DecisionGraph /></P>} />
+              <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
+              <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
+              <Route path="/warroom" element={<P><WarRoom /></P>} />
+              <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
+              <Route path="/strategy" element={<P><Strategy /></P>} />
+              <Route path="/friction" element={<P><FrictionMap /></P>} />
+              <Route path="/health" element={<P><HealthHeatmap /></P>} />
+              <Route path="/dna" element={<P><DecisionDNA /></P>} />
+              <Route path="/engine" element={<P><EscalationEngine /></P>} />
+              <Route path="/benchmarking" element={<P><DecisionBenchmarking /></P>} />
+              <Route path="/scenarios" element={<P><ScenarioEngine /></P>} />
+              <Route path="/executive" element={<P><ExecutiveDashboard /></P>} />
+              <Route path="/settings" element={<P><SettingsPage /></P>} />
+              <Route path="/admin/users" element={<P><AdminUsers /></P>} />
+              <Route path="/audit" element={<P><AuditTrail /></P>} />
+              <Route path="/pilot" element={<P><PilotSettings /></P>} />
+              <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
