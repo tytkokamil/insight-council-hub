@@ -250,11 +250,11 @@ const ExecutiveDashboard = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-sm font-semibold mb-4">Performance Radar</h3>
-                <div className="h-[240px]">
+                <div className="h-[260px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
+                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="55%">
                       <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                       <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
                     </RadarChart>
