@@ -374,10 +374,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Desktop Sidebar */}
       {!isMobile && (
-        <motion.aside
-          animate={{ width: collapsed ? 56 : 240 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="relative border-r border-border bg-card flex flex-col shrink-0 overflow-hidden"
+        <aside
+          style={{ width: collapsed ? 56 : 240 }}
+          className="relative border-r border-border bg-card flex flex-col shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
           role="navigation"
           aria-label="Hauptnavigation"
         >
@@ -386,7 +385,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             {...sidebarProps}
             onCollapse={() => setCollapsed(!collapsed)}
           />
-        </motion.aside>
+        </aside>
       )}
 
       {/* Main Content with page transition */}
