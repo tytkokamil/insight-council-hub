@@ -63,7 +63,149 @@ const navGroups = [
   },
 ];
 
-const SidebarContent = memo(({
+/* ── Stable header: logo + theme + collapse ── */
+const SidebarHeader = memo(({
+  collapsed,
+  theme,
+  toggleTheme,
+  onCollapse,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  theme: string;
+  toggleTheme: () => void;
+  onCollapse: () => void;
+  onNavigate?: () => void;
+}) => (
+  <div className="flex items-center justify-between px-3 h-14 border-b border-border">
+    <Link to="/dashboard" className="flex items-center gap-2.5 overflow-hidden" onClick={onNavigate}>
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <LayoutDashboard className="w-4 h-4 text-primary" />
+      </div>
+      {!collapsed && (
+        <span className="font-display font-semibold text-sm tracking-tight whitespace-nowrap">
+          DecisionOS
+        </span>
+      )}
+    </Link>
+    <div className="flex items-center gap-0.5 shrink-0">
+      <button
+        onClick={toggleTheme}
+        className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+        title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+      >
+        {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+      </button>
+      <button
+        onClick={onCollapse}
+        className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex"
+      >
+        <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`} />
+      </button>
+    </div>
+  </div>
+));
+
+/* ── Navigation: only part that depends on pathname ── */
+const SidebarNav = memo(({
+  collapsed,
+  isAdmin,
+  isFeatureEnabled,
+  pathname,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  isAdmin: boolean;
+  isFeatureEnabled: (key: string) => boolean;
+  pathname: string;
+  onNavigate?: () => void;
+}) => (
+  <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
+    {navGroups.map((group) => {
+      const visibleItems = group.items.filter(item => {
+        if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
+        if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
+        return true;
+      });
+      if (visibleItems.length === 0) return null;
+      return (
+        <div key={group.label}>
+          {!collapsed && (
+            <p className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50">
+              {group.label}
+            </p>
+          )}
+          <div className="space-y-0.5">
+            {visibleItems.map((item) => {
+              const active = pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={onNavigate}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  }`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  {!collapsed && (
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </nav>
+));
+
+/* ── Stable footer: user info + sign out ── */
+const SidebarFooter = memo(({
+  collapsed,
+  user,
+  avatarUrl,
+  onSignOut,
+}: {
+  collapsed: boolean;
+  user: any;
+  avatarUrl: string | null;
+  onSignOut: () => void;
+}) => (
+  <>
+    <div className="py-2 border-t border-border">
+      <NotificationCenter collapsed={collapsed} />
+    </div>
+    <div className="px-2 py-3 border-t border-border">
+      <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+        <UserAvatar avatarUrl={avatarUrl} fullName={user?.user_metadata?.full_name} email={user?.email} />
+        {!collapsed && (
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {user?.user_metadata?.full_name || user?.email}
+              </p>
+              <p className="text-[10px] text-success flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
+                Online
+              </p>
+            </div>
+            <button onClick={onSignOut} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/50">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  </>
+));
+
+/* ── Composed sidebar ── */
+const SidebarContent = ({
   collapsed,
   isAdmin,
   isFeatureEnabled,
@@ -89,141 +231,12 @@ const SidebarContent = memo(({
   onNavigate?: () => void;
 }) => (
   <>
-    {/* Logo */}
-    <div className="flex items-center justify-between px-3 h-14 border-b border-border">
-      <Link to="/dashboard" className="flex items-center gap-2.5 overflow-hidden" onClick={onNavigate}>
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <LayoutDashboard className="w-4 h-4 text-primary" />
-        </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              className="font-display font-semibold text-sm tracking-tight whitespace-nowrap"
-            >
-              DecisionOS
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </Link>
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button
-          onClick={toggleTheme}
-          className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
-          title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-        >
-          {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-        </button>
-        <button
-          onClick={onCollapse}
-          className="w-7 h-7 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex"
-        >
-          <ChevronLeft className={`w-3.5 h-3.5 transition-transform duration-200 ${collapsed ? "rotate-180" : ""}`} />
-        </button>
-      </div>
-    </div>
-
-    {/* Team Switcher */}
+    <SidebarHeader collapsed={collapsed} theme={theme} toggleTheme={toggleTheme} onCollapse={onCollapse} onNavigate={onNavigate} />
     <TeamSwitcher collapsed={collapsed} />
-
-    {/* Navigation */}
-    <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
-      {navGroups.map((group) => {
-        const visibleItems = group.items.filter(item => {
-          if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
-          if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
-          return true;
-        });
-        if (visibleItems.length === 0) return null;
-        return (
-          <div key={group.label}>
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50"
-                >
-                  {group.label}
-                </motion.p>
-              )}
-            </AnimatePresence>
-            <div className="space-y-0.5">
-              {visibleItems.map((item) => {
-                const active = pathname === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={onNavigate}
-                    className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-                      active
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-                    }`}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <item.icon className="w-4 h-4 shrink-0" />
-                    <AnimatePresence>
-                      {!collapsed && (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="whitespace-nowrap"
-                        >
-                          {item.label}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </nav>
-
-    {/* Notifications */}
-    <div className="py-2 border-t border-border">
-      <NotificationCenter collapsed={collapsed} />
-    </div>
-
-    {/* User */}
-    <div className="px-2 py-3 border-t border-border">
-      <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors">
-        <UserAvatar avatarUrl={avatarUrl} fullName={user?.user_metadata?.full_name} email={user?.email} />
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 min-w-0"
-            >
-              <p className="text-sm font-medium truncate">
-                {user?.user_metadata?.full_name || user?.email}
-              </p>
-              <p className="text-[10px] text-success flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-                Online
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {!collapsed && (
-          <button onClick={onSignOut} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/50">
-            <LogOut className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-    </div>
+    <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} />
+    <SidebarFooter collapsed={collapsed} user={user} avatarUrl={avatarUrl} onSignOut={onSignOut} />
   </>
-));
+);
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
