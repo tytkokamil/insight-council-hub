@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import PageHint from "@/components/shared/PageHint";
 import { Plus, Users as UsersIcon, UserPlus, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,12 @@ const Teams = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Verwaltung</p>
-          <h1 className="font-display text-xl font-bold">Teams</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold">Teams</h1>
+            <PageHint>
+              Erstelle Teams und lade Mitglieder per E-Mail ein. Entscheidungen können Teams zugeordnet werden, um Verantwortlichkeiten klar zu definieren.
+            </PageHint>
+          </div>
         </div>
         <Button onClick={() => setShowCreate(true)} className="gap-2">
           <Plus className="w-4 h-4" />

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import PageHint from "@/components/shared/PageHint";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -146,7 +147,12 @@ const Strategy = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategie</p>
-          <h1 className="font-display text-xl font-bold">Strategy Link Layer</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold">Strategy Link Layer</h1>
+            <PageHint>
+              Verknüpfe Entscheidungen mit strategischen Zielen (OKRs, KPIs, Revenue). Verfolge den Fortschritt und sieh, welche Entscheidungen den größten Impact haben.
+            </PageHint>
+          </div>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="gap-2">
           <Plus className="w-4 h-4" /> Neues Ziel

@@ -15,6 +15,7 @@ import {
 } from "date-fns";
 import { de } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download } from "lucide-react";
+import PageHint from "@/components/shared/PageHint";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
@@ -223,10 +224,15 @@ const DecisionCalendar = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <CalendarDays className="w-6 h-6 text-primary" />
-              Entscheidungskalender
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                <CalendarDays className="w-6 h-6 text-primary" />
+                Entscheidungskalender
+              </h1>
+              <PageHint>
+                Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich.
+              </PageHint>
+            </div>
             <p className="text-sm text-muted-foreground mt-1">
               Drag & Drop zum Verschieben von Deadlines
             </p>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
@@ -123,7 +124,12 @@ const ExecutiveDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
-            <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+              <PageHint>
+                Unternehmensweite Entscheidungs-Intelligence für die Führungsebene. Zeigt Gesamtperformance, Team-Vergleiche, Risikobewertung und strategische Ausrichtung auf einen Blick.
+              </PageHint>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="text-sm px-3 py-1">{archetype}</Badge>

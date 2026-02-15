@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
 import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle, BarChart3 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -83,7 +84,12 @@ const Analytics = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-        <h1 className="font-display text-xl font-bold">Analytics</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Analytics</h1>
+          <PageHint>
+            Visualisierung deiner Entscheidungsdaten: Statusverteilung, Kategorien, Risikoanalyse und Durchlaufzeiten. Alle Diagramme aktualisieren sich automatisch.
+          </PageHint>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

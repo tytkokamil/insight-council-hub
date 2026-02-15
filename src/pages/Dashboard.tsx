@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -123,7 +124,12 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+            <PageHint>
+              Dein Echtzeit-Überblick über alle Entscheidungen. Die KPI-Widgets zeigen Velocity, Momentum, Kosten und Eskalationen. Klicke auf eine Entscheidung, um Details zu sehen.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">Überblick über deine Entscheidungen</p>
         </div>
         <Button onClick={() => navigate("/decisions")} className="gap-2">

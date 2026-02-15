@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import PageHint from "@/components/shared/PageHint";
 import { History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles, Pencil, Plus, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,10 +93,15 @@ const AuditTrail = () => {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <History className="w-5 h-5 text-primary" />
-            Audit Trail
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <History className="w-5 h-5 text-primary" />
+              Audit Trail
+            </h1>
+            <PageHint>
+              Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">
             Vollständige Änderungshistorie aller Entscheidungen
           </p>
