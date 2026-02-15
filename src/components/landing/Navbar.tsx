@@ -41,8 +41,9 @@ const Navbar = () => {
               <div className="hidden md:flex items-center gap-1">
               {[
                 { label: "Funktionen", href: "#features" },
+                { label: "Preise", href: "#pricing" },
                 { label: "Vorteile", href: "#stats" },
-                { label: "Enterprise", href: "#testimonials" },
+                { label: "Kunden", href: "#testimonials" },
               ].map(item => (
                   <a
                     key={item.label}
@@ -93,8 +94,9 @@ const Navbar = () => {
             <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/60 p-5 shadow-elevated space-y-1">
               {[
                 { label: "Funktionen", href: "#features" },
+                { label: "Preise", href: "#pricing" },
                 { label: "Vorteile", href: "#stats" },
-                { label: "Enterprise", href: "#testimonials" },
+                { label: "Kunden", href: "#testimonials" },
               ].map(item => (
                 <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl hover:bg-muted/50 transition-colors">
                   {item.label}
