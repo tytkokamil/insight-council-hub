@@ -16,6 +16,7 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [open, setOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const teamsLoaded = useRef(false);
 
@@ -33,12 +34,13 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin");
-      const isAdmin = (roleData?.length ?? 0) > 0;
+      const isAdminUser = (roleData?.length ?? 0) > 0;
+      setIsAdmin(isAdminUser);
 
       let query = supabase.from("teams").select("id, name").order("name");
-      if (!isAdmin && memberTeamIds.length > 0) {
+      if (!isAdminUser && memberTeamIds.length > 0) {
         query = query.in("id", memberTeamIds);
-      } else if (!isAdmin) {
+      } else if (!isAdminUser) {
         teamsLoaded.current = true;
         setTeams([]);
         return;
@@ -105,7 +107,7 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const label = selectedTeam ? selectedTeam.name : "Persönlich";
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
-  if (teamsLoaded.current && teams.length === 0) return null;
+  if (teamsLoaded.current && teams.length === 0 && !isAdmin) return null;
 
   return (
     <div className="relative px-3 py-2 border-b border-border">
