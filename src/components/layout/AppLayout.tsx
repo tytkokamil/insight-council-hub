@@ -16,6 +16,7 @@ import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { motion, AnimatePresence } from "framer-motion";
+import { usePrefetchOnHover } from "@/hooks/usePrefetch";
 
 const navGroups = [
   {
@@ -114,12 +115,14 @@ const SidebarNav = memo(({
   isFeatureEnabled,
   pathname,
   onNavigate,
+  onPrefetch,
 }: {
   collapsed: boolean;
   isAdmin: boolean;
   isFeatureEnabled: (key: string) => boolean;
   pathname: string;
   onNavigate?: () => void;
+  onPrefetch?: (path: string) => void;
 }) => (
   <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
     {navGroups.map((group) => {
@@ -144,6 +147,7 @@ const SidebarNav = memo(({
                   key={item.path}
                   to={item.path}
                   onClick={onNavigate}
+                  onMouseEnter={() => onPrefetch?.(item.path)}
                   className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
                     active
                       ? "bg-primary/10 text-primary"
@@ -218,6 +222,7 @@ const SidebarContent = ({
   onCollapse,
   onSignOut,
   onNavigate,
+  onPrefetch,
 }: {
   collapsed: boolean;
   isAdmin: boolean;
@@ -230,11 +235,12 @@ const SidebarContent = ({
   onCollapse: () => void;
   onSignOut: () => void;
   onNavigate?: () => void;
+  onPrefetch?: (path: string) => void;
 }) => (
   <>
     <SidebarHeader collapsed={collapsed} theme={theme} toggleTheme={toggleTheme} onCollapse={onCollapse} onNavigate={onNavigate} />
     <TeamSwitcher collapsed={collapsed} />
-    <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} />
+    <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch} />
     <SidebarFooter collapsed={collapsed} user={user} avatarUrl={avatarUrl} onSignOut={onSignOut} />
   </>
 );
@@ -246,6 +252,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const { theme, toggleTheme } = useTheme();
   const { isEnabled } = useFeatureFlags();
   const isMobile = useIsMobile();
+  const prefetch = usePrefetchOnHover();
   const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -367,6 +374,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
                 {...sidebarProps}
                 onCollapse={() => {}}
                 onNavigate={() => setMobileOpen(false)}
+                onPrefetch={prefetch}
               />
             </motion.aside>
           </>
@@ -385,6 +393,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
             collapsed={collapsed}
             {...sidebarProps}
             onCollapse={() => setCollapsed(!collapsed)}
+            onPrefetch={prefetch}
           />
         </aside>
       )}

@@ -3,6 +3,7 @@ import { Trophy, Medal, Zap, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
+import WidgetSkeleton from "./WidgetSkeleton";
 
 interface LeaderEntry {
   userId: string;
@@ -13,9 +14,11 @@ interface LeaderEntry {
 }
 
 const LeaderboardWidget = () => {
-  const { data: allDecisions = [] } = useDecisions();
-  const { data: profiles = [] } = useProfiles();
+  const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: profiles = [], isLoading: loadingProfiles } = useProfiles();
   const profileMap = buildProfileMap(profiles);
+
+  const isLoading = loadingDec || loadingProfiles;
 
   const leaders = useMemo(() => {
     if (allDecisions.length === 0) return [];
@@ -54,6 +57,7 @@ const LeaderboardWidget = () => {
     <Medal className="w-4 h-4 text-warning/60" />,
   ];
 
+  if (isLoading) return <WidgetSkeleton rows={5} showScore={false} />;
   if (leaders.length === 0) return null;
 
   return (

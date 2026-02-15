@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
@@ -146,4 +146,38 @@ export const useInvalidateDecisions = () => {
     qc.invalidateQueries({ queryKey: DEPENDENCIES_KEY });
     qc.invalidateQueries({ queryKey: REVIEWS_KEY });
   };
+};
+
+/** Optimistic mutation for updating decision status */
+export const useUpdateDecisionStatus = () => {
+  const qc = useQueryClient();
+  const { selectedTeamId } = useTeamContext();
+  const queryKey = [...DECISIONS_KEY, selectedTeamId];
+
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const updates: Record<string, any> = { status, updated_at: new Date().toISOString() };
+      if (status === "implemented") updates.implemented_at = new Date().toISOString();
+      const { error } = await supabase.from("decisions").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData(queryKey);
+      qc.setQueryData(queryKey, (old: any[] | undefined) =>
+        old?.map((d) =>
+          d.id === id
+            ? { ...d, status, updated_at: new Date().toISOString(), ...(status === "implemented" ? { implemented_at: new Date().toISOString() } : {}) }
+            : d
+        )
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(queryKey, context.previous);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey });
+    },
+  });
 };

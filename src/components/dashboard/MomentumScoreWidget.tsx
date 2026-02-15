@@ -6,6 +6,7 @@ import { useDecisions, useDependencies, useReviews } from "@/hooks/useDecisions"
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import WidgetSkeleton from "./WidgetSkeleton";
 
 interface MomentumBreakdown {
   velocity: number;
@@ -22,10 +23,10 @@ interface Recommendation {
 }
 
 const MomentumScoreWidget = () => {
-  const { data: decisions = [] } = useDecisions();
-  const { data: deps = [] } = useDependencies();
-  const { data: reviews = [] } = useReviews();
-  const { data: escalations = [] } = useQuery({
+  const { data: decisions = [], isLoading: loadingDecisions } = useDecisions();
+  const { data: deps = [], isLoading: loadingDeps } = useDependencies();
+  const { data: reviews = [], isLoading: loadingReviews } = useReviews();
+  const { data: escalations = [], isLoading: loadingEsc } = useQuery({
     queryKey: ["escalation-notifications"],
     queryFn: async () => {
       const { data } = await supabase.from("notifications").select("id, type, created_at").eq("type", "escalation");
@@ -35,6 +36,8 @@ const MomentumScoreWidget = () => {
   });
 
   const [showDetails, setShowDetails] = useState(false);
+
+  const isLoading = loadingDecisions || loadingDeps || loadingReviews || loadingEsc;
 
   const { score, breakdown, recommendations, predictedScore } = useMemo(() => {
     if (decisions.length === 0) return { score: null, breakdown: { velocity: 0, bottleneckRate: 0, reviewEfficiency: 0, escalationRate: 0, decisionQuality: 0 }, recommendations: [], predictedScore: null };
@@ -109,6 +112,8 @@ const MomentumScoreWidget = () => {
       predictedScore: Math.min(100, totalScore + totalImpact),
     };
   }, [decisions, deps, reviews, escalations]);
+
+  if (isLoading) return <WidgetSkeleton rows={5} showScore showProgress />;
 
   const getColor = (s: number) => s > 70 ? "text-success" : s > 40 ? "text-warning" : "text-destructive";
   const getBgColor = (s: number) => s > 70 ? "bg-success" : s > 40 ? "bg-warning" : "bg-destructive";
