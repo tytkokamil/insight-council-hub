@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard,
+  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
@@ -50,6 +50,7 @@ const navGroups = [
     label: "VERWALTUNG",
     items: [
       { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
+      { icon: UserCog, label: "Nutzer", path: "/admin/users", adminOnly: true },
       { icon: Users, label: "Teams", path: "/teams" },
       { icon: Settings, label: "Einstellungen", path: "/settings" },
     ],
