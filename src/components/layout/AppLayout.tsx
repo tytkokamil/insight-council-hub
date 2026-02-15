@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, memo, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
@@ -63,11 +63,11 @@ const navGroups = [
   },
 ];
 
-const SidebarContent = ({
+const SidebarContent = memo(({
   collapsed,
   isAdmin,
   isFeatureEnabled,
-  location,
+  pathname,
   user,
   avatarUrl,
   theme,
@@ -79,7 +79,7 @@ const SidebarContent = ({
   collapsed: boolean;
   isAdmin: boolean;
   isFeatureEnabled: (key: string) => boolean;
-  location: ReturnType<typeof useLocation>;
+  pathname: string;
   user: any;
   avatarUrl: string | null;
   theme: string;
@@ -153,7 +153,7 @@ const SidebarContent = ({
             </AnimatePresence>
             <div className="space-y-0.5">
               {visibleItems.map((item) => {
-                const active = location.pathname === item.path;
+                const active = pathname === item.path;
                 return (
                   <Link
                     key={item.path}
@@ -223,7 +223,7 @@ const SidebarContent = ({
       </div>
     </div>
   </>
-);
+));
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
@@ -274,7 +274,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const sidebarProps = {
     isAdmin,
     isFeatureEnabled: isEnabled,
-    location,
+    pathname: location.pathname,
     user,
     avatarUrl,
     theme,
