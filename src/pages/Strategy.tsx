@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import PageHint from "@/components/shared/PageHint";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useDecisions } from "@/hooks/useDecisions";
+import { useTeamContext } from "@/hooks/useTeamContext";
 import {
   Target, Plus, TrendingUp, DollarSign, BarChart3, Trash2, Loader2,
   ChevronRight, Link2, CheckCircle2, AlertTriangle, Clock,
@@ -51,6 +53,9 @@ const Strategy = () => {
   const [creating, setCreating] = useState(false);
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
 
+  const { selectedTeamId } = useTeamContext();
+  const { data: teamDecisions = [] } = useDecisions();
+
   // Form state
   const [form, setForm] = useState({
     title: "", description: "", goal_type: "okr",
@@ -59,21 +64,26 @@ const Strategy = () => {
   });
 
   const fetchGoals = async () => {
-    const [goalsRes, linksRes, decisionsRes] = await Promise.all([
-      supabase.from("strategic_goals").select("*").order("created_at", { ascending: false }),
+    let goalsQuery = supabase.from("strategic_goals").select("*").order("created_at", { ascending: false });
+    if (selectedTeamId) {
+      goalsQuery = goalsQuery.eq("team_id", selectedTeamId);
+    } else {
+      goalsQuery = goalsQuery.is("team_id", null);
+    }
+
+    const [goalsRes, linksRes] = await Promise.all([
+      goalsQuery,
       supabase.from("decision_goal_links").select("*"),
-      supabase.from("decisions").select("id, title, status"),
     ]);
 
     const goalsData = goalsRes.data || [];
     const links = linksRes.data || [];
-    const decisions = decisionsRes.data || [];
-    const decMap = Object.fromEntries(decisions.map(d => [d.id, d]));
+    const decMap = Object.fromEntries(teamDecisions.map(d => [d.id, d]));
 
     const enriched: Goal[] = goalsData.map(g => ({
       ...g,
       linked_decisions: links
-        .filter(l => l.goal_id === g.id)
+        .filter(l => l.goal_id === g.id && decMap[l.decision_id])
         .map(l => ({
           id: l.decision_id,
           title: decMap[l.decision_id]?.title || "Unbekannt",
@@ -86,7 +96,7 @@ const Strategy = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchGoals(); }, []);
+  useEffect(() => { fetchGoals(); }, [selectedTeamId, teamDecisions]);
 
   const createGoal = async () => {
     if (!form.title.trim() || !user) return;
@@ -101,6 +111,7 @@ const Strategy = () => {
       year: form.year,
       status: form.status,
       created_by: user.id,
+      team_id: selectedTeamId || null,
     });
     if (error) {
       toast({ title: "Fehler", description: error.message, variant: "destructive" });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
@@ -11,6 +11,7 @@ import {
   AlertTriangle, CheckCircle2, Clock, Lightbulb, Shield,
 } from "lucide-react";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
+import { useDecisions, useFilteredNotifications } from "@/hooks/useDecisions";
 
 interface EngineAction { type: string; decision_id: string; title: string; [key: string]: any; }
 interface EngineResult { message: string; actions: EngineAction[]; processed: number; }
@@ -25,23 +26,34 @@ const EscalationEngine = () => {
   const { toast } = useToast();
   const [running, setRunning] = useState(false);
   const [lastResult, setLastResult] = useState<EngineResult | null>(null);
-  const [recentNotifications, setRecentNotifications] = useState<any[]>([]);
   const [stats, setStats] = useState({ totalEscalated: 0, totalReassigned: 0, totalSkipped: 0, openDecisions: 0 });
-  const [loading, setLoading] = useState(true);
 
-  const fetchStats = async () => {
-    const [decRes, notifRes] = await Promise.all([
-      supabase.from("decisions").select("id, status, escalation_level, assignee_id").in("status", ["draft", "review", "approved"]),
-      supabase.from("notifications").select("id, type, title, message, decision_id, created_at, read").in("type", ["escalation", "auto_reassign", "auto_skip_review", "process_suggestion"]).order("created_at", { ascending: false }).limit(20),
-    ]);
-    const decisions = decRes.data || []; const notifications = notifRes.data || [];
-    setStats({ openDecisions: decisions.length, totalEscalated: decisions.filter(d => (d.escalation_level || 0) > 0).length, totalReassigned: notifications.filter(n => n.type === "auto_reassign").length, totalSkipped: notifications.filter(n => n.type === "auto_skip_review").length });
-    setRecentNotifications(notifications); setLoading(false);
-  };
-  useEffect(() => { fetchStats(); }, []);
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: notifications = [], isLoading: notifLoading } = useFilteredNotifications();
+
+  const loading = decLoading || notifLoading;
+
+  const recentNotifications = useMemo(() =>
+    notifications
+      .filter(n => ["escalation", "auto_reassign", "auto_skip_review", "process_suggestion"].includes(n.type))
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 20),
+    [notifications]
+  );
+
+  useEffect(() => {
+    if (loading) return;
+    const openDecs = decisions.filter(d => ["draft", "review", "approved"].includes(d.status));
+    setStats({
+      openDecisions: openDecs.length,
+      totalEscalated: openDecs.filter(d => (d.escalation_level || 0) > 0).length,
+      totalReassigned: recentNotifications.filter(n => n.type === "auto_reassign").length,
+      totalSkipped: recentNotifications.filter(n => n.type === "auto_skip_review").length,
+    });
+  }, [loading, decisions, recentNotifications]);
   const runEngine = async () => {
     setRunning(true);
-    try { const { data, error } = await supabase.functions.invoke("autonomous-escalation"); if (error) throw error; setLastResult(data as EngineResult); toast({ title: "Engine ausgeführt", description: `${(data as EngineResult).actions.length} Aktionen.` }); fetchStats(); }
+    try { const { data, error } = await supabase.functions.invoke("autonomous-escalation"); if (error) throw error; setLastResult(data as EngineResult); toast({ title: "Engine ausgeführt", description: `${(data as EngineResult).actions.length} Aktionen.` }); }
     catch (e: any) { toast({ title: "Fehler", description: e.message, variant: "destructive" }); }
     setRunning(false);
   };
