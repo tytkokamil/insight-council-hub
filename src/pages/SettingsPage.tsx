@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
@@ -56,6 +57,9 @@ const SettingsPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
+  // Notification preferences
+  const [notifPrefs, setNotifPrefs] = useState({ review_requests: true, escalations: true, team_updates: true });
+
   // AI settings
   const [aiProvider, setAiProvider] = useState("lovable");
   const [aiApiKey, setAiApiKey] = useState("");
@@ -67,9 +71,10 @@ const SettingsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const [profileRes, aiRes] = await Promise.all([
+      const [profileRes, aiRes, notifRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single(),
         supabase.from("user_ai_settings").select("*").eq("user_id", user.id).single(),
+        supabase.from("notification_preferences").select("*").eq("user_id", user.id).single(),
       ]);
       if (profileRes.data) {
         setFullName(profileRes.data.full_name || "");
@@ -79,6 +84,13 @@ const SettingsPage = () => {
         setAiProvider(aiRes.data.provider || "lovable");
         setAiApiKey(aiRes.data.api_key || "");
         setAiModel(aiRes.data.model || "");
+      }
+      if (notifRes.data) {
+        setNotifPrefs({
+          review_requests: notifRes.data.review_requests,
+          escalations: notifRes.data.escalations,
+          team_updates: notifRes.data.team_updates,
+        });
       }
     };
     fetchData();
@@ -171,6 +183,16 @@ const SettingsPage = () => {
     setAvatarUrl(newUrl);
     setUploadingAvatar(false);
     toast({ title: "Gespeichert", description: "Profilbild aktualisiert." });
+  };
+
+  const handleNotifToggle = async (key: keyof typeof notifPrefs) => {
+    if (!user) return;
+    const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(updated);
+    await supabase.from("notification_preferences").upsert(
+      { user_id: user.id, ...updated },
+      { onConflict: "user_id" }
+    );
   };
 
   const selectedProvider = AI_PROVIDERS.find((p) => p.id === aiProvider);
@@ -357,19 +379,20 @@ const SettingsPage = () => {
                 <h2 className="text-sm font-semibold">Benachrichtigungen</h2>
               </div>
               <div className="space-y-2">
-                {[
-                  { label: "Review-Anfragen", desc: "Bei neuen Reviews benachrichtigen" },
-                  { label: "Eskalationen", desc: "Sofortige Eskalationshinweise" },
-                  { label: "Team-Updates", desc: "Neue Mitglieder & Einladungen" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+                {([
+                  { key: "review_requests" as const, label: "Review-Anfragen", desc: "Bei neuen Reviews benachrichtigen" },
+                  { key: "escalations" as const, label: "Eskalationen", desc: "Sofortige Eskalationshinweise" },
+                  { key: "team_updates" as const, label: "Team-Updates", desc: "Neue Mitglieder & Einladungen" },
+                ]).map((item) => (
+                  <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
                     <div>
                       <p className="text-sm font-medium">{item.label}</p>
                       <p className="text-xs text-muted-foreground">{item.desc}</p>
                     </div>
-                    <div className="w-9 h-5 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-end px-0.5">
-                      <div className="w-4 h-4 rounded-full bg-primary" />
-                    </div>
+                    <Switch
+                      checked={notifPrefs[item.key]}
+                      onCheckedChange={() => handleNotifToggle(item.key)}
+                    />
                   </div>
                 ))}
               </div>
