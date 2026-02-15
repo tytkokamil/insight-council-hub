@@ -229,128 +229,127 @@ const DecisionGraph = () => {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onNodeClick={onNodeClick}
-          nodeTypes={nodeTypes}
-          fitView
-          minZoom={0.3}
-          maxZoom={2}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background color="hsl(var(--border))" gap={24} size={1} />
-          <Controls
-            className="!bg-card !border-border !rounded-lg !shadow-lg"
-            style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any}
-          />
-          <MiniMap
-            className="!bg-card/80 !border-border !rounded-lg"
-            nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"}
-            maskColor="hsl(var(--background) / 0.8)"
-          />
+      <div className="relative rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
+        {decisions.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <GitBranch className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
+              <h3 className="font-display text-xl font-semibold mb-2 text-muted-foreground">Noch keine Entscheidungen</h3>
+              <p className="text-sm text-muted-foreground">Erstelle Entscheidungen und verknüpfe sie, um den Graph zu sehen.</p>
+            </div>
+          </div>
+        ) : (
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onNodeClick={onNodeClick}
+            nodeTypes={nodeTypes}
+            fitView
+            minZoom={0.3}
+            maxZoom={2}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color="hsl(var(--border))" gap={24} size={1} />
+            <Controls
+              className="!bg-card !border-border !rounded-lg !shadow-lg"
+              style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any}
+            />
+            <MiniMap
+              className="!bg-card/80 !border-border !rounded-lg"
+              nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"}
+              maskColor="hsl(var(--background) / 0.8)"
+            />
 
-          {/* Cascade Info Panel */}
-          {selectedNode && (
-            <Panel position="top-right">
-              <div className="rounded-lg border border-border bg-card p-4 max-w-xs space-y-3 shadow-lg">
-                <h3 className="font-display font-semibold text-sm">{selectedNode.label}</h3>
-                <div className="flex items-center gap-2 text-xs">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ background: statusColors[selectedNode.status] }}
-                  />
-                  <span>{selectedNode.status === "draft" ? "Entwurf" : selectedNode.status === "review" ? "Review" : selectedNode.status === "approved" ? "Genehmigt" : selectedNode.status === "implemented" ? "Umgesetzt" : "Abgelehnt"}</span>
-                  <span className="text-muted-foreground">•</span>
-                  <span>{selectedNode.priority === "critical" ? "Kritisch" : selectedNode.priority === "high" ? "Hoch" : selectedNode.priority === "medium" ? "Mittel" : "Niedrig"}</span>
-                </div>
-
-                {selectedNode.delayCost > 0 && (
-                  <div className="flex items-center gap-2 text-warning text-xs font-medium p-2 rounded-lg bg-warning/10">
-                    <DollarSign className="w-3.5 h-3.5" />
-                    {selectedNode.delayCost.toLocaleString("de-DE")} € direkte Verzögerungskosten
+            {/* Cascade Info Panel */}
+            {selectedNode && (
+              <Panel position="top-right">
+                <div className="rounded-lg border border-border bg-card p-4 max-w-xs space-y-3 shadow-lg">
+                  <h3 className="font-display font-semibold text-sm">{selectedNode.label}</h3>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: statusColors[selectedNode.status] }}
+                    />
+                    <span>{selectedNode.status === "draft" ? "Entwurf" : selectedNode.status === "review" ? "Review" : selectedNode.status === "approved" ? "Genehmigt" : selectedNode.status === "implemented" ? "Umgesetzt" : "Abgelehnt"}</span>
+                    <span className="text-muted-foreground">•</span>
+                    <span>{selectedNode.priority === "critical" ? "Kritisch" : selectedNode.priority === "high" ? "Hoch" : selectedNode.priority === "medium" ? "Mittel" : "Niedrig"}</span>
                   </div>
-                )}
 
-                {cascadeInfo && (
-                  <div className="space-y-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
-                    <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
+                  {selectedNode.delayCost > 0 && (
+                    <div className="flex items-center gap-2 text-warning text-xs font-medium p-2 rounded-lg bg-warning/10">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      {selectedNode.delayCost.toLocaleString("de-DE")} € direkte Verzögerungskosten
+                    </div>
+                  )}
+
+                  {cascadeInfo && (
+                    <div className="space-y-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                      <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Kaskaden-Analyse
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Diese Verzögerung beeinflusst{" "}
+                        <span className="text-destructive font-bold">{cascadeInfo.count} Folgeentscheidungen</span>
+                      </p>
+                      <p className="text-xs font-medium text-destructive">
+                        Gesamtkosten der Kette: {cascadeInfo.cost.toLocaleString("de-DE")} €
+                      </p>
+                      <div className="space-y-1 mt-1">
+                        {cascadeInfo.chain.slice(0, 5).map((title, i) => (
+                          <p key={i} className="text-[10px] text-muted-foreground truncate">
+                            → {title}
+                          </p>
+                        ))}
+                        {cascadeInfo.chain.length > 5 && (
+                          <p className="text-[10px] text-muted-foreground">
+                            ... und {cascadeInfo.chain.length - 5} weitere
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedNode.isBlocked && (
+                    <div className="flex items-center gap-2 text-destructive text-xs p-2 rounded-lg bg-destructive/10">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      Kaskaden-Analyse
+                      Blockiert durch andere Entscheidung
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Diese Verzögerung beeinflusst{" "}
-                      <span className="text-destructive font-bold">{cascadeInfo.count} Folgeentscheidungen</span>
-                    </p>
-                    <p className="text-xs font-medium text-destructive">
-                      Gesamtkosten der Kette: {cascadeInfo.cost.toLocaleString("de-DE")} €
-                    </p>
-                    <div className="space-y-1 mt-1">
-                      {cascadeInfo.chain.slice(0, 5).map((title, i) => (
-                        <p key={i} className="text-[10px] text-muted-foreground truncate">
-                          → {title}
-                        </p>
-                      ))}
-                      {cascadeInfo.chain.length > 5 && (
-                        <p className="text-[10px] text-muted-foreground">
-                          ... und {cascadeInfo.chain.length - 5} weitere
-                        </p>
-                      )}
+                  )}
+
+                  {!cascadeInfo && !selectedNode.isBlocked && selectedNode.delayCost === 0 && (
+                    <div className="flex items-center gap-2 text-success text-xs p-2 rounded-lg bg-success/10">
+                      <Info className="w-3.5 h-3.5" />
+                      Keine Abhängigkeiten oder Risiken
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
+              </Panel>
+            )}
 
-                {selectedNode.isBlocked && (
-                  <div className="flex items-center gap-2 text-destructive text-xs p-2 rounded-lg bg-destructive/10">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    Blockiert durch andere Entscheidung
-                  </div>
-                )}
-
-                {!cascadeInfo && !selectedNode.isBlocked && selectedNode.delayCost === 0 && (
-                  <div className="flex items-center gap-2 text-success text-xs p-2 rounded-lg bg-success/10">
-                    <Info className="w-3.5 h-3.5" />
-                    Keine Abhängigkeiten oder Risiken
-                  </div>
-                )}
+            {/* Legend */}
+            <Panel position="bottom-left">
+              <div className="rounded-lg border border-border bg-card p-3 space-y-2 text-[10px] shadow-lg">
+                <p className="font-semibold text-xs mb-1">Verbindungstypen</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-0.5 bg-destructive rounded" />
+                  <span className="text-muted-foreground">Blockiert (animiert)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-0.5 bg-warning rounded" style={{ borderTop: "1px dashed" }} />
+                  <span className="text-muted-foreground">Beeinflusst</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-0.5 bg-primary rounded" />
+                  <span className="text-muted-foreground">Benötigt</span>
+                </div>
               </div>
             </Panel>
-          )}
-
-          {/* Legend */}
-          <Panel position="bottom-left">
-            <div className="rounded-lg border border-border bg-card p-3 space-y-2 text-[10px] shadow-lg">
-              <p className="font-semibold text-xs mb-1">Verbindungstypen</p>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-0.5 bg-destructive rounded" />
-                <span className="text-muted-foreground">Blockiert (animiert)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-0.5 bg-warning rounded" style={{ borderTop: "1px dashed" }} />
-                <span className="text-muted-foreground">Beeinflusst</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-0.5 bg-primary rounded" />
-                <span className="text-muted-foreground">Benötigt</span>
-              </div>
-            </div>
-          </Panel>
-        </ReactFlow>
+          </ReactFlow>
+        )}
       </div>
-
-
-      {decisions.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center">
-            <GitBranch className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
-            <h3 className="font-display text-xl font-semibold mb-2 text-muted-foreground">Noch keine Entscheidungen</h3>
-            <p className="text-sm text-muted-foreground">Erstelle Entscheidungen und verknüpfe sie, um den Graph zu sehen.</p>
-          </div>
-        </div>
-      )}
     </AppLayout>
   );
 };
