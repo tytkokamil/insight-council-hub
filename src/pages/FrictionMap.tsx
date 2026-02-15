@@ -146,7 +146,7 @@ const FrictionMap = () => {
           { icon: GitPullRequest, label: "Review-Loops gesamt", value: teamFriction.reduce((s, t) => s + t.reviewLoops, 0), color: "text-warning" },
           { icon: AlertTriangle, label: "Cross-Team Konflikte", value: crossFriction.filter(c => c.frictionLevel === "high" || c.frictionLevel === "critical").length, color: "text-destructive" },
         ].map((card) => (
-          <div key={card.label} className="glass-card p-4">
+          <div key={card.label} className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
@@ -169,7 +169,7 @@ const FrictionMap = () => {
           <CollapsibleSection title="Team Friction Ranking" subtitle="Reibungswerte pro Team (Entscheidungen + Aufgaben)" icon={<Flame className="w-4 h-4 text-destructive" />} defaultOpen={true} className="mb-8">
             <div className="space-y-2">
               {teamFriction.map((team, i) => (
-                <div key={team.teamId} className="glass-card p-4">
+                <div key={team.teamId} className="rounded-lg border border-border bg-card p-4">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${i < 2 ? "bg-destructive/20 text-destructive" : "bg-muted/30 text-muted-foreground"}`}>{i + 1}</div>
                     <div className="flex-1 min-w-0">
@@ -197,7 +197,7 @@ const FrictionMap = () => {
             <CollapsibleSection title="Cross-Team Reibung" subtitle={`${crossFriction.length} Verbindungen`} icon={<ArrowUpRight className="w-4 h-4 text-warning" />} defaultOpen={false}>
               <div className="space-y-2">
                 {crossFriction.map((cf) => (
-                  <div key={`${cf.teamA}-${cf.teamB}`} className={`glass-card p-4 border ${crossFrictionColor[cf.frictionLevel]}`}>
+                  <div key={`${cf.teamA}-${cf.teamB}`} className={`rounded-lg bg-card p-4 border ${crossFrictionColor[cf.frictionLevel]}`}>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2 flex-1">
                         <span className="text-sm font-semibold">{cf.teamAName}</span>
@@ -220,7 +220,7 @@ const FrictionMap = () => {
 
       {view === "heatmap" && (
         <CollapsibleSection title="Friction Heatmap: Team × Kategorie" icon={<BarChart3 className="w-4 h-4 text-primary" />} defaultOpen={true}>
-          <div className="glass-card p-5 overflow-x-auto">
+          <div className="rounded-lg border border-border bg-card p-5 overflow-x-auto">
             {heatmapData.teams.length > 0 ? (
               <table className="w-full text-xs">
                 <thead><tr><th className="text-left p-2 text-muted-foreground font-medium">Team</th>{heatmapData.categories.map(cat => (<th key={cat} className="p-2 text-center text-muted-foreground font-medium">{categoryLabels[cat] || cat}</th>))}</tr></thead>

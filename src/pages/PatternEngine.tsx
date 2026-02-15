@@ -157,9 +157,9 @@ const PatternEngine = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">INTELLIGENCE</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Mustererkennung</p>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">Pattern Engine</h1>
+            <h1 className="font-display text-xl font-bold">Pattern Engine</h1>
             <PageHint>
               Erkennt wiederkehrende Muster in deinen Entscheidungen. Analysiert Erfolgsquoten nach Kategorie, Zeitverläufe und Entscheider-Profile.
             </PageHint>

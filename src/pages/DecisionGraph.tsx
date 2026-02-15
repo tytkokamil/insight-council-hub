@@ -54,7 +54,7 @@ const DecisionNode = ({ data }: { data: any }) => {
           style={{ background: borderColor }}
         />
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-          {data.status}
+          {data.status === "draft" ? "Entwurf" : data.status === "review" ? "Review" : data.status === "approved" ? "Genehmigt" : data.status === "implemented" ? "Umgesetzt" : data.status === "rejected" ? "Abgelehnt" : data.status}
         </span>
         {isBlocked && (
           <AlertTriangle className="w-3 h-3 text-destructive ml-auto" />
@@ -64,8 +64,8 @@ const DecisionNode = ({ data }: { data: any }) => {
         {data.label}
       </p>
       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-        <span className="capitalize">{data.priority}</span>
-        <span className="capitalize">{data.category}</span>
+        <span className="capitalize">{data.priority === "critical" ? "Kritisch" : data.priority === "high" ? "Hoch" : data.priority === "medium" ? "Mittel" : "Niedrig"}</span>
+        <span className="capitalize">{data.category === "strategic" ? "Strategisch" : data.category === "budget" ? "Budget" : data.category === "hr" ? "Personal" : data.category === "technical" ? "Technisch" : data.category === "operational" ? "Operativ" : data.category === "marketing" ? "Marketing" : data.category}</span>
       </div>
       {data.delayCost > 0 && (
         <div className="mt-2 flex items-center gap-1 text-[10px] text-warning font-medium">
@@ -217,16 +217,19 @@ const DecisionGraph = () => {
           </div>
         </div>
         <div className="flex items-center gap-4 text-xs">
-          {Object.entries(statusColors).map(([status, color]) => (
+          {([
+            ["draft", "Entwurf"], ["review", "Review"], ["approved", "Genehmigt"],
+            ["implemented", "Umgesetzt"], ["rejected", "Abgelehnt"],
+          ] as const).map(([status, label]) => (
             <div key={status} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-              <span className="capitalize text-muted-foreground">{status}</span>
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: statusColors[status] }} />
+              <span className="text-muted-foreground">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="glass-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
+      <div className="rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -253,16 +256,16 @@ const DecisionGraph = () => {
           {/* Cascade Info Panel */}
           {selectedNode && (
             <Panel position="top-right">
-              <div className="glass-card p-4 max-w-xs space-y-3">
+              <div className="rounded-lg border border-border bg-card p-4 max-w-xs space-y-3 shadow-lg">
                 <h3 className="font-display font-semibold text-sm">{selectedNode.label}</h3>
                 <div className="flex items-center gap-2 text-xs">
                   <div
                     className="w-2 h-2 rounded-full"
                     style={{ background: statusColors[selectedNode.status] }}
                   />
-                  <span className="capitalize">{selectedNode.status}</span>
+                  <span>{selectedNode.status === "draft" ? "Entwurf" : selectedNode.status === "review" ? "Review" : selectedNode.status === "approved" ? "Genehmigt" : selectedNode.status === "implemented" ? "Umgesetzt" : "Abgelehnt"}</span>
                   <span className="text-muted-foreground">•</span>
-                  <span className="capitalize">{selectedNode.priority}</span>
+                  <span>{selectedNode.priority === "critical" ? "Kritisch" : selectedNode.priority === "high" ? "Hoch" : selectedNode.priority === "medium" ? "Mittel" : "Niedrig"}</span>
                 </div>
 
                 {selectedNode.delayCost > 0 && (
@@ -319,7 +322,7 @@ const DecisionGraph = () => {
 
           {/* Legend */}
           <Panel position="bottom-left">
-            <div className="glass-card p-3 space-y-2 text-[10px]">
+            <div className="rounded-lg border border-border bg-card p-3 space-y-2 text-[10px] shadow-lg">
               <p className="font-semibold text-xs mb-1">Verbindungstypen</p>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-0.5 bg-destructive rounded" />

@@ -213,10 +213,10 @@ const WarRoom = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge(d.priority)}`}>
-                              {d.priority}
+                              {d.priority === "critical" ? "Kritisch" : d.priority === "high" ? "Hoch" : d.priority === "medium" ? "Mittel" : "Niedrig"}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground capitalize">
-                              {d.category}
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              {d.category === "strategic" ? "Strategisch" : d.category === "budget" ? "Budget" : d.category === "hr" ? "Personal" : d.category === "technical" ? "Technisch" : d.category === "operational" ? "Operativ" : "Marketing"}
                             </span>
                             {d.overdue && (
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">
@@ -231,7 +231,7 @@ const WarRoom = () => {
                             {d.escalation_level != null && d.escalation_level > 0 && (
                               <span className="text-destructive">Eskalation Lv.{d.escalation_level}</span>
                             )}
-                            <span className="capitalize">{d.status}</span>
+                            <span>{d.status === "draft" ? "Entwurf" : d.status === "review" ? "Review" : d.status === "approved" ? "Genehmigt" : d.status}</span>
                           </div>
                         </div>
                         <div className="text-right shrink-0">

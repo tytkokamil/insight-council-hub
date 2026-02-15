@@ -28,11 +28,11 @@ const categoryLabels: Record<string, string> = {
 };
 
 const priorityLabels: Record<string, string> = {
-  low: "Low", medium: "Medium", high: "High", critical: "Critical",
+  low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch",
 };
 
 const typeLabels: Record<string, string> = {
-  decision: "Entscheidungen", task: "Aufgaben",
+  decision: "Entscheidungen", task: "Aufgaben", 
 };
 
 /** Unified item for both decisions and tasks */
@@ -233,7 +233,7 @@ const HealthHeatmap = () => {
             small: true,
           },
         ].map((card) => (
-          <div key={card.label} className="glass-card p-4">
+          <div key={card.label} className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
@@ -274,7 +274,7 @@ const HealthHeatmap = () => {
           </div>
         </div>
 
-        <div className="glass-card p-5 overflow-x-auto">
+        <div className="rounded-lg border border-border bg-card p-5 overflow-x-auto">
           {heatmap.rows.length > 0 && heatmap.cols.length > 0 ? (
             <table className="w-full text-xs">
               <thead>
@@ -351,7 +351,7 @@ const HealthHeatmap = () => {
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {bestCell && bestCell[1].total > 0 && (
-              <div className="glass-card p-4 border border-success/20">
+              <div className="rounded-lg border border-success/20 bg-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-success" />
                   <span className="text-xs font-semibold text-success">Stärke</span>
@@ -363,7 +363,7 @@ const HealthHeatmap = () => {
               </div>
             )}
             {worstCell && worstCell[1].total > 0 && (
-              <div className="glass-card p-4 border border-destructive/20">
+              <div className="rounded-lg border border-destructive/20 bg-card p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingDown className="w-4 h-4 text-destructive" />
                   <span className="text-xs font-semibold text-destructive">Schwachstelle</span>
