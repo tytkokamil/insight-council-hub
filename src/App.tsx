@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
+import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -31,6 +32,7 @@ import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import ResetPassword from "./pages/ResetPassword";
 import AdminUsers from "./pages/AdminUsers";
 import AuditTrail from "./pages/AuditTrail";
+import PilotSettings from "./pages/PilotSettings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +45,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+            <FeatureFlagsProvider>
             <TeamProvider>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -70,9 +73,11 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
               <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
+              <Route path="/pilot" element={<ProtectedRoute><PilotSettings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
+            </FeatureFlagsProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
