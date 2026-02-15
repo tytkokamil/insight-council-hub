@@ -28,6 +28,7 @@ import EscalationEngine from "./pages/EscalationEngine";
 import DecisionBenchmarking from "./pages/DecisionBenchmarking";
 import ScenarioEngine from "./pages/ScenarioEngine";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/decisions" element={<ProtectedRoute><Decisions /></ProtectedRoute>} />
               <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />

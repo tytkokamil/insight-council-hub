@@ -178,6 +178,16 @@ const Auth = () => {
               <Button type="submit" size="lg" className="w-full" disabled={loading}>
                 {loading ? "Laden..." : isLogin ? "Anmelden" : "Registrieren"}
               </Button>
+
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/reset-password")}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center"
+                >
+                  Passwort vergessen?
+                </button>
+              )}
             </form>
           </CardContent>
         </Card>
