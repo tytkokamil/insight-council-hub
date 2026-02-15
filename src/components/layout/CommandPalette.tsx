@@ -11,7 +11,7 @@ import {
 import {
   BarChart3, FileText, Users, TrendingUp, Settings,
   GitBranch, Radar, DollarSign, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, Calendar, Crosshair, Shield, Sun, LayoutDashboard,
+  Dna, Zap, Trophy, FlaskConical, Target, Calendar, Crosshair, Shield, Sun, LayoutDashboard, Brain,
 } from "lucide-react";
 import { useDecisions } from "@/hooks/useDecisions";
 
@@ -33,6 +33,7 @@ const pages = [
   { label: "Timeline", path: "/timeline", icon: Calendar },
   { label: "Strategie", path: "/strategy", icon: Crosshair },
   { label: "War Room", path: "/warroom", icon: Shield },
+  { label: "Patterns", path: "/patterns", icon: Brain },
   { label: "Teams", path: "/teams", icon: Users },
   { label: "Einstellungen", path: "/settings", icon: Settings },
 ];
