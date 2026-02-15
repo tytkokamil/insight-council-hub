@@ -658,6 +658,62 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          category: Database["public"]["Enums"]["task_category"]
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          category?: Database["public"]["Enums"]["task_category"]
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          category?: Database["public"]["Enums"]["task_category"]
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_chat_reads: {
         Row: {
           id: string
@@ -912,6 +968,16 @@ export type Database = {
         | "approved"
         | "implemented"
         | "rejected"
+      task_category:
+        | "general"
+        | "strategic"
+        | "operational"
+        | "technical"
+        | "hr"
+        | "marketing"
+        | "budget"
+      task_priority: "low" | "medium" | "high" | "critical"
+      task_status: "open" | "in_progress" | "done"
       user_role: "admin" | "decision_maker" | "reviewer" | "observer"
     }
     CompositeTypes: {
@@ -1057,6 +1123,17 @@ export const Constants = {
         "implemented",
         "rejected",
       ],
+      task_category: [
+        "general",
+        "strategic",
+        "operational",
+        "technical",
+        "hr",
+        "marketing",
+        "budget",
+      ],
+      task_priority: ["low", "medium", "high", "critical"],
+      task_status: ["open", "in_progress", "done"],
       user_role: ["admin", "decision_maker", "reviewer", "observer"],
     },
   },

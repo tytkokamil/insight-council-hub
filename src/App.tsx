@@ -43,6 +43,7 @@ const PilotSettings = lazy(() => import("./pages/PilotSettings"));
 const DecisionCalendar = lazy(() => import("./pages/DecisionCalendar"));
 const PatternEngine = lazy(() => import("./pages/PatternEngine"));
 const TeamDetail = lazy(() => import("./pages/TeamDetail"));
+const TasksPage = lazy(() => import("./pages/Tasks"));
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ const App = () => (
               <Route path="/decisions" element={<P><Decisions /></P>} />
               <Route path="/teams" element={<P><Teams /></P>} />
               <Route path="/teams/:teamId" element={<P><TeamDetail /></P>} />
+              <Route path="/tasks" element={<P><TasksPage /></P>} />
               <Route path="/analytics" element={<P><Analytics /></P>} />
               <Route path="/briefing" element={<P><Briefing /></P>} />
               <Route path="/graph" element={<P><DecisionGraph /></P>} />
