@@ -17,6 +17,8 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const [open, setOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
+  const teamsLoaded = useRef(false);
+
   useEffect(() => {
     if (!user) return;
     const fetchTeams = async () => {
@@ -37,14 +39,18 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
       if (!isAdmin && memberTeamIds.length > 0) {
         query = query.in("id", memberTeamIds);
       } else if (!isAdmin) {
+        teamsLoaded.current = true;
         setTeams([]);
         return;
       }
 
       const { data } = await query;
+      teamsLoaded.current = true;
       setTeams(data || []);
     };
-    fetchTeams();
+    if (!teamsLoaded.current) {
+      fetchTeams();
+    }
   }, [user?.id]);
 
   const fetchUnreadCounts = useCallback(async () => {
@@ -100,7 +106,7 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const label = selectedTeam ? selectedTeam.name : "Persönlich";
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
-  if (teams.length === 0) return null;
+  if (teamsLoaded.current && teams.length === 0) return null;
 
   return (
     <div className="relative px-3 py-2 border-b border-border">
