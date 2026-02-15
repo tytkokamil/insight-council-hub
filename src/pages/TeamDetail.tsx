@@ -3,13 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, MessageCircle, ClipboardList, FileUp } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import TeamOverviewTab from "@/components/teams/TeamOverviewTab";
 import TeamChat from "@/components/teams/TeamChat";
-import TeamTasksTab from "@/components/teams/TeamTasksTab";
-import TeamImportTab from "@/components/teams/TeamImportTab";
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -80,14 +78,6 @@ const TeamDetail = () => {
               <MessageCircle className="w-3.5 h-3.5" />
               Chat
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="gap-1.5">
-              <ClipboardList className="w-3.5 h-3.5" />
-              Aufgaben
-            </TabsTrigger>
-            <TabsTrigger value="import" className="gap-1.5">
-              <FileUp className="w-3.5 h-3.5" />
-              Import
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -98,14 +88,6 @@ const TeamDetail = () => {
             <div className="rounded-lg border border-border overflow-hidden">
               <TeamChat teamId={team.id} teamName={team.name} />
             </div>
-          </TabsContent>
-
-          <TabsContent value="tasks" className="mt-6">
-            <TeamTasksTab teamId={team.id} />
-          </TabsContent>
-
-          <TabsContent value="import" className="mt-6">
-            <TeamImportTab teamId={team.id} />
           </TabsContent>
         </Tabs>
       </div>
