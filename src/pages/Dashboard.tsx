@@ -150,7 +150,7 @@ const Dashboard = () => {
                   <stat.icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
               </div>
-              <p className="text-2xl font-bold">{stat.value}</p>
+              <p className="text-2xl font-bold stat-pop">{stat.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -226,9 +226,9 @@ const Dashboard = () => {
               const status = statusConfig[decision.status];
               const priority = priorityConfig[decision.priority];
               return (
-                <tr
+                 <tr
                   key={decision.id}
-                  className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
+                  className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors row-highlight"
                   onClick={() => setSelectedDecision(decision)}
                 >
                   <td className="p-3">

@@ -337,6 +337,11 @@
     transition: transform 0.2s ease;
   }
 
+  /* Icon bounce on hover — for action buttons */
+  .icon-hover-bounce:hover svg {
+    animation: icon-bounce 0.4s ease;
+  }
+
   /* Underline slide on hover */
   .underline-slide {
     position: relative;
@@ -359,10 +364,40 @@
     transform-origin: left;
   }
 
+  /* Table row highlight — smooth left-border accent */
+  .row-highlight {
+    position: relative;
+    transition: background-color 0.15s ease;
+  }
+  .row-highlight::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: hsl(var(--primary));
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+    border-radius: 0 1px 1px 0;
+  }
+  .row-highlight:hover::before {
+    transform: scaleY(1);
+  }
+
   /* Number count-up feel */
   .number-highlight {
     font-family: 'JetBrains Mono', monospace;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Stat value pop on hover */
+  .stat-pop {
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .stat-pop:hover {
+    transform: scale(1.05);
+    color: hsl(var(--primary));
   }
 }
 
@@ -379,4 +414,11 @@
 @keyframes stagger-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes icon-bounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-3px); }
+  60% { transform: translateY(-1px); }
+  100% { transform: translateY(0); }
 }
