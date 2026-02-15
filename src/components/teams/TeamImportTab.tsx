@@ -52,6 +52,24 @@ const TeamImportTab = ({ teamId }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
+  const parsePdf = async (file: File): Promise<string> => {
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+    const buffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    const pages: string[] = [];
+
+    for (let i = 1; i <= Math.min(pdf.numPages, 50); i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const text = content.items.map((item: any) => item.str).join(" ");
+      if (text.trim()) pages.push(text);
+    }
+
+    return pages.join("\n\n");
+  };
+
   const parseFile = async (file: File): Promise<string> => {
     const ext = file.name.split(".").pop()?.toLowerCase();
 
@@ -66,11 +84,14 @@ const TeamImportTab = ({ teamId }: Props) => {
       return XLSX.utils.sheet_to_csv(sheet);
     }
 
-    // For other files, try as text
+    if (ext === "pdf") {
+      return await parsePdf(file);
+    }
+
     try {
       return await file.text();
     } catch {
-      throw new Error("Dateiformat wird nicht unterstützt. Bitte CSV, Excel oder Text verwenden.");
+      throw new Error("Dateiformat wird nicht unterstützt. Bitte PDF, CSV, Excel oder Text verwenden.");
     }
   };
 
@@ -242,7 +263,7 @@ const TeamImportTab = ({ teamId }: Props) => {
               ref={fileInputRef}
               type="file"
               className="hidden"
-              accept=".csv,.xlsx,.xls,.txt,.tsv"
+              accept=".csv,.xlsx,.xls,.txt,.tsv,.pdf"
               onChange={handleFileSelect}
             />
             <div className="flex flex-col items-center gap-4">
@@ -252,11 +273,12 @@ const TeamImportTab = ({ teamId }: Props) => {
               <div>
                 <p className="text-sm font-semibold mb-1">Datei hochladen</p>
                 <p className="text-xs text-muted-foreground">
-                  CSV, Excel oder Textdatei hierher ziehen oder klicken
+                  PDF, CSV, Excel oder Textdatei hierher ziehen oder klicken
                 </p>
               </div>
               <div className="flex gap-3 mt-2">
                 {[
+                  { icon: FileText, label: "PDF" },
                   { icon: FileSpreadsheet, label: "Excel" },
                   { icon: FileText, label: "CSV" },
                   { icon: FileText, label: "Text" },
