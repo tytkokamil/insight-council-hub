@@ -22,7 +22,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, Legend,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const ExecutiveDashboard = () => {
   const { user } = useAuth();
@@ -33,6 +36,34 @@ const ExecutiveDashboard = () => {
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useFilteredReviews();
   const { data: tasks = [] } = useTasks();
+
+  // Fetch ALL decisions across teams for cross-team comparison
+  const { data: allDecisions = [] } = useQuery({
+    queryKey: ["decisions", "all-teams"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("decisions")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
+
+  // Fetch ALL tasks across teams
+  const { data: allTasks = [] } = useQuery({
+    queryKey: ["tasks", "all-teams"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 30_000,
+  });
 
   if (loadingDec) {
     return (
@@ -330,6 +361,53 @@ const ExecutiveDashboard = () => {
             </Card>
           </div>
         </CollapsibleSection>
+
+        {/* Team Comparison */}
+        {teams.length > 0 && (() => {
+          const teamComparisonData = teams.map((team: any) => {
+            const teamDecs = allDecisions.filter((d: any) => d.team_id === team.id);
+            const teamTsk = allTasks.filter((t: any) => t.team_id === team.id);
+            const totalDec = teamDecs.length || 1;
+            const implCount = teamDecs.filter((d: any) => d.status === "implemented").length;
+            const overdueCount = teamDecs.filter((d: any) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
+            const tasksDone = teamTsk.filter((t: any) => t.status === "done").length;
+            const taskTotal = teamTsk.length || 1;
+            return {
+              name: team.name.length > 12 ? team.name.slice(0, 12) + "…" : team.name,
+              Umsetzung: Math.round((implCount / totalDec) * 100),
+              Termintreue: Math.round(((totalDec - overdueCount) / totalDec) * 100),
+              "Task-Rate": Math.round((tasksDone / taskTotal) * 100),
+            };
+          });
+
+          return (
+            <CollapsibleSection
+              title="Team-Vergleich"
+              subtitle="Performance-Metriken nach Team"
+              icon={<BarChart3 className="w-4 h-4 text-primary" />}
+              defaultOpen={true}
+            >
+              <Card>
+                <CardContent className="p-6">
+                  <div className="h-[280px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={teamComparisonData} barCategoryGap="20%">
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} unit="%" />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar dataKey="Umsetzung" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Termintreue" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="Task-Rate" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </CollapsibleSection>
+          );
+        })()}
       </div>
     </AppLayout>
   );
