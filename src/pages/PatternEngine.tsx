@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -245,7 +246,12 @@ const PatternEngine = () => {
         {/* Header */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">INTELLIGENCE</p>
-          <h1 className="text-xl font-bold">Pattern Engine</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold">Pattern Engine</h1>
+            <PageHint>
+              Erkennt wiederkehrende Muster in deinen Entscheidungen. Analysiert Erfolgsquoten nach Kategorie, Zeitverläufe und Entscheider-Profile, um Best Practices abzuleiten.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             Lernt aus {patterns.totalDecisions} Entscheidungen · {patterns.dataPoints} Datenpunkte analysiert
           </p>

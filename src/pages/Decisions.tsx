@@ -1,4 +1,5 @@
 import { useState } from "react";
+import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -122,7 +123,12 @@ const Decisions = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
+            <PageHint>
+              Alle Entscheidungen auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Klicke auf eine Entscheidung für Details, KI-Analyse und Abhängigkeiten. Export als CSV oder PDF möglich.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">Überblick über alle Entscheidungen</p>
         </div>
         <div className="flex items-center gap-2">

@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -177,7 +178,12 @@ const PredictiveTimeline = () => {
         {/* Header */}
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
-          <h1 className="font-display text-xl font-bold">Predictive Timeline</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold">Predictive Timeline</h1>
+            <PageHint>
+              KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Timer } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -118,7 +119,12 @@ const OpportunityCostRadar = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
-        <h1 className="font-display text-xl font-bold">Opportunity Cost Radar</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Opportunity Cost Radar</h1>
+          <PageHint>
+            Berechnet die täglichen Verzögerungskosten offener Entscheidungen basierend auf Team-Stundensätzen. Zeigt die teuersten Blockaden und Gesamtkosten.
+          </PageHint>
+        </div>
       </div>
 
       {/* Summary cards */}

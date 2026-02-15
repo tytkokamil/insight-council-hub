@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -167,7 +168,12 @@ const HealthHeatmap = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
-        <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
+          <PageHint>
+            Farbcodierte Gesundheitsanalyse deiner Entscheidungen nach Team, Kategorie oder Priorität. Rot signalisiert Handlungsbedarf, Grün zeigt gesunde Bereiche.
+          </PageHint>
+        </div>
       </div>
 
       {/* Summary */}

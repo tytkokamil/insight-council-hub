@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -266,7 +267,12 @@ const FrictionMap = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
-        <h1 className="font-display text-xl font-bold">Friction Map</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Friction Map</h1>
+          <PageHint>
+            Erkennt Reibungspunkte im Entscheidungsprozess pro Team. Analysiert Review-Zeiten, Ablehnungsquoten und Abhängigkeitskonflikte, um Optimierungspotenziale aufzuzeigen.
+          </PageHint>
+        </div>
       </div>
 
       {/* Summary */}

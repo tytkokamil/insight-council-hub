@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -131,7 +132,12 @@ const DecisionBenchmarking = () => {
       <div className="space-y-6">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vergleich</p>
-          <h1 className="font-display text-xl font-bold">Decision Benchmarking</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold">Decision Benchmarking</h1>
+            <PageHint>
+              Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen. Radar-Diagramm und Detail-Metriken zeigen Stärken und Schwächen.
+            </PageHint>
+          </div>
           <p className="text-sm text-muted-foreground mt-1">Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen.</p>
         </div>
 

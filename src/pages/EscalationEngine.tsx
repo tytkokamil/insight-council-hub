@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -95,7 +96,12 @@ const EscalationEngine = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Automatisierung</p>
-          <h1 className="font-display text-xl font-bold">Escalation Engine</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-xl font-bold">Escalation Engine</h1>
+            <PageHint>
+              Automatische Eskalation überfälliger Entscheidungen. Die Engine prüft SLA-Regeln und benachrichtigt verantwortliche Personen. Starte sie manuell oder aktiviere den Autopilot.
+            </PageHint>
+          </div>
         </div>
         <Button onClick={runEngine} disabled={running} className="gap-2">
           {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}

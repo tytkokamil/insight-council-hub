@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -209,7 +210,12 @@ const BottleneckIntelligence = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Engpass-Erkennung</p>
-        <h1 className="font-display text-xl font-bold">Bottleneck Intelligence</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Bottleneck Intelligence</h1>
+          <PageHint>
+            Identifiziert Engpässe bei Personen, Teams und Kategorien. Zeigt wer die meisten offenen Entscheidungen hält und wo Review-Staus entstehen.
+          </PageHint>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">

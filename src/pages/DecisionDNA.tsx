@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
@@ -267,7 +268,12 @@ const DecisionDNA = () => {
     <AppLayout>
       <div className="mb-6">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
-        <h1 className="font-display text-xl font-bold">Decision DNA</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="font-display text-xl font-bold">Decision DNA</h1>
+          <PageHint>
+            Tiefenanalyse deiner Entscheidungsmuster. Zeigt Risikoprofil, Geschwindigkeit, Komplexität und Qualität mit konkreten Handlungsempfehlungen pro Dimension.
+          </PageHint>
+        </div>
       </div>
 
       {/* Archetype Card */}
