@@ -2,6 +2,7 @@ import { useState } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2, TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3 } from "lucide-react";
+import { categoryLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -244,7 +245,7 @@ const Dashboard = () => {
                       {priority?.label || decision.priority}
                     </span>
                   </td>
-                  <td className="p-3"><span className="text-xs text-muted-foreground capitalize">{decision.category}</span></td>
+                  <td className="p-3"><span className="text-xs text-muted-foreground">{categoryLabels[decision.category] || decision.category}</span></td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
                       <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">

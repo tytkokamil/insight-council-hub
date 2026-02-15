@@ -2,6 +2,7 @@ import { useState } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
 import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye } from "lucide-react";
+import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -300,9 +301,9 @@ const Decisions = () => {
                         <p className="text-sm font-medium">{decision.title}</p>
                         <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
                       </td>
-                      <td className="p-3"><span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[decision.status] || ""}`}>{decision.status}</span></td>
-                      <td className="p-3"><span className={`text-xs font-semibold uppercase ${priorityStyles[decision.priority] || ""}`}>{decision.priority}</span></td>
-                      <td className="p-3"><span className="text-xs text-muted-foreground uppercase">{decision.category}</span></td>
+                      <td className="p-3"><span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[decision.status] || ""}`}>{statusLabels[decision.status] || decision.status}</span></td>
+                      <td className="p-3"><span className={`text-xs font-semibold uppercase ${priorityStyles[decision.priority] || ""}`}>{priorityLabels[decision.priority] || decision.priority}</span></td>
+                      <td className="p-3"><span className="text-xs text-muted-foreground">{categoryLabels[decision.category] || decision.category}</span></td>
                       <td className="p-3">{decision.team_id && teamMap[decision.team_id] ? (<span className="px-2 py-0.5 rounded-md text-[10px] bg-primary/10 text-primary">{teamMap[decision.team_id]}</span>) : (<span className="text-xs text-muted-foreground">—</span>)}</td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
