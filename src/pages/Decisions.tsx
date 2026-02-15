@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -9,6 +9,8 @@ import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
+import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
+import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
 import { toast } from "sonner";
@@ -64,6 +66,8 @@ const Decisions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
+  const [editDecision, setEditDecision] = useState<any>(null);
+  const [deleteDecision, setDeleteDecision] = useState<any>(null);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterPriority, setFilterPriority] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
@@ -303,7 +307,28 @@ const Decisions = () => {
                         </div>
                       </td>
                       <td className="p-3"><span className="text-xs text-muted-foreground">{decision.due_date || "—"}</span></td>
-                      <td className="p-3"><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button></td>
+                      <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setSelectedDecision(decision)} className="gap-2">
+                              <Eye className="w-3.5 h-3.5" /> Öffnen
+                            </DropdownMenuItem>
+                            {user?.id === decision.created_by && (
+                              <>
+                                <DropdownMenuItem onClick={() => setEditDecision(decision)} className="gap-2">
+                                  <Pencil className="w-3.5 h-3.5" /> Bearbeiten
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDeleteDecision(decision)} className="gap-2 text-destructive focus:text-destructive">
+                                  <Trash2 className="w-3.5 h-3.5" /> Löschen
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
                     </motion.tr>
                   ))
                 )}
@@ -315,6 +340,8 @@ const Decisions = () => {
 
       <NewDecisionDialog open={showNewDialog} onOpenChange={setShowNewDialog} onCreated={invalidate} />
       <DecisionDetailDialog decision={selectedDecision} open={!!selectedDecision} onOpenChange={(open) => { if (!open) setSelectedDecision(null); }} onUpdated={invalidate} />
+      {editDecision && <EditDecisionDialog decision={editDecision} open={!!editDecision} onOpenChange={(open) => { if (!open) setEditDecision(null); }} onUpdated={invalidate} />}
+      {deleteDecision && <DeleteDecisionDialog decision={deleteDecision} open={!!deleteDecision} onOpenChange={(open) => { if (!open) setDeleteDecision(null); }} onDeleted={invalidate} />}
     </AppLayout>
   );
 };
