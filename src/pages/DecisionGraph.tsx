@@ -39,13 +39,12 @@ const DecisionNode = ({ data }: { data: any }) => {
 
   return (
     <div
-      className="rounded-xl p-3 min-w-[180px] max-w-[220px] cursor-pointer transition-all hover:scale-105"
+      className="rounded-xl p-3 min-w-[180px] max-w-[220px] cursor-pointer transition-all hover:scale-105 bg-card text-card-foreground"
       style={{
-        background: "hsl(217 32% 17% / 0.95)",
         border: `2px solid ${borderColor}`,
         boxShadow: isCriticalPath
           ? `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`
-          : "0 4px 12px hsl(0 0% 0% / 0.3)",
+          : "0 4px 12px hsl(var(--shadow-color, 0 0% 0%) / 0.15)",
       }}
     >
       <div className="flex items-center gap-2 mb-1.5">
