@@ -30,6 +30,7 @@ import ScenarioEngine from "./pages/ScenarioEngine";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import ResetPassword from "./pages/ResetPassword";
 import AdminUsers from "./pages/AdminUsers";
+import AuditTrail from "./pages/AuditTrail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="/executive" element={<ProtectedRoute><ExecutiveDashboard /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+              <Route path="/audit" element={<ProtectedRoute><AuditTrail /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
