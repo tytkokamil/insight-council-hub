@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2 } from "lucide-react";
+import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const AI_PROVIDERS = [
@@ -396,6 +396,35 @@ const SettingsPage = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Onboarding Tour */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <RotateCcw className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-semibold">Onboarding</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Starte die Einführungstour erneut, um die wichtigsten Features kennenzulernen.
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (user) {
+                    localStorage.removeItem(`onboarding_done_${user.id}`);
+                    window.location.reload();
+                  }
+                }}
+                className="gap-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Tour erneut starten
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
