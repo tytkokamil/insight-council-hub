@@ -136,11 +136,11 @@ const ExecutiveDashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategische Analyse</p>
             <div className="flex items-center gap-2">
               <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
               <PageHint>
-                Unternehmensweite Entscheidungs-Intelligence für die Führungsebene. Zeigt Gesamtperformance, Team-Vergleiche, Risikobewertung und strategische Ausrichtung auf einen Blick.
+                Organisationsweite Entscheidungs-Intelligence: Health Score über alle Teams, Cross-Team-Benchmarks, Kosten-Radar und strategische Trends. Für deinen persönlichen Überblick nutze das Dashboard.
               </PageHint>
             </div>
           </div>
