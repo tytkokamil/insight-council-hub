@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,10 +13,10 @@ import {
   Panel,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import { AlertTriangle, DollarSign, GitBranch, Info } from "lucide-react";
 import PageHint from "@/components/shared/PageHint";
+import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 
 const statusColors: Record<string, string> = {
   draft: "#6b7280",
@@ -94,108 +94,96 @@ const edgeTypeStyles: Record<string, any> = {
 const DecisionGraph = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [decisions, setDecisions] = useState<any[]>([]);
-  const [dependencies, setDependencies] = useState<any[]>([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
   const [cascadeInfo, setCascadeInfo] = useState<{ count: number; cost: number; chain: string[] } | null>(null);
 
+  const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: allDeps = [], isLoading: depLoading } = useDependencies();
+  const { data: teams = [], isLoading: teamLoading } = useTeams();
+
+  // Filter deps to only those relevant to current decisions
+  const decIds = useMemo(() => new Set(decisions.map(d => d.id)), [decisions]);
+  const deps = useMemo(() => allDeps.filter(d => decIds.has(d.source_decision_id) || decIds.has(d.target_decision_id)), [allDeps, decIds]);
+
   useEffect(() => {
-    const fetchData = async () => {
-      const [decRes, depRes, teamRes] = await Promise.all([
-        supabase.from("decisions").select("*").order("created_at"),
-        supabase.from("decision_dependencies").select("*"),
-        supabase.from("teams").select("id, hourly_rate"),
-      ]);
+    if (decLoading || depLoading || teamLoading || decisions.length === 0) return;
 
-      const decs = decRes.data || [];
-      const deps = depRes.data || [];
-      const teams = teamRes.data || [];
-      const teamRateMap = Object.fromEntries(teams.map((t) => [t.id, t.hourly_rate || 75]));
+    const teamRateMap = Object.fromEntries(teams.map((t) => [t.id, t.hourly_rate || 75]));
 
-      setDecisions(decs);
-      setDependencies(deps);
+    const adjForward: Record<string, string[]> = {};
+    deps.forEach((d) => {
+      if (!adjForward[d.source_decision_id]) adjForward[d.source_decision_id] = [];
+      adjForward[d.source_decision_id].push(d.target_decision_id);
+    });
 
-      // Build adjacency for cascade calculation
-      const adjForward: Record<string, string[]> = {};
-      deps.forEach((d) => {
-        if (!adjForward[d.source_decision_id]) adjForward[d.source_decision_id] = [];
-        adjForward[d.source_decision_id].push(d.target_decision_id);
-      });
+    const blockedBy = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id));
 
-      const blockedBy = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id));
-
-      // Cascade calculation: BFS from each node
-      const getCascade = (id: string): { count: number; ids: string[] } => {
-        const visited = new Set<string>();
-        const queue = [id];
-        while (queue.length > 0) {
-          const current = queue.shift()!;
-          const children = adjForward[current] || [];
-          for (const child of children) {
-            if (!visited.has(child) && child !== id) {
-              visited.add(child);
-              queue.push(child);
-            }
+    const getCascade = (id: string): { count: number; ids: string[] } => {
+      const visited = new Set<string>();
+      const queue = [id];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        const children = adjForward[current] || [];
+        for (const child of children) {
+          if (!visited.has(child) && child !== id) {
+            visited.add(child);
+            queue.push(child);
           }
         }
-        return { count: visited.size, ids: Array.from(visited) };
-      };
-
-      // Calculate delay cost per decision
-      const getDelayCost = (dec: any) => {
-        if (dec.status === "implemented" || dec.status === "rejected") return 0;
-        const daysOpen = Math.max(1, Math.floor((Date.now() - new Date(dec.created_at).getTime()) / 86400000));
-        const rate = dec.team_id ? (teamRateMap[dec.team_id] || 75) : 75;
-        return daysOpen * 2 * 2 * rate;
-      };
-
-      // Layout: Dagre-style simple layering
-      const positioned = layoutNodes(decs, deps);
-
-      const graphNodes: Node[] = decs.map((dec, i) => {
-        const cascade = getCascade(dec.id);
-        const pos = positioned[dec.id] || { x: (i % 5) * 280, y: Math.floor(i / 5) * 200 };
-        return {
-          id: dec.id,
-          type: "decision",
-          position: pos,
-          data: {
-            label: dec.title,
-            status: dec.status,
-            priority: dec.priority,
-            category: dec.category,
-            delayCost: getDelayCost(dec),
-            cascadeCount: cascade.count,
-            cascadeIds: cascade.ids,
-            isBlocked: blockedBy.has(dec.id),
-            decision: dec,
-          },
-          sourcePosition: Position.Right,
-          targetPosition: Position.Left,
-        };
-      });
-
-      const graphEdges: Edge[] = deps.map((dep) => ({
-        id: dep.id,
-        source: dep.source_decision_id,
-        target: dep.target_decision_id,
-        type: "default",
-        animated: dep.dependency_type === "blocks",
-        label: dep.dependency_type === "blocks" ? "blockiert" : dep.dependency_type === "requires" ? "benötigt" : "beeinflusst",
-        labelStyle: { fontSize: 10, fill: "#9ca3af" },
-        style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308",
-        },
-      }));
-
-      setNodes(graphNodes);
-      setEdges(graphEdges);
+      }
+      return { count: visited.size, ids: Array.from(visited) };
     };
 
-    fetchData();
-  }, []);
+    const getDelayCost = (dec: any) => {
+      if (dec.status === "implemented" || dec.status === "rejected") return 0;
+      const daysOpen = Math.max(1, Math.floor((Date.now() - new Date(dec.created_at).getTime()) / 86400000));
+      const rate = dec.team_id ? (teamRateMap[dec.team_id] || 75) : 75;
+      return daysOpen * 2 * 2 * rate;
+    };
+
+    const positioned = layoutNodes(decisions, deps);
+
+    const graphNodes: Node[] = decisions.map((dec, i) => {
+      const cascade = getCascade(dec.id);
+      const pos = positioned[dec.id] || { x: (i % 5) * 280, y: Math.floor(i / 5) * 200 };
+      return {
+        id: dec.id,
+        type: "decision",
+        position: pos,
+        data: {
+          label: dec.title,
+          status: dec.status,
+          priority: dec.priority,
+          category: dec.category,
+          delayCost: getDelayCost(dec),
+          cascadeCount: cascade.count,
+          cascadeIds: cascade.ids,
+          isBlocked: blockedBy.has(dec.id),
+          decision: dec,
+        },
+        sourcePosition: Position.Right,
+        targetPosition: Position.Left,
+      };
+    });
+
+    const graphEdges: Edge[] = deps.map((dep) => ({
+      id: dep.id,
+      source: dep.source_decision_id,
+      target: dep.target_decision_id,
+      type: "default",
+      animated: dep.dependency_type === "blocks",
+      label: dep.dependency_type === "blocks" ? "blockiert" : dep.dependency_type === "requires" ? "benötigt" : "beeinflusst",
+      labelStyle: { fontSize: 10, fill: "#9ca3af" },
+      style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308",
+      },
+    }));
+
+    setNodes(graphNodes);
+    setEdges(graphEdges);
+  }, [decLoading, depLoading, teamLoading, decisions, deps, teams]);
 
   const onNodeClick = useCallback((_: any, node: Node) => {
     const nodeData = node.data as any;
