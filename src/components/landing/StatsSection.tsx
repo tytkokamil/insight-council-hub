@@ -3,10 +3,10 @@ import { TrendingUp, Clock, Target, Users } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 const stats = [
-  { icon: TrendingUp, value: 73, suffix: "%", label: "Faster Decisions", description: "Average time reduction in decision cycles" },
-  { icon: Target, value: 94, suffix: "%", label: "Implementation Rate", description: "Decisions that reach full execution" },
-  { icon: Clock, value: 2.5, suffix: "x", label: "Better Tracking", description: "Improved visibility into decision progress" },
-  { icon: Users, value: 500, suffix: "+", label: "Enterprise Teams", description: "Organizations transforming their decisions" },
+  { icon: TrendingUp, value: 73, suffix: "%", label: "Schnellere Entscheidungen", description: "Durchschnittliche Reduktion der Entscheidungszyklen" },
+  { icon: Target, value: 94, suffix: "%", label: "Umsetzungsrate", description: "Entscheidungen, die vollständig implementiert werden" },
+  { icon: Clock, value: 2.5, suffix: "x", label: "Bessere Nachverfolgung", description: "Verbesserte Transparenz über den Entscheidungsfortschritt" },
+  { icon: Users, value: 500, suffix: "+", label: "Enterprise-Teams", description: "Organisationen, die ihre Entscheidungen transformieren" },
 ];
 
 const AnimatedNumber = ({ value, suffix, inView }: { value: number; suffix: string; inView: boolean }) => {
@@ -30,15 +30,29 @@ const AnimatedNumber = ({ value, suffix, inView }: { value: number; suffix: stri
 
 const StatsSection = () => {
   return (
-    <section className="py-28 relative overflow-hidden">
+    <section id="stats" className="py-28 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-20" />
 
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center max-w-3xl mx-auto mb-16"
+        >
+          <p className="text-sm font-medium text-primary mb-4 tracking-wide uppercase">Messbare Ergebnisse</p>
+          <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
+            Zahlen, die
+            <span className="gradient-text"> für sich sprechen</span>
+          </h2>
+        </motion.div>
+
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto"
         >
           {stats.map((stat, index) => (
             <motion.div

@@ -15,14 +15,14 @@ const Footer = () => {
               <span className="font-display font-bold text-lg tracking-tight">DecisionOS</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Enterprise Decision Management for teams that demand transparency.
+              Enterprise Decision Management für Teams, die Transparenz fordern.
             </p>
           </div>
 
           {[
-            { title: "Product", links: ["Features", "Templates", "Integrations", "Pricing"] },
-            { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
-            { title: "Legal", links: ["Privacy", "Terms", "Security", "GDPR"] },
+            { title: "Produkt", links: ["Funktionen", "Templates", "Integrationen", "Preise"] },
+            { title: "Unternehmen", links: ["Über uns", "Blog", "Karriere", "Kontakt"] },
+            { title: "Rechtliches", links: ["Datenschutz", "AGB", "Sicherheit", "DSGVO"] },
           ].map(section => (
             <div key={section.title}>
               <h4 className="font-semibold text-sm mb-4">{section.title}</h4>
@@ -41,7 +41,7 @@ const Footer = () => {
 
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/40">
           <p className="text-sm text-muted-foreground">
-            © 2025 DecisionOS. All rights reserved.
+            © 2025 DecisionOS. Alle Rechte vorbehalten.
           </p>
           <div className="flex items-center gap-6 mt-4 md:mt-0">
             {["Twitter", "LinkedIn", "GitHub"].map(social => (

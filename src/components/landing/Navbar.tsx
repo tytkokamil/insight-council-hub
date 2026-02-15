@@ -39,13 +39,17 @@ const Navbar = () => {
 
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center gap-1">
-                {["Features", "Pricing", "Enterprise", "Docs"].map(item => (
+              {[
+                { label: "Funktionen", href: "#features" },
+                { label: "Vorteile", href: "#stats" },
+                { label: "Enterprise", href: "#testimonials" },
+              ].map(item => (
                   <a
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
+                    key={item.label}
+                    href={item.href}
                     className="text-sm text-muted-foreground hover:text-foreground px-4 py-2 rounded-xl hover:bg-muted/50 transition-all duration-200"
                   >
-                    {item}
+                    {item.label}
                   </a>
                 ))}
               </div>
@@ -54,12 +58,12 @@ const Navbar = () => {
               <div className="hidden md:flex items-center gap-2">
                 <Link to="/login">
                   <Button variant="ghost" size="sm" className="rounded-xl">
-                    Sign In
+                    Anmelden
                   </Button>
                 </Link>
                 <Link to="/dashboard">
                   <Button size="sm" className="rounded-xl shadow-md shadow-primary/20">
-                    Get Started
+                    Kostenlos testen
                   </Button>
                 </Link>
               </div>
@@ -87,17 +91,21 @@ const Navbar = () => {
             className="md:hidden mx-4 mt-2"
           >
             <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/60 p-5 shadow-elevated space-y-1">
-              {["Features", "Pricing", "Enterprise", "Docs"].map(item => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl hover:bg-muted/50 transition-colors">
-                  {item}
+              {[
+                { label: "Funktionen", href: "#features" },
+                { label: "Vorteile", href: "#stats" },
+                { label: "Enterprise", href: "#testimonials" },
+              ].map(item => (
+                <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-xl hover:bg-muted/50 transition-colors">
+                  {item.label}
                 </a>
               ))}
               <div className="pt-4 mt-3 border-t border-border/50 space-y-2">
                 <Link to="/login">
-                  <Button variant="ghost" className="w-full rounded-xl">Sign In</Button>
+                  <Button variant="ghost" className="w-full rounded-xl">Anmelden</Button>
                 </Link>
                 <Link to="/dashboard">
-                  <Button className="w-full rounded-xl">Get Started</Button>
+                  <Button className="w-full rounded-xl">Kostenlos testen</Button>
                 </Link>
               </div>
             </div>
