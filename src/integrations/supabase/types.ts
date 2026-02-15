@@ -127,24 +127,30 @@ export type Database = {
           created_by: string
           dependency_type: string
           id: string
-          source_decision_id: string
-          target_decision_id: string
+          source_decision_id: string | null
+          source_task_id: string | null
+          target_decision_id: string | null
+          target_task_id: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
           dependency_type?: string
           id?: string
-          source_decision_id: string
-          target_decision_id: string
+          source_decision_id?: string | null
+          source_task_id?: string | null
+          target_decision_id?: string | null
+          target_task_id?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
           dependency_type?: string
           id?: string
-          source_decision_id?: string
-          target_decision_id?: string
+          source_decision_id?: string | null
+          source_task_id?: string | null
+          target_decision_id?: string | null
+          target_task_id?: string | null
         }
         Relationships: [
           {
@@ -155,10 +161,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "decision_dependencies_source_task_id_fkey"
+            columns: ["source_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "decision_dependencies_target_decision_id_fkey"
             columns: ["target_decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_dependencies_target_task_id_fkey"
+            columns: ["target_task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
