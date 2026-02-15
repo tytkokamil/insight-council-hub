@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import PageHint from "@/components/shared/PageHint";
+import { categoryLabels } from "@/lib/labels";
 import { motion } from "framer-motion";
 import { TrendingUp, Clock, CheckCircle2, AlertCircle, FileText, AlertTriangle, BarChart3 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -36,7 +37,7 @@ const Analytics = () => {
       acc[d.category] = (acc[d.category] || 0) + 1;
       return acc;
     }, {})
-  ).map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value }));
+  ).map(([name, value]) => ({ name: categoryLabels[name] || name, value }));
 
   const riskDistribution = [
     { name: "Niedrig (0-40%)", value: decisions.filter(d => (d.ai_risk_score || 0) <= 40).length },
@@ -168,7 +169,7 @@ const Analytics = () => {
                   <XAxis type="number" stroke="hsl(215, 20%, 55%)" fontSize={12} />
                   <YAxis type="category" dataKey="name" stroke="hsl(215, 20%, 55%)" fontSize={12} width={100} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="value" fill="hsl(280, 65%, 60%)" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="value" fill="hsl(192, 91%, 56%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
