@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useDependencies } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import DiscussionPanel from "./DiscussionPanel";
 import ReviewPanel from "./ReviewPanel";
 import AiAnalysisPanel from "./AiAnalysisPanel";
@@ -16,7 +18,7 @@ import CoPilotPanel from "./CoPilotPanel";
 import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2 } from "lucide-react";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -37,11 +39,31 @@ const statusLabels: Record<string, string> = {
 
 const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
   const { user } = useAuth();
+  const { data: allDeps = [] } = useDependencies();
+  const { data: allTasks = [] } = useTasks();
   const [status, setStatus] = useState(decision?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [activeTab, setActiveTab] = useState("discussion");
+
+  // Count open tasks linked to this decision
+  const openLinkedTasks = useMemo(() => {
+    if (!decision) return 0;
+    const taskMap = new Map(allTasks.map(t => [t.id, t]));
+    let count = 0;
+    allDeps.forEach(dep => {
+      if (dep.source_decision_id === decision.id && dep.target_task_id) {
+        const task = taskMap.get(dep.target_task_id);
+        if (task && task.status !== "done") count++;
+      }
+      if (dep.target_decision_id === decision.id && dep.source_task_id) {
+        const task = taskMap.get(dep.source_task_id);
+        if (task && task.status !== "done") count++;
+      }
+    });
+    return count;
+  }, [decision, allDeps, allTasks]);
 
   useEffect(() => {
     if (decision) setStatus(decision.status);
@@ -126,6 +148,15 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           </div>
           <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
         </DialogHeader>
+
+        {openLinkedTasks > 0 && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-2">
+            <AlertCircle className="w-4 h-4 text-warning shrink-0" />
+            <p className="text-xs text-warning">
+              <span className="font-semibold">{openLinkedTasks} offene Aufgabe{openLinkedTasks > 1 ? "n" : ""}</span> verknüpft — diese müssen erledigt werden, bevor die Entscheidung abgeschlossen werden kann.
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 flex-wrap mt-2">
           <span className="text-xs text-muted-foreground">Status:</span>

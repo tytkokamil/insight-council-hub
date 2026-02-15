@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageHint from "@/components/shared/PageHint";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye } from "lucide-react";
+import { Plus, Search, Filter, FileText, MoreHorizontal, Zap, Target, GitBranch, BarChart3, Download, X, Pencil, Trash2, Eye, AlertCircle } from "lucide-react";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,9 +13,11 @@ import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
-import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Entwurf" },
@@ -60,9 +62,34 @@ const Decisions = () => {
   const { data: decisions = [] } = useDecisions();
   const { data: teams = [] } = useTeams();
   const { data: profiles = [] } = useProfiles();
+  const { data: allDeps = [] } = useDependencies();
+  const { data: allTasks = [] } = useTasks();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const teamMap: Record<string, string> = {};
+
+  // Build map: decisionId -> count of open linked tasks
+  const openTasksPerDecision = useMemo(() => {
+    const map: Record<string, number> = {};
+    const taskMap = new Map(allTasks.map(t => [t.id, t]));
+    allDeps.forEach(dep => {
+      // Task linked to decision (task as target, decision as source)
+      if (dep.source_decision_id && dep.target_task_id) {
+        const task = taskMap.get(dep.target_task_id);
+        if (task && task.status !== "done") {
+          map[dep.source_decision_id] = (map[dep.source_decision_id] || 0) + 1;
+        }
+      }
+      // Task linked to decision (task as source, decision as target)
+      if (dep.target_decision_id && dep.source_task_id) {
+        const task = taskMap.get(dep.source_task_id);
+        if (task && task.status !== "done") {
+          map[dep.target_decision_id] = (map[dep.target_decision_id] || 0) + 1;
+        }
+      }
+    });
+    return map;
+  }, [allDeps, allTasks]);
   teams.forEach(t => { teamMap[t.id] = t.name; });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -298,7 +325,22 @@ const Decisions = () => {
                   filtered.map((decision) => (
                     <tr key={decision.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors row-highlight" onClick={() => setSelectedDecision(decision)}>
                       <td className="p-3">
-                        <p className="text-sm font-medium">{decision.title}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium">{decision.title}</p>
+                          {openTasksPerDecision[decision.id] > 0 && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-medium bg-warning/15 text-warning border border-warning/20">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {openTasksPerDecision[decision.id]}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p className="text-xs">{openTasksPerDecision[decision.id]} offene Aufgabe{openTasksPerDecision[decision.id] > 1 ? "n" : ""} verknüpft</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
                       </td>
                       <td className="p-3"><span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[decision.status] || ""}`}>{statusLabels[decision.status] || decision.status}</span></td>
