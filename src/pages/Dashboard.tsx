@@ -133,32 +133,30 @@ const Dashboard = () => {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 stagger-children">
         {stats.map((stat, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
-                  <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                  </div>
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
+                <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
                 </div>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+              <p className="text-2xl font-bold">{stat.value}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
       {/* Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4 stagger-children">
         <MomentumScoreWidget />
         <DecisionCostWidget />
         <VelocityScoreWidget />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 stagger-children">
         <EscalationWidget />
         <LeaderboardWidget />
       </div>
@@ -214,18 +212,15 @@ const Dashboard = () => {
               <th className="p-3"></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="stagger-children">
             {filtered.length === 0 ? (
               <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">Keine Entscheidungen gefunden.</td></tr>
-            ) : filtered.map((decision, i) => {
+            ) : filtered.map((decision) => {
               const status = statusConfig[decision.status];
               const priority = priorityConfig[decision.priority];
               return (
-                <motion.tr
+                <tr
                   key={decision.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.03 }}
                   className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
                   onClick={() => setSelectedDecision(decision)}
                 >
@@ -254,7 +249,7 @@ const Dashboard = () => {
                   </td>
                   <td className="p-3"><span className="text-xs text-muted-foreground">{decision.due_date || "—"}</span></td>
                   <td className="p-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></td>
-                </motion.tr>
+                </tr>
               );
             })}
           </tbody>

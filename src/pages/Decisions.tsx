@@ -284,12 +284,12 @@ const Decisions = () => {
                   <th className="p-3"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="stagger-children">
                 {filtered.length === 0 ? (
                   <tr><td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">Keine Ergebnisse gefunden.</td></tr>
                 ) : (
-                  filtered.map((decision, i) => (
-                    <motion.tr key={decision.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedDecision(decision)}>
+                  filtered.map((decision) => (
+                    <tr key={decision.id} className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedDecision(decision)}>
                       <td className="p-3">
                         <p className="text-sm font-medium">{decision.title}</p>
                         <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
@@ -329,7 +329,7 @@ const Decisions = () => {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))
                 )}
               </tbody>
