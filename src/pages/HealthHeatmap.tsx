@@ -2,18 +2,19 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
-import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle, CheckSquare } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 
-type Dimension = "team" | "category" | "priority";
+type Dimension = "team" | "category" | "priority" | "type";
 
 interface HealthCell {
   label: string;
   total: number;
-  implemented: number;
+  completed: number;
   avgDays: number;
   overdueRate: number;
   rejectedRate: number;
@@ -23,37 +24,77 @@ interface HealthCell {
 const categoryLabels: Record<string, string> = {
   strategic: "Strategisch", budget: "Budget", hr: "HR",
   technical: "Technisch", operational: "Operativ", marketing: "Marketing",
+  general: "Allgemein",
 };
 
 const priorityLabels: Record<string, string> = {
   low: "Low", medium: "Medium", high: "High", critical: "Critical",
 };
 
+const typeLabels: Record<string, string> = {
+  decision: "Entscheidungen", task: "Aufgaben",
+};
+
+/** Unified item for both decisions and tasks */
+interface UnifiedItem {
+  id: string;
+  category: string;
+  priority: string;
+  status: string;
+  team_id: string | null;
+  created_at: string;
+  due_date: string | null;
+  completed_at: string | null; // implemented_at for decisions, completed_at for tasks
+  rejected: boolean;
+  itemType: "decision" | "task";
+}
+
 const HealthHeatmap = () => {
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
+  const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
-  const loading = loadingDec || loadingTeams;
+  const loading = loadingDec || loadingTasks || loadingTeams;
   const [rowDim, setRowDim] = useState<Dimension>("team");
   const [colDim, setColDim] = useState<Dimension>("category");
 
   const teamMap = useMemo(() => Object.fromEntries(teams.map(t => [t.id, t.name])), [teams]);
 
+  // Merge decisions + tasks into unified items
+  const items: UnifiedItem[] = useMemo(() => {
+    const decItems: UnifiedItem[] = decisions.map(d => ({
+      id: d.id, category: d.category, priority: d.priority, status: d.status,
+      team_id: d.team_id, created_at: d.created_at, due_date: d.due_date,
+      completed_at: d.implemented_at || null, rejected: d.status === "rejected",
+      itemType: "decision" as const,
+    }));
+    const taskItems: UnifiedItem[] = tasks.map(t => ({
+      id: t.id, category: t.category || "general", priority: t.priority, status: t.status,
+      team_id: t.team_id, created_at: t.created_at, due_date: t.due_date,
+      completed_at: t.completed_at || null, rejected: false,
+      itemType: "task" as const,
+    }));
+    return [...decItems, ...taskItems];
+  }, [decisions, tasks]);
+
   const getLabels = (dim: Dimension): string[] => {
     if (dim === "team") return teams.map(t => t.name);
-    if (dim === "category") return Object.keys(categoryLabels);
+    if (dim === "category") return [...new Set(items.map(i => i.category))].sort();
+    if (dim === "type") return ["decision", "task"];
     return Object.keys(priorityLabels);
   };
 
   const getDisplayLabel = (dim: Dimension, key: string): string => {
     if (dim === "category") return categoryLabels[key] || key;
     if (dim === "priority") return priorityLabels[key] || key;
+    if (dim === "type") return typeLabels[key] || key;
     return key;
   };
 
-  const getValue = (dec: any, dim: Dimension): string => {
-    if (dim === "team") return dec.team_id ? (teamMap[dec.team_id] || "") : "";
-    if (dim === "category") return dec.category;
-    return dec.priority;
+  const getValue = (item: UnifiedItem, dim: Dimension): string => {
+    if (dim === "team") return item.team_id ? (teamMap[item.team_id] || "") : "";
+    if (dim === "category") return item.category;
+    if (dim === "type") return item.itemType;
+    return item.priority;
   };
 
   const heatmap = useMemo(() => {
@@ -66,35 +107,35 @@ const HealthHeatmap = () => {
     rows.forEach(row => {
       cols.forEach(col => {
         const key = `${row}|${col}`;
-        const matching = decisions.filter(d => {
-          const rv = getValue(d, rowDim);
-          const cv = getValue(d, colDim);
+        const matching = items.filter(i => {
+          const rv = getValue(i, rowDim);
+          const cv = getValue(i, colDim);
           return rv === row && cv === col;
         });
 
         const total = matching.length;
-        const implemented = matching.filter(d => d.status === "implemented").length;
-        const rejected = matching.filter(d => d.status === "rejected").length;
-        const overdue = matching.filter(d =>
-          d.due_date && new Date(d.due_date).getTime() < now &&
-          d.status !== "implemented" && d.status !== "rejected"
+        const completed = matching.filter(i => i.completed_at !== null).length;
+        const rejected = matching.filter(i => i.rejected).length;
+        const overdue = matching.filter(i =>
+          i.due_date && new Date(i.due_date).getTime() < now &&
+          !i.completed_at && !i.rejected
         ).length;
 
         const durations = matching
-          .filter(d => d.status === "implemented" && d.implemented_at)
-          .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
+          .filter(i => i.completed_at)
+          .map(i => (new Date(i.completed_at!).getTime() - new Date(i.created_at).getTime()) / 86400000);
         const avgDays = durations.length > 0
           ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length * 10) / 10
           : 0;
 
         const overdueRate = total > 0 ? Math.round((overdue / total) * 100) : 0;
         const rejectedRate = total > 0 ? Math.round((rejected / total) * 100) : 0;
-        const implementRate = total > 0 ? (implemented / total) : 0;
+        const completeRate = total > 0 ? (completed / total) : 0;
 
         let healthScore = 0;
         if (total > 0) {
           healthScore = Math.round(
-            implementRate * 40 +
+            completeRate * 40 +
             (1 - overdueRate / 100) * 25 +
             (1 - rejectedRate / 100) * 15 +
             Math.max(0, (1 - avgDays / 30)) * 20
@@ -103,13 +144,13 @@ const HealthHeatmap = () => {
 
         cells[key] = {
           label: `${getDisplayLabel(rowDim, row)} × ${getDisplayLabel(colDim, col)}`,
-          total, implemented, avgDays, overdueRate, rejectedRate, healthScore,
+          total, completed, avgDays, overdueRate, rejectedRate, healthScore,
         };
       });
     });
 
     return { rows, cols, cells };
-  }, [decisions, teams, rowDim, colDim]);
+  }, [items, teams, rowDim, colDim]);
 
   const getCellBg = (score: number, total: number): string => {
     if (total === 0) return "bg-muted/10";
@@ -128,12 +169,12 @@ const HealthHeatmap = () => {
     return "text-destructive";
   };
 
-  const totalDec = decisions.length;
-  const implementedDec = decisions.filter(d => d.status === "implemented").length;
-  const overallHealth = totalDec > 0 ? Math.round((implementedDec / totalDec) * 100) : 0;
-  const overdueDec = decisions.filter(d =>
-    d.due_date && new Date(d.due_date).getTime() < Date.now() &&
-    d.status !== "implemented" && d.status !== "rejected"
+  const totalItems = items.length;
+  const completedItems = items.filter(i => i.completed_at !== null).length;
+  const overallHealth = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  const overdueItems = items.filter(i =>
+    i.due_date && new Date(i.due_date).getTime() < Date.now() &&
+    !i.completed_at && !i.rejected
   ).length;
 
   const cellEntries = Object.entries(heatmap.cells).filter(([, c]) => c.total > 0);
@@ -144,11 +185,12 @@ const HealthHeatmap = () => {
     { key: "team", label: "Team" },
     { key: "category", label: "Kategorie" },
     { key: "priority", label: "Priorität" },
+    { key: "type", label: "Typ" },
   ];
 
   if (loading) return <AnalysisPageSkeleton cards={4} sections={1} showChart />;
 
-  if (decisions.length === 0) {
+  if (items.length === 0) {
     return (
       <AppLayout>
         <div className="mb-6">
@@ -158,8 +200,8 @@ const HealthHeatmap = () => {
         <EmptyAnalysisState
           icon={Heart}
           title="Keine Health-Daten"
-          description="Erstelle Entscheidungen und Teams, um die Gesundheits-Heatmap zu generieren."
-          hint="Die Heatmap zeigt Health Scores pro Team und Kategorie"
+          description="Erstelle Entscheidungen oder Aufgaben, um die Gesundheits-Heatmap zu generieren."
+          hint="Die Heatmap zeigt Health Scores für Entscheidungen und Aufgaben"
         />
       </AppLayout>
     );
@@ -172,17 +214,17 @@ const HealthHeatmap = () => {
         <div className="flex items-center gap-2">
           <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
           <PageHint>
-            Farbcodierte Gesundheitsanalyse deiner Entscheidungen nach Team, Kategorie oder Priorität. Rot signalisiert Handlungsbedarf, Grün zeigt gesunde Bereiche.
+            Farbcodierte Gesundheitsanalyse deiner Entscheidungen und Aufgaben nach Team, Kategorie, Priorität oder Typ.
           </PageHint>
         </div>
       </div>
 
-      {/* Summary – always visible */}
+      {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { icon: Heart, label: "Gesundheits-Index", value: `${overallHealth}%`, color: overallHealth >= 60 ? "text-success" : "text-warning" },
-          { icon: CheckCircle2, label: "Umgesetzt", value: `${implementedDec}/${totalDec}`, color: "text-primary" },
-          { icon: AlertTriangle, label: "Überfällig", value: overdueDec, color: "text-destructive" },
+          { icon: CheckCircle2, label: "Abgeschlossen", value: `${completedItems}/${totalItems}`, color: "text-primary", sub: `${decisions.length} Entsch. • ${tasks.length} Aufg.` },
+          { icon: AlertTriangle, label: "Überfällig", value: overdueItems, color: "text-destructive" },
           {
             icon: bestCell && bestCell[1].healthScore >= 60 ? TrendingUp : TrendingDown,
             label: "Stärkstes Segment",
@@ -190,21 +232,22 @@ const HealthHeatmap = () => {
             color: "text-success",
             small: true,
           },
-        ].map((card, i) => (
+        ].map((card) => (
           <div key={card.label} className="glass-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
             </div>
-            <p className={`font-display font-bold ${card.small ? "text-sm" : "text-2xl"}`}>{card.value}</p>
+            <p className={`font-display font-bold ${(card as any).small ? "text-sm" : "text-2xl"}`}>{card.value}</p>
+            {(card as any).sub && <p className="text-[10px] text-muted-foreground mt-0.5">{(card as any).sub}</p>}
           </div>
         ))}
       </div>
 
-      {/* Heatmap – collapsible */}
+      {/* Heatmap */}
       <CollapsibleSection
         title="Heatmap"
-        subtitle="Gesundheit nach Dimensionen"
+        subtitle="Gesundheit nach Dimensionen (Entscheidungen + Aufgaben)"
         icon={<Activity className="w-4 h-4 text-primary" />}
         defaultOpen={true}
         className="mb-8"
@@ -247,10 +290,10 @@ const HealthHeatmap = () => {
                 </tr>
               </thead>
               <tbody>
-                {heatmap.rows.map((row, ri) => (
+                {heatmap.rows.map((row) => (
                   <tr key={row}>
                     <td className="p-2 font-medium text-sm">{getDisplayLabel(rowDim, row)}</td>
-                    {heatmap.cols.map((col, ci) => {
+                    {heatmap.cols.map((col) => {
                       const key = `${row}|${col}`;
                       const cell = heatmap.cells[key];
                       if (!cell) return <td key={col} className="p-1.5"><div className="rounded-lg p-3 bg-muted/10 text-center text-muted-foreground/40">—</div></td>;
@@ -258,14 +301,14 @@ const HealthHeatmap = () => {
                       return (
                         <td key={col} className="p-1.5">
                           <div
-                            className={`rounded-lg p-2.5 text-center cursor-default group relative ${getCellBg(cell.healthScore, cell.total)}`}
-                            title={`${cell.label}\nHealth: ${cell.healthScore}/100\n${cell.total} Entscheidungen`}
+                            className={`rounded-lg p-2.5 text-center cursor-default ${getCellBg(cell.healthScore, cell.total)}`}
+                            title={`${cell.label}\nHealth: ${cell.healthScore}/100\n${cell.total} Items`}
                           >
                             <p className={`text-lg font-bold font-display ${getCellText(cell.healthScore, cell.total)}`}>
                               {cell.total === 0 ? "—" : cell.healthScore}
                             </p>
                             <p className="text-[9px] text-muted-foreground mt-0.5">
-                              {cell.total === 0 ? "keine" : `${cell.total} | ${cell.implemented}✓`}
+                              {cell.total === 0 ? "keine" : `${cell.total} | ${cell.completed}✓`}
                             </p>
                           </div>
                         </td>
@@ -298,7 +341,7 @@ const HealthHeatmap = () => {
         </div>
       </CollapsibleSection>
 
-      {/* Insights – collapsible, default closed */}
+      {/* Insights */}
       {(bestCell || worstCell) && (
         <CollapsibleSection
           title="Insights"
@@ -315,7 +358,7 @@ const HealthHeatmap = () => {
                 </div>
                 <p className="text-sm font-medium">{bestCell[1].label}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Health Score: {bestCell[1].healthScore}/100 • {bestCell[1].implemented}/{bestCell[1].total} umgesetzt • Ø {bestCell[1].avgDays}d
+                  Health Score: {bestCell[1].healthScore}/100 • {bestCell[1].completed}/{bestCell[1].total} abgeschlossen • Ø {bestCell[1].avgDays}d
                 </p>
               </div>
             )}
@@ -327,7 +370,7 @@ const HealthHeatmap = () => {
                 </div>
                 <p className="text-sm font-medium">{worstCell[1].label}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Health Score: {worstCell[1].healthScore}/100 • {worstCell[1].overdueRate}% überfällig • {worstCell[1].rejectedRate}% abgelehnt
+                  Health Score: {worstCell[1].healthScore}/100 • {worstCell[1].overdueRate}% überfällig
                 </p>
               </div>
             )}

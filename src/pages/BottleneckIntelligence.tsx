@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
-import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight } from "lucide-react";
+import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight, CheckSquare } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews, useProfiles, useFilteredNotifications, buildProfileMap } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 
 interface PersonBottleneck {
   userId: string;
@@ -15,6 +16,7 @@ interface PersonBottleneck {
   avgDays: number;
   openCount: number;
   blockingCount: number;
+  openTasks: number;
   percentile: string;
 }
 
@@ -24,6 +26,7 @@ interface CategoryBottleneck {
   globalAvg: number;
   ratio: number;
   count: number;
+  taskCount: number;
 }
 
 interface TeamFriction {
@@ -32,6 +35,7 @@ interface TeamFriction {
   avgDays: number;
   escalationCount: number;
   blockedCount: number;
+  openTasks: number;
   score: number;
 }
 
@@ -41,13 +45,14 @@ const BottleneckIntelligence = () => {
   const [teamFrictions, setTeamFrictions] = useState<TeamFriction[]>([]);
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: tasks = [], isLoading: taskLoading } = useTasks();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
   const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
   const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
   const { data: profiles = [], isLoading: profLoading } = useProfiles();
   const { data: notifications = [] } = useFilteredNotifications();
 
-  const loading = decLoading || teamLoading || depLoading || revLoading || profLoading;
+  const loading = decLoading || taskLoading || teamLoading || depLoading || revLoading || profLoading;
 
   useEffect(() => {
     if (loading) return;
@@ -57,12 +62,13 @@ const BottleneckIntelligence = () => {
     const now = Date.now();
     const escalations = notifications.filter(n => n.type === "escalation");
 
-    const personStats: Record<string, { totalDays: number; count: number; openCount: number; blockingCount: number }> = {};
+    // ── Person stats: decisions + tasks ──
+    const personStats: Record<string, { totalDays: number; count: number; openCount: number; blockingCount: number; openTasks: number }> = {};
 
     decisions.forEach(d => {
       const pid = d.assignee_id || d.created_by;
       if (!pid) return;
-      if (!personStats[pid]) personStats[pid] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0 };
+      if (!personStats[pid]) personStats[pid] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0, openTasks: 0 };
       const days = d.implemented_at
         ? (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / 86400000
         : (now - new Date(d.created_at).getTime()) / 86400000;
@@ -71,7 +77,20 @@ const BottleneckIntelligence = () => {
       if (!["implemented", "rejected"].includes(d.status)) personStats[pid].openCount++;
     });
 
-    const blockedSourceIds = deps.filter(d => d.dependency_type === "blocks").map(d => d.source_decision_id);
+    // Include tasks in person stats
+    tasks.forEach(t => {
+      const pid = t.assignee_id || t.created_by;
+      if (!pid) return;
+      if (!personStats[pid]) personStats[pid] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0, openTasks: 0 };
+      const days = t.completed_at
+        ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000
+        : (now - new Date(t.created_at).getTime()) / 86400000;
+      personStats[pid].totalDays += days;
+      personStats[pid].count++;
+      if (t.status !== "done") personStats[pid].openTasks++;
+    });
+
+    const blockedSourceIds = deps.filter(d => d.dependency_type === "blocks").map(d => d.source_decision_id).filter(Boolean);
     blockedSourceIds.forEach(sourceId => {
       const dec = decisions.find(d => d.id === sourceId);
       const pid = dec?.assignee_id || dec?.created_by;
@@ -82,7 +101,7 @@ const BottleneckIntelligence = () => {
       if (!r.reviewed_at) {
         const waitDays = (now - new Date(r.created_at).getTime()) / 86400000;
         if (waitDays > 3) {
-          if (!personStats[r.reviewer_id]) personStats[r.reviewer_id] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0 };
+          if (!personStats[r.reviewer_id]) personStats[r.reviewer_id] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0, openTasks: 0 };
           personStats[r.reviewer_id].totalDays += waitDays;
           personStats[r.reviewer_id].count++;
           personStats[r.reviewer_id].blockingCount++;
@@ -100,6 +119,7 @@ const BottleneckIntelligence = () => {
         avgDays: Math.round(s.totalDays / s.count),
         openCount: s.openCount,
         blockingCount: s.blockingCount,
+        openTasks: s.openTasks,
         percentile: s.totalDays / s.count > globalPersonAvg * 1.5 ? "Langsam" : s.totalDays / s.count > globalPersonAvg ? "Durchschnitt" : "Schnell",
       }))
       .filter(p => p.avgDays > globalPersonAvg * 0.8)
@@ -108,38 +128,56 @@ const BottleneckIntelligence = () => {
 
     setPersonBottlenecks(persons);
 
-    const catStats: Record<string, { totalDays: number; count: number }> = {};
+    // ── Category stats: decisions + tasks ──
+    const catStats: Record<string, { totalDays: number; decCount: number; taskCount: number }> = {};
+
     decisions.forEach(d => {
-      if (!catStats[d.category]) catStats[d.category] = { totalDays: 0, count: 0 };
+      if (!catStats[d.category]) catStats[d.category] = { totalDays: 0, decCount: 0, taskCount: 0 };
       const days = d.implemented_at
         ? (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / 86400000
         : (now - new Date(d.created_at).getTime()) / 86400000;
       catStats[d.category].totalDays += days;
-      catStats[d.category].count++;
+      catStats[d.category].decCount++;
     });
 
-    const globalCatAvg = decisions.length > 0
-      ? Object.values(catStats).reduce((s, c) => s + c.totalDays, 0) / decisions.length
+    tasks.forEach(t => {
+      const cat = t.category || "general";
+      if (!catStats[cat]) catStats[cat] = { totalDays: 0, decCount: 0, taskCount: 0 };
+      const days = t.completed_at
+        ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000
+        : (now - new Date(t.created_at).getTime()) / 86400000;
+      catStats[cat].totalDays += days;
+      catStats[cat].taskCount++;
+    });
+
+    const totalItems = Object.values(catStats).reduce((s, c) => s + c.decCount + c.taskCount, 0);
+    const globalCatAvg = totalItems > 0
+      ? Object.values(catStats).reduce((s, c) => s + c.totalDays, 0) / totalItems
       : 7;
 
     const cats: CategoryBottleneck[] = Object.entries(catStats)
-      .map(([category, s]) => ({
-        category,
-        avgDays: Math.round(s.totalDays / s.count),
-        globalAvg: Math.round(globalCatAvg),
-        ratio: Math.round((s.totalDays / s.count / globalCatAvg) * 100) / 100,
-        count: s.count,
-      }))
+      .map(([category, s]) => {
+        const count = s.decCount + s.taskCount;
+        return {
+          category,
+          avgDays: Math.round(s.totalDays / count),
+          globalAvg: Math.round(globalCatAvg),
+          ratio: Math.round((s.totalDays / count / globalCatAvg) * 100) / 100,
+          count: s.decCount,
+          taskCount: s.taskCount,
+        };
+      })
       .sort((a, b) => b.ratio - a.ratio);
 
     setCategoryBottlenecks(cats);
 
-    const teamStats: Record<string, { totalDays: number; count: number; escalations: number; blocked: number }> = {};
-    const blockedTargets = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id));
+    // ── Team friction: decisions + tasks ──
+    const teamStats: Record<string, { totalDays: number; count: number; escalations: number; blocked: number; openTasks: number }> = {};
+    const blockedTargets = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id).filter(Boolean));
 
     decisions.forEach(d => {
       if (!d.team_id) return;
-      if (!teamStats[d.team_id]) teamStats[d.team_id] = { totalDays: 0, count: 0, escalations: 0, blocked: 0 };
+      if (!teamStats[d.team_id]) teamStats[d.team_id] = { totalDays: 0, count: 0, escalations: 0, blocked: 0, openTasks: 0 };
       const days = d.implemented_at
         ? (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / 86400000
         : (now - new Date(d.created_at).getTime()) / 86400000;
@@ -149,11 +187,23 @@ const BottleneckIntelligence = () => {
       if (blockedTargets.has(d.id)) teamStats[d.team_id].blocked++;
     });
 
+    // Include tasks in team friction
+    tasks.forEach(t => {
+      if (!t.team_id) return;
+      if (!teamStats[t.team_id]) teamStats[t.team_id] = { totalDays: 0, count: 0, escalations: 0, blocked: 0, openTasks: 0 };
+      const days = t.completed_at
+        ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000
+        : (now - new Date(t.created_at).getTime()) / 86400000;
+      teamStats[t.team_id].totalDays += days;
+      teamStats[t.team_id].count++;
+      if (t.status !== "done") teamStats[t.team_id].openTasks++;
+    });
+
     const teamResults: TeamFriction[] = Object.entries(teamStats)
       .map(([teamId, s]) => {
         const avgDays = s.totalDays / s.count;
         const score = Math.round(
-          (s.escalations * 15) + (s.blocked * 20) + (avgDays > globalCatAvg ? (avgDays - globalCatAvg) * 3 : 0)
+          (s.escalations * 15) + (s.blocked * 20) + (s.openTasks * 5) + (avgDays > globalCatAvg ? (avgDays - globalCatAvg) * 3 : 0)
         );
         return {
           teamId,
@@ -161,13 +211,14 @@ const BottleneckIntelligence = () => {
           avgDays: Math.round(avgDays),
           escalationCount: s.escalations,
           blockedCount: s.blocked,
+          openTasks: s.openTasks,
           score,
         };
       })
       .sort((a, b) => b.score - a.score);
 
     setTeamFrictions(teamResults);
-  }, [loading, decisions, teams, deps, reviews, profiles, notifications]);
+  }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
 
   const percentileColor = (p: string) =>
     p === "Langsam" ? "text-destructive bg-destructive/10" : p === "Durchschnitt" ? "text-warning bg-warning/10" : "text-success bg-success/10";
@@ -199,7 +250,7 @@ const BottleneckIntelligence = () => {
         <EmptyAnalysisState
           icon={Zap}
           title="Keine Engpässe erkannt"
-          description="Erstelle Entscheidungen und weise sie Teams zu, um strukturelle Bottlenecks zu identifizieren."
+          description="Erstelle Entscheidungen und Aufgaben und weise sie Teams zu, um strukturelle Bottlenecks zu identifizieren."
           hint="Engpässe werden automatisch erkannt, sobald genug Daten vorhanden sind"
         />
       </AppLayout>
@@ -213,12 +264,12 @@ const BottleneckIntelligence = () => {
         <div className="flex items-center gap-2">
           <h1 className="font-display text-xl font-bold">Bottleneck Intelligence</h1>
           <PageHint>
-            Identifiziert Engpässe bei Personen, Teams und Kategorien. Zeigt wer die meisten offenen Entscheidungen hält und wo Review-Staus entstehen.
+            Identifiziert Engpässe bei Personen, Teams und Kategorien. Analysiert Entscheidungen und Aufgaben gemeinsam.
           </PageHint>
         </div>
       </div>
 
-      {/* Summary KPIs – always visible */}
+      {/* Summary KPIs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <Card>
           <CardContent className="p-5">
@@ -249,10 +300,10 @@ const BottleneckIntelligence = () => {
         </Card>
       </div>
 
-      {/* Person Bottlenecks – collapsible */}
+      {/* Person Bottlenecks */}
       <CollapsibleSection
         title="Personen-Engpässe"
-        subtitle="Wer verlangsamt Entscheidungen strukturell?"
+        subtitle="Wer verlangsamt Entscheidungen & Aufgaben strukturell?"
         icon={<User className="w-4 h-4 text-destructive" />}
         defaultOpen={true}
         className="mb-6"
@@ -264,17 +315,14 @@ const BottleneckIntelligence = () => {
             ) : (
               <div className="space-y-2">
                 {personBottlenecks.map((p) => (
-                  <div
-                    key={p.userId}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors"
-                  >
+                  <div key={p.userId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center text-xs font-medium shrink-0">
                       {p.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{p.name}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        ⌀ {p.avgDays} Tage • {p.openCount} offen • {p.blockingCount} Blockaden
+                        ⌀ {p.avgDays} Tage • {p.openCount} Entsch. offen • {p.openTasks} Aufg. offen • {p.blockingCount} Blockaden
                       </p>
                     </div>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${percentileColor(p.percentile)}`}>
@@ -288,10 +336,10 @@ const BottleneckIntelligence = () => {
         </Card>
       </CollapsibleSection>
 
-      {/* Category Bottlenecks – collapsible, default closed */}
+      {/* Category Bottlenecks */}
       <CollapsibleSection
         title="Kategorien-Analyse"
-        subtitle="Welche Entscheidungstypen dauern unverhältnismäßig lang?"
+        subtitle="Welche Bereiche dauern unverhältnismäßig lang? (Entscheidungen + Aufgaben)"
         icon={<FolderOpen className="w-4 h-4 text-warning" />}
         defaultOpen={false}
         className="mb-6"
@@ -300,15 +348,14 @@ const BottleneckIntelligence = () => {
           <CardContent className="p-5">
             <div className="space-y-3">
               {categoryBottlenecks.map((c) => (
-                <div
-                  key={c.category}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/10"
-                >
+                <div key={c.category} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10">
                   <span className="text-sm font-medium capitalize w-24 shrink-0">{c.category}</span>
                   {ratioBar(c.ratio)}
-                  <div className="text-right shrink-0 w-28">
+                  <div className="text-right shrink-0 w-36">
                     <p className="text-xs font-medium">⌀ {c.avgDays} Tage</p>
-                    <p className="text-[10px] text-muted-foreground">Ø Global: {c.globalAvg}d • {c.count} Entsch.</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {c.count} Entsch. • {c.taskCount} Aufg.
+                    </p>
                   </div>
                 </div>
               ))}
@@ -317,31 +364,28 @@ const BottleneckIntelligence = () => {
         </Card>
       </CollapsibleSection>
 
-      {/* Team Friction – collapsible, default closed */}
+      {/* Team Friction */}
       <CollapsibleSection
         title="Team-Reibung"
-        subtitle="Wo entstehen organisatorische Blockaden?"
+        subtitle="Wo entstehen organisatorische Blockaden? (inkl. Aufgaben)"
         icon={<Users className="w-4 h-4 text-primary" />}
         defaultOpen={false}
       >
         <Card>
           <CardContent className="p-5">
             {teamFrictions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Keine Teams mit Entscheidungen vorhanden</p>
+              <p className="text-sm text-muted-foreground text-center py-4">Keine Teams mit Daten vorhanden</p>
             ) : (
               <div className="space-y-2">
                 {teamFrictions.map((t) => (
-                  <div
-                    key={t.teamId}
-                    className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors"
-                  >
+                  <div key={t.teamId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Users className="w-4 h-4 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{t.teamName}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        ⌀ {t.avgDays} Tage • {t.escalationCount} Eskalationen • {t.blockedCount} Blockaden
+                        ⌀ {t.avgDays}d • {t.escalationCount} Eskal. • {t.blockedCount} Blockaden • {t.openTasks} offene Aufg.
                       </p>
                     </div>
                     <div className="text-right shrink-0">

@@ -2,13 +2,14 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
-import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock } from "lucide-react";
+import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock, CheckSquare } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
+import { useTasks } from "@/hooks/useTasks";
 
-interface TeamFriction { teamId: string; teamName: string; avgReviewTime: number; reviewLoops: number; escalationRate: number; overdueRate: number; totalDecisions: number; frictionScore: number; }
+interface TeamFriction { teamId: string; teamName: string; avgReviewTime: number; reviewLoops: number; escalationRate: number; overdueRate: number; totalDecisions: number; totalTasks: number; frictionScore: number; }
 interface CrossTeamFriction { teamA: string; teamB: string; teamAName: string; teamBName: string; sharedDecisions: number; avgDelay: number; frictionLevel: "low" | "medium" | "high" | "critical"; }
 
 const FrictionMap = () => {
@@ -17,18 +18,20 @@ const FrictionMap = () => {
   const [view, setView] = useState<"teams" | "heatmap">("teams");
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
+  const { data: tasks = [], isLoading: taskLoading } = useTasks();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
   const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();
   const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
 
-  const loading = decLoading || teamLoading || revLoading || depLoading;
+  const loading = decLoading || taskLoading || teamLoading || revLoading || depLoading;
 
   useEffect(() => {
-    if (loading || decisions.length === 0) return;
+    if (loading || (decisions.length === 0 && tasks.length === 0)) return;
     const now = Date.now();
     const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
-    const teamStats: Record<string, { decisions: any[]; reviewTimes: number[]; reviewLoops: number; escalations: number; overdue: number; }> = {};
-    teams.forEach(t => { teamStats[t.id] = { decisions: [], reviewTimes: [], reviewLoops: 0, escalations: 0, overdue: 0 }; });
+    const teamStats: Record<string, { decisions: any[]; tasks: any[]; reviewTimes: number[]; reviewLoops: number; escalations: number; overdue: number; }> = {};
+    teams.forEach(t => { teamStats[t.id] = { decisions: [], tasks: [], reviewTimes: [], reviewLoops: 0, escalations: 0, overdue: 0 }; });
+
     decisions.forEach(d => {
       if (d.team_id && teamStats[d.team_id]) {
         teamStats[d.team_id].decisions.push(d);
@@ -36,6 +39,15 @@ const FrictionMap = () => {
         if ((d.escalation_level || 0) > 0) teamStats[d.team_id].escalations++;
       }
     });
+
+    // Include tasks in team stats
+    tasks.forEach(t => {
+      if (t.team_id && teamStats[t.team_id]) {
+        teamStats[t.team_id].tasks.push(t);
+        if (t.due_date && new Date(t.due_date).getTime() < now && t.status !== "done") teamStats[t.team_id].overdue++;
+      }
+    });
+
     const decisionReviews: Record<string, any[]> = {};
     reviews.forEach(r => { if (!decisionReviews[r.decision_id]) decisionReviews[r.decision_id] = []; decisionReviews[r.decision_id].push(r); });
     Object.entries(decisionReviews).forEach(([decId, revs]) => {
@@ -45,23 +57,32 @@ const FrictionMap = () => {
       teamStats[dec.team_id].reviewLoops += loopCount;
       revs.forEach(r => { if (r.reviewed_at) { const reviewDays = (new Date(r.reviewed_at).getTime() - new Date(r.created_at).getTime()) / 86400000; teamStats[dec.team_id].reviewTimes.push(Math.max(0, reviewDays)); } });
     });
+
     const frictionResults: TeamFriction[] = teams.map(t => {
-      const stats = teamStats[t.id]; const total = stats.decisions.length;
-      if (total === 0) return { teamId: t.id, teamName: t.name, avgReviewTime: 0, reviewLoops: 0, escalationRate: 0, overdueRate: 0, totalDecisions: 0, frictionScore: 0 };
+      const stats = teamStats[t.id];
+      const totalDec = stats.decisions.length;
+      const totalTasks = stats.tasks.length;
+      const total = totalDec + totalTasks;
+      if (total === 0) return { teamId: t.id, teamName: t.name, avgReviewTime: 0, reviewLoops: 0, escalationRate: 0, overdueRate: 0, totalDecisions: 0, totalTasks: 0, frictionScore: 0 };
       const avgReviewTime = stats.reviewTimes.length > 0 ? stats.reviewTimes.reduce((a, b) => a + b, 0) / stats.reviewTimes.length : 0;
-      const escalationRate = Math.round((stats.escalations / total) * 100);
+      const escalationRate = totalDec > 0 ? Math.round((stats.escalations / totalDec) * 100) : 0;
       const overdueRate = Math.round((stats.overdue / total) * 100);
-      const frictionScore = Math.min(100, Math.round((avgReviewTime > 7 ? 30 : avgReviewTime * 4.3) + (escalationRate * 0.3) + (overdueRate * 0.25) + (stats.reviewLoops / total * 15)));
-      return { teamId: t.id, teamName: t.name, avgReviewTime: Math.round(avgReviewTime * 10) / 10, reviewLoops: stats.reviewLoops, escalationRate, overdueRate, totalDecisions: total, frictionScore };
-    }).filter(t => t.totalDecisions > 0).sort((a, b) => b.frictionScore - a.frictionScore);
+      const frictionScore = Math.min(100, Math.round((avgReviewTime > 7 ? 30 : avgReviewTime * 4.3) + (escalationRate * 0.3) + (overdueRate * 0.25) + (stats.reviewLoops / Math.max(totalDec, 1) * 15)));
+      return { teamId: t.id, teamName: t.name, avgReviewTime: Math.round(avgReviewTime * 10) / 10, reviewLoops: stats.reviewLoops, escalationRate, overdueRate, totalDecisions: totalDec, totalTasks, frictionScore };
+    }).filter(t => (t.totalDecisions + t.totalTasks) > 0).sort((a, b) => b.frictionScore - a.frictionScore);
     setTeamFriction(frictionResults);
+
+    // Cross-team friction (decisions only, since tasks don't have cross-team deps yet)
     const crossMap: Record<string, { sharedDecisions: Set<string>; delays: number[] }> = {};
     deps.forEach(dep => {
-      const sourceDecision = decisions.find(d => d.id === dep.source_decision_id); const targetDecision = decisions.find(d => d.id === dep.target_decision_id);
-      if (!sourceDecision?.team_id || !targetDecision?.team_id) return; if (sourceDecision.team_id === targetDecision.team_id) return;
+      const sourceDecision = decisions.find(d => d.id === dep.source_decision_id);
+      const targetDecision = decisions.find(d => d.id === dep.target_decision_id);
+      if (!sourceDecision?.team_id || !targetDecision?.team_id) return;
+      if (sourceDecision.team_id === targetDecision.team_id) return;
       const key = [sourceDecision.team_id, targetDecision.team_id].sort().join("|");
       if (!crossMap[key]) crossMap[key] = { sharedDecisions: new Set(), delays: [] };
-      crossMap[key].sharedDecisions.add(dep.source_decision_id); crossMap[key].sharedDecisions.add(dep.target_decision_id);
+      crossMap[key].sharedDecisions.add(dep.source_decision_id);
+      crossMap[key].sharedDecisions.add(dep.target_decision_id);
       const daysBetween = Math.abs(new Date(targetDecision.created_at).getTime() - new Date(sourceDecision.updated_at).getTime()) / 86400000;
       crossMap[key].delays.push(daysBetween);
     });
@@ -74,7 +95,7 @@ const FrictionMap = () => {
       return { teamA, teamB, teamAName: teamMap[teamA] || "Unbekannt", teamBName: teamMap[teamB] || "Unbekannt", sharedDecisions: shared, avgDelay, frictionLevel };
     }).sort((a, b) => b.avgDelay - a.avgDelay);
     setCrossFriction(crossResults);
-  }, [loading, decisions, teams, reviews, deps]);
+  }, [loading, decisions, tasks, teams, reviews, deps]);
 
   const maxFriction = Math.max(...teamFriction.map(t => t.frictionScore), 1);
   const frictionColor = (score: number) => score >= 70 ? "bg-destructive" : score >= 50 ? "bg-warning" : score >= 30 ? "bg-primary" : "bg-success";
@@ -83,14 +104,14 @@ const FrictionMap = () => {
 
   const heatmapData = useMemo(() => {
     if (teamFriction.length === 0) return { teams: [] as string[], categories: [] as string[], cells: {} as Record<string, number> };
-    const categories = ["strategic", "budget", "hr", "technical", "operational", "marketing"];
+    const categories = ["strategic", "budget", "hr", "technical", "operational", "marketing", "general"];
     const teamsWithData = teamFriction.map(t => t.teamName);
     const cells: Record<string, number> = {};
-    teamFriction.forEach(t => { categories.forEach(cat => { const catMultiplier: Record<string, number> = { strategic: 1.3, budget: 1.2, hr: 0.9, technical: 1.1, operational: 0.8, marketing: 0.7 }; const score = Math.min(100, Math.round(t.frictionScore * (catMultiplier[cat] || 1))); cells[`${t.teamName}|${cat}`] = score; }); });
+    teamFriction.forEach(t => { categories.forEach(cat => { const catMultiplier: Record<string, number> = { strategic: 1.3, budget: 1.2, hr: 0.9, technical: 1.1, operational: 0.8, marketing: 0.7, general: 1.0 }; const score = Math.min(100, Math.round(t.frictionScore * (catMultiplier[cat] || 1))); cells[`${t.teamName}|${cat}`] = score; }); });
     return { teams: teamsWithData, categories, cells };
   }, [teamFriction]);
 
-  const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing" };
+  const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
   const getCellColor = (score: number): string => { if (score >= 70) return "bg-destructive/60"; if (score >= 50) return "bg-warning/50"; if (score >= 30) return "bg-primary/40"; if (score > 0) return "bg-success/30"; return "bg-muted/20"; };
 
   if (loading) return <AnalysisPageSkeleton cards={4} sections={2} />;
@@ -102,7 +123,7 @@ const FrictionMap = () => {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
           <h1 className="font-display text-xl font-bold">Friction Map</h1>
         </div>
-        <EmptyAnalysisState icon={Flame} title="Keine Friction-Daten" description="Erstelle Teams und weise ihnen Entscheidungen zu." ctaLabel="Teams erstellen" ctaRoute="/teams" hint="Friction wird automatisch analysiert" />
+        <EmptyAnalysisState icon={Flame} title="Keine Friction-Daten" description="Erstelle Teams und weise ihnen Entscheidungen oder Aufgaben zu." ctaLabel="Teams erstellen" ctaRoute="/teams" hint="Friction wird automatisch analysiert" />
       </AppLayout>
     );
   }
@@ -113,18 +134,18 @@ const FrictionMap = () => {
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
         <div className="flex items-center gap-2">
           <h1 className="font-display text-xl font-bold">Friction Map</h1>
-          <PageHint>Erkennt Reibungspunkte im Entscheidungsprozess pro Team.</PageHint>
+          <PageHint>Erkennt Reibungspunkte im Entscheidungs- und Aufgabenprozess pro Team.</PageHint>
         </div>
       </div>
 
-      {/* Summary – always visible */}
+      {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
           { icon: Users, label: "Teams analysiert", value: teamFriction.length, color: "text-primary" },
           { icon: Flame, label: "Höchste Reibung", value: teamFriction[0]?.frictionScore ?? 0, color: "text-destructive", suffix: "/100" },
           { icon: GitPullRequest, label: "Review-Loops gesamt", value: teamFriction.reduce((s, t) => s + t.reviewLoops, 0), color: "text-warning" },
           { icon: AlertTriangle, label: "Cross-Team Konflikte", value: crossFriction.filter(c => c.frictionLevel === "high" || c.frictionLevel === "critical").length, color: "text-destructive" },
-        ].map((card, i) => (
+        ].map((card) => (
           <div key={card.label} className="glass-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
@@ -145,8 +166,7 @@ const FrictionMap = () => {
 
       {view === "teams" && (
         <>
-          {/* Team Ranking – collapsible */}
-          <CollapsibleSection title="Team Friction Ranking" subtitle="Reibungswerte pro Team" icon={<Flame className="w-4 h-4 text-destructive" />} defaultOpen={true} className="mb-8">
+          <CollapsibleSection title="Team Friction Ranking" subtitle="Reibungswerte pro Team (Entscheidungen + Aufgaben)" icon={<Flame className="w-4 h-4 text-destructive" />} defaultOpen={true} className="mb-8">
             <div className="space-y-2">
               {teamFriction.map((team, i) => (
                 <div key={team.teamId} className="glass-card p-4">
@@ -155,7 +175,8 @@ const FrictionMap = () => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold">{team.teamName}</p>
                       <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
-                        <span>{team.totalDecisions} Entscheidungen</span>
+                        <span>{team.totalDecisions} Entsch.</span>
+                        <span><CheckSquare className="w-3 h-3 inline mr-0.5" />{team.totalTasks} Aufg.</span>
                         <span><Clock className="w-3 h-3 inline mr-0.5" />Ø {team.avgReviewTime}d Review</span>
                         <span>{team.escalationRate}% eskaliert</span>
                       </div>
@@ -172,7 +193,6 @@ const FrictionMap = () => {
             </div>
           </CollapsibleSection>
 
-          {/* Cross-team – collapsible, default closed */}
           {crossFriction.length > 0 && (
             <CollapsibleSection title="Cross-Team Reibung" subtitle={`${crossFriction.length} Verbindungen`} icon={<ArrowUpRight className="w-4 h-4 text-warning" />} defaultOpen={false}>
               <div className="space-y-2">
