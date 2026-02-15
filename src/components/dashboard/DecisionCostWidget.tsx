@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { DollarSign, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
+import ScoreMethodology from "@/components/shared/ScoreMethodology";
 
 const DecisionCostWidget = () => {
   const { data: allDecisions = [] } = useDecisions();
@@ -33,7 +34,19 @@ const DecisionCostWidget = () => {
           <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
             <DollarSign className="w-4 h-4 text-destructive" />
           </div>
-          <CardTitle className="text-sm">Verzögerungskosten</CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-sm">Verzögerungskosten</CardTitle>
+            <ScoreMethodology
+              title="Verzögerungskosten"
+              description="Geschätzte Opportunitätskosten durch offene Entscheidungen (Draft/Review) basierend auf Personalkosten."
+              items={[
+                { label: "Formel", formula: "Tage offen × 2 Personen × 2h/Tag × Stundensatz (Standard: 75€)" },
+                { label: "Tage offen", formula: "Heute − Erstellungsdatum der Entscheidung" },
+                { label: "Ranking", formula: "Top 3 nach höchsten Kosten sortiert" },
+              ]}
+              source="Basiert auf Team-Stundensätzen und geschätztem Overhead"
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

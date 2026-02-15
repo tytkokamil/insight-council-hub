@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Activity, Zap, Target, HeartPulse, TrendingUp, ShieldAlert, GitPullRequest, Lightbulb, ArrowUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
+import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -128,7 +129,21 @@ const MomentumScoreWidget = () => {
             <Activity className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-sm">Momentum Score™</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm">Momentum Score™</CardTitle>
+              <ScoreMethodology
+                title="Momentum Score"
+                description="Aggregierter Gesundheitsindex (0–100) aus 5 gleichgewichteten Faktoren. Jeder Faktor wird auf 0–20 normalisiert."
+                items={[
+                  { label: "Velocity", weight: "20 Punkte", formula: "20 × (1 − min(Ø Tage bis Umsetzung, 60) / 60)" },
+                  { label: "Bottleneck", weight: "20 Punkte", formula: "20 × (1 − Anteil blockierter aktiver Entscheidungen)" },
+                  { label: "Review", weight: "20 Punkte", formula: "20 × (1 − min(Ø Review-Dauer in Tagen, 14) / 14)" },
+                  { label: "Eskalation", weight: "20 Punkte", formula: "20 × (1 − min(Eskalationsquote 30d, 0.5) / 0.5)" },
+                  { label: "Qualität", weight: "20 Punkte", formula: "Ø(100 − |KI-Impact − Ist-Impact|) / 5" },
+                ]}
+                source="Interne Berechnung auf Basis aller Entscheidungsdaten"
+              />
+            </div>
             <p className="text-xs text-muted-foreground">5-Faktor Organisationsgesundheit</p>
           </div>
         </div>

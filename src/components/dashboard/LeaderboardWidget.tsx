@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Trophy, Medal, Zap, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
+import ScoreMethodology from "@/components/shared/ScoreMethodology";
 
 interface LeaderEntry {
   userId: string;
@@ -62,7 +63,18 @@ const LeaderboardWidget = () => {
           <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
             <Trophy className="w-4 h-4 text-warning" />
           </div>
-          <CardTitle className="text-sm">Decision Leaderboard</CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-sm">Decision Leaderboard</CardTitle>
+            <ScoreMethodology
+              title="Leaderboard"
+              description="Ranking der Entscheidungsträger nach Umsetzungsleistung."
+              items={[
+                { label: "Sortierung", formula: "Primär: Anzahl implementierter Entscheidungen (absteigend)" },
+                { label: "Tiebreak", formula: "Sekundär: Ø Velocity in Tagen (aufsteigend = schneller = besser)" },
+                { label: "Velocity pro Person", formula: "Σ(implemented_at − created_at) / Anzahl implementiert" },
+              ]}
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>

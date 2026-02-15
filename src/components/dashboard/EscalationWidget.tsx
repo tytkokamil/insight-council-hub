@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Bell, AlertTriangle, Clock, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +58,18 @@ const EscalationWidget = () => {
             <Bell className="w-4 h-4 text-destructive" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-sm">Eskalationen & Deadlines</CardTitle>
+            <div className="flex items-center gap-1.5">
+              <CardTitle className="text-sm">Eskalationen & Deadlines</CardTitle>
+              <ScoreMethodology
+                title="Eskalationen"
+                description="Zeigt ungelesene Benachrichtigungen und überfällige Entscheidungen. Eskalationsstufen zeigen Dringlichkeit."
+                items={[
+                  { label: "Überfällig", formula: "Status ∈ {Draft, Review, Approved} UND due_date < heute" },
+                  { label: "Eskalationsstufe", formula: "Level 1 = niedrig, Level 2 = mittel (gelb), Level 3+ = kritisch (rot)" },
+                  { label: "Auto-Eskalation", formula: "Wird durch check-escalations Backend-Funktion basierend auf SLA ausgelöst" },
+                ]}
+              />
+            </div>
           </div>
           {notifications.length > 0 && (
             <Badge variant="destructive" className="text-[10px]">

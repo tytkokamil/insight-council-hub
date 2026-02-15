@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Zap, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
+import ScoreMethodology from "@/components/shared/ScoreMethodology";
 
 const VelocityScoreWidget = () => {
   const { data: allDecisions = [] } = useDecisions();
@@ -55,7 +56,19 @@ const VelocityScoreWidget = () => {
           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
             <Zap className="w-4 h-4 text-primary" />
           </div>
-          <CardTitle className="text-sm">Decision Velocity</CardTitle>
+          <div className="flex items-center gap-1.5">
+            <CardTitle className="text-sm">Decision Velocity</CardTitle>
+            <ScoreMethodology
+              title="Decision Velocity"
+              description="Durchschnittliche Zeit von Erstellung bis Umsetzung, aufgeschlüsselt nach Kategorie."
+              items={[
+                { label: "Ø Tage", formula: "Σ(implemented_at − created_at) / Anzahl implementierter Entscheidungen" },
+                { label: "Trend", formula: "Vergleich Ø Velocity letzte 30 Tage vs. vorherige 30 Tage (±0.5d Toleranz)" },
+                { label: "Kategorie-Breakdown", formula: "Gleiche Formel, gruppiert nach Entscheidungskategorie" },
+              ]}
+              source="Berechnung auf Basis implementierter Entscheidungen"
+            />
+          </div>
         </div>
       </CardHeader>
       <CardContent>
