@@ -14,7 +14,7 @@ import {
   subWeeks,
 } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
 import PageHint from "@/components/shared/PageHint";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -33,6 +33,8 @@ import CalendarLegend from "@/components/calendar/CalendarLegend";
 import CalendarFilterBar, { type CalendarFilters } from "@/components/calendar/CalendarFilterBar";
 import UnscheduledSidebar from "@/components/calendar/UnscheduledSidebar";
 import { exportDecisionsAsICS } from "@/components/calendar/exportICS";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import TaskPill from "@/components/calendar/TaskPill";
 
 const DecisionCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -98,6 +100,10 @@ const DecisionCalendar = () => {
   const unscheduledDecisions = useMemo(() => {
     return (decisions ?? []).filter((d) => !d.due_date && applyFilters(d));
   }, [decisions, applyFilters]);
+
+  const unscheduledTasks = useMemo(() => {
+    return allTasks.filter((t) => !t.due_date);
+  }, [allTasks]);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -327,16 +333,36 @@ const DecisionCalendar = () => {
           </div>
 
           {/* Unscheduled sidebar */}
-          {unscheduledDecisions.length > 0 && (
-            <div className="w-56 shrink-0">
-              <UnscheduledSidebar
-                decisions={unscheduledDecisions}
-                draggingId={draggingId}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDecisionClick={setSelectedDecision}
-                profileMap={profileMap}
-              />
+          {(unscheduledDecisions.length > 0 || unscheduledTasks.length > 0) && (
+            <div className="w-56 shrink-0 space-y-3">
+              {unscheduledDecisions.length > 0 && (
+                <UnscheduledSidebar
+                  decisions={unscheduledDecisions}
+                  draggingId={draggingId}
+                  onDragStart={handleDragStart}
+                  onDragEnd={handleDragEnd}
+                  onDecisionClick={setSelectedDecision}
+                  profileMap={profileMap}
+                />
+              )}
+              {unscheduledTasks.length > 0 && (
+                <div className="border border-border rounded-xl bg-card overflow-hidden">
+                  <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
+                    <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">Aufgaben ohne Deadline</span>
+                    <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+                      {unscheduledTasks.length}
+                    </span>
+                  </div>
+                  <ScrollArea className="max-h-[300px]">
+                    <div className="p-2 space-y-1">
+                      {unscheduledTasks.map((task) => (
+                        <TaskPill key={task.id} task={task} profileMap={profileMap} />
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </div>
+              )}
             </div>
           )}
         </div>
