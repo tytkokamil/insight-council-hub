@@ -145,17 +145,37 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
           new_value: title.trim(),
         });
 
-        // Auto-create review steps from approval matrix
+        // Auto-create review steps from approval matrix with team members
         if (selectedTemplate?.approvalSteps.length) {
-          const reviewSteps = selectedTemplate.approvalSteps
-            .filter(s => s.required)
-            .map((step, i) => ({
+          const requiredSteps = selectedTemplate.approvalSteps.filter(s => s.required);
+          if (requiredSteps.length > 0 && teamId) {
+            // Fetch team members (excluding creator)
+            const { data: members } = await supabase
+              .from("team_members")
+              .select("user_id")
+              .eq("team_id", teamId)
+              .neq("user_id", user.id);
+
+            const availableMembers = members?.map(m => m.user_id) || [];
+
+            const reviewSteps = requiredSteps.map((step, i) => ({
               decision_id: data.id,
-              reviewer_id: user.id, // placeholder – owner assigns later
+              // Round-robin assign team members, fallback to creator if no members
+              reviewer_id: availableMembers.length > 0
+                ? availableMembers[i % availableMembers.length]
+                : user.id,
               step_order: i + 1,
               status: "review" as const,
             }));
-          if (reviewSteps.length > 0) {
+            await supabase.from("decision_reviews").insert(reviewSteps);
+          } else if (requiredSteps.length > 0) {
+            // No team selected – assign creator as placeholder
+            const reviewSteps = requiredSteps.map((step, i) => ({
+              decision_id: data.id,
+              reviewer_id: user.id,
+              step_order: i + 1,
+              status: "review" as const,
+            }));
             await supabase.from("decision_reviews").insert(reviewSteps);
           }
         }
