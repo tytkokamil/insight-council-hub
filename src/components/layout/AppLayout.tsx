@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings, LogOut,
   GitBranch, Radar, DollarSign, Shield, Calendar, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog, Menu, X, History,
+  Dna, Zap, Trophy, FlaskConical, Target, ChevronLeft, Sun, Moon, LayoutDashboard, UserCog, Menu, X, History, Beaker,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import UserAvatar from "@/components/shared/UserAvatar";
@@ -20,41 +21,42 @@ const navGroups = [
   {
     label: "ÜBERSICHT",
     items: [
-      { icon: Target, label: "Executive", path: "/executive" },
-      { icon: BarChart3, label: "Dashboard", path: "/dashboard" },
-      { icon: FileText, label: "Entscheidungen", path: "/decisions" },
-      { icon: Sun, label: "Briefing", path: "/briefing" },
+      { icon: Target, label: "Executive", path: "/executive", featureKey: "executive" },
+      { icon: BarChart3, label: "Dashboard", path: "/dashboard", featureKey: "dashboard" },
+      { icon: FileText, label: "Entscheidungen", path: "/decisions", featureKey: "decisions" },
+      { icon: Sun, label: "Briefing", path: "/briefing", featureKey: "briefing" },
     ],
   },
   {
     label: "ANALYSE",
     items: [
-      { icon: GitBranch, label: "Graph", path: "/graph" },
-      { icon: Radar, label: "Bottlenecks", path: "/bottlenecks" },
-      { icon: DollarSign, label: "Kosten", path: "/costs" },
-      { icon: Flame, label: "Friction", path: "/friction" },
-      { icon: Activity, label: "Health", path: "/health" },
-      { icon: TrendingUp, label: "Analytics", path: "/analytics" },
+      { icon: GitBranch, label: "Graph", path: "/graph", featureKey: "graph" },
+      { icon: Radar, label: "Bottlenecks", path: "/bottlenecks", featureKey: "bottlenecks" },
+      { icon: DollarSign, label: "Kosten", path: "/costs", featureKey: "costs" },
+      { icon: Flame, label: "Friction", path: "/friction", featureKey: "friction" },
+      { icon: Activity, label: "Health", path: "/health", featureKey: "health" },
+      { icon: TrendingUp, label: "Analytics", path: "/analytics", featureKey: "analytics" },
     ],
   },
   {
     label: "INTELLIGENCE",
     items: [
-      { icon: Dna, label: "DNA", path: "/dna" },
-      { icon: Zap, label: "Engine", path: "/engine" },
-      { icon: Trophy, label: "Benchmark", path: "/benchmarking" },
-      { icon: FlaskConical, label: "Szenarien", path: "/scenarios" },
-      { icon: Calendar, label: "Timeline", path: "/timeline" },
-      { icon: Crosshair, label: "Strategie", path: "/strategy" },
+      { icon: Dna, label: "DNA", path: "/dna", featureKey: "dna" },
+      { icon: Zap, label: "Engine", path: "/engine", featureKey: "engine" },
+      { icon: Trophy, label: "Benchmark", path: "/benchmarking", featureKey: "benchmarking" },
+      { icon: FlaskConical, label: "Szenarien", path: "/scenarios", featureKey: "scenarios" },
+      { icon: Calendar, label: "Timeline", path: "/timeline", featureKey: "timeline" },
+      { icon: Crosshair, label: "Strategie", path: "/strategy", featureKey: "strategy" },
     ],
   },
   {
     label: "VERWALTUNG",
     items: [
-      { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true },
+      { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true, featureKey: "warroom" },
       { icon: UserCog, label: "Nutzer", path: "/admin/users", adminOnly: true },
-      { icon: History, label: "Audit Trail", path: "/audit" },
-      { icon: Users, label: "Teams", path: "/teams" },
+      { icon: Beaker, label: "Pilot-Modus", path: "/pilot", adminOnly: true },
+      { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
+      { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
       { icon: Settings, label: "Einstellungen", path: "/settings" },
     ],
   },
@@ -63,6 +65,7 @@ const navGroups = [
 const SidebarContent = ({
   collapsed,
   isAdmin,
+  isFeatureEnabled,
   location,
   user,
   avatarUrl,
@@ -74,6 +77,7 @@ const SidebarContent = ({
 }: {
   collapsed: boolean;
   isAdmin: boolean;
+  isFeatureEnabled: (key: string) => boolean;
   location: ReturnType<typeof useLocation>;
   user: any;
   avatarUrl: string | null;
@@ -126,7 +130,11 @@ const SidebarContent = ({
     {/* Navigation */}
     <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
       {navGroups.map((group) => {
-        const visibleItems = group.items.filter(item => !("adminOnly" in item && item.adminOnly) || isAdmin);
+        const visibleItems = group.items.filter(item => {
+          if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
+          if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
+          return true;
+        });
         if (visibleItems.length === 0) return null;
         return (
           <div key={group.label}>
@@ -221,6 +229,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { isEnabled } = useFeatureFlags();
   const isMobile = useIsMobile();
   const [isAdmin, setIsAdmin] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -263,6 +272,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
   const sidebarProps = {
     isAdmin,
+    isFeatureEnabled: isEnabled,
     location,
     user,
     avatarUrl,
