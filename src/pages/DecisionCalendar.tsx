@@ -295,77 +295,75 @@ const DecisionCalendar = () => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div>
           {/* Main calendar view */}
-          <div className="flex-1 min-w-0 overflow-hidden">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={viewMode}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-              >
-                {viewMode === "month" && (
-                  <MonthView
-                    monthDays={monthDays}
-                    currentDate={currentDate}
-                    decisionsByDate={decisionsByDate}
-                    {...sharedDragProps}
-                  />
-                )}
-                {viewMode === "week" && (
-                  <WeekView
-                    weekDays={weekDays}
-                    decisionsByDate={decisionsByDate}
-                    {...sharedDragProps}
-                  />
-                )}
-                {viewMode === "day" && (
-                  <DayView
-                    day={currentDate}
-                    decisionsByDate={decisionsByDate}
-                    {...sharedDragProps}
-                  />
-                )}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {/* Unscheduled sidebar */}
-          {(unscheduledDecisions.length > 0 || unscheduledTasks.length > 0) && (
-            <div className="w-56 shrink-0 space-y-3">
-              {unscheduledDecisions.length > 0 && (
-                <UnscheduledSidebar
-                  decisions={unscheduledDecisions}
-                  draggingId={draggingId}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDecisionClick={setSelectedDecision}
-                  profileMap={profileMap}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            >
+              {viewMode === "month" && (
+                <MonthView
+                  monthDays={monthDays}
+                  currentDate={currentDate}
+                  decisionsByDate={decisionsByDate}
+                  {...sharedDragProps}
                 />
               )}
-              {unscheduledTasks.length > 0 && (
-                <div className="border border-border rounded-xl bg-card overflow-hidden">
-                  <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
-                    <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-xs font-semibold text-muted-foreground">Aufgaben ohne Deadline</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
-                      {unscheduledTasks.length}
-                    </span>
-                  </div>
-                  <ScrollArea className="max-h-[300px]">
-                    <div className="p-2 space-y-1">
-                      {unscheduledTasks.map((task) => (
-                        <TaskPill key={task.id} task={task} profileMap={profileMap} />
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
+              {viewMode === "week" && (
+                <WeekView
+                  weekDays={weekDays}
+                  decisionsByDate={decisionsByDate}
+                  {...sharedDragProps}
+                />
               )}
-            </div>
-          )}
+              {viewMode === "day" && (
+                <DayView
+                  day={currentDate}
+                  decisionsByDate={decisionsByDate}
+                  {...sharedDragProps}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
+
+        {/* Unscheduled section below calendar */}
+        {(unscheduledDecisions.length > 0 || unscheduledTasks.length > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {unscheduledDecisions.length > 0 && (
+              <UnscheduledSidebar
+                decisions={unscheduledDecisions}
+                draggingId={draggingId}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDecisionClick={setSelectedDecision}
+                profileMap={profileMap}
+              />
+            )}
+            {unscheduledTasks.length > 0 && (
+              <div className="border border-border rounded-xl bg-card overflow-hidden">
+                <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
+                  <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-muted-foreground">Aufgaben ohne Deadline</span>
+                  <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
+                    {unscheduledTasks.length}
+                  </span>
+                </div>
+                <ScrollArea className="max-h-[300px]">
+                  <div className="p-2 space-y-1">
+                    {unscheduledTasks.map((task) => (
+                      <TaskPill key={task.id} task={task} profileMap={profileMap} />
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+        )}
 
         <CalendarLegend />
       </div>
