@@ -18,6 +18,7 @@ import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
+import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
@@ -179,20 +180,8 @@ const Dashboard = () => {
       </div>
 
       {/* Personal Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {stats.map((stat, i) => (
-          <Card key={i}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
-                <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center`}>
-                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                </div>
-              </div>
-              <p className="text-2xl font-bold stat-pop">{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mb-8">
+        <KpiOverviewWidget />
       </div>
 
       {/* Open Tasks – quick view */}
