@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PageHint from "@/components/shared/PageHint";
+import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import { motion } from "framer-motion";
 import {
   Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2,
@@ -180,9 +181,11 @@ const Dashboard = () => {
       </div>
 
       {/* Personal Stats */}
-      <div className="mb-8">
-        <KpiOverviewWidget />
-      </div>
+      <WidgetErrorBoundary label="KPI-Übersicht" compact>
+        <div className="mb-8">
+          <KpiOverviewWidget />
+        </div>
+      </WidgetErrorBoundary>
 
       {/* Open Tasks – quick view */}
       {openTasks.length > 0 && (
@@ -244,13 +247,13 @@ const Dashboard = () => {
         className="mb-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <MomentumScoreWidget />
-          <DecisionCostWidget />
-          <VelocityScoreWidget />
+          <WidgetErrorBoundary label="Momentum" compact><MomentumScoreWidget /></WidgetErrorBoundary>
+          <WidgetErrorBoundary label="Kosten" compact><DecisionCostWidget /></WidgetErrorBoundary>
+          <WidgetErrorBoundary label="Velocity" compact><VelocityScoreWidget /></WidgetErrorBoundary>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <EscalationWidget />
-          <LeaderboardWidget />
+          <WidgetErrorBoundary label="Eskalationen" compact><EscalationWidget /></WidgetErrorBoundary>
+          <WidgetErrorBoundary label="Leaderboard" compact><LeaderboardWidget /></WidgetErrorBoundary>
         </div>
       </CollapsibleSection>
 
