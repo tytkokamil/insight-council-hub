@@ -10,6 +10,7 @@ import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
+import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 
 // Eagerly loaded (critical path)
 import Index from "./pages/Index";
@@ -49,9 +50,11 @@ const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>
-    <Suspense fallback={<PageLoadingFallback />}>
-      {children}
-    </Suspense>
+    <WidgetErrorBoundary label="Seite">
+      <Suspense fallback={<PageLoadingFallback />}>
+        {children}
+      </Suspense>
+    </WidgetErrorBoundary>
   </ProtectedRoute>
 );
 
