@@ -4,127 +4,121 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Shield, Zap, BarChart3 } from "lucide-react";
 import ProductTourModal from "./ProductTourModal";
 
+const ease = [0.16, 1, 0.3, 1] as const;
+
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 w-full">
-      {/* Subtle ambient background */}
-      <div className="absolute inset-0 mesh-gradient" />
-      <div className="absolute w-[600px] h-[600px] bg-primary/8 -top-40 left-0 -translate-x-1/2 rounded-full blur-[80px] pointer-events-none animate-[float_8s_ease-in-out_infinite]" />
-      <div className="absolute w-[500px] h-[500px] bg-accent/6 top-1/3 right-0 translate-x-1/2 rounded-full blur-[80px] pointer-events-none animate-[float_8s_ease-in-out_infinite_2s]" />
-
-      {/* Subtle dot pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--foreground)/0.04)_1px,transparent_1px)] bg-[size:32px_32px]" />
-
-      {/* Top/bottom fade */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-12 w-full">
+      {/* Minimal ambient — single soft gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none" />
 
       <div className="container relative z-10 mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-4xl mx-auto text-center"
+          transition={{ duration: 1, ease }}
+          className="max-w-3xl mx-auto text-center"
         >
-          {/* Badge */}
+          {/* Minimal badge */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card/80 backdrop-blur-sm mb-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/60 bg-muted/30 mb-12"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-xs font-medium text-muted-foreground tracking-wide uppercase">
-              Enterprise Decision Management
+            <span className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase">
+              Enterprise Decision Intelligence
             </span>
           </motion.div>
 
-          {/* Main headline */}
+          {/* Headline — larger, bolder, more breathing room */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-7 leading-[0.95]"
+            transition={{ delay: 0.2, duration: 1, ease }}
+            className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-bold tracking-[-0.04em] leading-[0.92] mb-8"
           >
             Nie wieder verlorene
             <br />
             <span className="gradient-text">Entscheidungen.</span>
           </motion.h1>
 
-          {/* Subheadline */}
+          {/* Subline — restrained, one clear sentence */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed text-balance"
+            transition={{ delay: 0.4, duration: 0.8, ease }}
+            className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-14 leading-relaxed"
           >
-            Schluss mit Ad-hoc-Chaos. DecisionOS macht jede Geschäftsentscheidung
-            nachvollziehbar, KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung.
+            DecisionOS macht jede Geschäftsentscheidung nachvollziehbar, 
+            KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung.
           </motion.p>
 
-          {/* CTA Buttons */}
+          {/* CTA — clean, two buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
+            transition={{ delay: 0.6, duration: 0.6, ease }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
-            <Button variant="hero" size="xl" className="rounded-2xl">
+            <Button variant="hero" size="xl" className="rounded-full">
               Kostenlos starten
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button variant="hero-outline" size="xl" className="rounded-2xl" onClick={() => setShowTour(true)}>
-              <Play className="w-5 h-5" />
+            <Button variant="glass" size="xl" className="rounded-full" onClick={() => setShowTour(true)}>
+              <Play className="w-4 h-4" />
               Demo ansehen
             </Button>
           </motion.div>
 
-          {/* Trust badges */}
+          {/* Trust — minimal, just text */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="mt-20 flex flex-wrap items-center justify-center gap-10 text-muted-foreground"
+            transition={{ delay: 1, duration: 1 }}
+            className="mt-16 flex flex-wrap items-center justify-center gap-8"
           >
             {[
               { icon: Shield, text: "DSGVO-konform" },
               { icon: Zap, text: "SOC 2 Ready" },
               { icon: Shield, text: "Enterprise-Sicherheit" },
             ].map((badge, i) => (
-              <div key={i} className="flex items-center gap-2.5">
-                <badge.icon className="w-4 h-4 text-muted-foreground/50" />
-                <span className="text-sm font-medium">{badge.text}</span>
+              <div key={i} className="flex items-center gap-2 text-muted-foreground/60">
+                <badge.icon className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium tracking-wide">{badge.text}</span>
               </div>
             ))}
           </motion.div>
         </motion.div>
 
-        {/* Dashboard Preview */}
+        {/* Dashboard Preview — cleaner frame */}
         <motion.div
-          initial={{ opacity: 0, y: 80 }}
+          initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-24 relative max-w-5xl mx-auto"
+          transition={{ delay: 0.8, duration: 1.2, ease }}
+          className="mt-28 relative max-w-5xl mx-auto"
         >
-          {/* Glow behind */}
-          <div className="absolute -inset-8 bg-primary/3 rounded-[32px] blur-3xl" />
+          {/* Subtle glow */}
+          <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/10 via-transparent to-transparent opacity-60 blur-xl pointer-events-none" />
 
-          <div className="relative rounded-2xl border border-border bg-card shadow-elevated overflow-hidden">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border bg-muted/30">
+          <div className="relative rounded-2xl border border-border/60 bg-card shadow-elevated overflow-hidden">
+            {/* Browser chrome — minimal */}
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-border/40">
               <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-destructive/30" />
-                <div className="w-3 h-3 rounded-full bg-warning/30" />
-                <div className="w-3 h-3 rounded-full bg-success/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-lg bg-muted/50 text-xs text-muted-foreground font-mono">
-                  app.decisionos.com/dashboard
+                <div className="px-4 py-1 rounded-md bg-muted/40 text-[11px] text-muted-foreground/60 font-mono">
+                  app.decisionos.com
                 </div>
               </div>
             </div>
 
-            {/* Dashboard content */}
             <DashboardPreview />
           </div>
         </motion.div>
@@ -135,63 +129,53 @@ const HeroSection = () => {
   );
 };
 
-// Mini dashboard preview
-const DashboardPreview = () => {
-  return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-            <BarChart3 className="w-4 h-4 text-primary" />
-          </div>
-          <span className="font-display font-semibold text-sm">Decision Dashboard</span>
+const DashboardPreview = () => (
+  <div className="p-6 space-y-5">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
+          <BarChart3 className="w-4 h-4 text-primary" />
         </div>
-        <div className="flex gap-2">
-          <div className="px-3 py-1 rounded-full text-xs bg-success/10 text-success font-medium">12 Genehmigt</div>
-          <div className="px-3 py-1 rounded-full text-xs bg-warning/10 text-warning font-medium">5 In Review</div>
-        </div>
+        <span className="font-display font-semibold text-sm">Decision Dashboard</span>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {[
-          { title: "Q4 Budget-Freigabe", status: "Genehmigt", priority: "Hoch", progress: 85 },
-          { title: "Neuer Markteintritt", status: "In Review", priority: "Kritisch", progress: 60 },
-          { title: "Tech Stack Migration", status: "Entwurf", priority: "Mittel", progress: 30 },
-        ].map((decision, i) => (
-          <div key={i} className="p-4 rounded-xl bg-muted/30 border border-border space-y-3 hover:border-primary/20 transition-colors">
-            <div className="flex items-start justify-between">
-              <span className="font-medium text-sm">{decision.title}</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                decision.status === 'Genehmigt' ? 'bg-success/10 text-success' :
-                decision.status === 'In Review' ? 'bg-warning/10 text-warning' :
-                'bg-muted text-muted-foreground'
-              }`}>
-                {decision.status}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-primary"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${decision.progress}%` }}
-                  transition={{ duration: 1.2, delay: 1.2 + i * 0.2, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground font-mono">{decision.progress}%</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className={`${
-                decision.priority === 'Critical' ? 'text-destructive' :
-                decision.priority === 'High' ? 'text-warning' :
-                'text-primary'
-              }`}>● {decision.priority}</span>
-            </div>
-          </div>
-        ))}
+      <div className="flex gap-2">
+        <div className="px-2.5 py-1 rounded-md text-[10px] bg-success/8 text-success font-medium">12 Genehmigt</div>
+        <div className="px-2.5 py-1 rounded-md text-[10px] bg-warning/8 text-warning font-medium">5 In Review</div>
       </div>
     </div>
-  );
-};
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      {[
+        { title: "Q4 Budget-Freigabe", status: "Genehmigt", priority: "Hoch", progress: 85 },
+        { title: "Neuer Markteintritt", status: "In Review", priority: "Kritisch", progress: 60 },
+        { title: "Tech Stack Migration", status: "Entwurf", priority: "Mittel", progress: 30 },
+      ].map((decision, i) => (
+        <div key={i} className="p-4 rounded-xl bg-muted/20 border border-border/40 space-y-3">
+          <div className="flex items-start justify-between">
+            <span className="font-medium text-sm">{decision.title}</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-md font-medium ${
+              decision.status === 'Genehmigt' ? 'bg-success/8 text-success' :
+              decision.status === 'In Review' ? 'bg-warning/8 text-warning' :
+              'bg-muted text-muted-foreground'
+            }`}>
+              {decision.status}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 rounded-full bg-border/60 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-primary/60"
+                initial={{ width: 0 }}
+                animate={{ width: `${decision.progress}%` }}
+                transition={{ duration: 1.4, delay: 1 + i * 0.15, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">{decision.progress}%</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 export default HeroSection;
