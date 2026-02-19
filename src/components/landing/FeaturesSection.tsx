@@ -4,6 +4,7 @@ import {
   Brain, GitBranch, AlertTriangle, TrendingUp, BarChart3, Sparkles,
   Shield, Clock, Target, Zap, ArrowRight, CheckCircle2, XOctagon,
 } from "lucide-react";
+import productGraphFrame from "@/assets/product-graph-frame.jpg";
 
 const features = [
   {
@@ -240,8 +241,10 @@ const FeaturesSection = () => {
   const Preview = previewMap[current.preview];
 
   return (
-    <section id="features" className="py-32 relative">
+    <section id="features" className="py-32 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-40" />
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 grid-bg opacity-30" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -270,9 +273,12 @@ const FeaturesSection = () => {
           transition={{ duration: 0.7 }}
           className="max-w-5xl mx-auto"
         >
-          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-elevated">
+          <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden" style={{ boxShadow: 'var(--shadow-elevated)' }}>
+            {/* Gradient border glow */}
+            <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+
             {/* Tabs */}
-            <div className="flex overflow-x-auto border-b border-border bg-muted/20">
+            <div className="relative flex overflow-x-auto border-b border-border bg-muted/20">
               {features.map((f, i) => (
                 <button
                   key={f.id}
@@ -297,7 +303,7 @@ const FeaturesSection = () => {
             </div>
 
             {/* Content */}
-            <div className="grid md:grid-cols-2 gap-0">
+            <div className="relative grid md:grid-cols-2 gap-0">
               {/* Description */}
               <div className="p-8 md:p-10 flex flex-col justify-center border-r border-border">
                 <AnimatePresence mode="wait">
@@ -345,6 +351,25 @@ const FeaturesSection = () => {
           </div>
         </motion.div>
 
+        {/* Product screenshot below features */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 max-w-4xl mx-auto relative"
+        >
+          <div className="absolute -inset-4 rounded-3xl bg-gradient-to-b from-primary/5 via-transparent to-transparent blur-xl pointer-events-none" />
+          <div className="relative rounded-2xl border border-border/40 overflow-hidden" style={{ boxShadow: 'var(--shadow-card)' }}>
+            <img
+              src={productGraphFrame}
+              alt="Decision Graph Visualisierung"
+              className="w-full h-auto"
+              loading="lazy"
+            />
+          </div>
+        </motion.div>
+
         {/* Quick feature badges */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -359,7 +384,7 @@ const FeaturesSection = () => {
           ].map((badge) => (
             <span
               key={badge}
-              className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground"
+              className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground hover:border-primary/20 hover:text-foreground transition-all duration-300 cursor-default"
             >
               {badge}
             </span>
