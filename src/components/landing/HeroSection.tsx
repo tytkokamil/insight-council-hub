@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Shield, Zap, BarChart3 } from "lucide-react";
 import ProductTourModal from "./ProductTourModal";
@@ -8,8 +8,16 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const dashboardY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const dashboardScale = useTransform(scrollYProgress, [0, 0.5], [1, 0.96]);
+  const dashboardOpacity = useTransform(scrollYProgress, [0.4, 0.9], [1, 0]);
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-12 w-full">
+    <section ref={heroRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-12 w-full">
       {/* Minimal ambient — single soft gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] via-transparent to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none" />
@@ -99,6 +107,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 1.2, ease }}
+          style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity }}
           className="mt-28 relative max-w-5xl mx-auto"
         >
           {/* Subtle glow */}
