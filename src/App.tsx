@@ -48,6 +48,7 @@ const TasksPage = lazy(() => import("./pages/Tasks"));
 const Templates = lazy(() => import("./pages/Templates"));
 const TimelinePage = lazy(() => import("./pages/TimelinePage"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
+const DecisionDetail = lazy(() => import("./pages/DecisionDetail"));
 const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/reset-password" element={<Suspense fallback={<PageLoadingFallback />}><ResetPassword /></Suspense>} />
               <Route path="/dashboard" element={<P><Dashboard /></P>} />
               <Route path="/decisions" element={<P><Decisions /></P>} />
+              <Route path="/decisions/:id" element={<P><DecisionDetail /></P>} />
               <Route path="/teams" element={<P><Teams /></P>} />
               <Route path="/teams/:teamId" element={<P><TeamDetail /></P>} />
               <Route path="/tasks" element={<P><TasksPage /></P>} />
