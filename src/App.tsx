@@ -46,7 +46,7 @@ const PatternEngine = lazy(() => import("./pages/PatternEngine"));
 const TeamDetail = lazy(() => import("./pages/TeamDetail"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
 const Templates = lazy(() => import("./pages/Templates"));
-
+const TimelinePage = lazy(() => import("./pages/TimelinePage"));
 const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
@@ -101,6 +101,7 @@ const App = () => (
               <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
               <Route path="/patterns" element={<P><PatternEngine /></P>} />
               <Route path="/templates" element={<P><Templates /></P>} />
+              <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
