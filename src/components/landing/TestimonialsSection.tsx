@@ -28,7 +28,7 @@ const testimonials = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const TestimonialsSection = () => (
-  <section id="testimonials" className="py-28 relative overflow-hidden">
+  <section id="testimonials" className="py-20 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
 
     <div className="container mx-auto px-4 relative z-10">
@@ -37,7 +37,7 @@ const TestimonialsSection = () => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-20"
+        className="text-center max-w-2xl mx-auto mb-12"
       >
         <p className="text-xs font-medium text-primary mb-4 tracking-widest uppercase">
           Kundenstimmen
