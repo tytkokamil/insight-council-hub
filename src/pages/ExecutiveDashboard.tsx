@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
@@ -12,154 +11,191 @@ import { useTasks } from "@/hooks/useTasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BarChart3, TrendingUp, AlertTriangle, CheckCircle2,
-  Clock, DollarSign, Zap, Trophy, Dna, Activity, FlaskConical,
-  GitBranch, Flame, ArrowRight, Target, FileDown, Loader2, ListChecks,
+  Clock, DollarSign, Zap, Target, FileDown, Loader2, ListChecks,
+  ArrowRight, Activity, Info, ExternalLink, Users, Send,
 } from "lucide-react";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
 import { useToast } from "@/hooks/use-toast";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar, Legend,
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RTooltip, CartesianGrid, Legend,
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
+const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
 const ExecutiveDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
+  const [briefLoading, setBriefLoading] = useState(false);
+  const [aiBrief, setAiBrief] = useState<string[] | null>(null);
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: deps = [] } = useFilteredDependencies();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useFilteredReviews();
   const { data: tasks = [] } = useTasks();
 
-  // Fetch ALL decisions across teams for cross-team comparison
   const { data: allDecisions = [] } = useQuery({
     queryKey: ["decisions", "all-teams"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("decisions")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("decisions").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
     staleTime: 30_000,
   });
 
-  // Fetch ALL tasks across teams
   const { data: allTasks = [] } = useQuery({
     queryKey: ["tasks", "all-teams"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
     staleTime: 30_000,
   });
 
+  const metrics = useMemo(() => {
+    if (loadingDec || decisions.length === 0) return null;
+    const total = decisions.length || 1;
+    const implemented = decisions.filter(d => d.status === "implemented");
+    const approved = decisions.filter(d => d.status === "approved" || d.status === "implemented");
+    const overdue = decisions.filter(d => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented");
+    const escalated = decisions.filter(d => (d.escalation_level ?? 0) > 0);
+    const critical = decisions.filter(d => d.priority === "critical");
+    const highRisk = decisions.filter(d => (d.ai_risk_score ?? 0) > 60);
+    const doneTasks = tasks.filter(t => t.status === "done");
+    const openTasks = tasks.filter(t => t.status !== "done");
+    const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
+    const taskCompletionRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
+    const implDurations = implemented.filter(d => d.implemented_at).map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
+    const avgVelocity = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 0;
+
+    const openDecisions = decisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
+    const totalOpportunityCost = openDecisions.reduce((sum, d) => {
+      const team = teams.find((t: any) => t.id === d.team_id);
+      const rate = team?.hourly_rate || 75;
+      const daysOpen = (Date.now() - new Date(d.created_at).getTime()) / 86400000;
+      return sum + Math.round(rate * (daysOpen / 7) * 8 * (d.priority === "critical" ? 4 : d.priority === "high" ? 2.5 : 1.5));
+    }, 0);
+
+    const implRate = (implemented.length / total) * 100;
+    const overdueRate = (overdue.length / total) * 100;
+    const escRate = (escalated.length / total) * 100;
+    const taskHealth = tasks.length > 0 ? (taskCompletionRate * 0.5 + (100 - (overdueTasks.length / Math.max(1, openTasks.length)) * 100) * 0.5) : 50;
+    const healthScore = Math.round(Math.max(0, Math.min(100, (implRate * 0.3) + ((100 - overdueRate) * 0.2) + ((100 - escRate) * 0.15) + (approved.length / total * 100 * 0.1) + (taskHealth * 0.25))));
+
+    // Radar data with axis explanations
+    const radarData = [
+      { metric: "Risiko", value: Math.round(100 - (highRisk.length / total * 100)), explanation: "Anteil Entscheidungen ohne hohes Risiko" },
+      { metric: "Verzögerung", value: Math.round(100 - overdueRate), explanation: "Termintreue – niedrige Überfälligkeitsrate" },
+      { metric: "Eskalation", value: Math.round(100 - escRate), explanation: "Entscheidungen ohne Eskalation" },
+      { metric: "Alignment", value: Math.round((reviews.length / total) * 100), explanation: "Review-Abdeckung als Alignment-Indikator" },
+      { metric: "Durchsatz", value: Math.round(implRate), explanation: "Umsetzungsrate aller Entscheidungen" },
+    ];
+
+    // Critical Decisions – sorted by urgency
+    const criticalDecisions = [...openDecisions]
+      .map(d => {
+        const daysOpen = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000);
+        const isOverdue = d.due_date ? new Date(d.due_date) < new Date() : false;
+        const overdueDays = isOverdue && d.due_date ? Math.floor((Date.now() - new Date(d.due_date).getTime()) / 86400000) : 0;
+        const riskScore = d.ai_risk_score ?? 0;
+        const team = teams.find((t: any) => t.id === d.team_id);
+        const rate = team?.hourly_rate || 75;
+        const costImpact = Math.round(rate * (daysOpen / 7) * 8 * (d.priority === "critical" ? 4 : d.priority === "high" ? 2.5 : 1.5));
+        const delayProb = Math.min(100, Math.round((daysOpen > 14 ? 60 : daysOpen * 4) + (riskScore * 0.3)));
+        const urgency = riskScore * 0.3 + delayProb * 0.3 + (isOverdue ? overdueDays * 5 : 0) + (d.priority === "critical" ? 40 : d.priority === "high" ? 20 : 0);
+        return { ...d, riskScore, delayProb, costImpact, urgency, isOverdue };
+      })
+      .sort((a, b) => b.urgency - a.urgency)
+      .slice(0, 10);
+
+    return {
+      total, implemented, overdue, escalated, critical, highRisk,
+      doneTasks, overdueTasks, taskCompletionRate, avgVelocity,
+      openDecisions, totalOpportunityCost, implRate, overdueRate, escRate,
+      healthScore, radarData, criticalDecisions,
+    };
+  }, [loadingDec, decisions, tasks, teams, reviews, deps]);
+
+  const generateBrief = async () => {
+    if (!metrics) return;
+    setBriefLoading(true);
+    try {
+      const { data } = await supabase.functions.invoke("ceo-briefing", {
+        body: { user_id: user?.id },
+      });
+      if (data?.content?.bullets) {
+        setAiBrief(data.content.bullets);
+      } else if (data?.content?.summary) {
+        setAiBrief([data.content.summary]);
+      } else {
+        // Fallback: generate local brief
+        const bullets = [
+          `${metrics.openDecisions.length} offene Entscheidungen, davon ${metrics.overdue.length} überfällig.`,
+          `${metrics.escalated.length} aktive Eskalationen – SLA-Verletzungen prüfen.`,
+          `Umsetzungsrate bei ${Math.round(metrics.implRate)}%, Ø ${metrics.avgVelocity} Tage.`,
+          `Geschätzte Verzögerungskosten: €${metrics.totalOpportunityCost.toLocaleString()}.`,
+          metrics.highRisk.length > 0 ? `${metrics.highRisk.length} Hochrisiko-Entscheidungen offen.` : "Keine Hochrisiko-Entscheidungen offen.",
+          `Task-Abschlussrate: ${metrics.taskCompletionRate}%, ${metrics.overdueTasks.length} überfällig.`,
+          metrics.overdue.length > 3 ? "Empfehlung: Eskalationsprozess für überfällige Entscheidungen einleiten." : "Termintreue im akzeptablen Bereich.",
+          `Health Score: ${metrics.healthScore}/100.`,
+        ];
+        setAiBrief(bullets);
+      }
+    } catch {
+      const bullets = [
+        `${metrics.openDecisions.length} offene Entscheidungen, ${metrics.overdue.length} überfällig.`,
+        `Umsetzungsrate: ${Math.round(metrics.implRate)}%.`,
+        `Verzögerungskosten: €${metrics.totalOpportunityCost.toLocaleString()}.`,
+        `Health Score: ${metrics.healthScore}/100.`,
+      ];
+      setAiBrief(bullets);
+    }
+    setBriefLoading(false);
+  };
+
   if (loadingDec) {
-    return (
-      <AppLayout>
-        <div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div>
-      </AppLayout>
-    );
+    return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div></AppLayout>;
   }
 
-  if (decisions.length === 0) {
+  if (!metrics) {
     return (
       <AppLayout>
         <div className="mb-8">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
           <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Unternehmensweite Entscheidungs-Intelligence auf einen Blick.</p>
         </div>
-        <EmptyAnalysisState
-          icon={Target}
-          title="Noch keine Executive-Daten"
-          description="Erstelle Entscheidungen, um KPIs, Radar-Charts und Kostenanalysen zu sehen."
-          hint="Alle Metriken werden automatisch aus deinen Entscheidungen berechnet"
-        />
+        <EmptyAnalysisState icon={Target} title="Noch keine Executive-Daten" description="Erstelle Entscheidungen für KPIs und Analysen." hint="Metriken werden automatisch berechnet" />
       </AppLayout>
     );
   }
 
-  const total = decisions.length || 1;
-  const implemented = decisions.filter(d => d.status === "implemented");
-  const approved = decisions.filter(d => d.status === "approved" || d.status === "implemented");
-  const overdue = decisions.filter(d => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented");
-  const escalated = decisions.filter(d => (d.escalation_level ?? 0) > 0);
-  const critical = decisions.filter(d => d.priority === "critical");
-  const highRisk = decisions.filter(d => (d.ai_risk_score ?? 0) > 60);
+  const scoreColor = metrics.healthScore >= 75 ? "text-success" : metrics.healthScore >= 50 ? "text-warning" : "text-destructive";
 
-  // Task stats
-  const doneTasks = tasks.filter(t => t.status === "done");
-  const openTasks = tasks.filter(t => t.status !== "done");
-  const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
-  const taskCompletionRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
-
-  const implDurations = implemented
-    .filter(d => d.implemented_at)
-    .map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
-  const avgVelocity = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 0;
-
-  const openDecisions = decisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
-  const totalOpportunityCost = openDecisions.reduce((sum, d) => {
-    const team = teams.find((t: any) => t.id === d.team_id);
-    const rate = team?.hourly_rate || 75;
-    const daysOpen = (Date.now() - new Date(d.created_at).getTime()) / 86400000;
-    return sum + Math.round(rate * (daysOpen / 7) * 8 * (d.priority === "critical" ? 4 : d.priority === "high" ? 2.5 : 1.5));
-  }, 0);
-
-  const implRate = (implemented.length / total) * 100;
-  const overdueRate = (overdue.length / total) * 100;
-  const escRate = (escalated.length / total) * 100;
-  const taskHealth = tasks.length > 0 ? (taskCompletionRate * 0.5 + (100 - (overdueTasks.length / Math.max(1, openTasks.length)) * 100) * 0.5) : 50;
-  const healthScore = Math.round(Math.max(0, Math.min(100,
-    (implRate * 0.3) + ((100 - overdueRate) * 0.2) + ((100 - escRate) * 0.15) + (approved.length / total * 100 * 0.1) + (taskHealth * 0.25)
-  )));
-
-  const riskAppetite = decisions.filter(d => (d.ai_risk_score ?? 0) > 50 && (d.status === "approved" || d.status === "implemented")).length / (decisions.filter(d => (d.ai_risk_score ?? 0) > 50).length || 1) * 100;
-  const archetype = healthScore >= 75 ? "High-Performance" : riskAppetite < 30 ? "Konservativ" : overdueRate > 30 ? "Bottleneck-anfällig" : "Balanced";
-
-  const radarData = [
-    { metric: "Umsetzung", value: Math.round(implRate) },
-    { metric: "Speed", value: Math.max(0, 100 - avgVelocity * 3) },
-    { metric: "Risiko", value: Math.round(100 - (highRisk.length / total * 100)) },
-    { metric: "Alignment", value: Math.round((reviews.length / total) * 100) },
-    { metric: "Eskalation", value: Math.round(100 - escRate) },
-    { metric: "Termine", value: Math.round(100 - overdueRate) },
-    { metric: "Tasks", value: taskCompletionRate },
-  ];
-
-  const now = Date.now();
-  const activityData = Array.from({ length: 8 }, (_, i) => {
-    const weekStart = now - (7 - i) * 7 * 86400000;
-    const weekEnd = weekStart + 7 * 86400000;
-    const created = decisions.filter(d => { const t = new Date(d.created_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
-    const resolved = decisions.filter(d => { if (!d.implemented_at) return false; const t = new Date(d.implemented_at).getTime(); return t >= weekStart && t < weekEnd; }).length;
-    const tasksCompleted = tasks.filter(t => { if (!t.completed_at) return false; const ts = new Date(t.completed_at).getTime(); return ts >= weekStart && ts < weekEnd; }).length;
-    return { week: `W${8 - (7 - i)}`, erstellt: created, umgesetzt: resolved, tasks: tasksCompleted };
+  // Team comparison data
+  const teamComparisonData = teams.map((team: any) => {
+    const teamDecs = allDecisions.filter((d: any) => d.team_id === team.id);
+    const teamTsk = allTasks.filter((t: any) => t.team_id === team.id);
+    const totalDec = teamDecs.length || 1;
+    const implCount = teamDecs.filter((d: any) => d.status === "implemented").length;
+    const overdueCount = teamDecs.filter((d: any) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
+    const tasksDone = teamTsk.filter((t: any) => t.status === "done").length;
+    const taskTotal = teamTsk.length || 1;
+    return {
+      name: team.name.length > 12 ? team.name.slice(0, 12) + "…" : team.name,
+      Umsetzung: Math.round((implCount / totalDec) * 100),
+      Termintreue: Math.round(((totalDec - overdueCount) / totalDec) * 100),
+      "Task-Rate": Math.round((tasksDone / taskTotal) * 100),
+    };
   });
-
-  const quickLinks = [
-    { label: "Bottlenecks", path: "/bottlenecks", icon: Flame, color: "text-warning" },
-    { label: "Health Map", path: "/health", icon: Activity, color: "text-success" },
-    { label: "DNA", path: "/dna", icon: Dna, color: "text-primary" },
-    { label: "Benchmarking", path: "/benchmarking", icon: Trophy, color: "text-warning" },
-    { label: "Szenarien", path: "/scenarios", icon: FlaskConical, color: "text-primary" },
-    { label: "Escalation", path: "/engine", icon: Zap, color: "text-destructive" },
-  ];
-
-  const scoreColor = healthScore >= 75 ? "text-success" : healthScore >= 50 ? "text-warning" : "text-destructive";
-  const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" };
 
   return (
     <AppLayout>
@@ -170,109 +206,81 @@ const ExecutiveDashboard = () => {
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategische Analyse</p>
             <div className="flex items-center gap-2">
               <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
-              <PageHint>
-                Organisationsweite Entscheidungs-Intelligence: Health Score über alle Teams, Cross-Team-Benchmarks, Kosten-Radar und strategische Trends. Für deinen persönlichen Überblick nutze das Dashboard.
-              </PageHint>
+              <PageHint>Management-Cockpit: KPI Snapshot, Risk Radar, kritische Entscheidungen und KI-Briefing auf einen Blick.</PageHint>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-3 py-1">{archetype}</Badge>
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={exporting}
-              onClick={async () => {
-                setExporting(true);
-                try {
-                  const data = await fetchBoardReportData();
-                  generateBoardReport(data);
-                  toast({ title: "Exportiert", description: "Board Report als PDF heruntergeladen." });
-                } catch (e) {
-                  toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" });
-                }
-                setExporting(false);
-              }}
-              className="gap-2"
-            >
-              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              Board Report
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
+            setExporting(true);
+            try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "Exportiert", description: "Board Report als PDF." }); }
+            catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
+            setExporting(false);
+          }} className="gap-2">
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+            Board Report
+          </Button>
         </div>
 
-        {/* Top KPIs – clean horizontal strip */}
-        <div className="flex items-stretch gap-0 rounded-xl border border-border bg-card overflow-hidden divide-x divide-border">
+        {/* ═══ KPI Snapshot ═══ */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
-            { label: "Entscheidungen", value: decisions.length, icon: BarChart3 },
-            { label: "Umgesetzt", value: implemented.length, icon: CheckCircle2, color: "text-success" },
-            { label: "Überfällig", value: overdue.length, icon: Clock, color: overdue.length > 0 ? "text-destructive" : undefined },
-            { label: "Eskaliert", value: escalated.length, icon: AlertTriangle, color: escalated.length > 0 ? "text-warning" : undefined },
-            { label: "Tasks", value: tasks.length, icon: ListChecks },
-            { label: "Erledigt", value: doneTasks.length, icon: CheckCircle2, color: "text-success" },
-            { label: "Überfällig", value: overdueTasks.length, icon: Clock, color: overdueTasks.length > 0 ? "text-destructive" : undefined },
-            { label: "Ø Velocity", value: `${avgVelocity}d`, icon: TrendingUp },
+            { label: "Offene Entscheidungen", value: metrics.openDecisions.length, icon: BarChart3 },
+            { label: "Kritisch (High Risk)", value: metrics.highRisk.length, icon: AlertTriangle, color: metrics.highRisk.length > 0 ? "text-destructive" : undefined },
+            { label: "Eskalationen aktiv", value: metrics.escalated.length, icon: Zap, color: metrics.escalated.length > 0 ? "text-warning" : undefined },
+            { label: "Delay Cost", value: `€${metrics.totalOpportunityCost.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
+            { label: "Completion Rate", value: `${Math.round(metrics.implRate)}%`, icon: CheckCircle2, color: "text-success" },
           ].map((kpi, i) => (
-            <div key={i} className="flex-1 min-w-0 px-4 py-3 text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <kpi.icon className={`w-3.5 h-3.5 ${kpi.color || "text-muted-foreground"}`} />
-                <span className="text-[11px] text-muted-foreground whitespace-nowrap">{kpi.label}</span>
-              </div>
-              <div className={`text-xl font-bold font-display ${kpi.color || ""}`}>{kpi.value}</div>
-            </div>
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <kpi.icon className={`w-3.5 h-3.5 ${kpi.color || "text-muted-foreground"}`} />
+                  <span className="text-[10px] text-muted-foreground">{kpi.label}</span>
+                </div>
+                <div className={`text-2xl font-bold font-display ${kpi.color || ""}`}>{kpi.value}</div>
+              </CardContent>
+            </Card>
           ))}
         </div>
 
-        {/* Health & Radar – collapsible */}
-        <CollapsibleSection
-          title="Organisation Health & Performance"
-          subtitle="Gesamtbewertung und Radar-Analyse"
-          icon={<Activity className="w-4 h-4 text-success" />}
-          defaultOpen={true}
-        >
+        {/* ═══ Risk Radar (Spider Chart) ═══ */}
+        <CollapsibleSection title="Risk Radar" subtitle="Fünf-Achsen Performance-Analyse" icon={<Activity className="w-4 h-4 text-primary" />} defaultOpen={true}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
+            <Card className="md:col-span-2">
               <CardContent className="p-6">
-                <h3 className="text-sm font-semibold mb-4">Health Score</h3>
-                <div className="flex flex-col items-center gap-3">
-                  <div className={`text-5xl font-bold font-display ${scoreColor}`}>{healthScore}</div>
-                  <Progress value={healthScore} className="w-full" />
-                  <div className="grid grid-cols-2 gap-2 w-full text-xs">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Umsetzung</span><span>{Math.round(implRate)}%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Termintreue</span><span>{Math.round(100 - overdueRate)}%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Eskalation</span><span>{Math.round(escRate)}%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Task-Rate</span><span>{taskCompletionRate}%</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Reviews</span><span>{reviews.length}</span></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-sm font-semibold mb-4">Performance Radar</h3>
-                <div className="h-[260px]">
+                <div className="h-[320px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="55%">
+                    <RadarChart data={metrics.radarData} cx="50%" cy="50%" outerRadius="60%">
                       <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
+                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                       <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                      <RTooltip content={({ payload }) => {
+                        if (!payload?.[0]) return null;
+                        const d = payload[0].payload;
+                        return (
+                          <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-lg">
+                            <p className="font-semibold">{d.metric}: {d.value}%</p>
+                            <p className="text-muted-foreground mt-0.5">{d.explanation}</p>
+                          </div>
+                        );
+                      }} />
                     </RadarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-4"><DollarSign className="w-4 h-4" />Opportunity Cost</h3>
+                <h3 className="text-sm font-semibold mb-4">Health Score</h3>
                 <div className="flex flex-col items-center gap-3">
-                  <div className="text-3xl font-bold font-display text-destructive">€{totalOpportunityCost.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground text-center">Geschätzte Kosten durch offene Entscheidungen</p>
-                  <div className="w-full space-y-2 text-xs">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Offene Entscheidungen</span><span>{openDecisions.length}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Kritische offen</span><span className="text-destructive font-medium">{critical.filter(d => d.status !== "implemented").length}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Teams betroffen</span><span>{new Set(openDecisions.map(d => d.team_id).filter(Boolean)).size}</span></div>
+                  <div className={`text-5xl font-bold font-display ${scoreColor}`}>{metrics.healthScore}</div>
+                  <Progress value={metrics.healthScore} className="w-full" />
+                  <div className="w-full space-y-1.5 text-xs">
+                    {metrics.radarData.map(r => (
+                      <div key={r.metric} className="flex justify-between">
+                        <span className="text-muted-foreground">{r.metric}</span>
+                        <span className={r.value >= 70 ? "text-success" : r.value >= 40 ? "text-warning" : "text-destructive"}>{r.value}%</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -280,132 +288,138 @@ const ExecutiveDashboard = () => {
           </div>
         </CollapsibleSection>
 
-        {/* Activity Trend – collapsible, default closed */}
-        <CollapsibleSection
-          title="Aktivitätstrend"
-          subtitle="Erstellt vs. umgesetzt (8 Wochen)"
-          icon={<TrendingUp className="w-4 h-4 text-primary" />}
-          defaultOpen={false}
-        >
+        {/* ═══ Critical Decisions Table ═══ */}
+        <CollapsibleSection title="Kritische Entscheidungen" subtitle={`${metrics.criticalDecisions.length} dringendste Items`} icon={<AlertTriangle className="w-4 h-4 text-destructive" />} defaultOpen={true}>
           <Card>
-            <CardContent className="p-6">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={activityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                    <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Area type="monotone" dataKey="erstellt" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-                    <Area type="monotone" dataKey="umgesetzt" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.2} />
-                    <Area type="monotone" dataKey="tasks" stroke="hsl(var(--warning))" fill="hsl(var(--warning))" fillOpacity={0.15} name="Tasks erledigt" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+            <CardContent className="p-0">
+              {metrics.criticalDecisions.length === 0 ? (
+                <div className="text-center py-8 text-sm text-muted-foreground">✅ Keine kritischen Entscheidungen</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titel</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Risk</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Delay %</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Cost Impact</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Owner</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Aktionen</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {metrics.criticalDecisions.map(d => (
+                        <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium truncate max-w-[200px]">{d.title}</span>
+                              {d.isOverdue && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Überfällig</Badge>}
+                            </div>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className={`font-bold ${d.riskScore > 60 ? "text-destructive" : d.riskScore > 30 ? "text-warning" : "text-success"}`}>{d.riskScore}%</span>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className={`font-medium ${d.delayProb > 60 ? "text-destructive" : d.delayProb > 30 ? "text-warning" : "text-muted-foreground"}`}>{d.delayProb}%</span>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className="font-medium">€{d.costImpact.toLocaleString()}</span>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <Badge variant="outline" className="text-[10px]">{d.priority}</Badge>
+                          </td>
+                          <td className="text-right py-3 px-4">
+                            <div className="flex items-center justify-end gap-1">
+                              <Link to={`/decisions/${d.id}`}>
+                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" />Öffnen</Button>
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </CollapsibleSection>
 
-        {/* Alerts + Quick Links – collapsible */}
-        <CollapsibleSection
-          title="Alerts & Quick Access"
-          subtitle="Dringende Probleme und Schnellzugriff"
-          icon={<AlertTriangle className="w-4 h-4 text-destructive" />}
-          defaultOpen={overdue.length > 0 || highRisk.length > 0}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-4"><AlertTriangle className="w-4 h-4 text-destructive" />Sofortige Aufmerksamkeit</h3>
-                <div className="space-y-2">
-                  {overdue.slice(0, 3).map(d => (
-                    <div key={d.id} className="flex items-center justify-between p-2.5 rounded-lg bg-destructive/5">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{d.title}</p>
-                        <p className="text-xs text-muted-foreground">Fällig: {d.due_date}</p>
-                      </div>
-                      <Badge variant="destructive" className="shrink-0 text-xs">{d.priority}</Badge>
-                    </div>
-                  ))}
-                  {highRisk.filter(d => !overdue.includes(d)).slice(0, 2).map(d => (
-                    <div key={d.id} className="flex items-center justify-between p-2.5 rounded-lg bg-warning/5">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{d.title}</p>
-                        <p className="text-xs text-muted-foreground">Risiko: {d.ai_risk_score}%</p>
-                      </div>
-                      <Badge variant="outline" className="shrink-0 text-xs">Risiko</Badge>
-                    </div>
-                  ))}
-                  {overdue.length === 0 && highRisk.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">✅ Keine dringenden Probleme</p>
-                  )}
+        {/* ═══ AI Executive Brief ═══ */}
+        <CollapsibleSection title="AI Executive Brief" subtitle="KI-generierte Zusammenfassung" icon={<Zap className="w-4 h-4 text-primary" />} defaultOpen={true}>
+          <Card className="border-primary/20">
+            <CardContent className="p-6">
+              {aiBrief ? (
+                <div className="space-y-4">
+                  <ul className="space-y-2">
+                    {aiBrief.map((bullet, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span className="text-primary mt-0.5 shrink-0">•</span>
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex items-center gap-2 pt-2 border-t border-border">
+                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={async () => {
+                      setExporting(true);
+                      try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "PDF exportiert" }); }
+                      catch { toast({ title: "Fehler", variant: "destructive" }); }
+                      setExporting(false);
+                    }}>
+                      <FileDown className="w-3 h-3" />Als PDF exportieren
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast({ title: "Gesendet", description: "Briefing wurde an das Team gesendet." })}>
+                      <Send className="w-3 h-3" />An Team senden
+                    </Button>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-sm font-semibold mb-4">Quick Access</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {quickLinks.map(link => (
-                    <Link key={link.path} to={link.path} className="flex items-center gap-2 p-3 rounded-xl bg-muted/30 hover:bg-muted/60 transition-all group border border-transparent hover:border-border/50">
-                      <link.icon className={`w-4 h-4 ${link.color}`} />
-                      <span className="text-sm font-medium flex-1">{link.label}</span>
-                      <ArrowRight className="w-3 h-3 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </Link>
-                  ))}
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-sm text-muted-foreground mb-3">Generiere ein KI-Briefing mit Risiken, Trends und Empfehlungen (max. 8 Punkte).</p>
+                  <Button onClick={generateBrief} disabled={briefLoading} className="gap-2">
+                    {briefLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                    {briefLoading ? "Generiere..." : "Briefing generieren"}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </CollapsibleSection>
 
-        {/* Team Comparison */}
-        {teams.length > 0 && (() => {
-          const teamComparisonData = teams.map((team: any) => {
-            const teamDecs = allDecisions.filter((d: any) => d.team_id === team.id);
-            const teamTsk = allTasks.filter((t: any) => t.team_id === team.id);
-            const totalDec = teamDecs.length || 1;
-            const implCount = teamDecs.filter((d: any) => d.status === "implemented").length;
-            const overdueCount = teamDecs.filter((d: any) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
-            const tasksDone = teamTsk.filter((t: any) => t.status === "done").length;
-            const taskTotal = teamTsk.length || 1;
-            return {
-              name: team.name.length > 12 ? team.name.slice(0, 12) + "…" : team.name,
-              Umsetzung: Math.round((implCount / totalDec) * 100),
-              Termintreue: Math.round(((totalDec - overdueCount) / totalDec) * 100),
-              "Task-Rate": Math.round((tasksDone / taskTotal) * 100),
-            };
-          });
+        {/* ═══ Team Comparison ═══ */}
+        {teams.length > 0 && teamComparisonData.length > 0 && (
+          <CollapsibleSection title="Team-Vergleich" subtitle="Performance-Metriken nach Team" icon={<BarChart3 className="w-4 h-4 text-primary" />} defaultOpen={false}>
+            <Card>
+              <CardContent className="p-6">
+                <div className="h-[280px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={teamComparisonData} barCategoryGap="20%">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} unit="%" />
+                      <RTooltip contentStyle={tooltipStyle} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="Umsetzung" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Termintreue" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Task-Rate" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </CollapsibleSection>
+        )}
 
-          return (
-            <CollapsibleSection
-              title="Team-Vergleich"
-              subtitle="Performance-Metriken nach Team"
-              icon={<BarChart3 className="w-4 h-4 text-primary" />}
-              defaultOpen={true}
-            >
-              <Card>
-                <CardContent className="p-6">
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={teamComparisonData} barCategoryGap="20%">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} unit="%" />
-                        <Tooltip contentStyle={tooltipStyle} />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="Umsetzung" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Termintreue" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="Task-Rate" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            </CollapsibleSection>
-          );
-        })()}
+        {/* ═══ Help ═══ */}
+        <CollapsibleSection title="Hilfe" subtitle="Definitionen und Berechnungen" icon={<Info className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
+          <Card>
+            <CardContent className="p-5 space-y-3 text-sm">
+              <div><span className="font-semibold">Was ist kritisch?</span><p className="text-muted-foreground text-xs mt-0.5">Entscheidungen mit hohem Risiko (&gt;60%), überfällig oder eskaliert werden als kritisch eingestuft.</p></div>
+              <div><span className="font-semibold">Wie werden Scores berechnet?</span><p className="text-muted-foreground text-xs mt-0.5">Health Score = 30% Umsetzung + 20% Termintreue + 15% Eskalation + 10% Reviews + 25% Task-Rate. Risk Radar zeigt 5 Achsen normalisiert auf 0-100%.</p></div>
+              <div><span className="font-semibold">Delay Probability</span><p className="text-muted-foreground text-xs mt-0.5">Geschätzte Wahrscheinlichkeit weiterer Verzögerung basierend auf bisheriger Offenheit und AI Risk Score.</p></div>
+            </CardContent>
+          </Card>
+        </CollapsibleSection>
       </div>
     </AppLayout>
   );

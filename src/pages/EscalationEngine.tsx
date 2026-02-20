@@ -1,20 +1,28 @@
 import { useState, useEffect, useMemo } from "react";
-import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import {
-  Zap, Play, Loader2, RefreshCw, ArrowUpRight, SkipForward, Users,
-  AlertTriangle, CheckCircle2, Clock, Lightbulb, Shield,
+  Zap, Play, Loader2, AlertTriangle, CheckCircle2, Clock, Lightbulb, Shield,
+  Users, SkipForward, ExternalLink, TrendingUp, ArrowUpRight,
 } from "lucide-react";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useFilteredNotifications } from "@/hooks/useDecisions";
+import { useQuery } from "@tanstack/react-query";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line, Legend,
+} from "recharts";
 
 interface EngineAction { type: string; decision_id: string; title: string; [key: string]: any; }
 interface EngineResult { message: string; actions: EngineAction[]; processed: number; }
+
 const actionConfig: Record<string, { icon: any; label: string; color: string; bgColor: string }> = {
   escalation: { icon: AlertTriangle, label: "Eskalation", color: "text-destructive", bgColor: "bg-destructive/15" },
   auto_reassign: { icon: Users, label: "Auto-Reassign", color: "text-warning", bgColor: "bg-warning/15" },
@@ -22,14 +30,25 @@ const actionConfig: Record<string, { icon: any; label: string; color: string; bg
   process_suggestion: { icon: Lightbulb, label: "Prozessvorschlag", color: "text-primary", bgColor: "bg-primary/15" },
 };
 
+const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
+
 const EscalationEngine = () => {
   const { toast } = useToast();
   const [running, setRunning] = useState(false);
   const [lastResult, setLastResult] = useState<EngineResult | null>(null);
-  const [stats, setStats] = useState({ totalEscalated: 0, totalReassigned: 0, totalSkipped: 0, openDecisions: 0 });
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: notifications = [], isLoading: notifLoading } = useFilteredNotifications();
+
+  const { data: slaConfigs = [] } = useQuery({
+    queryKey: ["sla-configs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sla_configs").select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
 
   const loading = decLoading || notifLoading;
 
@@ -37,37 +56,89 @@ const EscalationEngine = () => {
     notifications
       .filter(n => ["escalation", "auto_reassign", "auto_skip_review", "process_suggestion"].includes(n.type))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 20),
+      .slice(0, 30),
     [notifications]
   );
 
-  useEffect(() => {
-    if (loading) return;
+  const stats = useMemo(() => {
+    if (loading) return { openDecisions: 0, totalEscalated: 0, totalReassigned: 0, totalSkipped: 0, maxLevel: 0 };
     const openDecs = decisions.filter(d => ["draft", "review", "approved"].includes(d.status));
-    setStats({
+    const escalated = openDecs.filter(d => (d.escalation_level || 0) > 0);
+    const maxLevel = escalated.reduce((m, d) => Math.max(m, d.escalation_level || 0), 0);
+    return {
       openDecisions: openDecs.length,
-      totalEscalated: openDecs.filter(d => (d.escalation_level || 0) > 0).length,
+      totalEscalated: escalated.length,
       totalReassigned: recentNotifications.filter(n => n.type === "auto_reassign").length,
       totalSkipped: recentNotifications.filter(n => n.type === "auto_skip_review").length,
-    });
+      maxLevel,
+    };
   }, [loading, decisions, recentNotifications]);
+
+  // Active escalations as table
+  const activeEscalations = useMemo(() => {
+    return decisions
+      .filter(d => (d.escalation_level || 0) > 0 && !["implemented", "rejected"].includes(d.status))
+      .map(d => {
+        const daysOpen = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000);
+        return { ...d, daysOpen };
+      })
+      .sort((a, b) => (b.escalation_level || 0) - (a.escalation_level || 0));
+  }, [decisions]);
+
+  // Analytics data
+  const analyticsData = useMemo(() => {
+    const now = Date.now();
+    const weeklyData = Array.from({ length: 8 }, (_, i) => {
+      const weekStart = now - (8 - i) * 7 * 86400000;
+      const weekEnd = weekStart + 7 * 86400000;
+      const weekNotifs = recentNotifications.filter(n => {
+        const t = new Date(n.created_at).getTime();
+        return t >= weekStart && t < weekEnd;
+      });
+      const escalations = weekNotifs.filter(n => n.type === "escalation").length;
+      const totalEsc = notifications.filter(n => {
+        const t = new Date(n.created_at).getTime();
+        return t >= weekStart && t < weekEnd && n.type === "escalation";
+      }).length;
+      return { week: `W${i + 1}`, Eskalationen: totalEsc || escalations };
+    });
+
+    const totalOpen = decisions.filter(d => !["implemented", "rejected"].includes(d.status)).length;
+    const escalatedCount = activeEscalations.length;
+    const escalationRate = totalOpen > 0 ? Math.round((escalatedCount / totalOpen) * 100) : 0;
+    const responseTimes = recentNotifications.filter(n => n.type === "escalation").map(n => {
+      const dec = decisions.find(d => d.id === n.decision_id);
+      if (!dec?.last_escalated_at) return null;
+      return (new Date(n.created_at).getTime() - new Date(dec.created_at).getTime()) / 86400000;
+    }).filter(Boolean) as number[];
+    const avgResponseTime = responseTimes.length > 0 ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length * 10) / 10 : 0;
+
+    return { weeklyData, escalationRate, avgResponseTime };
+  }, [decisions, notifications, recentNotifications, activeEscalations]);
+
   const runEngine = async () => {
     setRunning(true);
-    try { const { data, error } = await supabase.functions.invoke("autonomous-escalation"); if (error) throw error; setLastResult(data as EngineResult); toast({ title: "Engine ausgeführt", description: `${(data as EngineResult).actions.length} Aktionen.` }); }
-    catch (e: any) { toast({ title: "Fehler", description: e.message, variant: "destructive" }); }
+    try {
+      const { data, error } = await supabase.functions.invoke("autonomous-escalation");
+      if (error) throw error;
+      setLastResult(data as EngineResult);
+      toast({ title: "Engine ausgeführt", description: `${(data as EngineResult).actions.length} Aktionen.` });
+    } catch (e: any) {
+      toast({ title: "Fehler", description: e.message, variant: "destructive" });
+    }
     setRunning(false);
   };
 
-  if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Escalation Engine...</div></AppLayout>;
+  if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Escalation Center...</div></AppLayout>;
 
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Automatisierung</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">SLA & Eskalation</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Escalation Engine</h1>
-            <PageHint>Automatische Eskalation überfälliger Entscheidungen basierend auf SLA-Regeln.</PageHint>
+            <h1 className="font-display text-xl font-bold">Escalation Center</h1>
+            <PageHint>Steuert SLA-basierte Eskalationen, zeigt aktive Fälle, Regeln, Historie und Analytik.</PageHint>
           </div>
         </div>
         <Button onClick={runEngine} disabled={running} className="gap-2">
@@ -76,95 +147,217 @@ const EscalationEngine = () => {
         </Button>
       </div>
 
-      {/* Stats – always visible */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { icon: Clock, label: "Offene Entscheidungen", value: stats.openDecisions, color: "text-primary" },
           { icon: AlertTriangle, label: "Aktiv eskaliert", value: stats.totalEscalated, color: "text-destructive" },
           { icon: Users, label: "Auto-Reassigns", value: stats.totalReassigned, color: "text-warning" },
           { icon: SkipForward, label: "Reviews übersprungen", value: stats.totalSkipped, color: "text-success" },
-        ].map((card) => (
-          <Card key={card.label}><CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1"><card.icon className={`w-4 h-4 ${card.color}`} /><span className="text-xs text-muted-foreground">{card.label}</span></div>
-            <p className="font-display text-2xl font-bold">{card.value}</p>
+        ].map(c => (
+          <Card key={c.label}><CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1"><c.icon className={`w-4 h-4 ${c.color}`} /><span className="text-xs text-muted-foreground">{c.label}</span></div>
+            <p className="font-display text-2xl font-bold">{c.value}</p>
           </CardContent></Card>
         ))}
       </div>
 
-      {/* Rules – collapsible, default closed */}
-      <CollapsibleSection title="Aktive Regeln" subtitle="4 automatische Aktionstypen" icon={<Shield className="w-4 h-4 text-primary" />} defaultOpen={false} className="mb-8">
-        <Card><CardContent className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {[
-              { icon: AlertTriangle, title: "Smart Escalation", desc: "Automatische Eskalation basierend auf Priorität und Inaktivität", color: "text-destructive" },
-              { icon: Users, title: "Auto-Reassign", desc: "Neuzuweisung bei >7 Tage Inaktivität", color: "text-warning" },
-              { icon: SkipForward, title: "Low-Risk Review Skip", desc: "Auto-Genehmigung bei AI Risk ≤ 25%", color: "text-success" },
-              { icon: Lightbulb, title: "Prozessverkürzung", desc: "Vorschlag zum Überspringen bei ≥2/n Reviews", color: "text-primary" },
-            ].map((rule) => (
-              <div key={rule.title} className="p-3 rounded-lg bg-muted/20 border border-border/50">
-                <div className="flex items-center gap-2 mb-1"><rule.icon className={`w-4 h-4 ${rule.color}`} /><span className="text-sm font-semibold">{rule.title}</span></div>
-                <p className="text-[11px] text-muted-foreground">{rule.desc}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent></Card>
-      </CollapsibleSection>
-
-      {/* Last Run – collapsible */}
+      {/* Last Run Result */}
       {lastResult && (
-        <CollapsibleSection title="Letzter Durchlauf" subtitle={`${lastResult.processed} geprüft, ${lastResult.actions.length} Aktionen`} icon={<Zap className="w-4 h-4 text-primary" />} defaultOpen={true} className="mb-8">
-          <Card className="border-primary/20"><CardContent className="p-5">
+        <Card className="border-primary/20 mb-6">
+          <CardContent className="p-5">
+            <p className="text-sm font-semibold mb-2">Letzter Durchlauf: {lastResult.processed} geprüft, {lastResult.actions.length} Aktionen</p>
             {lastResult.actions.length === 0 ? (
-              <div className="text-center py-4"><CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" /><p className="text-sm text-muted-foreground">Keine Aktionen nötig.</p></div>
+              <div className="text-center py-3"><CheckCircle2 className="w-6 h-6 text-success mx-auto mb-1" /><p className="text-sm text-muted-foreground">Keine Aktionen nötig.</p></div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {lastResult.actions.map((action, i) => {
                   const config = actionConfig[action.type] || actionConfig.escalation;
                   return (
-                    <div key={i} className={`flex items-center gap-3 p-3 rounded-lg ${config.bgColor}`}>
+                    <div key={i} className={`flex items-center gap-3 p-2.5 rounded-lg ${config.bgColor}`}>
+                      <config.icon className={`w-4 h-4 shrink-0 ${config.color}`} />
+                      <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{action.title}</p></div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${config.color}`}>{config.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ═══ TABS ═══ */}
+      <Tabs defaultValue="active" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="active">Aktive Eskalationen</TabsTrigger>
+          <TabsTrigger value="rules">Regeln (SLA)</TabsTrigger>
+          <TabsTrigger value="log">Escalation Log</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        {/* Tab: Active Escalations */}
+        <TabsContent value="active">
+          <Card>
+            <CardContent className="p-0">
+              {activeEscalations.length === 0 ? (
+                <div className="text-center py-8"><CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" /><p className="text-sm text-muted-foreground">Keine aktiven Eskalationen.</p></div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titel</th>
+                      <th className="text-center py-3 px-3 font-medium text-muted-foreground">Dauer</th>
+                      <th className="text-center py-3 px-3 font-medium text-muted-foreground">Stufe</th>
+                      <th className="text-center py-3 px-3 font-medium text-muted-foreground">Priorität</th>
+                      <th className="text-right py-3 px-4 font-medium text-muted-foreground">Aktionen</th>
+                    </tr></thead>
+                    <tbody>
+                      {activeEscalations.map(d => (
+                        <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30">
+                          <td className="py-3 px-4 font-medium truncate max-w-[200px]">{d.title}</td>
+                          <td className="text-center py-3 px-3">{d.daysOpen}d</td>
+                          <td className="text-center py-3 px-3">
+                            <Badge variant={d.escalation_level! >= 3 ? "destructive" : "outline"}>Stufe {d.escalation_level}</Badge>
+                          </td>
+                          <td className="text-center py-3 px-3">
+                            <span className={`text-xs font-medium capitalize ${d.priority === "critical" ? "text-destructive" : d.priority === "high" ? "text-warning" : "text-muted-foreground"}`}>{d.priority}</span>
+                          </td>
+                          <td className="text-right py-3 px-4">
+                            <Link to={`/decisions/${d.id}`}><Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" />Öffnen</Button></Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab: Rules (SLA Config) */}
+        <TabsContent value="rules">
+          <div className="space-y-4">
+            {/* Built-in rules */}
+            <Card><CardContent className="p-5">
+              <h3 className="text-sm font-semibold mb-3">Automatische Aktionstypen</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { icon: AlertTriangle, title: "Smart Escalation", desc: "Automatische Eskalation basierend auf Priorität und Inaktivität", color: "text-destructive", trigger: "Deadline überschritten oder Inaktivität > SLA-Schwellenwert" },
+                  { icon: Users, title: "Auto-Reassign", desc: "Neuzuweisung bei >7 Tage Inaktivität", color: "text-warning", trigger: "7+ Tage keine Aktivität am Item" },
+                  { icon: SkipForward, title: "Low-Risk Review Skip", desc: "Auto-Genehmigung bei AI Risk ≤ 25%", color: "text-success", trigger: "AI Risk Score ≤ 25 und keine offenen Bedenken" },
+                  { icon: Lightbulb, title: "Prozessverkürzung", desc: "Vorschlag zum Überspringen bei ≥2/n Reviews", color: "text-primary", trigger: "Mehrheit der Reviewer hat zugestimmt" },
+                ].map(rule => (
+                  <div key={rule.title} className="p-3 rounded-lg bg-muted/20 border border-border/50">
+                    <div className="flex items-center gap-2 mb-1"><rule.icon className={`w-4 h-4 ${rule.color}`} /><span className="text-sm font-semibold">{rule.title}</span></div>
+                    <p className="text-[11px] text-muted-foreground">{rule.desc}</p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5 italic">Trigger: {rule.trigger}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent></Card>
+
+            {/* SLA Config from DB */}
+            {slaConfigs.length > 0 && (
+              <Card><CardContent className="p-5">
+                <h3 className="text-sm font-semibold mb-3">SLA-Konfiguration</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b">
+                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">Kategorie</th>
+                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">Priorität</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Warnung (h)</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Dringend (h)</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Überfällig (h)</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Reassign (d)</th>
+                    </tr></thead>
+                    <tbody>
+                      {slaConfigs.map((c: any) => (
+                        <tr key={c.id} className="border-b last:border-0">
+                          <td className="py-2 px-3 capitalize">{c.category}</td>
+                          <td className="py-2 px-3 capitalize">{c.priority}</td>
+                          <td className="text-center py-2 px-3">{c.escalation_hours_warn}h</td>
+                          <td className="text-center py-2 px-3">{c.escalation_hours_urgent}h</td>
+                          <td className="text-center py-2 px-3">{c.escalation_hours_overdue}h</td>
+                          <td className="text-center py-2 px-3">{c.reassign_days}d</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-3">SLA-Konfiguration kann in den Einstellungen angepasst werden.</p>
+              </CardContent></Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Tab: Escalation Log */}
+        <TabsContent value="log">
+          <Card><CardContent className="p-0">
+            {recentNotifications.length === 0 ? (
+              <div className="text-center py-8"><Zap className="w-10 h-10 text-primary mx-auto mb-2 opacity-30" /><p className="text-sm text-muted-foreground">Noch keine Engine-Aktivitäten.</p></div>
+            ) : (
+              <div className="divide-y divide-border">
+                {recentNotifications.map(notif => {
+                  const config = actionConfig[notif.type] || actionConfig.escalation;
+                  return (
+                    <div key={notif.id} className="flex items-center gap-3 p-3 hover:bg-muted/20 transition-colors">
                       <config.icon className={`w-4 h-4 shrink-0 ${config.color}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{action.title}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          {action.type === "escalation" && `Level ${action.from_level} → ${action.to_level}`}
-                          {action.type === "auto_reassign" && "Automatisch neu zugewiesen"}
-                          {action.type === "auto_skip_review" && `${action.skipped_steps} Review-Schritt(e) übersprungen`}
-                          {action.type === "process_suggestion" && `${action.completed_reviews}/${action.total_reviews} Reviews`}
-                        </p>
+                        <p className="text-sm font-medium truncate">{notif.title}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{notif.message}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${config.color} ${config.bgColor}`}>{config.label}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${config.color} ${config.bgColor} shrink-0`}>{config.label}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {new Date(notif.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </span>
                     </div>
                   );
                 })}
               </div>
             )}
           </CardContent></Card>
-        </CollapsibleSection>
-      )}
+        </TabsContent>
 
-      {/* Recent Activity – collapsible, default closed */}
-      <CollapsibleSection title="Letzte Engine-Aktivitäten" subtitle={`${recentNotifications.length} Einträge`} icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={recentNotifications.length > 0 && !lastResult}>
-        <div className="space-y-2">
-          {recentNotifications.map((notif) => {
-            const config = actionConfig[notif.type] || actionConfig.escalation;
-            return (
-              <Card key={notif.id}><CardContent className="p-3 flex items-center gap-3">
-                <config.icon className={`w-4 h-4 shrink-0 ${config.color}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{notif.title}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{notif.message}</p>
-                </div>
-                <span className="text-[10px] text-muted-foreground shrink-0">
-                  {new Date(notif.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                </span>
+        {/* Tab: Analytics */}
+        <TabsContent value="analytics">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card><CardContent className="p-5">
+                <p className="text-xs text-muted-foreground mb-1">Eskalationsrate</p>
+                <p className={`text-3xl font-bold font-display ${analyticsData.escalationRate > 20 ? "text-destructive" : analyticsData.escalationRate > 10 ? "text-warning" : "text-success"}`}>{analyticsData.escalationRate}%</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Anteil eskalierter Entscheidungen</p>
               </CardContent></Card>
-            );
-          })}
-          {recentNotifications.length === 0 && (
-            <Card><CardContent className="p-8 text-center"><Zap className="w-10 h-10 text-primary mx-auto mb-2 opacity-30" /><p className="text-sm text-muted-foreground">Noch keine Engine-Aktivitäten.</p></CardContent></Card>
-          )}
-        </div>
-      </CollapsibleSection>
+              <Card><CardContent className="p-5">
+                <p className="text-xs text-muted-foreground mb-1">Ø Reaktionszeit</p>
+                <p className="text-3xl font-bold font-display">{analyticsData.avgResponseTime}d</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Tage bis zur Eskalation</p>
+              </CardContent></Card>
+              <Card><CardContent className="p-5">
+                <p className="text-xs text-muted-foreground mb-1">Höchste Stufe</p>
+                <p className="text-3xl font-bold font-display text-destructive">{stats.maxLevel}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Maximale Eskalationsstufe</p>
+              </CardContent></Card>
+            </div>
+
+            <Card><CardContent className="p-5">
+              <h3 className="text-sm font-semibold mb-3">Eskalationstrend (8 Wochen)</h3>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analyticsData.weeklyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                    <Tooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="Eskalationen" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent></Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   );
 };
