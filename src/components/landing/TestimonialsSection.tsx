@@ -28,7 +28,7 @@ const testimonials = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const TestimonialsSection = () => (
-  <section id="testimonials" className="py-32 relative overflow-hidden">
+  <section id="testimonials" className="py-28 relative overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
 
     <div className="container mx-auto px-4 relative z-10">

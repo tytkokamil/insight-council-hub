@@ -15,7 +15,7 @@ const capabilities = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const AIShowcaseSection = () => (
-  <section className="py-32 relative overflow-hidden">
+  <section className="py-28 relative overflow-hidden">
     <div className="absolute top-1/2 left-0 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-[120px] pointer-events-none" />
     <div className="absolute top-1/3 right-0 w-[400px] h-[400px] rounded-full bg-accent/[0.03] blur-[100px] pointer-events-none" />
 

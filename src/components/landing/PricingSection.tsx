@@ -58,7 +58,7 @@ const plans = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const PricingSection = () => (
-  <section id="pricing" className="py-32 relative overflow-hidden">
+  <section id="pricing" className="py-28 relative overflow-hidden">
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/[0.02] blur-[100px] pointer-events-none" />
 
     <div className="container mx-auto px-4 relative z-10">

@@ -242,7 +242,7 @@ const FeaturesSection = () => {
   const Preview = previewMap[current.preview];
 
   return (
-    <section id="features" className="py-32 relative overflow-hidden">
+    <section id="features" className="py-28 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-40" />
       <div className="absolute inset-0 grid-bg opacity-30" />
 

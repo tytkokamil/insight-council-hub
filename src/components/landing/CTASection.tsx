@@ -5,7 +5,7 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const CTASection = () => (
-  <section className="py-32 relative overflow-hidden">
+  <section className="py-28 relative overflow-hidden">
     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full bg-primary/[0.04] blur-[120px] pointer-events-none" />
 
     <div className="container mx-auto px-4 relative z-10">
