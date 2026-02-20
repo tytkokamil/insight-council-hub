@@ -18,7 +18,7 @@ const HeroSection = () => {
   const dashboardOpacity = useTransform(scrollYProgress, [0.4, 0.9], [1, 0]);
 
   return (
-    <section ref={heroRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-12 w-full">
+    <section ref={heroRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-28 pb-16 w-full">
       {/* Layered ambient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px] pointer-events-none" />
