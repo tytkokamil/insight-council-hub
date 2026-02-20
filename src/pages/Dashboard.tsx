@@ -4,6 +4,7 @@ import {
   Plus, AlertTriangle, Clock, ArrowRight, BarChart3,
   Activity, DollarSign, Zap, FileText, Eye, TrendingUp, TrendingDown,
   Minus, ShieldAlert, CheckCircle2, Info, Command, ListTodo,
+  Link2, ChevronDown, ChevronRight, Users, ExternalLink, Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,15 +15,17 @@ import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
-import { format, differenceInDays, subDays } from "date-fns";
+import { statusLabels, priorityLabels, categoryLabels } from "@/lib/labels";
+import { format, differenceInDays, subDays, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid,
+  BarChart, Bar, Legend,
 } from "recharts";
 
 const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
@@ -35,12 +38,14 @@ const Dashboard = () => {
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useReviews();
+  const { data: dependencies = [] } = useFilteredDependencies();
   const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
 
   const [timeRange, setTimeRange] = useState<TimeRange>(30);
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
   const isPersonal = selectedTeamId === null;
   const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
@@ -62,7 +67,19 @@ const Dashboard = () => {
     const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
     const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
     const pendingReviews = reviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
-    const openTasks = contextTasks.filter(t => t.status !== "done");
+
+    // Blocked tasks: tasks linked via dependency to an open decision
+    const openDecisionIds = new Set(active.map(d => d.id));
+    const blockedTaskIds = new Set<string>();
+    dependencies.forEach(dep => {
+      if (dep.source_decision_id && openDecisionIds.has(dep.source_decision_id) && dep.target_task_id) {
+        blockedTaskIds.add(dep.target_task_id);
+      }
+      if (dep.target_decision_id && openDecisionIds.has(dep.target_decision_id) && dep.source_task_id) {
+        blockedTaskIds.add(dep.source_task_id);
+      }
+    });
+    const blockedTasks = contextTasks.filter(t => blockedTaskIds.has(t.id) && t.status !== "done");
 
     // Oldest overdue
     const oldestOverdue = overdue.length > 0
@@ -87,14 +104,20 @@ const Dashboard = () => {
     );
     const avgDecisionTime = velocities.length > 0 ? Math.round(velocities.reduce((s, v) => s + v, 0) / velocities.length * 10) / 10 : null;
 
+    const overdueRate = active.length > 0 ? Math.round((overdue.length / active.length) * 100) : 0;
     const escalationRate = decisions.length > 0 ? Math.round((escalated.length / decisions.length) * 100) : 0;
 
-    // Performance index
+    // Momentum Score
     const completionRate = decisions.length > 0 ? (implemented.length / decisions.length) * 100 : 0;
     const taskDoneRate = contextTasks.length > 0 ? (contextTasks.filter(t => t.status === "done").length / contextTasks.length) * 100 : 0;
-    const performanceIndex = Math.round((completionRate * 0.6 + taskDoneRate * 0.4));
+    const momentumScore = Math.round((completionRate * 0.6 + taskDoneRate * 0.4));
 
-    // KPI trends (compare current half vs previous half of range)
+    // Velocity Score
+    const velocityScore = avgDecisionTime != null
+      ? Math.max(0, Math.min(100, Math.round(100 - avgDecisionTime * 2)))
+      : null;
+
+    // KPI trends
     const halfRange = Math.floor(timeRange / 2);
     const halfStart = subDays(now, halfRange);
     const prevHalfStart = subDays(now, timeRange);
@@ -140,41 +163,61 @@ const Dashboard = () => {
         return true;
       }).length;
 
-      // Avg time for decisions completed that week
       const completedDecs = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd);
       const avgTime = completedDecs.length > 0
         ? Math.round(completedDecs.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / completedDecs.length)
         : null;
 
-      return { week: weekLabel, completed, overdue: overdueAtEnd, avgTime: avgTime ?? 0 };
+      const escalatedCount = decisions.filter(d => {
+        if ((d.escalation_level || 0) < 1) return false;
+        const c = new Date(d.created_at);
+        return c <= weekEnd && (!d.implemented_at || new Date(d.implemented_at) > weekEnd);
+      }).length;
+
+      return { week: weekLabel, completed, overdue: overdueAtEnd, avgTime: avgTime ?? 0, escalated: escalatedCount };
     });
 
     // Economic impact
-    const defaultRate = 75;
+    const defaultRate = currentTeam?.hourly_rate || 75;
     const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
     let totalDelayCost = 0;
-    const costItems: { title: string; cost: number; days: number; priority: string; id: string }[] = [];
+    const costItems: { title: string; cost: number; days: number; priority: string; category: string; team_id: string | null; id: string }[] = [];
 
     active.forEach(d => {
       const daysOpen = Math.max(0, differenceInDays(now, new Date(d.created_at)));
       const mult = priorityMultiplier[d.priority] || 1.5;
       const cost = Math.round(daysOpen * 2 * defaultRate * mult);
       totalDelayCost += cost;
-      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, id: d.id });
+      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, category: d.category, team_id: d.team_id, id: d.id });
     });
     costItems.sort((a, b) => b.cost - a.cost);
 
     const staleDecisions = active.filter(d => differenceInDays(now, new Date(d.created_at)) > 14);
 
+    // Cost breakdown by category
+    const costByCategory: Record<string, number> = {};
+    const costByPriority: Record<string, number> = {};
+    costItems.forEach(c => {
+      costByCategory[c.category] = (costByCategory[c.category] || 0) + c.cost;
+      costByPriority[c.priority] = (costByPriority[c.priority] || 0) + c.cost;
+    });
+
+    // Recently opened/escalated
+    const recentlyOpened = [...decisions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 3);
+    const recentlyEscalated = escalated.sort((a, b) => new Date(b.last_escalated_at || b.updated_at).getTime() - new Date(a.last_escalated_at || a.updated_at).getTime()).slice(0, 3);
+
     return {
-      overdue, escalated, pendingReviews, active, openTasks,
+      overdue, escalated, pendingReviews, active, blockedTasks,
       oldestOverdueDays, maxEscalation,
-      openCount: active.length, completedInRange, avgDecisionTime, escalationRate, performanceIndex,
+      openCount: active.length, completedInRange, avgDecisionTime, overdueRate, escalationRate,
+      momentumScore, velocityScore,
       openTrend: trend(openCurr, openPrev),
       completedTrend: trend(completedCurr, completedPrev),
       weekData, totalDelayCost, costItems, staleDecisions, implemented,
+      costByCategory, costByPriority,
+      recentlyOpened, recentlyEscalated,
     };
-  }, [decisions, contextTasks, reviews, user, timeRange]);
+  }, [decisions, contextTasks, reviews, dependencies, user, timeRange, currentTeam]);
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
 
@@ -229,7 +272,7 @@ const Dashboard = () => {
   }
 
   const dashboardTitle = isPersonal ? "Mein Arbeitsbereich" : `Team: ${currentTeam?.name || "—"}`;
-  const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length;
+  const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.blockedTasks.length;
   const hasNoActions = actionCount === 0;
 
   const KpiTooltip = ({ text }: { text: string }) => (
@@ -247,21 +290,60 @@ const Dashboard = () => {
     return <Minus className="w-3.5 h-3.5 text-muted-foreground" />;
   };
 
+  const toggleExpand = (key: string) => setExpandedAction(prev => prev === key ? null : key);
+
+  // Action Required item renderer
+  const ActionItem = ({ title, badge, badgeVariant, dueText, onOpen, onPing, onEscalate }: {
+    title: string; badge: string; badgeVariant?: "destructive" | "default" | "secondary" | "outline";
+    dueText: string; onOpen: () => void; onPing?: () => void; onEscalate?: () => void;
+  }) => (
+    <div className="flex items-center justify-between py-2 px-2 rounded-md hover:bg-muted/40 transition-colors group">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <span className="text-xs truncate font-medium">{title}</span>
+        <Badge variant={badgeVariant || "outline"} className="text-[10px] px-1.5 py-0 shrink-0">{badge}</Badge>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+        <span className="text-[10px] text-muted-foreground whitespace-nowrap">{dueText}</span>
+        <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onOpen}>
+          <ExternalLink className="w-3 h-3" />
+        </Button>
+        {onPing && (
+          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onPing}>
+            <Bell className="w-3 h-3" />
+          </Button>
+        )}
+        {onEscalate && (
+          <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={onEscalate}>
+            <ShieldAlert className="w-3 h-3" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <AppLayout>
-      {/* ═══ A) HEADER ROW ═══ */}
+      {/* ═══ A) TOP HEADER ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-xl font-bold">{dashboardTitle}</h1>
-            <PageHint>Überblick über deinen Handlungsbedarf, KPIs, Trends und wirtschaftliche Auswirkungen offener Entscheidungen.</PageHint>
+            <PageHint>
+              <p className="font-semibold mb-2">Dashboard-Hilfe</p>
+              <ul className="space-y-1.5 text-xs">
+                <li><strong>Momentum Score:</strong> Gewichteter Index aus Decision Completion (60%) + Task Done Rate (40%)</li>
+                <li><strong>Decision Cost:</strong> Tage offen × 2 Personen × Stundensatz × Prioritäts-Multiplikator</li>
+                <li><strong>Overdue:</strong> Deadline überschritten (nicht SLA-basiert)</li>
+                <li><strong>Escalation:</strong> SLA-Verletzung führt zu Eskalationsstufen 1–3</li>
+                <li><strong>Tipp:</strong> Reduziere Overdue Rate und Avg. Decision Time, um den Score zu verbessern</li>
+              </ul>
+            </PageHint>
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             Dein Entscheidungs-Cockpit: Was braucht heute deine Aufmerksamkeit?
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Time Range Filter */}
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center rounded-lg border border-border bg-muted/30 p-0.5">
             {([7, 30, 90] as TimeRange[]).map(r => (
               <button
@@ -293,11 +375,11 @@ const Dashboard = () => {
               <CardContent className="py-8 text-center">
                 <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
                 <p className="text-sm font-medium">Alles im grünen Bereich 🎉</p>
-                <p className="text-xs text-muted-foreground mt-1">Keine überfälligen Entscheidungen, Eskalationen oder offene Reviews.</p>
+                <p className="text-xs text-muted-foreground mt-1">Keine überfälligen Entscheidungen, Eskalationen, Reviews oder blockierten Tasks.</p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Overdue Decisions */}
               <Card className={`border-destructive/20 ${computed.overdue.length > 0 ? "bg-destructive/[0.03]" : ""}`}>
                 <CardContent className="p-5">
@@ -310,19 +392,37 @@ const Dashboard = () => {
                       <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Overdue</p>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
                     {computed.overdue.length > 0
                       ? `Älteste überfällig seit ${computed.oldestOverdueDays} Tagen`
                       : "Keine überfälligen Entscheidungen"
                     }
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-1.5 text-xs"
-                    onClick={() => navigate("/decisions")}
-                    disabled={computed.overdue.length === 0}
-                  >
+                  {/* Expandable item list */}
+                  {computed.overdue.length > 0 && (
+                    <>
+                      <button onClick={() => toggleExpand("overdue")} className="text-[11px] text-primary flex items-center gap-1 mb-2 hover:underline">
+                        {expandedAction === "overdue" ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        Details anzeigen
+                      </button>
+                      {expandedAction === "overdue" && (
+                        <div className="space-y-0.5 mb-3 max-h-40 overflow-y-auto">
+                          {computed.overdue.slice(0, 5).map(d => (
+                            <ActionItem
+                              key={d.id}
+                              title={d.title}
+                              badge="Overdue"
+                              badgeVariant="destructive"
+                              dueText={`${differenceInDays(new Date(), new Date(d.due_date!))}d over`}
+                              onOpen={() => navigate(`/decisions/${d.id}`)}
+                              onEscalate={() => navigate("/engine")}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => navigate("/decisions")} disabled={computed.overdue.length === 0}>
                     Review now <ArrowRight className="w-3 h-3" />
                   </Button>
                 </CardContent>
@@ -340,19 +440,36 @@ const Dashboard = () => {
                       <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Escalations</p>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">
+                  <p className="text-xs text-muted-foreground mb-3">
                     {computed.escalated.length > 0
                       ? `Höchste Stufe: Level ${computed.maxEscalation}`
                       : "Keine aktiven Eskalationen"
                     }
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-1.5 text-xs"
-                    onClick={() => navigate("/engine")}
-                    disabled={computed.escalated.length === 0}
-                  >
+                  {computed.escalated.length > 0 && (
+                    <>
+                      <button onClick={() => toggleExpand("escalated")} className="text-[11px] text-primary flex items-center gap-1 mb-2 hover:underline">
+                        {expandedAction === "escalated" ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        Details anzeigen
+                      </button>
+                      {expandedAction === "escalated" && (
+                        <div className="space-y-0.5 mb-3 max-h-40 overflow-y-auto">
+                          {computed.escalated.slice(0, 5).map(d => (
+                            <ActionItem
+                              key={d.id}
+                              title={d.title}
+                              badge={`L${d.escalation_level}`}
+                              badgeVariant="default"
+                              dueText={d.due_date ? `Due ${format(new Date(d.due_date), "dd.MM", { locale: de })}` : "No due date"}
+                              onOpen={() => navigate(`/decisions/${d.id}`)}
+                              onEscalate={() => navigate("/engine")}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => navigate("/engine")} disabled={computed.escalated.length === 0}>
                     Open Escalation Center <ArrowRight className="w-3 h-3" />
                   </Button>
                 </CardContent>
@@ -370,22 +487,81 @@ const Dashboard = () => {
                       <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Reviews</p>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    {computed.pendingReviews.length > 0
-                      ? "Waiting on you"
-                      : "Keine ausstehenden Reviews"
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {computed.pendingReviews.length > 0 ? "Waiting on you" : "Keine ausstehenden Reviews"}
+                  </p>
+                  {computed.pendingReviews.length > 0 && (
+                    <>
+                      <button onClick={() => toggleExpand("reviews")} className="text-[11px] text-primary flex items-center gap-1 mb-2 hover:underline">
+                        {expandedAction === "reviews" ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        Details anzeigen
+                      </button>
+                      {expandedAction === "reviews" && (
+                        <div className="space-y-0.5 mb-3 max-h-40 overflow-y-auto">
+                          {computed.pendingReviews.slice(0, 5).map(r => (
+                            <ActionItem
+                              key={r.id}
+                              title={`Review Step ${r.step_order}`}
+                              badge="Review"
+                              badgeVariant="secondary"
+                              dueText={formatDistanceToNow(new Date(r.created_at), { locale: de, addSuffix: true })}
+                              onOpen={() => navigate(`/decisions/${r.decision_id}`)}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => {
+                    if (computed.pendingReviews.length > 0) navigate(`/decisions/${computed.pendingReviews[0].decision_id}`);
+                  }} disabled={computed.pendingReviews.length === 0}>
+                    Go to Reviews <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Blocked Tasks */}
+              <Card className={`border-muted-foreground/20 ${computed.blockedTasks.length > 0 ? "bg-muted/[0.03]" : ""}`}>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center">
+                      <Link2 className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{computed.blockedTasks.length}</p>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Blocked Tasks</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {computed.blockedTasks.length > 0
+                      ? "Tasks warten auf Entscheidungen"
+                      : "Keine blockierten Tasks"
                     }
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-1.5 text-xs"
-                    onClick={() => {
-                      if (computed.pendingReviews.length > 0) navigate(`/decisions/${computed.pendingReviews[0].decision_id}`);
-                    }}
-                    disabled={computed.pendingReviews.length === 0}
-                  >
-                    Go to Reviews <ArrowRight className="w-3 h-3" />
+                  {computed.blockedTasks.length > 0 && (
+                    <>
+                      <button onClick={() => toggleExpand("blocked")} className="text-[11px] text-primary flex items-center gap-1 mb-2 hover:underline">
+                        {expandedAction === "blocked" ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        Details anzeigen
+                      </button>
+                      {expandedAction === "blocked" && (
+                        <div className="space-y-0.5 mb-3 max-h-40 overflow-y-auto">
+                          {computed.blockedTasks.slice(0, 5).map(t => (
+                            <ActionItem
+                              key={t.id}
+                              title={t.title}
+                              badge="Blocked"
+                              badgeVariant="outline"
+                              dueText={t.due_date ? format(new Date(t.due_date), "dd.MM", { locale: de }) : "—"}
+                              onOpen={() => navigate("/tasks")}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <Button variant="outline" size="sm" className="w-full gap-1.5 text-xs" onClick={() => navigate("/tasks")} disabled={computed.blockedTasks.length === 0}>
+                    Tasks anzeigen <ArrowRight className="w-3 h-3" />
                   </Button>
                 </CardContent>
               </Card>
@@ -393,28 +569,36 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* ═══ C) BLOCK 2: KPI SNAPSHOT ═══ */}
+        {/* ═══ C) BLOCK 2: KPI SNAPSHOT (6 cards) ═══ */}
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">KPI Snapshot</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
               {
                 label: "Open Decisions", value: computed.openCount, icon: FileText,
-                color: "text-primary", bg: "bg-primary/10",
-                trend: computed.openTrend,
-                tooltip: "Anzahl aktiver Entscheidungen (nicht implemented/rejected)",
+                color: "text-primary", bg: "bg-primary/10", trend: computed.openTrend,
+                tooltip: "Aktive Entscheidungen (nicht implemented/rejected)",
+                link: "/analytics",
               },
               {
                 label: `Completed (${timeRange}d)`, value: computed.completedInRange, icon: CheckCircle2,
-                color: "text-success", bg: "bg-success/10",
-                trend: computed.completedTrend,
+                color: "text-success", bg: "bg-success/10", trend: computed.completedTrend,
                 tooltip: `Abgeschlossene Entscheidungen & Tasks der letzten ${timeRange} Tage`,
+                link: "/analytics",
               },
               {
-                label: "Avg. Decision Time", value: computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—", icon: Zap,
-                color: "text-primary", bg: "bg-primary/10",
+                label: "Overdue Rate", value: `${computed.overdueRate}%`, icon: Clock,
+                color: computed.overdueRate > 20 ? "text-destructive" : "text-muted-foreground",
+                bg: computed.overdueRate > 20 ? "bg-destructive/10" : "bg-muted/50",
                 trend: "neutral" as const,
-                tooltip: "Durchschnittliche Dauer von Erstellung bis Umsetzung (in Tagen)",
+                tooltip: "Anteil überfälliger Entscheidungen an aktiven Entscheidungen",
+                link: "/analytics",
+              },
+              {
+                label: "Avg. Time", value: computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—", icon: Zap,
+                color: "text-primary", bg: "bg-primary/10", trend: "neutral" as const,
+                tooltip: "Durchschnittliche Dauer von Erstellung bis Umsetzung",
+                link: "/analytics",
               },
               {
                 label: "Escalation Rate", value: `${computed.escalationRate}%`, icon: AlertTriangle,
@@ -422,21 +606,26 @@ const Dashboard = () => {
                 bg: computed.escalationRate > 15 ? "bg-warning/10" : "bg-muted/50",
                 trend: "neutral" as const,
                 tooltip: "Anteil eskalierter Entscheidungen an der Gesamtzahl",
+                link: "/engine",
               },
               {
-                label: "Performance Index", value: `${computed.performanceIndex}%`, icon: Activity,
-                color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive",
-                bg: computed.performanceIndex > 60 ? "bg-success/10" : computed.performanceIndex > 30 ? "bg-warning/10" : "bg-destructive/10",
+                label: "Momentum", value: `${computed.momentumScore}%`, icon: Activity,
+                color: computed.momentumScore > 60 ? "text-success" : computed.momentumScore > 30 ? "text-warning" : "text-destructive",
+                bg: computed.momentumScore > 60 ? "bg-success/10" : computed.momentumScore > 30 ? "bg-warning/10" : "bg-destructive/10",
                 trend: "neutral" as const,
-                tooltip: "Gewichteter Index aus Decision Completion Rate (60%) und Task Done Rate (40%)",
+                tooltip: "Momentum Score™ = Decision Completion (60%) + Task Done Rate (40%)",
+                link: "/analytics",
               },
             ].map((kpi, i) => (
               <motion.div key={kpi.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-                <Card className="h-full">
+                <Card
+                  className="h-full cursor-pointer hover:border-primary/30 transition-colors"
+                  onClick={() => navigate(kpi.link)}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide leading-tight">{kpi.label}</span>
                         <KpiTooltip text={kpi.tooltip} />
                       </div>
                       <div className={`w-7 h-7 rounded-md ${kpi.bg} flex items-center justify-center`}>
@@ -454,10 +643,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* ═══ D) BLOCK 3: TRENDS ═══ */}
+        {/* ═══ D) BLOCK 3: PERFORMANCE & TRENDS ═══ */}
         <CollapsibleSection
-          title="Trends"
-          subtitle="Velocity · Delay"
+          title="Performance & Trends"
+          subtitle="Velocity · Duration · Escalation"
           icon={<TrendingUp className="w-4 h-4 text-primary" />}
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -488,11 +677,11 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Delay Trend */}
+            {/* Duration Trend */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Delay Trend</CardTitle>
-                <p className="text-xs text-muted-foreground">Überfällige Entscheidungen / Woche</p>
+                <CardTitle className="text-sm">Duration Trend</CardTitle>
+                <p className="text-xs text-muted-foreground">Avg. Bearbeitungszeit & Overdue / Woche</p>
               </CardHeader>
               <CardContent>
                 <div className="h-48">
@@ -509,7 +698,29 @@ const Dashboard = () => {
                       <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" allowDecimals={false} />
                       <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
                       <Area type="monotone" dataKey="overdue" name="Überfällig" stroke="hsl(var(--destructive))" fill="url(#gradOverdue)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="avgTime" name="Avg. Tage" stroke="hsl(var(--primary))" fill="none" strokeWidth={1.5} strokeDasharray="4 4" />
                     </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Escalation Trend */}
+            <Card className="lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Escalation Trend</CardTitle>
+                <p className="text-xs text-muted-foreground">Aktive Eskalationen / Woche</p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-40">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis dataKey="week" tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                      <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" allowDecimals={false} />
+                      <RechartsTooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
+                      <Bar dataKey="escalated" name="Eskalationen" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
@@ -520,12 +731,12 @@ const Dashboard = () => {
         {/* ═══ E) BLOCK 4: ECONOMIC IMPACT ═══ */}
         <CollapsibleSection
           title="Economic Impact"
-          subtitle="Delay Costs · Missed Opportunities"
+          subtitle="Delay Costs · Missed Opportunities · Breakdown"
           icon={<DollarSign className="w-4 h-4 text-destructive" />}
         >
           <Card>
             <CardContent className="p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 {/* Delay Cost */}
                 <div>
                   <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Delay Costs</p>
@@ -564,6 +775,58 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
+
+              {/* Breakdown */}
+              <div className="border-t border-border pt-4">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-3">Breakdown</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* By Category */}
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground mb-2">Nach Kategorie</p>
+                    <div className="space-y-1.5">
+                      {Object.entries(computed.costByCategory).sort(([,a],[,b]) => b - a).slice(0, 4).map(([cat, cost]) => (
+                        <div key={cat} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{categoryLabels[cat] || cat}</span>
+                          <span className="font-medium">{formatCost(cost)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* By Priority */}
+                  <div>
+                    <p className="text-[10px] font-medium text-muted-foreground mb-2">Nach Priorität</p>
+                    <div className="space-y-1.5">
+                      {Object.entries(computed.costByPriority).sort(([,a],[,b]) => b - a).map(([prio, cost]) => (
+                        <div key={prio} className="flex items-center justify-between text-xs">
+                          <span className={priorityColors[prio]}>{priorityLabels[prio] || prio}</span>
+                          <span className="font-medium">{formatCost(cost)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* By Team */}
+                  {!isPersonal && teams.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-medium text-muted-foreground mb-2">Nach Team</p>
+                      <div className="space-y-1.5">
+                        {(() => {
+                          const costByTeam: Record<string, number> = {};
+                          computed.costItems.forEach(c => {
+                            const teamName = teams.find((t: any) => t.id === c.team_id)?.name || "Persönlich";
+                            costByTeam[teamName] = (costByTeam[teamName] || 0) + c.cost;
+                          });
+                          return Object.entries(costByTeam).sort(([,a],[,b]) => b - a).slice(0, 4).map(([name, cost]) => (
+                            <div key={name} className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">{name}</span>
+                              <span className="font-medium">{formatCost(cost)}</span>
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </CollapsibleSection>
@@ -571,8 +834,8 @@ const Dashboard = () => {
         {/* ═══ F) BLOCK 5: LEADERBOARD (toggle) ═══ */}
         <CollapsibleSection
           title="Leaderboard"
-          subtitle="Top Entscheider nach Impact"
-          icon={<Activity className="w-4 h-4 text-primary" />}
+          subtitle="Top Decision Closers · Best On-Time Rate"
+          icon={<Users className="w-4 h-4 text-primary" />}
           defaultOpen={false}
         >
           <WidgetErrorBoundary label="Leaderboard">
@@ -582,17 +845,82 @@ const Dashboard = () => {
           </WidgetErrorBoundary>
         </CollapsibleSection>
 
+        {/* ═══ G) FOOTER: UTILITIES ═══ */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Recently Opened */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                Zuletzt geöffnet
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {computed.recentlyOpened.length > 0 ? (
+                <div className="space-y-2">
+                  {computed.recentlyOpened.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => navigate(`/decisions/${d.id}`)}
+                      className="w-full flex items-center justify-between hover:bg-muted/50 rounded-md p-2 -mx-2 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{statusLabels[d.status] || d.status}</Badge>
+                        <span className="text-xs truncate">{d.title}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                        {formatDistanceToNow(new Date(d.updated_at), { locale: de, addSuffix: true })}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground py-4 text-center">Keine kürzlich geöffneten Entscheidungen</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recently Escalated */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-warning" />
+                Zuletzt eskaliert
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {computed.recentlyEscalated.length > 0 ? (
+                <div className="space-y-2">
+                  {computed.recentlyEscalated.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => navigate(`/decisions/${d.id}`)}
+                      className="w-full flex items-center justify-between hover:bg-muted/50 rounded-md p-2 -mx-2 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0">L{d.escalation_level}</Badge>
+                        <span className="text-xs truncate">{d.title}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                        {formatDistanceToNow(new Date(d.last_escalated_at || d.updated_at), { locale: de, addSuffix: true })}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground py-4 text-center">Keine kürzlichen Eskalationen</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
 
       {/* ═══ STICKY QUICK ACTIONS FAB ═══ */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              className="h-10 w-10 rounded-full shadow-lg"
-              onClick={() => navigate("/decisions")}
-            >
+            <Button size="icon" className="h-10 w-10 rounded-full shadow-lg" onClick={() => navigate("/decisions")}>
               <FileText className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
@@ -600,12 +928,7 @@ const Dashboard = () => {
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-10 w-10 rounded-full shadow-lg"
-              onClick={() => navigate("/tasks")}
-            >
+            <Button size="icon" variant="secondary" className="h-10 w-10 rounded-full shadow-lg" onClick={() => navigate("/tasks")}>
               <ListTodo className="w-4 h-4" />
             </Button>
           </TooltipTrigger>
