@@ -1,4 +1,4 @@
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Plus, AlertTriangle, Clock, ArrowRight, BarChart3,
@@ -19,14 +19,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { format, differenceInDays, subDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 
-// Lazy-loaded heavy widgets
-const MomentumScoreWidget = lazy(() => import("@/components/dashboard/MomentumScoreWidget"));
-const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
+// Removed: MomentumScoreWidget and LeaderboardWidget (not in dashboard spec)
 
 const priorityColors: Record<string, string> = {
   critical: "text-destructive",
@@ -499,26 +497,6 @@ const Dashboard = () => {
           </div>
         </CollapsibleSection>
 
-        {/* ═══ BLOCK 5: DEEP INSIGHTS (Optional) ═══ */}
-        <CollapsibleSection
-          title="Deep Insights"
-          subtitle="Momentum Score · Leaderboard"
-          icon={<Activity className="w-4 h-4 text-primary" />}
-          defaultOpen={false}
-        >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <WidgetErrorBoundary label="Momentum Score">
-              <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
-                <MomentumScoreWidget />
-              </Suspense>
-            </WidgetErrorBoundary>
-            <WidgetErrorBoundary label="Leaderboard">
-              <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
-                <LeaderboardWidget />
-              </Suspense>
-            </WidgetErrorBoundary>
-          </div>
-        </CollapsibleSection>
 
       </div>
     </AppLayout>
