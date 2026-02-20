@@ -4,7 +4,7 @@ import {
   BarChart3, FileText, Users, TrendingUp, Settings,
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
-  ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen,
+  ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
 } from "lucide-react";
 
 interface NavItem {
@@ -50,6 +50,7 @@ const navGroups: NavGroup[] = [
       { icon: TrendingUp, label: "Analytics", path: "/analytics", featureKey: "analytics" },
       { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
       { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
+      { icon: Clock, label: "Timeline", path: "/unified-timeline" },
       { icon: Crosshair, label: "Strategie", path: "/strategy", featureKey: "strategy" },
     ],
   },
