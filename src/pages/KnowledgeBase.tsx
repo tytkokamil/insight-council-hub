@@ -14,9 +14,10 @@ import { toast } from "sonner";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
-  ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download,
+  ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
 } from "lucide-react";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -182,13 +183,35 @@ const KnowledgeBase = () => {
   const selectedLessons = lessons.filter(l => l.decision_id === selectedDecision);
   const selectedDecTags = decisionTags.filter(dt => dt.decision_id === selectedDecision);
 
-  // Similar decisions: same category & priority
+  // AI-based similarity
+  const [aiSimilarities, setAiSimilarities] = useState<{ decision_id: string; score: number; reason: string }[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState<string | null>(null);
+
+  const fetchSimilarity = async (decId: string) => {
+    setSimilarLoading(true);
+    setSimilarError(null);
+    setAiSimilarities([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("similarity-score", {
+        body: { decisionId: decId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setAiSimilarities(data?.similarities ?? []);
+    } catch (e: any) {
+      console.error("Similarity error:", e);
+      setSimilarError(e.message || "Fehler bei der Ähnlichkeitsanalyse");
+    } finally {
+      setSimilarLoading(false);
+    }
+  };
+
   const similarDecisions = useMemo(() => {
-    if (!selected) return [];
-    return decisions
-      .filter(d => d.id !== selected.id && (d.category === selected.category || d.priority === selected.priority))
-      .slice(0, 5);
-  }, [selected, decisions]);
+    return aiSimilarities
+      .map(s => ({ ...s, decision: decisions.find(d => d.id === s.decision_id) }))
+      .filter(s => s.decision) as { decision_id: string; score: number; reason: string; decision: DecisionRow }[];
+  }, [aiSimilarities, decisions]);
 
   const getDecisionTags = (decisionId: string) =>
     decisionTags.filter(dt => dt.decision_id === decisionId).map(dt => tagMap.get(dt.tag_id)).filter(Boolean) as TagRow[];
@@ -382,8 +405,8 @@ const KnowledgeBase = () => {
                     <TabsTrigger value="tags" className="flex-1">
                       <Tag className="w-3.5 h-3.5 mr-1" /> Tags ({selectedDecTags.length})
                     </TabsTrigger>
-                    <TabsTrigger value="similar" className="flex-1">
-                      <Sparkles className="w-3.5 h-3.5 mr-1" /> Ähnliche ({similarDecisions.length})
+                    <TabsTrigger value="similar" className="flex-1" onClick={() => { if (selectedDecision && aiSimilarities.length === 0 && !similarLoading) fetchSimilarity(selectedDecision); }}>
+                      <Brain className="w-3.5 h-3.5 mr-1" /> KI-Ähnliche ({similarDecisions.length})
                     </TabsTrigger>
                   </TabsList>
 
@@ -499,44 +522,65 @@ const KnowledgeBase = () => {
                     </Card>
                   </TabsContent>
 
-                  {/* Similar */}
-                  <TabsContent value="similar" className="space-y-2">
-                    {similarDecisions.length === 0 && (
+                  {/* Similar - AI powered */}
+                  <TabsContent value="similar" className="space-y-3">
+                    {similarLoading && (
+                      <Card className="p-6 text-center">
+                        <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">KI analysiert Ähnlichkeiten…</p>
+                      </Card>
+                    )}
+                    {similarError && (
+                      <Card className="p-4 text-center">
+                        <p className="text-sm text-destructive">{similarError}</p>
+                        <Button size="sm" variant="outline" className="mt-2" onClick={() => fetchSimilarity(selectedDecision!)}>
+                          Erneut versuchen
+                        </Button>
+                      </Card>
+                    )}
+                    {!similarLoading && !similarError && similarDecisions.length === 0 && aiSimilarities.length === 0 && (
+                      <Card className="p-6 text-center">
+                        <Brain className="w-8 h-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Klicke auf diesen Tab um die KI-Ähnlichkeitsanalyse zu starten</p>
+                        <Button size="sm" variant="outline" className="mt-3" onClick={() => fetchSimilarity(selectedDecision!)}>
+                          <Sparkles className="w-3.5 h-3.5 mr-1" /> Analyse starten
+                        </Button>
+                      </Card>
+                    )}
+                    {!similarLoading && similarDecisions.length === 0 && aiSimilarities.length > 0 && (
                       <Card className="p-6 text-center text-muted-foreground text-sm">
                         Keine ähnlichen Entscheidungen gefunden
                       </Card>
                     )}
-                    {similarDecisions.map(d => {
-                      const matchReasons: string[] = [];
-                      if (d.category === selected!.category) matchReasons.push(categoryLabels[d.category] ?? d.category);
-                      if (d.priority === selected!.priority) matchReasons.push(priorityLabels[d.priority] ?? d.priority);
+                    {similarDecisions.map(({ decision: d, score, reason }) => {
                       const dLessons = lessons.filter(l => l.decision_id === d.id);
                       return (
                         <Card
                           key={d.id}
                           className="p-3 cursor-pointer hover:bg-muted/30 transition-all"
-                          onClick={() => setSelectedDecision(d.id)}
+                          onClick={() => { setSelectedDecision(d.id); setAiSimilarities([]); }}
                         >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h4 className="text-sm font-medium">{d.title}</h4>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-sm font-medium truncate">{d.title}</h4>
+                                <Badge variant="outline" className="text-[10px] shrink-0 font-bold tabular-nums">
+                                  {score}%
+                                </Badge>
+                              </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="outline" className="text-[10px]">{statusLabels[d.status] ?? d.status}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
                                 {dLessons.length > 0 && (
                                   <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
-                                    <Lightbulb className="w-3 h-3" /> {dLessons.length} Lessons
+                                    <Lightbulb className="w-3 h-3" /> {dLessons.length}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex gap-1 mt-1.5">
-                                {matchReasons.map(r => (
-                                  <span key={r} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">
-                                    {r}
-                                  </span>
-                                ))}
-                              </div>
+                              <p className="text-[11px] text-muted-foreground mt-1.5 italic">{reason}</p>
+                              <Progress value={score} className="h-1 mt-2" />
                             </div>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                           </div>
                         </Card>
                       );

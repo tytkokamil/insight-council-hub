@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.extract-decisions]
 verify_jwt = false
+
+[functions.similarity-score]
+verify_jwt = false
