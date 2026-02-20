@@ -1,142 +1,177 @@
-import { useState } from "react";
-import PageHint from "@/components/shared/PageHint";
-import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, Search, Filter, FileText, MoreHorizontal, Clock, CheckCircle2,
-  TrendingUp, AlertTriangle, Zap, ArrowRight, BarChart3, Activity, DollarSign,
-  ListChecks, Circle,
+  Plus, AlertTriangle, Clock, CheckCircle2, ArrowRight, BarChart3,
+  Activity, DollarSign, Zap, FileText, Bell, Eye, TrendingUp, TrendingDown,
+  Minus, ListChecks, Circle, ShieldAlert,
 } from "lucide-react";
-import { categoryLabels } from "@/lib/labels";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
-import VelocityScoreWidget from "@/components/dashboard/VelocityScoreWidget";
-import EscalationWidget from "@/components/dashboard/EscalationWidget";
-import LeaderboardWidget from "@/components/dashboard/LeaderboardWidget";
-import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
-import MomentumScoreWidget from "@/components/dashboard/MomentumScoreWidget";
-import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
+import PageHint from "@/components/shared/PageHint";
+import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions } from "@/hooks/useDecisions";
+import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useInvalidateDecisions } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
-import { format } from "date-fns";
+import { format, differenceInDays, subDays } from "date-fns";
 import { de } from "date-fns/locale";
+import { categoryLabels } from "@/lib/labels";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart,
+} from "recharts";
 
-const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  draft: { label: "Entwurf", variant: "secondary" },
-  review: { label: "Review", variant: "outline" },
-  approved: { label: "Genehmigt", variant: "default" },
-  implemented: { label: "Umgesetzt", variant: "default" },
-  rejected: { label: "Abgelehnt", variant: "destructive" },
+// Lazy-loaded heavy widgets
+const MomentumScoreWidget = lazy(() => import("@/components/dashboard/MomentumScoreWidget"));
+const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
+
+const statusLabels: Record<string, string> = {
+  draft: "Entwurf", review: "Review", approved: "Genehmigt",
+  implemented: "Umgesetzt", rejected: "Abgelehnt",
 };
 
-const priorityConfig: Record<string, { label: string; className: string }> = {
-  low: { label: "Niedrig", className: "text-muted-foreground" },
-  medium: { label: "Mittel", className: "text-primary" },
-  high: { label: "Hoch", className: "text-warning" },
-  critical: { label: "Kritisch", className: "text-destructive" },
+const priorityLabels: Record<string, string> = {
+  low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch",
 };
 
 const Dashboard = () => {
-  const { data: allDecisions = [] } = useDecisions();
+  const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: profiles = [] } = useProfiles();
-  const { data: tasks = [] } = useTasks();
+  const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
+  const { data: reviews = [] } = useReviews();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
-
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
 
   const isPersonal = selectedTeamId === null;
   const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
+  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
 
-  // Context-dependent filtering: personal = only mine, team = all team data
-  const contextDecisions = isPersonal
+  // Context filtering
+  const decisions = isPersonal
     ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
     : allDecisions;
   const contextTasks = isPersonal
     ? tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id)
     : tasks;
 
-  const openDecisions = contextDecisions.filter(d => d.status !== "implemented" && d.status !== "rejected");
-  const openTasks = contextTasks.filter(t => t.status !== "done");
-  const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < new Date());
-  const doneTasks = contextTasks.filter(t => t.status === "done");
+  // === COMPUTED DATA ===
+  const computed = useMemo(() => {
+    const now = new Date();
+    const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
+    const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
+    const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
+    const pendingReviews = reviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
+    const highRisk = active.filter(d => (d.ai_risk_score || 0) > 60);
 
-  const stats = [
-    { label: isPersonal ? "Meine Entscheidungen" : "Entscheidungen", value: contextDecisions.length, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-    { label: "Offen", value: openDecisions.length, icon: Clock, color: "text-warning", bg: "bg-warning/10" },
-    { label: isPersonal ? "Meine Aufgaben" : "Aufgaben", value: contextTasks.length, icon: ListChecks, color: "text-accent-foreground", bg: "bg-accent/30" },
-    { label: "Aufgaben offen", value: openTasks.length, icon: Circle, color: overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground", bg: overdueTasks.length > 0 ? "bg-destructive/10" : "bg-muted/50" },
-  ];
+    // KPIs
+    const implemented = decisions.filter(d => d.status === "implemented");
+    const openCount = active.length;
+    const overduePercent = active.length > 0 ? Math.round((overdue.length / active.length) * 100) : 0;
 
-  const decisions = contextDecisions.slice(0, 10);
-  const highRiskDecisions = decisions.filter(d => (d.ai_risk_score || 0) > 60);
-  const filtered = decisions.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  const firstName = user?.user_metadata?.full_name?.split(" ")[0] || "dort";
-  const dashboardTitle = isPersonal ? "Mein Arbeitsbereich" : `Team: ${currentTeam?.name || "—"}`;
-  const dashboardHint = isPersonal
-    ? "Dein persönlicher Überblick: Offene Aufgaben, laufende Entscheidungen und operative Metriken."
-    : "Team-Überblick: Alle Aufgaben und Entscheidungen dieses Teams.";
-  const dashboardSubtitle = isPersonal
-    ? `Hallo ${firstName} – das liegt heute an`
-    : `${contextDecisions.length} Entscheidungen · ${openTasks.length} offene Aufgaben`;
+    const velocities = implemented.filter(d => d.implemented_at).map(d =>
+      differenceInDays(new Date(d.implemented_at!), new Date(d.created_at))
+    );
+    const avgDecisionTime = velocities.length > 0 ? Math.round(velocities.reduce((s, v) => s + v, 0) / velocities.length * 10) / 10 : null;
 
-  // Empty welcome state
-  if (allDecisions.length === 0 && tasks.length === 0) {
+    const escalationRate = decisions.length > 0 ? Math.round((escalated.length / decisions.length) * 100) : 0;
+
+    // Performance index (simplified momentum)
+    const completionRate = decisions.length > 0 ? (implemented.length / decisions.length) * 100 : 0;
+    const taskDoneRate = contextTasks.length > 0 ? (contextTasks.filter(t => t.status === "done").length / contextTasks.length) * 100 : 0;
+    const performanceIndex = Math.round((completionRate * 0.6 + taskDoneRate * 0.4));
+
+    // Trend data (last 8 weeks)
+    const weekData = Array.from({ length: 8 }, (_, i) => {
+      const weekEnd = subDays(now, (7 - i) * 7);
+      const weekStart = subDays(weekEnd, 7);
+      const weekLabel = format(weekEnd, "dd.MM", { locale: de });
+
+      const created = decisions.filter(d => {
+        const date = new Date(d.created_at);
+        return date >= weekStart && date < weekEnd;
+      }).length;
+
+      const completed = [
+        ...decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd),
+        ...contextTasks.filter(t => t.completed_at && new Date(t.completed_at) >= weekStart && new Date(t.completed_at) < weekEnd),
+      ].length;
+
+      const openAtEnd = decisions.filter(d => {
+        const c = new Date(d.created_at);
+        if (c > weekEnd) return false;
+        if (d.implemented_at && new Date(d.implemented_at) <= weekEnd) return false;
+        if (d.status === "rejected") return false;
+        return true;
+      }).length;
+
+      return { week: weekLabel, erstellt: created, abgeschlossen: completed, offen: openAtEnd };
+    });
+
+    // Economic impact
+    const defaultRate = 75;
+    const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
+    let totalDelayCost = 0;
+    const costItems: { title: string; cost: number; days: number; priority: string; id: string }[] = [];
+
+    active.forEach(d => {
+      const daysOpen = Math.max(0, differenceInDays(now, new Date(d.created_at)));
+      const mult = priorityMultiplier[d.priority] || 1.5;
+      const cost = Math.round(daysOpen * 2 * defaultRate * mult);
+      totalDelayCost += cost;
+      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, id: d.id });
+    });
+    costItems.sort((a, b) => b.cost - a.cost);
+
+    return {
+      overdue, escalated, pendingReviews, highRisk, active,
+      openCount, overduePercent, avgDecisionTime, escalationRate, performanceIndex,
+      weekData, totalDelayCost, costItems,
+    };
+  }, [decisions, contextTasks, reviews, user]);
+
+  const actionItems = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.highRisk.length;
+
+  const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
+
+  // ============ EMPTY STATE ============
+  if (!loadingDec && !loadingTasks && allDecisions.length === 0 && tasks.length === 0) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="text-center max-w-lg"
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="text-center max-w-lg">
             <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
               <BarChart3 className="w-7 h-7 text-primary" />
             </div>
-
-            <h1 className="font-display text-3xl font-bold mb-2">
-              Willkommen, {firstName}
-            </h1>
+            <h1 className="font-display text-3xl font-bold mb-2">Willkommen, {firstName}</h1>
             <p className="text-muted-foreground mb-8 leading-relaxed">
               Dein Decision Intelligence System ist bereit. Erstelle deine erste Entscheidung, um KI-gestützte Analysen zu aktivieren.
             </p>
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
               <Button size="lg" onClick={() => navigate("/decisions")} className="gap-2">
-                <Plus className="w-4 h-4" />
-                Erste Entscheidung erstellen
+                <Plus className="w-4 h-4" /> Erste Entscheidung erstellen
               </Button>
               <Button variant="outline" size="lg" onClick={() => navigate("/teams")} className="gap-2">
-                Team einrichten
-                <ArrowRight className="w-4 h-4" />
+                Team einrichten <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
-
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Zap, title: "KI-Analyse", desc: "Automatische Risikobewertung" },
                 { icon: BarChart3, title: "Echtzeit", desc: "Live-Metriken & Trends" },
                 { icon: TrendingUp, title: "Prognosen", desc: "Prädiktive Szenarien" },
               ].map((f, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1 }}
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
                   <Card className="text-left">
                     <CardContent className="p-4">
                       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
@@ -155,209 +190,264 @@ const Dashboard = () => {
     );
   }
 
+  const dashboardTitle = isPersonal ? "Mein Arbeitsbereich" : `Team: ${currentTeam?.name || "—"}`;
+
   return (
     <AppLayout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      {/* ═══ HEADER ═══ */}
+      <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-display text-2xl font-bold">{dashboardTitle}</h1>
-            <PageHint>
-              {dashboardHint} Für die strategische Gesamtübersicht nutze das Executive Dashboard.
-            </PageHint>
+            <PageHint>Operatives Steuerpanel – Handlungsbedarf zuerst, dann KPIs und Trends.</PageHint>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">{dashboardSubtitle}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {isPersonal ? `Hallo ${firstName} – das liegt heute an` : `${decisions.length} Entscheidungen · ${contextTasks.filter(t => t.status !== "done").length} offene Aufgaben`}
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate("/tasks")} className="gap-2">
-            <ListChecks className="w-4 h-4" />
-            Aufgaben
-          </Button>
-          <Button onClick={() => navigate("/decisions")} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Neue Entscheidung
-          </Button>
-        </div>
+        <Button onClick={() => navigate("/decisions")} className="gap-2">
+          <Plus className="w-4 h-4" /> Neue Entscheidung
+        </Button>
       </div>
 
-      {/* Personal Stats */}
-      <WidgetErrorBoundary label="KPI-Übersicht" compact>
-        <div className="mb-8">
-          <KpiOverviewWidget />
-        </div>
-      </WidgetErrorBoundary>
-
-      {/* Open Tasks – quick view */}
-      {openTasks.length > 0 && (
-        <CollapsibleSection
-          title={`${isPersonal ? "Meine offenen" : "Offene"} Aufgaben (${openTasks.length})`}
-          subtitle={overdueTasks.length > 0 ? `${overdueTasks.length} überfällig` : "Alles im Zeitplan"}
-          icon={<ListChecks className="w-4 h-4 text-primary" />}
-          defaultOpen={true}
-          className="mb-8"
-        >
-          <Card>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {openTasks.slice(0, 5).map(task => {
-                  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
-                  return (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 cursor-pointer transition-colors"
-                      onClick={() => navigate("/tasks")}
-                    >
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${task.status === "in_progress" ? "bg-warning" : "bg-muted-foreground"}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{task.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {task.status === "in_progress" ? "In Arbeit" : "Offen"}
-                          {task.due_date && ` · Fällig: ${format(new Date(task.due_date), "dd.MM.", { locale: de })}`}
-                        </p>
-                      </div>
-                      {isOverdue && <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />}
-                      <Badge variant="outline" className={`text-[10px] shrink-0 ${
-                        task.priority === "critical" ? "text-destructive" :
-                        task.priority === "high" ? "text-warning" : ""
-                      }`}>
-                        {priorityConfig[task.priority]?.label || task.priority}
-                      </Badge>
-                    </div>
-                  );
-                })}
-                {openTasks.length > 5 && (
-                  <div className="px-4 py-2 text-center">
-                    <Button variant="link" size="sm" onClick={() => navigate("/tasks")} className="text-xs">
-                      Alle {openTasks.length} Aufgaben anzeigen <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
+      {/* ═══ BLOCK 1: ACTION REQUIRED ═══ */}
+      {actionItems > 0 && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
+            <h2 className="text-sm font-semibold">Handlungsbedarf ({actionItems})</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Overdue Decisions */}
+            {computed.overdue.length > 0 && (
+              <Card className="border-destructive/20 bg-destructive/[0.02] cursor-pointer hover:border-destructive/40 transition-colors" onClick={() => navigate("/decisions")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="w-4 h-4 text-destructive" />
+                    <span className="text-xs font-semibold text-destructive">Überfällig</span>
+                    <Badge variant="destructive" className="ml-auto text-[10px]">{computed.overdue.length}</Badge>
                   </div>
-                )}
+                  <div className="space-y-1">
+                    {computed.overdue.slice(0, 2).map(d => (
+                      <p key={d.id} className="text-xs truncate text-muted-foreground">{d.title}</p>
+                    ))}
+                    {computed.overdue.length > 2 && <p className="text-[10px] text-destructive">+{computed.overdue.length - 2} weitere</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Escalations */}
+            {computed.escalated.length > 0 && (
+              <Card className="border-warning/20 bg-warning/[0.02] cursor-pointer hover:border-warning/40 transition-colors" onClick={() => navigate("/escalation")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <ShieldAlert className="w-4 h-4 text-warning" />
+                    <span className="text-xs font-semibold text-warning">Eskalationen</span>
+                    <Badge className="ml-auto text-[10px] bg-warning/10 text-warning border-warning/20">{computed.escalated.length}</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    {computed.escalated.slice(0, 2).map(d => (
+                      <p key={d.id} className="text-xs truncate text-muted-foreground">{d.title}</p>
+                    ))}
+                    {computed.escalated.length > 2 && <p className="text-[10px] text-warning">+{computed.escalated.length - 2} weitere</p>}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Pending Reviews */}
+            {computed.pendingReviews.length > 0 && (
+              <Card className="border-primary/20 bg-primary/[0.02] cursor-pointer hover:border-primary/40 transition-colors" onClick={() => navigate("/decisions")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Eye className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold text-primary">Reviews warten</span>
+                    <Badge variant="outline" className="ml-auto text-[10px]">{computed.pendingReviews.length}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{computed.pendingReviews.length} Review{computed.pendingReviews.length !== 1 ? "s" : ""} benötigen dein Feedback</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* High Risk */}
+            {computed.highRisk.length > 0 && (
+              <Card className="border-destructive/20 bg-destructive/[0.02] cursor-pointer hover:border-destructive/40 transition-colors" onClick={() => setSelectedDecision(computed.highRisk[0])}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                    <span className="text-xs font-semibold text-destructive">Hohes Risiko</span>
+                    <Badge variant="destructive" className="ml-auto text-[10px]">{computed.highRisk.length}</Badge>
+                  </div>
+                  <div className="space-y-1">
+                    {computed.highRisk.slice(0, 2).map(d => (
+                      <div key={d.id} className="flex items-center justify-between">
+                        <p className="text-xs truncate text-muted-foreground flex-1 mr-2">{d.title}</p>
+                        <span className="text-[10px] font-mono text-destructive">{d.ai_risk_score}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══ BLOCK 2: KPI SNAPSHOT ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        {[
+          { label: "Offen", value: computed.openCount, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+          { label: "Überfällig", value: `${computed.overduePercent}%`, icon: AlertTriangle, color: computed.overduePercent > 20 ? "text-destructive" : "text-muted-foreground", bg: computed.overduePercent > 20 ? "bg-destructive/10" : "bg-muted/50" },
+          { label: "Ø Tage", value: computed.avgDecisionTime ?? "—", icon: Zap, color: "text-primary", bg: "bg-primary/10" },
+          { label: "Eskalationsrate", value: `${computed.escalationRate}%`, icon: Bell, color: computed.escalationRate > 15 ? "text-warning" : "text-muted-foreground", bg: computed.escalationRate > 15 ? "bg-warning/10" : "bg-muted/50" },
+          { label: "Performance", value: `${computed.performanceIndex}%`, icon: Activity, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive", bg: computed.performanceIndex > 60 ? "bg-success/10" : computed.performanceIndex > 30 ? "bg-warning/10" : "bg-destructive/10" },
+        ].map((kpi, i) => (
+          <motion.div key={kpi.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+            <Card className="h-full">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                  <div className={`w-7 h-7 rounded-md ${kpi.bg} flex items-center justify-center`}>
+                    <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+                  </div>
+                </div>
+                <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ═══ BLOCK 3: TREND ═══ */}
+      <CollapsibleSection
+        title="Trend"
+        subtitle="Throughput & Velocity (8 Wochen)"
+        icon={<TrendingUp className="w-4 h-4 text-primary" />}
+        defaultOpen={true}
+        className="mb-8"
+      >
+        <Card>
+          <CardContent className="p-4 pt-6">
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={computed.weekData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="week" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} className="text-muted-foreground" />
+                <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                  labelStyle={{ fontWeight: 600 }}
+                />
+                <Area type="monotone" dataKey="abgeschlossen" name="Abgeschlossen" stroke="hsl(var(--success))" fill="url(#gradCompleted)" strokeWidth={2} dot={false} />
+                <Area type="monotone" dataKey="erstellt" name="Erstellt" stroke="hsl(var(--primary))" fill="url(#gradCreated)" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="offen" name="Offen" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div className="flex items-center justify-center gap-6 mt-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0.5 rounded bg-success" />
+                <span className="text-[11px] text-muted-foreground">Abgeschlossen</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0.5 rounded bg-primary" />
+                <span className="text-[11px] text-muted-foreground">Erstellt</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-0.5 rounded bg-muted-foreground" style={{ borderTop: "1px dashed" }} />
+                <span className="text-[11px] text-muted-foreground">Offen</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </CollapsibleSection>
+
+      {/* ═══ BLOCK 4: ECONOMIC IMPACT ═══ */}
+      <CollapsibleSection
+        title="Economic Impact"
+        subtitle="Geschätzte Verzögerungskosten"
+        icon={<DollarSign className="w-4 h-4 text-destructive" />}
+        defaultOpen={true}
+        className="mb-8"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Total cost */}
+          <Card className="lg:col-span-1">
+            <CardContent className="p-5">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Gesamte Verzögerungskosten</p>
+              <p className="text-3xl font-bold text-destructive">{formatCost(computed.totalDelayCost)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{computed.active.length} offene Entscheidungen</p>
+              <div className="mt-4 pt-3 border-t border-border space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Kritisch / Hoch</span>
+                  <span className="font-semibold text-destructive">{computed.costItems.filter(c => c.priority === "critical" || c.priority === "high").length}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Ø Tage offen</span>
+                  <span className="font-semibold">
+                    {computed.costItems.length > 0 ? Math.round(computed.costItems.reduce((s, c) => s + c.days, 0) / computed.costItems.length) : 0}d
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
-        </CollapsibleSection>
-      )}
 
-      {/* Performance Widgets – collapsible */}
+          {/* Top cost drivers */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Größte Kostentreiber</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              {computed.costItems.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-4 text-center">Keine offenen Entscheidungen.</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {computed.costItems.slice(0, 5).map((item, i) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => {
+                        const d = decisions.find(dec => dec.id === item.id);
+                        if (d) setSelectedDecision(d);
+                      }}
+                    >
+                      <span className="text-[10px] font-mono text-muted-foreground w-4">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-[11px] text-muted-foreground">{item.days}d offen · {priorityLabels[item.priority] || item.priority}</p>
+                      </div>
+                      <span className="text-sm font-bold text-destructive shrink-0">{formatCost(item.cost)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </CollapsibleSection>
+
+      {/* ═══ OPTIONAL: DEEP METRICS (lazy) ═══ */}
       <CollapsibleSection
         title={isPersonal ? "Meine Performance" : "Team Performance"}
-        subtitle="Momentum, Kosten & Velocity"
+        subtitle="Momentum Score & Leaderboard"
         icon={<Activity className="w-4 h-4 text-primary" />}
         defaultOpen={false}
         className="mb-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-          <WidgetErrorBoundary label="Momentum" compact><MomentumScoreWidget /></WidgetErrorBoundary>
-          <WidgetErrorBoundary label="Kosten" compact><DecisionCostWidget /></WidgetErrorBoundary>
-          <WidgetErrorBoundary label="Velocity" compact><VelocityScoreWidget /></WidgetErrorBoundary>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <WidgetErrorBoundary label="Eskalationen" compact><EscalationWidget /></WidgetErrorBoundary>
-          <WidgetErrorBoundary label="Leaderboard" compact><LeaderboardWidget /></WidgetErrorBoundary>
-        </div>
-      </CollapsibleSection>
-
-      {/* High risk alert – collapsible */}
-      {highRiskDecisions.length > 0 && (
-        <CollapsibleSection
-          title={`Hohes Risiko (${highRiskDecisions.length})`}
-          subtitle="Entscheidungen die Aufmerksamkeit erfordern"
-          icon={<AlertTriangle className="w-4 h-4 text-destructive" />}
-          defaultOpen={true}
-          className="mb-8"
-        >
-          <Card className="border-destructive/20">
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                {highRiskDecisions.slice(0, 3).map((d) => (
-                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-destructive/5 hover:bg-destructive/10 cursor-pointer transition-colors" onClick={() => setSelectedDecision(d)}>
-                    <span className="text-sm font-medium">{d.title}</span>
-                    <Badge variant="destructive" className="font-mono">{d.ai_risk_score}%</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </CollapsibleSection>
-      )}
-
-      {/* Recent Decisions */}
-      <CollapsibleSection
-        title={isPersonal ? "Meine Entscheidungen" : "Team-Entscheidungen"}
-        subtitle={`${contextDecisions.length} insgesamt`}
-        icon={<FileText className="w-4 h-4 text-muted-foreground" />}
-        defaultOpen={true}
-        className="mb-4"
-      >
-        {/* Search */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input type="text" placeholder="Entscheidungen durchsuchen..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all placeholder:text-muted-foreground" />
+        <Suspense fallback={<div className="grid grid-cols-1 lg:grid-cols-2 gap-4"><Skeleton className="h-64 rounded-xl" /><Skeleton className="h-64 rounded-xl" /></div>}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <WidgetErrorBoundary label="Momentum" compact><MomentumScoreWidget /></WidgetErrorBoundary>
+            <WidgetErrorBoundary label="Leaderboard" compact><LeaderboardWidget /></WidgetErrorBoundary>
           </div>
-          <Button variant="outline" size="sm" className="gap-2">
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
-        </div>
-
-        {/* Table */}
-        <Card className="overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Entscheidung</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Priorität</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Kategorie</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Risiko</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Fällig</th>
-                <th className="p-3"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">Keine Entscheidungen gefunden.</td></tr>
-              ) : filtered.map((decision) => {
-                const status = statusConfig[decision.status];
-                const priority = priorityConfig[decision.priority];
-                return (
-                  <tr
-                    key={decision.id}
-                    className="border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
-                    onClick={() => setSelectedDecision(decision)}
-                  >
-                    <td className="p-3">
-                      <p className="text-sm font-medium">{decision.title}</p>
-                      <p className="text-xs text-muted-foreground">{decision.assignee_id ? profileMap[decision.assignee_id] || "—" : "—"}</p>
-                    </td>
-                    <td className="p-3">
-                      <Badge variant={status?.variant || "secondary"} className="text-[10px]">
-                        {status?.label || decision.status}
-                      </Badge>
-                    </td>
-                    <td className="p-3 hidden md:table-cell">
-                      <span className={`text-xs font-semibold ${priority?.className || ""}`}>
-                        {priority?.label || decision.priority}
-                      </span>
-                    </td>
-                    <td className="p-3 hidden lg:table-cell"><span className="text-xs text-muted-foreground">{categoryLabels[decision.category] || decision.category}</span></td>
-                    <td className="p-3 hidden lg:table-cell">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div className={`h-full rounded-full ${(decision.ai_risk_score||0) > 60 ? "bg-destructive" : (decision.ai_risk_score||0) > 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${decision.ai_risk_score||0}%` }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground font-medium">{decision.ai_risk_score||0}%</span>
-                      </div>
-                    </td>
-                    <td className="p-3 hidden md:table-cell"><span className="text-xs text-muted-foreground">{decision.due_date || "—"}</span></td>
-                    <td className="p-3"><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </Card>
+        </Suspense>
       </CollapsibleSection>
 
       <DecisionDetailDialog
