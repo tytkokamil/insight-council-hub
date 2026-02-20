@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-import { Bell, Check, CheckCheck, FileText, Zap, Calendar, X } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { Bell, Check, CheckCheck, FileText, Zap, Calendar, X, AtSign, MessageSquare, Settings, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { de } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 interface Notification {
   id: string;
@@ -21,20 +22,86 @@ const typeIcon: Record<string, typeof Bell> = {
   status_change: FileText,
   review: FileText,
   deadline: Calendar,
+  mention: AtSign,
+  system: Settings,
+};
+
+const typeColor: Record<string, string> = {
+  escalation: "bg-destructive/10 text-destructive",
+  status_change: "bg-primary/10 text-primary",
+  review: "bg-warning/10 text-warning",
+  deadline: "bg-accent/10 text-accent-foreground",
+  mention: "bg-primary/10 text-primary",
+  system: "bg-muted text-muted-foreground",
+};
+
+type FilterType = "all" | "mentions" | "reviews" | "escalations" | "system";
+
+const filters: { key: FilterType; label: string; icon: typeof Bell }[] = [
+  { key: "all", label: "Alle", icon: Bell },
+  { key: "mentions", label: "Mentions", icon: AtSign },
+  { key: "reviews", label: "Reviews", icon: FileText },
+  { key: "escalations", label: "Eskalationen", icon: Zap },
+  { key: "system", label: "System", icon: Settings },
+];
+
+const filterMatch = (type: string, filter: FilterType): boolean => {
+  if (filter === "all") return true;
+  if (filter === "mentions") return type === "mention";
+  if (filter === "reviews") return type === "review";
+  if (filter === "escalations") return type === "escalation";
+  if (filter === "system") return type === "system" || type === "status_change";
+  return true;
+};
+
+interface GroupedNotifications {
+  label: string;
+  items: Notification[];
+}
+
+const groupByDate = (notifications: Notification[]): GroupedNotifications[] => {
+  const groups: GroupedNotifications[] = [];
+  const today: Notification[] = [];
+  const yesterday: Notification[] = [];
+  const thisWeek: Notification[] = [];
+  const older: Notification[] = [];
+
+  notifications.forEach((n) => {
+    const d = new Date(n.created_at);
+    if (isToday(d)) today.push(n);
+    else if (isYesterday(d)) yesterday.push(n);
+    else if (isThisWeek(d)) thisWeek.push(n);
+    else older.push(n);
+  });
+
+  if (today.length > 0) groups.push({ label: "Heute", items: today });
+  if (yesterday.length > 0) groups.push({ label: "Gestern", items: yesterday });
+  if (thisWeek.length > 0) groups.push({ label: "Diese Woche", items: thisWeek });
+  if (older.length > 0) groups.push({ label: "Älter", items: older });
+
+  return groups;
 };
 
 const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const ref = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // Fetch notifications
+  const filteredNotifications = useMemo(
+    () => notifications.filter((n) => filterMatch(n.type, activeFilter)),
+    [notifications, activeFilter]
+  );
+
+  const grouped = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
+
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchNotifs = async () => {
       const { data } = await supabase
         .from("notifications")
         .select("*")
@@ -43,19 +110,13 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
         .limit(50);
       if (data) setNotifications(data);
     };
-    fetch();
+    fetchNotifs();
 
-    // Realtime subscription
     const channel = supabase
       .channel("notifications-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           if (payload.eventType === "INSERT") {
             setNotifications((prev) => [payload.new as Notification, ...prev].slice(0, 50));
@@ -70,12 +131,9 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -97,6 +155,14 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const handleNotifClick = (n: Notification) => {
+    if (!n.read) markAsRead(n.id);
+    if (n.decision_id) {
+      setOpen(false);
+      navigate(`/decisions/${n.decision_id}`);
+    }
+  };
+
   return (
     <div ref={ref} className="relative px-2">
       <button
@@ -114,12 +180,7 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
         </div>
         <AnimatePresence>
           {!collapsed && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="whitespace-nowrap flex-1 text-left"
-            >
+            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="whitespace-nowrap flex-1 text-left">
               Benachrichtigungen
             </motion.span>
           )}
@@ -133,72 +194,102 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.15 }}
-            className="fixed bottom-16 z-[100] w-80 max-h-[420px] rounded-xl border border-border bg-card shadow-xl overflow-hidden"
+            className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border bg-card shadow-xl overflow-hidden flex flex-col"
             style={{ left: collapsed ? 64 : 248 }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-              <h3 className="text-sm font-semibold">Benachrichtigungen</h3>
-              <div className="flex items-center gap-1">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllAsRead}
-                    className="text-xs text-primary hover:underline flex items-center gap-1"
-                    title="Alle als gelesen markieren"
-                  >
-                    <CheckCheck className="w-3.5 h-3.5" />
-                    Alle gelesen
+            <div className="px-4 py-3 border-b border-border bg-card">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold">Benachrichtigungen</h3>
+                <div className="flex items-center gap-1">
+                  {unreadCount > 0 && (
+                    <button onClick={markAllAsRead} className="text-xs text-primary hover:underline flex items-center gap-1" title="Alle als gelesen markieren">
+                      <CheckCheck className="w-3.5 h-3.5" />
+                      Alle gelesen
+                    </button>
+                  )}
+                  <button onClick={() => { setOpen(false); navigate("/settings"); }} className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground" title="Einstellungen">
+                    <Settings className="w-3.5 h-3.5" />
                   </button>
-                )}
-                <button
-                  onClick={() => setOpen(false)}
-                  className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                  <button onClick={() => setOpen(false)} className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter Toggles */}
+              <div className="flex gap-1 overflow-x-auto">
+                {filters.map((f) => {
+                  const count = f.key === "all" ? notifications.length : notifications.filter((n) => filterMatch(n.type, f.key)).length;
+                  return (
+                    <button
+                      key={f.key}
+                      onClick={() => setActiveFilter(f.key)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-colors ${
+                        activeFilter === f.key
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      <f.icon className="w-3 h-3" />
+                      {f.label}
+                      {count > 0 && <span className="text-[9px] opacity-70">({count})</span>}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* List */}
-            <div className="overflow-y-auto max-h-[350px]">
-              {notifications.length === 0 ? (
+            <div className="overflow-y-auto flex-1">
+              {filteredNotifications.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground">
                   <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">Keine Benachrichtigungen</p>
+                  <p className="text-xs text-muted-foreground/60 mt-1">
+                    {activeFilter !== "all" ? "Wechsle den Filter oder erstelle Inhalte." : "Du bist auf dem neuesten Stand."}
+                  </p>
                 </div>
               ) : (
-                notifications.map((n) => {
-                  const Icon = typeIcon[n.type] || Bell;
-                  return (
-                    <div
-                      key={n.id}
-                      className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/30 ${
-                        !n.read ? "bg-primary/5" : ""
-                      }`}
-                      onClick={() => !n.read && markAsRead(n.id)}
-                    >
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                        !n.read ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                      }`}>
-                        <Icon className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-xs leading-relaxed ${!n.read ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-                          {n.title}
-                        </p>
-                        {n.message && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: de })}
-                        </p>
-                      </div>
-                      {!n.read && (
-                        <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />
-                      )}
+                grouped.map((group) => (
+                  <div key={group.label}>
+                    <div className="px-4 py-1.5 bg-muted/30 border-b border-border/50">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
                     </div>
-                  );
-                })
+                    {group.items.map((n) => {
+                      const Icon = typeIcon[n.type] || Bell;
+                      const colorClass = typeColor[n.type] || "bg-muted text-muted-foreground";
+                      return (
+                        <div
+                          key={n.id}
+                          className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/30 ${
+                            !n.read ? "bg-primary/5" : ""
+                          }`}
+                          onClick={() => handleNotifClick(n)}
+                        >
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${colorClass}`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs leading-relaxed ${!n.read ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+                              {n.title}
+                            </p>
+                            {n.message && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-[10px] text-muted-foreground/60">
+                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: de })}
+                              </p>
+                              <span className="text-[9px] text-muted-foreground/40 uppercase">{n.type}</span>
+                            </div>
+                          </div>
+                          {!n.read && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-2" />}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
           </motion.div>
