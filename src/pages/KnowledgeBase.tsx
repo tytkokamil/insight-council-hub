@@ -14,8 +14,9 @@ import { toast } from "sonner";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
-  ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight,
+  ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download,
 } from "lucide-react";
+import { generateLessonsReport } from "@/lib/generateLessonsReport";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -214,6 +215,15 @@ const KnowledgeBase = () => {
               Lessons Learned aus {decisions.length} abgeschlossenen Entscheidungen
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)}
+            disabled={decisions.length === 0}
+          >
+            <Download className="w-4 h-4 mr-1.5" />
+            PDF-Report
+          </Button>
         </div>
 
         {/* Stats */}
