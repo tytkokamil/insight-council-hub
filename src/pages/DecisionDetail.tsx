@@ -2,24 +2,29 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft, Pencil, Trash2, AlertCircle, CheckSquare, MessageSquare,
+  ArrowLeft, Pencil, Trash2, AlertCircle, MessageSquare,
   GitPullRequest, Brain, History, Target, Users, GitBranch, Link2,
   Compass, Crosshair, Clock, ShieldAlert, AlertTriangle, DollarSign,
+  ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useDecisions, useProfiles, buildProfileMap, useDependencies, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useDecisions, useProfiles, buildProfileMap, useDependencies, useInvalidateDecisions, useReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
-import { differenceInDays, format } from "date-fns";
+import { differenceInDays, differenceInHours, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 // Panels
 import DiscussionPanel from "@/components/decisions/DiscussionPanel";
@@ -61,19 +66,24 @@ const tabGroups = [
     ],
   },
   {
+    label: "Governance",
+    tabs: [
+      { value: "review", icon: GitPullRequest, label: "Review" },
+      { value: "alignment", icon: Users, label: "Alignment" },
+    ],
+  },
+  {
     label: "Analyse",
     tabs: [
-      { value: "dependencies", icon: Link2, label: "Abhängigkeiten" },
+      { value: "dependencies", icon: Link2, label: "Dependencies" },
       { value: "impact", icon: DollarSign, label: "Impact" },
       { value: "ai", icon: Brain, label: "KI Insights" },
       { value: "whatif", icon: GitBranch, label: "What-If" },
     ],
   },
   {
-    label: "Governance",
+    label: "Strategie",
     tabs: [
-      { value: "review", icon: GitPullRequest, label: "Review" },
-      { value: "alignment", icon: Users, label: "Alignment" },
       { value: "copilot", icon: Compass, label: "Co-Pilot" },
       { value: "strategy", icon: Crosshair, label: "Strategie" },
       { value: "audit", icon: History, label: "Audit" },
@@ -89,6 +99,7 @@ const DecisionDetail = () => {
   const { data: profiles = [] } = useProfiles();
   const { data: allDeps = [] } = useDependencies();
   const { data: allTasks = [] } = useTasks();
+  const { data: allReviews = [] } = useReviews();
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
 
@@ -97,6 +108,31 @@ const DecisionDetail = () => {
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+
+  // Stakeholder positions
+  const { data: stakeholderPositions = [] } = useQuery({
+    queryKey: ["stakeholder-positions", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from("stakeholder_positions").select("*").eq("decision_id", id);
+      return data ?? [];
+    },
+    enabled: !!id,
+    staleTime: 30_000,
+  });
+
+  // Goal links for alignment
+  const { data: goalLinks = [] } = useQuery({
+    queryKey: ["decision-goal-links", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase.from("decision_goal_links").select("*").eq("decision_id", id);
+      return data ?? [];
+    },
+    enabled: !!id,
+    staleTime: 30_000,
+  });
 
   const decision = allDecisions.find(d => d.id === id);
 
@@ -104,11 +140,12 @@ const DecisionDetail = () => {
     if (decision) setStatus(decision.status);
   }, [decision]);
 
-  // Linked data
-  const { openLinkedTasks, depCount, delayCost } = useMemo(() => {
-    if (!decision) return { openLinkedTasks: 0, depCount: 0, delayCost: 0 };
+  // Linked data computation
+  const { openLinkedTasks, depCount, delayCost, reviewCompletion, alignmentScore } = useMemo(() => {
+    if (!decision) return { openLinkedTasks: 0, depCount: 0, delayCost: 0, reviewCompletion: 0, alignmentScore: 0 };
     const taskMap = new Map(allTasks.map(t => [t.id, t]));
     let openTasks = 0;
+
     allDeps.forEach(dep => {
       if (dep.source_decision_id === decision.id && dep.target_task_id) {
         const task = taskMap.get(dep.target_task_id);
@@ -121,17 +158,53 @@ const DecisionDetail = () => {
     });
 
     const deps = allDeps.filter(d =>
-      d.source_decision_id === decision.id || d.target_decision_id === decision.id ||
-      d.source_task_id === decision.id || d.target_task_id === decision.id
+      d.source_decision_id === decision.id || d.target_decision_id === decision.id
     );
 
     const daysOpen = differenceInDays(new Date(), new Date(decision.created_at));
     const mult: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
     const cost = Math.round(daysOpen * 2 * 75 * (mult[decision.priority] || 1.5));
 
-    return { openLinkedTasks: openTasks, depCount: deps.length, delayCost: cost };
-  }, [decision, allDeps, allTasks]);
+    const decReviews = allReviews.filter(r => r.decision_id === decision.id);
+    const reviewComp = decReviews.length > 0
+      ? Math.round((decReviews.filter(r => r.reviewed_at).length / decReviews.length) * 100)
+      : 0;
 
+    const alignment = goalLinks.length > 0
+      ? Math.round(goalLinks.reduce((s, l) => s + (l.impact_weight || 50), 0) / goalLinks.length)
+      : 0;
+
+    return { openLinkedTasks: openTasks, depCount: deps.length, delayCost: cost, reviewCompletion: reviewComp, alignmentScore: alignment };
+  }, [decision, allDeps, allTasks, allReviews, goalLinks]);
+
+  // SLA timer
+  const slaRemaining = useMemo(() => {
+    if (!decision?.due_date || !decision || ["implemented", "rejected"].includes(decision.status)) return null;
+    const hoursLeft = differenceInHours(new Date(decision.due_date), new Date());
+    if (hoursLeft < 0) return { text: `${Math.abs(hoursLeft)}h überfällig`, overdue: true };
+    if (hoursLeft < 24) return { text: `${hoursLeft}h verbleibend`, overdue: false };
+    const daysLeft = Math.floor(hoursLeft / 24);
+    return { text: `${daysLeft}d ${hoursLeft % 24}h`, overdue: false };
+  }, [decision]);
+
+  // Timeline steps
+  const timelineSteps = useMemo(() => {
+    const s = decision?.status || status;
+    return [
+      { label: "Erstellt", date: decision?.created_at, done: true },
+      { label: "Review", date: null, done: ["review", "approved", "implemented"].includes(s) },
+      { label: "Genehmigt", date: null, done: ["approved", "implemented"].includes(s) },
+      { label: "Umgesetzt", date: decision?.implemented_at, done: s === "implemented" },
+    ];
+  }, [decision, status]);
+
+  // Stakeholder position summary
+  const positionSummary = useMemo(() => {
+    const support = stakeholderPositions.filter(p => p.position === "support").length;
+    const neutral = stakeholderPositions.filter(p => p.position === "neutral").length;
+    const oppose = stakeholderPositions.filter(p => p.position === "oppose").length;
+    return { support, neutral, oppose, total: stakeholderPositions.length };
+  }, [stakeholderPositions]);
   if (!decision) {
     return (
       <AppLayout>
@@ -146,6 +219,8 @@ const DecisionDetail = () => {
   }
 
   const isOwner = user?.id === decision.created_by;
+  const isActive = !["implemented", "rejected"].includes(decision.status);
+  const riskScore = decision.ai_risk_score || 0;
 
   const handleStatusChange = async (newStatus: string) => {
     setSaving(true);
@@ -166,8 +241,6 @@ const DecisionDetail = () => {
   };
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
-  const riskScore = decision.ai_risk_score || 0;
-  const isActive = !["implemented", "rejected"].includes(decision.status);
 
   return (
     <AppLayout>
@@ -177,39 +250,89 @@ const DecisionDetail = () => {
       </Button>
 
       {/* ═══ HEADER ═══ */}
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap mb-2">
             <h1 className="font-display text-2xl font-bold">{decision.title}</h1>
-            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase ${statusStyles[status]}`}>
-              {statusLabels[status]}
-            </span>
+            {/* Status Dropdown */}
+            <Select value={status} onValueChange={handleStatusChange} disabled={saving}>
+              <SelectTrigger className={`w-auto h-7 text-xs font-semibold uppercase border-0 ${statusStyles[status]}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map(s => (
+                  <SelectItem key={s} value={s} disabled={!isOwner && s !== "approved" && s !== "rejected"}>
+                    {statusLabels[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <span className={`text-xs font-semibold ${priorityStyles[decision.priority]}`}>
               {priorityLabels[decision.priority]}
             </span>
+            {(decision.escalation_level || 0) > 0 && (
+              <Badge className="bg-warning/20 text-warning border-warning/30 text-[10px]">
+                <ShieldAlert className="w-3 h-3 mr-1" /> Eskalation Stufe {decision.escalation_level}
+              </Badge>
+            )}
+            {slaRemaining && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant={slaRemaining.overdue ? "destructive" : "outline"} className="text-[10px] gap-1">
+                    <Clock className="w-3 h-3" /> {slaRemaining.text}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent><p className="text-xs">SLA-Timer: Zeit bis Fälligkeit</p></TooltipContent>
+              </Tooltip>
+            )}
           </div>
           <p className="text-sm text-muted-foreground max-w-2xl">{decision.description || "Keine Beschreibung"}</p>
           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
-            <span>Erstellt von {profileMap[decision.created_by] || "Unbekannt"}</span>
-            {decision.assignee_id && <span>Zugewiesen: {profileMap[decision.assignee_id] || "—"}</span>}
+            <span>Owner: {profileMap[decision.assignee_id || decision.created_by] || "Unbekannt"}</span>
             <span>{categoryLabels[decision.category]}</span>
             {decision.due_date && (
-              <span className={decision.due_date && new Date(decision.due_date) < new Date() && isActive ? "text-destructive font-medium" : ""}>
+              <span className={slaRemaining?.overdue ? "text-destructive font-medium" : ""}>
                 Fällig: {format(new Date(decision.due_date), "dd.MM.yyyy", { locale: de })}
               </span>
             )}
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="w-4 h-4" />
+          </Button>
+          {decision.status === "draft" && (
+            <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("review")}>
+              <PlayCircle className="w-3.5 h-3.5" /> Start Review
+            </Button>
+          )}
+          {decision.status === "review" && (
+            <>
+              <Button size="sm" variant="default" className="gap-1.5 text-xs" onClick={() => handleStatusChange("approved")}>
+                <ThumbsUp className="w-3.5 h-3.5" /> Approve
+              </Button>
+              <Button size="sm" variant="destructive" className="gap-1.5 text-xs" onClick={() => handleStatusChange("rejected")}>
+                <ThumbsDown className="w-3.5 h-3.5" /> Reject
+              </Button>
+            </>
+          )}
+          {isActive && (decision.escalation_level || 0) === 0 && (
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs text-warning" onClick={async () => {
+              await supabase.from("decisions").update({ escalation_level: 1, last_escalated_at: new Date().toISOString() }).eq("id", decision.id);
+              invalidate(); toast.success("Eskaliert auf Stufe 1");
+            }}>
+              <ChevronUp className="w-3.5 h-3.5" /> Eskalieren
+            </Button>
+          )}
           {isOwner && (
             <>
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setShowEdit(true)}>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => setShowEdit(true)}>
                 <Pencil className="w-3.5 h-3.5" /> Bearbeiten
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
-                <Trash2 className="w-3.5 h-3.5" /> Löschen
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
+                <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </>
           )}
@@ -221,62 +344,28 @@ const DecisionDetail = () => {
         <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 mb-4">
           <AlertCircle className="w-4 h-4 text-warning shrink-0" />
           <p className="text-xs text-warning">
-            <span className="font-semibold">{openLinkedTasks} offene Aufgabe{openLinkedTasks > 1 ? "n" : ""}</span> verknüpft
+            <span className="font-semibold">{openLinkedTasks} offene Aufgabe{openLinkedTasks > 1 ? "n" : ""}</span> verknüpft — müssen erledigt werden.
           </p>
         </div>
       )}
 
-      {/* ═══ STATUS BAR + INDICATOR STRIP ═══ */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        {/* Status changer */}
-        <Card className="flex-1">
-          <CardContent className="p-4">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Status ändern</p>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {statusOptions.map(s => (
-                <Button
-                  key={s} size="sm" variant={status === s ? "default" : "outline"}
-                  className="text-xs h-7" disabled={saving || (!isOwner && s !== "approved" && s !== "rejected")}
-                  onClick={() => handleStatusChange(s)}
-                >
-                  {statusLabels[s]}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick indicators */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Card>
+      {/* ═══ HEALTH INDICATOR STRIP ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        {[
+          { icon: AlertTriangle, label: "Risk Score", value: `${riskScore}%`, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success" },
+          { icon: Users, label: "Alignment", value: alignmentScore > 0 ? `${alignmentScore}%` : "—", color: "text-primary" },
+          { icon: Link2, label: "Dependencies", value: `${depCount}`, color: "text-primary" },
+          { icon: CheckSquare, label: "Review", value: `${reviewCompletion}%`, color: reviewCompletion === 100 ? "text-success" : "text-warning" },
+          { icon: DollarSign, label: "Delay Cost", value: isActive ? formatCost(delayCost) : "—", color: "text-destructive" },
+        ].map(ind => (
+          <Card key={ind.label} className="card-interactive">
             <CardContent className="p-3 text-center">
-              <AlertTriangle className={`w-4 h-4 mx-auto mb-1 ${riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success"}`} />
-              <p className="text-lg font-bold">{riskScore}%</p>
-              <p className="text-[10px] text-muted-foreground">Risk Score</p>
+              <ind.icon className={`w-4 h-4 mx-auto mb-1 ${ind.color}`} />
+              <p className="text-lg font-bold number-highlight">{ind.value}</p>
+              <p className="text-[10px] text-muted-foreground">{ind.label}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Link2 className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-lg font-bold">{depCount}</p>
-              <p className="text-[10px] text-muted-foreground">Dependencies</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <DollarSign className="w-4 h-4 mx-auto mb-1 text-destructive" />
-              <p className="text-lg font-bold">{isActive ? formatCost(delayCost) : "—"}</p>
-              <p className="text-[10px] text-muted-foreground">Cost Impact</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <ShieldAlert className={`w-4 h-4 mx-auto mb-1 ${(decision.escalation_level || 0) > 0 ? "text-warning" : "text-muted-foreground"}`} />
-              <p className="text-lg font-bold">{decision.escalation_level || 0}</p>
-              <p className="text-[10px] text-muted-foreground">Eskalation</p>
-            </CardContent>
-          </Card>
-        </div>
+        ))}
       </div>
 
       {/* ═══ TABBED CONTENT ═══ */}
@@ -305,42 +394,89 @@ const DecisionDetail = () => {
           ))}
         </div>
 
-        {/* Overview tab – summary of key data */}
+        {/* ═══ TAB 1: OVERVIEW ═══ */}
         <TabsContent value="overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Description & Context */}
+            {/* Left column: Summary */}
             <div className="space-y-4">
+              {/* A) Summary Section */}
               <Card>
-                <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-2">Beschreibung</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {decision.description || "Keine Beschreibung vorhanden."}
-                  </p>
+                <CardContent className="p-5 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold mb-1">Problembeschreibung</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {decision.description || "Keine Beschreibung vorhanden."}
+                    </p>
+                  </div>
+                  {decision.context && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-1">Kontext & Hintergrund</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{decision.context}</p>
+                    </div>
+                  )}
+                  {decision.outcome && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-1">Entscheidungsempfehlung / Ergebnis</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{decision.outcome}</p>
+                      {decision.outcome_notes && (
+                        <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border italic">{decision.outcome_notes}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Options */}
+                  {decision.options && Array.isArray(decision.options) && (decision.options as any[]).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold mb-2">Optionen</h3>
+                      <div className="space-y-2">
+                        {(decision.options as any[]).map((opt: any, i: number) => (
+                          <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border text-sm">
+                            <p className="font-medium">{typeof opt === "string" ? opt : opt.title || opt.name || `Option ${i + 1}`}</p>
+                            {typeof opt !== "string" && opt.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{opt.description}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-              {decision.context && (
-                <Card>
-                  <CardContent className="p-5">
-                    <h3 className="text-sm font-semibold mb-2">Kontext</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{decision.context}</p>
-                  </CardContent>
-                </Card>
-              )}
-              {decision.outcome && (
-                <Card>
-                  <CardContent className="p-5">
-                    <h3 className="text-sm font-semibold mb-2">Ergebnis</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{decision.outcome}</p>
-                    {decision.outcome_notes && (
-                      <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">{decision.outcome_notes}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
-            {/* Right: Decision Health */}
+            {/* Right column */}
             <div className="space-y-4">
+              {/* B) Stakeholder Matrix */}
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="text-sm font-semibold mb-3">Stakeholder-Matrix</h3>
+                  {stakeholderPositions.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Noch keine Positionen abgegeben. Nutze den Alignment-Tab.</p>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-4 mb-3 text-xs">
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-success" /> Support: {positionSummary.support}</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-warning" /> Neutral: {positionSummary.neutral}</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-destructive" /> Oppose: {positionSummary.oppose}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {stakeholderPositions.slice(0, 5).map(sp => (
+                          <div key={sp.id} className="flex items-center justify-between text-xs p-2 rounded-lg bg-muted/20">
+                            <span className="font-medium">{profileMap[sp.user_id] || "Unbekannt"}</span>
+                            <Badge variant="outline" className={`text-[10px] ${
+                              sp.position === "support" ? "text-success border-success/30" :
+                              sp.position === "oppose" ? "text-destructive border-destructive/30" :
+                              "text-warning border-warning/30"
+                            }`}>{sp.position === "support" ? "Unterstützt" : sp.position === "oppose" ? "Dagegen" : "Neutral"}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* C) Health Indicators */}
               <Card>
                 <CardContent className="p-5">
                   <h3 className="text-sm font-semibold mb-3">Decision Health</h3>
@@ -348,6 +484,8 @@ const DecisionDetail = () => {
                     {[
                       { label: "Risiko", value: riskScore, color: riskScore > 60 ? "bg-destructive" : riskScore > 40 ? "bg-warning" : "bg-success" },
                       { label: "KI-Impact", value: decision.ai_impact_score || 0, color: "bg-primary" },
+                      { label: "Alignment", value: alignmentScore, color: "bg-primary" },
+                      { label: "Review-Fortschritt", value: reviewCompletion, color: reviewCompletion === 100 ? "bg-success" : "bg-warning" },
                     ].map(metric => (
                       <div key={metric.label}>
                         <div className="flex items-center justify-between text-xs mb-1">
@@ -355,12 +493,13 @@ const DecisionDetail = () => {
                           <span className="font-semibold">{metric.value}%</span>
                         </div>
                         <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div className={`h-full rounded-full ${metric.color}`} style={{ width: `${metric.value}%` }} />
+                          <div className={`h-full rounded-full transition-all ${metric.color}`} style={{ width: `${metric.value}%` }} />
                         </div>
                       </div>
                     ))}
                   </div>
 
+                  {/* Risk/Success factors */}
                   {(decision.ai_risk_factors?.length > 0 || decision.ai_success_factors?.length > 0) && (
                     <div className="mt-4 pt-3 border-t border-border space-y-3">
                       {decision.ai_risk_factors?.length > 0 && (
@@ -388,10 +527,27 @@ const DecisionDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Timeline info */}
+              {/* D) Timeline Visual */}
               <Card>
                 <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-3">Timeline</h3>
+                  <h3 className="text-sm font-semibold mb-4">Timeline</h3>
+                  {/* Visual pipeline */}
+                  <div className="flex items-center gap-1 mb-4">
+                    {timelineSteps.map((step, i) => (
+                      <div key={step.label} className="flex-1 flex items-center">
+                        <div className={`flex-1 h-1.5 rounded-full ${step.done ? "bg-primary" : "bg-muted"}`} />
+                        {i < timelineSteps.length - 1 && <div className="w-1" />}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[10px] text-muted-foreground mb-4">
+                    {timelineSteps.map(step => (
+                      <span key={step.label} className={step.done ? "text-primary font-medium" : ""}>{step.label}</span>
+                    ))}
+                  </div>
+
+                  <Separator className="my-3" />
+
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Erstellt</span>
@@ -404,7 +560,7 @@ const DecisionDetail = () => {
                     {decision.due_date && (
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Fällig</span>
-                        <span className={new Date(decision.due_date) < new Date() && isActive ? "text-destructive font-medium" : ""}>
+                        <span className={slaRemaining?.overdue ? "text-destructive font-medium" : ""}>
                           {format(new Date(decision.due_date), "dd.MM.yyyy", { locale: de })}
                         </span>
                       </div>
@@ -416,8 +572,8 @@ const DecisionDetail = () => {
                       </div>
                     )}
                     <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <span className="text-muted-foreground">Tage seit Erstellung</span>
-                      <span className="font-semibold">{differenceInDays(new Date(), new Date(decision.created_at))}d</span>
+                      <span className="text-muted-foreground">Laufzeit</span>
+                      <span className="font-semibold number-highlight">{differenceInDays(new Date(), new Date(decision.created_at))}d</span>
                     </div>
                   </div>
                 </CardContent>
@@ -426,6 +582,7 @@ const DecisionDetail = () => {
           </div>
         </TabsContent>
 
+        {/* Remaining tabs */}
         <TabsContent value="discussion"><DiscussionPanel decisionId={decision.id} /></TabsContent>
         <TabsContent value="review"><ReviewPanel decision={decision} onUpdated={invalidate} /></TabsContent>
         <TabsContent value="ai"><AiAnalysisPanel decision={decision} onUpdated={invalidate} /></TabsContent>
@@ -437,6 +594,33 @@ const DecisionDetail = () => {
         <TabsContent value="strategy"><StrategyLinkPanel decisionId={decision.id} /></TabsContent>
         <TabsContent value="audit"><AuditTrailPanel decisionId={decision.id} /></TabsContent>
       </Tabs>
+
+      {/* ═══ HELP MODAL ═══ */}
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display">Hilfe — Decision Detail</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold mb-1">Lifecycle</h4>
+              <p className="text-muted-foreground">Entwurf → Review → Genehmigt → Umgesetzt. Nutze die Buttons in der Header-Leiste für schnelle Statuswechsel.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-1">Risk Score</h4>
+              <p className="text-muted-foreground">KI-basiert, 0–100%. Berücksichtigt Kategorie, Kontext, Stakeholder-Alignment und historische Muster.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-1">Alignment Score</h4>
+              <p className="text-muted-foreground">Durchschnitt der Impact-Gewichte verknüpfter strategischer Ziele. Über den Strategie-Tab verknüpfbar.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-1">SLA-Timer</h4>
+              <p className="text-muted-foreground">Countdown bis zum Fälligkeitsdatum. Überfällige Entscheidungen werden rot markiert und können eskaliert werden.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isOwner && (
         <>
