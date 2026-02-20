@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Shield, Zap } from "lucide-react";
 import ProductTourModal from "./ProductTourModal";
-import productDashboardFrame from "@/assets/product-dashboard-frame.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -136,16 +135,52 @@ const HeroSection = () => {
               </div>
             </div>
 
-            {/* Real product screenshot */}
-            <div className="relative">
-              <img
-                src={productDashboardFrame}
-                alt="DecisionOS Dashboard"
-                className="w-full h-auto"
-                loading="eager"
-              />
+            {/* Code-based dashboard mockup */}
+            <div className="relative p-5 md:p-6 space-y-4">
+              {/* Top stats row */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "Approved", value: "12", color: "text-success" },
+                  { label: "In Review", value: "5", color: "text-warning" },
+                  { label: "Risk Score", value: "34%", color: "text-primary" },
+                ].map((s) => (
+                  <div key={s.label} className="p-3 rounded-xl bg-muted/30 border border-border/40">
+                    <div className={`text-xl md:text-2xl font-bold font-display ${s.color}`}>{s.value}</div>
+                    <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Chart mockup */}
+              <div className="p-4 rounded-xl bg-muted/20 border border-border/40">
+                <div className="text-xs font-medium text-muted-foreground mb-3">Decision Velocity</div>
+                <div className="flex items-end gap-1.5 h-20">
+                  {[40, 65, 50, 80, 55, 90, 70, 95, 75, 60, 85, 72].map((h, i) => (
+                    <motion.div
+                      key={i}
+                      className="flex-1 rounded-sm bg-primary/20"
+                      initial={{ height: 0 }}
+                      animate={{ height: `${h}%` }}
+                      transition={{ delay: 1.2 + i * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                  ))}
+                </div>
+              </div>
+              {/* Table mockup rows */}
+              <div className="space-y-1.5">
+                {[
+                  { title: "Q4 Budget Allocation", status: "Approved", statusColor: "bg-success/10 text-success" },
+                  { title: "Engineering Hiring Plan", status: "Review", statusColor: "bg-warning/10 text-warning" },
+                  { title: "Cloud Migration", status: "Draft", statusColor: "bg-muted text-muted-foreground" },
+                ].map((row) => (
+                  <div key={row.title} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/15 border border-border/30">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                    <span className="text-xs font-medium flex-1 truncate">{row.title}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${row.statusColor}`}>{row.status}</span>
+                  </div>
+                ))}
+              </div>
               {/* Fade to background at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-card to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent" />
             </div>
           </div>
         </motion.div>

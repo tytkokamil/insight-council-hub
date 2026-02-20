@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import {
   Brain, FileText, TrendingUp, Sparkles, Clock, Target, Zap, Shield,
 } from "lucide-react";
-import productAnalyticsFrame from "@/assets/product-analytics-frame.jpg";
+
 
 const capabilities = [
   { icon: Brain, title: "Risiko-Scoring", description: "Automatische Bewertung von Risiken basierend auf historischen Daten und Kontext." },
@@ -45,15 +45,29 @@ const AIShowcaseSection = () => (
             erkennt Risiken bevor sie auftreten, und liefert personalisierte Empfehlungen.
           </p>
 
-          {/* Product screenshot with glow frame */}
-          <div className="relative rounded-xl overflow-hidden border border-border/50 group">
-            <div className="absolute -inset-px rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            <img
-              src={productAnalyticsFrame}
-              alt="KI-Analyse Dashboard"
-              className="w-full h-auto relative"
-              loading="lazy"
-            />
+          {/* Code-based analytics mockup */}
+          <div className="relative rounded-xl overflow-hidden border border-border/50 bg-card p-4 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[11px] font-medium text-primary">Live Analyse</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Entscheidungen", value: "847", change: "+12%" },
+                { label: "Ø Zykluszeit", value: "3.2d", change: "-18%" },
+              ].map((m) => (
+                <div key={m.label} className="p-2.5 rounded-lg bg-muted/30 border border-border/40">
+                  <div className="text-lg font-bold font-display">{m.value}</div>
+                  <div className="text-[10px] text-muted-foreground">{m.label}</div>
+                  <div className="text-[10px] font-medium text-success">{m.change}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-end gap-1 h-14 px-1">
+              {[30, 45, 38, 60, 50, 70, 55, 80, 65, 75].map((h, i) => (
+                <div key={i} className="flex-1 rounded-sm bg-primary/20" style={{ height: `${h}%` }} />
+              ))}
+            </div>
           </div>
 
           {/* Metrics */}
