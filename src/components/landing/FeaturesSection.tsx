@@ -5,7 +5,6 @@ import {
   Shield, Clock, Target, Zap, ArrowRight, CheckCircle2, XOctagon,
 } from "lucide-react";
 
-
 const features = [
   {
     id: "ai-copilot",
@@ -62,6 +61,8 @@ const features = [
     preview: "analytics",
   },
 ];
+
+const ease = [0.16, 1, 0.3, 1] as const;
 
 /* ─── Mini preview components ─── */
 
@@ -243,38 +244,61 @@ const FeaturesSection = () => {
   return (
     <section id="features" className="py-32 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-40" />
-      {/* Subtle grid pattern */}
       <div className="absolute inset-0 grid-bg opacity-30" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, ease }}
           className="text-center max-w-3xl mx-auto mb-20"
         >
           <p className="text-sm font-medium text-primary mb-4 tracking-wide uppercase">Power Features</p>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-            Nicht nur Tracking —
-            <span className="gradient-text block mt-1">echte Entscheidungs-Intelligenz</span>
+            {"Nicht nur Tracking —".split(" ").map((word, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + i * 0.06, duration: 0.6, ease }}
+                className="inline-block mr-[0.25em]"
+              >
+                {word}
+              </motion.span>
+            ))}
+            <motion.span
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.7, ease }}
+              className="gradient-text block mt-1"
+            >
+              echte Entscheidungs-Intelligenz
+            </motion.span>
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="text-lg text-muted-foreground leading-relaxed"
+          >
             Von KI-gestützter Analyse bis zur automatischen Eskalation — alles was Enterprise-Teams brauchen.
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* Interactive feature showcase */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.8, ease }}
           className="max-w-5xl mx-auto"
         >
           <div className="relative rounded-2xl border border-border/50 bg-card overflow-hidden" style={{ boxShadow: 'var(--shadow-elevated)' }}>
-            {/* Gradient border glow */}
             <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
 
             {/* Tabs */}
@@ -304,7 +328,6 @@ const FeaturesSection = () => {
 
             {/* Content */}
             <div className="relative grid md:grid-cols-2 gap-0">
-              {/* Description */}
               <div className="p-8 md:p-10 flex flex-col justify-center border-r border-border">
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -331,7 +354,6 @@ const FeaturesSection = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Preview */}
               <div className="p-6 md:p-8 bg-muted/10 min-h-[280px] flex items-center">
                 <div className="w-full">
                   <AnimatePresence mode="wait">
@@ -351,25 +373,28 @@ const FeaturesSection = () => {
           </div>
         </motion.div>
 
-
         {/* Quick feature badges */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
           className="mt-12 flex flex-wrap justify-center gap-3"
         >
           {[
             "CEO Briefing", "Decision DNA", "Health Heatmap", "Predictive Timeline",
             "Friction Map", "Benchmarking", "Audit Trail", "Strategy Alignment",
-          ].map((badge) => (
-            <span
+          ].map((badge, i) => (
+            <motion.span
               key={badge}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 + i * 0.04, duration: 0.4 }}
               className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground hover:border-primary/20 hover:text-foreground transition-all duration-300 cursor-default"
             >
               {badge}
-            </span>
+            </motion.span>
           ))}
         </motion.div>
       </div>

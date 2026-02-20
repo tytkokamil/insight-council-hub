@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Quote, Star } from "lucide-react";
+import { Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -29,23 +29,41 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const TestimonialsSection = () => (
   <section id="testimonials" className="py-32 relative overflow-hidden">
-    {/* Ambient */}
     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/20 to-transparent" />
 
     <div className="container mx-auto px-4 relative z-10">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease }}
         className="text-center max-w-2xl mx-auto mb-20"
       >
         <p className="text-xs font-medium text-primary mb-4 tracking-widest uppercase">
           Kundenstimmen
         </p>
         <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
-          Was Enterprise-Teams
-          <span className="gradient-text"> über uns sagen</span>
+          {"Was Enterprise-Teams".split(" ").map((word, i) => (
+            <motion.span
+              key={i}
+              initial={{ opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 + i * 0.06, duration: 0.6, ease }}
+              className="inline-block mr-[0.25em]"
+            >
+              {word}
+            </motion.span>
+          ))}
+          <motion.span
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3, duration: 0.6, ease }}
+            className="gradient-text inline-block"
+          >
+            über uns sagen
+          </motion.span>
         </h2>
       </motion.div>
 
@@ -53,25 +71,22 @@ const TestimonialsSection = () => (
         {testimonials.map((t, i) => (
           <motion.div
             key={t.name}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.12, duration: 0.6, ease }}
-            className="group relative p-7 rounded-2xl border border-border/40 bg-card hover:border-primary/20 transition-all duration-500 flex flex-col"
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: i * 0.12, duration: 0.7, ease }}
+            className="group relative p-7 rounded-2xl border border-border/40 bg-card hover:border-primary/20 transition-all duration-500 flex flex-col card-interactive"
             style={{ boxShadow: 'var(--shadow-card)' }}
           >
-            {/* Hover gradient overlay */}
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.02] to-accent/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
             <div className="relative flex-1 flex flex-col">
-              {/* Stars */}
               <div className="flex gap-0.5 mb-4">
                 {[...Array(5)].map((_, j) => (
                   <Star key={j} className="w-3.5 h-3.5 fill-warning text-warning" />
                 ))}
               </div>
 
-              {/* Highlight badge */}
               <div className="inline-flex self-start px-2.5 py-1 rounded-full bg-primary/8 text-[10px] font-semibold text-primary mb-4">
                 {t.highlight}
               </div>
