@@ -316,6 +316,45 @@ export type Database = {
           },
         ]
       }
+      decision_tags: {
+        Row: {
+          created_at: string
+          created_by: string
+          decision_id: string
+          id: string
+          tag_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decision_id: string
+          id?: string
+          tag_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decision_id?: string
+          id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_tags_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisions: {
         Row: {
           actual_impact_score: number | null
@@ -440,6 +479,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      lessons_learned: {
+        Row: {
+          created_at: string
+          created_by: string
+          decision_id: string
+          id: string
+          key_takeaway: string
+          recommendations: string | null
+          updated_at: string
+          what_went_well: string | null
+          what_went_wrong: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decision_id: string
+          id?: string
+          key_takeaway: string
+          recommendations?: string | null
+          updated_at?: string
+          what_went_well?: string | null
+          what_went_wrong?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decision_id?: string
+          id?: string
+          key_takeaway?: string
+          recommendations?: string | null
+          updated_at?: string
+          what_went_well?: string | null
+          what_went_wrong?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_learned_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_preferences: {
         Row: {
@@ -677,6 +760,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tags: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
       }
       tasks: {
         Row: {

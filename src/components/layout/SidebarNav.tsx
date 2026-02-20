@@ -42,6 +42,7 @@ const navGroups: NavGroup[] = [
       { icon: Calendar, label: "Kalender", path: "/calendar", featureKey: "calendar" },
       { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
       { icon: BookOpen, label: "Templates", path: "/templates" },
+      { icon: Lightbulb, label: "Knowledge Base", path: "/knowledge" },
     ],
   },
   {
