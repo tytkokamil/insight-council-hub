@@ -18,7 +18,7 @@ const HeroSection = () => {
   const dashboardOpacity = useTransform(scrollYProgress, [0.4, 0.9], [1, 0]);
 
   return (
-    <section ref={heroRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-28 pb-16 w-full">
+    <section ref={heroRef} className="relative min-h-[90svh] flex items-center justify-center overflow-hidden pt-24 pb-10 w-full">
       {/* Layered ambient background */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.03] via-transparent to-transparent" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px] pointer-events-none" />
@@ -32,7 +32,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ delay: 0.1, duration: 0.8, ease }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border/60 mb-12 relative"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border/60 mb-8 relative"
           >
             <div className="absolute -inset-px rounded-full bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 opacity-60 blur-sm pointer-events-none" />
             <div className="relative flex items-center gap-2">
@@ -44,7 +44,7 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Headline — word-by-word stagger */}
-          <h1 className="font-display text-[clamp(2.5rem,6vw,5.5rem)] font-bold tracking-[-0.04em] leading-[0.92] mb-8">
+          <h1 className="font-display text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[0.92] mb-6">
             {["Nie", "wieder", "verlorene"].map((word, i) => (
               <motion.span
                 key={word}
@@ -72,7 +72,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8, ease }}
-            className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-14 leading-relaxed"
+            className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
             DecisionOS macht jede Geschäftsentscheidung nachvollziehbar,
             KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung.
@@ -100,7 +100,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.3, duration: 1 }}
-            className="mt-16 flex flex-wrap items-center justify-center gap-8"
+            className="mt-10 flex flex-wrap items-center justify-center gap-6"
           >
             {[
               { icon: Shield, text: "DSGVO-konform" },
@@ -127,7 +127,7 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 1.2, ease }}
           style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity }}
-          className="mt-28 relative max-w-5xl mx-auto"
+          className="mt-16 relative max-w-4xl mx-auto"
         >
           {/* Multi-layer glow */}
           <div className="absolute -inset-4 rounded-3xl bg-gradient-to-b from-primary/8 via-accent/4 to-transparent opacity-80 blur-2xl pointer-events-none" />

@@ -58,7 +58,7 @@ const plans = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const PricingSection = () => (
-  <section id="pricing" className="py-28 relative overflow-hidden">
+  <section id="pricing" className="py-20 relative overflow-hidden">
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-primary/[0.02] blur-[100px] pointer-events-none" />
 
     <div className="container mx-auto px-4 relative z-10">
@@ -67,7 +67,7 @@ const PricingSection = () => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-20"
+        className="text-center max-w-2xl mx-auto mb-12"
       >
         <p className="text-xs font-medium text-primary mb-4 tracking-widest uppercase">Preise</p>
         <h2 className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-5">
@@ -104,7 +104,7 @@ const PricingSection = () => (
         </motion.p>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
+      <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start pt-4">
         {plans.map((plan, i) => (
           <motion.div
             key={plan.name}
@@ -112,7 +112,7 @@ const PricingSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: i * 0.12, duration: 0.7, ease }}
-            className={`group relative rounded-2xl border p-8 transition-all duration-500 overflow-hidden ${
+            className={`group relative rounded-2xl border p-7 transition-all duration-500 ${
               plan.highlighted
                 ? "border-primary/30 bg-card"
                 : "border-border/40 bg-card hover:border-border"
@@ -122,8 +122,8 @@ const PricingSection = () => (
             {plan.highlighted && (
               <>
                 <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-primary/20 via-primary/5 to-transparent pointer-events-none" />
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground tracking-wide">
+                <div className="relative z-10 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground tracking-wide">
                     <Sparkles className="w-3 h-3" />
                     Beliebteste Wahl
                   </span>

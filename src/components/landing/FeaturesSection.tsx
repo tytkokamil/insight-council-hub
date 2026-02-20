@@ -242,7 +242,7 @@ const FeaturesSection = () => {
   const Preview = previewMap[current.preview];
 
   return (
-    <section id="features" className="py-28 relative overflow-hidden">
+    <section id="features" className="py-20 relative overflow-hidden">
       <div className="absolute inset-0 mesh-gradient opacity-40" />
       <div className="absolute inset-0 grid-bg opacity-30" />
 
@@ -253,7 +253,7 @@ const FeaturesSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7, ease }}
-          className="text-center max-w-3xl mx-auto mb-20"
+          className="text-center max-w-3xl mx-auto mb-12"
         >
           <p className="text-sm font-medium text-primary mb-4 tracking-wide uppercase">Power Features</p>
           <h2 className="font-display text-4xl md:text-5xl font-bold mb-6 tracking-tight">
