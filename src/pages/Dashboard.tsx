@@ -14,8 +14,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
-import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useInvalidateDecisions } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
@@ -46,12 +45,10 @@ const Dashboard = () => {
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useReviews();
-  const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
-  const [selectedDecision, setSelectedDecision] = useState<any>(null);
 
   const isPersonal = selectedTeamId === null;
   const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
@@ -272,7 +269,7 @@ const Dashboard = () => {
 
             {/* High Risk */}
             {computed.highRisk.length > 0 && (
-              <Card className="border-destructive/20 bg-destructive/[0.02] cursor-pointer hover:border-destructive/40 transition-colors" onClick={() => setSelectedDecision(computed.highRisk[0])}>
+              <Card className="border-destructive/20 bg-destructive/[0.02] cursor-pointer hover:border-destructive/40 transition-colors" onClick={() => navigate(`/decisions/${computed.highRisk[0].id}`)}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="w-4 h-4 text-destructive" />
@@ -414,10 +411,7 @@ const Dashboard = () => {
                     <div
                       key={item.id}
                       className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 cursor-pointer transition-colors"
-                      onClick={() => {
-                        const d = decisions.find(dec => dec.id === item.id);
-                        if (d) setSelectedDecision(d);
-                      }}
+                      onClick={() => navigate(`/decisions/${item.id}`)}
                     >
                       <span className="text-[10px] font-mono text-muted-foreground w-4">{i + 1}</span>
                       <div className="flex-1 min-w-0">
@@ -450,12 +444,6 @@ const Dashboard = () => {
         </Suspense>
       </CollapsibleSection>
 
-      <DecisionDetailDialog
-        decision={selectedDecision}
-        open={!!selectedDecision}
-        onOpenChange={(open) => { if (!open) setSelectedDecision(null); }}
-        onUpdated={invalidate}
-      />
     </AppLayout>
   );
 };
