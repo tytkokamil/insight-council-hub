@@ -36,13 +36,11 @@ const navGroups: NavGroup[] = [
   {
     label: "CORE",
     items: [
-      { icon: BarChart3, label: "Dashboard", path: "/dashboard", featureKey: "dashboard" },
-      { icon: FileText, label: "Entscheidungen", path: "/decisions", featureKey: "decisions" },
-      { icon: ListTodo, label: "Aufgaben", path: "/tasks", featureKey: "tasks" },
-      { icon: Calendar, label: "Kalender", path: "/calendar", featureKey: "calendar" },
+      { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: "dashboard" },
+      { icon: FileText, label: "Decisions", path: "/decisions", featureKey: "decisions" },
+      { icon: ListTodo, label: "Tasks", path: "/tasks", featureKey: "tasks" },
+      { icon: Calendar, label: "Calendar", path: "/calendar", featureKey: "calendar" },
       { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
-      { icon: BookOpen, label: "Templates", path: "/templates" },
-      { icon: Lightbulb, label: "Knowledge Base", path: "/knowledge" },
     ],
   },
   {
@@ -50,9 +48,8 @@ const navGroups: NavGroup[] = [
     items: [
       { icon: TrendingUp, label: "Analytics", path: "/analytics", featureKey: "analytics" },
       { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
-      { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
-      { icon: Clock, label: "Timeline", path: "/unified-timeline" },
-      { icon: Crosshair, label: "Strategie", path: "/strategy", featureKey: "strategy" },
+      { icon: Crosshair, label: "Strategy", path: "/strategy", featureKey: "strategy" },
+      { icon: History, label: "Audit", path: "/audit", featureKey: "audit" },
     ],
   },
   {
@@ -77,7 +74,6 @@ const navGroups: NavGroup[] = [
           { icon: Flame, label: "Friction Map", path: "/friction", featureKey: "friction" },
           { icon: Activity, label: "Health Heatmap", path: "/health", featureKey: "health" },
           { icon: Brain, label: "Pattern Engine", path: "/patterns", featureKey: "patterns" },
-          { icon: AlertTriangle, label: "Eskalationen", path: "/engine", featureKey: "engine" },
         ],
       },
       {
@@ -90,15 +86,22 @@ const navGroups: NavGroup[] = [
           { icon: FlaskConical, label: "Scenario Engine", path: "/scenarios", featureKey: "scenarios" },
         ],
       },
+      {
+        icon: AlertTriangle,
+        label: "Escalation Center",
+        children: [
+          { icon: Shield, label: "War Room", path: "/warroom", featureKey: "warroom" },
+          { icon: Zap, label: "Escalation Engine", path: "/engine", featureKey: "engine" },
+        ],
+      },
     ],
   },
   {
     label: "SYSTEM",
     items: [
-      { icon: Shield, label: "War Room", path: "/warroom", adminOnly: true, featureKey: "warroom" },
-      { icon: UserCog, label: "Nutzer", path: "/admin/users", adminOnly: true },
-      { icon: Beaker, label: "Pilot-Modus", path: "/pilot", adminOnly: true },
-      { icon: Settings, label: "Einstellungen", path: "/settings" },
+      { icon: Settings, label: "Settings", path: "/settings" },
+      { icon: UserCog, label: "Users", path: "/admin/users", adminOnly: true },
+      { icon: Beaker, label: "Pilot Mode", path: "/pilot", adminOnly: true },
     ],
   },
 ];
