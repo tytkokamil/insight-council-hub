@@ -1,14 +1,13 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useMemo, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import {
-  Plus, AlertTriangle, Clock, CheckCircle2, ArrowRight, BarChart3,
+  Plus, AlertTriangle, Clock, ArrowRight, BarChart3,
   Activity, DollarSign, Zap, FileText, Bell, Eye, TrendingUp, TrendingDown,
-  Minus, ListChecks, Circle, ShieldAlert,
+  Minus, ShieldAlert, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
@@ -20,23 +19,27 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { format, differenceInDays, subDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { categoryLabels } from "@/lib/labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 
 // Lazy-loaded heavy widgets
 const MomentumScoreWidget = lazy(() => import("@/components/dashboard/MomentumScoreWidget"));
 const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
 
-const statusLabels: Record<string, string> = {
-  draft: "Entwurf", review: "Review", approved: "Genehmigt",
-  implemented: "Umgesetzt", rejected: "Abgelehnt",
+const priorityColors: Record<string, string> = {
+  critical: "text-destructive",
+  high: "text-warning",
+  medium: "text-muted-foreground",
+  low: "text-muted-foreground",
 };
 
-const priorityLabels: Record<string, string> = {
-  low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch",
+const priorityBadge: Record<string, string> = {
+  critical: "bg-destructive/10 text-destructive border-destructive/20",
+  high: "bg-warning/10 text-warning border-warning/20",
+  medium: "bg-muted text-muted-foreground",
+  low: "bg-muted text-muted-foreground",
 };
 
 const Dashboard = () => {
@@ -62,7 +65,7 @@ const Dashboard = () => {
     ? tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id)
     : tasks;
 
-  // === COMPUTED DATA ===
+  // === ALL COMPUTED DATA ===
   const computed = useMemo(() => {
     const now = new Date();
     const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
@@ -70,6 +73,7 @@ const Dashboard = () => {
     const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
     const pendingReviews = reviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
     const highRisk = active.filter(d => (d.ai_risk_score || 0) > 60);
+    const overdueTasks = contextTasks.filter(t => t.status !== "done" && t.due_date && new Date(t.due_date) < now);
 
     // KPIs
     const implemented = decisions.filter(d => d.status === "implemented");
@@ -83,7 +87,7 @@ const Dashboard = () => {
 
     const escalationRate = decisions.length > 0 ? Math.round((escalated.length / decisions.length) * 100) : 0;
 
-    // Performance index (simplified momentum)
+    // Performance index
     const completionRate = decisions.length > 0 ? (implemented.length / decisions.length) * 100 : 0;
     const taskDoneRate = contextTasks.length > 0 ? (contextTasks.filter(t => t.status === "done").length / contextTasks.length) * 100 : 0;
     const performanceIndex = Math.round((completionRate * 0.6 + taskDoneRate * 0.4));
@@ -104,15 +108,17 @@ const Dashboard = () => {
         ...contextTasks.filter(t => t.completed_at && new Date(t.completed_at) >= weekStart && new Date(t.completed_at) < weekEnd),
       ].length;
 
-      const openAtEnd = decisions.filter(d => {
+      const overdueAtEnd = decisions.filter(d => {
+        if (!d.due_date) return false;
+        const due = new Date(d.due_date);
         const c = new Date(d.created_at);
-        if (c > weekEnd) return false;
+        if (c > weekEnd || due > weekEnd) return false;
         if (d.implemented_at && new Date(d.implemented_at) <= weekEnd) return false;
         if (d.status === "rejected") return false;
         return true;
       }).length;
 
-      return { week: weekLabel, erstellt: created, abgeschlossen: completed, offen: openAtEnd };
+      return { week: weekLabel, erstellt: created, abgeschlossen: completed, überfällig: overdueAtEnd };
     });
 
     // Economic impact
@@ -130,14 +136,17 @@ const Dashboard = () => {
     });
     costItems.sort((a, b) => b.cost - a.cost);
 
+    // Missed opportunity: decisions in review/draft > 14 days
+    const staleDecisions = active.filter(d => differenceInDays(now, new Date(d.created_at)) > 14);
+
     return {
-      overdue, escalated, pendingReviews, highRisk, active,
+      overdue, escalated, pendingReviews, highRisk, active, overdueTasks,
       openCount, overduePercent, avgDecisionTime, escalationRate, performanceIndex,
-      weekData, totalDelayCost, costItems,
+      weekData, totalDelayCost, costItems, staleDecisions, implemented,
     };
   }, [decisions, contextTasks, reviews, user]);
 
-  const actionItems = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.highRisk.length;
+  const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.overdueTasks.length;
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
 
@@ -207,31 +216,311 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* ═══ KPI SNAPSHOT ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        {[
-          { label: "Offen", value: computed.openCount, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
-          { label: "Überfällig", value: `${computed.overduePercent}%`, icon: AlertTriangle, color: computed.overduePercent > 20 ? "text-destructive" : "text-muted-foreground", bg: computed.overduePercent > 20 ? "bg-destructive/10" : "bg-muted/50" },
-          { label: "Ø Tage", value: computed.avgDecisionTime ?? "—", icon: Zap, color: "text-primary", bg: "bg-primary/10" },
-          { label: "Eskalationsrate", value: `${computed.escalationRate}%`, icon: Bell, color: computed.escalationRate > 15 ? "text-warning" : "text-muted-foreground", bg: computed.escalationRate > 15 ? "bg-warning/10" : "bg-muted/50" },
-          { label: "Performance", value: `${computed.performanceIndex}%`, icon: Activity, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive", bg: computed.performanceIndex > 60 ? "bg-success/10" : computed.performanceIndex > 30 ? "bg-warning/10" : "bg-destructive/10" },
-        ].map((kpi, i) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-            <Card className="h-full">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
-                  <div className={`w-7 h-7 rounded-md ${kpi.bg} flex items-center justify-center`}>
-                    <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+      <div className="space-y-6">
+
+        {/* ═══ BLOCK 1: ACTION REQUIRED ═══ */}
+        {actionCount > 0 && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="border-destructive/20 bg-destructive/[0.02]">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <ShieldAlert className="w-4 h-4 text-destructive" />
                   </div>
+                  <div className="flex-1">
+                    <CardTitle className="text-sm">Handlungsbedarf</CardTitle>
+                    <p className="text-xs text-muted-foreground">{actionCount} {actionCount === 1 ? "Punkt erfordert" : "Punkte erfordern"} deine Aufmerksamkeit</p>
+                  </div>
+                  <Badge variant="destructive" className="text-xs">{actionCount}</Badge>
                 </div>
-                <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {/* Overdue Decisions */}
+                {computed.overdue.map(d => (
+                  <button
+                    key={d.id}
+                    onClick={() => navigate(`/decisions/${d.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10 hover:bg-destructive/10 transition-colors text-left"
+                  >
+                    <Clock className="w-4 h-4 text-destructive shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{d.title}</p>
+                      <p className="text-xs text-muted-foreground">Überfällig seit {differenceInDays(new Date(), new Date(d.due_date!))}d</p>
+                    </div>
+                    <Badge variant="outline" className={`text-[10px] shrink-0 ${priorityBadge[d.priority]}`}>
+                      {d.priority}
+                    </Badge>
+                  </button>
+                ))}
+
+                {/* Escalations */}
+                {computed.escalated.filter(d => !computed.overdue.some(o => o.id === d.id)).map(d => (
+                  <button
+                    key={`esc-${d.id}`}
+                    onClick={() => navigate(`/decisions/${d.id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-warning/5 border border-warning/10 hover:bg-warning/10 transition-colors text-left"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{d.title}</p>
+                      <p className="text-xs text-muted-foreground">Eskalationsstufe {d.escalation_level}</p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] shrink-0 bg-warning/10 text-warning border-warning/20">
+                      Stufe {d.escalation_level}
+                    </Badge>
+                  </button>
+                ))}
+
+                {/* Pending Reviews */}
+                {computed.pendingReviews.map(r => (
+                  <button
+                    key={`rev-${r.id}`}
+                    onClick={() => navigate(`/decisions/${r.decision_id}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/10 hover:bg-primary/10 transition-colors text-left"
+                  >
+                    <Eye className="w-4 h-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Review ausstehend</p>
+                      <p className="text-xs text-muted-foreground">Wartet auf deine Bewertung</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+
+                {/* Overdue Tasks */}
+                {computed.overdueTasks.slice(0, 3).map(t => (
+                  <button
+                    key={`task-${t.id}`}
+                    onClick={() => navigate("/tasks")}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-destructive/5 border border-destructive/10 hover:bg-destructive/10 transition-colors text-left"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-destructive shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{t.title}</p>
+                      <p className="text-xs text-muted-foreground">Aufgabe überfällig seit {differenceInDays(new Date(), new Date(t.due_date!))}d</p>
+                    </div>
+                  </button>
+                ))}
+
+                {computed.overdueTasks.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center pt-1">
+                    +{computed.overdueTasks.length - 3} weitere überfällige Aufgaben
+                  </p>
+                )}
               </CardContent>
             </Card>
           </motion.div>
-        ))}
-      </div>
+        )}
 
+        {/* ═══ BLOCK 2: KPI SNAPSHOT ═══ */}
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">KPI Snapshot</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {[
+              { label: "Offen", value: computed.openCount, icon: FileText, color: "text-primary", bg: "bg-primary/10" },
+              { label: "Überfällig", value: `${computed.overduePercent}%`, icon: AlertTriangle, color: computed.overduePercent > 20 ? "text-destructive" : "text-muted-foreground", bg: computed.overduePercent > 20 ? "bg-destructive/10" : "bg-muted/50" },
+              { label: "Ø Tage", value: computed.avgDecisionTime ?? "—", icon: Zap, color: "text-primary", bg: "bg-primary/10" },
+              { label: "Eskalationsrate", value: `${computed.escalationRate}%`, icon: Bell, color: computed.escalationRate > 15 ? "text-warning" : "text-muted-foreground", bg: computed.escalationRate > 15 ? "bg-warning/10" : "bg-muted/50" },
+              { label: "Performance", value: `${computed.performanceIndex}%`, icon: Activity, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive", bg: computed.performanceIndex > 60 ? "bg-success/10" : computed.performanceIndex > 30 ? "bg-warning/10" : "bg-destructive/10" },
+            ].map((kpi, i) => (
+              <motion.div key={kpi.label} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                <Card className="h-full">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                      <div className={`w-7 h-7 rounded-md ${kpi.bg} flex items-center justify-center`}>
+                        <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+                      </div>
+                    </div>
+                    <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* ═══ BLOCK 3: TRENDS ═══ */}
+        <CollapsibleSection
+          title="Trend-Analyse"
+          subtitle="Velocity · Durchsatz · Verzögerungen"
+          icon={<TrendingUp className="w-4 h-4 text-primary" />}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Velocity / Throughput Chart */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Durchsatz & Velocity</CardTitle>
+                <p className="text-xs text-muted-foreground">Erstellt vs. Abgeschlossen (8 Wochen)</p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                      <defs>
+                        <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--success, 142 71% 45%))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--success, 142 71% 45%))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis dataKey="week" tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                      <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                      />
+                      <Area type="monotone" dataKey="erstellt" stroke="hsl(var(--primary))" fill="url(#gradCreated)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="abgeschlossen" stroke="hsl(var(--success, 142 71% 45%))" fill="url(#gradCompleted)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Delay Trend Chart */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Verzögerungs-Trend</CardTitle>
+                <p className="text-xs text-muted-foreground">Überfällige Entscheidungen pro Woche</p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                      <defs>
+                        <linearGradient id="gradOverdue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                      <XAxis dataKey="week" tick={{ fontSize: 10 }} className="text-muted-foreground" />
+                      <YAxis tick={{ fontSize: 10 }} className="text-muted-foreground" allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                      />
+                      <Area type="monotone" dataKey="überfällig" stroke="hsl(var(--destructive))" fill="url(#gradOverdue)" strokeWidth={2} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CollapsibleSection>
+
+        {/* ═══ BLOCK 4: ECONOMIC IMPACT ═══ */}
+        <CollapsibleSection
+          title="Economic Impact"
+          subtitle="Verzögerungskosten · Verpasste Chancen"
+          icon={<DollarSign className="w-4 h-4 text-destructive" />}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Delay Cost */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <DollarSign className="w-4 h-4 text-destructive" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm">Geschätzte Verzögerungskosten</CardTitle>
+                    <p className="text-xs text-muted-foreground">{computed.active.length} offene Entscheidungen</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-destructive mb-4">{formatCost(computed.totalDelayCost)}</p>
+                {computed.costItems.length > 0 && (
+                  <div className="space-y-2 pt-3 border-t border-border">
+                    {computed.costItems.slice(0, 4).map((c, i) => (
+                      <button
+                        key={i}
+                        onClick={() => navigate(`/decisions/${c.id}`)}
+                        className="w-full flex items-center justify-between hover:bg-muted/50 rounded-md p-1.5 -mx-1.5 transition-colors"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <AlertTriangle className={`w-3.5 h-3.5 shrink-0 ${priorityColors[c.priority]}`} />
+                          <span className="text-xs truncate">{c.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0 ml-2">
+                          <span className="text-[10px] text-muted-foreground">{c.days}d</span>
+                          <span className="text-xs font-bold text-destructive">{formatCost(c.cost)}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Missed Opportunity */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-warning" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm">Verpasste Chancen</CardTitle>
+                    <p className="text-xs text-muted-foreground">Entscheidungen {">"} 14 Tage ohne Fortschritt</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-warning mb-1">{computed.staleDecisions.length}</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  {computed.staleDecisions.length === 0
+                    ? "Keine stagnierenden Entscheidungen – alles im Fluss."
+                    : "Entscheidungen, die seit über 2 Wochen nicht vorankommen"
+                  }
+                </p>
+                {computed.staleDecisions.length > 0 && (
+                  <div className="space-y-2 pt-3 border-t border-border">
+                    {computed.staleDecisions.slice(0, 4).map(d => (
+                      <button
+                        key={d.id}
+                        onClick={() => navigate(`/decisions/${d.id}`)}
+                        className="w-full flex items-center justify-between hover:bg-muted/50 rounded-md p-1.5 -mx-1.5 transition-colors"
+                      >
+                        <span className="text-xs truncate">{d.title}</span>
+                        <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                          {differenceInDays(new Date(), new Date(d.created_at))}d offen
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </CollapsibleSection>
+
+        {/* ═══ BLOCK 5: DEEP INSIGHTS (Optional) ═══ */}
+        <CollapsibleSection
+          title="Deep Insights"
+          subtitle="Momentum Score · Leaderboard"
+          icon={<Activity className="w-4 h-4 text-primary" />}
+          defaultOpen={false}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <WidgetErrorBoundary label="Momentum Score">
+              <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
+                <MomentumScoreWidget />
+              </Suspense>
+            </WidgetErrorBoundary>
+            <WidgetErrorBoundary label="Leaderboard">
+              <Suspense fallback={<Skeleton className="h-64 rounded-lg" />}>
+                <LeaderboardWidget />
+              </Suspense>
+            </WidgetErrorBoundary>
+          </div>
+        </CollapsibleSection>
+
+      </div>
     </AppLayout>
   );
 };
