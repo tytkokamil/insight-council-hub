@@ -52,6 +52,7 @@ const DecisionDetail = lazy(() => import("./pages/DecisionDetail"));
 const AutomationRules = lazy(() => import("./pages/AutomationRules"));
 const ArchivePage = lazy(() => import("./pages/ArchivePage"));
 const RiskRegister = lazy(() => import("./pages/RiskRegister"));
+const TeamPerformance = lazy(() => import("./pages/TeamPerformance"));
 const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/automations" element={<P><AutomationRules /></P>} />
               <Route path="/archive" element={<P><ArchivePage /></P>} />
               <Route path="/risks" element={<P><RiskRegister /></P>} />
+              <Route path="/team-performance" element={<P><TeamPerformance /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
