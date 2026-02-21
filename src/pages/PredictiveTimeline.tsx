@@ -5,6 +5,7 @@ import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, Chev
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
 import { de } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -339,6 +340,21 @@ const PredictiveTimeline = () => {
               </div>
             </div>
             </CollapsibleSection>
+
+            {/* AI Analysis */}
+            <AiInsightPanel
+              type="pattern"
+              context={{
+                analysisType: "predictive_timeline",
+                openDecisions: decisions.length,
+                avgPredictedDays: avgPredicted,
+                atRiskCount: atRisk,
+                avgConfidence,
+                topRisks: sorted.filter(d => d.warning).slice(0, 5).map(d => ({
+                  title: d.title, warning: d.warning, predictedDaysLeft: d.predictedDaysLeft, confidence: d.confidence
+                })),
+              }}
+            />
           </>
         )}
       </div>
