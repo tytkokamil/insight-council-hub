@@ -42,7 +42,7 @@ const HeroSection = () => {
           </motion.div>
 
           {/* Headline — Problem + Outcome */}
-          <h1 className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[0.92] mb-6">
+          <h1 className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[0.95] mb-6">
             <motion.span
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
