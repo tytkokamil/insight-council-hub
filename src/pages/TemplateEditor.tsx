@@ -99,6 +99,87 @@ const TemplateEditor = () => {
     patchDraft({ approval_steps: localDraft.approval_steps.filter((_, i) => i !== idx) });
   };
 
+  // --- Conditional Rule CRUD ---
+  const addRule = () => {
+    if (!localDraft) return;
+    patchDraft({
+      conditional_rules: [
+        ...(localDraft.conditional_rules || []),
+        { when: "priority", operator: "equals", value: "critical", addFields: [], addApprovalSteps: [], governanceHint: "" },
+      ],
+    });
+  };
+
+  const updateRule = (idx: number, patch: Record<string, any>) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    rules[idx] = { ...rules[idx], ...patch };
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const removeRule = (idx: number) => {
+    if (!localDraft) return;
+    patchDraft({ conditional_rules: (localDraft.conditional_rules || []).filter((_: any, i: number) => i !== idx) });
+  };
+
+  const addRuleField = (ruleIdx: number) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    rule.addFields = [...(rule.addFields || []), { key: `cond_field_${Date.now()}`, label: "Neues Feld", type: "text", placeholder: "" }];
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const updateRuleField = (ruleIdx: number, fieldIdx: number, patch: Record<string, any>) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    const fields = [...(rule.addFields || [])];
+    fields[fieldIdx] = { ...fields[fieldIdx], ...patch };
+    rule.addFields = fields;
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const removeRuleField = (ruleIdx: number, fieldIdx: number) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    rule.addFields = (rule.addFields || []).filter((_: any, i: number) => i !== fieldIdx);
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const addRuleStep = (ruleIdx: number) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    rule.addApprovalSteps = [...(rule.addApprovalSteps || []), { role: "reviewer", label: "Neuer Schritt", required: false }];
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const updateRuleStep = (ruleIdx: number, stepIdx: number, patch: Record<string, any>) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    const steps = [...(rule.addApprovalSteps || [])];
+    steps[stepIdx] = { ...steps[stepIdx], ...patch };
+    rule.addApprovalSteps = steps;
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
+  const removeRuleStep = (ruleIdx: number, stepIdx: number) => {
+    if (!localDraft) return;
+    const rules = [...(localDraft.conditional_rules || [])];
+    const rule = { ...rules[ruleIdx] };
+    rule.addApprovalSteps = (rule.addApprovalSteps || []).filter((_: any, i: number) => i !== stepIdx);
+    rules[ruleIdx] = rule;
+    patchDraft({ conditional_rules: rules });
+  };
+
   const handleSave = () => {
     if (!localDraft) return;
     const newVersion = localDraft.version + 1;
@@ -524,41 +605,129 @@ const TemplateEditor = () => {
               </CardContent>
             </Card>
 
-            {/* Conditional Rules (read-only) */}
+            {/* Conditional Rules (editable) */}
             <Card>
               <CardContent className="p-5">
                 <SectionHeader label="Bedingte Regeln" sectionKey="rules" count={localDraft.conditional_rules?.length || 0} />
                 {expandedSections.rules && (
-                  <div className="space-y-2 mt-2">
+                  <div className="space-y-3 mt-2">
                     {(!localDraft.conditional_rules || localDraft.conditional_rules.length === 0) ? (
                       <p className="text-xs text-muted-foreground">Keine bedingten Regeln konfiguriert.</p>
                     ) : (
                       localDraft.conditional_rules.map((rule: any, idx: number) => (
-                        <div key={idx} className="p-3 rounded-lg bg-muted/20 border border-border text-xs space-y-1">
-                          <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-3.5 h-3.5 text-warning" />
-                            <span className="font-medium">
-                              Wenn <code className="bg-muted px-1 rounded">{rule.when}</code>{" "}
-                              <code className="bg-muted px-1 rounded">{rule.operator}</code>{" "}
-                              <code className="bg-muted px-1 rounded">{Array.isArray(rule.value) ? rule.value.join(", ") : rule.value}</code>
-                            </span>
+                        <div key={idx} className="p-3 rounded-lg bg-muted/20 border border-border text-xs space-y-3">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="w-3.5 h-3.5 text-warning mt-1 shrink-0" />
+                            <div className="flex-1 grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Feld</label>
+                                <Select value={rule.when} onValueChange={v => updateRule(idx, { when: v })}>
+                                  <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="priority">Priorität</SelectItem>
+                                    <SelectItem value="category">Kategorie</SelectItem>
+                                    <SelectItem value="budget_impact">Budget-Auswirkung</SelectItem>
+                                    <SelectItem value="stakeholder_count">Stakeholder-Anzahl</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Operator</label>
+                                <Select value={rule.operator} onValueChange={v => updateRule(idx, { operator: v })}>
+                                  <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="equals">Gleich</SelectItem>
+                                    <SelectItem value="not_equals">Nicht gleich</SelectItem>
+                                    <SelectItem value="greater_than">Größer als</SelectItem>
+                                    <SelectItem value="in">Enthält</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <label className="text-[10px] text-muted-foreground">Wert(e)</label>
+                                <Input
+                                  value={Array.isArray(rule.value) ? rule.value.join(", ") : rule.value}
+                                  onChange={e => {
+                                    const raw = e.target.value;
+                                    const val = rule.operator === "in" ? raw.split(",").map((s: string) => s.trim()).filter(Boolean) : raw;
+                                    updateRule(idx, { value: val });
+                                  }}
+                                  className="mt-0.5 h-8 text-xs"
+                                  placeholder={rule.operator === "in" ? "Werte kommagetrennt" : "Wert"}
+                                />
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive/60 hover:text-destructive" onClick={() => removeRule(idx)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
-                          {rule.governanceHint && (
-                            <p className="text-muted-foreground pl-5">{rule.governanceHint}</p>
-                          )}
-                          {rule.addFields && rule.addFields.length > 0 && (
-                            <p className="text-muted-foreground pl-5">
-                              → Zusätzliche Felder: {rule.addFields.map((f: any) => f.label).join(", ")}
-                            </p>
-                          )}
-                          {rule.addApprovalSteps && rule.addApprovalSteps.length > 0 && (
-                            <p className="text-muted-foreground pl-5">
-                              → Zusätzliche Freigabe: {rule.addApprovalSteps.map((s: any) => s.label).join(", ")}
-                            </p>
-                          )}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground">Governance-Hinweis</label>
+                            <Input
+                              value={rule.governanceHint || ""}
+                              onChange={e => updateRule(idx, { governanceHint: e.target.value })}
+                              className="mt-0.5 h-8 text-xs"
+                              placeholder="Hinweis bei Auslösung..."
+                            />
+                          </div>
+                          {/* Conditional extra fields */}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground mb-1 block">Zusätzliche Pflichtfelder ({rule.addFields?.length || 0})</label>
+                            <div className="space-y-1.5">
+                              {(rule.addFields || []).map((f: any, fi: number) => (
+                                <div key={fi} className="flex items-center gap-2">
+                                  <Input value={f.label} onChange={e => updateRuleField(idx, fi, { label: e.target.value, key: e.target.value.toLowerCase().replace(/\s+/g, "_") })} className="h-7 text-xs flex-1" placeholder="Feldname" />
+                                  <Select value={f.type} onValueChange={v => updateRuleField(idx, fi, { type: v })}>
+                                    <SelectTrigger className="h-7 text-xs w-[90px]"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {fieldTypes.map(ft => <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>)}
+                                    </SelectContent>
+                                  </Select>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/60" onClick={() => removeRuleField(idx, fi)}>
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => addRuleField(idx)}>
+                                <Plus className="w-3 h-3" /> Feld
+                              </Button>
+                            </div>
+                          </div>
+                          {/* Conditional extra approval steps */}
+                          <div>
+                            <label className="text-[10px] text-muted-foreground mb-1 block">Zusätzliche Freigabe-Schritte ({rule.addApprovalSteps?.length || 0})</label>
+                            <div className="space-y-1.5">
+                              {(rule.addApprovalSteps || []).map((s: any, si: number) => (
+                                <div key={si} className="flex items-center gap-2">
+                                  <Input value={s.label} onChange={e => updateRuleStep(idx, si, { label: e.target.value })} className="h-7 text-xs flex-1" placeholder="Schrittname" />
+                                  <Select value={s.role} onValueChange={v => updateRuleStep(idx, si, { role: v })}>
+                                    <SelectTrigger className="h-7 text-xs w-[100px]"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="decision_maker">Entscheider</SelectItem>
+                                      <SelectItem value="reviewer">Reviewer</SelectItem>
+                                      <SelectItem value="admin">Admin/GF</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <div className="flex items-center gap-1">
+                                    <label className="text-[9px] text-muted-foreground">Pflicht</label>
+                                    <Switch checked={s.required} onCheckedChange={v => updateRuleStep(idx, si, { required: v })} className="scale-75" />
+                                  </div>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/60" onClick={() => removeRuleStep(idx, si)}>
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => addRuleStep(idx)}>
+                                <Plus className="w-3 h-3" /> Freigabe-Schritt
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       ))
                     )}
+                    <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={addRule}>
+                      <Plus className="w-3.5 h-3.5" /> Regel hinzufügen
+                    </Button>
                   </div>
                 )}
               </CardContent>
