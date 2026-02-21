@@ -28,7 +28,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DecisionGraph = lazy(() => import("./pages/DecisionGraph"));
 const BottleneckIntelligence = lazy(() => import("./pages/BottleneckIntelligence"));
 const OpportunityCostRadar = lazy(() => import("./pages/OpportunityCostRadar"));
-const WarRoom = lazy(() => import("./pages/WarRoom"));
+// WarRoom removed – integrated into EscalationEngine
 const PredictiveTimeline = lazy(() => import("./pages/PredictiveTimeline"));
 const Strategy = lazy(() => import("./pages/Strategy"));
 const FrictionMap = lazy(() => import("./pages/FrictionMap"));
@@ -46,7 +46,7 @@ const DecisionCalendar = lazy(() => import("./pages/DecisionCalendar"));
 const PatternEngine = lazy(() => import("./pages/PatternEngine"));
 const TeamDetail = lazy(() => import("./pages/TeamDetail"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
-const Templates = lazy(() => import("./pages/Templates"));
+// Templates page removed – integrated into TemplateEditor
 const TimelinePage = lazy(() => import("./pages/TimelinePage"));
 const TemplateEditor = lazy(() => import("./pages/TemplateEditor"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
@@ -96,7 +96,7 @@ const App = () => (
               <Route path="/graph" element={<P><DecisionGraph /></P>} />
               <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
               <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
-              <Route path="/warroom" element={<P><WarRoom /></P>} />
+              {/* /warroom removed – integrated into /engine */}
               <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
               <Route path="/strategy" element={<P><Strategy /></P>} />
               <Route path="/friction" element={<P><FrictionMap /></P>} />
@@ -112,7 +112,7 @@ const App = () => (
               <Route path="/pilot" element={<P><PilotSettings /></P>} />
               <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
               <Route path="/patterns" element={<P><PatternEngine /></P>} />
-              <Route path="/templates" element={<P><Templates /></P>} />
+              <Route path="/templates" element={<P><TemplateEditor /></P>} />
               <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
               <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
               <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />

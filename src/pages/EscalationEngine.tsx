@@ -10,11 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import {
   Zap, Play, Loader2, AlertTriangle, CheckCircle2, Clock, Lightbulb, Shield,
-  Users, SkipForward, ExternalLink, TrendingUp, ArrowUpRight,
+  Users, SkipForward, ExternalLink, TrendingUp, ArrowUpRight, Flame, Target, Activity,
 } from "lucide-react";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import { useDecisions, useFilteredNotifications } from "@/hooks/useDecisions";
+import { useDecisions, useFilteredNotifications, useFilteredDependencies } from "@/hooks/useDecisions";
+import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
+import { differenceInDays } from "date-fns";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend,
@@ -34,11 +36,13 @@ const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(va
 
 const EscalationEngine = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [running, setRunning] = useState(false);
   const [lastResult, setLastResult] = useState<EngineResult | null>(null);
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: notifications = [], isLoading: notifLoading } = useFilteredNotifications();
+  const { data: allDeps = [], isLoading: depsLoading } = useFilteredDependencies();
 
   const { data: slaConfigs = [] } = useQuery({
     queryKey: ["sla-configs"],
@@ -50,7 +54,7 @@ const EscalationEngine = () => {
     staleTime: 60_000,
   });
 
-  const loading = decLoading || notifLoading;
+  const loading = decLoading || notifLoading || depsLoading;
 
   const recentNotifications = useMemo(() =>
     notifications
@@ -187,14 +191,19 @@ const EscalationEngine = () => {
         </Card>
       )}
 
-      {/* ═══ TABS ═══ */}
-      <Tabs defaultValue="active" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="critical" className="space-y-4">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="critical">🔥 Top 5 Kritisch</TabsTrigger>
           <TabsTrigger value="active">Aktive Eskalationen</TabsTrigger>
           <TabsTrigger value="rules">Regeln (SLA)</TabsTrigger>
           <TabsTrigger value="log">Escalation Log</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
+
+        {/* Tab: Top 5 Critical (from War Room) */}
+        <TabsContent value="critical">
+          <CriticalDecisionsTab decisions={decisions} allDeps={allDeps} escalationNotifications={recentNotifications.filter(n => n.type === "escalation")} />
+        </TabsContent>
 
         {/* Tab: Active Escalations */}
         <TabsContent value="active">
@@ -361,5 +370,99 @@ const EscalationEngine = () => {
     </AppLayout>
   );
 };
+
+/* ── War Room: Top 5 Critical Decisions + Systemic Risks ── */
+function CriticalDecisionsTab({ decisions, allDeps, escalationNotifications }: { decisions: any[]; allDeps: any[]; escalationNotifications: any[] }) {
+  const now = new Date();
+  const open = decisions.filter(d => !["implemented", "rejected", "cancelled", "superseded", "archived"].includes(d.status));
+  const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
+  const scored = open.map(d => {
+    const daysOpen = differenceInDays(now, new Date(d.created_at));
+    const overdue = d.due_date ? new Date(d.due_date) < now : false;
+    const riskWeight = (d.ai_risk_score || 0) / 20;
+    const urgencyScore =
+      (priorityWeight[d.priority] || 1) * 25 +
+      (overdue ? 30 : 0) +
+      Math.min(daysOpen, 30) * 1.5 +
+      riskWeight * 10 +
+      (d.escalation_level || 0) * 15;
+    return { ...d, daysOpen, overdue, urgencyScore };
+  }).sort((a, b) => b.urgencyScore - a.urgencyScore).slice(0, 5);
+
+  // Systemic risks
+  const risks: { severity: string; title: string; detail: string; metric: string }[] = [];
+  const stale = open.filter(d => differenceInDays(now, new Date(d.created_at)) > 14 && ["draft", "review"].includes(d.status));
+  if (stale.length > 0) risks.push({ severity: stale.length > 3 ? "critical" : "high", title: "Stagnierende Entscheidungen", detail: `${stale.length} seit >14 Tagen ohne Fortschritt`, metric: `${stale.length}` });
+
+  const recentEsc = escalationNotifications.filter(n => differenceInDays(now, new Date(n.created_at)) <= 7).length;
+  if (recentEsc > 2) risks.push({ severity: recentEsc > 5 ? "critical" : "high", title: "Eskalationswelle", detail: `${recentEsc} Eskalationen in 7 Tagen`, metric: `${recentEsc}` });
+
+  const blockedIds = new Set(allDeps.map(d => d.target_decision_id));
+  const blockedOpen = open.filter(d => blockedIds.has(d.id));
+  if (blockedOpen.length > 1) risks.push({ severity: blockedOpen.length > 3 ? "critical" : "high", title: "Abhängigkeits-Engpass", detail: `${blockedOpen.length} blockierte Entscheidungen`, metric: `${blockedOpen.length}` });
+
+  const priorityBadge = (p: string) =>
+    p === "critical" ? "bg-destructive/20 text-destructive" : p === "high" ? "bg-warning/20 text-warning" : p === "medium" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground";
+
+  return (
+    <div className="grid lg:grid-cols-5 gap-6">
+      <div className="lg:col-span-3 space-y-3">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <Flame className="w-4 h-4 text-destructive" /> Top 5 Kritische Entscheidungen
+        </h2>
+        <div className="space-y-2">
+          {scored.map((d, i) => (
+            <Link key={d.id} to={`/decisions/${d.id}`} className="block">
+              <div className={`p-4 rounded-lg border hover:bg-muted/30 transition-colors ${d.overdue ? "border-destructive/50 bg-destructive/5" : "border-border bg-muted/20"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge(d.priority)}`}>
+                        {d.priority === "critical" ? "Kritisch" : d.priority === "high" ? "Hoch" : d.priority === "medium" ? "Mittel" : "Niedrig"}
+                      </span>
+                      {d.overdue && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">ÜBERFÄLLIG</span>}
+                    </div>
+                    <p className="text-sm font-medium truncate">{d.title}</p>
+                    <div className="flex items-center gap-4 mt-1.5 text-[10px] text-muted-foreground">
+                      <span>{d.daysOpen}d offen</span>
+                      {d.ai_risk_score != null && <span>Risiko: {d.ai_risk_score}%</span>}
+                      {(d.escalation_level || 0) > 0 && <span className="text-destructive">Lv.{d.escalation_level}</span>}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold font-display">{Math.round(d.urgencyScore)}</p>
+                    <p className="text-[10px] text-muted-foreground">Urgency</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+          {scored.length === 0 && <p className="text-center py-8 text-muted-foreground text-sm">Keine offenen Entscheidungen 🎉</p>}
+        </div>
+      </div>
+      <div className="lg:col-span-2 space-y-3">
+        <h2 className="text-sm font-semibold flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-warning" /> Systemische Risiken
+        </h2>
+        {risks.length === 0 ? (
+          <Card><CardContent className="p-4 text-center text-sm text-muted-foreground">
+            <Activity className="w-6 h-6 mx-auto mb-2 opacity-30" /> Keine kritischen Risiken erkannt.
+          </CardContent></Card>
+        ) : (
+          <div className="space-y-2">
+            {risks.map((r, i) => (
+              <div key={i} className={`p-4 rounded-lg border ${r.severity === "critical" ? "border-destructive bg-destructive/10" : "border-warning bg-warning/10"}`}>
+                <p className={`text-xs font-semibold ${r.severity === "critical" ? "text-destructive" : "text-warning"}`}>{r.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{r.detail}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default EscalationEngine;
