@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+type OutcomeType = "successful" | "partial" | "failed" | null;
+
+const OUTCOME_OPTIONS: { value: OutcomeType; label: string; emoji: string; color: string }[] = [
+  { value: "successful", label: "Erfolgreich", emoji: "✅", color: "border-success/40 bg-success/10 text-success" },
+  { value: "partial", label: "Teilweise", emoji: "⚠️", color: "border-warning/40 bg-warning/10 text-warning" },
+  { value: "failed", label: "Gescheitert", emoji: "❌", color: "border-destructive/40 bg-destructive/10 text-destructive" },
+];
+
 const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
   const [outcomeNotes, setOutcomeNotes] = useState(decision.outcome_notes || "");
   const [actualImpact, setActualImpact] = useState<number>(decision.actual_impact_score ?? 0);
+  const [outcomeType, setOutcomeType] = useState<OutcomeType>(decision.outcome_type || null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -24,8 +33,9 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
       const { error } = await supabase.from("decisions").update({
         outcome_notes: outcomeNotes.trim(),
         actual_impact_score: actualImpact,
+        outcome_type: outcomeType,
         implemented_at: decision.implemented_at || new Date().toISOString(),
-      }).eq("id", decision.id);
+      } as any).eq("id", decision.id);
       if (error) throw error;
       onUpdated();
       toast({ title: "Outcome gespeichert" });
@@ -74,6 +84,24 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
 
       {/* Outcome Form */}
       <div className="space-y-3 pt-2 border-t border-border">
+        {/* Outcome Type Selection */}
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">Ergebnis-Bewertung</label>
+          <div className="flex gap-2">
+            {OUTCOME_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setOutcomeType(opt.value)}
+                className={`flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                  outcomeType === opt.value ? opt.color : "border-border bg-muted/30 text-muted-foreground hover:border-border/80"
+                }`}
+              >
+                {opt.emoji} {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Tatsächlicher Impact-Score (0-100)</label>
           <input

@@ -21,7 +21,7 @@ import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
 import ShareDecisionDialog from "./ShareDecisionDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle } from "lucide-react";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle, Lock } from "lucide-react";
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -208,7 +208,24 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
               )}
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm text-muted-foreground flex-1">{decision.description || "Keine Beschreibung"}</p>
+            {decision.confidential && (
+              <Badge variant="outline" className="text-[10px] gap-1 border-destructive/30 text-destructive bg-destructive/5">
+                <Lock className="w-3 h-3" /> Vertraulich
+              </Badge>
+            )}
+            {decision.outcome_type && (
+              <Badge variant="outline" className={`text-[10px] gap-1 ${
+                decision.outcome_type === "successful" ? "border-success/30 text-success bg-success/5" :
+                decision.outcome_type === "partial" ? "border-warning/30 text-warning bg-warning/5" :
+                "border-destructive/30 text-destructive bg-destructive/5"
+              }`}>
+                {decision.outcome_type === "successful" ? "✅ Erfolgreich" :
+                 decision.outcome_type === "partial" ? "⚠️ Teilweise" : "❌ Gescheitert"}
+              </Badge>
+            )}
+          </div>
           {/* Template version info */}
           {decision.template_used && (() => {
             const currentTpl = decisionTemplates.find(t => t.name === decision.template_used);

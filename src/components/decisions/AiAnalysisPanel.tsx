@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Brain, AlertTriangle, CheckCircle2, Loader2, Lightbulb, ThumbsUp, ThumbsDown, TrendingUp } from "lucide-react";
+import { Brain, AlertTriangle, CheckCircle2, Loader2, Lightbulb, ThumbsUp, ThumbsDown, TrendingUp, Info, ShieldCheck, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface WeightedFactor {
+  factor: string;
+  weight: number;
+}
 
 interface AiOption {
   title: string;
@@ -12,6 +19,12 @@ interface AiOption {
   estimated_roi: string;
   confidence: number;
 }
+
+const CONFIDENCE_CONFIG = {
+  high: { label: "Hoch", color: "text-success border-success/30 bg-success/10", icon: ShieldCheck },
+  medium: { label: "Mittel", color: "text-warning border-warning/30 bg-warning/10", icon: ShieldAlert },
+  low: { label: "Niedrig", color: "text-destructive border-destructive/30 bg-destructive/10", icon: AlertTriangle },
+};
 
 const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +39,9 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
   );
   const [options, setOptions] = useState<AiOption[]>(decision.ai_options || []);
   const [recommendation, setRecommendation] = useState<string>("");
+  const [confidence, setConfidence] = useState<string | null>(null);
+  const [confidenceReason, setConfidenceReason] = useState<string>("");
+  const [riskExplanation, setRiskExplanation] = useState<string>("");
   const { toast } = useToast();
 
   const runAnalysis = async () => {
@@ -37,9 +53,17 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       setAnalysis(data);
+      setConfidence(data.confidence || null);
+      setConfidenceReason(data.confidence_reason || "");
+      setRiskExplanation(data.risk_explanation || "");
+
+      // Normalize risk_factors for storage (extract strings if weighted objects)
+      const riskStrings = (data.risk_factors || []).map((f: any) => typeof f === "string" ? f : f.factor);
+      const successStrings = (data.success_factors || []).map((f: any) => typeof f === "string" ? f : f.factor);
+
       await supabase.from("decisions").update({
         ai_risk_score: data.risk_score, ai_impact_score: data.impact_score,
-        ai_risk_factors: data.risk_factors, ai_success_factors: data.success_factors,
+        ai_risk_factors: riskStrings, ai_success_factors: successStrings,
       }).eq("id", decision.id);
       onUpdated();
       toast({ title: "KI-Analyse abgeschlossen", description: data.summary });
@@ -60,9 +84,13 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
       setAnalysis(data);
       setOptions(data.options || []);
       setRecommendation(data.recommendation || "");
+
+      const riskStrings = (data.risk_factors || []).map((f: any) => typeof f === "string" ? f : f.factor);
+      const successStrings = (data.success_factors || []).map((f: any) => typeof f === "string" ? f : f.factor);
+
       await supabase.from("decisions").update({
         ai_risk_score: data.risk_score, ai_impact_score: data.impact_score,
-        ai_risk_factors: data.risk_factors, ai_success_factors: data.success_factors,
+        ai_risk_factors: riskStrings, ai_success_factors: successStrings,
         ai_options: data.options,
       }).eq("id", decision.id);
       onUpdated();
@@ -75,6 +103,43 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
 
   const scoreColor = (score: number) =>
     score > 60 ? "text-destructive" : score > 40 ? "text-warning" : "text-success";
+
+  const renderWeightedFactors = (factors: any[], type: "risk" | "success") => {
+    const isWeighted = factors.length > 0 && typeof factors[0] === "object";
+    const maxWeight = isWeighted ? Math.max(...factors.map((f: any) => f.weight || 1)) : 1;
+
+    return (
+      <ul className="space-y-1.5">
+        {factors.map((f: any, i: number) => {
+          const text = typeof f === "string" ? f : f.factor;
+          const weight = typeof f === "object" ? f.weight : null;
+          const barWidth = weight ? (weight / 10) * 100 : 0;
+
+          return (
+            <li key={i} className="text-xs text-muted-foreground">
+              <div className="flex items-start gap-1.5">
+                <span className={`mt-0.5 ${type === "risk" ? "text-destructive" : "text-success"}`}>•</span>
+                <div className="flex-1">
+                  <span>{text}</span>
+                  {weight !== null && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${type === "risk" ? "bg-destructive/60" : "bg-success/60"}`}
+                          style={{ width: `${barWidth}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground/70 w-6 text-right">{weight}/10</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
 
   return (
     <div className="space-y-4 mt-4">
@@ -94,6 +159,21 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
 
       {analysis ? (
         <div className="space-y-4">
+          {/* Confidence Meter */}
+          {confidence && CONFIDENCE_CONFIG[confidence as keyof typeof CONFIDENCE_CONFIG] && (() => {
+            const cfg = CONFIDENCE_CONFIG[confidence as keyof typeof CONFIDENCE_CONFIG];
+            const ConfIcon = cfg.icon;
+            return (
+              <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${cfg.color}`}>
+                <ConfIcon className="w-4 h-4 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <span className="text-xs font-semibold">Konfidenz: {cfg.label}</span>
+                  {confidenceReason && <p className="text-[10px] opacity-80 mt-0.5">{confidenceReason}</p>}
+                </div>
+              </div>
+            );
+          })()}
+
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground mb-1">Risiko-Score</p>
@@ -111,22 +191,25 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
             </div>
           </div>
 
+          {/* Explainable AI: Risk Explanation */}
+          {riskExplanation && (
+            <div className="p-3 rounded-lg bg-muted/20 border border-border/50">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Info className="w-3.5 h-3.5 text-primary" />
+                <span className="text-xs font-semibold text-primary">Warum dieser Score?</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{riskExplanation}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-medium text-destructive flex items-center gap-1 mb-2"><AlertTriangle className="w-3 h-3" /> Risikofaktoren</p>
-              <ul className="space-y-1">
-                {(analysis.risk_factors || []).map((f: string, i: number) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5"><span className="text-destructive mt-0.5">•</span> {f}</li>
-                ))}
-              </ul>
+              {renderWeightedFactors(analysis.risk_factors || [], "risk")}
             </div>
             <div>
               <p className="text-xs font-medium text-success flex items-center gap-1 mb-2"><CheckCircle2 className="w-3 h-3" /> Erfolgsfaktoren</p>
-              <ul className="space-y-1">
-                {(analysis.success_factors || []).map((f: string, i: number) => (
-                  <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5"><span className="text-success mt-0.5">•</span> {f}</li>
-                ))}
-              </ul>
+              {renderWeightedFactors(analysis.success_factors || [], "success")}
             </div>
           </div>
 
