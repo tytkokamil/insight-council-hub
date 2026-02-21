@@ -3,17 +3,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, MessageCircle } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import TeamOverviewTab from "@/components/teams/TeamOverviewTab";
 import TeamChat from "@/components/teams/TeamChat";
+import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isTeamAdmin, setIsTeamAdmin] = useState(false);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -28,6 +32,27 @@ const TeamDetail = () => {
     };
     fetchTeam();
   }, [teamId]);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!teamId || !user) return;
+      // Check org-level admin
+      const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
+      if (roleData?.role === "org_owner" || roleData?.role === "org_admin") {
+        setIsTeamAdmin(true);
+        return;
+      }
+      // Check team-level admin/lead
+      const { data: memberData } = await supabase
+        .from("team_members")
+        .select("role")
+        .eq("team_id", teamId)
+        .eq("user_id", user.id)
+        .single();
+      setIsTeamAdmin(memberData?.role === "admin" || memberData?.role === "lead");
+    };
+    checkAdmin();
+  }, [teamId, user]);
 
   if (loading) {
     return (
@@ -78,6 +103,12 @@ const TeamDetail = () => {
               <MessageCircle className="w-3.5 h-3.5" />
               Chat
             </TabsTrigger>
+            {isTeamAdmin && (
+              <TabsTrigger value="settings" className="gap-1.5">
+                <Settings className="w-3.5 h-3.5" />
+                Einstellungen
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -89,6 +120,21 @@ const TeamDetail = () => {
               <TeamChat teamId={team.id} teamName={team.name} />
             </div>
           </TabsContent>
+
+
+          {isTeamAdmin && (
+            <TabsContent value="settings" className="mt-6">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">SLA-Konfiguration</h2>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Definiere Eskalations-Schwellwerte und Reassignment-Regeln für dieses Team.
+                  </p>
+                  <SlaConfigPanel />
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </AppLayout>
