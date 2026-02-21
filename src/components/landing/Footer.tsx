@@ -6,8 +6,8 @@ const Footer = () => (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
         <div className="col-span-2 md:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-4 group">
-            <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
-              <span className="text-background text-xs font-bold">D</span>
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
+              <span className="text-white text-xs font-bold">D</span>
             </div>
             <span className="font-bold tracking-tight">DecisionOS</span>
           </Link>
@@ -17,12 +17,12 @@ const Footer = () => (
         </div>
 
         {[
-          { title: "Produkt", links: ["Funktionen", "Templates", "Integrationen", "Preise"] },
-          { title: "Unternehmen", links: ["Über uns", "Blog", "Karriere", "Kontakt"] },
-          { title: "Rechtliches", links: ["Datenschutz", "AGB", "Sicherheit", "DSGVO"] },
+          { title: "Produkt", links: ["Funktionen", "Templates", "Integrationen", "Preise"], color: "text-accent-blue" },
+          { title: "Unternehmen", links: ["Über uns", "Blog", "Karriere", "Kontakt"], color: "text-accent-violet" },
+          { title: "Rechtliches", links: ["Datenschutz", "AGB", "Sicherheit", "DSGVO"], color: "text-accent-teal" },
         ].map(section => (
           <div key={section.title}>
-            <h4 className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground/50 mb-4">{section.title}</h4>
+            <h4 className={`text-xs font-medium tracking-[0.15em] uppercase ${section.color}/50 mb-4`}>{section.title}</h4>
             <ul className="space-y-2.5">
               {section.links.map(link => (
                 <li key={link}>
@@ -38,12 +38,16 @@ const Footer = () => (
 
       <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/30">
         <p className="text-xs text-muted-foreground/50">
-          © 2025 DecisionOS. Alle Rechte vorbehalten.
+          © 2026 DecisionOS. Alle Rechte vorbehalten.
         </p>
         <div className="flex items-center gap-6 mt-4 md:mt-0">
-          {["Twitter", "LinkedIn", "GitHub"].map(social => (
-            <a key={social} href="#" className="text-xs text-muted-foreground/50 hover:text-foreground transition-colors duration-200">
-              {social}
+          {[
+            { name: "Twitter", hoverColor: "hover:text-accent-blue" },
+            { name: "LinkedIn", hoverColor: "hover:text-accent-blue" },
+            { name: "GitHub", hoverColor: "hover:text-foreground" },
+          ].map(social => (
+            <a key={social.name} href="#" className={`text-xs text-muted-foreground/50 ${social.hoverColor} transition-colors duration-200`}>
+              {social.name}
             </a>
           ))}
         </div>

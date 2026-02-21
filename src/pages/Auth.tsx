@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, AlertCircle, LayoutDashboard } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, LayoutDashboard, Shield, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -74,9 +74,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Subtle background accents */}
+      {/* Colored background orbs */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent-violet/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+      <div className="absolute top-1/2 left-1/2 w-[300px] h-[300px] bg-accent-teal/3 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -86,7 +87,7 @@ const Auth = () => {
       >
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent-violet/20 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <LayoutDashboard className="w-6 h-6 text-primary" />
           </div>
           <h1 className="font-display text-2xl font-bold">DecisionOS</h1>
@@ -96,7 +97,7 @@ const Auth = () => {
         </div>
 
         {/* Form Card */}
-        <Card>
+        <Card className="border-border/50 shadow-glow">
           <CardContent className="p-6">
             {/* Tab Toggle */}
             <div className="flex bg-muted rounded-lg p-1 mb-6">
@@ -170,8 +171,9 @@ const Auth = () => {
                 </div>
               )}
               {success && (
-                <div className="text-success text-sm bg-success/10 border border-success/20 p-3 rounded-lg">
-                  {success}
+                <div className="flex items-start gap-2 text-accent-teal text-sm bg-accent-teal/10 border border-accent-teal/20 p-3 rounded-lg">
+                  <Zap className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{success}</span>
                 </div>
               )}
 
@@ -192,9 +194,17 @@ const Auth = () => {
           </CardContent>
         </Card>
 
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          Decision Intelligence Platform
-        </p>
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-6 mt-6">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+            <Shield className="w-3.5 h-3.5 text-accent-teal/50" />
+            DSGVO-konform
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground/50">
+            <Lock className="w-3.5 h-3.5 text-accent-blue/50" />
+            256-bit SSL
+          </div>
+        </div>
       </motion.div>
     </div>
   );
