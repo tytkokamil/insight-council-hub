@@ -31,6 +31,7 @@ export const useDecisions = () => {
       return data ?? [];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 };
 
@@ -42,7 +43,8 @@ export const useTeams = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
 export const useDependencies = () =>
@@ -54,6 +56,7 @@ export const useDependencies = () =>
       return data ?? [];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 
 /** Dependencies filtered to only include those where both source and target are in the current decision set */
@@ -79,6 +82,7 @@ export const useReviews = () =>
       return data ?? [];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 
 /** Reviews filtered to only include those for decisions in the current team context */
@@ -117,7 +121,8 @@ export const useProfiles = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
 /** Utility: build a map of user_id -> full_name from profiles data */
@@ -136,6 +141,7 @@ export const useNotifications = () =>
       return data ?? [];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 
 /** Hook to invalidate all decision-related caches */

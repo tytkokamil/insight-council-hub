@@ -7,7 +7,15 @@ interface FeatureFlag {
   description: string | null;
   enabled: boolean;
   category: string;
+  min_plan: string;
 }
+
+const PLAN_ORDER: Record<string, number> = {
+  starter: 0,
+  pro: 1,
+  business: 2,
+  enterprise: 3,
+};
 
 interface FeatureFlagsContextType {
   flags: FeatureFlag[];
@@ -15,6 +23,7 @@ interface FeatureFlagsContextType {
   isEnabled: (key: string) => boolean;
   toggleFlag: (key: string, enabled: boolean) => Promise<void>;
   refetch: () => void;
+  isAvailableForPlan: (key: string, currentPlan: string) => boolean;
 }
 
 const FeatureFlagsContext = createContext<FeatureFlagsContextType | undefined>(undefined);
@@ -26,7 +35,7 @@ export const FeatureFlagsProvider = ({ children }: { children: ReactNode }) => {
   const fetchFlags = useCallback(async () => {
     const { data } = await supabase
       .from("feature_flags")
-      .select("feature_key, label, description, enabled, category")
+      .select("feature_key, label, description, enabled, category, min_plan")
       .order("category")
       .order("label");
     if (data) setFlags(data);
@@ -58,8 +67,17 @@ export const FeatureFlagsProvider = ({ children }: { children: ReactNode }) => {
     []
   );
 
+  const isAvailableForPlan = useCallback(
+    (key: string, currentPlan: string) => {
+      const flag = flags.find((f) => f.feature_key === key);
+      if (!flag) return true;
+      return (PLAN_ORDER[currentPlan] ?? 0) >= (PLAN_ORDER[flag.min_plan] ?? 0);
+    },
+    [flags]
+  );
+
   return (
-    <FeatureFlagsContext.Provider value={{ flags, loading, isEnabled, toggleFlag, refetch: fetchFlags }}>
+    <FeatureFlagsContext.Provider value={{ flags, loading, isEnabled, toggleFlag, refetch: fetchFlags, isAvailableForPlan }}>
       {children}
     </FeatureFlagsContext.Provider>
   );
