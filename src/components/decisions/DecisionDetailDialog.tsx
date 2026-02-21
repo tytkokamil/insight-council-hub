@@ -25,6 +25,8 @@ import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+import { toast } from "sonner";
+
 interface Props {
   decision: any;
   open: boolean;
@@ -54,6 +56,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
   const [activeTab, setActiveTab] = useState("discussion");
 
   // Count open tasks linked to this decision
@@ -111,6 +114,47 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   };
 
   const isOwner = user?.id === decision.created_by;
+
+  const handleTemplateUpgrade = async () => {
+    const currentTpl = decisionTemplates.find(t => t.name === decision.template_used);
+    if (!currentTpl || !user) return;
+
+    setUpgrading(true);
+    const newSnapshot = {
+      name: currentTpl.name,
+      version: currentTpl.version,
+      category: currentTpl.category,
+      priority: currentTpl.priority,
+      requiredFields: currentTpl.requiredFields.map(f => ({ key: f.key, label: f.label, type: f.type })),
+      approvalSteps: currentTpl.approvalSteps,
+      governanceNotes: currentTpl.governanceNotes,
+      defaultDurationDays: currentTpl.defaultDurationDays,
+    };
+
+    const { error } = await supabase
+      .from("decisions")
+      .update({
+        template_version: currentTpl.version,
+        template_snapshot: newSnapshot,
+      } as any)
+      .eq("id", decision.id);
+
+    if (!error) {
+      await supabase.from("audit_logs").insert({
+        decision_id: decision.id,
+        user_id: user.id,
+        action: "template_upgraded",
+        field_name: "template_version",
+        old_value: String(decision.template_version || 0),
+        new_value: String(currentTpl.version),
+      });
+      toast.success(`Template auf v${currentTpl.version} aktualisiert`);
+      onUpdated();
+    } else {
+      toast.error("Upgrade fehlgeschlagen");
+    }
+    setUpgrading(false);
+  };
 
   // Group tabs into categories for cleaner navigation
   const tabGroups = [
@@ -176,17 +220,29 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
                   <FileText className="w-3 h-3" /> {decision.template_used}
                   {savedVersion && <span className="text-muted-foreground">v{savedVersion}</span>}
                 </Badge>
-                {isOutdated && (
+                {isOutdated && isOwner && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-[10px] gap-1 border-warning/40 text-warning">
-                        <AlertTriangle className="w-3 h-3" /> Neue Version v{currentVersion} verfügbar
-                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-5 text-[10px] gap-1 border-warning/40 text-warning hover:bg-warning/10 px-2"
+                        onClick={handleTemplateUpgrade}
+                        disabled={upgrading}
+                      >
+                        <AlertTriangle className="w-3 h-3" />
+                        {upgrading ? "Upgrade…" : `Auf v${currentVersion} upgraden`}
+                      </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs max-w-56">
-                      Diese Entscheidung nutzt Template v{savedVersion}. Die aktuelle Version ist v{currentVersion}. Die gespeicherte Vorlage bleibt unverändert.
+                      Aktualisiert die Template-Struktur auf v{currentVersion}. Alle bestehenden Daten bleiben erhalten.
                     </TooltipContent>
                   </Tooltip>
+                )}
+                {isOutdated && !isOwner && (
+                  <Badge variant="outline" className="text-[10px] gap-1 border-warning/40 text-warning">
+                    <AlertTriangle className="w-3 h-3" /> v{currentVersion} verfügbar
+                  </Badge>
                 )}
               </div>
             );
