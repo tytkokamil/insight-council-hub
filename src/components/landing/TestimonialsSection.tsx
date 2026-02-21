@@ -4,8 +4,8 @@ import { Star, Quote } from "lucide-react";
 const testimonials = [
   {
     name: "Dr. Sarah Lindner",
-    role: "VP Operations, Siemens Digital",
-    quote: "DecisionOS hat unsere Entscheidungszyklen von 3 Wochen auf 4 Tage reduziert. Der KI Co-Pilot allein spart uns hunderte Stunden pro Quartal.",
+    role: "VP Operations",
+    quote: "Unsere Entscheidungszyklen haben sich von 3 Wochen auf 4 Tage reduziert. Endlich haben wir Transparenz über alle kritischen Beschlüsse.",
     avatar: "SL",
     highlight: "3 Wochen → 4 Tage",
     accentClass: "from-accent-blue to-accent-violet",
@@ -13,17 +13,17 @@ const testimonials = [
   },
   {
     name: "Marcus Weber",
-    role: "CTO, TechScale GmbH",
-    quote: "Der Decision Graph war ein Gamechanger. Wir sehen endlich wie unsere technischen Entscheidungen zusammenhängen und können Konflikte frühzeitig erkennen.",
+    role: "CTO, Series-B Startup",
+    quote: "Wir sehen endlich, wie unsere technischen Entscheidungen zusammenhängen. Konflikte erkennen wir jetzt Wochen früher.",
     avatar: "MW",
-    highlight: "Gamechanger",
+    highlight: "-35% Eskalationen",
     accentClass: "from-accent-violet to-accent-rose",
     avatarBg: "bg-accent-violet/15 text-accent-violet",
   },
   {
     name: "Anna Richter",
-    role: "Head of Strategy, FinBridge AG",
-    quote: "Die Szenario-Engine hat uns geholfen, eine €50M Investitionsentscheidung mit vollem Confidence zu treffen. Unverzichtbar für unser C-Level.",
+    role: "Head of Strategy, Enterprise",
+    quote: "Die Szenario-Engine hat uns bei einer €50M Investitionsentscheidung geholfen. Unverzichtbar für unser C-Level.",
     avatar: "AR",
     highlight: "€50M Entscheidung",
     accentClass: "from-accent-teal to-accent-blue",
@@ -47,7 +47,7 @@ const TestimonialsSection = () => (
           Kundenstimmen
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Was Enterprise-Teams <span className="gradient-text">über uns sagen</span>
+          Was unsere Kunden <span className="gradient-text">berichten</span>
         </h2>
       </motion.div>
 
@@ -62,17 +62,14 @@ const TestimonialsSection = () => (
             className="group relative p-7 rounded-2xl border border-border bg-card hover:border-primary/20 transition-all duration-300 flex flex-col"
           >
             <div className="relative flex-1 flex flex-col">
-              {/* Quote icon */}
               <Quote className="w-5 h-5 text-primary/20 mb-3" />
 
-              {/* Stars - golden */}
               <div className="flex gap-0.5 mb-4">
                 {[...Array(5)].map((_, j) => (
                   <Star key={j} className="w-3.5 h-3.5 fill-accent-amber text-accent-amber" />
                 ))}
               </div>
 
-              {/* Highlight badge with gradient */}
               <div className={`inline-flex self-start px-2.5 py-1 rounded-full bg-gradient-to-r ${t.accentClass} text-[10px] font-semibold text-white mb-4`}>
                 {t.highlight}
               </div>

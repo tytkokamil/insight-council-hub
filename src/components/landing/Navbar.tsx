@@ -5,10 +5,10 @@ import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const navItems = [
-  { label: "Funktionen", href: "#features" },
-  { label: "Preise", href: "#pricing" },
-  { label: "Vorteile", href: "#stats" },
+  { label: "Vorteile", href: "#features" },
+  { label: "Use Cases", href: "#use-cases" },
   { label: "Kunden", href: "#testimonials" },
+  { label: "Preise", href: "#pricing" },
 ];
 
 const Navbar = () => {

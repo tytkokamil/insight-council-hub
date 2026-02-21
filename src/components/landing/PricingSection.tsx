@@ -4,14 +4,13 @@ import { Check, ArrowRight, Sparkles } from "lucide-react";
 
 const plans = [
   {
-    name: "Starter",
+    name: "Free",
     price: "0",
     period: "für immer kostenlos",
     description: "Für kleine Teams, die Struktur in ihre Entscheidungen bringen wollen.",
     features: [
-      "Bis zu 5 Nutzer",
-      "50 Entscheidungen / Monat",
-      "Basis-Dashboard",
+      "1 Team, bis zu 5 Nutzer",
+      "Basis-Templates & Dashboard",
       "Audit Trail",
       "E-Mail-Support",
     ],
@@ -20,18 +19,16 @@ const plans = [
     checkColor: "text-accent-teal",
   },
   {
-    name: "Business",
+    name: "Pro",
     price: "49",
     period: "pro Nutzer / Monat",
-    description: "Für wachsende Teams mit Bedarf an KI-Analysen und Automatisierung.",
+    description: "KI-Intelligenz, Governance und Automatisierung für wachsende Teams.",
     features: [
-      "Unbegrenzte Nutzer",
-      "Unbegrenzte Entscheidungen",
+      "Unbegrenzte Nutzer & Teams",
       "KI Co-Pilot & Risiko-Scoring",
-      "Szenario-Engine",
-      "Auto-Eskalation",
-      "Decision Graph",
-      "CEO Briefing",
+      "Szenario-Engine & Simulationen",
+      "Auto-Eskalation & SLA",
+      "Decision Graph & CEO Briefing",
       "Prioritäts-Support",
     ],
     cta: "14 Tage kostenlos testen",
@@ -42,14 +39,13 @@ const plans = [
     name: "Enterprise",
     price: "Individuell",
     period: "",
-    description: "Maßgeschneidert für Konzerne mit höchsten Anforderungen.",
+    description: "Maßgeschneidert für Konzerne mit höchsten Governance-Anforderungen.",
     features: [
-      "Alles aus Business",
+      "Alles aus Pro",
       "SSO & SAML",
-      "Dedizierte Instanz",
-      "Custom Integrationen",
+      "Advanced Governance & Compliance",
+      "Custom KI-Modelle",
       "SLA-Garantie 99,9%",
-      "Onboarding & Training",
       "Dedicated Success Manager",
     ],
     cta: "Demo vereinbaren",
@@ -72,10 +68,10 @@ const PricingSection = () => (
       >
         <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Preise</p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Transparent und <span className="gradient-text">fair kalkuliert</span>
+          Einfach, transparent, <span className="gradient-text">fair</span>
         </h2>
         <p className="text-muted-foreground leading-relaxed">
-          Starte kostenlos und skaliere mit deinem Team. Keine versteckten Kosten.
+          Starten Sie kostenlos. Skalieren Sie mit Ihrem Team. Keine versteckten Kosten.
         </p>
       </motion.div>
 
@@ -128,18 +124,11 @@ const PricingSection = () => (
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
               <ul className="space-y-3">
-                {plan.features.map((feature, fi) => (
-                  <motion.li
-                    key={feature}
-                    initial={{ opacity: 0, x: -8 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 + fi * 0.04, duration: 0.4 }}
-                    className="flex items-start gap-2.5 text-sm"
-                  >
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5 text-sm">
                     <Check className={`w-3.5 h-3.5 ${plan.checkColor} shrink-0 mt-0.5`} />
                     <span className="text-muted-foreground">{feature}</span>
-                  </motion.li>
+                  </li>
                 ))}
               </ul>
             </div>

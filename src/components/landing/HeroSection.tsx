@@ -37,23 +37,29 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
-              Enterprise Decision Intelligence
+              Decision Operating System
             </span>
           </motion.div>
 
-          {/* Headline */}
+          {/* Headline — Problem + Outcome */}
           <h1 className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[0.92] mb-6">
-            {["Nie", "wieder", "verlorene"].map((word, i) => (
-              <motion.span
-                key={word}
-                initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                transition={{ delay: 0.2 + i * 0.08, duration: 0.8, ease }}
-                className="inline-block mr-[0.3em]"
-              >
-                {word}
-              </motion.span>
-            ))}
+            <motion.span
+              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ delay: 0.2, duration: 0.8, ease }}
+              className="inline-block"
+            >
+              Ihr Unternehmen hat kein
+            </motion.span>
+            <br />
+            <motion.span
+              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ delay: 0.35, duration: 0.8, ease }}
+              className="inline-block"
+            >
+              Task-Problem. Es hat ein
+            </motion.span>
             <br />
             <motion.span
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
@@ -61,19 +67,19 @@ const HeroSection = () => {
               transition={{ delay: 0.5, duration: 1, ease }}
               className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent"
             >
-              Entscheidungen.
+              Entscheidungs-Problem.
             </motion.span>
           </h1>
 
-          {/* Subline */}
+          {/* Subline — Value Proposition */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.8, ease }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            DecisionOS macht jede Geschäftsentscheidung nachvollziehbar,
-            KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung.
+            DecisionOS gibt Ihrer Organisation Struktur, Governance und
+            KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar.
           </motion.p>
 
           {/* CTA */}
@@ -93,12 +99,22 @@ const HeroSection = () => {
             </Button>
           </motion.div>
 
+          {/* Target audience */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.1, duration: 0.8 }}
+            className="mt-8 text-xs text-muted-foreground/60"
+          >
+            Für wachsende Teams und Unternehmen, die strategische Entscheidungen strukturieren wollen.
+          </motion.p>
+
           {/* Trust badges */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.3, duration: 1 }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-6"
+            className="mt-6 flex flex-wrap items-center justify-center gap-6"
           >
             {[
               { icon: Shield, text: "DSGVO-konform", color: "text-accent-teal" },
@@ -146,9 +162,9 @@ const HeroSection = () => {
             <div className="relative p-5 md:p-6 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Approved", value: "12", accent: "border-accent-teal/20 bg-accent-teal/[0.04]" },
-                  { label: "In Review", value: "5", accent: "border-accent-amber/20 bg-accent-amber/[0.04]" },
-                  { label: "Risk Score", value: "34%", accent: "border-accent-blue/20 bg-accent-blue/[0.04]" },
+                  { label: "Freigegeben", value: "12", accent: "border-accent-teal/20 bg-accent-teal/[0.04]" },
+                  { label: "Im Review", value: "5", accent: "border-accent-amber/20 bg-accent-amber/[0.04]" },
+                  { label: "Risiko-Score", value: "34%", accent: "border-accent-blue/20 bg-accent-blue/[0.04]" },
                 ].map((s, i) => (
                   <motion.div
                     key={s.label}
@@ -183,9 +199,9 @@ const HeroSection = () => {
               </motion.div>
               <div className="space-y-1.5">
                 {[
-                  { title: "Q4 Budget Allocation", status: "Approved", statusColor: "bg-accent-teal/10 text-accent-teal" },
+                  { title: "Q4 Budget-Freigabe", status: "Freigegeben", statusColor: "bg-accent-teal/10 text-accent-teal" },
                   { title: "Engineering Hiring Plan", status: "Review", statusColor: "bg-accent-amber/10 text-accent-amber" },
-                  { title: "Cloud Migration", status: "Draft", statusColor: "bg-muted text-muted-foreground" },
+                  { title: "Cloud Migration", status: "Entwurf", statusColor: "bg-muted text-muted-foreground" },
                 ].map((row, i) => (
                   <motion.div
                     key={row.title}
