@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Lock } from "lucide-react";
+import { Lock, Crown } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type DecisionCategory = Database["public"]["Enums"]["decision_category"];
@@ -42,6 +42,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const { user } = useAuth();
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
+  const [ownerId, setOwnerId] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [context, setContext] = useState("");
@@ -50,6 +51,16 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [dueDate, setDueDate] = useState("");
   const [changeReason, setChangeReason] = useState("");
   const [confidential, setConfidential] = useState(false);
+
+  // Fetch profiles for owner selector
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, full_name");
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
 
   useEffect(() => {
     if (decision) {
@@ -60,6 +71,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       setPriority(decision.priority || "medium");
       setDueDate(decision.due_date || "");
       setConfidential(decision.confidential || false);
+      setOwnerId(decision.owner_id || decision.created_by || "");
       setChangeReason("");
     }
   }, [decision]);
@@ -115,6 +127,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         priority,
         due_date: dueDate || null,
         confidential,
+        owner_id: ownerId || undefined,
       } as any)
       .eq("id", decision.id);
 
@@ -185,6 +198,20 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
+              <Crown className="w-3.5 h-3.5 text-warning" /> Owner (Accountable)
+            </label>
+            <Select value={ownerId} onValueChange={setOwnerId}>
+              <SelectTrigger><SelectValue placeholder="Owner auswählen" /></SelectTrigger>
+              <SelectContent>
+                {profiles.map(p => (
+                  <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || p.user_id.slice(0, 8)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[10px] text-muted-foreground mt-1">Owner ist verantwortlich für Status, Freigabe und Teilen.</p>
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
             <div className="flex items-center gap-2">

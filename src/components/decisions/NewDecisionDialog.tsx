@@ -340,6 +340,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       due_date: dueDate || null,
       team_id: teamId || null,
       created_by: user.id,
+      owner_id: user.id,
       template_used: selectedTemplate?.name || null,
       template_version: selectedTemplate?.version || null,
       template_snapshot: templateSnapshot,

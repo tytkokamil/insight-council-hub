@@ -183,7 +183,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
           title: d.title, description: d.description,
           category: d.category as any, priority: d.priority as any,
           due_date: d.due_date || null, team_id: selectedTeamId || null,
-          created_by: user.id, status: "draft" as const,
+          created_by: user.id, owner_id: user.id, status: "draft" as const,
         }));
         const { error } = await supabase.from("decisions").insert(rows);
         if (error) throw error;
