@@ -26,6 +26,7 @@ import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { toast } from "sonner";
+import { EventTypes } from "@/lib/eventTaxonomy";
 
 interface Props {
   decision: any;
@@ -103,7 +104,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
         user_id: user!.id,
-        action: "status_changed",
+        action: newStatus === "archived" ? EventTypes.DECISION_ARCHIVED : EventTypes.DECISION_STATUS_CHANGED,
         field_name: "status",
         old_value: oldStatus,
         new_value: newStatus,
@@ -143,7 +144,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
         user_id: user.id,
-        action: "template_upgraded",
+        action: EventTypes.DECISION_TEMPLATE_UPGRADED,
         field_name: "template_version",
         old_value: String(decision.template_version || 0),
         new_value: String(currentTpl.version),

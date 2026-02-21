@@ -574,6 +574,7 @@ export type Database = {
           context: string | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           description: string | null
           due_date: string | null
           escalation_level: number | null
@@ -605,6 +606,7 @@ export type Database = {
           context?: string | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           escalation_level?: number | null
@@ -636,6 +638,7 @@ export type Database = {
           context?: string | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           escalation_level?: number | null
@@ -1176,6 +1179,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           created_by: string
+          deleted_at: string | null
           description: string | null
           due_date: string | null
           id: string
@@ -1191,6 +1195,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -1206,6 +1211,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -1539,6 +1545,37 @@ export type Database = {
         | "implemented"
         | "rejected"
         | "archived"
+      event_type:
+        | "decision.created"
+        | "decision.updated"
+        | "decision.status_changed"
+        | "decision.deleted"
+        | "decision.restored"
+        | "decision.archived"
+        | "decision.shared"
+        | "decision.template_upgraded"
+        | "review.created"
+        | "review.approved"
+        | "review.rejected"
+        | "review.delegated"
+        | "task.created"
+        | "task.updated"
+        | "task.status_changed"
+        | "task.deleted"
+        | "task.restored"
+        | "escalation.triggered"
+        | "escalation.resolved"
+        | "automation.rule_executed"
+        | "team.member_added"
+        | "team.member_removed"
+        | "team.created"
+        | "risk.created"
+        | "risk.updated"
+        | "risk.linked"
+        | "comment.created"
+        | "stakeholder.position_changed"
+        | "goal.linked"
+        | "goal.unlinked"
       org_role: "org_owner" | "org_admin" | "org_member"
       task_category:
         | "general"
@@ -1696,6 +1733,38 @@ export const Constants = {
         "implemented",
         "rejected",
         "archived",
+      ],
+      event_type: [
+        "decision.created",
+        "decision.updated",
+        "decision.status_changed",
+        "decision.deleted",
+        "decision.restored",
+        "decision.archived",
+        "decision.shared",
+        "decision.template_upgraded",
+        "review.created",
+        "review.approved",
+        "review.rejected",
+        "review.delegated",
+        "task.created",
+        "task.updated",
+        "task.status_changed",
+        "task.deleted",
+        "task.restored",
+        "escalation.triggered",
+        "escalation.resolved",
+        "automation.rule_executed",
+        "team.member_added",
+        "team.member_removed",
+        "team.created",
+        "risk.created",
+        "risk.updated",
+        "risk.linked",
+        "comment.created",
+        "stakeholder.position_changed",
+        "goal.linked",
+        "goal.unlinked",
       ],
       org_role: ["org_owner", "org_admin", "org_member"],
       task_category: [
