@@ -661,6 +661,9 @@ const KnowledgeBase = () => {
                     <TabsTrigger value="lessons" className="flex-1">
                       <Lightbulb className="w-3.5 h-3.5 mr-1" /> Lessons ({selectedLessons.length})
                     </TabsTrigger>
+                    <TabsTrigger value="apply" className="flex-1">
+                      <ClipboardCheck className="w-3.5 h-3.5 mr-1" /> Apply Learning
+                    </TabsTrigger>
                     <TabsTrigger value="tags" className="flex-1">
                       <Tag className="w-3.5 h-3.5 mr-1" /> Tags ({selectedDecTags.length})
                     </TabsTrigger>
@@ -752,6 +755,55 @@ const KnowledgeBase = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
+                  </TabsContent>
+
+                  {/* Apply Learning */}
+                  <TabsContent value="apply" className="space-y-3">
+                    <Card className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <ClipboardCheck className="w-4 h-4 text-primary" />
+                        <h4 className="text-sm font-semibold">Learning anwenden</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Verknüpfe die Erkenntnisse aus dieser Entscheidung mit einer neuen oder bestehenden Entscheidung, um Wiederholungsfehler zu vermeiden.
+                      </p>
+                      {selectedLessons.length === 0 ? (
+                        <p className="text-xs text-muted-foreground italic">Noch keine Lessons vorhanden. Erstelle zuerst ein Lesson Learned im „Lessons"-Tab.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {selectedLessons.map(l => (
+                            <div key={l.id} className="p-3 rounded-lg bg-muted/30 border border-border">
+                              <p className="text-xs font-medium mb-1">{l.key_takeaway}</p>
+                              {l.recommendations && (
+                                <p className="text-[11px] text-muted-foreground">
+                                  <ArrowRight className="w-3 h-3 inline mr-0.5 text-primary" />
+                                  {l.recommendations}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full gap-1.5 mt-2"
+                            onClick={() => {
+                              const text = selectedLessons.map(l => `• ${l.key_takeaway}${l.recommendations ? `\n  → ${l.recommendations}` : ""}`).join("\n");
+                              navigator.clipboard.writeText(text);
+                              toast.success("Lessons in Zwischenablage kopiert – füge sie in eine neue Entscheidung ein");
+                            }}
+                          >
+                            <ClipboardCheck className="w-3.5 h-3.5" /> Lessons kopieren
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="w-full gap-1.5"
+                            onClick={() => navigate("/decisions")}
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Neue Entscheidung mit Lessons erstellen
+                          </Button>
+                        </div>
+                      )}
+                    </Card>
                   </TabsContent>
 
                   {/* Tags */}
