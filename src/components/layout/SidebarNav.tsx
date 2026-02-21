@@ -89,8 +89,9 @@ const navGroups: NavGroup[] = [
       },
       {
         icon: AlertTriangle,
-        label: "Escalation Center",
+        label: "Risk & Escalation",
         children: [
+          { icon: Shield, label: "Risk Register", path: "/risks" },
           { icon: Shield, label: "War Room", path: "/warroom", featureKey: "warroom" },
           { icon: Zap, label: "Escalation Engine", path: "/engine", featureKey: "engine" },
         ],

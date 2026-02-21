@@ -828,6 +828,140 @@ export type Database = {
         }
         Relationships: []
       }
+      risk_decision_links: {
+        Row: {
+          created_at: string
+          decision_id: string
+          id: string
+          linked_by: string
+          risk_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          id?: string
+          linked_by: string
+          risk_id: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          id?: string
+          linked_by?: string
+          risk_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_decision_links_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_decision_links_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "risks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_task_links: {
+        Row: {
+          created_at: string
+          id: string
+          linked_by: string
+          risk_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linked_by: string
+          risk_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linked_by?: string
+          risk_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_task_links_risk_id_fkey"
+            columns: ["risk_id"]
+            isOneToOne: false
+            referencedRelation: "risks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_task_links_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risks: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          impact: number
+          likelihood: number
+          mitigation_plan: string | null
+          owner_id: string | null
+          risk_score: number | null
+          status: string
+          team_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          impact?: number
+          likelihood?: number
+          mitigation_plan?: string | null
+          owner_id?: string | null
+          risk_score?: number | null
+          status?: string
+          team_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          impact?: number
+          likelihood?: number
+          mitigation_plan?: string | null
+          owner_id?: string | null
+          risk_score?: number | null
+          status?: string
+          team_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risks_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sla_configs: {
         Row: {
           category: string
