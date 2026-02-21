@@ -260,7 +260,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       due_date: dueDate || null,
       team_id: teamId || null,
       created_by: user.id,
-    }]).select().single();
+      template_used: selectedTemplate?.name || null,
+    } as any]).select().single();
 
     if (err) {
       setError(err.message);

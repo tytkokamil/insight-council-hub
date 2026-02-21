@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
+import TemplateAnalyticsSection from "@/components/analytics/TemplateAnalyticsSection";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
@@ -455,6 +456,9 @@ const Analytics = () => {
           </Card>
         </CollapsibleSection>
       )}
+
+      {/* Template Analytics */}
+      <TemplateAnalyticsSection decisions={allDecisions as any} />
     </AppLayout>
   );
 };
