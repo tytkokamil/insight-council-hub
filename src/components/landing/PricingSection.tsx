@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, Sparkles, Shield, Globe, TrendingUp, Brain } from "lucide-react";
 
@@ -24,6 +25,7 @@ const plans = [
       "Bis zu 30 Entscheidungen",
     ],
     cta: "Kostenlos starten",
+    ctaLink: "/auth",
     highlighted: false,
     checkColor: "text-accent-teal",
     borderColor: "border-border",
@@ -51,6 +53,7 @@ const plans = [
       "Knowledge Base (erstellen & bearbeiten)",
     ],
     cta: "Pro Trial starten",
+    ctaLink: "/auth",
     highlighted: true,
     checkColor: "text-primary",
     borderColor: "border-primary/30",
@@ -76,6 +79,7 @@ const plans = [
       "Vollständiger Datenexport",
     ],
     cta: "Auf Business upgraden",
+    ctaLink: "/auth",
     highlighted: false,
     checkColor: "text-accent-violet",
     borderColor: "border-accent-violet/20",
@@ -99,6 +103,7 @@ const plans = [
       "Security & Compliance Review",
     ],
     cta: "Sales kontaktieren",
+    ctaLink: "mailto:sales@decisionos.com",
     highlighted: false,
     checkColor: "text-accent-rose",
     borderColor: "border-accent-rose/20",
@@ -252,14 +257,29 @@ const PricingSection = () => {
                 </p>
 
                 {/* CTA */}
-                <Button
-                  variant={plan.highlighted ? "default" : "outline"}
-                  className="w-full rounded-xl mb-6 group/btn"
-                  size="lg"
-                >
-                  {plan.cta}
-                  <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                </Button>
+                {plan.ctaLink?.startsWith("mailto:") ? (
+                  <a href={plan.ctaLink}>
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl mb-6 group/btn"
+                      size="lg"
+                    >
+                      {plan.cta}
+                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </a>
+                ) : (
+                  <Link to={plan.ctaLink!}>
+                    <Button
+                      variant={plan.highlighted ? "default" : "outline"}
+                      className="w-full rounded-xl mb-6 group/btn"
+                      size="lg"
+                    >
+                      {plan.cta}
+                      <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                )}
 
                 {/* Features */}
                 <ul className="space-y-2.5 flex-1">
