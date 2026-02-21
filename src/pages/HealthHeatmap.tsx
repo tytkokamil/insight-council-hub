@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle, CheckSquare } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -209,14 +209,12 @@ const HealthHeatmap = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
           <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
-          <PageHint>
-            Farbcodierte Gesundheitsanalyse deiner Entscheidungen und Aufgaben nach Team, Kategorie, Priorität oder Typ.
-          </PageHint>
         </div>
+        <PageHelpButton title="Health Heatmap" description="Farbcodierte Gesundheitsanalyse deiner Entscheidungen und Aufgaben nach Team, Kategorie, Priorität oder Typ." />
       </div>
 
       {/* Summary */}

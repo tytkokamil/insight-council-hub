@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,15 +136,15 @@ const EscalationEngine = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">SLA & Eskalation</p>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Escalation Center</h1>
-            <PageHint>Steuert SLA-basierte Eskalationen, zeigt aktive Fälle, Regeln, Historie und Analytik.</PageHint>
-          </div>
+          <h1 className="font-display text-xl font-bold">Escalation Center</h1>
         </div>
-        <Button onClick={runEngine} disabled={running} className="gap-2">
-          {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-          {running ? "Läuft..." : "Engine starten"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageHelpButton title="Escalation Center" description="Steuert SLA-basierte Eskalationen, zeigt aktive Fälle, Regeln, Historie und Analytik." />
+          <Button onClick={runEngine} disabled={running} className="gap-2">
+            {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {running ? "Läuft..." : "Engine starten"}
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import PageHint from "@/components/shared/PageHint";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Search, Filter, FileText, MoreHorizontal, BarChart3, Download, X,
@@ -262,10 +261,7 @@ const Decisions = () => {
       {/* ═══ A) HEADER ═══ */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
-            <PageHint>Single Source of Truth — Zentrales Register aller Entscheidungen.</PageHint>
-          </div>
+          <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{decisions.length} Entscheidungen · {filtered.length} angezeigt</p>
         </div>
         <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { decisionTemplates, DecisionTemplate } from "@/lib/decisionTemplates";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -234,12 +234,12 @@ export default function Templates() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vorlagen</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vorlagen</p>
             <h1 className="text-xl font-bold">Templates & Playbooks</h1>
-            <PageHint>Vordefinierte Entscheidungs-Vorlagen mit Review-Flows und Approval-Chains</PageHint>
           </div>
+          <PageHelpButton title="Templates & Playbooks" description="Vordefinierte Entscheidungs-Vorlagen mit Review-Flows und Approval-Chains" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

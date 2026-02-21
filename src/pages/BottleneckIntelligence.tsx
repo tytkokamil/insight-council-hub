@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight, CheckSquare, Shield, Lightbulb } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
@@ -177,12 +177,12 @@ const BottleneckIntelligence = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p>
           <h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1>
-          <PageHint>Identifiziert strukturelle Probleme: Engpässe bei Personen und Kategorien, Team-Reibung, SLA-Verletzungen und liefert Top-3-Maßnahmen.</PageHint>
         </div>
+        <PageHelpButton title="Process Intelligence" description="Identifiziert strukturelle Probleme: Engpässe bei Personen und Kategorien, Team-Reibung, SLA-Verletzungen und liefert Top-3-Maßnahmen." />
       </div>
 
       {/* Summary KPIs */}

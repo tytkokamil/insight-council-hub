@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -161,15 +161,13 @@ const ScenarioEngine = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Simulation</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Simulation</p>
             <h1 className="text-xl font-semibold tracking-tight">Scenario Engine</h1>
-            <PageHint>
-              Simuliere, was passiert wenn Entscheidungen verschoben werden. Wähle einzelne oder alle Entscheidungen und passe die Verzögerung an, um Kaskadeneffekte und Kosten zu berechnen.
-            </PageHint>
+            <p className="text-sm text-muted-foreground mt-1">Simuliere unternehmensweite Auswirkungen wenn Entscheidungen verschoben werden.</p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">Simuliere unternehmensweite Auswirkungen wenn Entscheidungen verschoben werden.</p>
+          <PageHelpButton title="Scenario Engine" description="Simuliere, was passiert wenn Entscheidungen verschoben werden. Wähle einzelne oder alle Entscheidungen und passe die Verzögerung an, um Kaskadeneffekte und Kosten zu berechnen." />
         </div>
 
         {loading ? (

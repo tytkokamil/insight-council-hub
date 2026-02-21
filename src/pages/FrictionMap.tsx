@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Flame, Users, GitPullRequest, AlertTriangle, ArrowUpRight, BarChart3, Clock, CheckSquare } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -130,12 +130,12 @@ const FrictionMap = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
           <h1 className="text-xl font-semibold tracking-tight">Friction Map</h1>
-          <PageHint>Erkennt Reibungspunkte im Entscheidungs- und Aufgabenprozess pro Team.</PageHint>
         </div>
+        <PageHelpButton title="Friction Map" description="Erkennt Reibungspunkte im Entscheidungs- und Aufgabenprozess pro Team." />
       </div>
 
       {/* Summary */}

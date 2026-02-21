@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
@@ -198,20 +198,20 @@ const ExecutiveDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategische Analyse</p>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold">Executive Dashboard</h1>
-              <PageHint>Management-Cockpit: KPI Snapshot, Risk Radar, kritische Entscheidungen und KI-Briefing auf einen Blick.</PageHint>
-            </div>
+            <h1 className="text-xl font-bold">Executive Dashboard</h1>
           </div>
-          <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
-            setExporting(true);
-            try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "Exportiert", description: "Board Report als PDF." }); }
-            catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
-            setExporting(false);
-          }} className="gap-2">
-            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-            Board Report
-          </Button>
+          <div className="flex items-center gap-2">
+            <PageHelpButton title="Executive Dashboard" description="Management-Cockpit: KPI Snapshot, Risk Radar, kritische Entscheidungen und KI-Briefing auf einen Blick." />
+            <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
+              setExporting(true);
+              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "Exportiert", description: "Board Report als PDF." }); }
+              catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
+              setExporting(false);
+            }} className="gap-2">
+              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+              Board Report
+            </Button>
+          </div>
         </div>
 
         {/* KPI Snapshot */}

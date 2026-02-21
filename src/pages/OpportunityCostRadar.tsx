@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Timer } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -45,12 +45,12 @@ const OpportunityCostRadar = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
           <h1 className="text-xl font-semibold tracking-tight">Opportunity Cost Radar</h1>
-          <PageHint>Berechnet tägliche Verzögerungskosten offener Entscheidungen.</PageHint>
         </div>
+        <PageHelpButton title="Opportunity Cost Radar" description="Berechnet tägliche Verzögerungskosten offener Entscheidungen." />
       </div>
 
       {/* Summary – always visible */}

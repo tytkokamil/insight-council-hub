@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -156,17 +156,15 @@ const PatternEngine = () => {
     <AppLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Mustererkennung</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Mustererkennung</p>
             <h1 className="text-xl font-semibold tracking-tight">Pattern Engine</h1>
-            <PageHint>
-              Erkennt wiederkehrende Muster in deinen Entscheidungen. Analysiert Erfolgsquoten nach Kategorie, Zeitverläufe und Entscheider-Profile.
-            </PageHint>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Lernt aus {patterns.totalDecisions} Entscheidungen · {patterns.dataPoints} Datenpunkte
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Lernt aus {patterns.totalDecisions} Entscheidungen · {patterns.dataPoints} Datenpunkte
-          </p>
+          <PageHelpButton title="Pattern Engine" description="Erkennt wiederkehrende Muster in deinen Entscheidungen. Analysiert Erfolgsquoten nach Kategorie, Zeitverläufe und Entscheider-Profile." />
         </div>
 
         {/* KPI Row – always visible */}

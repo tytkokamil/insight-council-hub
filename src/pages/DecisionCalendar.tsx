@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 import { de } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
@@ -245,17 +245,13 @@ const DecisionCalendar = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Planung</p>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-xl font-bold">Entscheidungskalender</h1>
-              <PageHint>
-                Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich.
-              </PageHint>
-            </div>
+            <h1 className="font-display text-xl font-bold">Entscheidungskalender</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Drag & Drop zum Verschieben von Deadlines
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            <PageHelpButton title="Entscheidungskalender" description="Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich." />
             <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
             <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
               <Download className="w-3.5 h-3.5" />

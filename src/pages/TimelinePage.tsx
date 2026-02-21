@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 
 // ── Event types ──
 
@@ -291,12 +291,12 @@ export default function Timeline() {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Chronologie</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Chronologie</p>
             <h1 className="text-xl font-bold">Decision Timeline</h1>
-            <PageHint>Chronologische Ansicht aller Entscheidungs-, Task-, Review- und Eskalations-Events</PageHint>
           </div>
+          <PageHelpButton title="Decision Timeline" description="Chronologische Ansicht aller Entscheidungs-, Task-, Review- und Eskalations-Events" />
         </div>
 
         {/* Stats Strip */}

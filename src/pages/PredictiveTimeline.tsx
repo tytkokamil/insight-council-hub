@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -177,15 +177,13 @@ const PredictiveTimeline = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
             <h1 className="text-xl font-semibold tracking-tight">Predictive Timeline</h1>
-            <PageHint>
-              KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten.
-            </PageHint>
+            <p className="text-sm text-muted-foreground mt-1">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
+          <PageHelpButton title="Predictive Timeline" description="KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten." />
         </div>
 
         {loading ? (

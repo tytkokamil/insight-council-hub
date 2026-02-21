@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles, Pencil, Plus, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -92,17 +92,15 @@ const AuditTrail = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Protokoll</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Protokoll</p>
             <h1 className="font-display text-xl font-bold">Audit Trail</h1>
-            <PageHint>
-              Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert.
-            </PageHint>
+            <p className="text-sm text-muted-foreground mt-1">
+              Vollständige Änderungshistorie aller Entscheidungen
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Vollständige Änderungshistorie aller Entscheidungen
-          </p>
+          <PageHelpButton title="Audit Trail" description="Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert." />
         </div>
 
         {/* Filters */}
