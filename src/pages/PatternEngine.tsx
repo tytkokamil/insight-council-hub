@@ -159,7 +159,7 @@ const PatternEngine = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Mustererkennung</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Pattern Engine</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Pattern Engine</h1>
             <PageHint>
               Erkennt wiederkehrende Muster in deinen Entscheidungen. Analysiert Erfolgsquoten nach Kategorie, Zeitverläufe und Entscheider-Profile.
             </PageHint>
@@ -182,14 +182,14 @@ const PatternEngine = () => {
           <CollapsibleSection
             title="Erkannte Muster"
             subtitle={`${patterns.insights.length} Patterns identifiziert`}
-            icon={<Brain className="w-4 h-4 text-primary" />}
+            icon={<Brain className="w-4 h-4 text-muted-foreground" />}
             defaultOpen={true}
           >
             <Card>
               <CardContent className="p-4 space-y-3">
                 {patterns.insights.map((insight, i) => (
-                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${insight.type === "success" ? "border-emerald-500/20 bg-emerald-500/5" : insight.type === "warning" ? "border-amber-500/20 bg-amber-500/5" : "border-primary/20 bg-primary/5"}`}>
-                    <insight.icon className={`w-4 h-4 mt-0.5 shrink-0 ${insight.type === "success" ? "text-emerald-500" : insight.type === "warning" ? "text-amber-500" : "text-primary"}`} />
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${insight.type === "success" ? "border-success/20 bg-success/5" : insight.type === "warning" ? "border-warning/20 bg-warning/5" : "border-border bg-muted/5"}`}>
+                    <insight.icon className={`w-4 h-4 mt-0.5 shrink-0 ${insight.type === "success" ? "text-success" : insight.type === "warning" ? "text-warning" : "text-muted-foreground"}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <p className="text-sm font-medium">{insight.label}</p>
@@ -254,7 +254,7 @@ const PatternEngine = () => {
           <CollapsibleSection
             title="Empfehlungen"
             subtitle={`${patterns.recommendations.length} Vorschläge`}
-            icon={<Zap className="w-4 h-4 text-primary" />}
+            icon={<Zap className="w-4 h-4 text-muted-foreground" />}
             defaultOpen={false}
           >
             <Card>
@@ -262,7 +262,7 @@ const PatternEngine = () => {
                 <ul className="space-y-2">
                   {patterns.recommendations.map((rec, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-sm">
-                      <ArrowRight className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
                       <span>{rec}</span>
                     </li>
                   ))}

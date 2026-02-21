@@ -169,7 +169,7 @@ const BottleneckIntelligence = () => {
   if (personBottlenecks.length === 0 && categoryBottlenecks.length === 0 && teamFrictions.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p><h1 className="font-display text-xl font-bold">Process Intelligence</h1></div>
+        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p><h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1></div>
         <EmptyAnalysisState icon={Zap} title="Keine Engpässe erkannt" description="Erstelle Entscheidungen und Aufgaben, um strukturelle Bottlenecks zu identifizieren." hint="Engpässe werden automatisch erkannt" />
       </AppLayout>
     );
@@ -180,17 +180,17 @@ const BottleneckIntelligence = () => {
       <div className="mb-8">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold">Process Intelligence</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1>
           <PageHint>Identifiziert strukturelle Probleme: Engpässe bei Personen und Kategorien, Team-Reibung, SLA-Verletzungen und liefert Top-3-Maßnahmen.</PageHint>
         </div>
       </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><User className="w-4 h-4" /><span className="text-2xl font-bold font-display">{personBottlenecks.filter(p => p.percentile === "Langsam").length}</span></div><p className="text-xs text-muted-foreground">Personen strukturell langsam</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-warning mb-1"><FolderOpen className="w-4 h-4" /><span className="text-2xl font-bold font-display">{categoryBottlenecks.filter(c => c.ratio > 1.5).length}</span></div><p className="text-xs text-muted-foreground">Kategorien überdurchschnittlich</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-primary mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold font-display">{teamFrictions.filter(t => t.score > 30).length}</span></div><p className="text-xs text-muted-foreground">Teams mit hoher Reibung</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><Shield className="w-4 h-4" /><span className="text-2xl font-bold font-display">{slaViolations.thisWeek}</span></div><p className="text-xs text-muted-foreground">SLA-Verletzungen diese Woche</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><User className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{personBottlenecks.filter(p => p.percentile === "Langsam").length}</span></div><p className="text-xs text-muted-foreground">Personen strukturell langsam</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-warning mb-1"><FolderOpen className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{categoryBottlenecks.filter(c => c.ratio > 1.5).length}</span></div><p className="text-xs text-muted-foreground">Kategorien überdurchschnittlich</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-foreground mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{teamFrictions.filter(t => t.score > 30).length}</span></div><p className="text-xs text-muted-foreground">Teams mit hoher Reibung</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><Shield className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{slaViolations.thisWeek}</span></div><p className="text-xs text-muted-foreground">SLA-Verletzungen diese Woche</p></CardContent></Card>
       </div>
 
       {/* Bottleneck Detection – Person */}
@@ -260,7 +260,7 @@ const BottleneckIntelligence = () => {
       </CollapsibleSection>
 
       {/* Team Friction */}
-      <CollapsibleSection title="Team-Reibung" subtitle="Organisatorische Blockaden (inkl. Aufgaben)" icon={<Users className="w-4 h-4 text-primary" />} defaultOpen={false} className="mb-6">
+      <CollapsibleSection title="Team-Reibung" subtitle="Organisatorische Blockaden (inkl. Aufgaben)" icon={<Users className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-6">
         <Card><CardContent className="p-5">
           {teamFrictions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">Keine Teams mit Daten</p>
@@ -268,7 +268,7 @@ const BottleneckIntelligence = () => {
             <div className="space-y-2">
               {teamFrictions.map(t => (
                 <div key={t.teamId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><Users className="w-4 h-4 text-primary" /></div>
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Users className="w-4 h-4 text-muted-foreground" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{t.teamName}</p>
                     <p className="text-[10px] text-muted-foreground">⌀ {t.avgDays}d • {t.escalationCount} Eskal. • {t.blockedCount} Blockaden • {t.openTasks} Aufg.</p>
@@ -285,7 +285,7 @@ const BottleneckIntelligence = () => {
       </CollapsibleSection>
 
       {/* Recommendations Panel */}
-      <CollapsibleSection title="Top 3 Maßnahmen" subtitle="Priorisierte Empfehlungen" icon={<Lightbulb className="w-4 h-4 text-primary" />} defaultOpen={true}>
+      <CollapsibleSection title="Top 3 Maßnahmen" subtitle="Priorisierte Empfehlungen" icon={<Lightbulb className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
         <div className="space-y-2">
           {recommendations.map((rec, i) => (
             <Card key={i} className={rec.severity === "high" ? "border-destructive/30" : rec.severity === "medium" ? "border-warning/30" : ""}>
