@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp } from "lucide-react";
+import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -48,7 +48,30 @@ const AdminUsers = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
   const { data: decisions = [] } = useDecisions();
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-invite-user", {
+        body: { email: inviteEmail.trim().toLowerCase() },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else {
+        toast.success(data?.message || "Einladung gesendet");
+        setInviteEmail("");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Einladung fehlgeschlagen");
+    }
+    setInviting(false);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -121,6 +144,32 @@ const AdminUsers = () => {
 
           {/* Users Tab */}
           <TabsContent value="users" className="space-y-4 mt-4">
+            {/* Invite user form */}
+            <Card>
+              <CardContent className="p-4">
+                <form onSubmit={handleInvite} className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium flex items-center gap-2 mb-1.5">
+                      <Mail className="w-4 h-4 text-primary" />
+                      Neuen Nutzer per E-Mail einladen
+                    </label>
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="email@beispiel.de"
+                      required
+                      className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+                    />
+                  </div>
+                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10">
+                    <UserPlus className="w-4 h-4" />
+                    {inviting ? "Sende..." : "Einladen"}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input type="text" placeholder="Nutzer suchen..." value={search} onChange={(e) => setSearch(e.target.value)}
