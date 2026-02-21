@@ -562,6 +562,76 @@ const Dashboard = () => {
           );
         })()}
 
+        {/* ═══ TASK OVERVIEW ═══ */}
+        {!isLoading && tasks.length > 0 && (() => {
+          const now = new Date();
+          const activeTasks = tasks.filter(t => t.status !== "done");
+          const openTasks = activeTasks.filter(t => t.status === "open" || t.status === "backlog");
+          const inProgressTasks = activeTasks.filter(t => t.status === "in_progress");
+          const blockedTasks = activeTasks.filter(t => t.status === "blocked");
+          const overdueTasks = activeTasks.filter(t => t.due_date && new Date(t.due_date) < now);
+          
+          // Task velocity per week (last 6 weeks)
+          const taskWeekData: { week: string; completed: number }[] = [];
+          for (let w = 5; w >= 0; w--) {
+            const wStart = subDays(now, (w + 1) * 7);
+            const wEnd = subDays(now, w * 7);
+            const label = `KW${format(wEnd, "w")}`;
+            const completed = tasks.filter(t =>
+              t.status === "done" && t.completed_at &&
+              new Date(t.completed_at) >= wStart && new Date(t.completed_at) < wEnd
+            ).length;
+            taskWeekData.push({ week: label, completed });
+          }
+
+          return (
+            <section>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Task Overview</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
+                  <ListTodo className="w-4 h-4 text-muted-foreground mb-2" />
+                  <p className="text-2xl font-semibold tracking-tight">{openTasks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Offen / Backlog</p>
+                </div>
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
+                  <Activity className="w-4 h-4 text-primary mb-2" />
+                  <p className="text-2xl font-semibold tracking-tight">{inProgressTasks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">In Bearbeitung</p>
+                </div>
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
+                  <AlertTriangle className={`w-4 h-4 mb-2 ${overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground"}`} />
+                  <p className={`text-2xl font-semibold tracking-tight ${overdueTasks.length > 0 ? "text-destructive" : ""}`}>{overdueTasks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Überfällig</p>
+                </div>
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
+                  <ShieldAlert className={`w-4 h-4 mb-2 ${blockedTasks.length > 0 ? "text-warning" : "text-muted-foreground"}`} />
+                  <p className={`text-2xl font-semibold tracking-tight ${blockedTasks.length > 0 ? "text-warning" : ""}`}>{blockedTasks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Blockiert</p>
+                </div>
+              </div>
+
+              {/* Task velocity chart */}
+              <div className="border border-border rounded-lg p-5">
+                <div className="mb-4">
+                  <p className="text-sm font-medium">Task-Velocity / Woche</p>
+                  <p className="text-xs text-muted-foreground">Erledigte Tasks pro Kalenderwoche</p>
+                </div>
+                <div className="h-36">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={taskWeekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                      <RechartsTooltip contentStyle={chartTooltipStyle} />
+                      <Bar dataKey="completed" name="Erledigt" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} opacity={0.7} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* ═══ RECENT ═══ */}
         {!isLoading && (
           <section>
