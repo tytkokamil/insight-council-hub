@@ -363,10 +363,11 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       setError(err.message);
     } else {
       if (data) {
+        const { EventTypes } = await import("@/lib/eventTaxonomy");
         await supabase.from("audit_logs").insert({
           decision_id: data.id,
           user_id: user.id,
-          action: "created",
+          action: EventTypes.DECISION_CREATED,
           new_value: title.trim(),
         });
 

@@ -70,11 +70,12 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
       reviewed_at: new Date().toISOString(),
     }).eq("id", reviewId);
 
-    // Log audit
+    // Log audit with standardized event
+    const { EventTypes } = await import("@/lib/eventTaxonomy");
     await supabase.from("audit_logs").insert({
       decision_id: decision.id,
       user_id: user!.id,
-      action: `review_${newStatus}`,
+      action: newStatus === "approved" ? EventTypes.REVIEW_APPROVED : EventTypes.REVIEW_REJECTED,
       field_name: "review",
       new_value: feedback || newStatus,
     });

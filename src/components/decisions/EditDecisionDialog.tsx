@@ -116,11 +116,12 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
     if (error) {
       toast.error("Fehler beim Speichern");
     } else {
-      // Audit log
+      // Audit log with standardized event
+      const { EventTypes } = await import("@/lib/eventTaxonomy");
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
         user_id: user!.id,
-        action: "decision_edited",
+        action: EventTypes.DECISION_UPDATED,
         field_name: "multiple",
         old_value: `v${nextVersion}`,
         new_value: changeReason.trim(),

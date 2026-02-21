@@ -241,8 +241,9 @@ const DecisionDetail = () => {
     const { error } = await supabase.from("decisions").update(updates).eq("id", decision.id);
     if (!error) {
       setStatus(newStatus);
+      const { EventTypes } = await import("@/lib/eventTaxonomy");
       await supabase.from("audit_logs").insert({
-        decision_id: decision.id, user_id: user!.id, action: "status_changed",
+        decision_id: decision.id, user_id: user!.id, action: EventTypes.DECISION_STATUS_CHANGED,
         field_name: "status", old_value: oldStatus, new_value: newStatus,
       });
       invalidate();

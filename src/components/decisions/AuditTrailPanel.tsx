@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Clock, ArrowRight } from "lucide-react";
-
-const actionLabels: Record<string, string> = {
-  created: "Erstellt",
-  status_changed: "Status geändert",
-  review_approved: "Review genehmigt",
-  review_rejected: "Review abgelehnt",
-  ai_analysis: "KI-Analyse durchgeführt",
-  field_updated: "Feld aktualisiert",
-};
+import { eventLabels } from "@/lib/eventTaxonomy";
 
 const AuditTrailPanel = ({ decisionId }: { decisionId: string }) => {
   const [logs, setLogs] = useState<any[]>([]);
@@ -36,7 +28,7 @@ const AuditTrailPanel = ({ decisionId }: { decisionId: string }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-medium">{log.profiles?.full_name || "System"}</span>
-              <span className="text-xs text-primary">{actionLabels[log.action] || log.action}</span>
+              <span className="text-xs text-primary">{eventLabels[log.action] || log.action}</span>
               {log.field_name && (
                 <span className="text-xs text-muted-foreground">({log.field_name})</span>
               )}
