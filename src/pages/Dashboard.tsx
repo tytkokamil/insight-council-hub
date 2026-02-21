@@ -5,7 +5,7 @@ import {
   Activity, DollarSign, Zap, FileText, Eye, TrendingUp, TrendingDown,
   Minus, ShieldAlert, CheckCircle2, Info, Command, ListTodo,
   Link2, ChevronDown, ChevronRight, Users, ExternalLink, Bell,
-  Download, CalendarIcon, RefreshCw, Shield,
+  Download, CalendarIcon, RefreshCw, Shield, History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useRisks } from "@/hooks/useRisks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
@@ -60,6 +62,24 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
+
+  // Recent audit trail for current user
+  const { data: myAuditLogs = [] } = useQuery({
+    queryKey: ["my-audit-logs", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("audit_logs")
+        .select("*, decisions!audit_logs_decision_id_fkey(title)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
 
   const [timeRange, setTimeRange] = useState<TimeRange>(30);
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
@@ -632,10 +652,46 @@ const Dashboard = () => {
           );
         })()}
 
-        {/* ═══ RECENT ═══ */}
+        {/* ═══ RECENT & ACTIVITY ═══ */}
         {!isLoading && (
           <section>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* My Activity Feed */}
+              <div className="border border-border rounded-lg p-5">
+                <p className="text-sm font-medium mb-3 flex items-center gap-1.5">
+                  <History className="w-3.5 h-3.5 text-muted-foreground" /> Meine Aktivitäten
+                </p>
+                {myAuditLogs.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {myAuditLogs.map((log: any) => {
+                      const actionLabels: Record<string, string> = {
+                        created: "Erstellt", status_changed: "Status geändert",
+                        review_approved: "Genehmigt", review_rejected: "Abgelehnt",
+                        ai_analysis: "KI-Analyse", field_updated: "Aktualisiert",
+                      };
+                      return (
+                        <button key={log.id} onClick={() => navigate(`/decisions/${log.decision_id}`)} className="w-full flex items-start gap-2 hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
+                          <Clock className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">
+                                {actionLabels[log.action] || log.action}
+                              </Badge>
+                              {log.field_name && <span className="text-[10px] text-muted-foreground">({log.field_name})</span>}
+                            </div>
+                            <p className="text-xs truncate mt-0.5">{(log as any).decisions?.title || "Entscheidung"}</p>
+                            <span className="text-[10px] text-muted-foreground">
+                              {formatDistanceToNow(new Date(log.created_at), { locale: de, addSuffix: true })}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Noch keine Aktivitäten.</p>
+                )}
+              </div>
               <div className="border border-border rounded-lg p-5">
                 <p className="text-sm font-medium mb-3">Zuletzt geöffnet</p>
                 {computed.recentlyOpened.length > 0 ? (
