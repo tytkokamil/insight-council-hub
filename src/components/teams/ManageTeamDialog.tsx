@@ -18,18 +18,21 @@ interface Props {
 }
 
 const TEAM_ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
   lead: "Lead",
   member: "Mitglied",
   viewer: "Betrachter",
 };
 
 const TEAM_ROLE_STYLES: Record<string, string> = {
+  admin: "bg-destructive/10 text-destructive border-destructive/20",
   lead: "bg-primary/10 text-primary border-primary/20",
   member: "bg-muted text-muted-foreground border-border",
   viewer: "bg-muted/50 text-muted-foreground/60 border-border",
 };
 
 const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
+  admin: Shield,
   lead: Shield,
   member: UserCog,
   viewer: Eye,
@@ -71,7 +74,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
   }, [open, team]);
 
   const currentUserMember = members.find(m => m.user_id === user?.id);
-  const isLeadOrAdmin = currentUserMember?.role === "lead";
+  const isLeadOrAdmin = currentUserMember?.role === "lead" || currentUserMember?.role === "admin";
 
   const sendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,6 +223,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="admin">Admin</SelectItem>
                               <SelectItem value="lead">Lead</SelectItem>
                               <SelectItem value="member">Mitglied</SelectItem>
                               <SelectItem value="viewer">Betrachter</SelectItem>

@@ -14,18 +14,21 @@ interface Props {
 }
 
 const TEAM_ROLE_LABELS: Record<string, string> = {
+  admin: "Admin",
   lead: "Lead",
   member: "Mitglied",
   viewer: "Betrachter",
 };
 
 const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
+  admin: Shield,
   lead: Shield,
   member: UserCog,
   viewer: Eye,
 };
 
 const TEAM_ROLE_STYLES: Record<string, string> = {
+  admin: "bg-destructive/10 text-destructive border-destructive/20",
   lead: "bg-primary/10 text-primary border-primary/20",
   member: "bg-muted text-muted-foreground border-border",
   viewer: "bg-muted/50 text-muted-foreground/60 border-border",
@@ -71,8 +74,18 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
     fetchStats();
   }, [teamId]);
 
+  const [isOrgAdmin, setIsOrgAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).single().then(({ data }) => {
+      setIsOrgAdmin(data?.role === "org_owner" || data?.role === "org_admin");
+    });
+  }, [user]);
+
   const currentUserMember = members.find(m => m.user_id === user?.id);
-  const isLeadOrAdmin = currentUserMember?.role === "lead";
+  const isTeamAdminOrLead = currentUserMember?.role === "lead" || currentUserMember?.role === "admin";
+  const isLeadOrAdmin = isTeamAdminOrLead || isOrgAdmin;
 
   const sendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,6 +246,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="lead">Lead</SelectItem>
                       <SelectItem value="member">Mitglied</SelectItem>
                       <SelectItem value="viewer">Betrachter</SelectItem>
