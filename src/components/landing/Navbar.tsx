@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const navItems = [
@@ -31,16 +31,16 @@ const Navbar = () => {
       <div className={`mx-4 transition-all duration-500 ${scrolled ? "mt-2" : "mt-4"}`}>
         <div className={`rounded-2xl border transition-all duration-500 ${
           scrolled
-            ? "bg-background/90 backdrop-blur-2xl border-border/50 shadow-lg"
+            ? "bg-background/90 backdrop-blur-2xl border-border/50"
             : "bg-transparent border-transparent"
         }`}>
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-14">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors duration-300">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+                  <span className="text-background text-xs font-bold">D</span>
                 </div>
-                <span className="font-display font-bold text-base tracking-tight">DecisionOS</span>
+                <span className="font-bold text-base tracking-tight">DecisionOS</span>
               </Link>
 
               <div className="hidden md:flex items-center gap-0.5">
@@ -88,7 +88,7 @@ const Navbar = () => {
             transition={{ duration: 0.15 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/50 p-5 shadow-elevated space-y-1">
+            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border p-5 space-y-1">
               {navItems.map(item => (
                 <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-lg hover:bg-muted/30 transition-colors">
                   {item.label}
