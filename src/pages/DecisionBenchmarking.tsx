@@ -21,7 +21,7 @@ const METRIC_LABELS: Record<string, { label: string; unit: string; lowerIsBetter
   approvalRate: { label: "Genehmigungsrate", unit: "%" }, avgDaysToDecision: { label: "Ø Entscheidungsdauer", unit: "Tage", lowerIsBetter: true }, implementationRate: { label: "Umsetzungsrate", unit: "%" }, overdueRate: { label: "Überfälligkeitsrate", unit: "%", lowerIsBetter: true }, escalationRate: { label: "Eskalationsrate", unit: "%", lowerIsBetter: true }, reviewCoverage: { label: "Review-Abdeckung", unit: "%" }, riskMitigationRate: { label: "Risiko-Mitigation", unit: "%" }, crossTeamCollaboration: { label: "Cross-Team-Zusammenarbeit", unit: "%" },
 };
 
-const DecisionBenchmarking = () => {
+const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: reviews = [], isLoading: loadingRev } = useFilteredReviews();
   const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
@@ -65,8 +65,9 @@ const DecisionBenchmarking = () => {
   const scoreLabel = overallScore >= 75 ? "High-Performer" : overallScore >= 50 ? "Durchschnitt" : "Verbesserungspotenzial";
   const scoreColor = overallScore >= 75 ? "text-success" : overallScore >= 50 ? "text-warning" : "text-destructive";
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
@@ -146,7 +147,7 @@ const DecisionBenchmarking = () => {
           </>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

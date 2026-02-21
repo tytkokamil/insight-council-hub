@@ -135,26 +135,27 @@ const categoryLabels: Record<string, string> = { strategic: "Strategisch", budge
 const priorityLabels: Record<string, string> = { low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch" };
 const avg = (arr: number[]) => (arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0);
 
-const PatternEngine = () => {
+const PatternEngine = ({ embedded }: { embedded?: boolean }) => {
   const { data: decisions = [], isLoading } = useDecisions();
   const patterns = useMemo(() => computePatterns(decisions), [decisions]);
 
-  if (isLoading) return <AppLayout><AnalysisPageSkeleton /></AppLayout>;
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
+  if (isLoading) return <Wrap><AnalysisPageSkeleton /></Wrap>;
   if (!patterns) {
     return (
-      <AppLayout>
+      <Wrap>
         <EmptyAnalysisState
           icon={Brain}
           title="Noch keine Pattern-Daten"
           description="Erstelle mindestens 2 Entscheidungen, damit die Pattern-Engine Muster erkennen kann."
           hint="Die Pattern-Engine lernt aus deiner Entscheidungshistorie."
         />
-      </AppLayout>
+      </Wrap>
     );
   }
 
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -286,7 +287,7 @@ const PatternEngine = () => {
           </CollapsibleSection>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

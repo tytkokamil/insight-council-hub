@@ -45,7 +45,7 @@ const useAllDecisions = () =>
     staleTime: 30_000,
   });
 
-const TeamPerformance = () => {
+const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
   const { data: allDecisions = [], isLoading: loadingDec } = useAllDecisions();
   const { data: risks = [], isLoading: loadingRisks } = useRisks();
@@ -157,8 +157,9 @@ const TeamPerformance = () => {
     doc.save(`team-performance-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   }, [teamStats]);
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -333,7 +334,7 @@ const TeamPerformance = () => {
           </div>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

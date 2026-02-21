@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 
-const Briefing = () => {
+const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const [briefing, setBriefing] = useState<any>(null);
   const [costSummary, setCostSummary] = useState<any>(null);
   const [momentum, setMomentum] = useState<number | null>(null);
@@ -42,21 +42,22 @@ const Briefing = () => {
 
   const today = new Date().toLocaleDateString("de-DE", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   if (loading) {
     return (
-      <AppLayout>
+      <Wrap>
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
             <p className="text-sm text-muted-foreground">Generiere dein Morning Briefing...</p>
           </div>
         </div>
-      </AppLayout>
+      </Wrap>
     );
   }
 
   return (
-    <AppLayout>
+    <Wrap>
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -199,7 +200,7 @@ const Briefing = () => {
           </Card>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

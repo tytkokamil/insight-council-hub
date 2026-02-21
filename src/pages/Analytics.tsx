@@ -35,7 +35,7 @@ const tooltipStyle = {
   fontSize: 12,
 };
 
-const Analytics = () => {
+const Analytics = ({ embedded }: { embedded?: boolean }) => {
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allTasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
@@ -187,8 +187,8 @@ const Analytics = () => {
   if (loading) return <AnalysisPageSkeleton cards={4} sections={0} showChart />;
 
   if (allDecisions.length === 0) {
-    return (
-      <AppLayout>
+    const empty = (
+      <>
         <div className="mb-6">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
           <h1 className="font-display text-xl font-bold">Analytics</h1>
@@ -199,19 +199,22 @@ const Analytics = () => {
           description="Erstelle Entscheidungen, um Statistiken und Diagramme zu sehen."
           hint="Daten werden automatisch analysiert, sobald Entscheidungen vorhanden sind"
         />
-      </AppLayout>
+      </>
     );
+    return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
-  return (
-    <AppLayout>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-          <h1 className="font-display text-xl font-bold">Analytics</h1>
+  const content = (
+    <>
+      {!embedded && (
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
+            <h1 className="font-display text-xl font-bold">Analytics</h1>
+          </div>
+          <PageHelpButton title="Analytics" description="Muster & Trends erkennen: Durchlaufzeiten, Durchsatz, Ablehnungsquoten, Teamvergleiche und Engpässe." />
         </div>
-        <PageHelpButton title="Analytics" description="Muster & Trends erkennen: Durchlaufzeiten, Durchsatz, Ablehnungsquoten, Teamvergleiche und Engpässe." />
-      </div>
+      )}
 
       {/* ═══ Summary KPIs ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-8">
@@ -459,8 +462,10 @@ const Analytics = () => {
 
       {/* Template Analytics */}
       <TemplateAnalyticsSection decisions={allDecisions as any} />
-    </AppLayout>
+    </>
   );
+
+  return embedded ? content : <AppLayout>{content}</AppLayout>;
 };
 
 export default Analytics;

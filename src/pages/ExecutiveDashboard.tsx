@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
-const ExecutiveDashboard = () => {
+const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [exporting, setExporting] = useState(false);
@@ -157,19 +157,20 @@ const ExecutiveDashboard = () => {
     setBriefLoading(false);
   };
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   if (loadingDec) {
-    return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div></AppLayout>;
+    return <Wrap><div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div></Wrap>;
   }
 
   if (!metrics) {
     return (
-      <AppLayout>
+      <Wrap>
         <div className="mb-8">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
           <h1 className="text-xl font-bold">Executive Dashboard</h1>
         </div>
         <EmptyAnalysisState icon={Target} title="Noch keine Executive-Daten" description="Erstelle Entscheidungen für KPIs und Analysen." hint="Metriken werden automatisch berechnet" />
-      </AppLayout>
+      </Wrap>
     );
   }
 
@@ -192,7 +193,7 @@ const ExecutiveDashboard = () => {
   });
 
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -422,7 +423,7 @@ const ExecutiveDashboard = () => {
           </div>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

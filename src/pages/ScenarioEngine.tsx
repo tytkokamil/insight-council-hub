@@ -45,7 +45,7 @@ type SimulationResult = {
   monteCarlo: { percentile: string; cost: number; risk: number }[];
 };
 
-const ScenarioEngine = () => {
+const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
   const { toast } = useToast();
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
@@ -183,8 +183,9 @@ const ScenarioEngine = () => {
 
   const targetCount = getTargetDecisions().length;
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -449,7 +450,7 @@ const ScenarioEngine = () => {
           </>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 

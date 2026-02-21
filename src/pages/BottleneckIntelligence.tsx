@@ -17,7 +17,7 @@ interface SLAViolation { teamId: string; teamName: string; violationsThisWeek: n
 
 const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
 
-const BottleneckIntelligence = () => {
+const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
   const [personBottlenecks, setPersonBottlenecks] = useState<PersonBottleneck[]>([]);
   const [categoryBottlenecks, setCategoryBottlenecks] = useState<CategoryBottleneck[]>([]);
   const [teamFrictions, setTeamFrictions] = useState<TeamFriction[]>([]);
@@ -168,16 +168,18 @@ const BottleneckIntelligence = () => {
   if (loading) return <AnalysisPageSkeleton cards={3} sections={3} />;
 
   if (personBottlenecks.length === 0 && categoryBottlenecks.length === 0 && teamFrictions.length === 0) {
-    return (
-      <AppLayout>
+    const empty = (
+      <>
         <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p><h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1></div>
         <EmptyAnalysisState icon={Zap} title="Keine Engpässe erkannt" description="Erstelle Entscheidungen und Aufgaben, um strukturelle Bottlenecks zu identifizieren." hint="Engpässe werden automatisch erkannt" />
-      </AppLayout>
+      </>
     );
+    return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p>
@@ -315,7 +317,7 @@ const BottleneckIntelligence = () => {
           ))}
         </div>
       </CollapsibleSection>
-    </AppLayout>
+    </Wrap>
   );
 };
 

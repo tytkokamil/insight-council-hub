@@ -13,7 +13,7 @@ interface CostEntry { id: string; title: string; status: string; priority: strin
 const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
 const categoryMultiplier: Record<string, number> = { strategic: 3, budget: 2.5, hr: 1.8, technical: 1.5, marketing: 1.3, operational: 1 };
 
-const OpportunityCostRadar = () => {
+const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
   const [sortBy, setSortBy] = useState<"urgency" | "daily" | "total">("urgency");
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
@@ -44,8 +44,9 @@ const OpportunityCostRadar = () => {
 
   if (loading) return <AnalysisPageSkeleton cards={3} sections={2} />;
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
@@ -142,7 +143,7 @@ const OpportunityCostRadar = () => {
           className="mt-6"
         />
       )}
-    </AppLayout>
+    </Wrap>
   );
 };
 

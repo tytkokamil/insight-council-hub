@@ -28,7 +28,7 @@ interface TimelineDecision {
   warning: string | null;
 }
 
-const PredictiveTimeline = () => {
+const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
   const [sortBy, setSortBy] = useState<"predicted" | "priority" | "overdue">("predicted");
 
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
@@ -174,8 +174,9 @@ const PredictiveTimeline = () => {
     return (days / ganttRange.totalDays) * 100;
   }, [ganttRange]);
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -358,7 +359,7 @@ const PredictiveTimeline = () => {
           </>
         )}
       </div>
-    </AppLayout>
+    </Wrap>
   );
 };
 
