@@ -5,9 +5,10 @@ import {
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
   ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
-  Archive, Search as SearchIcon, Settings2, Compass, Video,
+  Archive, Search as SearchIcon, Settings2, Compass, Video, Lock,
 } from "lucide-react";
 import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface NavItem {
   icon: React.ElementType;
@@ -211,6 +212,8 @@ const SidebarNav = memo(({
         </div>
       )}
       {navGroups.map((group) => {
+        // In basic mode, collect locked items for teaser display
+        const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
           if (isSubGroup(item)) {
             if (item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
@@ -223,10 +226,38 @@ const SidebarNav = memo(({
           }
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
-          // Basic mode: only show core paths
-          if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) return false;
+          // Basic mode: track locked items for teaser
+          if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
+            lockedItems.push(item as NavItem);
+            return false;
+          }
           return true;
         });
+        if (visibleItems.length === 0 && lockedItems.length === 0) return null;
+        // If entire group is locked in basic mode, show teaser
+        if (visibleItems.length === 0 && lockedItems.length > 0 && !collapsed) {
+          const teaserTexts: Record<string, string> = {
+            INSIGHTS: "Trends, Engpässe & Executive Reports",
+            GOVERNANCE: "Eskalationen, Risiken & Audit",
+          };
+          return (
+            <div key={group.label}>
+              <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/40">
+                {group.label}
+              </p>
+              <button
+                onClick={() => setMode("advanced")}
+                className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.02] transition-colors group"
+              >
+                <Lock className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-60" />
+                <span className="text-left flex-1">
+                  <span className="block text-[11px] font-medium">{teaserTexts[group.label] || `${lockedItems.length} Features`}</span>
+                  <span className="block text-[10px] opacity-60">Wechsle zu Advanced →</span>
+                </span>
+              </button>
+            </div>
+          );
+        }
         if (visibleItems.length === 0) return null;
 
         const isGroupCollapsed = collapsedGroups[group.label] ?? false;

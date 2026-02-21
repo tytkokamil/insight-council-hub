@@ -28,6 +28,7 @@ import { useTeamContext } from "@/hooks/useTeamContext";
 import { statusLabels, priorityLabels, categoryLabels } from "@/lib/labels";
 import { format, differenceInDays, subDays, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import {
@@ -91,6 +92,7 @@ const Dashboard = () => {
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
   const [velocityToggle, setVelocityToggle] = useState<"completed" | "created">("completed");
   const [dismissedAdvancedHint, setDismissedAdvancedHint] = useState(() => localStorage.getItem("advanced-hint-dismissed") === "true");
+  const [seedingDemo, setSeedingDemo] = useState(false);
 
   const isPersonal = selectedTeamId === null;
   const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
@@ -258,6 +260,20 @@ const Dashboard = () => {
   }
 
   if (!isLoading && allDecisions.length === 0 && tasks.length === 0) {
+    const handleSeedDemo = async () => {
+      setSeedingDemo(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("seed-demo-data");
+        if (error) throw error;
+        if (data?.error) { toast.error(data.error); setSeedingDemo(false); return; }
+        toast.success("Demo-Daten erstellt! Dashboard wird geladen...");
+        setTimeout(() => { refetchDec(); refetchTasks(); window.location.reload(); }, 1000);
+      } catch (e: any) {
+        toast.error("Fehler beim Erstellen der Demo-Daten");
+        setSeedingDemo(false);
+      }
+    };
+
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
@@ -295,7 +311,11 @@ const Dashboard = () => {
               ))}
             </div>
 
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Button onClick={handleSeedDemo} variant="outline" className="gap-1.5" disabled={seedingDemo}>
+                {seedingDemo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                {seedingDemo ? "Wird erstellt…" : "Mit Beispieldaten starten"}
+              </Button>
               <Button onClick={() => setShowOnboarding(true)} variant="outline" className="gap-1.5">
                 <Compass className="w-4 h-4" /> Tour starten
               </Button>
