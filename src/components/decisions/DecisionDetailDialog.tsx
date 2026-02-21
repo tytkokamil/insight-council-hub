@@ -35,17 +35,9 @@ interface Props {
   onUpdated: () => void;
 }
 
-const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
+const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
-const statusLabels: Record<string, string> = {
-  draft: "Entwurf",
-  proposed: "Vorschlag",
-  review: "Review",
-  approved: "Genehmigt",
-  rejected: "Abgelehnt",
-  implemented: "Umgesetzt",
-  archived: "Archiviert",
-};
+import { statusLabels } from "@/lib/labels";
 
 const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
   const { user } = useAuth();
@@ -95,6 +87,8 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
     const updates: Record<string, any> = { status: newStatus as any };
     if (newStatus === "archived") updates.archived_at = new Date().toISOString();
     if (newStatus !== "archived" && oldStatus === "archived") updates.archived_at = null;
+    if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
+    if (newStatus === "cancelled") updates.cancelled_at = new Date().toISOString();
     const { error } = await supabase
       .from("decisions")
       .update(updates)

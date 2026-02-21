@@ -453,6 +453,29 @@ const DecisionDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left column: Summary */}
             <div className="space-y-4">
+              {/* RACI Card */}
+              <Card>
+                <CardContent className="p-5">
+                  <h3 className="text-sm font-semibold mb-3">RACI-Karte</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { role: "Accountable", label: "Owner", userId: decision.owner_id, color: "text-warning", icon: "👑" },
+                      { role: "Responsible", label: "Assignee", userId: decision.assignee_id, color: "text-primary", icon: "🎯" },
+                      { role: "Consulted", label: "Reviewer", userId: null, count: allReviews.filter(r => r.decision_id === decision.id).length, color: "text-accent-foreground", icon: "💬" },
+                      { role: "Informed", label: "Stakeholder", userId: null, count: stakeholderPositions.length, color: "text-muted-foreground", icon: "📢" },
+                    ].map(r => (
+                      <div key={r.role} className="p-3 rounded-lg bg-muted/30 border border-border">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mb-1">{r.icon} {r.role}</p>
+                        <p className={`text-xs font-semibold ${r.color}`}>
+                          {r.userId ? (profileMap[r.userId] || "Nicht zugewiesen") : `${r.count} Person${r.count !== 1 ? "en" : ""}`}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">{r.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* A) Summary Section */}
               <Card>
                 <CardContent className="p-5 space-y-4">
