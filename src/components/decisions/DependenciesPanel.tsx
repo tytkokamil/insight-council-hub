@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { GitBranch, Plus, Trash2, ArrowRight, CheckSquare, Lightbulb } from "lucide-react";
+import { useTeams } from "@/hooks/useDecisions";
+import { GitBranch, Plus, Trash2, ArrowRight, CheckSquare, Lightbulb, Users } from "lucide-react";
 
 interface Props {
   decisionId: string;
@@ -12,6 +13,8 @@ type EntityType = "decision" | "task";
 
 const DependenciesPanel = ({ decisionId }: Props) => {
   const { user } = useAuth();
+  const { data: teams = [] } = useTeams();
+  const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
   const [dependencies, setDependencies] = useState<any[]>([]);
   const [dependents, setDependents] = useState<any[]>([]);
   const [allDecisions, setAllDecisions] = useState<any[]>([]);
@@ -25,7 +28,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     // Outgoing: this decision is source
     const { data: depsOut } = await supabase
       .from("decision_dependencies")
-      .select("*, target_decision:decisions!decision_dependencies_target_decision_id_fkey(id, title, status)")
+      .select("*, target_decision:decisions!decision_dependencies_target_decision_id_fkey(id, title, status, team_id)")
       .eq("source_decision_id", decisionId);
 
     // Also fetch task targets for outgoing deps
@@ -45,7 +48,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     // Incoming: this decision is target
     const { data: depsIn } = await supabase
       .from("decision_dependencies")
-      .select("*, source_decision:decisions!decision_dependencies_source_decision_id_fkey(id, title, status)")
+      .select("*, source_decision:decisions!decision_dependencies_source_decision_id_fkey(id, title, status, team_id)")
       .eq("target_decision_id", decisionId);
 
     const incoming = depsIn || [];
@@ -209,6 +212,12 @@ const DependenciesPanel = ({ decisionId }: Props) => {
               </span>
               {dep.target && statusDot(dep.target.status)}
               <span className="text-sm flex-1 truncate">{dep.target?.title || "?"}</span>
+              {dep.target_type === "decision" && dep.target?.team_id && teamMap[dep.target.team_id] && (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-accent/50 text-accent-foreground shrink-0">
+                  <Users className="w-2.5 h-2.5" />
+                  {teamMap[dep.target.team_id]}
+                </span>
+              )}
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => removeDependency(dep.id)}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
@@ -232,6 +241,12 @@ const DependenciesPanel = ({ decisionId }: Props) => {
               </span>
               {dep.source && statusDot(dep.source.status)}
               <span className="text-sm flex-1 truncate">{dep.source?.title || "?"}</span>
+              {dep.source_type === "decision" && dep.source?.team_id && teamMap[dep.source.team_id] && (
+                <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-accent/50 text-accent-foreground shrink-0">
+                  <Users className="w-2.5 h-2.5" />
+                  {teamMap[dep.source.team_id]}
+                </span>
+              )}
             </div>
           ))}
         </div>
