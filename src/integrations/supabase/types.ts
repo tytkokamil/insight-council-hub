@@ -586,7 +586,9 @@ export type Database = {
           priority: Database["public"]["Enums"]["decision_priority"]
           status: Database["public"]["Enums"]["decision_status"]
           team_id: string | null
+          template_snapshot: Json | null
           template_used: string | null
+          template_version: number | null
           title: string
           updated_at: string
         }
@@ -615,7 +617,9 @@ export type Database = {
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
+          template_snapshot?: Json | null
           template_used?: string | null
+          template_version?: number | null
           title: string
           updated_at?: string
         }
@@ -644,7 +648,9 @@ export type Database = {
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
+          template_snapshot?: Json | null
           template_used?: string | null
+          template_version?: number | null
           title?: string
           updated_at?: string
         }

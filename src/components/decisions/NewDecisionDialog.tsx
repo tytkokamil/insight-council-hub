@@ -333,6 +333,18 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       });
     }
 
+    // Build template snapshot for versioning
+    const templateSnapshot = selectedTemplate ? {
+      name: selectedTemplate.name,
+      version: selectedTemplate.version,
+      category: selectedTemplate.category,
+      priority: selectedTemplate.priority,
+      requiredFields: selectedTemplate.requiredFields.map(f => ({ key: f.key, label: f.label, type: f.type })),
+      approvalSteps: selectedTemplate.approvalSteps,
+      governanceNotes: selectedTemplate.governanceNotes,
+      defaultDurationDays: selectedTemplate.defaultDurationDays,
+    } : null;
+
     const { data, error: err } = await supabase.from("decisions").insert([{
       title: title.trim(),
       description: description.trim() || null,
@@ -343,6 +355,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       team_id: teamId || null,
       created_by: user.id,
       template_used: selectedTemplate?.name || null,
+      template_version: selectedTemplate?.version || null,
+      template_snapshot: templateSnapshot,
     } as any]).select().single();
 
     if (err) {
