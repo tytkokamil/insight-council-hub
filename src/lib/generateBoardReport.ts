@@ -38,26 +38,32 @@ interface BoardReportData {
   teams: any[];
   auditLogs: any[];
   profiles: any[];
+  risks: any[];
+  tasks: any[];
 }
 
 export async function fetchBoardReportData(): Promise<BoardReportData> {
-  const [decRes, teamRes, auditRes, profRes] = await Promise.all([
+  const [decRes, teamRes, auditRes, profRes, riskRes, taskRes] = await Promise.all([
     supabase.from("decisions").select("*").order("created_at", { ascending: false }),
     supabase.from("teams").select("*"),
     supabase.from("audit_logs").select("*, profiles:user_id(full_name), decisions:decision_id(title)")
       .order("created_at", { ascending: false }).limit(50),
     supabase.from("profiles").select("user_id, full_name"),
+    supabase.from("risks").select("*").order("risk_score", { ascending: false }),
+    supabase.from("tasks").select("*").is("deleted_at", null),
   ]);
   return {
     decisions: decRes.data || [],
     teams: teamRes.data || [],
     auditLogs: auditRes.data || [],
     profiles: profRes.data || [],
+    risks: riskRes.data || [],
+    tasks: taskRes.data || [],
   };
 }
 
 export function generateBoardReport(data: BoardReportData) {
-  const { decisions, teams, auditLogs, profiles } = data;
+  const { decisions, teams, auditLogs, profiles, risks, tasks } = data;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
   const now = format(new Date(), "dd. MMMM yyyy, HH:mm 'Uhr'", { locale: de });
@@ -218,12 +224,114 @@ export function generateBoardReport(data: BoardReportData) {
     styles: { cellPadding: 2.5 },
   });
 
-  // --- AUDIT TRAIL ---
+  // --- RISK REGISTER ---
   y = (doc as any).lastAutoTable.finalY + 12;
-  if (y > 240) {
-    doc.addPage();
-    y = 20;
+  if (y > 240) { doc.addPage(); y = 20; }
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(30, 30, 30);
+  doc.text("Risiko-Register", 14, y);
+  y += 4;
+
+  if (risks.length > 0) {
+    const riskRows = risks.slice(0, 15).map((r: any) => [
+      r.title.length > 30 ? r.title.slice(0, 30) + "…" : r.title,
+      `${r.likelihood}/5`,
+      `${r.impact}/5`,
+      String(r.risk_score || r.likelihood * r.impact),
+      r.status === "open" ? "Offen" : r.status === "mitigated" ? "Mitigiert" : r.status,
+      r.mitigation_plan ? (r.mitigation_plan.length > 35 ? r.mitigation_plan.slice(0, 35) + "…" : r.mitigation_plan) : "—",
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Risiko", "W'keit", "Impact", "Score", "Status", "Maßnahme"]],
+      body: riskRows,
+      theme: "striped",
+      headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
+      bodyStyles: { fontSize: 7.5 },
+      columnStyles: { 0: { cellWidth: 40 }, 5: { cellWidth: 45 } },
+      margin: { left: 14, right: 14 },
+      styles: { cellPadding: 2, overflow: "linebreak" },
+      didParseCell: (data: any) => {
+        if (data.column.index === 3 && data.section === "body") {
+          const val = parseInt(data.cell.text[0]);
+          if (val >= 15) data.cell.styles.textColor = [220, 38, 38];
+          else if (val >= 9) data.cell.styles.textColor = [202, 138, 4];
+        }
+      },
+    });
+  } else {
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text("Keine Risiken erfasst.", 14, y + 6);
+    y += 12;
   }
+
+  // --- TASK TIMELINE ---
+  y = risks.length > 0 ? (doc as any).lastAutoTable.finalY + 12 : y;
+  if (y > 240) { doc.addPage(); y = 20; }
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Aufgaben-Übersicht", 14, y);
+  y += 4;
+
+  const openTasks = tasks.filter((t: any) => t.status !== "done");
+  const doneTasks = tasks.filter((t: any) => t.status === "done");
+  const overdueTasks = openTasks.filter((t: any) => t.due_date && new Date(t.due_date) < new Date());
+
+  const taskSummary = [
+    ["Gesamt", String(tasks.length)],
+    ["Offen", String(openTasks.length)],
+    ["Erledigt", String(doneTasks.length)],
+    ["Überfällig", String(overdueTasks.length)],
+  ];
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Metrik", "Anzahl"]],
+    body: taskSummary,
+    theme: "grid",
+    headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
+    bodyStyles: { fontSize: 8 },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 60 } },
+    margin: { left: 14, right: 14 },
+    styles: { cellPadding: 2.5 },
+  });
+
+  // --- RECOMMENDATIONS ---
+  y = (doc as any).lastAutoTable.finalY + 12;
+  if (y > 240) { doc.addPage(); y = 20; }
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Empfehlungen", 14, y);
+  y += 6;
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(30, 30, 30);
+
+  const recommendations: string[] = [];
+  if (overdue.length > 0) recommendations.push(`⚠️ ${overdue.length} überfällige Entscheidungen priorisieren — älteste: "${overdue[0]?.title}".`);
+  if (highRisk.length > 0) recommendations.push(`🔴 ${highRisk.length} Entscheidungen mit hohem Risiko (>60%) erfordern sofortige Review.`);
+  if (overdueTasks.length > 0) recommendations.push(`📋 ${overdueTasks.length} überfällige Aufgaben blockieren möglicherweise Entscheidungen.`);
+  const criticalRisks = risks.filter((r: any) => (r.risk_score || 0) >= 15);
+  if (criticalRisks.length > 0) recommendations.push(`🛡️ ${criticalRisks.length} kritische Risiken (Score ≥15) benötigen Eskalation.`);
+  if (implRate < 30) recommendations.push(`📈 Umsetzungsrate bei ${implRate}% — Prozess-Optimierung empfohlen.`);
+  if (recommendations.length === 0) recommendations.push("✅ Keine kritischen Handlungsempfehlungen — System ist gesund.");
+
+  recommendations.forEach(rec => {
+    if (y > 275) { doc.addPage(); y = 20; }
+    doc.text(`• ${rec}`, 16, y, { maxWidth: pageWidth - 30 });
+    y += 8;
+  });
+
+  // --- AUDIT TRAIL ---
+  y += 4;
+  if (y > 240) { doc.addPage(); y = 20; }
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");

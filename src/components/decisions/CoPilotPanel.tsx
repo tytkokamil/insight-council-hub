@@ -6,6 +6,7 @@ import {
   Loader2, Compass, AlertTriangle, UserCheck, Users2,
   Zap, ArrowRight, Shield, TrendingDown, ChevronRight,
 } from "lucide-react";
+import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
 
 interface CoPilotResult {
   rejection_probability: number;
@@ -206,6 +207,9 @@ const CoPilotPanel = ({ decision }: { decision: any }) => {
             </span>
             <span className="font-medium text-foreground">{result.confidence}%</span>
           </div>
+
+          {/* AI Feedback */}
+          <AiFeedbackButton context="copilot" />
         </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground">
