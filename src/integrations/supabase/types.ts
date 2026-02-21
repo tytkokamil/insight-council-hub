@@ -1004,6 +1004,47 @@ export type Database = {
           },
         ]
       }
+      team_defaults: {
+        Row: {
+          created_at: string
+          default_category: string
+          default_priority: string
+          default_review_flow: string
+          default_sla_days: number
+          id: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_category?: string
+          default_priority?: string
+          default_review_flow?: string
+          default_sla_days?: number
+          id?: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_category?: string
+          default_priority?: string
+          default_review_flow?: string
+          default_sla_days?: number
+          id?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_defaults_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_invitations: {
         Row: {
           accepted_at: string | null
