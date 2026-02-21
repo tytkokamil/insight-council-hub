@@ -19,6 +19,13 @@ const HeroSection = () => {
 
   return (
     <section ref={heroRef} className="relative min-h-[90svh] flex items-center justify-center overflow-hidden pt-24 pb-10 w-full">
+      {/* Subtle gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-accent-blue/[0.04] blur-[100px]" />
+        <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-accent-teal/[0.05] blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent-violet/[0.03] blur-[120px]" />
+      </div>
+
       <div className="container relative z-10 mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
           {/* Badge */}
@@ -26,10 +33,10 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ delay: 0.1, duration: 0.8, ease }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border/60 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/[0.06] border border-primary/15 mb-8"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-foreground/40 animate-pulse" />
-            <span className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
               Enterprise Decision Intelligence
             </span>
           </motion.div>
@@ -52,7 +59,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: 0.5, duration: 1, ease }}
-              className="inline-block text-foreground"
+              className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent"
             >
               Entscheidungen.
             </motion.span>
@@ -76,7 +83,7 @@ const HeroSection = () => {
             transition={{ delay: 0.9, duration: 0.6, ease }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
-            <Button size="lg" className="rounded-full group">
+            <Button size="lg" className="rounded-full group bg-primary hover:bg-primary/90 shadow-glow">
               Kostenlos starten
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -94,18 +101,18 @@ const HeroSection = () => {
             className="mt-10 flex flex-wrap items-center justify-center gap-6"
           >
             {[
-              { icon: Shield, text: "DSGVO-konform" },
-              { icon: Lock, text: "SOC 2 Ready" },
-              { icon: Zap, text: "Enterprise-Sicherheit" },
+              { icon: Shield, text: "DSGVO-konform", color: "text-accent-teal" },
+              { icon: Lock, text: "SOC 2 Ready", color: "text-accent-blue" },
+              { icon: Zap, text: "Enterprise-Sicherheit", color: "text-accent-violet" },
             ].map((badge, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.4 + i * 0.1, duration: 0.5 }}
-                className="flex items-center gap-2 text-muted-foreground/60"
+                className="flex items-center gap-2 text-muted-foreground"
               >
-                <badge.icon className="w-3.5 h-3.5" />
+                <badge.icon className={`w-3.5 h-3.5 ${badge.color}`} />
                 <span className="text-xs font-medium tracking-wide">{badge.text}</span>
               </motion.div>
             ))}
@@ -120,13 +127,13 @@ const HeroSection = () => {
           style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity }}
           className="mt-16 relative max-w-4xl mx-auto"
         >
-          <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-card">
             {/* Browser chrome */}
             <div className="flex items-center gap-2 px-5 py-3 border-b border-border/40 bg-muted/20">
               <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/10" />
+                <div className="w-2.5 h-2.5 rounded-full bg-accent-rose/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-accent-amber/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-accent-teal/30" />
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1 rounded-md bg-muted/50 text-[11px] text-muted-foreground/60 font-mono border border-border/30">
@@ -139,16 +146,16 @@ const HeroSection = () => {
             <div className="relative p-5 md:p-6 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Approved", value: "12" },
-                  { label: "In Review", value: "5" },
-                  { label: "Risk Score", value: "34%" },
+                  { label: "Approved", value: "12", accent: "border-accent-teal/20 bg-accent-teal/[0.04]" },
+                  { label: "In Review", value: "5", accent: "border-accent-amber/20 bg-accent-amber/[0.04]" },
+                  { label: "Risk Score", value: "34%", accent: "border-accent-blue/20 bg-accent-blue/[0.04]" },
                 ].map((s, i) => (
                   <motion.div
                     key={s.label}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 1.4 + i * 0.1, duration: 0.5, ease }}
-                    className="p-3 rounded-xl bg-muted/30 border border-border/40"
+                    className={`p-3 rounded-xl border ${s.accent}`}
                   >
                     <div className="text-xl md:text-2xl font-bold tabular-nums">{s.value}</div>
                     <div className="text-[11px] text-muted-foreground">{s.label}</div>
@@ -166,7 +173,7 @@ const HeroSection = () => {
                   {[40, 65, 50, 80, 55, 90, 70, 95, 75, 60, 85, 72].map((h, i) => (
                     <motion.div
                       key={i}
-                      className="flex-1 rounded-sm bg-foreground/10 hover:bg-foreground/20 transition-colors"
+                      className="flex-1 rounded-sm bg-primary/10 hover:bg-primary/20 transition-colors"
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
                       transition={{ delay: 1.8 + i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -176,8 +183,8 @@ const HeroSection = () => {
               </motion.div>
               <div className="space-y-1.5">
                 {[
-                  { title: "Q4 Budget Allocation", status: "Approved", statusColor: "bg-success/10 text-success" },
-                  { title: "Engineering Hiring Plan", status: "Review", statusColor: "bg-warning/10 text-warning" },
+                  { title: "Q4 Budget Allocation", status: "Approved", statusColor: "bg-accent-teal/10 text-accent-teal" },
+                  { title: "Engineering Hiring Plan", status: "Review", statusColor: "bg-accent-amber/10 text-accent-amber" },
                   { title: "Cloud Migration", status: "Draft", statusColor: "bg-muted text-muted-foreground" },
                 ].map((row, i) => (
                   <motion.div
@@ -187,7 +194,7 @@ const HeroSection = () => {
                     transition={{ delay: 2.0 + i * 0.08, duration: 0.4, ease }}
                     className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/15 border border-border/30"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-foreground/20" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
                     <span className="text-xs font-medium flex-1 truncate">{row.title}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${row.statusColor}`}>{row.status}</span>
                   </motion.div>
