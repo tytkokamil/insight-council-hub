@@ -16,6 +16,8 @@ export const statusLabels: Record<string, string> = {
   approved: "Genehmigt",
   rejected: "Abgelehnt",
   implemented: "Umgesetzt",
+  cancelled: "Abgebrochen",
+  superseded: "Ersetzt",
   archived: "Archiviert",
 };
 

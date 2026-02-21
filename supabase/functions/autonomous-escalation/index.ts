@@ -6,7 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Default SLA values as fallback
 const DEFAULT_SLA = {
   escalation_hours_warn: 48,
   escalation_hours_urgent: 24,
@@ -25,10 +24,9 @@ serve(async (req) => {
     const now = new Date();
     const actions: any[] = [];
 
-    // 1. Fetch all open decisions, reviews, members, AND SLA configs
     const [decRes, reviewRes, memberRes, slaRes] = await Promise.all([
       supabase.from("decisions")
-        .select("id, title, priority, category, due_date, created_by, assignee_id, escalation_level, status, ai_risk_score, team_id, created_at")
+        .select("id, title, priority, category, due_date, created_by, owner_id, assignee_id, escalation_level, status, ai_risk_score, team_id, created_at")
         .in("status", ["draft", "review", "approved"]),
       supabase.from("decision_reviews")
         .select("id, decision_id, reviewer_id, status, step_order, reviewed_at"),
@@ -43,7 +41,6 @@ serve(async (req) => {
     const members = memberRes.data || [];
     const slaConfigs = slaRes.data || [];
 
-    // Build SLA lookup map: "category:priority" -> config
     const slaMap: Record<string, typeof DEFAULT_SLA> = {};
     slaConfigs.forEach(s => {
       slaMap[`${s.category}:${s.priority}`] = {
@@ -57,14 +54,12 @@ serve(async (req) => {
     const getSla = (category: string, priority: string) =>
       slaMap[`${category}:${priority}`] || DEFAULT_SLA;
 
-    // Group reviews by decision
     const reviewsByDec: Record<string, any[]> = {};
     reviews.forEach(r => {
       if (!reviewsByDec[r.decision_id]) reviewsByDec[r.decision_id] = [];
       reviewsByDec[r.decision_id].push(r);
     });
 
-    // Team members map
     const teamMembers: Record<string, string[]> = {};
     members.forEach(m => {
       if (!teamMembers[m.team_id]) teamMembers[m.team_id] = [];
@@ -79,8 +74,9 @@ serve(async (req) => {
       const riskScore = dec.ai_risk_score || 0;
       const decReviews = reviewsByDec[dec.id] || [];
       const sla = getSla(dec.category, dec.priority);
+      const notifyUser = dec.owner_id || dec.created_by;
 
-      // === ACTION 1: Smart Escalation using configurable SLA ===
+      // === ACTION 1: Smart Escalation ===
       let newLevel = 0;
       if (dueDate) {
         if (hoursUntilDue <= sla.escalation_hours_overdue) newLevel = 3;
@@ -88,7 +84,6 @@ serve(async (req) => {
         else if (hoursUntilDue <= sla.escalation_hours_warn) newLevel = 1;
       }
 
-      // Bonus escalation for stale decisions
       if (daysOpen > sla.reassign_days * 2 && dec.status === "draft") {
         newLevel = Math.max(newLevel, 2);
       }
@@ -109,7 +104,7 @@ serve(async (req) => {
           ? `Seit ${daysOpen} Tagen offen ohne Fortschritt.`
           : `Nur noch ${Math.round(hoursUntilDue)}h bis zur Deadline.`;
 
-        const usersToNotify = new Set([dec.created_by]);
+        const usersToNotify = new Set([notifyUser]);
         if (dec.assignee_id) usersToNotify.add(dec.assignee_id);
 
         for (const userId of usersToNotify) {
@@ -119,13 +114,13 @@ serve(async (req) => {
           });
         }
 
-        actions.push({ type: "escalation", decision_id: dec.id, title: dec.title, from_level: currentLevel, to_level: newLevel, sla });
+        actions.push({ type: "escalation", decision_id: dec.id, title: dec.title, from_level: currentLevel, to_level: newLevel });
       }
 
-      // === ACTION 2: Auto-Reassign using configurable reassign_days ===
+      // === ACTION 2: Auto-Reassign ===
       if (dec.assignee_id && daysOpen > sla.reassign_days && dec.status === "draft" && dec.team_id) {
         const teamMemberIds = teamMembers[dec.team_id] || [];
-        const otherMembers = teamMemberIds.filter(id => id !== dec.assignee_id && id !== dec.created_by);
+        const otherMembers = teamMemberIds.filter(id => id !== dec.assignee_id && id !== notifyUser);
 
         if (otherMembers.length > 0) {
           const newAssignee = otherMembers[Math.floor(Math.random() * otherMembers.length)];
@@ -138,49 +133,48 @@ serve(async (req) => {
             user_id: newAssignee, decision_id: dec.id,
             type: "auto_reassign",
             title: `🔄 Auto-Reassign: ${dec.title}`,
-            message: `Diese Entscheidung wurde dir automatisch zugewiesen, da der vorherige Bearbeiter seit ${daysOpen} Tagen inaktiv war. (SLA: ${sla.reassign_days} Tage)`,
+            message: `Diese Entscheidung wurde dir automatisch zugewiesen (${daysOpen} Tage inaktiv, SLA: ${sla.reassign_days}d).`,
           });
 
           await supabase.from("notifications").insert({
             user_id: dec.assignee_id, decision_id: dec.id,
             type: "auto_reassign",
             title: `🔄 Reassigned: ${dec.title}`,
-            message: `Diese Entscheidung wurde automatisch neu zugewiesen, da keine Aktivität seit ${daysOpen} Tagen stattfand. (SLA: ${sla.reassign_days} Tage)`,
+            message: `Diese Entscheidung wurde automatisch neu zugewiesen (${daysOpen} Tage ohne Aktivität).`,
           });
 
-          actions.push({ type: "auto_reassign", decision_id: dec.id, title: dec.title, old_assignee: dec.assignee_id, new_assignee: newAssignee, sla_reassign_days: sla.reassign_days });
+          actions.push({ type: "auto_reassign", decision_id: dec.id, title: dec.title });
         }
       }
 
-      // === ACTION 3: Auto-Skip Review for Low-Risk decisions ===
+      // === ACTION 3: SUGGEST-ONLY Review Skip (was: auto-skip) ===
+      // Instead of auto-approving, we now ONLY send a suggestion notification.
+      // The owner/reviewer must manually approve.
       if (dec.status === "review" && riskScore <= 25 && dec.priority !== "critical") {
         const pendingReviews = decReviews.filter(r => !r.reviewed_at && r.step_order > 1);
 
         if (pendingReviews.length > 0) {
-          for (const review of pendingReviews) {
-            await supabase.from("decision_reviews")
-              .update({
-                status: "approved",
-                reviewed_at: now.toISOString(),
-                feedback: "✅ Auto-approved: Low-risk decision (AI Risk Score ≤ 25). Review-Schritt automatisch übersprungen.",
-              })
-              .eq("id", review.id);
-          }
-
-          await supabase.from("decisions")
-            .update({ status: "approved" })
-            .eq("id", dec.id);
-
+          // Send suggestion to owner – NO auto-approval
           await supabase.from("notifications").insert({
-            user_id: dec.created_by, decision_id: dec.id,
-            type: "auto_skip_review",
-            title: `⚡ Auto-Approved: ${dec.title}`,
-            message: `Diese Low-Risk Entscheidung (Risk: ${riskScore}%) wurde automatisch genehmigt. ${pendingReviews.length} Review-Schritt(e) übersprungen.`,
+            user_id: notifyUser, decision_id: dec.id,
+            type: "review_skip_suggestion",
+            title: `💡 Review-Verkürzung empfohlen: ${dec.title}`,
+            message: `AI empfiehlt, ${pendingReviews.length} Review-Schritt(e) zu überspringen (Risk Score: ${riskScore}%). Bitte manuell bestätigen.`,
           });
 
+          // Also notify each pending reviewer
+          for (const review of pendingReviews) {
+            await supabase.from("notifications").insert({
+              user_id: review.reviewer_id, decision_id: dec.id,
+              type: "review_skip_suggestion",
+              title: `💡 Review-Skip vorgeschlagen: ${dec.title}`,
+              message: `Diese Low-Risk Entscheidung (${riskScore}%) könnte den Review-Schritt überspringen. Der Owner wurde informiert.`,
+            });
+          }
+
           actions.push({
-            type: "auto_skip_review", decision_id: dec.id, title: dec.title,
-            risk_score: riskScore, skipped_steps: pendingReviews.length,
+            type: "review_skip_suggestion", decision_id: dec.id, title: dec.title,
+            risk_score: riskScore, suggested_skips: pendingReviews.length,
           });
         }
       }
@@ -192,16 +186,13 @@ serve(async (req) => {
 
         if (completedReviews < totalReviews && completedReviews >= 2) {
           await supabase.from("notifications").insert({
-            user_id: dec.created_by, decision_id: dec.id,
+            user_id: notifyUser, decision_id: dec.id,
             type: "process_suggestion",
             title: `💡 Prozessverkürzung: ${dec.title}`,
-            message: `Diese Entscheidung hat bereits ${completedReviews}/${totalReviews} Reviews abgeschlossen und ist seit ${daysOpen} Tagen offen. Erwäge die verbleibenden Schritte zu überspringen.`,
+            message: `${completedReviews}/${totalReviews} Reviews abgeschlossen, seit ${daysOpen} Tagen offen. Erwäge die verbleibenden Schritte zu überspringen.`,
           });
 
-          actions.push({
-            type: "process_suggestion", decision_id: dec.id, title: dec.title,
-            completed_reviews: completedReviews, total_reviews: totalReviews,
-          });
+          actions.push({ type: "process_suggestion", decision_id: dec.id, title: dec.title });
         }
       }
     }

@@ -20,7 +20,7 @@ const OpportunityCostRadar = () => {
 
   const { entries, totalDailyCost, totalAccumulated } = useMemo(() => {
     if (loading) return { entries: [] as CostEntry[], totalDailyCost: 0, totalAccumulated: 0 };
-    const openDecisions = decisions.filter(d => ["draft", "review", "approved"].includes(d.status));
+    const openDecisions = decisions.filter(d => ["draft", "review", "approved"].includes(d.status) && d.status !== "cancelled" && d.status !== "superseded");
     const teamMap = Object.fromEntries(teams.map(t => [t.id, { name: t.name, rate: t.hourly_rate || 75 }]));
     const now = Date.now();
     const results: CostEntry[] = openDecisions.map(d => {
