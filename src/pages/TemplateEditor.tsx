@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight, Settings2, Download, Loader2, Copy } from "lucide-react";
+import { FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight, Settings2, Download, Upload, Loader2, Copy } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,10 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTemplates, type DbTemplate } from "@/hooks/useTemplates";
+import { useTemplates, type DbTemplate, toDecisionTemplate } from "@/hooks/useTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { type RequiredField, type ApprovalStep } from "@/lib/decisionTemplates";
 import { categoryLabels, priorityLabels } from "@/lib/labels";
+import { toast } from "sonner";
 
 const fieldTypes = [
   { value: "text", label: "Text" },
@@ -28,6 +29,7 @@ const TemplateEditor = () => {
   const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [localDraft, setLocalDraft] = useState<DbTemplate | null>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     fields: true, approval: true, rules: false,
   });
@@ -181,6 +183,97 @@ const TemplateEditor = () => {
     });
   };
 
+  const handleExportTemplate = () => {
+    if (!localDraft) return;
+    const exportData = {
+      name: localDraft.name,
+      category: localDraft.category,
+      priority: localDraft.priority,
+      description: localDraft.description,
+      default_duration_days: localDraft.default_duration_days,
+      required_fields: localDraft.required_fields,
+      approval_steps: localDraft.approval_steps,
+      conditional_rules: localDraft.conditional_rules,
+      governance_notes: localDraft.governance_notes,
+      when_to_use: localDraft.when_to_use,
+      icon_color: localDraft.icon_color,
+      version: localDraft.version,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `template-${localDraft.slug || localDraft.name.toLowerCase().replace(/\s+/g, "-")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Template als JSON exportiert");
+  };
+
+  const handleExportAll = () => {
+    const exportData = templates.map(t => ({
+      name: t.name,
+      category: t.category,
+      priority: t.priority,
+      description: t.description,
+      default_duration_days: t.default_duration_days,
+      required_fields: t.required_fields,
+      approval_steps: t.approval_steps,
+      conditional_rules: t.conditional_rules,
+      governance_notes: t.governance_notes,
+      when_to_use: t.when_to_use,
+      icon_color: t.icon_color,
+      version: t.version,
+    }));
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "templates-export.json";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${templates.length} Templates exportiert`);
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const items = Array.isArray(parsed) ? parsed : [parsed];
+      let count = 0;
+      for (const item of items) {
+        if (!item.name) continue;
+        const slug = `import-${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        await new Promise<void>((resolve, reject) => {
+          createTemplate.mutate({
+            name: item.name,
+            slug,
+            category: item.category || "operational",
+            priority: item.priority || "medium",
+            description: item.description || "",
+            default_duration_days: item.default_duration_days || 7,
+            required_fields: item.required_fields || [],
+            approval_steps: item.approval_steps || [],
+            conditional_rules: item.conditional_rules || [],
+            governance_notes: item.governance_notes || null,
+            when_to_use: item.when_to_use || null,
+            icon_color: item.icon_color || null,
+            version: item.version || 1,
+            is_system: false,
+            created_by: user.id,
+          } as any, { onSuccess: () => resolve(), onError: (err: Error) => reject(err) });
+        });
+        count++;
+      }
+      toast.success(`${count} Template(s) importiert`);
+    } catch (err: any) {
+      toast.error("Import fehlgeschlagen: " + (err.message || "Ungültige JSON-Datei"));
+    }
+    // Reset file input
+    if (importFileRef.current) importFileRef.current.value = "";
+  };
+
   const SectionHeader = ({ label, sectionKey, count }: { label: string; sectionKey: string; count?: number }) => (
     <button
       onClick={() => toggleSection(sectionKey)}
@@ -250,6 +343,16 @@ const TemplateEditor = () => {
                 </button>
               ))
             )}
+            <Separator className="my-2" />
+            <div className="flex gap-1.5">
+              <input ref={importFileRef} type="file" accept=".json" className="hidden" onChange={handleImportFile} />
+              <Button variant="outline" size="sm" className="flex-1 gap-1 text-xs h-7" onClick={() => importFileRef.current?.click()}>
+                <Upload className="w-3 h-3" /> Import
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 gap-1 text-xs h-7" onClick={handleExportAll} disabled={templates.length === 0}>
+                <Download className="w-3 h-3" /> Alle exportieren
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -266,6 +369,9 @@ const TemplateEditor = () => {
                     {!localDraft.is_system && <Badge variant="secondary" className="text-[9px]">Benutzerdefiniert</Badge>}
                   </h2>
                   <div className="flex items-center gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={handleExportTemplate} className="gap-1 text-xs text-muted-foreground" title="Als JSON exportieren">
+                      <Download className="w-3.5 h-3.5" /> Export
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1 text-xs text-muted-foreground" title="Template duplizieren">
                       <Copy className="w-3.5 h-3.5" /> Duplizieren
                     </Button>
