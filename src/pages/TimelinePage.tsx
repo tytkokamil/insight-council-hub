@@ -10,12 +10,13 @@ import { motion } from "framer-motion";
 import {
   FileText, ListTodo, AlertTriangle, Shield, CheckCircle2,
   Clock, Filter, Search, XCircle, ArrowUpCircle, Eye,
-  MessageSquare, TrendingUp,
+  TrendingUp,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import PageHint from "@/components/shared/PageHint";
 
 // ── Event types ──
 
@@ -41,14 +42,14 @@ interface TimelineEvent {
 }
 
 const typeConfig: Record<TimelineEventType, { icon: React.ElementType; color: string; label: string }> = {
-  decision_created:     { icon: FileText,       color: "text-blue-400 bg-blue-400/10 border-blue-400/20",       label: "Entscheidung erstellt" },
-  decision_status:      { icon: ArrowUpCircle,  color: "text-amber-400 bg-amber-400/10 border-amber-400/20",    label: "Status geändert" },
-  decision_implemented: { icon: CheckCircle2,   color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", label: "Umgesetzt" },
-  task_created:         { icon: ListTodo,        color: "text-violet-400 bg-violet-400/10 border-violet-400/20", label: "Aufgabe erstellt" },
-  task_completed:       { icon: CheckCircle2,   color: "text-green-400 bg-green-400/10 border-green-400/20",    label: "Aufgabe erledigt" },
-  review_submitted:     { icon: Eye,            color: "text-cyan-400 bg-cyan-400/10 border-cyan-400/20",       label: "Review" },
-  escalation:           { icon: AlertTriangle,  color: "text-red-400 bg-red-400/10 border-red-400/20",          label: "Eskalation" },
-  audit_change:         { icon: Shield,         color: "text-orange-400 bg-orange-400/10 border-orange-400/20", label: "Änderung" },
+  decision_created:     { icon: FileText,       color: "text-foreground bg-muted border-border",       label: "Entscheidung erstellt" },
+  decision_status:      { icon: ArrowUpCircle,  color: "text-warning bg-warning/10 border-warning/20",    label: "Status geändert" },
+  decision_implemented: { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20", label: "Umgesetzt" },
+  task_created:         { icon: ListTodo,        color: "text-muted-foreground bg-muted border-border", label: "Aufgabe erstellt" },
+  task_completed:       { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20",    label: "Aufgabe erledigt" },
+  review_submitted:     { icon: Eye,            color: "text-foreground bg-muted border-border",       label: "Review" },
+  escalation:           { icon: AlertTriangle,  color: "text-destructive bg-destructive/10 border-destructive/20",          label: "Eskalation" },
+  audit_change:         { icon: Shield,         color: "text-warning bg-warning/10 border-warning/20", label: "Änderung" },
 };
 
 // ── Hooks ──
@@ -218,7 +219,7 @@ function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap:
       <div className="flex-1 min-w-0 pt-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-foreground truncate">{event.title}</span>
-          <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${cfg.color}`}>
+          <Badge variant="outline" className="text-[9px] px-1.5 py-0">
             {cfg.label}
           </Badge>
           {event.meta?.priority && (
@@ -230,14 +231,12 @@ function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap:
         {event.description && (
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{event.description}</p>
         )}
-        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/60">
+        <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {format(parseISO(event.timestamp), "HH:mm", { locale: de })}
           </span>
-          {userName && (
-            <span>{userName}</span>
-          )}
+          {userName && <span>{userName}</span>}
         </div>
       </div>
     </motion.div>
@@ -293,26 +292,27 @@ export default function Timeline() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Decision Timeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Chronologische Ansicht aller Entscheidungs-, Task-, Review- und Eskalations-Events
-          </p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Chronologie</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold">Decision Timeline</h1>
+            <PageHint>Chronologische Ansicht aller Entscheidungs-, Task-, Review- und Eskalations-Events</PageHint>
+          </div>
         </div>
 
         {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Gesamt-Events", value: stats.total, icon: TrendingUp, color: "text-primary" },
-            { label: "Entscheidungen", value: stats.decisions, icon: FileText, color: "text-blue-400" },
-            { label: "Aufgaben", value: stats.tasks, icon: ListTodo, color: "text-violet-400" },
-            { label: "Eskalationen", value: stats.escalations, icon: AlertTriangle, color: "text-red-400" },
+            { label: "Gesamt-Events", value: stats.total, icon: TrendingUp },
+            { label: "Entscheidungen", value: stats.decisions, icon: FileText },
+            { label: "Aufgaben", value: stats.tasks, icon: ListTodo },
+            { label: "Eskalationen", value: stats.escalations, icon: AlertTriangle },
           ].map(s => (
-            <div key={s.label} className="p-3 rounded-xl border border-border bg-card">
+            <div key={s.label} className="p-3 rounded-lg border border-border bg-card">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">{s.label}</span>
-                <s.icon className={`w-4 h-4 ${s.color}`} />
+                <s.icon className="w-4 h-4 text-muted-foreground" />
               </div>
-              <p className="text-xl font-bold text-foreground mt-1">{s.value}</p>
+              <p className="text-xl font-bold mt-1">{s.value}</p>
             </div>
           ))}
         </div>
@@ -325,11 +325,11 @@ export default function Timeline() {
               placeholder="Events durchsuchen..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="pl-9 h-9 text-sm bg-card"
+              className="pl-9 h-9 text-sm"
             />
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px] h-9 text-sm bg-card">
+            <SelectTrigger className="w-[180px] h-9 text-sm">
               <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Alle Events" />
             </SelectTrigger>
@@ -371,8 +371,8 @@ export default function Timeline() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Clock className="w-12 h-12 text-muted-foreground/20 mb-4" />
-            <p className="text-sm font-medium text-muted-foreground/50">Keine Events gefunden</p>
-            <p className="text-xs text-muted-foreground/30 mt-1">
+            <p className="text-sm font-medium text-muted-foreground">Keine Events gefunden</p>
+            <p className="text-xs text-muted-foreground mt-1">
               {search || typeFilter !== "all" ? "Versuche andere Filter." : "Events werden hier angezeigt, sobald Aktivitäten vorhanden sind."}
             </p>
           </div>
@@ -381,11 +381,11 @@ export default function Timeline() {
             {grouped.map(([dayKey, events]) => (
               <div key={dayKey}>
                 <div className="flex items-center gap-3 mb-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {formatDayLabel(events[0].timestamp)}
                   </h3>
-                  <div className="flex-1 h-px bg-border/30" />
-                  <span className="text-[10px] text-muted-foreground/40">{events.length} Events</span>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-[10px] text-muted-foreground">{events.length} Events</span>
                 </div>
                 <div className="pl-1">
                   {events.map(event => (
