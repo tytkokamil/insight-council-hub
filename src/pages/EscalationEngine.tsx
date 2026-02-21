@@ -255,7 +255,7 @@ const EscalationEngine = () => {
                 {[
                   { icon: AlertTriangle, title: "Smart Escalation", desc: "Automatische Eskalation basierend auf Priorität und Inaktivität", color: "text-destructive", trigger: "Deadline überschritten oder Inaktivität > SLA-Schwellenwert" },
                   { icon: Users, title: "Auto-Reassign", desc: "Neuzuweisung bei >7 Tage Inaktivität", color: "text-warning", trigger: "7+ Tage keine Aktivität am Item" },
-                  { icon: SkipForward, title: "Low-Risk Review Skip", desc: "Auto-Genehmigung bei AI Risk ≤ 25%", color: "text-success", trigger: "AI Risk Score ≤ 25 und keine offenen Bedenken" },
+                  { icon: SkipForward, title: "Low-Risk Review Skip", desc: "AI schlägt Überspringen vor (Suggest-only). Nicht für Critical/Confidential.", color: "text-success", trigger: "AI Risk Score ≤ 25%, manuelle Bestätigung erforderlich" },
                   { icon: Lightbulb, title: "Prozessverkürzung", desc: "Vorschlag zum Überspringen bei ≥2/n Reviews", color: "text-primary", trigger: "Mehrheit der Reviewer hat zugestimmt" },
                 ].map(rule => (
                   <div key={rule.title} className="p-3 rounded-lg bg-muted/20 border border-border/50">
