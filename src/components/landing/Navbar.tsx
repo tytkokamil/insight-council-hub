@@ -37,8 +37,8 @@ const Navbar = () => {
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-14">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
-                  <span className="text-background text-xs font-bold">D</span>
+                <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">D</span>
                 </div>
                 <span className="font-bold text-base tracking-tight">DecisionOS</span>
               </Link>
@@ -48,7 +48,7 @@ const Navbar = () => {
                   <a
                     key={item.label}
                     href={item.href}
-                    className="text-sm text-muted-foreground hover:text-foreground px-3.5 py-1.5 rounded-lg transition-colors duration-200"
+                    className="text-sm text-muted-foreground hover:text-foreground px-3.5 py-1.5 rounded-lg transition-colors duration-200 hover:bg-primary/5"
                   >
                     {item.label}
                   </a>
@@ -90,7 +90,7 @@ const Navbar = () => {
           >
             <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border p-5 space-y-1">
               {navItems.map(item => (
-                <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-lg hover:bg-primary/5 transition-colors">
                   {item.label}
                 </a>
               ))}

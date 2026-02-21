@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Sparkles } from "lucide-react";
 
 const plans = [
   {
@@ -17,6 +17,7 @@ const plans = [
     ],
     cta: "Kostenlos starten",
     highlighted: false,
+    checkColor: "text-accent-teal",
   },
   {
     name: "Business",
@@ -35,6 +36,7 @@ const plans = [
     ],
     cta: "14 Tage kostenlos testen",
     highlighted: true,
+    checkColor: "text-primary",
   },
   {
     name: "Enterprise",
@@ -52,6 +54,7 @@ const plans = [
     ],
     cta: "Demo vereinbaren",
     highlighted: false,
+    checkColor: "text-accent-violet",
   },
 ];
 
@@ -69,7 +72,7 @@ const PricingSection = () => (
       >
         <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Preise</p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Transparent und fair kalkuliert
+          Transparent und <span className="gradient-text">fair kalkuliert</span>
         </h2>
         <p className="text-muted-foreground leading-relaxed">
           Starte kostenlos und skaliere mit deinem Team. Keine versteckten Kosten.
@@ -86,13 +89,14 @@ const PricingSection = () => (
             transition={{ delay: i * 0.12, duration: 0.7, ease }}
             className={`group relative rounded-2xl border p-7 transition-all duration-300 ${
               plan.highlighted
-                ? "border-foreground/20 bg-card"
+                ? "border-primary/30 bg-card shadow-glow"
                 : "border-border bg-card hover:border-foreground/10"
             }`}
           >
             {plan.highlighted && (
               <div className="mb-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-foreground text-background tracking-wide">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground tracking-wide">
+                  <Sparkles className="w-3 h-3" />
                   Beliebteste Wahl
                 </span>
               </div>
@@ -102,7 +106,7 @@ const PricingSection = () => (
               <h3 className="text-lg font-bold mb-4">{plan.name}</h3>
               <div className="mb-3">
                 {plan.price === "Individuell" ? (
-                  <span className="text-3xl font-bold">Individuell</span>
+                  <span className="text-3xl font-bold gradient-text">Individuell</span>
                 ) : (
                   <>
                     <span className="text-4xl font-bold tracking-tight tabular-nums">€{plan.price}</span>
@@ -133,7 +137,7 @@ const PricingSection = () => (
                     transition={{ delay: 0.3 + fi * 0.04, duration: 0.4 }}
                     className="flex items-start gap-2.5 text-sm"
                   >
-                    <Check className="w-3.5 h-3.5 text-foreground/40 shrink-0 mt-0.5" />
+                    <Check className={`w-3.5 h-3.5 ${plan.checkColor} shrink-0 mt-0.5`} />
                     <span className="text-muted-foreground">{feature}</span>
                   </motion.li>
                 ))}

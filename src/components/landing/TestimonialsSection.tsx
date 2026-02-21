@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Quote } from "lucide-react";
 
 const testimonials = [
   {
@@ -8,6 +8,8 @@ const testimonials = [
     quote: "DecisionOS hat unsere Entscheidungszyklen von 3 Wochen auf 4 Tage reduziert. Der KI Co-Pilot allein spart uns hunderte Stunden pro Quartal.",
     avatar: "SL",
     highlight: "3 Wochen → 4 Tage",
+    accentClass: "from-accent-blue to-accent-violet",
+    avatarBg: "bg-accent-blue/15 text-accent-blue",
   },
   {
     name: "Marcus Weber",
@@ -15,6 +17,8 @@ const testimonials = [
     quote: "Der Decision Graph war ein Gamechanger. Wir sehen endlich wie unsere technischen Entscheidungen zusammenhängen und können Konflikte frühzeitig erkennen.",
     avatar: "MW",
     highlight: "Gamechanger",
+    accentClass: "from-accent-violet to-accent-rose",
+    avatarBg: "bg-accent-violet/15 text-accent-violet",
   },
   {
     name: "Anna Richter",
@@ -22,6 +26,8 @@ const testimonials = [
     quote: "Die Szenario-Engine hat uns geholfen, eine €50M Investitionsentscheidung mit vollem Confidence zu treffen. Unverzichtbar für unser C-Level.",
     avatar: "AR",
     highlight: "€50M Entscheidung",
+    accentClass: "from-accent-teal to-accent-blue",
+    avatarBg: "bg-accent-teal/15 text-accent-teal",
   },
 ];
 
@@ -41,7 +47,7 @@ const TestimonialsSection = () => (
           Kundenstimmen
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Was Enterprise-Teams über uns sagen
+          Was Enterprise-Teams <span className="gradient-text">über uns sagen</span>
         </h2>
       </motion.div>
 
@@ -53,16 +59,21 @@ const TestimonialsSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ delay: i * 0.12, duration: 0.7, ease }}
-            className="group relative p-7 rounded-2xl border border-border bg-card hover:border-foreground/15 transition-all duration-300 flex flex-col"
+            className="group relative p-7 rounded-2xl border border-border bg-card hover:border-primary/20 transition-all duration-300 flex flex-col"
           >
             <div className="relative flex-1 flex flex-col">
+              {/* Quote icon */}
+              <Quote className="w-5 h-5 text-primary/20 mb-3" />
+
+              {/* Stars - golden */}
               <div className="flex gap-0.5 mb-4">
                 {[...Array(5)].map((_, j) => (
-                  <Star key={j} className="w-3.5 h-3.5 fill-foreground/20 text-foreground/20" />
+                  <Star key={j} className="w-3.5 h-3.5 fill-accent-amber text-accent-amber" />
                 ))}
               </div>
 
-              <div className="inline-flex self-start px-2.5 py-1 rounded-full bg-foreground/[0.06] text-[10px] font-semibold text-foreground mb-4">
+              {/* Highlight badge with gradient */}
+              <div className={`inline-flex self-start px-2.5 py-1 rounded-full bg-gradient-to-r ${t.accentClass} text-[10px] font-semibold text-white mb-4`}>
                 {t.highlight}
               </div>
 
@@ -71,7 +82,7 @@ const TestimonialsSection = () => (
               </p>
 
               <div className="flex items-center gap-3 mt-auto pt-5 border-t border-border/30">
-                <div className="w-10 h-10 rounded-full bg-foreground/[0.06] flex items-center justify-center text-xs font-bold text-foreground/60">
+                <div className={`w-10 h-10 rounded-full ${t.avatarBg} flex items-center justify-center text-xs font-bold`}>
                   {t.avatar}
                 </div>
                 <div>
