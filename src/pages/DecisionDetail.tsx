@@ -28,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useRiskDecisionLinks } from "@/hooks/useRisks";
 
 // Panels
+import DecisionHealthScore from "@/components/decisions/DecisionHealthScore";
 import DiscussionPanel from "@/components/decisions/DiscussionPanel";
 import ReviewPanel from "@/components/decisions/ReviewPanel";
 import AiAnalysisPanel from "@/components/decisions/AiAnalysisPanel";
@@ -356,25 +357,19 @@ const DecisionDetail = () => {
         </div>
       )}
 
-      {/* ═══ HEALTH INDICATOR STRIP ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-        {[
-          { icon: AlertTriangle, label: "Risk Score", value: `${riskScore}%`, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success" },
-          { icon: Users, label: "Alignment", value: alignmentScore > 0 ? `${alignmentScore}%` : "—", color: "text-primary" },
-          { icon: Link2, label: "Dependencies", value: `${depCount}`, color: "text-primary" },
-          { icon: CheckSquare, label: "Review", value: `${reviewCompletion}%`, color: reviewCompletion === 100 ? "text-success" : "text-warning" },
-          { icon: DollarSign, label: "Delay Cost", value: isActive ? formatCost(delayCost) : "—", color: "text-destructive" },
-          { icon: Shield, label: "Risiken", value: `${riskCount}`, color: riskCount > 0 ? "text-destructive" : "text-muted-foreground" },
-        ].map(ind => (
-          <Card key={ind.label} className="card-interactive">
-            <CardContent className="p-3 text-center">
-              <ind.icon className={`w-4 h-4 mx-auto mb-1 ${ind.color}`} />
-              <p className="text-lg font-bold number-highlight">{ind.value}</p>
-              <p className="text-[10px] text-muted-foreground">{ind.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* ═══ DECISION HEALTH SCORE ═══ */}
+      <DecisionHealthScore
+        decision={decision}
+        reviewCompletion={reviewCompletion}
+        alignmentScore={alignmentScore}
+        riskScore={riskScore}
+        depCount={depCount}
+        riskCount={riskCount}
+        delayCost={delayCost}
+        openLinkedTasks={openLinkedTasks}
+        isActive={isActive}
+        stakeholderPositions={stakeholderPositions}
+      />
 
       {/* ═══ TABBED CONTENT ═══ */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
