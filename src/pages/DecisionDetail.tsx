@@ -6,7 +6,7 @@ import {
   GitPullRequest, Brain, History, Target, Users, GitBranch, Link2,
   Compass, Crosshair, Clock, ShieldAlert, AlertTriangle, DollarSign,
   ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare, Shield,
-  GitCommit, ClipboardCheck,
+  GitCommit, ClipboardCheck, Ban, Replace,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 import VersionHistoryPanel from "@/components/decisions/VersionHistoryPanel";
 import PostImplementationReview from "@/components/decisions/PostImplementationReview";
 
-const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
+const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -54,6 +54,8 @@ const statusStyles: Record<string, string> = {
   approved: "bg-success/20 text-success",
   rejected: "bg-destructive/20 text-destructive",
   implemented: "bg-primary/20 text-primary",
+  cancelled: "bg-muted/60 text-muted-foreground line-through",
+  superseded: "bg-accent/40 text-accent-foreground",
   archived: "bg-muted/50 text-muted-foreground/60",
 };
 
@@ -231,8 +233,8 @@ const DecisionDetail = () => {
     );
   }
 
-  const isOwner = user?.id === decision.created_by;
-  const isActive = !["implemented", "rejected"].includes(decision.status);
+  const isOwner = user?.id === decision.created_by || user?.id === decision.owner_id;
+  const isActive = !["implemented", "rejected", "cancelled", "superseded", "archived"].includes(decision.status);
   const riskScore = decision.ai_risk_score || 0;
 
   const handleStatusChange = async (newStatus: string) => {
@@ -240,6 +242,7 @@ const DecisionDetail = () => {
     const oldStatus = status;
     const updates: Record<string, any> = { status: newStatus as any, updated_at: new Date().toISOString() };
     if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
+    if (newStatus === "cancelled") updates.cancelled_at = new Date().toISOString();
     const { error } = await supabase.from("decisions").update(updates).eq("id", decision.id);
     if (!error) {
       setStatus(newStatus);
@@ -339,6 +342,16 @@ const DecisionDetail = () => {
             }}>
               <ChevronUp className="w-3.5 h-3.5" /> Eskalieren
             </Button>
+          )}
+          {isActive && isOwner && (
+            <>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => handleStatusChange("cancelled")}>
+                <Ban className="w-3.5 h-3.5" /> Abbrechen
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => handleStatusChange("superseded")}>
+                <Replace className="w-3.5 h-3.5" /> Ersetzen
+              </Button>
+            </>
           )}
           {isOwner && (
             <>
