@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 import { useDecisions, useFilteredDependencies, useTeams } from "@/hooks/useDecisions";
 
 type DelayImpact = {
@@ -41,6 +42,7 @@ type SimulationResult = {
   criticalCount: number;
   timelineData: { week: number; cumulativeCost: number; riskLevel: number }[];
   aiInsights: string | null;
+  monteCarlo: { percentile: string; cost: number; risk: number }[];
 };
 
 const ScenarioEngine = () => {
@@ -124,6 +126,29 @@ const ScenarioEngine = () => {
     const avgRiskIncrease = Math.round(impacts.reduce((s, i) => s + i.riskIncrease, 0) / (impacts.length || 1));
     const criticalCount = impacts.filter(i => i.severity === "critical" || i.severity === "high").length;
 
+    // Monte Carlo simulation (1000 iterations with random variance)
+    const monteCarloRuns = 1000;
+    const costResults: number[] = [];
+    const riskResults: number[] = [];
+    for (let i = 0; i < monteCarloRuns; i++) {
+      let runCost = 0; let runRisk = 0;
+      impacts.forEach(imp => {
+        const variance = 0.5 + Math.random() * 1.0; // 50%-150% variance
+        runCost += imp.totalCost * variance;
+        runRisk += imp.riskIncrease * (0.7 + Math.random() * 0.6);
+      });
+      costResults.push(runCost);
+      riskResults.push(runRisk / (impacts.length || 1));
+    }
+    costResults.sort((a, b) => a - b);
+    riskResults.sort((a, b) => a - b);
+    const monteCarlo = [
+      { percentile: "Best Case (P10)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.1)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.1)]) },
+      { percentile: "Wahrscheinlich (P50)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.5)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.5)]) },
+      { percentile: "Pessimistisch (P75)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.75)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.75)]) },
+      { percentile: "Worst Case (P95)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.95)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.95)]) },
+    ];
+
     const timelineData = Array.from({ length: delayWeeks + 1 }, (_, w) => ({
       week: w,
       cumulativeCost: impacts.reduce((s, i) => s + i.costPerWeek * w, 0),
@@ -148,7 +173,7 @@ const ScenarioEngine = () => {
       // AI optional
     }
 
-    setResult({ impacts, totalCost, avgRiskIncrease, criticalCount, timelineData, aiInsights });
+    setResult({ impacts, totalCost, avgRiskIncrease, criticalCount, timelineData, aiInsights, monteCarlo });
     setSimulating(false);
   };
 
@@ -366,6 +391,59 @@ const ScenarioEngine = () => {
                   </TabsContent>
                 </Tabs>
                 </CollapsibleSection>
+
+                {/* Monte Carlo Simulation Results */}
+                <CollapsibleSection
+                  title="Monte Carlo Simulation"
+                  subtitle="1.000 Iterationen mit Varianzanalyse"
+                  icon={<FlaskConical className="w-4 h-4 text-primary" />}
+                  defaultOpen={true}
+                >
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {result.monteCarlo.map((mc, i) => (
+                      <Card key={i} className={i === 3 ? "border-destructive/30" : i === 0 ? "border-success/30" : ""}>
+                        <CardContent className="p-4 text-center">
+                          <p className="text-[10px] text-muted-foreground mb-1">{mc.percentile}</p>
+                          <p className={`text-xl font-bold tabular-nums ${i >= 3 ? "text-destructive" : i >= 2 ? "text-warning" : ""}`}>
+                            €{mc.cost.toLocaleString("de-DE")}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Risiko: {mc.risk}%</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+                      <div className="bg-success/60 h-full" style={{ width: "10%" }} />
+                      <div className="bg-primary/40 h-full" style={{ width: "40%" }} />
+                      <div className="bg-warning/50 h-full" style={{ width: "25%" }} />
+                      <div className="bg-destructive/50 h-full" style={{ width: "25%" }} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>Best Case</span>
+                      <span>Wahrscheinlich</span>
+                      <span>Pessimistisch</span>
+                      <span>Worst Case</span>
+                    </div>
+                  </div>
+                </CollapsibleSection>
+
+                {/* AI Deep Analysis */}
+                <AiInsightPanel
+                  type="bottleneck"
+                  context={{
+                    analysisType: "scenario_simulation",
+                    delayWeeks,
+                    totalCost: result.totalCost,
+                    avgRiskIncrease: result.avgRiskIncrease,
+                    criticalCount: result.criticalCount,
+                    cascadeTotal: result.impacts.reduce((s, i) => s + i.cascadeCount, 0),
+                    monteCarlo: result.monteCarlo,
+                    topImpacts: result.impacts.slice(0, 5).map(i => ({
+                      title: i.decision.title, priority: i.decision.priority, totalCost: i.totalCost, riskIncrease: i.riskIncrease, cascadeCount: i.cascadeCount
+                    })),
+                  }}
+                />
               </>
             )}
           </>

@@ -660,6 +660,49 @@ const Dashboard = () => {
           );
         })()}
 
+        {/* ═══ UPCOMING DEADLINES ═══ */}
+        {!isLoading && (() => {
+          const now = new Date();
+          const upcoming = decisions
+            .filter(d => d.due_date && !["implemented", "rejected"].includes(d.status) && new Date(d.due_date) >= now)
+            .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
+            .slice(0, 5);
+          if (upcoming.length === 0) return null;
+          return (
+            <section>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Nächste Deadlines</h2>
+              <div className="border border-border rounded-lg divide-y divide-border">
+                {upcoming.map(d => {
+                  const daysLeft = differenceInDays(new Date(d.due_date!), now);
+                  return (
+                    <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)} className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary"}`} />
+                        <span className="text-sm truncate">{d.title}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-xs font-medium tabular-nums ${daysLeft <= 2 ? "text-destructive" : daysLeft <= 5 ? "text-warning" : "text-muted-foreground"}`}>
+                          {daysLeft === 0 ? "Heute" : daysLeft === 1 ? "Morgen" : `${daysLeft}d`}
+                        </span>
+                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* ═══ LEADERBOARD ═══ */}
+        {!isLoading && (
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
+            <WidgetErrorBoundary>
+              <LeaderboardWidget />
+            </WidgetErrorBoundary>
+          </Suspense>
+        )}
+
         {/* ═══ RECENT & ACTIVITY ═══ */}
         {!isLoading && (
           <section>

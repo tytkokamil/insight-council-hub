@@ -6,6 +6,7 @@ import { DollarSign, Clock, AlertTriangle, TrendingUp, ArrowUpRight, Flame, Time
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
 
 interface CostEntry { id: string; title: string; status: string; priority: string; category: string; daysOpen: number; dailyCost: number; totalCost: number; dueDate: string | null; isOverdue: boolean; urgencyScore: number; teamName: string | null; }
@@ -123,6 +124,24 @@ const OpportunityCostRadar = () => {
           <EmptyAnalysisState icon={DollarSign} title="Keine offenen Kosten" description="Alle Entscheidungen sind abgeschlossen." hint="Offene Entscheidungen generieren automatisch Opportunity-Costs" />
         )}
       </CollapsibleSection>
+
+      {/* AI Analysis */}
+      {entries.length > 0 && (
+        <AiInsightPanel
+          type="bottleneck"
+          context={{
+            analysisType: "opportunity_cost",
+            totalDailyCost,
+            totalAccumulated,
+            openDecisions: entries.length,
+            overdueCount: entries.filter(e => e.isOverdue).length,
+            top5: entries.slice(0, 5).map(e => ({
+              title: e.title, priority: e.priority, dailyCost: e.dailyCost, totalCost: e.totalCost, daysOpen: e.daysOpen, isOverdue: e.isOverdue
+            })),
+          }}
+          className="mt-6"
+        />
+      )}
     </AppLayout>
   );
 };
