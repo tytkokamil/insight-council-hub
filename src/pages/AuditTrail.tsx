@@ -150,8 +150,17 @@ const AuditTrail = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <History className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Keine Audit-Einträge gefunden.</p>
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
+              <History className="w-8 h-8 text-primary opacity-60" />
+            </div>
+            <h3 className="font-display text-lg font-semibold mb-2">
+              {search || actionFilter !== "all" ? "Keine Einträge gefunden" : "Noch keine Audit-Einträge"}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {search || actionFilter !== "all"
+                ? "Versuche andere Filter oder Suchbegriffe."
+                : "Alle Änderungen an Entscheidungen werden hier automatisch protokolliert — Statusänderungen, Reviews, Bearbeitungen und KI-Analysen."}
+            </p>
           </div>
         ) : (
           <div className="space-y-8">

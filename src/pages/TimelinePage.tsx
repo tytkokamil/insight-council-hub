@@ -370,10 +370,16 @@ export default function Timeline() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Clock className="w-12 h-12 text-muted-foreground/20 mb-4" />
-            <p className="text-sm font-medium text-muted-foreground">Keine Events gefunden</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {search || typeFilter !== "all" ? "Versuche andere Filter." : "Events werden hier angezeigt, sobald Aktivitäten vorhanden sind."}
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
+              <Clock className="w-8 h-8 text-primary opacity-60" />
+            </div>
+            <h3 className="font-display text-lg font-semibold mb-2">
+              {search || typeFilter !== "all" ? "Keine Events gefunden" : "Noch keine Aktivitäten"}
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+              {search || typeFilter !== "all"
+                ? "Versuche andere Filter oder Suchbegriffe."
+                : "Die Timeline zeigt chronologisch alle Aktivitäten — erstellte Entscheidungen, Statusänderungen, Reviews, abgeschlossene Aufgaben und Eskalationen."}
             </p>
           </div>
         ) : (

@@ -313,9 +313,14 @@ const KnowledgeBase = () => {
           {/* Decision list */}
           <div className="lg:col-span-2 space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filteredDecisions.length === 0 && (
-              <Card className="p-8 text-center text-muted-foreground">
-                <Lightbulb className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Keine abgeschlossenen Entscheidungen gefunden</p>
+              <Card className="p-8 text-center">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb className="w-6 h-6 text-primary opacity-60" />
+                </div>
+                <h3 className="font-display font-semibold mb-1">Keine Entscheidungen gefunden</h3>
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
+                  {search ? "Passe die Suche an." : "Sobald Entscheidungen umgesetzt sind, kannst du hier Lessons Learned und Tags dokumentieren."}
+                </p>
               </Card>
             )}
             {filteredDecisions.map(d => {
