@@ -65,7 +65,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: 0.5, duration: 1, ease }}
-              className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent pb-1 -mb-1 decoration-clone"
+              className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent pb-2 -mb-2 decoration-clone"
             >
               Entscheidungs-Problem.
             </motion.span>
