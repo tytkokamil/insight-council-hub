@@ -136,9 +136,9 @@ const DependenciesPanel = ({ decisionId }: Props) => {
 
   const statusDot = (status: string) => {
     const colors: Record<string, string> = {
-      draft: "bg-muted-foreground", review: "bg-warning", approved: "bg-success",
-      implemented: "bg-primary", rejected: "bg-destructive",
-      open: "bg-muted-foreground", in_progress: "bg-warning", done: "bg-success",
+      draft: "bg-muted-foreground", proposed: "bg-accent-foreground/60", review: "bg-warning", approved: "bg-success",
+      implemented: "bg-primary", rejected: "bg-destructive", archived: "bg-muted-foreground/40",
+      backlog: "bg-muted-foreground/40", open: "bg-muted-foreground", in_progress: "bg-warning", blocked: "bg-destructive", done: "bg-success",
     };
     return <div className={`w-2 h-2 rounded-full ${colors[status] || "bg-muted"}`} />;
   };

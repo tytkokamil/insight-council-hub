@@ -1118,7 +1118,7 @@ export type Database = {
         | "marketing"
         | "budget"
       task_priority: "low" | "medium" | "high" | "critical"
-      task_status: "open" | "in_progress" | "done"
+      task_status: "backlog" | "open" | "in_progress" | "blocked" | "done"
       team_role: "lead" | "member" | "viewer"
       user_role: "admin" | "decision_maker" | "reviewer" | "observer"
     }
@@ -1277,7 +1277,7 @@ export const Constants = {
         "budget",
       ],
       task_priority: ["low", "medium", "high", "critical"],
-      task_status: ["open", "in_progress", "done"],
+      task_status: ["backlog", "open", "in_progress", "blocked", "done"],
       team_role: ["lead", "member", "viewer"],
       user_role: ["admin", "decision_maker", "reviewer", "observer"],
     },

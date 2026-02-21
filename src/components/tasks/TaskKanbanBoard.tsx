@@ -9,8 +9,10 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const STATUS_COLUMNS = [
+  { key: "backlog", label: "Backlog", color: "border-t-muted-foreground/40" },
   { key: "open", label: "Offen", color: "border-t-muted-foreground" },
   { key: "in_progress", label: "In Arbeit", color: "border-t-warning" },
+  { key: "blocked", label: "Blockiert", color: "border-t-destructive" },
   { key: "done", label: "Erledigt", color: "border-t-success" },
 ] as const;
 
@@ -44,7 +46,7 @@ const TaskKanbanBoard = memo(({ tasks, profileMap, onStatusChange, onEdit, onDel
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
 
   const columns = useMemo(() => {
-    const map: Record<string, Task[]> = { open: [], in_progress: [], done: [] };
+    const map: Record<string, Task[]> = { backlog: [], open: [], in_progress: [], blocked: [], done: [] };
     tasks.forEach(t => { (map[t.status] ??= []).push(t); });
     return map;
   }, [tasks]);

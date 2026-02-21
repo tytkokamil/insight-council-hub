@@ -20,14 +20,18 @@ interface Props {
 }
 
 const STATUS_OPTIONS = [
+  { value: "backlog", label: "Backlog", icon: Circle },
   { value: "open", label: "Offen", icon: Circle },
   { value: "in_progress", label: "In Arbeit", icon: Clock },
+  { value: "blocked", label: "Blockiert", icon: Circle },
   { value: "done", label: "Erledigt", icon: CheckCircle2 },
 ] as const;
 
 const statusLabels: Record<string, string> = {
+  backlog: "Backlog",
   open: "Offen",
   in_progress: "In Arbeit",
+  blocked: "Blockiert",
   done: "Erledigt",
 };
 

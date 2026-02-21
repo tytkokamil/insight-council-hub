@@ -8,7 +8,7 @@ export interface Task {
   id: string;
   title: string;
   description: string | null;
-  status: "open" | "in_progress" | "done";
+  status: "backlog" | "open" | "in_progress" | "blocked" | "done";
   priority: "low" | "medium" | "high" | "critical";
   category: "general" | "strategic" | "operational" | "technical" | "hr" | "marketing" | "budget";
   due_date: string | null;
