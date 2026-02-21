@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
+import { GuidedModeProvider } from "@/hooks/useGuidedMode";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
@@ -56,6 +57,11 @@ const ArchivePage = lazy(() => import("./pages/ArchivePage"));
 const RiskRegister = lazy(() => import("./pages/RiskRegister"));
 const TeamPerformance = lazy(() => import("./pages/TeamPerformance"));
 const GlobalSearch = lazy(() => import("./pages/GlobalSearch"));
+const MeetingMode = lazy(() => import("./pages/MeetingMode"));
+
+const AnalyticsHub = lazy(() => import("./pages/AnalyticsHub"));
+const ProcessHub = lazy(() => import("./pages/ProcessHub"));
+const ExecutiveHub = lazy(() => import("./pages/ExecutiveHub"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +85,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <FeatureFlagsProvider>
+            <GuidedModeProvider>
             <TeamProvider>
             <Routes>
               <Route path="/" element={<Index />} />
@@ -121,10 +128,13 @@ const App = () => (
               <Route path="/risks" element={<P><RiskRegister /></P>} />
               <Route path="/team-performance" element={<P><TeamPerformance /></P>} />
               <Route path="/search" element={<P><GlobalSearch /></P>} />
+              <Route path="/meeting" element={<P><MeetingMode /></P>} />
+              <Route path="/process" element={<P><ProcessHub /></P>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>
+            </GuidedModeProvider>
             </FeatureFlagsProvider>
           </AuthProvider>
         </BrowserRouter>

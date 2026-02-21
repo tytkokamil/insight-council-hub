@@ -5,8 +5,9 @@ import {
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
   ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
-  Archive, Search as SearchIcon, Settings2, Compass,
+  Archive, Search as SearchIcon, Settings2, Compass, Video,
 } from "lucide-react";
+import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
 
 interface NavItem {
   icon: React.ElementType;
@@ -42,7 +43,7 @@ const navGroups: NavGroup[] = [
       { icon: ListTodo, label: "Tasks", path: "/tasks", featureKey: "tasks" },
       { icon: Calendar, label: "Calendar", path: "/calendar", featureKey: "calendar" },
       { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
-      
+      { icon: Video, label: "Meeting Mode", path: "/meeting" },
       { icon: SearchIcon, label: "Suche", path: "/search" },
     ],
   },
@@ -181,6 +182,7 @@ const SubGroupItem = ({
 const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
 }: SidebarNavProps) => {
+  const { mode, setMode, shouldShowAdvanced } = useGuidedMode();
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navGroups.forEach(g => {
@@ -195,6 +197,24 @@ const SidebarNav = memo(({
 
   return (
     <nav className="flex-1 px-2 py-2 space-y-4 overflow-y-auto overflow-x-hidden">
+      {/* Guided Mode Toggle */}
+      {!collapsed && (
+        <div className="px-2 pb-1">
+          <div className="flex items-center rounded-md border border-border p-0.5">
+            {(["basic", "advanced"] as const).map(m => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`flex-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
+                  mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {m === "basic" ? "Basic" : "Advanced"}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {navGroups.map((group) => {
         const visibleItems = group.items.filter(item => {
           if (isSubGroup(item)) {
@@ -202,11 +222,14 @@ const SidebarNav = memo(({
             return item.children.some(c => {
               if (c.adminOnly && !isAdmin) return false;
               if (c.featureKey && !isFeatureEnabled(c.featureKey)) return false;
+              if (mode === "basic" && !BASIC_MODE_PATHS.has(c.path)) return false;
               return true;
             });
           }
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
+          // Basic mode: only show core paths
+          if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) return false;
           return true;
         });
         if (visibleItems.length === 0) return null;
