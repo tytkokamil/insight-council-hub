@@ -45,32 +45,21 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "ANALYTICS",
-    items: [
-      { icon: TrendingUp, label: "Analytics", path: "/analytics", featureKey: "analytics" },
-      { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
-      { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
-      { icon: Crosshair, label: "Strategy", path: "/strategy", featureKey: "strategy" },
-      { icon: History, label: "Audit", path: "/audit", featureKey: "audit" },
-    ],
-  },
-  {
-    label: "INTELLIGENCE",
-    defaultCollapsed: true,
+    label: "INSIGHTS",
     items: [
       {
-        icon: Briefcase,
-        label: "Executive View",
-        featureKey: "executive",
+        icon: TrendingUp,
+        label: "Analytics Hub",
         children: [
-          { icon: Target, label: "Executive Dashboard", path: "/executive", featureKey: "executive" },
-          { icon: Sun, label: "CEO Briefing", path: "/briefing", featureKey: "briefing" },
-          { icon: CalendarDays, label: "Predictive Timeline", path: "/timeline", featureKey: "timeline" },
+          { icon: BarChart3, label: "Analytics", path: "/analytics", featureKey: "analytics" },
+          { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
+          { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
+          { icon: Crosshair, label: "Strategy", path: "/strategy", featureKey: "strategy" },
         ],
       },
       {
         icon: Cpu,
-        label: "Process Intelligence",
+        label: "Process Hub",
         children: [
           { icon: Radar, label: "Bottlenecks", path: "/bottlenecks", featureKey: "bottlenecks" },
           { icon: Flame, label: "Friction Map", path: "/friction", featureKey: "friction" },
@@ -79,30 +68,35 @@ const navGroups: NavGroup[] = [
         ],
       },
       {
-        icon: Lightbulb,
-        label: "Decision Insights",
+        icon: Briefcase,
+        label: "Executive Hub",
+        featureKey: "executive",
         children: [
+          { icon: Target, label: "Executive Dashboard", path: "/executive", featureKey: "executive" },
+          { icon: Sun, label: "CEO Briefing", path: "/briefing", featureKey: "briefing" },
+          { icon: CalendarDays, label: "Predictive Timeline", path: "/timeline", featureKey: "timeline" },
           { icon: Dna, label: "Decision DNA", path: "/dna", featureKey: "dna" },
           { icon: Trophy, label: "Benchmarking", path: "/benchmarking", featureKey: "benchmarking" },
           { icon: DollarSign, label: "Economic Impact", path: "/costs", featureKey: "costs" },
           { icon: FlaskConical, label: "Scenario Engine", path: "/scenarios", featureKey: "scenarios" },
         ],
       },
-      {
-        icon: AlertTriangle,
-        label: "Risk & Escalation",
-        children: [
-          { icon: Shield, label: "Risk Register", path: "/risks" },
-          { icon: Shield, label: "War Room", path: "/warroom", featureKey: "warroom" },
-          { icon: Zap, label: "Escalation Engine", path: "/engine", featureKey: "engine" },
-        ],
-      },
+    ],
+  },
+  {
+    label: "GOVERNANCE",
+    defaultCollapsed: true,
+    items: [
+      { icon: Zap, label: "Escalation Center", path: "/engine", featureKey: "engine" },
+      { icon: Shield, label: "War Room", path: "/warroom", featureKey: "warroom" },
+      { icon: Shield, label: "Risk Register", path: "/risks" },
+      { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
+      { icon: Zap, label: "Automations", path: "/automations", adminOnly: true },
     ],
   },
   {
     label: "SYSTEM",
     items: [
-      { icon: Zap, label: "Automations", path: "/automations", adminOnly: true },
       { icon: Archive, label: "Archive", path: "/archive" },
       { icon: Settings, label: "Settings", path: "/settings" },
       { icon: UserCog, label: "Users", path: "/admin/users", adminOnly: true },
