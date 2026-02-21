@@ -230,10 +230,8 @@ const KnowledgeBase = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-primary" />
-              Knowledge Base
-            </h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Wissen</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Knowledge Base</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Lessons Learned aus {decisions.length} abgeschlossenen Entscheidungen
             </p>
@@ -325,9 +323,9 @@ const KnowledgeBase = () => {
               const dLessons = lessons.filter(l => l.decision_id === d.id);
               const isActive = selectedDecision === d.id;
               return (
-                <Card
+                  <Card
                   key={d.id}
-                  className={`p-3 cursor-pointer transition-all ${isActive ? "ring-2 ring-primary bg-primary/5" : "hover:bg-muted/30"}`}
+                  className={`p-3 cursor-pointer transition-all ${isActive ? "border-foreground/20 bg-muted/40" : "hover:bg-muted/30"}`}
                   onClick={() => setSelectedDecision(d.id)}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -339,7 +337,7 @@ const KnowledgeBase = () => {
                           {statusLabels[d.status] ?? d.status}
                         </Badge>
                         {dLessons.length > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600">
+                      <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
                             <Lightbulb className="w-3 h-3" /> {dLessons.length}
                           </span>
                         )}
@@ -415,18 +413,18 @@ const KnowledgeBase = () => {
                     {selectedLessons.map(l => (
                       <Card key={l.id} className="p-4 space-y-3">
                         <div className="flex items-start gap-2">
-                          <Lightbulb className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                          <Lightbulb className="w-4 h-4 text-warning mt-0.5 shrink-0" />
                           <p className="text-sm font-medium">{l.key_takeaway}</p>
                         </div>
                         {l.what_went_well && (
                           <div className="flex items-start gap-2 text-sm">
-                            <ThumbsUp className="w-3.5 h-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                            <ThumbsUp className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
                             <span>{l.what_went_well}</span>
                           </div>
                         )}
                         {l.what_went_wrong && (
                           <div className="flex items-start gap-2 text-sm">
-                            <ThumbsDown className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
+                            <ThumbsDown className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
                             <span>{l.what_went_wrong}</span>
                           </div>
                         )}
@@ -526,7 +524,7 @@ const KnowledgeBase = () => {
                   <TabsContent value="similar" className="space-y-3">
                     {similarLoading && (
                       <Card className="p-6 text-center">
-                        <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-primary" />
+                        <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-muted-foreground" />
                         <p className="text-sm text-muted-foreground">KI analysiert Ähnlichkeiten…</p>
                       </Card>
                     )}
@@ -572,7 +570,7 @@ const KnowledgeBase = () => {
                                 <Badge variant="outline" className="text-[10px]">{statusLabels[d.status] ?? d.status}</Badge>
                                 <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
                                 {dLessons.length > 0 && (
-                                  <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                                     <Lightbulb className="w-3 h-3" /> {dLessons.length}
                                   </span>
                                 )}
