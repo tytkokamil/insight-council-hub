@@ -18,7 +18,8 @@ import CoPilotPanel from "./CoPilotPanel";
 import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare } from "lucide-react";
+import ShareDecisionDialog from "./ShareDecisionDialog";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2 } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -47,6 +48,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const [activeTab, setActiveTab] = useState("discussion");
 
   // Count open tasks linked to this decision
@@ -137,16 +139,21 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
         <DialogHeader>
           <div className="flex items-center justify-between gap-2">
             <DialogTitle className="font-display text-xl">{decision.title}</DialogTitle>
-            {isOwner && (
-              <div className="flex items-center gap-1 shrink-0">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowEdit(true)}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              {isOwner && (
+                <>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowShare(true)} title="Mit Teams teilen">
+                    <Share2 className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowEdit(true)}>
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setShowDelete(true)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
           <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
         </DialogHeader>
@@ -218,6 +225,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           <>
             <EditDecisionDialog decision={decision} open={showEdit} onOpenChange={setShowEdit} onUpdated={() => { onUpdated(); onOpenChange(false); }} />
             <DeleteDecisionDialog decision={decision} open={showDelete} onOpenChange={setShowDelete} onDeleted={() => { onUpdated(); onOpenChange(false); }} />
+            <ShareDecisionDialog decisionId={decision.id} decisionTeamId={decision.team_id} open={showShare} onOpenChange={setShowShare} />
           </>
         )}
       </DialogContent>

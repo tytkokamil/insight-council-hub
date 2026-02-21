@@ -417,6 +417,45 @@ export type Database = {
           },
         ]
       }
+      decision_shares: {
+        Row: {
+          decision_id: string
+          id: string
+          shared_at: string
+          shared_by: string
+          team_id: string
+        }
+        Insert: {
+          decision_id: string
+          id?: string
+          shared_at?: string
+          shared_by: string
+          team_id: string
+        }
+        Update: {
+          decision_id?: string
+          id?: string
+          shared_at?: string
+          shared_by?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_shares_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "decision_shares_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decision_tags: {
         Row: {
           created_at: string
