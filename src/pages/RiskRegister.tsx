@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
@@ -199,6 +200,72 @@ const RiskRegister = () => {
             </Card>
           ))}
         </div>
+
+        {/* 5×5 Risk Heatmap */}
+        <Card className="glass-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Risk Heatmap</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="flex gap-4">
+              {/* Y-axis label */}
+              <div className="flex flex-col items-center justify-center">
+                <span className="text-[10px] text-muted-foreground font-medium writing-mode-vertical" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
+                  Wahrscheinlichkeit →
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="grid grid-cols-5 gap-1">
+                  {[5, 4, 3, 2, 1].map(likelihood =>
+                    [1, 2, 3, 4, 5].map(impact => {
+                      const score = likelihood * impact;
+                      const cellRisks = risks.filter(r => r.likelihood === likelihood && r.impact === impact);
+                      const count = cellRisks.length;
+                      const bg = score >= 16
+                        ? "bg-destructive/80 text-destructive-foreground"
+                        : score >= 12
+                        ? "bg-destructive/40 text-destructive"
+                        : score >= 9
+                        ? "bg-warning/50 text-warning"
+                        : score >= 4
+                        ? "bg-warning/20 text-warning"
+                        : "bg-primary/10 text-primary";
+
+                      return (
+                        <Tooltip key={`${likelihood}-${impact}`}>
+                          <TooltipTrigger asChild>
+                            <div className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-default transition-all hover:ring-2 hover:ring-foreground/20 ${bg}`}>
+                              {count > 0 ? (
+                                <span className="text-sm font-bold">{count}</span>
+                              ) : (
+                                <span className="text-[10px] opacity-30">{score}</span>
+                              )}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[200px]">
+                            <p className="text-xs font-semibold">W:{likelihood} × A:{impact} = {score}</p>
+                            {count > 0 ? (
+                              <ul className="text-[11px] mt-1 space-y-0.5">
+                                {cellRisks.slice(0, 5).map(r => (
+                                  <li key={r.id} className="truncate">• {r.title}</li>
+                                ))}
+                                {count > 5 && <li className="text-muted-foreground">+{count - 5} weitere</li>}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-muted-foreground">Keine Risiken</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })
+                  )}
+                </div>
+                {/* X-axis label */}
+                <p className="text-[10px] text-muted-foreground font-medium text-center mt-2">Auswirkung →</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Risk List */}
         {isLoading ? (
