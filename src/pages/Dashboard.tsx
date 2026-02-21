@@ -1,11 +1,11 @@
 import { useMemo, useState, useEffect, lazy, Suspense, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, AlertTriangle, Clock, ArrowRight, BarChart3,
   Activity, DollarSign, Zap, FileText, Eye, TrendingUp, TrendingDown,
   Minus, ShieldAlert, CheckCircle2, Info, Command, ListTodo,
   Link2, ChevronDown, ChevronRight, Users, ExternalLink, Bell,
-  Download, CalendarIcon, RefreshCw, Shield, History,
+  Download, CalendarIcon, RefreshCw, Shield, History, Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import AppLayout from "@/components/layout/AppLayout";
 
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
+import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,6 +38,7 @@ import {
 const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 const RoiDashboardWidget = lazy(() => import("@/components/dashboard/RoiDashboardWidget"));
+const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 
 type TimeRange = 7 | 30 | 90 | "custom";
 
@@ -64,6 +66,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
+  const { mode, setMode, shouldShowAdvanced, decisionCount, implementedCount } = useGuidedMode();
 
   // Recent audit trail for current user
   const { data: myAuditLogs = [] } = useQuery({
@@ -87,6 +90,7 @@ const Dashboard = () => {
   const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
   const [velocityToggle, setVelocityToggle] = useState<"completed" | "created">("completed");
+  const [dismissedAdvancedHint, setDismissedAdvancedHint] = useState(() => localStorage.getItem("advanced-hint-dismissed") === "true");
 
   const isPersonal = selectedTeamId === null;
   const currentTeam = teams.find((t: any) => t.id === selectedTeamId);
@@ -94,6 +98,21 @@ const Dashboard = () => {
 
   const isLoading = loadingDec || loadingTasks;
   const hasError = errorDec || errorTasks;
+
+  // Onboarding tour — auto-trigger on first visit
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  useEffect(() => {
+    const seen = localStorage.getItem("onboarding-completed");
+    if (!seen && !isLoading && allDecisions.length === 0 && tasks.length === 0) {
+      const timer = setTimeout(() => setShowOnboarding(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, allDecisions.length, tasks.length]);
+
+  const completeOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    localStorage.setItem("onboarding-completed", "true");
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -242,19 +261,54 @@ const Dashboard = () => {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-            <h1 className="text-2xl font-semibold tracking-tight mb-2">Willkommen, {firstName}</h1>
-            <p className="text-muted-foreground mb-6">Starte mit deiner ersten Entscheidung.</p>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-lg">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+              <Zap className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight mb-2">Willkommen, {firstName}!</h1>
+            <p className="text-muted-foreground mb-2">Dein Decision Operating System ist bereit.</p>
+            <p className="text-sm text-muted-foreground/70 mb-8">
+              Starte in 3 Schritten: Team erstellen → Erste Entscheidung → Review starten
+            </p>
+
+            {/* Onboarding Steps */}
+            <div className="grid gap-3 mb-8 text-left">
+              {[
+                { num: "1", label: "Team erstellen", desc: "Lade Kollegen ein und definiere Rollen", path: "/teams", icon: Users },
+                { num: "2", label: "Erste Entscheidung", desc: "Nutze ein Template für strukturierte Entscheidungen", path: "/decisions", icon: FileText },
+                { num: "3", label: "Review starten", desc: "Hole Feedback ein und tracke den Fortschritt", path: "/decisions", icon: Eye },
+              ].map(step => (
+                <button
+                  key={step.num}
+                  onClick={() => navigate(step.path)}
+                  className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/[0.02] transition-all group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center justify-center shrink-0">
+                    {step.num}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium group-hover:text-primary transition-colors">{step.label}</p>
+                    <p className="text-xs text-muted-foreground">{step.desc}</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
+                </button>
+              ))}
+            </div>
+
             <div className="flex items-center justify-center gap-3">
+              <Button onClick={() => setShowOnboarding(true)} variant="outline" className="gap-1.5">
+                <Compass className="w-4 h-4" /> Tour starten
+              </Button>
               <Button onClick={() => navigate("/decisions")} className="gap-1.5">
                 <Plus className="w-4 h-4" /> Neue Entscheidung
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/teams")} className="gap-1.5">
-                Team einrichten <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </motion.div>
         </div>
+
+        <Suspense fallback={null}>
+          <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
+        </Suspense>
       </AppLayout>
     );
   }
@@ -267,8 +321,35 @@ const Dashboard = () => {
 
   const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
 
+
   return (
     <AppLayout>
+      {/* Progressive Disclosure Banner */}
+      {shouldShowAdvanced && mode === "basic" && !dismissedAdvancedHint && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-lg border border-primary/20 bg-primary/[0.03] flex items-center gap-3"
+        >
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">Advanced-Modus verfügbar</p>
+            <p className="text-xs text-muted-foreground">
+              Du hast {decisionCount} Entscheidungen und {implementedCount} implementiert — schalte Intelligence-Features frei.
+            </p>
+          </div>
+          <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={() => setMode("advanced")}>
+            Aktivieren
+          </Button>
+          <button
+            onClick={() => { setDismissedAdvancedHint(true); localStorage.setItem("advanced-hint-dismissed", "true"); }}
+            className="text-muted-foreground/40 hover:text-muted-foreground text-xs shrink-0"
+          >✕</button>
+        </motion.div>
+      )}
+
       {/* ═══ HEADER ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
         <div>
