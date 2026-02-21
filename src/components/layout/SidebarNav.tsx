@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 interface NavItem {
   icon: React.ElementType;
@@ -35,44 +36,53 @@ function isSubGroup(item: NavItem | NavSubGroup): item is NavSubGroup {
   return "children" in item;
 }
 
-const navGroups: NavGroup[] = [
+/* nav group keys map to i18n keys */
+const navGroupKey = (label: string) => label;
+
+interface NavGroupDef {
+  labelKey: string;
+  items: (NavItem | NavSubGroup)[];
+  defaultCollapsed?: boolean;
+}
+
+const navGroupsDef: NavGroupDef[] = [
   {
-    label: "CORE",
+    labelKey: "core",
     items: [
-      { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard", featureKey: "dashboard" },
-      { icon: FileText, label: "Decisions", path: "/decisions", featureKey: "decisions" },
-      { icon: ListTodo, label: "Tasks", path: "/tasks", featureKey: "tasks" },
-      { icon: Calendar, label: "Calendar", path: "/calendar", featureKey: "calendar" },
-      { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
-      { icon: Video, label: "Meeting Mode", path: "/meeting" },
+      { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard", featureKey: "dashboard" },
+      { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
+      { icon: ListTodo, label: "nav.tasks", path: "/tasks", featureKey: "tasks" },
+      { icon: Calendar, label: "nav.calendar", path: "/calendar", featureKey: "calendar" },
+      { icon: Users, label: "nav.teams", path: "/teams", featureKey: "teams" },
+      { icon: Video, label: "nav.meeting", path: "/meeting" },
     ],
   },
   {
-    label: "INSIGHTS",
+    labelKey: "insights",
     items: [
-      { icon: BarChart3, label: "Analytics Hub", path: "/analytics", featureKey: "analytics" },
-      { icon: Cpu, label: "Process Hub", path: "/process", featureKey: "bottlenecks" },
-      { icon: Briefcase, label: "Executive Hub", path: "/executive", featureKey: "executive" },
+      { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
+      { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks" },
+      { icon: Briefcase, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
     ],
   },
   {
-    label: "GOVERNANCE",
+    labelKey: "governance",
     items: [
-      { icon: Zap, label: "Escalation Center", path: "/engine", featureKey: "engine" },
-      { icon: Shield, label: "Risk Register", path: "/risks" },
-      { icon: Lightbulb, label: "Automations", path: "/automations" },
-      { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
+      { icon: Zap, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
+      { icon: Shield, label: "nav.riskRegister", path: "/risks" },
+      { icon: Lightbulb, label: "nav.automations", path: "/automations" },
+      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
     ],
   },
   {
-    label: "SYSTEM",
+    labelKey: "system",
     items: [
-      { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },
-      { icon: Settings2, label: "Templates", path: "/template-editor" },
-      { icon: Archive, label: "Archive", path: "/archive" },
-      { icon: Settings, label: "Settings", path: "/settings" },
-      { icon: UserCog, label: "Users", path: "/admin/users", adminOnly: true },
-      { icon: Beaker, label: "Pilot Mode", path: "/pilot", adminOnly: true },
+      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge" },
+      { icon: Settings2, label: "nav.templates", path: "/template-editor" },
+      { icon: Archive, label: "nav.archive", path: "/archive" },
+      { icon: Settings, label: "nav.settings", path: "/settings" },
+      { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
+      { icon: Beaker, label: "nav.pilotMode", path: "/pilot", adminOnly: true },
     ],
   },
 ];
@@ -98,6 +108,7 @@ const SubGroupItem = ({
   onNavigate?: () => void;
   onPrefetch?: (path: string) => void;
 }) => {
+  const { t } = useTranslation();
   const visibleChildren = subGroup.children.filter(child => {
     if (child.adminOnly && !isAdmin) return false;
     if (child.featureKey && !isFeatureEnabled(child.featureKey)) return false;
@@ -123,7 +134,7 @@ const SubGroupItem = ({
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
             }`}
-            title={child.label}
+            title={t(child.label)}
           >
             <child.icon className="w-4 h-4 shrink-0" />
           </Link>
@@ -143,7 +154,7 @@ const SubGroupItem = ({
         }`}
       >
         <subGroup.icon className="w-4 h-4 shrink-0 opacity-60" />
-        <span className="whitespace-nowrap flex-1 text-left">{subGroup.label}</span>
+        <span className="whitespace-nowrap flex-1 text-left">{t(subGroup.label)}</span>
         {open ? (
           <ChevronDown className="w-3 h-3 shrink-0 opacity-40" />
         ) : (
@@ -165,7 +176,7 @@ const SubGroupItem = ({
               }`}
             >
               <child.icon className="w-3.5 h-3.5 shrink-0 opacity-60" />
-              <span className="whitespace-nowrap">{child.label}</span>
+              <span className="whitespace-nowrap">{t(child.label)}</span>
             </Link>
           ))}
         </div>
@@ -179,10 +190,11 @@ const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
 }: SidebarNavProps) => {
   const { mode, setMode, shouldShowAdvanced } = useGuidedMode();
+  const { t } = useTranslation();
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    navGroups.forEach(g => {
-      if (g.defaultCollapsed) initial[g.label] = true;
+    navGroupsDef.forEach(g => {
+      if (g.defaultCollapsed) initial[g.labelKey] = true;
     });
     return initial;
   });
@@ -205,13 +217,14 @@ const SidebarNav = memo(({
                   mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {m === "basic" ? "Basic" : "Advanced"}
+                {m === "basic" ? t("nav.basic") : t("nav.advanced")}
               </button>
             ))}
           </div>
         </div>
       )}
-      {navGroups.map((group) => {
+      {navGroupsDef.map((group) => {
+        const groupLabel = t(`nav.${group.labelKey}`);
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
@@ -226,7 +239,6 @@ const SidebarNav = memo(({
           }
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
-          // Basic mode: track locked items for teaser
           if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
             lockedItems.push(item as NavItem);
             return false;
@@ -234,16 +246,15 @@ const SidebarNav = memo(({
           return true;
         });
         if (visibleItems.length === 0 && lockedItems.length === 0) return null;
-        // If entire group is locked in basic mode, show teaser
         if (visibleItems.length === 0 && lockedItems.length > 0 && !collapsed) {
-          const teaserTexts: Record<string, string> = {
-            INSIGHTS: "Trends, Engpässe & Executive Reports",
-            GOVERNANCE: "Eskalationen, Risiken & Audit",
+          const teaserKeys: Record<string, string> = {
+            insights: "nav.teaserInsights",
+            governance: "nav.teaserGovernance",
           };
           return (
-            <div key={group.label}>
+            <div key={group.labelKey}>
               <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/40">
-                {group.label}
+                {groupLabel}
               </p>
               <button
                 onClick={() => setMode("advanced")}
@@ -251,8 +262,8 @@ const SidebarNav = memo(({
               >
                 <Lock className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-60" />
                 <span className="text-left flex-1">
-                  <span className="block text-[11px] font-medium">{teaserTexts[group.label] || `${lockedItems.length} Features`}</span>
-                  <span className="block text-[10px] opacity-60">Wechsle zu Advanced →</span>
+                  <span className="block text-[11px] font-medium">{teaserKeys[group.labelKey] ? t(teaserKeys[group.labelKey]) : `${lockedItems.length} Features`}</span>
+                  <span className="block text-[10px] opacity-60">{t("nav.switchToAdvanced")}</span>
                 </span>
               </button>
             </div>
@@ -260,22 +271,22 @@ const SidebarNav = memo(({
         }
         if (visibleItems.length === 0) return null;
 
-        const isGroupCollapsed = collapsedGroups[group.label] ?? false;
+        const isGroupCollapsed = collapsedGroups[group.labelKey] ?? false;
         const hasActiveItem = visibleItems.some(item => {
           if (isSubGroup(item)) return item.children.some(c => pathname === c.path);
           return pathname === item.path;
         });
 
         return (
-          <div key={group.label}>
+          <div key={group.labelKey}>
             {!collapsed && (
               <button
-                onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.label) : undefined}
+                onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.labelKey) : undefined}
                 className={`w-full flex items-center px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 ${
                   group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
                 }`}
               >
-                <span className="flex-1 text-left">{group.label}</span>
+                <span className="flex-1 text-left">{groupLabel}</span>
                 {group.defaultCollapsed !== undefined && (
                   isGroupCollapsed && !hasActiveItem ? (
                     <ChevronRight className="w-3 h-3 opacity-40" />
@@ -318,15 +329,15 @@ const SidebarNav = memo(({
                             ? "text-primary/80 hover:bg-primary/5 hover:text-primary"
                             : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                       }`}
-                      title={collapsed ? item.label : undefined}
+                      title={collapsed ? t(item.label) : undefined}
                     >
                       <item.icon className={`w-4 h-4 shrink-0 ${isMeeting ? "opacity-80" : "opacity-60"}`} />
                       {!collapsed && (
                         <span className="whitespace-nowrap flex items-center gap-1.5">
-                          {item.label}
+                          {t(item.label)}
                           {isMeeting && (
                             <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary">
-                              Live
+                              {t("nav.live")}
                             </span>
                           )}
                         </span>
@@ -345,5 +356,5 @@ const SidebarNav = memo(({
 
 SidebarNav.displayName = "SidebarNav";
 
-export { navGroups };
+export { navGroupsDef as navGroups };
 export default SidebarNav;
