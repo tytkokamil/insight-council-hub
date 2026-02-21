@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight, Settings2, Download, Loader2 } from "lucide-react";
+import { FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight, Settings2, Download, Loader2, Copy } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTemplates, type DbTemplate } from "@/hooks/useTemplates";
+import { useAuth } from "@/hooks/useAuth";
 import { type RequiredField, type ApprovalStep } from "@/lib/decisionTemplates";
 import { categoryLabels, priorityLabels } from "@/lib/labels";
 
@@ -23,7 +24,8 @@ const fieldTypes = [
 ];
 
 const TemplateEditor = () => {
-  const { templates, isLoading, seedDefaults, updateTemplate, deleteTemplate } = useTemplates();
+  const { templates, isLoading, seedDefaults, updateTemplate, deleteTemplate, createTemplate } = useTemplates();
+  const { user } = useAuth();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [localDraft, setLocalDraft] = useState<DbTemplate | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -116,6 +118,69 @@ const TemplateEditor = () => {
     });
   };
 
+  const handleCreateNew = () => {
+    if (!user) return;
+    const slug = `custom-${Date.now()}`;
+    createTemplate.mutate({
+      name: "Neues Template",
+      slug,
+      category: "operational",
+      priority: "medium",
+      description: "",
+      default_duration_days: 7,
+      required_fields: [],
+      approval_steps: [],
+      conditional_rules: [],
+      governance_notes: null,
+      when_to_use: null,
+      icon_color: null,
+      version: 1,
+      is_system: false,
+      created_by: user.id,
+    } as any, {
+      onSuccess: () => {
+        // Select the newly created template (will be last after refetch)
+        setTimeout(() => {
+          const newest = templates[templates.length - 1];
+          if (newest) setSelectedId(newest.id);
+        }, 500);
+      },
+    });
+  };
+
+  const handleDuplicate = () => {
+    if (!localDraft || !user) return;
+    const slug = `${localDraft.slug}-copy-${Date.now()}`;
+    createTemplate.mutate({
+      name: `${localDraft.name} (Kopie)`,
+      slug,
+      category: localDraft.category,
+      priority: localDraft.priority,
+      description: localDraft.description,
+      default_duration_days: localDraft.default_duration_days,
+      required_fields: localDraft.required_fields,
+      approval_steps: localDraft.approval_steps,
+      conditional_rules: localDraft.conditional_rules,
+      governance_notes: localDraft.governance_notes,
+      when_to_use: localDraft.when_to_use,
+      icon_color: localDraft.icon_color,
+      version: 1,
+      is_system: false,
+      created_by: user.id,
+    } as any);
+  };
+
+  const handleDelete = () => {
+    if (!localDraft || localDraft.is_system) return;
+    if (!confirm(`Template "${localDraft.name}" wirklich löschen?`)) return;
+    deleteTemplate.mutate(localDraft.id, {
+      onSuccess: () => {
+        setSelectedId(null);
+        setLocalDraft(null);
+      },
+    });
+  };
+
   const SectionHeader = ({ label, sectionKey, count }: { label: string; sectionKey: string; count?: number }) => (
     <button
       onClick={() => toggleSection(sectionKey)}
@@ -154,9 +219,14 @@ const TemplateEditor = () => {
         {/* Sidebar */}
         <Card>
           <CardContent className="p-3 space-y-1">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-              Templates ({isLoading ? "…" : templates.length})
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Templates ({isLoading ? "…" : templates.length})
+              </p>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCreateNew} disabled={createTemplate.isPending} title="Neues Template">
+                <Plus className="w-3.5 h-3.5" />
+              </Button>
+            </div>
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)
             ) : (
@@ -192,11 +262,23 @@ const TemplateEditor = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold flex items-center gap-2">
                     <FileText className="w-4 h-4" /> Grunddaten
+                    {localDraft.is_system && <Badge variant="outline" className="text-[9px]">System</Badge>}
+                    {!localDraft.is_system && <Badge variant="secondary" className="text-[9px]">Benutzerdefiniert</Badge>}
                   </h2>
-                  <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs">
-                    {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                    Speichern
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    <Button variant="ghost" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1 text-xs text-muted-foreground" title="Template duplizieren">
+                      <Copy className="w-3.5 h-3.5" /> Duplizieren
+                    </Button>
+                    {!localDraft.is_system && (
+                      <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleteTemplate.isPending} className="gap-1 text-xs text-destructive/70 hover:text-destructive" title="Template löschen">
+                        <Trash2 className="w-3.5 h-3.5" /> Löschen
+                      </Button>
+                    )}
+                    <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs">
+                      {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                      Speichern
+                    </Button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
