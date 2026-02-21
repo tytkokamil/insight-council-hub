@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
 import { Card, CardContent } from "@/components/ui/card";
-import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
@@ -11,11 +10,10 @@ import { useTasks } from "@/hooks/useTasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   BarChart3, TrendingUp, AlertTriangle, CheckCircle2,
-  Clock, DollarSign, Zap, Target, FileDown, Loader2, ListChecks,
-  ArrowRight, Activity, Info, ExternalLink, Users, Send,
+  Clock, DollarSign, Zap, Target, FileDown, Loader2,
+  ArrowRight, Activity, ExternalLink, Send,
 } from "lucide-react";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
 import { useToast } from "@/hooks/use-toast";
@@ -91,7 +89,6 @@ const ExecutiveDashboard = () => {
     const taskHealth = tasks.length > 0 ? (taskCompletionRate * 0.5 + (100 - (overdueTasks.length / Math.max(1, openTasks.length)) * 100) * 0.5) : 50;
     const healthScore = Math.round(Math.max(0, Math.min(100, (implRate * 0.3) + ((100 - overdueRate) * 0.2) + ((100 - escRate) * 0.15) + (approved.length / total * 100 * 0.1) + (taskHealth * 0.25))));
 
-    // Radar data with axis explanations
     const radarData = [
       { metric: "Risiko", value: Math.round(100 - (highRisk.length / total * 100)), explanation: "Anteil Entscheidungen ohne hohes Risiko" },
       { metric: "Verzögerung", value: Math.round(100 - overdueRate), explanation: "Termintreue – niedrige Überfälligkeitsrate" },
@@ -100,7 +97,6 @@ const ExecutiveDashboard = () => {
       { metric: "Durchsatz", value: Math.round(implRate), explanation: "Umsetzungsrate aller Entscheidungen" },
     ];
 
-    // Critical Decisions – sorted by urgency
     const criticalDecisions = [...openDecisions]
       .map(d => {
         const daysOpen = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000);
@@ -137,7 +133,6 @@ const ExecutiveDashboard = () => {
       } else if (data?.content?.summary) {
         setAiBrief([data.content.summary]);
       } else {
-        // Fallback: generate local brief
         const bullets = [
           `${metrics.openDecisions.length} offene Entscheidungen, davon ${metrics.overdue.length} überfällig.`,
           `${metrics.escalated.length} aktive Eskalationen – SLA-Verletzungen prüfen.`,
@@ -171,7 +166,7 @@ const ExecutiveDashboard = () => {
       <AppLayout>
         <div className="mb-8">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
-          <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+          <h1 className="text-xl font-bold">Executive Dashboard</h1>
         </div>
         <EmptyAnalysisState icon={Target} title="Noch keine Executive-Daten" description="Erstelle Entscheidungen für KPIs und Analysen." hint="Metriken werden automatisch berechnet" />
       </AppLayout>
@@ -180,7 +175,6 @@ const ExecutiveDashboard = () => {
 
   const scoreColor = metrics.healthScore >= 75 ? "text-success" : metrics.healthScore >= 50 ? "text-warning" : "text-destructive";
 
-  // Team comparison data
   const teamComparisonData = teams.map((team: any) => {
     const teamDecs = allDecisions.filter((d: any) => d.team_id === team.id);
     const teamTsk = allTasks.filter((t: any) => t.team_id === team.id);
@@ -205,7 +199,7 @@ const ExecutiveDashboard = () => {
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategische Analyse</p>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-xl font-bold">Executive Dashboard</h1>
+              <h1 className="text-xl font-bold">Executive Dashboard</h1>
               <PageHint>Management-Cockpit: KPI Snapshot, Risk Radar, kritische Entscheidungen und KI-Briefing auf einen Blick.</PageHint>
             </div>
           </div>
@@ -220,7 +214,7 @@ const ExecutiveDashboard = () => {
           </Button>
         </div>
 
-        {/* ═══ KPI Snapshot ═══ */}
+        {/* KPI Snapshot */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Offene Entscheidungen", value: metrics.openDecisions.length, icon: BarChart3 },
@@ -235,14 +229,19 @@ const ExecutiveDashboard = () => {
                   <kpi.icon className={`w-3.5 h-3.5 ${kpi.color || "text-muted-foreground"}`} />
                   <span className="text-[10px] text-muted-foreground">{kpi.label}</span>
                 </div>
-                <div className={`text-2xl font-bold font-display ${kpi.color || ""}`}>{kpi.value}</div>
+                <div className={`text-2xl font-bold ${kpi.color || ""}`}>{kpi.value}</div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* ═══ Risk Radar (Spider Chart) ═══ */}
-        <CollapsibleSection title="Risk Radar" subtitle="Fünf-Achsen Performance-Analyse" icon={<Activity className="w-4 h-4 text-primary" />} defaultOpen={true}>
+        {/* Risk Radar */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Risk Radar</h2>
+            <span className="text-xs text-muted-foreground">— Fünf-Achsen Performance-Analyse</span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="md:col-span-2">
               <CardContent className="p-6">
@@ -252,7 +251,7 @@ const ExecutiveDashboard = () => {
                       <PolarGrid stroke="hsl(var(--border))" />
                       <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                      <Radar dataKey="value" stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.1} />
                       <RTooltip content={({ payload }) => {
                         if (!payload?.[0]) return null;
                         const d = payload[0].payload;
@@ -272,7 +271,7 @@ const ExecutiveDashboard = () => {
               <CardContent className="p-6">
                 <h3 className="text-sm font-semibold mb-4">Health Score</h3>
                 <div className="flex flex-col items-center gap-3">
-                  <div className={`text-5xl font-bold font-display ${scoreColor}`}>{metrics.healthScore}</div>
+                  <div className={`text-5xl font-bold ${scoreColor}`}>{metrics.healthScore}</div>
                   <Progress value={metrics.healthScore} className="w-full" />
                   <div className="w-full space-y-1.5 text-xs">
                     {metrics.radarData.map(r => (
@@ -286,10 +285,15 @@ const ExecutiveDashboard = () => {
               </CardContent>
             </Card>
           </div>
-        </CollapsibleSection>
+        </div>
 
-        {/* ═══ Critical Decisions Table ═══ */}
-        <CollapsibleSection title="Kritische Entscheidungen" subtitle={`${metrics.criticalDecisions.length} dringendste Items`} icon={<AlertTriangle className="w-4 h-4 text-destructive" />} defaultOpen={true}>
+        {/* Critical Decisions Table */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <h2 className="text-sm font-semibold">Kritische Entscheidungen</h2>
+            <span className="text-xs text-muted-foreground">— {metrics.criticalDecisions.length} dringendste Items</span>
+          </div>
           <Card>
             <CardContent className="p-0">
               {metrics.criticalDecisions.length === 0 ? (
@@ -298,18 +302,18 @@ const ExecutiveDashboard = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Titel</th>
-                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Risk</th>
-                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Delay %</th>
-                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Cost Impact</th>
-                        <th className="text-center py-3 px-3 font-medium text-muted-foreground">Owner</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Aktionen</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground text-xs">Titel</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground text-xs">Risk</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground text-xs">Delay %</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground text-xs">Cost Impact</th>
+                        <th className="text-center py-3 px-3 font-medium text-muted-foreground text-xs">Priorität</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground text-xs">Aktionen</th>
                       </tr>
                     </thead>
                     <tbody>
                       {metrics.criticalDecisions.map(d => (
-                        <tr key={d.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <tr key={d.id} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <span className="font-medium truncate max-w-[200px]">{d.title}</span>
@@ -329,11 +333,9 @@ const ExecutiveDashboard = () => {
                             <Badge variant="outline" className="text-[10px]">{d.priority}</Badge>
                           </td>
                           <td className="text-right py-3 px-4">
-                            <div className="flex items-center justify-end gap-1">
-                              <Link to={`/decisions/${d.id}`}>
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" />Öffnen</Button>
-                              </Link>
-                            </div>
+                            <Link to={`/decisions/${d.id}`}>
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" />Öffnen</Button>
+                            </Link>
                           </td>
                         </tr>
                       ))}
@@ -343,18 +345,23 @@ const ExecutiveDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </CollapsibleSection>
+        </div>
 
-        {/* ═══ AI Executive Brief ═══ */}
-        <CollapsibleSection title="AI Executive Brief" subtitle="KI-generierte Zusammenfassung" icon={<Zap className="w-4 h-4 text-primary" />} defaultOpen={true}>
-          <Card className="border-primary/20">
+        {/* AI Executive Brief */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">AI Executive Brief</h2>
+            <span className="text-xs text-muted-foreground">— KI-generierte Zusammenfassung</span>
+          </div>
+          <Card>
             <CardContent className="p-6">
               {aiBrief ? (
                 <div className="space-y-4">
                   <ul className="space-y-2">
                     {aiBrief.map((bullet, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
-                        <span className="text-primary mt-0.5 shrink-0">•</span>
+                        <span className="text-muted-foreground mt-0.5 shrink-0">•</span>
                         <span>{bullet}</span>
                       </li>
                     ))}
@@ -375,7 +382,7 @@ const ExecutiveDashboard = () => {
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">Generiere ein KI-Briefing mit Risiken, Trends und Empfehlungen (max. 8 Punkte).</p>
+                  <p className="text-sm text-muted-foreground mb-3">Generiere ein KI-Briefing mit Risiken, Trends und Empfehlungen.</p>
                   <Button onClick={generateBrief} disabled={briefLoading} className="gap-2">
                     {briefLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                     {briefLoading ? "Generiere..." : "Briefing generieren"}
@@ -384,11 +391,16 @@ const ExecutiveDashboard = () => {
               )}
             </CardContent>
           </Card>
-        </CollapsibleSection>
+        </div>
 
-        {/* ═══ Team Comparison ═══ */}
+        {/* Team Comparison */}
         {teams.length > 0 && teamComparisonData.length > 0 && (
-          <CollapsibleSection title="Team-Vergleich" subtitle="Performance-Metriken nach Team" icon={<BarChart3 className="w-4 h-4 text-primary" />} defaultOpen={false}>
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">Team-Vergleich</h2>
+              <span className="text-xs text-muted-foreground">— Performance-Metriken nach Team</span>
+            </div>
             <Card>
               <CardContent className="p-6">
                 <div className="h-[280px]">
@@ -399,27 +411,16 @@ const ExecutiveDashboard = () => {
                       <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} unit="%" />
                       <RTooltip contentStyle={tooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="Umsetzung" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Termintreue" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="Task-Rate" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Umsetzung" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Termintreue" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Task-Rate" fill="hsl(var(--border))" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-          </CollapsibleSection>
+          </div>
         )}
-
-        {/* ═══ Help ═══ */}
-        <CollapsibleSection title="Hilfe" subtitle="Definitionen und Berechnungen" icon={<Info className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
-          <Card>
-            <CardContent className="p-5 space-y-3 text-sm">
-              <div><span className="font-semibold">Was ist kritisch?</span><p className="text-muted-foreground text-xs mt-0.5">Entscheidungen mit hohem Risiko (&gt;60%), überfällig oder eskaliert werden als kritisch eingestuft.</p></div>
-              <div><span className="font-semibold">Wie werden Scores berechnet?</span><p className="text-muted-foreground text-xs mt-0.5">Health Score = 30% Umsetzung + 20% Termintreue + 15% Eskalation + 10% Reviews + 25% Task-Rate. Risk Radar zeigt 5 Achsen normalisiert auf 0-100%.</p></div>
-              <div><span className="font-semibold">Delay Probability</span><p className="text-muted-foreground text-xs mt-0.5">Geschätzte Wahrscheinlichkeit weiterer Verzögerung basierend auf bisheriger Offenheit und AI Risk Score.</p></div>
-            </CardContent>
-          </Card>
-        </CollapsibleSection>
       </div>
     </AppLayout>
   );
