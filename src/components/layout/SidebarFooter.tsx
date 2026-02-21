@@ -17,25 +17,25 @@ const SidebarFooter = memo(({
   onSignOut,
 }: SidebarFooterProps) => (
   <>
-    <div className="py-2 border-t border-border">
+    <div className="py-1.5 border-t border-border/40">
       <NotificationCenter collapsed={collapsed} />
     </div>
-    <div className="px-2 py-3 border-t border-border">
-      <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted/50 transition-colors">
+    <div className="px-2 py-2 border-t border-border/40">
+      <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-foreground/[0.04] transition-colors">
         <UserAvatar avatarUrl={avatarUrl} fullName={user?.user_metadata?.full_name} email={user?.email} />
         {!collapsed && (
           <>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
+              <p className="text-[13px] font-medium truncate text-foreground">
                 {user?.user_metadata?.full_name || user?.email}
               </p>
-              <p className="text-[10px] text-success flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-success inline-block" />
-                Online
-              </p>
             </div>
-            <button onClick={onSignOut} className="text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-muted/50">
-              <LogOut className="w-4 h-4" />
+            <button
+              onClick={onSignOut}
+              className="text-muted-foreground/50 hover:text-foreground transition-colors p-1 rounded-md hover:bg-foreground/[0.04]"
+              title="Abmelden"
+            >
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </>
         )}

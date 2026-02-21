@@ -115,14 +115,9 @@ interface SidebarNavProps {
   onPrefetch?: (path: string) => void;
 }
 
+/* ── Sub-group (collapsible) ── */
 const SubGroupItem = ({
-  subGroup,
-  collapsed,
-  isAdmin,
-  isFeatureEnabled,
-  pathname,
-  onNavigate,
-  onPrefetch,
+  subGroup, collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
 }: {
   subGroup: NavSubGroup;
   collapsed: boolean;
@@ -144,19 +139,18 @@ const SubGroupItem = ({
   if (visibleChildren.length === 0) return null;
 
   if (collapsed) {
-    // In collapsed mode, show only the group icon (first child path)
     return (
-      <div className="space-y-0.5">
+      <div className="space-y-px">
         {visibleChildren.map(child => (
           <Link
             key={child.path}
             to={child.path}
             onClick={onNavigate}
             onMouseEnter={() => onPrefetch?.(child.path)}
-            className={`w-full flex items-center justify-center px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+            className={`w-full flex items-center justify-center h-8 rounded-md text-[13px] transition-colors ${
               pathname === child.path
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                ? "bg-foreground/[0.08] text-foreground"
+                : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
             }`}
             title={child.label}
           >
@@ -171,35 +165,35 @@ const SubGroupItem = ({
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+        className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
           hasActiveChild
-            ? "text-primary"
-            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            ? "text-foreground"
+            : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
         }`}
       >
-        <subGroup.icon className="w-4 h-4 shrink-0" />
+        <subGroup.icon className="w-4 h-4 shrink-0 opacity-60" />
         <span className="whitespace-nowrap flex-1 text-left">{subGroup.label}</span>
         {open ? (
-          <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
+          <ChevronDown className="w-3 h-3 shrink-0 opacity-40" />
         ) : (
-          <ChevronRight className="w-3 h-3 shrink-0 opacity-50" />
+          <ChevronRight className="w-3 h-3 shrink-0 opacity-40" />
         )}
       </button>
       {open && (
-        <div className="ml-4 pl-2 border-l border-border/30 space-y-0.5 mt-0.5">
+        <div className="ml-[18px] pl-2 border-l border-border/30 space-y-px mt-px">
           {visibleChildren.map(child => (
             <Link
               key={child.path}
               to={child.path}
               onClick={onNavigate}
               onMouseEnter={() => onPrefetch?.(child.path)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 ${
+              className={`w-full flex items-center gap-2 px-2 h-7 rounded-md text-[12px] font-medium transition-colors ${
                 pathname === child.path
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  ? "bg-foreground/[0.08] text-foreground"
+                  : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
               }`}
             >
-              <child.icon className="w-3.5 h-3.5 shrink-0" />
+              <child.icon className="w-3.5 h-3.5 shrink-0 opacity-60" />
               <span className="whitespace-nowrap">{child.label}</span>
             </Link>
           ))}
@@ -209,13 +203,9 @@ const SubGroupItem = ({
   );
 };
 
+/* ── Main nav ── */
 const SidebarNav = memo(({
-  collapsed,
-  isAdmin,
-  isFeatureEnabled,
-  pathname,
-  onNavigate,
-  onPrefetch,
+  collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
 }: SidebarNavProps) => {
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -230,7 +220,7 @@ const SidebarNav = memo(({
   };
 
   return (
-    <nav className="flex-1 px-2 py-3 space-y-5 overflow-y-auto overflow-x-hidden">
+    <nav className="flex-1 px-2 py-2 space-y-4 overflow-y-auto overflow-x-hidden">
       {navGroups.map((group) => {
         const visibleItems = group.items.filter(item => {
           if (isSubGroup(item)) {
@@ -258,22 +248,22 @@ const SidebarNav = memo(({
             {!collapsed && (
               <button
                 onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.label) : undefined}
-                className={`w-full flex items-center px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/50 ${
-                  group.defaultCollapsed !== undefined ? "hover:text-muted-foreground cursor-pointer" : "cursor-default"
+                className={`w-full flex items-center px-2 mb-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/40 ${
+                  group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/70 cursor-pointer" : "cursor-default"
                 }`}
               >
                 <span className="flex-1 text-left">{group.label}</span>
                 {group.defaultCollapsed !== undefined && (
                   isGroupCollapsed && !hasActiveItem ? (
-                    <ChevronRight className="w-3 h-3 opacity-50" />
+                    <ChevronRight className="w-3 h-3 opacity-40" />
                   ) : (
-                    <ChevronDown className="w-3 h-3 opacity-50" />
+                    <ChevronDown className="w-3 h-3 opacity-40" />
                   )
                 )}
               </button>
             )}
             {(!isGroupCollapsed || hasActiveItem || collapsed) && (
-              <div className="space-y-0.5">
+              <div className="space-y-px">
                 {visibleItems.map((item) => {
                   if (isSubGroup(item)) {
                     return (
@@ -297,14 +287,14 @@ const SidebarNav = memo(({
                       to={item.path}
                       onClick={onNavigate}
                       onMouseEnter={() => onPrefetch?.(item.path)}
-                      className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                      className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
                         active
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                          ? "bg-foreground/[0.08] text-foreground"
+                          : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                       }`}
                       title={collapsed ? item.label : undefined}
                     >
-                      <item.icon className="w-4 h-4 shrink-0" />
+                      <item.icon className="w-4 h-4 shrink-0 opacity-60" />
                       {!collapsed && (
                         <span className="whitespace-nowrap">{item.label}</span>
                       )}

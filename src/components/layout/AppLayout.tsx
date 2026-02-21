@@ -138,7 +138,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="fixed top-0 left-0 bottom-0 z-50 w-[280px] bg-card border-r border-border flex flex-col"
+              className="fixed top-0 left-0 bottom-0 z-50 w-[260px] bg-background border-r border-border/40 flex flex-col"
               role="navigation"
               aria-label="Hauptnavigation"
             >
@@ -165,8 +165,8 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {!isMobile && (
         <aside
-          style={{ width: collapsed ? 56 : 240 }}
-          className="relative border-r border-border bg-card flex flex-col shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
+          style={{ width: collapsed ? 52 : 220 }}
+          className="relative border-r border-border/40 bg-background flex flex-col shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
           role="navigation"
           aria-label="Hauptnavigation"
         >
