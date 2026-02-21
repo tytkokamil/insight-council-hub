@@ -277,7 +277,7 @@ const Dashboard = () => {
           <div className="flex items-center rounded-md border border-border p-0.5">
             {([7, 30, 90] as const).map(r => (
               <button key={r} onClick={() => setTimeRange(r)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${timeRange === r ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>
+                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${timeRange === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 {r}d
               </button>
             ))}
@@ -296,7 +296,7 @@ const Dashboard = () => {
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Action Required</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Overdue */}
-              <div className="border border-border rounded-lg p-4">
+              <div className="border border-destructive/20 bg-destructive/[0.03] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <Clock className="w-4 h-4 text-destructive" />
                   {computed.overdueDelta !== 0 && (
@@ -315,7 +315,7 @@ const Dashboard = () => {
               </div>
 
               {/* Escalations */}
-              <div className="border border-border rounded-lg p-4">
+              <div className="border border-warning/20 bg-warning/[0.03] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <AlertTriangle className="w-4 h-4 text-warning" />
                   {computed.maxEscalation > 0 && <span className="text-[10px] font-medium text-warning">L{computed.maxEscalation}</span>}
@@ -330,8 +330,8 @@ const Dashboard = () => {
               </div>
 
               {/* Reviews */}
-              <div className="border border-border rounded-lg p-4">
-                <Eye className="w-4 h-4 text-muted-foreground mb-3" />
+              <div className="border border-primary/20 bg-primary/[0.03] rounded-lg p-4">
+                <Eye className="w-4 h-4 text-primary mb-3" />
                 <p className="text-2xl font-semibold tracking-tight">{computed.pendingReviews.length}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Offene Reviews</p>
                 {computed.pendingReviews.length > 0 && (
@@ -342,8 +342,8 @@ const Dashboard = () => {
               </div>
 
               {/* Blocked */}
-              <div className="border border-border rounded-lg p-4">
-                <Link2 className="w-4 h-4 text-muted-foreground mb-3" />
+              <div className="border border-accent-violet/20 bg-accent-violet/[0.03] rounded-lg p-4">
+                <Link2 className="w-4 h-4 text-accent-violet mb-3" />
                 <p className="text-2xl font-semibold tracking-tight">{computed.blockedTasks.length}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Blockierte Tasks</p>
                 {computed.blockedTasks.length > 0 && (
@@ -357,9 +357,9 @@ const Dashboard = () => {
         )}
 
         {!isLoading && hasNoActions && (
-          <div className="border border-success/20 rounded-lg p-6 text-center">
+          <div className="border border-success/20 bg-success/[0.04] rounded-lg p-6 text-center">
             <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-2" />
-            <p className="text-sm font-medium">Alles im grünen Bereich</p>
+            <p className="text-sm font-medium text-success">Alles im grünen Bereich</p>
             <p className="text-xs text-muted-foreground mt-0.5">Keine offenen Aktionspunkte.</p>
           </div>
         )}

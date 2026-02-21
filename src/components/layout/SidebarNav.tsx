@@ -148,7 +148,7 @@ const SubGroupItem = ({
             onMouseEnter={() => onPrefetch?.(child.path)}
             className={`w-full flex items-center justify-center h-8 rounded-md text-[13px] transition-colors ${
               pathname === child.path
-                ? "bg-foreground/[0.08] text-foreground"
+                ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
             }`}
             title={child.label}
@@ -188,7 +188,7 @@ const SubGroupItem = ({
               onMouseEnter={() => onPrefetch?.(child.path)}
               className={`w-full flex items-center gap-2 px-2 h-7 rounded-md text-[12px] font-medium transition-colors ${
                 pathname === child.path
-                  ? "bg-foreground/[0.08] text-foreground"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
               }`}
             >
@@ -288,7 +288,7 @@ const SidebarNav = memo(({
                       onMouseEnter={() => onPrefetch?.(item.path)}
                       className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
                         active
-                          ? "bg-foreground/[0.08] text-foreground"
+                          ? "bg-primary/10 text-primary border-l-2 border-primary"
                           : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                       }`}
                       title={collapsed ? item.label : undefined}

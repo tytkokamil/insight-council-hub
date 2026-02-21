@@ -19,7 +19,7 @@ const SidebarHeader = memo(({
 }: SidebarHeaderProps) => (
   <div className="flex items-center justify-between px-3 h-12 border-b border-border/40">
     <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden" onClick={onNavigate}>
-      <span className="w-6 h-6 rounded bg-foreground/10 flex items-center justify-center shrink-0 text-[11px] font-bold text-foreground/70">
+      <span className="w-6 h-6 rounded bg-primary/15 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
         D
       </span>
       {!collapsed && (
