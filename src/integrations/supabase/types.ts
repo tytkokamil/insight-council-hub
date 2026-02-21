@@ -577,6 +577,7 @@ export type Database = {
           archived_at: string | null
           assignee_id: string | null
           category: Database["public"]["Enums"]["decision_category"]
+          confidential: boolean
           context: string | null
           created_at: string
           created_by: string
@@ -590,6 +591,7 @@ export type Database = {
           options: Json | null
           outcome: string | null
           outcome_notes: string | null
+          outcome_type: Database["public"]["Enums"]["outcome_type"] | null
           priority: Database["public"]["Enums"]["decision_priority"]
           status: Database["public"]["Enums"]["decision_status"]
           team_id: string | null
@@ -609,6 +611,7 @@ export type Database = {
           archived_at?: string | null
           assignee_id?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
+          confidential?: boolean
           context?: string | null
           created_at?: string
           created_by: string
@@ -622,6 +625,7 @@ export type Database = {
           options?: Json | null
           outcome?: string | null
           outcome_notes?: string | null
+          outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -641,6 +645,7 @@ export type Database = {
           archived_at?: string | null
           assignee_id?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
+          confidential?: boolean
           context?: string | null
           created_at?: string
           created_by?: string
@@ -654,6 +659,7 @@ export type Database = {
           options?: Json | null
           outcome?: string | null
           outcome_notes?: string | null
+          outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -1583,6 +1589,7 @@ export type Database = {
         | "goal.linked"
         | "goal.unlinked"
       org_role: "org_owner" | "org_admin" | "org_member"
+      outcome_type: "successful" | "partial" | "failed"
       share_permission: "read" | "comment" | "edit"
       task_category:
         | "general"
@@ -1774,6 +1781,7 @@ export const Constants = {
         "goal.unlinked",
       ],
       org_role: ["org_owner", "org_admin", "org_member"],
+      outcome_type: ["successful", "partial", "failed"],
       share_permission: ["read", "comment", "edit"],
       task_category: [
         "general",

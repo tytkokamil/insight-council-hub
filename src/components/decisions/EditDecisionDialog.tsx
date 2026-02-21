@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Lock } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type DecisionCategory = Database["public"]["Enums"]["decision_category"];
@@ -47,6 +49,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [priority, setPriority] = useState<DecisionPriority>("medium");
   const [dueDate, setDueDate] = useState("");
   const [changeReason, setChangeReason] = useState("");
+  const [confidential, setConfidential] = useState(false);
 
   useEffect(() => {
     if (decision) {
@@ -56,6 +59,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       setCategory(decision.category || "operational");
       setPriority(decision.priority || "medium");
       setDueDate(decision.due_date || "");
+      setConfidential(decision.confidential || false);
       setChangeReason("");
     }
   }, [decision]);
@@ -110,7 +114,8 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         category,
         priority,
         due_date: dueDate || null,
-      })
+        confidential,
+      } as any)
       .eq("id", decision.id);
 
     if (error) {
@@ -180,6 +185,16 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="text-xs font-medium">Vertraulich</p>
+                <p className="text-[10px] text-muted-foreground">Nur Owner, Reviewer und Org-Admins sehen diese Entscheidung</p>
+              </div>
+            </div>
+            <Switch checked={confidential} onCheckedChange={setConfidential} />
           </div>
           <div className="border-t border-border pt-4">
             <label className="text-xs font-medium text-foreground mb-1 block">Änderungsbegründung *</label>

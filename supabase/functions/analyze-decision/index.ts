@@ -153,17 +153,44 @@ serve(async (req) => {
           type: "function",
           function: {
             name: "decision_analysis",
-            description: "Structured analysis of a business decision",
+            description: "Structured analysis of a business decision with explainability",
             parameters: {
               type: "object",
               properties: {
                 risk_score: { type: "number", description: "Risk score 0-100" },
                 impact_score: { type: "number", description: "Impact score 0-100" },
-                risk_factors: { type: "array", items: { type: "string" }, description: "2-4 risk factors in German" },
-                success_factors: { type: "array", items: { type: "string" }, description: "2-4 success factors in German" },
+                confidence: { type: "string", enum: ["high", "medium", "low"], description: "Confidence level of the analysis based on data quality and completeness" },
+                confidence_reason: { type: "string", description: "Why this confidence level, 1 sentence in German" },
+                risk_factors: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      factor: { type: "string", description: "Risk factor description in German" },
+                      weight: { type: "number", description: "Importance weight 1-10" },
+                    },
+                    required: ["factor", "weight"],
+                    additionalProperties: false,
+                  },
+                  description: "Top 3 risk factors with weights",
+                },
+                success_factors: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      factor: { type: "string", description: "Success factor description in German" },
+                      weight: { type: "number", description: "Importance weight 1-10" },
+                    },
+                    required: ["factor", "weight"],
+                    additionalProperties: false,
+                  },
+                  description: "Top 3 success factors with weights",
+                },
+                risk_explanation: { type: "string", description: "Why this risk score, referencing the top factors, 2 sentences in German" },
                 summary: { type: "string", description: "Brief summary in German, max 2 sentences" },
               },
-              required: ["risk_score", "impact_score", "risk_factors", "success_factors", "summary"],
+              required: ["risk_score", "impact_score", "confidence", "confidence_reason", "risk_factors", "success_factors", "risk_explanation", "summary"],
               additionalProperties: false,
             },
           },
