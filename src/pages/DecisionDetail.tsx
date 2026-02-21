@@ -5,7 +5,7 @@ import {
   ArrowLeft, Pencil, Trash2, AlertCircle, MessageSquare,
   GitPullRequest, Brain, History, Target, Users, GitBranch, Link2,
   Compass, Crosshair, Clock, ShieldAlert, AlertTriangle, DollarSign,
-  ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare,
+  ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ import { differenceInDays, differenceInHours, format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useRiskDecisionLinks } from "@/hooks/useRisks";
 
 // Panels
 import DiscussionPanel from "@/components/decisions/DiscussionPanel";
@@ -143,8 +144,10 @@ const DecisionDetail = () => {
   }, [decision]);
 
   // Linked data computation
-  const { openLinkedTasks, depCount, delayCost, reviewCompletion, alignmentScore } = useMemo(() => {
-    if (!decision) return { openLinkedTasks: 0, depCount: 0, delayCost: 0, reviewCompletion: 0, alignmentScore: 0 };
+  const { data: riskDecLinks = [] } = useRiskDecisionLinks();
+
+  const { openLinkedTasks, depCount, delayCost, reviewCompletion, alignmentScore, riskCount } = useMemo(() => {
+    if (!decision) return { openLinkedTasks: 0, depCount: 0, delayCost: 0, reviewCompletion: 0, alignmentScore: 0, riskCount: 0 };
     const taskMap = new Map(allTasks.map(t => [t.id, t]));
     let openTasks = 0;
 
@@ -176,8 +179,10 @@ const DecisionDetail = () => {
       ? Math.round(goalLinks.reduce((s, l) => s + (l.impact_weight || 50), 0) / goalLinks.length)
       : 0;
 
-    return { openLinkedTasks: openTasks, depCount: deps.length, delayCost: cost, reviewCompletion: reviewComp, alignmentScore: alignment };
-  }, [decision, allDeps, allTasks, allReviews, goalLinks]);
+    const linkedRisks = riskDecLinks.filter(l => l.decision_id === decision.id).length;
+
+    return { openLinkedTasks: openTasks, depCount: deps.length, delayCost: cost, reviewCompletion: reviewComp, alignmentScore: alignment, riskCount: linkedRisks };
+  }, [decision, allDeps, allTasks, allReviews, goalLinks, riskDecLinks]);
 
   // SLA timer
   const slaRemaining = useMemo(() => {
@@ -352,13 +357,14 @@ const DecisionDetail = () => {
       )}
 
       {/* ═══ HEALTH INDICATOR STRIP ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
         {[
           { icon: AlertTriangle, label: "Risk Score", value: `${riskScore}%`, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success" },
           { icon: Users, label: "Alignment", value: alignmentScore > 0 ? `${alignmentScore}%` : "—", color: "text-primary" },
           { icon: Link2, label: "Dependencies", value: `${depCount}`, color: "text-primary" },
           { icon: CheckSquare, label: "Review", value: `${reviewCompletion}%`, color: reviewCompletion === 100 ? "text-success" : "text-warning" },
           { icon: DollarSign, label: "Delay Cost", value: isActive ? formatCost(delayCost) : "—", color: "text-destructive" },
+          { icon: Shield, label: "Risiken", value: `${riskCount}`, color: riskCount > 0 ? "text-destructive" : "text-muted-foreground" },
         ].map(ind => (
           <Card key={ind.label} className="card-interactive">
             <CardContent className="p-3 text-center">

@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDependencies } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import { useRiskDecisionLinks } from "@/hooks/useRisks";
 import DiscussionPanel from "./DiscussionPanel";
 import ReviewPanel from "./ReviewPanel";
 import AiAnalysisPanel from "./AiAnalysisPanel";
@@ -19,7 +21,7 @@ import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
 import ShareDecisionDialog from "./ShareDecisionDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2 } from "lucide-react";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield } from "lucide-react";
 
 interface Props {
   decision: any;
@@ -44,6 +46,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const { user } = useAuth();
   const { data: allDeps = [] } = useDependencies();
   const { data: allTasks = [] } = useTasks();
+  const { data: riskDecLinks = [] } = useRiskDecisionLinks();
   const [status, setStatus] = useState(decision?.status || "draft");
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -159,6 +162,16 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
+          {(() => {
+            const rc = riskDecLinks.filter(l => l.decision_id === decision.id).length;
+            return rc > 0 ? (
+              <div className="flex items-center gap-1.5 mt-2">
+                <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
+                  <Shield className="w-3 h-3" /> {rc} Risik{rc > 1 ? "en" : "o"} verknüpft
+                </Badge>
+              </div>
+            ) : null;
+          })()}
         </DialogHeader>
 
         {openLinkedTasks > 0 && (
