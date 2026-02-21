@@ -3,14 +3,33 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { UserPlus, Trash2, Mail, Clock, Check, Users } from "lucide-react";
+import { UserPlus, Trash2, Mail, Clock, Check, Users, Shield, Eye, UserCog } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
   teamId: string;
   teamName: string;
 }
+
+const TEAM_ROLE_LABELS: Record<string, string> = {
+  lead: "Lead",
+  member: "Mitglied",
+  viewer: "Betrachter",
+};
+
+const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
+  lead: Shield,
+  member: UserCog,
+  viewer: Eye,
+};
+
+const TEAM_ROLE_STYLES: Record<string, string> = {
+  lead: "bg-primary/10 text-primary border-primary/20",
+  member: "bg-muted text-muted-foreground border-border",
+  viewer: "bg-muted/50 text-muted-foreground/60 border-border",
+};
 
 const TeamOverviewTab = ({ teamId, teamName }: Props) => {
   const { user } = useAuth();
@@ -52,6 +71,9 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
     fetchStats();
   }, [teamId]);
 
+  const currentUserMember = members.find(m => m.user_id === user?.id);
+  const isLeadOrAdmin = currentUserMember?.role === "lead";
+
   const sendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -87,53 +109,81 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
     toast.success("Einladung zurückgezogen");
   };
 
+  const changeRole = async (memberId: string, newRole: string) => {
+    const { error } = await supabase
+      .from("team_members")
+      .update({ role: newRole as any })
+      .eq("id", memberId);
+    if (error) {
+      toast.error("Rollenänderung fehlgeschlagen");
+    } else {
+      toast.success(`Rolle → ${TEAM_ROLE_LABELS[newRole]}`);
+      await fetchMembers();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
-          <Users className="w-5 h-5 mx-auto text-primary mb-1" />
-          <p className="text-2xl font-bold font-display">{members.length}</p>
+          <Users className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
+          <p className="text-2xl font-bold">{members.length}</p>
           <p className="text-[10px] text-muted-foreground">Mitglieder</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
-          <Clock className="w-5 h-5 mx-auto text-warning mb-1" />
-          <p className="text-2xl font-bold font-display">{pendingInvites.length}</p>
+          <Clock className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
+          <p className="text-2xl font-bold">{pendingInvites.length}</p>
           <p className="text-[10px] text-muted-foreground">Ausstehend</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
-          <Check className="w-5 h-5 mx-auto text-success mb-1" />
-          <p className="text-2xl font-bold font-display">{decisionCount}</p>
+          <Check className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
+          <p className="text-2xl font-bold">{decisionCount}</p>
           <p className="text-[10px] text-muted-foreground">Entscheidungen</p>
         </div>
       </div>
 
-      {/* Invite */}
-      <div className="rounded-lg border border-border p-4">
-        <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-          <Mail className="w-4 h-4 text-primary" />
-          Per E-Mail einladen
-        </h3>
-        <form onSubmit={sendInvite} className="flex gap-2">
-          <input
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            placeholder="email@beispiel.de"
-            className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm"
-            required
-          />
-          <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5">
-            <UserPlus className="w-3.5 h-3.5" />
-            {inviting ? "..." : "Einladen"}
-          </Button>
-        </form>
+      {/* Role Legend */}
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+        <span className="font-semibold">Rollen:</span>
+        {Object.entries(TEAM_ROLE_LABELS).map(([key, label]) => {
+          const Icon = TEAM_ROLE_ICONS[key];
+          return (
+            <span key={key} className="flex items-center gap-1">
+              <Icon className="w-3 h-3" /> {label}
+            </span>
+          );
+        })}
       </div>
+
+      {/* Invite */}
+      {isLeadOrAdmin && (
+        <div className="rounded-lg border border-border p-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+            <Mail className="w-4 h-4 text-muted-foreground" />
+            Per E-Mail einladen
+          </h3>
+          <form onSubmit={sendInvite} className="flex gap-2">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="email@beispiel.de"
+              className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
+              required
+            />
+            <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5">
+              <UserPlus className="w-3.5 h-3.5" />
+              {inviting ? "..." : "Einladen"}
+            </Button>
+          </form>
+        </div>
+      )}
 
       {/* Pending invitations */}
       {pendingInvites.length > 0 && (
-        <div className="rounded-lg border border-dashed border-warning/30 p-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-warning">
+        <div className="rounded-lg border border-dashed border-border p-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-muted-foreground">
             <Clock className="w-4 h-4" />
             Ausstehende Einladungen ({pendingInvites.length})
           </h3>
@@ -142,9 +192,11 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
               <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border">
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm flex-1 truncate">{inv.email}</span>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => cancelInvite(inv.id)}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
+                {isLeadOrAdmin && (
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => cancelInvite(inv.id)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -154,28 +206,53 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
       {/* Members */}
       <div className="rounded-lg border border-border p-4">
         <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-          <Check className="w-4 h-4 text-success" />
+          <Check className="w-4 h-4 text-muted-foreground" />
           Mitglieder ({members.length})
         </h3>
         <div className="space-y-2">
-          {members.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
-              <UserAvatar
-                avatarUrl={m.profiles?.avatar_url}
-                fullName={m.profiles?.full_name}
-                size="sm"
-              />
-              <span className="text-sm flex-1 font-medium">{m.profiles?.full_name || "Unbekannt"}</span>
-              {m.user_id === user?.id && (
-                <Badge variant="outline" className="text-[10px]">Du</Badge>
-              )}
-              {m.user_id !== user?.id && (
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => removeMember(m.id)}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              )}
-            </div>
-          ))}
+          {members.map((m) => {
+            const RoleIcon = TEAM_ROLE_ICONS[m.role] || UserCog;
+            return (
+              <div key={m.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors group">
+                <UserAvatar
+                  avatarUrl={m.profiles?.avatar_url}
+                  fullName={m.profiles?.full_name}
+                  size="sm"
+                />
+                <span className="text-sm flex-1 font-medium">{m.profiles?.full_name || "Unbekannt"}</span>
+
+                {m.user_id === user?.id && (
+                  <Badge variant="outline" className="text-[10px]">Du</Badge>
+                )}
+
+                {/* Role badge or select */}
+                {isLeadOrAdmin && m.user_id !== user?.id ? (
+                  <Select value={m.role} onValueChange={(val) => changeRole(m.id, val)}>
+                    <SelectTrigger className={`w-[120px] h-7 text-[10px] font-semibold border ${TEAM_ROLE_STYLES[m.role]}`}>
+                      <RoleIcon className="w-3 h-3 mr-1" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lead">Lead</SelectItem>
+                      <SelectItem value="member">Mitglied</SelectItem>
+                      <SelectItem value="viewer">Betrachter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Badge variant="outline" className={`text-[10px] ${TEAM_ROLE_STYLES[m.role]}`}>
+                    <RoleIcon className="w-3 h-3 mr-1" />
+                    {TEAM_ROLE_LABELS[m.role] || m.role}
+                  </Badge>
+                )}
+
+                {isLeadOrAdmin && m.user_id !== user?.id && (
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive opacity-0 group-hover:opacity-100" onClick={() => removeMember(m.id)}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

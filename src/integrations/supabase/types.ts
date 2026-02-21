@@ -909,18 +909,21 @@ export type Database = {
         Row: {
           id: string
           joined_at: string
+          role: Database["public"]["Enums"]["team_role"]
           team_id: string
           user_id: string
         }
         Insert: {
           id?: string
           joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
           team_id: string
           user_id: string
         }
         Update: {
           id?: string
           joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
           team_id?: string
           user_id?: string
         }
@@ -1075,6 +1078,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_team_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["team_role"]
+          _team_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_team_lead_or_admin: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       comment_type: "comment" | "feedback" | "risk_flag"
@@ -1104,6 +1119,7 @@ export type Database = {
         | "budget"
       task_priority: "low" | "medium" | "high" | "critical"
       task_status: "open" | "in_progress" | "done"
+      team_role: "lead" | "member" | "viewer"
       user_role: "admin" | "decision_maker" | "reviewer" | "observer"
     }
     CompositeTypes: {
@@ -1262,6 +1278,7 @@ export const Constants = {
       ],
       task_priority: ["low", "medium", "high", "critical"],
       task_status: ["open", "in_progress", "done"],
+      team_role: ["lead", "member", "viewer"],
       user_role: ["admin", "decision_maker", "reviewer", "observer"],
     },
   },
