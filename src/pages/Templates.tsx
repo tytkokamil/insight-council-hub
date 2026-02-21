@@ -33,6 +33,8 @@ const roleLabels: Record<string, string> = {
   decision_maker: "Entscheider",
   reviewer: "Reviewer",
   admin: "Administrator",
+  team_lead: "Team Lead",
+  team_admin: "Team Admin",
 };
 
 function TemplateCard({ template, onSelect, isSelected }: {

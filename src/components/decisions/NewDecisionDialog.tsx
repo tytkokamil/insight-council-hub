@@ -46,8 +46,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       const fetchTeams = async () => {
         const { data: roleData } = await supabase
           .from("user_roles").select("role")
-          .eq("user_id", user.id).eq("role", "admin");
-        const isAdmin = (roleData?.length ?? 0) > 0;
+          .eq("user_id", user.id).single();
+        const isAdmin = roleData?.role === "org_owner" || roleData?.role === "org_admin";
         if (isAdmin) {
           const { data } = await supabase.from("teams").select("id, name").order("name");
           if (data) setTeams(data);

@@ -84,8 +84,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
-        setIsAdmin((data?.length ?? 0) > 0);
+      supabase.from("user_roles").select("role").eq("user_id", user.id).then(({ data }) => {
+        const role = data?.[0]?.role;
+        setIsAdmin(role === "org_owner" || role === "org_admin");
       });
       supabase.from("profiles").select("avatar_url").eq("user_id", user.id).single().then(({ data }) => {
         setAvatarUrl(data?.avatar_url || null);

@@ -24,15 +24,16 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Verify caller is admin
+    // Verify caller is org_owner or org_admin
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
+      .single();
 
-    if (!roleData) throw new Error("Nur Admins können Nutzer einladen");
+    if (!roleData || (roleData.role !== "org_owner" && roleData.role !== "org_admin")) {
+      throw new Error("Nur Org Owner und Admins können Nutzer einladen");
+    }
 
     const { email } = await req.json();
     if (!email) throw new Error("E-Mail-Adresse fehlt");

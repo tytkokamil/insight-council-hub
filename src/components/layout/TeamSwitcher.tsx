@@ -31,8 +31,8 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .eq("role", "admin");
-      const isAdminUser = (roleData?.length ?? 0) > 0;
+        .single();
+      const isAdminUser = roleData?.role === "org_owner" || roleData?.role === "org_admin";
       setIsAdmin(isAdminUser);
 
       let query = supabase.from("teams").select("id, name").order("name");

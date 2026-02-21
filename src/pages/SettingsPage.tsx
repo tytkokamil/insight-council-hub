@@ -22,7 +22,7 @@ const AI_PROVIDERS = [
 
 type SettingsTab = "general" | "notifications" | "ai" | "security" | "admin";
 
-const roleLabels: Record<string, string> = { admin: "Admin", decision_maker: "Decision Maker", reviewer: "Reviewer", observer: "Observer" };
+const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_member: "Mitglied" };
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -51,7 +51,7 @@ const SettingsPage = () => {
   const [savingAi, setSavingAi] = useState(false);
   const [savedAi, setSavedAi] = useState(false);
 
-  const [userRole, setUserRole] = useState<string>("observer");
+  const [userRole, setUserRole] = useState<string>("org_member");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,7 +70,7 @@ const SettingsPage = () => {
     fetchData();
   }, [user]);
 
-  const isAdmin = userRole === "admin";
+  const isAdmin = userRole === "org_owner" || userRole === "org_admin";
 
   const handleSave = async () => {
     if (!user) return;
