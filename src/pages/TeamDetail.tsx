@@ -3,11 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, MessageCircle, Settings } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Settings, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import TeamOverviewTab from "@/components/teams/TeamOverviewTab";
+import TeamCommandCenter from "@/components/teams/TeamCommandCenter";
+import TeamHealthIndicator from "@/components/teams/TeamHealthIndicator";
 import TeamChat from "@/components/teams/TeamChat";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import TeamDefaultsConfig from "@/components/teams/TeamDefaultsConfig";
@@ -84,8 +86,11 @@ const TeamDetail = () => {
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate("/teams")}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Team</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em]">Team</p>
+              <TeamHealthIndicator teamId={team.id} />
+            </div>
             <h1 className="font-display text-xl font-bold">{team.name}</h1>
             {team.description && (
               <p className="text-sm text-muted-foreground mt-0.5">{team.description}</p>
@@ -94,11 +99,15 @@ const TeamDetail = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="overview">
+        <Tabs defaultValue="command">
           <TabsList>
+            <TabsTrigger value="command" className="gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5" />
+              Command Center
+            </TabsTrigger>
             <TabsTrigger value="overview" className="gap-1.5">
               <Users className="w-3.5 h-3.5" />
-              Übersicht
+              Mitglieder
             </TabsTrigger>
             <TabsTrigger value="chat" className="gap-1.5">
               <MessageCircle className="w-3.5 h-3.5" />
@@ -111,6 +120,10 @@ const TeamDetail = () => {
               </TabsTrigger>
             )}
           </TabsList>
+
+          <TabsContent value="command" className="mt-6">
+            <TeamCommandCenter teamId={team.id} />
+          </TabsContent>
 
           <TabsContent value="overview" className="mt-6">
             <TeamOverviewTab teamId={team.id} teamName={team.name} />
