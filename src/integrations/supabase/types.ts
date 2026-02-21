@@ -447,21 +447,27 @@ export type Database = {
       decision_shares: {
         Row: {
           decision_id: string
+          expires_at: string | null
           id: string
+          permission: Database["public"]["Enums"]["share_permission"]
           shared_at: string
           shared_by: string
           team_id: string
         }
         Insert: {
           decision_id: string
+          expires_at?: string | null
           id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
           shared_at?: string
           shared_by: string
           team_id: string
         }
         Update: {
           decision_id?: string
+          expires_at?: string | null
           id?: string
+          permission?: Database["public"]["Enums"]["share_permission"]
           shared_at?: string
           shared_by?: string
           team_id?: string
@@ -1577,6 +1583,7 @@ export type Database = {
         | "goal.linked"
         | "goal.unlinked"
       org_role: "org_owner" | "org_admin" | "org_member"
+      share_permission: "read" | "comment" | "edit"
       task_category:
         | "general"
         | "strategic"
@@ -1767,6 +1774,7 @@ export const Constants = {
         "goal.unlinked",
       ],
       org_role: ["org_owner", "org_admin", "org_member"],
+      share_permission: ["read", "comment", "edit"],
       task_category: [
         "general",
         "strategic",
