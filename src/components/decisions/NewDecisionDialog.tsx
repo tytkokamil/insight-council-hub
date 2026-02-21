@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import {
-  decisionTemplates, getTemplateByCategory, evaluateConditionalRules,
+  evaluateConditionalRules,
   type DecisionTemplate, type RequiredField,
 } from "@/lib/decisionTemplates";
+import { useTemplates, toDecisionTemplate } from "@/hooks/useTemplates";
 import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
 import ReviewFlowSelector from "./ReviewFlowSelector";
 import {
@@ -46,6 +47,15 @@ const categoryIcons: Record<string, string> = {
 const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
+  const { templates: dbTemplates } = useTemplates();
+
+  // Convert DB templates to DecisionTemplate interface for the UI
+  const availableTemplates: DecisionTemplate[] = useMemo(
+    () => dbTemplates.map(toDecisionTemplate),
+    [dbTemplates]
+  );
+
+  const getTemplateByCategory = (cat: string) => availableTemplates.find(t => t.category === cat);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<string>("operational");
@@ -183,7 +193,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
     // Match to actual template object
     if (bestTemplate) {
-      const match = decisionTemplates.find(t => t.name === bestTemplate!.name);
+      const match = availableTemplates.find(t => t.name === bestTemplate!.name);
       if (match) return { template: match, stats: bestTemplate };
     }
     return null;
@@ -517,7 +527,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       )}
 
       <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-        {decisionTemplates.map((t) => {
+        {availableTemplates.map((t) => {
           const isExpanded = expandedTemplate === t.category;
           const isRecommended = templateRecommendation?.template.category === t.category;
           return (
