@@ -230,9 +230,9 @@ const SettingsPage = () => {
               {/* Onboarding */}
               <section>
                 <h2 className="text-sm font-medium mb-3">Onboarding</h2>
-                <p className="text-xs text-muted-foreground mb-3">Starte die Einführungstour erneut.</p>
-                <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.reload(); } }} className="gap-1.5">
-                  <RotateCcw className="w-3 h-3" />Tour starten
+                <p className="text-xs text-muted-foreground mb-3">Starte die geführte Einführungstour erneut, um alle Bereiche kennenzulernen.</p>
+                <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
+                  <RotateCcw className="w-3 h-3" />Tour erneut starten
                 </Button>
               </section>
             </div>
