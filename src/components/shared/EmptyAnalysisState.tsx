@@ -4,13 +4,28 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+interface FeatureHint {
+  icon: LucideIcon;
+  label: string;
+  desc: string;
+}
+
+interface QuickAction {
+  label: string;
+  icon?: LucideIcon;
+  onClick: () => void;
+}
+
 interface EmptyAnalysisStateProps {
   icon: LucideIcon;
   title: string;
   description: string;
   ctaLabel?: string;
   ctaRoute?: string;
+  onCtaClick?: () => void;
   hint?: string;
+  features?: FeatureHint[];
+  quickActions?: QuickAction[];
 }
 
 const EmptyAnalysisState = ({
@@ -19,7 +34,10 @@ const EmptyAnalysisState = ({
   description,
   ctaLabel = "Entscheidung erstellen",
   ctaRoute = "/decisions",
+  onCtaClick,
   hint,
+  features,
+  quickActions,
 }: EmptyAnalysisStateProps) => {
   const navigate = useNavigate();
 
@@ -30,20 +48,49 @@ const EmptyAnalysisState = ({
     >
       <Card>
         <CardContent className="p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
             <Icon className="w-8 h-8 text-primary opacity-60" />
           </div>
           <h3 className="font-display text-xl font-semibold mb-2">{title}</h3>
           <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">{description}</p>
-          <Button onClick={() => navigate(ctaRoute)} className="gap-2">
+          
+          <Button onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
             <Plus className="w-4 h-4" />
             {ctaLabel}
           </Button>
+
           {hint && (
             <p className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
               <ArrowRight className="w-3 h-3" />
               {hint}
             </p>
+          )}
+
+          {features && features.length > 0 && (
+            <div className={`grid grid-cols-${Math.min(features.length, 3)} gap-3 mt-8 max-w-lg mx-auto`}>
+              {features.map((f, i) => (
+                <Card key={i} className="text-left">
+                  <div className="p-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
+                      <f.icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <p className="text-sm font-semibold">{f.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {quickActions && quickActions.length > 0 && (
+            <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
+              {quickActions.map((a, i) => (
+                <Button key={i} variant="outline" size="sm" onClick={a.onClick} className="gap-1.5 text-xs">
+                  {a.icon && <a.icon className="w-3.5 h-3.5" />}
+                  {a.label}
+                </Button>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

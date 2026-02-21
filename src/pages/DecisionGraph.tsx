@@ -228,10 +228,27 @@ const DecisionGraph = () => {
       <div className="relative rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
         {decisions.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <GitBranch className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-30" />
-              <h3 className="font-display text-xl font-semibold mb-2 text-muted-foreground">Noch keine Entscheidungen</h3>
-              <p className="text-sm text-muted-foreground">Erstelle Entscheidungen und verknüpfe sie, um den Graph zu sehen.</p>
+            <div className="text-center max-w-md">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
+                <GitBranch className="w-8 h-8 text-primary opacity-60" />
+              </div>
+              <h3 className="font-display text-xl font-semibold mb-2">Entscheidungsnetzwerk</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                Erstelle Entscheidungen und verknüpfe sie, um Abhängigkeiten, kritische Pfade und Kaskadeneffekte visuell zu erkennen.
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { icon: GitBranch, label: "Abhängigkeiten", desc: "Verknüpfungen sehen" },
+                  { icon: AlertTriangle, label: "Kritische Pfade", desc: "Engpässe erkennen" },
+                  { icon: DollarSign, label: "Kaskadenkosten", desc: "Impact analysieren" },
+                ].map((f, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border">
+                    <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
+                    <p className="text-xs font-semibold">{f.label}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (

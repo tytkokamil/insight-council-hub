@@ -186,10 +186,16 @@ const ArchivePage = () => {
               {loading ? (
                 <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />)}</div>
               ) : filtered.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <Archive className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p className="text-sm font-medium">Keine archivierten Entscheidungen</p>
-                  <p className="text-xs mt-1">Archivierte Entscheidungen erscheinen hier.</p>
+                <div className="text-center py-12">
+                  <div className="w-14 h-14 rounded-xl bg-muted/50 border border-border flex items-center justify-center mx-auto mb-4">
+                    <Archive className="w-7 h-7 text-muted-foreground opacity-50" />
+                  </div>
+                  <h3 className="font-display font-semibold mb-1">Keine archivierten Entscheidungen</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    {search
+                      ? "Keine Treffer für deine Suche."
+                      : "Archivierte Entscheidungen erscheinen hier. Du kannst Entscheidungen über die Statusänderung oder automatisch per Retention Policy archivieren."}
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -270,8 +271,38 @@ const RiskRegister = () => {
         {/* Risk List */}
         {isLoading ? (
           <p className="text-muted-foreground text-sm text-center py-8">Lade Risiken…</p>
+        ) : risks.length === 0 ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-border bg-card p-12 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-5">
+              <Shield className="w-8 h-8 text-destructive opacity-60" />
+            </div>
+            <h3 className="font-display text-xl font-semibold mb-2">Noch keine Risiken erfasst</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">
+              Erfasse Risiken, bewerte sie mit der Heatmap und verknüpfe sie mit Entscheidungen und Aufgaben für eine ganzheitliche Governance.
+            </p>
+            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-2">
+              <Plus className="w-4 h-4" /> Erstes Risiko erstellen
+            </Button>
+            <div className="grid grid-cols-3 gap-3 mt-8 max-w-lg mx-auto">
+              {[
+                { icon: AlertTriangle, label: "Risk Heatmap", desc: "5×5 Bewertungsmatrix" },
+                { icon: Link2, label: "Verknüpfungen", desc: "Mit Entscheidungen & Tasks" },
+                { icon: Shield, label: "Mitigation", desc: "Maßnahmen dokumentieren" },
+              ].map((f, i) => (
+                <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border text-left">
+                  <f.icon className="w-4 h-4 text-primary mb-1.5" />
+                  <p className="text-xs font-semibold">{f.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground text-sm text-center py-8">Keine Risiken gefunden.</p>
+          <div className="text-center py-12 text-muted-foreground">
+            <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">Keine Risiken gefunden</p>
+            <p className="text-xs mt-1">Passe die Filter an oder erstelle ein neues Risiko.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {filtered.map(risk => {
