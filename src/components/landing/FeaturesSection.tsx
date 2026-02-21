@@ -5,42 +5,57 @@ import {
   Shield, Clock, Target, Zap, ArrowRight, CheckCircle2, XOctagon, Sparkles,
 } from "lucide-react";
 
+const accentStyles: Record<string, { bg: string; text: string }> = {
+  "accent-violet": { bg: "bg-accent-violet/10", text: "text-accent-violet" },
+  "accent-blue": { bg: "bg-accent-blue/10", text: "text-accent-blue" },
+  "accent-rose": { bg: "bg-accent-rose/10", text: "text-accent-rose" },
+  "accent-teal": { bg: "bg-accent-teal/10", text: "text-accent-teal" },
+  "accent-amber": { bg: "bg-accent-amber/10", text: "text-accent-amber" },
+  "primary": { bg: "bg-primary/10", text: "text-primary" },
+};
+
 const features = [
   {
     id: "ai-copilot", label: "KI Co-Pilot", icon: Brain,
     title: "KI-gestützter Decision Co-Pilot",
     description: "Dein persönlicher KI-Berater analysiert jede Entscheidung in Echtzeit — Risiko-Score, Erfolgswahrscheinlichkeit, und konkrete Handlungsempfehlungen.",
     preview: "copilot",
+    accent: "accent-violet",
   },
   {
     id: "decision-graph", label: "Decision Graph", icon: GitBranch,
     title: "Visuelle Entscheidungs-Netzwerke",
     description: "Sieh wie deine Entscheidungen zusammenhängen. Identifiziere Abhängigkeiten, kritische Pfade und Kaskadeneffekte bevor sie zum Problem werden.",
     preview: "graph",
+    accent: "accent-blue",
   },
   {
     id: "war-room", label: "War Room", icon: Zap,
     title: "Krisenmanagement in Echtzeit",
     description: "Wenn es brennt, zählt jede Sekunde. Der War Room bündelt kritische Entscheidungen, eskaliert automatisch und koordiniert dein Team.",
     preview: "warroom",
+    accent: "accent-rose",
   },
   {
     id: "scenario-engine", label: "Szenario Engine", icon: TrendingUp,
     title: "What-If Simulationen",
     description: "Simuliere verschiedene Szenarien und deren Auswirkungen bevor du dich festlegst. Die KI berechnet Wahrscheinlichkeiten und Outcomes.",
     preview: "scenarios",
+    accent: "accent-teal",
   },
   {
     id: "escalation", label: "Auto-Eskalation", icon: AlertTriangle,
     title: "Intelligente Eskalations-Engine",
     description: "Überfällige Entscheidungen werden automatisch eskaliert. Regeln, Schwellenwerte und Benachrichtigungen — alles konfigurierbar.",
     preview: "escalation",
+    accent: "accent-amber",
   },
   {
     id: "analytics", label: "Deep Analytics", icon: BarChart3,
     title: "Bottleneck & Opportunity Cost Radar",
     description: "Finde heraus wo Entscheidungen steckenbleiben, was sie kosten, und wo die größten Optimierungspotenziale liegen.",
     preview: "analytics",
+    accent: "primary",
   },
 ];
 
@@ -50,11 +65,11 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const CopilotPreview = () => (
   <div className="space-y-3">
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-3 rounded-xl bg-muted/30 border border-border">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-3 rounded-xl bg-accent-violet/5 border border-accent-violet/15">
       <div className="flex items-center gap-2 mb-2">
-        <Brain className="w-4 h-4 text-muted-foreground" />
+        <Brain className="w-4 h-4 text-accent-violet" />
         <span className="text-xs font-semibold text-foreground">KI-Analyse aktiv</span>
-        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-foreground/30 animate-pulse" />
+        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-violet/50 animate-pulse" />
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -71,7 +86,7 @@ const CopilotPreview = () => (
     </motion.div>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="p-3 rounded-xl bg-muted/30 border border-border">
       <div className="flex items-start gap-2">
-        <Sparkles className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+        <Sparkles className="w-3.5 h-3.5 text-accent-violet mt-0.5 shrink-0" />
         <p className="text-xs text-muted-foreground leading-relaxed">
           <span className="text-foreground font-medium">Empfehlung:</span> Hole vor der Umsetzung Feedback vom Engineering-Team ein.
           Ähnliche Entscheidungen hatten +34% Erfolgsrate mit technischem Review.
@@ -91,7 +106,7 @@ const GraphPreview = () => (
         ["45%", "15%", "60%", "60%"],
         ["75%", "25%", "85%", "70%"],
       ].map(([x1, y1, x2, y2], i) => (
-        <motion.line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--border))" strokeWidth="1.5" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3 + i * 0.1, duration: 0.6 }} />
+        <motion.line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--accent-blue) / 0.3)" strokeWidth="1.5" strokeDasharray="4 4" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3 + i * 0.1, duration: 0.6 }} />
       ))}
     </svg>
     {[
@@ -103,7 +118,7 @@ const GraphPreview = () => (
       { x: "78%", y: "58%", label: "Partner" },
     ].map((node, i) => (
       <motion.div key={node.label} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 + i * 0.08, type: "spring", stiffness: 200 }} className="absolute" style={{ left: node.x, top: node.y }}>
-        <div className="px-3 py-1.5 rounded-lg border border-border bg-card text-[10px] font-medium whitespace-nowrap">
+        <div className="px-3 py-1.5 rounded-lg border border-accent-blue/20 bg-accent-blue/5 text-[10px] font-medium whitespace-nowrap">
           {node.label}
         </div>
       </motion.div>
@@ -164,7 +179,7 @@ const EscalationPreview = () => (
   <div className="space-y-2.5">
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
       {[1, 2, 3, 4].map((level) => (
-        <motion.div key={level} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 + level * 0.1, type: "spring" }} className={`flex-1 h-2 rounded-full ${level <= 3 ? "bg-foreground/30" : "bg-muted"}`} />
+        <motion.div key={level} initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 + level * 0.1, type: "spring" }} className={`flex-1 h-2 rounded-full ${level <= 3 ? "bg-accent-amber/40" : "bg-muted"}`} />
       ))}
       <span className="text-xs text-muted-foreground font-semibold ml-1">Level 3</span>
     </motion.div>
@@ -175,8 +190,8 @@ const EscalationPreview = () => (
       { time: "Tag 7", action: "Executive Alert", done: false },
     ].map((step, i) => (
       <motion.div key={step.time} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.1 }} className="flex items-center gap-3">
-        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-foreground/10" : "bg-muted"}`}>
-          {step.done ? <CheckCircle2 className="w-3.5 h-3.5 text-foreground/50" /> : <Clock className="w-3.5 h-3.5 text-muted-foreground" />}
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${step.done ? "bg-accent-amber/15" : "bg-muted"}`}>
+          {step.done ? <CheckCircle2 className="w-3.5 h-3.5 text-accent-amber" /> : <Clock className="w-3.5 h-3.5 text-muted-foreground" />}
         </div>
         <div className="flex-1 min-w-0">
           <div className={`text-xs ${step.done ? "text-foreground" : "text-muted-foreground"}`}>{step.action}</div>
@@ -203,7 +218,7 @@ const AnalyticsPreview = () => (
     </div>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-end gap-1 h-16 px-1">
       {[35, 52, 40, 68, 45, 72, 58, 80, 65, 90, 75, 85].map((h, i) => (
-        <motion.div key={i} className="flex-1 rounded-sm bg-foreground/10" initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: 0.5 + i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
+        <motion.div key={i} className="flex-1 rounded-sm bg-primary/20" initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: 0.5 + i * 0.05, duration: 0.4, ease: [0.22, 1, 0.36, 1] }} />
       ))}
     </motion.div>
   </div>
@@ -270,7 +285,7 @@ const FeaturesSection = () => {
                   {i === active && (
                     <motion.div
                       layoutId="activeFeatureTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -289,8 +304,8 @@ const FeaturesSection = () => {
                     exit={{ opacity: 0, x: 12 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <div className="w-12 h-12 rounded-xl bg-foreground/[0.06] flex items-center justify-center mb-5">
-                      <current.icon className="w-6 h-6 text-foreground/60" />
+                    <div className={`w-12 h-12 rounded-xl ${accentStyles[current.accent]?.bg} flex items-center justify-center mb-5`}>
+                      <current.icon className={`w-6 h-6 ${accentStyles[current.accent]?.text}`} />
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold mb-3 tracking-tight">
                       {current.title}
