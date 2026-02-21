@@ -27,6 +27,7 @@ import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useRiskDecisionLinks } from "@/hooks/useRisks";
+import WatchlistButton from "@/components/decisions/WatchlistButton";
 
 // Panels
 import DecisionHealthScore from "@/components/decisions/DecisionHealthScore";
@@ -317,6 +318,7 @@ const DecisionDetail = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <WatchlistButton decisionId={decision.id} />
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHelp(true)}>
             <HelpCircle className="w-4 h-4" />
           </Button>

@@ -56,6 +56,7 @@ const ArchivePage = lazy(() => import("./pages/ArchivePage"));
 const RiskRegister = lazy(() => import("./pages/RiskRegister"));
 const TeamPerformance = lazy(() => import("./pages/TeamPerformance"));
 const GlobalSearch = lazy(() => import("./pages/GlobalSearch"));
+const ExpertFinder = lazy(() => import("./pages/ExpertFinder"));
 const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/risks" element={<P><RiskRegister /></P>} />
               <Route path="/team-performance" element={<P><TeamPerformance /></P>} />
               <Route path="/search" element={<P><GlobalSearch /></P>} />
+              <Route path="/experts" element={<P><ExpertFinder /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>

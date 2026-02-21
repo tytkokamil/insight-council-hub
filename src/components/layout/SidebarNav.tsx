@@ -5,7 +5,7 @@ import {
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
   ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
-  Archive, Search as SearchIcon, Settings2,
+  Archive, Search as SearchIcon, Settings2, Compass,
 } from "lucide-react";
 
 interface NavItem {
@@ -42,6 +42,7 @@ const navGroups: NavGroup[] = [
       { icon: ListTodo, label: "Tasks", path: "/tasks", featureKey: "tasks" },
       { icon: Calendar, label: "Calendar", path: "/calendar", featureKey: "calendar" },
       { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
+      { icon: Compass, label: "Experten", path: "/experts" },
       { icon: SearchIcon, label: "Suche", path: "/search" },
     ],
   },
