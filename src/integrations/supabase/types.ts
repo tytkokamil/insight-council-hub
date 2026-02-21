@@ -592,6 +592,7 @@ export type Database = {
           outcome: string | null
           outcome_notes: string | null
           outcome_type: Database["public"]["Enums"]["outcome_type"] | null
+          owner_id: string
           priority: Database["public"]["Enums"]["decision_priority"]
           status: Database["public"]["Enums"]["decision_status"]
           team_id: string | null
@@ -626,6 +627,7 @@ export type Database = {
           outcome?: string | null
           outcome_notes?: string | null
           outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
+          owner_id: string
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -660,6 +662,7 @@ export type Database = {
           outcome?: string | null
           outcome_notes?: string | null
           outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
+          owner_id?: string
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
           team_id?: string | null
@@ -1023,6 +1026,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_views: {
+        Row: {
+          created_at: string
+          entity_type: string
+          filters: Json
+          icon: string | null
+          id: string
+          is_pinned: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_type?: string
+          filters?: Json
+          icon?: string | null
+          id?: string
+          is_pinned?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_type?: string
+          filters?: Json
+          icon?: string | null
+          id?: string
+          is_pinned?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       sla_configs: {
         Row: {

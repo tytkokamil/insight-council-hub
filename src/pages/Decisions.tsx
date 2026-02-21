@@ -6,6 +6,8 @@ import {
   HelpCircle, CheckSquare, UserPlus, Tag, Clock, ShieldAlert, Zap, Brain,
 } from "lucide-react";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import SavedViewsBar from "@/components/decisions/SavedViewsBar";
+import type { SavedViewFilters } from "@/hooks/useSavedViews";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -391,6 +393,26 @@ const Decisions = () => {
                 </button>
               ))}
             </div>
+
+            {/* Saved Views */}
+            <SavedViewsBar
+              entityType="decisions"
+              currentFilters={{
+                status: filterStatus,
+                priority: filterPriority,
+                category: filterCategory,
+                team: filterTeam,
+                quickChip,
+              }}
+              onApplyView={(filters: SavedViewFilters) => {
+                setFilterStatus(filters.status ?? []);
+                setFilterPriority(filters.priority ?? []);
+                setFilterCategory(filters.category ?? []);
+                setFilterTeam(filters.team ?? []);
+                setQuickChip(filters.quickChip ?? null);
+              }}
+              hasActiveFilters={activeFilterCount > 0}
+            />
           </div>
 
           {/* ═══ BULK ACTIONS ═══ */}

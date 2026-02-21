@@ -218,6 +218,7 @@ const TeamImportTab = ({ teamId }: Props) => {
         due_date: d.due_date || null,
         team_id: teamId,
         created_by: user.id,
+        owner_id: user.id,
         status: "draft" as const,
       }));
 
