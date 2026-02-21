@@ -35,6 +35,7 @@ import {
 } from "recharts";
 
 const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
+const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 
 type TimeRange = 7 | 30 | 90 | "custom";
 
@@ -362,6 +363,13 @@ const Dashboard = () => {
             <p className="text-sm font-medium text-success">Alles im grünen Bereich</p>
             <p className="text-xs text-muted-foreground mt-0.5">Keine offenen Aktionspunkte.</p>
           </div>
+        )}
+
+        {/* ═══ AI BRIEFING ═══ */}
+        {!isLoading && (
+          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+            <AiBriefingWidget />
+          </Suspense>
         )}
 
         {/* ═══ KPIs ═══ */}
