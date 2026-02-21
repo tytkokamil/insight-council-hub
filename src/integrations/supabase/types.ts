@@ -528,6 +528,69 @@ export type Database = {
           },
         ]
       }
+      decision_templates: {
+        Row: {
+          approval_steps: Json
+          category: string
+          conditional_rules: Json
+          created_at: string
+          created_by: string
+          default_duration_days: number
+          description: string
+          governance_notes: string | null
+          icon_color: string | null
+          id: string
+          is_system: boolean
+          name: string
+          priority: string
+          required_fields: Json
+          slug: string
+          updated_at: string
+          version: number
+          when_to_use: string | null
+        }
+        Insert: {
+          approval_steps?: Json
+          category?: string
+          conditional_rules?: Json
+          created_at?: string
+          created_by: string
+          default_duration_days?: number
+          description?: string
+          governance_notes?: string | null
+          icon_color?: string | null
+          id?: string
+          is_system?: boolean
+          name: string
+          priority?: string
+          required_fields?: Json
+          slug: string
+          updated_at?: string
+          version?: number
+          when_to_use?: string | null
+        }
+        Update: {
+          approval_steps?: Json
+          category?: string
+          conditional_rules?: Json
+          created_at?: string
+          created_by?: string
+          default_duration_days?: number
+          description?: string
+          governance_notes?: string | null
+          icon_color?: string | null
+          id?: string
+          is_system?: boolean
+          name?: string
+          priority?: string
+          required_fields?: Json
+          slug?: string
+          updated_at?: string
+          version?: number
+          when_to_use?: string | null
+        }
+        Relationships: []
+      }
       decision_versions: {
         Row: {
           change_reason: string | null
