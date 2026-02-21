@@ -68,6 +68,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         }
       };
       fetchTeams();
+      if (selectedTeamId) {
+        handleTeamChange(selectedTeamId);
+      }
     }
   }, [open, selectedTeamId]);
 
@@ -103,6 +106,33 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const handlePriorityChange = (newPri: string) => {
     setPriority(newPri);
     setReviewFlowId(suggestReviewFlow(category, newPri));
+  };
+
+  const handleTeamChange = async (newTeamId: string) => {
+    setTeamId(newTeamId);
+    if (!newTeamId) return;
+    // Fetch and apply team defaults
+    const { data } = await supabase
+      .from("team_defaults")
+      .select("*")
+      .eq("team_id", newTeamId)
+      .single();
+    if (data) {
+      setCategory(data.default_category);
+      setPriority(data.default_priority);
+      setReviewFlowId(data.default_review_flow);
+      if (data.default_sla_days && !dueDate) {
+        const due = new Date();
+        due.setDate(due.getDate() + data.default_sla_days);
+        setDueDate(due.toISOString().split("T")[0]);
+      }
+      // Update template if category changed
+      const tpl = getTemplateByCategory(data.default_category);
+      if (tpl) {
+        setSelectedTemplate(tpl);
+        setExtraFields({});
+      }
+    }
   };
 
   const handleReviewFlowSelect = (flow: ReviewFlowTemplate) => {
@@ -320,7 +350,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               <label className="text-sm text-muted-foreground mb-1 block">
                 <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Team</span>
               </label>
-              <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className={inputClass}>
+              <select value={teamId} onChange={(e) => handleTeamChange(e.target.value)} className={inputClass}>
                 <option value="" className="bg-card">Kein Team (öffentlich)</option>
                 {teams.map((t) => (<option key={t.id} value={t.id} className="bg-card">{t.name}</option>))}
               </select>

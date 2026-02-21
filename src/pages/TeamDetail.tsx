@@ -10,6 +10,7 @@ import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import TeamOverviewTab from "@/components/teams/TeamOverviewTab";
 import TeamChat from "@/components/teams/TeamChat";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
+import TeamDefaultsConfig from "@/components/teams/TeamDefaultsConfig";
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -124,7 +125,17 @@ const TeamDetail = () => {
 
           {isTeamAdmin && (
             <TabsContent value="settings" className="mt-6">
-              <div className="space-y-6">
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">Smart Defaults</h2>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Voreinstellungen für neue Entscheidungen in diesem Team.
+                  </p>
+                  <TeamDefaultsConfig teamId={team.id} />
+                </div>
+
+                <hr className="border-border" />
+
                 <div>
                   <h2 className="text-sm font-semibold mb-1">SLA-Konfiguration</h2>
                   <p className="text-xs text-muted-foreground mb-4">
