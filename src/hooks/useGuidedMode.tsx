@@ -65,12 +65,17 @@ export const useGuidedMode = () => {
 
 /** Which sidebar items are visible in basic mode */
 export const BASIC_MODE_PATHS = new Set([
+  // CORE
   "/dashboard",
   "/decisions",
   "/tasks",
-  "/teams",
   "/calendar",
+  "/teams",
   "/meeting",
+  // INSIGHTS (light)
+  "/analytics",
+  // SYSTEM (reduced)
   "/knowledge",
+  "/archive",
   "/settings",
 ]);
