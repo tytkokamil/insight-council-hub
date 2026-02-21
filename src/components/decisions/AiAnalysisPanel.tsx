@@ -5,6 +5,7 @@ import { Brain, AlertTriangle, CheckCircle2, Loader2, Lightbulb, ThumbsUp, Thumb
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
 
 interface WeightedFactor {
   factor: string;
@@ -259,6 +260,9 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
               </div>
             </div>
           )}
+
+          {/* AI Feedback */}
+          <AiFeedbackButton context={options.length > 0 ? "autopilot" : "risk-analysis"} />
         </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground">

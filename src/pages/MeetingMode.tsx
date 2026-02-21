@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Video, PlayCircle, CheckCircle2, ThumbsUp, ThumbsDown, Minus as MinusIcon,
-  FileText, ArrowRight, Timer, Users, Brain, Loader2, Copy,
+  FileText, ArrowRight, Timer, Users, Brain, Loader2, Copy, ListTodo, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +34,8 @@ const MeetingMode = () => {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [generatingProtocol, setGeneratingProtocol] = useState(false);
   const [protocol, setProtocol] = useState<string>("");
+  const [extractedTasks, setExtractedTasks] = useState<{ title: string; priority: string }[]>([]);
+  const [creatingTasks, setCreatingTasks] = useState(false);
 
   // Only show review-ready decisions
   const reviewReady = useMemo(() =>
@@ -98,28 +100,85 @@ const MeetingMode = () => {
 
       const { data, error } = await supabase.functions.invoke("decision-copilot", {
         body: {
-          prompt: `Erstelle ein professionelles Meeting-Protokoll auf Deutsch für folgende Entscheidungen, die in einem Decision Review Meeting besprochen wurden:\n\n${summary}\n\nDatum: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}\n\nStrukturiere das Protokoll mit: Datum, Teilnehmer (${profileMap[user!.id] || "Meeting-Leiter"}), besprochene Entscheidungen, Ergebnisse und nächste Schritte.`,
+          prompt: `Erstelle ein professionelles Meeting-Protokoll auf Deutsch für folgende Entscheidungen, die in einem Decision Review Meeting besprochen wurden:\n\n${summary}\n\nDatum: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}\n\nStrukturiere das Protokoll mit: Datum, Teilnehmer (${profileMap[user!.id] || "Meeting-Leiter"}), besprochene Entscheidungen, Ergebnisse und nächste Schritte.\n\nAm Ende: Liste unter "AUFGABEN:" konkrete Action Items im Format "- [Aufgabe] (Priorität: hoch/mittel/niedrig)"`,
         },
       });
 
       if (error) throw error;
       const text = typeof data === "string" ? data : data?.response || data?.text || JSON.stringify(data);
       setProtocol(text);
+      extractTasksFromProtocol(text);
     } catch (e: any) {
-      // Fallback: generate simple protocol locally
       const lines = selectedDecisions.map(d => {
         const vote = votes[d.id];
         const note = notes[d.id] || "";
         return `• ${d.title} — ${vote === "approve" ? "Genehmigt ✅" : vote === "reject" ? "Abgelehnt ❌" : "Zurückgestellt ⏸️"}${note ? `\n  Anmerkung: ${note}` : ""}`;
       });
-      setProtocol(
+      const fallbackProtocol =
         `Meeting-Protokoll — ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}\n` +
         `Leiter: ${profileMap[user!.id] || "—"}\n\n` +
         `Besprochene Entscheidungen:\n${lines.join("\n\n")}\n\n` +
-        `Zusammenfassung: ${selectedDecisions.length} Entscheidungen besprochen, davon ${Object.values(votes).filter(v => v === "approve").length} genehmigt, ${Object.values(votes).filter(v => v === "reject").length} abgelehnt.`
-      );
+        `Zusammenfassung: ${selectedDecisions.length} Entscheidungen besprochen, davon ${Object.values(votes).filter(v => v === "approve").length} genehmigt, ${Object.values(votes).filter(v => v === "reject").length} abgelehnt.`;
+      setProtocol(fallbackProtocol);
+      // Generate fallback tasks from approved decisions
+      const fallbackTasks = selectedDecisions
+        .filter(d => votes[d.id] === "approve")
+        .map(d => ({ title: `Follow-up: ${d.title}`, priority: d.priority === "critical" ? "high" : d.priority }));
+      setExtractedTasks(fallbackTasks);
     }
     setGeneratingProtocol(false);
+  };
+
+  const extractTasksFromProtocol = (text: string) => {
+    const tasks: { title: string; priority: string }[] = [];
+    const lines = text.split("\n");
+    let inTaskSection = false;
+    for (const line of lines) {
+      if (line.toLowerCase().includes("aufgaben") || line.toLowerCase().includes("action item") || line.toLowerCase().includes("nächste schritte")) {
+        inTaskSection = true;
+        continue;
+      }
+      if (inTaskSection && (line.startsWith("- ") || line.startsWith("• ") || line.match(/^\d+\./))) {
+        const cleaned = line.replace(/^[-•\d.)\s]+/, "").trim();
+        if (cleaned.length < 5) continue;
+        const priorityMatch = cleaned.match(/\((?:Priorität|Priority)[:\s]*(hoch|mittel|niedrig|high|medium|low)\)/i);
+        const priority = priorityMatch
+          ? (priorityMatch[1].toLowerCase() === "hoch" || priorityMatch[1].toLowerCase() === "high" ? "high" : priorityMatch[1].toLowerCase() === "niedrig" || priorityMatch[1].toLowerCase() === "low" ? "low" : "medium")
+          : "medium";
+        const title = cleaned.replace(/\((?:Priorität|Priority)[:\s]*(?:hoch|mittel|niedrig|high|medium|low)\)/gi, "").trim();
+        if (title) tasks.push({ title, priority });
+      }
+    }
+    // Fallback: if no tasks found, generate from approved decisions
+    if (tasks.length === 0) {
+      selectedDecisions
+        .filter(d => votes[d.id] === "approve")
+        .forEach(d => tasks.push({ title: `Follow-up: ${d.title}`, priority: d.priority === "critical" ? "high" : d.priority }));
+    }
+    setExtractedTasks(tasks);
+  };
+
+  const createAllTasks = async () => {
+    if (!user || extractedTasks.length === 0) return;
+    setCreatingTasks(true);
+    try {
+      const teamId = selectedDecisions[0]?.team_id || null;
+      const inserts = extractedTasks.map(t => ({
+        title: t.title,
+        priority: t.priority as any,
+        status: "open" as const,
+        created_by: user.id,
+        team_id: teamId,
+        category: "general" as const,
+      }));
+      const { error } = await supabase.from("tasks").insert(inserts);
+      if (error) throw error;
+      toast.success(`${extractedTasks.length} Aufgaben erstellt`);
+      setExtractedTasks([]);
+    } catch (e: any) {
+      toast.error(e.message || "Fehler beim Erstellen");
+    }
+    setCreatingTasks(false);
   };
 
   const copyProtocol = () => {
@@ -323,6 +382,32 @@ const MeetingMode = () => {
                 <Button variant="outline" size="sm" className="absolute top-2 right-2 gap-1" onClick={copyProtocol}>
                   <Copy className="w-3 h-3" /> Kopieren
                 </Button>
+              </div>
+            )}
+
+            {/* Extracted Tasks */}
+            {extractedTasks.length > 0 && (
+              <div className="space-y-3 pt-2 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                    <ListTodo className="w-4 h-4 text-primary" /> Extrahierte Aufgaben ({extractedTasks.length})
+                  </h4>
+                  <Button size="sm" onClick={createAllTasks} disabled={creatingTasks} className="gap-1.5">
+                    {creatingTasks ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                    Alle als Tasks erstellen
+                  </Button>
+                </div>
+                <div className="space-y-1.5">
+                  {extractedTasks.map((t, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/10">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                      <span className="text-xs flex-1">{t.title}</span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {t.priority === "high" ? "Hoch" : t.priority === "low" ? "Niedrig" : "Mittel"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

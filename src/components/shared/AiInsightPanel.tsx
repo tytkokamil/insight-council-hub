@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, Target, TrendingUp } from "lucide-react";
+import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
 
 interface AiInsightPanelProps {
   type: "pattern" | "dna" | "bottleneck";
@@ -176,6 +177,9 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
             )}
           </div>
         )}
+
+        {/* AI Feedback */}
+        <AiFeedbackButton context={`intelligence-${type}`} />
       </CardContent>
     </Card>
   );
