@@ -49,6 +49,7 @@ const Templates = lazy(() => import("./pages/Templates"));
 const TimelinePage = lazy(() => import("./pages/TimelinePage"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const DecisionDetail = lazy(() => import("./pages/DecisionDetail"));
+const AutomationRules = lazy(() => import("./pages/AutomationRules"));
 const queryClient = new QueryClient();
 
 const P = ({ children }: { children: React.ReactNode }) => (
@@ -106,6 +107,7 @@ const App = () => (
               <Route path="/templates" element={<P><Templates /></P>} />
               <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
               <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />
+              <Route path="/automations" element={<P><AutomationRules /></P>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </TeamProvider>

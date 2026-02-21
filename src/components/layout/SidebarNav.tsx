@@ -99,6 +99,7 @@ const navGroups: NavGroup[] = [
   {
     label: "SYSTEM",
     items: [
+      { icon: Zap, label: "Automations", path: "/automations", adminOnly: true },
       { icon: Settings, label: "Settings", path: "/settings" },
       { icon: UserCog, label: "Users", path: "/admin/users", adminOnly: true },
       { icon: Beaker, label: "Pilot Mode", path: "/pilot", adminOnly: true },

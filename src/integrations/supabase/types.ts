@@ -62,6 +62,107 @@ export type Database = {
           },
         ]
       }
+      automation_rule_logs: {
+        Row: {
+          action_taken: string
+          decision_id: string
+          details: string | null
+          executed_at: string
+          id: string
+          rule_id: string
+        }
+        Insert: {
+          action_taken: string
+          decision_id: string
+          details?: string | null
+          executed_at?: string
+          id?: string
+          rule_id: string
+        }
+        Update: {
+          action_taken?: string
+          decision_id?: string
+          details?: string | null
+          executed_at?: string
+          id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rule_logs_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_rule_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_rules: {
+        Row: {
+          action_type: string
+          action_value: string
+          condition_field: string
+          condition_operator: string
+          condition_value: string
+          created_at: string
+          created_by: string
+          description: string | null
+          enabled: boolean
+          id: string
+          name: string
+          team_id: string | null
+          trigger_event: string
+          updated_at: string
+        }
+        Insert: {
+          action_type: string
+          action_value: string
+          condition_field: string
+          condition_operator?: string
+          condition_value: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name: string
+          team_id?: string | null
+          trigger_event: string
+          updated_at?: string
+        }
+        Update: {
+          action_type?: string
+          action_value?: string
+          condition_field?: string
+          condition_operator?: string
+          condition_value?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name?: string
+          team_id?: string | null
+          trigger_event?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_rules_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       briefings: {
         Row: {
           content: Json
