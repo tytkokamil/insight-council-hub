@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +7,9 @@ import { useTeamContext } from "@/hooks/useTeamContext";
 import { decisionTemplates, getTemplateByCategory, type DecisionTemplate, type RequiredField } from "@/lib/decisionTemplates";
 import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
 import ReviewFlowSelector from "./ReviewFlowSelector";
-import { FileText, Users, Shield, AlertCircle } from "lucide-react";
+import { FileText, Users, Shield, AlertCircle, Lightbulb, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props {
   open: boolean;
@@ -39,10 +40,40 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [showTemplates, setShowTemplates] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<DecisionTemplate | null>(null);
   const [extraFields, setExtraFields] = useState<Record<string, string>>({});
+  const [showRecommendations, setShowRecommendations] = useState(false);
   
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
   const [selectedReviewFlow, setSelectedReviewFlow] = useState<ReviewFlowTemplate | null>(null);
+
+  // Fetch lessons learned for recommendations
+  const { data: lessonsWithDecisions = [] } = useQuery({
+    queryKey: ["lessons-recommendations"],
+    queryFn: async () => {
+      const { data: lessons } = await supabase
+        .from("lessons_learned")
+        .select("id, decision_id, key_takeaway, what_went_well, what_went_wrong, recommendations")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (!lessons?.length) return [];
+      const decisionIds = [...new Set(lessons.map(l => l.decision_id))];
+      const { data: decisions } = await supabase
+        .from("decisions")
+        .select("id, title, category, priority")
+        .in("id", decisionIds);
+      const decMap = new Map((decisions ?? []).map(d => [d.id, d]));
+      return lessons.map(l => ({ ...l, decision: decMap.get(l.decision_id) })).filter(l => l.decision);
+    },
+    enabled: open,
+    staleTime: 60_000,
+  });
+
+  const relevantLessons = useMemo(() => {
+    if (!category) return [];
+    return lessonsWithDecisions
+      .filter(l => l.decision?.category === category)
+      .slice(0, 5);
+  }, [lessonsWithDecisions, category]);
 
   useEffect(() => {
     if (open && user) {
@@ -389,6 +420,56 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             <p className="text-[11px] text-muted-foreground italic p-2 rounded-lg bg-warning/5 border border-warning/20">
               {selectedTemplate.governanceNotes}
             </p>
+          )}
+
+          {/* Lessons Learned Recommendations */}
+          {relevantLessons.length > 0 && (
+            <div className="pt-3 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setShowRecommendations(v => !v)}
+                className="flex items-center gap-2 w-full text-left group"
+              >
+                <Lightbulb className="w-4 h-4 text-warning" />
+                <span className="text-sm font-medium flex-1">
+                  Lessons Learned ({relevantLessons.length})
+                </span>
+                <Badge variant="outline" className="text-[10px]">{categoryLabels[category]}</Badge>
+                {showRecommendations ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+              </button>
+              {showRecommendations && (
+                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                  {relevantLessons.map(l => (
+                    <div key={l.id} className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
+                      <p className="font-medium text-foreground flex items-start gap-1.5">
+                        <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
+                        {l.key_takeaway}
+                      </p>
+                      {l.what_went_well && (
+                        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+                          <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                          {l.what_went_well}
+                        </p>
+                      )}
+                      {l.what_went_wrong && (
+                        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+                          <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+                          {l.what_went_wrong}
+                        </p>
+                      )}
+                      {l.recommendations && (
+                        <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
+                          → {l.recommendations}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground/60 pl-4">
+                        Aus: {l.decision?.title}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {validationErrors.length > 0 && (
