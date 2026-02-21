@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageHelpButton from "@/components/shared/PageHelpButton";
-import { History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles, Pencil, Plus, AlertTriangle } from "lucide-react";
+import { History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles, Pencil, Plus, AlertTriangle, RotateCcw, Archive, Share2, Zap, Users, Target, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/shared/UserAvatar";
+import { eventLabels, EventTypes } from "@/lib/eventTaxonomy";
 
 interface AuditLog {
   id: string;
@@ -23,6 +24,24 @@ interface AuditLog {
 }
 
 const actionConfig: Record<string, { label: string; icon: typeof Plus; color: string }> = {
+  [EventTypes.DECISION_CREATED]: { label: eventLabels[EventTypes.DECISION_CREATED], icon: Plus, color: "text-primary" },
+  [EventTypes.DECISION_UPDATED]: { label: eventLabels[EventTypes.DECISION_UPDATED], icon: Pencil, color: "text-primary" },
+  [EventTypes.DECISION_STATUS_CHANGED]: { label: eventLabels[EventTypes.DECISION_STATUS_CHANGED], icon: CheckCircle, color: "text-accent-foreground" },
+  [EventTypes.DECISION_DELETED]: { label: eventLabels[EventTypes.DECISION_DELETED], icon: XCircle, color: "text-destructive" },
+  [EventTypes.DECISION_RESTORED]: { label: eventLabels[EventTypes.DECISION_RESTORED], icon: RotateCcw, color: "text-success" },
+  [EventTypes.DECISION_ARCHIVED]: { label: eventLabels[EventTypes.DECISION_ARCHIVED], icon: Archive, color: "text-muted-foreground" },
+  [EventTypes.DECISION_SHARED]: { label: eventLabels[EventTypes.DECISION_SHARED], icon: Share2, color: "text-primary" },
+  [EventTypes.DECISION_TEMPLATE_UPGRADED]: { label: eventLabels[EventTypes.DECISION_TEMPLATE_UPGRADED], icon: Sparkles, color: "text-primary" },
+  [EventTypes.REVIEW_APPROVED]: { label: eventLabels[EventTypes.REVIEW_APPROVED], icon: CheckCircle, color: "text-success" },
+  [EventTypes.REVIEW_REJECTED]: { label: eventLabels[EventTypes.REVIEW_REJECTED], icon: XCircle, color: "text-destructive" },
+  [EventTypes.REVIEW_DELEGATED]: { label: eventLabels[EventTypes.REVIEW_DELEGATED], icon: Users, color: "text-primary" },
+  [EventTypes.ESCALATION_TRIGGERED]: { label: eventLabels[EventTypes.ESCALATION_TRIGGERED], icon: AlertTriangle, color: "text-destructive" },
+  [EventTypes.ESCALATION_RESOLVED]: { label: eventLabels[EventTypes.ESCALATION_RESOLVED], icon: CheckCircle, color: "text-success" },
+  [EventTypes.AUTOMATION_RULE_EXECUTED]: { label: eventLabels[EventTypes.AUTOMATION_RULE_EXECUTED], icon: Zap, color: "text-primary" },
+  [EventTypes.COMMENT_CREATED]: { label: eventLabels[EventTypes.COMMENT_CREATED], icon: MessageSquare, color: "text-muted-foreground" },
+  [EventTypes.GOAL_LINKED]: { label: eventLabels[EventTypes.GOAL_LINKED], icon: Target, color: "text-primary" },
+  [EventTypes.GOAL_UNLINKED]: { label: eventLabels[EventTypes.GOAL_UNLINKED], icon: Target, color: "text-muted-foreground" },
+  // Legacy fallbacks
   created: { label: "Erstellt", icon: Plus, color: "text-primary" },
   status_changed: { label: "Status geändert", icon: CheckCircle, color: "text-accent-foreground" },
   review_approved: { label: "Genehmigt", icon: CheckCircle, color: "text-success" },
