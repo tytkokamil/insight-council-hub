@@ -5,7 +5,8 @@ import {
   Pencil, Trash2, Eye, AlertCircle, FileUp, Link2, ChevronRight,
   HelpCircle, CheckSquare, UserPlus, Tag, Clock, ShieldAlert, Zap, Brain,
 } from "lucide-react";
-import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import { categoryLabels, statusLabels, priorityLabels, useTranslatedLabels } from "@/lib/labels";
+import { useTranslation } from "react-i18next";
 import SavedViewsBar from "@/components/decisions/SavedViewsBar";
 import type { SavedViewFilters } from "@/hooks/useSavedViews";
 import { Button } from "@/components/ui/button";
@@ -34,33 +35,7 @@ import { de } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const STATUS_OPTIONS = [
-  { value: "draft", label: "Entwurf" },
-  { value: "proposed", label: "Vorschlag" },
-  { value: "review", label: "Review" },
-  { value: "approved", label: "Genehmigt" },
-  { value: "rejected", label: "Abgelehnt" },
-  { value: "implemented", label: "Umgesetzt" },
-  { value: "cancelled", label: "Abgebrochen" },
-  { value: "superseded", label: "Ersetzt" },
-  { value: "archived", label: "Archiviert" },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Niedrig" },
-  { value: "medium", label: "Mittel" },
-  { value: "high", label: "Hoch" },
-  { value: "critical", label: "Kritisch" },
-];
-
-const CATEGORY_OPTIONS = [
-  { value: "strategic", label: "Strategisch" },
-  { value: "budget", label: "Budget" },
-  { value: "hr", label: "Personal" },
-  { value: "technical", label: "Technisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "marketing", label: "Marketing" },
-];
+/* These are rebuilt inside component with t() for i18n */
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -82,6 +57,12 @@ const priorityStyles: Record<string, string> = {
 };
 
 const Decisions = () => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
+
+  const STATUS_OPTIONS = Object.entries(tl.statusLabels).map(([value, label]) => ({ value, label }));
+  const PRIORITY_OPTIONS = Object.entries(tl.priorityLabels).map(([value, label]) => ({ value, label }));
+  const CATEGORY_OPTIONS = Object.entries(tl.categoryLabels).map(([value, label]) => ({ value, label }));
   const { data: decisions = [] } = useDecisions();
   const { data: teams = [] } = useTeams();
   const { data: profiles = [] } = useProfiles();
@@ -237,7 +218,7 @@ const Decisions = () => {
     if (newStatus === "archived") updates.archived_at = new Date().toISOString();
     const { error } = await supabase.from("decisions").update(updates).in("id", ids);
     if (!error) {
-      toast.success(`${ids.length} Entscheidungen → ${statusLabels[newStatus]}`);
+      toast.success(`${ids.length} ${t("decisions.title")} → ${tl.statusLabels[newStatus]}`);
       setSelectedIds(new Set());
       invalidate();
     }
@@ -247,7 +228,7 @@ const Decisions = () => {
     const ids = Array.from(selectedIds);
     const { error } = await supabase.from("decisions").update({ team_id: teamId, updated_at: new Date().toISOString() } as any).in("id", ids);
     if (!error) {
-      toast.success(`${ids.length} Entscheidungen → ${teamId ? teamMap[teamId] : "Persönlich"}`);
+      toast.success(`${ids.length} ${t("decisions.title")} → ${teamId ? teamMap[teamId] : t("common.personal")}`);
       setSelectedIds(new Set());
       invalidate();
     }
@@ -260,17 +241,17 @@ const Decisions = () => {
       creator_name: profileMap[d.created_by],
     }));
 
-  const handleExportCSV = () => { exportCSV(prepareExport()); toast.success("CSV-Export heruntergeladen"); };
+  const handleExportCSV = () => { exportCSV(prepareExport()); toast.success(t("decisions.csvExported")); };
   const handleExportPDF = () => { exportPDF(prepareExport()); };
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
 
   const quickChips = [
-    { key: "overdue", label: "Überfällig", count: chipCounts.overdue, icon: Clock, color: "text-destructive" },
-    { key: "escalated", label: "Eskaliert", count: chipCounts.escalated, icon: ShieldAlert, color: "text-warning" },
-    { key: "review", label: "Needs Review", count: chipCounts.review, icon: CheckSquare, color: "text-primary" },
-    { key: "highRisk", label: "High Risk", count: chipCounts.highRisk, icon: AlertCircle, color: "text-destructive" },
-    { key: "blocked", label: "Blockiert", count: chipCounts.blocked, icon: Zap, color: "text-warning" },
+    { key: "overdue", label: t("decisions.overdue"), count: chipCounts.overdue, icon: Clock, color: "text-destructive" },
+    { key: "escalated", label: t("decisions.escalated"), count: chipCounts.escalated, icon: ShieldAlert, color: "text-warning" },
+    { key: "review", label: t("decisions.needsReview"), count: chipCounts.review, icon: CheckSquare, color: "text-primary" },
+    { key: "highRisk", label: t("decisions.highRisk"), count: chipCounts.highRisk, icon: AlertCircle, color: "text-destructive" },
+    { key: "blocked", label: t("decisions.blocked"), count: chipCounts.blocked, icon: Zap, color: "text-warning" },
   ];
 
   return (
@@ -278,8 +259,8 @@ const Decisions = () => {
       {/* ═══ A) HEADER ═══ */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold">Entscheidungen</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{decisions.length} Entscheidungen · {filtered.length} angezeigt</p>
+          <h1 className="font-display text-2xl font-bold">{t("decisions.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t("decisions.countShown", { total: decisions.length, shown: filtered.length })}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHelp(true)}>
@@ -288,7 +269,7 @@ const Decisions = () => {
           {decisions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2"><Download className="w-4 h-4" /> Export</Button>
+                <Button variant="outline" size="sm" className="gap-2"><Download className="w-4 h-4" /> {t("common.export")}</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleExportCSV} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
@@ -296,8 +277,8 @@ const Decisions = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-2"><FileUp className="w-4 h-4" /> Import</Button>
-          <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> Neue Entscheidung</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-2"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+          <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> {t("decisions.new")}</Button>
         </div>
       </div>
 
@@ -307,16 +288,16 @@ const Decisions = () => {
             <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary/15 to-accent-violet/15 border border-primary/20 flex items-center justify-center">
               <BarChart3 className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen vorhanden</h3>
-            <p className="text-sm text-muted-foreground mb-6">Erstelle deine erste Entscheidung oder starte mit Beispieldaten, um die Plattform zu erkunden.</p>
+            <h3 className="font-display text-xl font-bold mb-2">{t("decisions.noDecisions")}</h3>
+            <p className="text-sm text-muted-foreground mb-6">{t("decisions.noDecisionsDesc")}</p>
             <div className="flex items-center justify-center gap-3">
               <Button variant="outline" onClick={async () => {
-                toast.info("Demo-Daten werden erstellt…");
+                toast.info(t("decisions.demoCreating"));
                 const { data, error } = await supabase.functions.invoke("seed-demo-data");
-                if (error || data?.error) { toast.error(data?.error || "Fehler"); return; }
-                toast.success("Demo-Daten erstellt!"); window.location.reload();
-              }} className="gap-2"><Zap className="w-4 h-4" /> Beispieldaten laden</Button>
-              <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> Erste Entscheidung erstellen</Button>
+                if (error || data?.error) { toast.error(data?.error || t("settings.error")); return; }
+                toast.success(t("decisions.demoCreated")); window.location.reload();
+              }} className="gap-2"><Zap className="w-4 h-4" /> {t("decisions.loadDemo")}</Button>
+              <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> {t("decisions.createFirst")}</Button>
             </div>
           </div>
         </motion.div>
@@ -328,13 +309,13 @@ const Decisions = () => {
             <div className="flex items-center gap-3">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input type="text" placeholder="Entscheidungen durchsuchen..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                <input type="text" placeholder={t("decisions.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
               </div>
               <Popover open={filterOpen} onOpenChange={setFilterOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-2 relative">
-                    <Filter className="w-4 h-4" /> Filter
+                    <Filter className="w-4 h-4" /> {t("common.filter")}
                     {activeFilterCount > 0 && (
                       <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{activeFilterCount}</span>
                     )}
@@ -342,16 +323,16 @@ const Decisions = () => {
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-3" align="end">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold">Filter</span>
+                    <span className="text-sm font-semibold">{t("common.filter")}</span>
                     {activeFilterCount > 0 && (
-                      <button onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1"><X className="w-3 h-3" /> Zurücksetzen</button>
+                      <button onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1"><X className="w-3 h-3" /> {t("common.reset")}</button>
                     )}
                   </div>
                   <div className="space-y-3">
                     {[
-                      { label: "Status", options: STATUS_OPTIONS, state: filterStatus, setter: setFilterStatus },
-                      { label: "Priorität", options: PRIORITY_OPTIONS, state: filterPriority, setter: setFilterPriority },
-                      { label: "Kategorie", options: CATEGORY_OPTIONS, state: filterCategory, setter: setFilterCategory },
+                      { label: t("decisions.statusLabel"), options: STATUS_OPTIONS, state: filterStatus, setter: setFilterStatus },
+                      { label: t("decisions.priorityLabel"), options: PRIORITY_OPTIONS, state: filterPriority, setter: setFilterPriority },
+                      { label: t("decisions.categoryLabel"), options: CATEGORY_OPTIONS, state: filterCategory, setter: setFilterCategory },
                     ].map(group => (
                       <div key={group.label}>
                         <p className="text-xs font-medium text-muted-foreground mb-1.5">{group.label}</p>
@@ -432,10 +413,10 @@ const Decisions = () => {
             {selectedIds.size > 0 && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
                 className="flex items-center gap-3 p-3 mb-3 rounded-lg bg-primary/5 border border-primary/20">
-                <span className="text-xs font-semibold text-primary">{selectedIds.size} ausgewählt</span>
+                <span className="text-xs font-semibold text-primary">{t("decisions.selected", { count: selectedIds.size })}</span>
                 <Separator orientation="vertical" className="h-4" />
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="text-xs h-7">Status setzen</Button></DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="text-xs h-7">{t("decisions.setStatus")}</Button></DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {STATUS_OPTIONS.map(s => (
                       <DropdownMenuItem key={s.value} onClick={() => handleBulkStatus(s.value)}>{s.label}</DropdownMenuItem>
@@ -444,9 +425,9 @@ const Decisions = () => {
                 </DropdownMenu>
                 {teams.length > 0 && (
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="text-xs h-7 gap-1.5"><UserPlus className="w-3 h-3" /> Team zuweisen</Button></DropdownMenuTrigger>
+                    <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="text-xs h-7 gap-1.5"><UserPlus className="w-3 h-3" /> {t("decisions.assignTeam")}</Button></DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleBulkTeam(null)}>Persönlich (kein Team)</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleBulkTeam(null)}>{t("common.personal")}</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {teams.map(t => (
                         <DropdownMenuItem key={t.id} onClick={() => handleBulkTeam(t.id)}>{t.name}</DropdownMenuItem>
@@ -455,13 +436,13 @@ const Decisions = () => {
                   </DropdownMenu>
                 )}
                 <Button variant="outline" size="sm" className="text-xs h-7 gap-1.5 text-warning hover:text-warning" onClick={() => handleBulkStatus("archived")}>
-                  Archivieren
+                  {t("decisions.archive")}
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs h-7 gap-1.5" onClick={() => { exportCSV(prepareExport().filter(d => selectedIds.has(d.id))); toast.success("Exportiert"); }}>
-                  <Download className="w-3 h-3" /> Exportieren
+                  <Download className="w-3 h-3" /> {t("decisions.exportSelected")}
                 </Button>
                 <Button variant="ghost" size="sm" className="text-xs h-7 ml-auto" onClick={() => setSelectedIds(new Set())}>
-                  <X className="w-3 h-3 mr-1" /> Auswahl aufheben
+                  <X className="w-3 h-3 mr-1" /> {t("decisions.clearSelection")}
                 </Button>
               </motion.div>
             )}
@@ -476,15 +457,15 @@ const Decisions = () => {
                     <th className="p-3 w-10">
                       <Checkbox checked={selectedIds.size === filtered.length && filtered.length > 0} onCheckedChange={toggleSelectAll} />
                     </th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Entscheidung</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Owner</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Priorität</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Risiko</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Alignment</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">Deps</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Fällig</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">Updated</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.decision")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.statusLabel")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.owner")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.priorityLabel")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">{t("decisions.risk")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">{t("decisions.alignment")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">{t("decisions.deps")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.due")}</th>
+                    <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">{t("decisions.updated")}</th>
                     <th className="p-3 w-10"></th>
                   </tr>
                 </thead>
@@ -492,8 +473,8 @@ const Decisions = () => {
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={11} className="p-12 text-center">
-                        <p className="text-sm text-muted-foreground">Keine Ergebnisse für diese Filter.</p>
-                        <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>Filter zurücksetzen</Button>
+                        <p className="text-sm text-muted-foreground">{t("decisions.noFilterResults")}</p>
+                        <Button variant="outline" size="sm" className="mt-3" onClick={clearAllFilters}>{t("decisions.resetFilters")}</Button>
                       </td>
                     </tr>
                   ) : (
@@ -519,12 +500,12 @@ const Decisions = () => {
                               {meta.needsReview && <Badge className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">Review</Badge>}
                               {meta.isBlocked && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">Blockiert</Badge>}
                             </div>
-                            <p className="text-[11px] text-muted-foreground mt-0.5">{categoryLabels[decision.category]}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{tl.categoryLabels[decision.category]}</p>
                           </td>
 
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[decision.status]}`}>
-                              {statusLabels[decision.status]}
+                              {tl.statusLabels[decision.status]}
                             </span>
                           </td>
 
@@ -542,7 +523,7 @@ const Decisions = () => {
 
                           <td className="p-3 hidden md:table-cell">
                             <span className={`text-xs font-semibold ${priorityStyles[decision.priority]}`}>
-                              {priorityLabels[decision.priority]}
+                              {tl.priorityLabels[decision.priority]}
                             </span>
                           </td>
 
@@ -586,7 +567,7 @@ const Decisions = () => {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => navigate(`/decisions/${decision.id}`)} className="gap-2">
-                                  <Eye className="w-3.5 h-3.5" /> Öffnen
+                                  <Eye className="w-3.5 h-3.5" /> {t("common.open")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {STATUS_OPTIONS.filter(s => s.value !== decision.status).slice(0, 3).map(s => (
@@ -601,10 +582,10 @@ const Decisions = () => {
                                 {user?.id === decision.created_by && (
                                   <>
                                     <DropdownMenuItem onClick={() => setEditDecision(decision)} className="gap-2">
-                                      <Pencil className="w-3.5 h-3.5" /> Bearbeiten
+                                      <Pencil className="w-3.5 h-3.5" /> {t("common.edit")}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setDeleteDecision(decision)} className="gap-2 text-destructive focus:text-destructive">
-                                      <Trash2 className="w-3.5 h-3.5" /> Löschen
+                                      <Trash2 className="w-3.5 h-3.5" /> {t("common.delete")}
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -636,18 +617,18 @@ const Decisions = () => {
                   {/* Status & Priority */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase ${statusStyles[previewDecision.status]}`}>
-                      {statusLabels[previewDecision.status]}
+                      {tl.statusLabels[previewDecision.status]}
                     </span>
                     <span className={`text-xs font-semibold ${priorityStyles[previewDecision.priority]}`}>
-                      {priorityLabels[previewDecision.priority]}
+                      {tl.priorityLabels[previewDecision.priority]}
                     </span>
-                    <span className="text-xs text-muted-foreground">{categoryLabels[previewDecision.category]}</span>
+                    <span className="text-xs text-muted-foreground">{tl.categoryLabels[previewDecision.category]}</span>
                   </div>
 
                   {/* Description */}
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Beschreibung</p>
-                    <p className="text-sm leading-relaxed">{previewDecision.description || "Keine Beschreibung"}</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t("decisions.description")}</p>
+                    <p className="text-sm leading-relaxed">{previewDecision.description || t("decisions.noDescription")}</p>
                   </div>
 
                   {/* AI Summary */}
@@ -655,11 +636,11 @@ const Decisions = () => {
                     <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
                       <div className="flex items-center gap-1.5 mb-2">
                         <Brain className="w-3.5 h-3.5 text-primary" />
-                        <p className="text-xs font-semibold text-primary">KI-Analyse</p>
+                        <p className="text-xs font-semibold text-primary">{t("decisions.aiAnalysis")}</p>
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-xs">
                         <div>
-                          <p className="text-muted-foreground">Risiko</p>
+                          <p className="text-muted-foreground">{t("decisions.risk")}</p>
                           <p className="font-bold text-lg">{previewDecision.ai_risk_score || 0}%</p>
                         </div>
                         <div>
@@ -680,7 +661,7 @@ const Decisions = () => {
 
                   {/* Quick Status Change */}
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Status ändern</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{t("decisions.changeStatus")}</p>
                     <div className="flex flex-wrap gap-1.5">
                       {STATUS_OPTIONS.map(s => (
                         <Button key={s.value} size="sm" variant={previewDecision.status === s.value ? "default" : "outline"}
@@ -701,7 +682,7 @@ const Decisions = () => {
 
                   {/* Jump to Detail */}
                   <Button className="w-full gap-2" onClick={() => { setPreviewDecision(null); navigate(`/decisions/${previewDecision.id}`); }}>
-                    <Eye className="w-4 h-4" /> Zur Detailansicht <ChevronRight className="w-4 h-4 ml-auto" />
+                    <Eye className="w-4 h-4" /> {t("decisions.toDetail")} <ChevronRight className="w-4 h-4 ml-auto" />
                   </Button>
                 </div>
               </>
