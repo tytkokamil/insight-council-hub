@@ -8,6 +8,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2, RotateCcw, Clock, Palette, Sun, Moon, Beaker } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
+import DelegationPanel from "@/components/settings/DelegationPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -346,6 +347,14 @@ const SettingsPage = () => {
                 <h2 className="text-sm font-medium mb-4">SLA-Konfiguration</h2>
                 <p className="text-xs text-muted-foreground mb-4">Eskalationszeiten und Delegationsregeln pro Kategorie und Priorität.</p>
                 <SlaConfigPanel />
+              </section>
+
+              <hr className="border-border" />
+
+              <section>
+                <h2 className="text-sm font-medium mb-4">Vertretung / Delegation</h2>
+                <p className="text-xs text-muted-foreground mb-4">Richte eine Urlaubsvertretung ein. Deine ausstehenden Reviews werden automatisch an die Vertretung weitergeleitet.</p>
+                <DelegationPanel />
               </section>
 
               <hr className="border-border" />
