@@ -522,6 +522,44 @@ export type Database = {
           },
         ]
       }
+      decision_versions: {
+        Row: {
+          change_reason: string | null
+          created_at: string
+          created_by: string
+          decision_id: string
+          id: string
+          snapshot: Json
+          version_number: number
+        }
+        Insert: {
+          change_reason?: string | null
+          created_at?: string
+          created_by: string
+          decision_id: string
+          id?: string
+          snapshot: Json
+          version_number?: number
+        }
+        Update: {
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string
+          decision_id?: string
+          id?: string
+          snapshot?: Json
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_versions_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decisions: {
         Row: {
           actual_impact_score: number | null
