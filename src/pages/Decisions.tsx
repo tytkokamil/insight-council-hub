@@ -228,9 +228,20 @@ const Decisions = () => {
     const ids = Array.from(selectedIds);
     const updates: Record<string, any> = { status: newStatus as any, updated_at: new Date().toISOString() };
     if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
+    if (newStatus === "archived") updates.archived_at = new Date().toISOString();
     const { error } = await supabase.from("decisions").update(updates).in("id", ids);
     if (!error) {
       toast.success(`${ids.length} Entscheidungen → ${statusLabels[newStatus]}`);
+      setSelectedIds(new Set());
+      invalidate();
+    }
+  };
+
+  const handleBulkTeam = async (teamId: string | null) => {
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("decisions").update({ team_id: teamId, updated_at: new Date().toISOString() } as any).in("id", ids);
+    if (!error) {
+      toast.success(`${ids.length} Entscheidungen → ${teamId ? teamMap[teamId] : "Persönlich"}`);
       setSelectedIds(new Set());
       invalidate();
     }
@@ -397,6 +408,21 @@ const Decisions = () => {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                {teams.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild><Button variant="outline" size="sm" className="text-xs h-7 gap-1.5"><UserPlus className="w-3 h-3" /> Team zuweisen</Button></DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleBulkTeam(null)}>Persönlich (kein Team)</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {teams.map(t => (
+                        <DropdownMenuItem key={t.id} onClick={() => handleBulkTeam(t.id)}>{t.name}</DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+                <Button variant="outline" size="sm" className="text-xs h-7 gap-1.5 text-warning hover:text-warning" onClick={() => handleBulkStatus("archived")}>
+                  Archivieren
+                </Button>
                 <Button variant="outline" size="sm" className="text-xs h-7 gap-1.5" onClick={() => { exportCSV(prepareExport().filter(d => selectedIds.has(d.id))); toast.success("Exportiert"); }}>
                   <Download className="w-3 h-3" /> Exportieren
                 </Button>
