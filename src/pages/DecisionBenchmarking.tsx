@@ -71,7 +71,7 @@ const DecisionBenchmarking = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vergleich</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Decision Benchmarking</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Decision Benchmarking</h1>
             <PageHint>Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen.</PageHint>
           </div>
         </div>
@@ -85,7 +85,7 @@ const DecisionBenchmarking = () => {
               <Card className="md:col-span-1">
                 <CardHeader className="pb-2"><CardTitle className="text-sm">Gesamtbewertung</CardTitle></CardHeader>
                 <CardContent className="flex flex-col items-center gap-3">
-                  <div className={`text-5xl font-bold ${scoreColor}`}>{overallScore}</div>
+                  <div className={`text-5xl font-bold tabular-nums ${scoreColor}`}>{overallScore}</div>
                   <Badge variant={overallScore >= 75 ? "default" : overallScore >= 50 ? "secondary" : "destructive"}>{scoreLabel}</Badge>
                   <Progress value={overallScore} className="w-full" />
                 </CardContent>
@@ -104,7 +104,7 @@ const DecisionBenchmarking = () => {
             </div>
 
             {/* Charts – collapsible */}
-            <CollapsibleSection title="Vergleichs-Charts" subtitle="Radar und Balkendiagramm" icon={<BarChart3 className="w-4 h-4 text-primary" />} defaultOpen={true}>
+            <CollapsibleSection title="Vergleichs-Charts" subtitle="Radar und Balkendiagramm" icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
               <Tabs defaultValue="radar">
                 <TabsList>
                   <TabsTrigger value="radar">Radar-Vergleich</TabsTrigger>
@@ -112,10 +112,10 @@ const DecisionBenchmarking = () => {
                   <TabsTrigger value="detail">Detail-Tabelle</TabsTrigger>
                 </TabsList>
                 <TabsContent value="radar">
-                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="hsl(var(--border))" /><PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Ihr Unternehmen" dataKey="Ihr Unternehmen" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} /><Radar name="Branchen-Ø" dataKey="Branchen-Ø" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} /><Radar name="Top 10%" dataKey="Top 10%" stroke="#10b981" fill="#10b981" fillOpacity={0.1} /><Legend /></RadarChart></ResponsiveContainer></div></CardContent></Card>
+                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="hsl(var(--border))" /><PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name="Ihr Unternehmen" dataKey="Ihr Unternehmen" stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.2} /><Radar name="Branchen-Ø" dataKey="Branchen-Ø" stroke="hsl(var(--muted-foreground))" fill="hsl(var(--muted-foreground))" fillOpacity={0.1} /><Radar name="Top 10%" dataKey="Top 10%" stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.1} /><Legend /></RadarChart></ResponsiveContainer></div></CardContent></Card>
                 </TabsContent>
                 <TabsContent value="bar">
-                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={barData} layout="vertical" margin={{ left: 120 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={110} /><Tooltip /><Bar dataKey="Unternehmen" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} /><Bar dataKey="Branchen-Ø" fill="#f59e0b" radius={[0, 4, 4, 0]} /><Bar dataKey="Top 10%" fill="#10b981" radius={[0, 4, 4, 0]} /><Legend /></BarChart></ResponsiveContainer></div></CardContent></Card>
+                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={barData} layout="vertical" margin={{ left: 120 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={110} /><Tooltip /><Bar dataKey="Unternehmen" fill="hsl(var(--foreground))" radius={[0, 4, 4, 0]} /><Bar dataKey="Branchen-Ø" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} /><Bar dataKey="Top 10%" fill="hsl(var(--success))" radius={[0, 4, 4, 0]} /><Legend /></BarChart></ResponsiveContainer></div></CardContent></Card>
                 </TabsContent>
                 <TabsContent value="detail">
                   <Card><CardContent className="pt-6"><div className="overflow-auto"><table className="w-full text-sm"><thead><tr className="border-b"><th className="text-left py-2 px-3 font-medium text-muted-foreground">Metrik</th><th className="text-center py-2 px-3 font-medium text-muted-foreground">Ihr Wert</th><th className="text-center py-2 px-3 font-medium text-muted-foreground">Branchen-Ø</th><th className="text-center py-2 px-3 font-medium text-muted-foreground">Top 10%</th><th className="text-center py-2 px-3 font-medium text-muted-foreground">Bewertung</th></tr></thead><tbody>
@@ -129,7 +129,7 @@ const DecisionBenchmarking = () => {
             </CollapsibleSection>
 
             {/* Recommendations – collapsible, default closed */}
-            <CollapsibleSection title="Empfehlungen" subtitle="Verbesserungspotenziale" icon={<Zap className="w-4 h-4 text-primary" />} defaultOpen={false}>
+            <CollapsibleSection title="Empfehlungen" subtitle="Verbesserungspotenziale" icon={<Zap className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
               <Card><CardContent className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {Object.entries(METRIC_LABELS).map(([key, meta]) => {

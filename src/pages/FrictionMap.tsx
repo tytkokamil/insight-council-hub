@@ -121,7 +121,7 @@ const FrictionMap = () => {
       <AppLayout>
         <div className="mb-6">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
-          <h1 className="font-display text-xl font-bold">Friction Map</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Friction Map</h1>
         </div>
         <EmptyAnalysisState icon={Flame} title="Keine Friction-Daten" description="Erstelle Teams und weise ihnen Entscheidungen oder Aufgaben zu." ctaLabel="Teams erstellen" ctaRoute="/teams" hint="Friction wird automatisch analysiert" />
       </AppLayout>
@@ -133,7 +133,7 @@ const FrictionMap = () => {
       <div className="mb-8">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold">Friction Map</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Friction Map</h1>
           <PageHint>Erkennt Reibungspunkte im Entscheidungs- und Aufgabenprozess pro Team.</PageHint>
         </div>
       </div>
@@ -141,7 +141,7 @@ const FrictionMap = () => {
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: Users, label: "Teams analysiert", value: teamFriction.length, color: "text-primary" },
+          { icon: Users, label: "Teams analysiert", value: teamFriction.length, color: "text-foreground" },
           { icon: Flame, label: "Höchste Reibung", value: teamFriction[0]?.frictionScore ?? 0, color: "text-destructive", suffix: "/100" },
           { icon: GitPullRequest, label: "Review-Loops gesamt", value: teamFriction.reduce((s, t) => s + t.reviewLoops, 0), color: "text-warning" },
           { icon: AlertTriangle, label: "Cross-Team Konflikte", value: crossFriction.filter(c => c.frictionLevel === "high" || c.frictionLevel === "critical").length, color: "text-destructive" },
@@ -151,7 +151,7 @@ const FrictionMap = () => {
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
             </div>
-            <p className="font-display text-2xl font-bold">{card.value}{card.suffix || ""}</p>
+            <p className="text-2xl font-bold tabular-nums">{card.value}{card.suffix || ""}</p>
           </div>
         ))}
       </div>
@@ -160,7 +160,7 @@ const FrictionMap = () => {
       <div className="flex items-center gap-2 mb-6">
         <span className="text-xs text-muted-foreground">Ansicht:</span>
         {([{ key: "teams" as const, label: "Team-Ranking" }, { key: "heatmap" as const, label: "Heatmap" }]).map(v => (
-          <button key={v.key} onClick={() => setView(v.key)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${view === v.key ? "bg-primary/20 text-primary font-medium" : "text-muted-foreground hover:bg-muted/30"}`}>{v.label}</button>
+          <button key={v.key} onClick={() => setView(v.key)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${view === v.key ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:bg-muted/30"}`}>{v.label}</button>
         ))}
       </div>
 
@@ -186,7 +186,7 @@ const FrictionMap = () => {
                         <div className={`h-full rounded-full ${frictionColor(team.frictionScore)}`} style={{ width: `${(team.frictionScore / maxFriction) * 100}%` }} />
                       </div>
                     </div>
-                    <div className={`text-right shrink-0 w-16 font-display text-lg font-bold ${frictionTextColor(team.frictionScore)}`}>{team.frictionScore}</div>
+                    <div className={`text-right shrink-0 w-16 text-lg font-bold tabular-nums ${frictionTextColor(team.frictionScore)}`}>{team.frictionScore}</div>
                   </div>
                 </div>
               ))}
@@ -219,7 +219,7 @@ const FrictionMap = () => {
       )}
 
       {view === "heatmap" && (
-        <CollapsibleSection title="Friction Heatmap: Team × Kategorie" icon={<BarChart3 className="w-4 h-4 text-primary" />} defaultOpen={true}>
+        <CollapsibleSection title="Friction Heatmap: Team × Kategorie" icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
           <div className="rounded-lg border border-border bg-card p-5 overflow-x-auto">
             {heatmapData.teams.length > 0 ? (
               <table className="w-full text-xs">

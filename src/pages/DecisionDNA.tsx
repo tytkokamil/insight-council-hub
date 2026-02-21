@@ -115,7 +115,7 @@ const DecisionDNA = () => {
   if (traits.length === 0) {
     return (
       <AppLayout>
-        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p><h1 className="font-display text-xl font-bold">Decision DNA</h1></div>
+        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p><h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1></div>
         <EmptyAnalysisState icon={Dna} title="Noch keine DNA-Daten" description="Erstelle Entscheidungen für die DNA-Analyse." hint="Mindestens eine Entscheidung benötigt" />
       </AppLayout>
     );
@@ -126,19 +126,19 @@ const DecisionDNA = () => {
       <div className="mb-8">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold">Decision DNA</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1>
           <PageHint>Tiefenanalyse deiner Entscheidungsmuster mit konkreten Handlungsempfehlungen.</PageHint>
         </div>
       </div>
 
       {/* Archetype – always visible */}
-      <Card className="mb-8 border-primary/20">
+      <Card className="mb-8">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center"><Dna className="w-6 h-6 text-primary" /></div>
+            <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center"><Dna className="w-6 h-6 text-foreground" /></div>
             <div>
               <p className="text-xs text-muted-foreground">Organisations-Archetyp</p>
-              <h2 className="font-display text-2xl font-bold">{overallArchetype}</h2>
+              <h2 className="text-2xl font-semibold tracking-tight">{overallArchetype}</h2>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{archetypeDescription}</p>
@@ -150,7 +150,7 @@ const DecisionDNA = () => {
       </Card>
 
       {/* DNA Traits – collapsible */}
-      <CollapsibleSection title="Organisations-Merkmale" subtitle={`${traits.length} Dimensionen analysiert`} icon={<Dna className="w-4 h-4 text-primary" />} defaultOpen={true} className="mb-8">
+      <CollapsibleSection title="Organisations-Merkmale" subtitle={`${traits.length} Dimensionen analysiert`} icon={<Dna className="w-4 h-4 text-muted-foreground" />} defaultOpen={true} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {traits.map((trait) => (
             <Card key={trait.id} className={`border ${sentimentBg(trait.sentiment)}`}>
@@ -161,7 +161,7 @@ const DecisionDNA = () => {
                     <p className="text-sm font-semibold">{trait.label}</p>
                     <p className="text-[10px] text-muted-foreground">{trait.description}</p>
                   </div>
-                  <span className={`font-display text-xl font-bold ${sentimentColor(trait.sentiment)}`}>{trait.score}</span>
+                  <span className={`text-xl font-bold tabular-nums ${sentimentColor(trait.sentiment)}`}>{trait.score}</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
                   <div className={`h-full rounded-full ${scoreBarColor(trait.score)}`} style={{ width: `${trait.score}%` }} />
@@ -174,7 +174,7 @@ const DecisionDNA = () => {
       </CollapsibleSection>
 
       {/* Category Speed Profile – collapsible, default closed */}
-      <CollapsibleSection title="Geschwindigkeitsprofil nach Kategorie" icon={<Clock className="w-4 h-4 text-warning" />} defaultOpen={false} className="mb-8">
+      <CollapsibleSection title="Geschwindigkeitsprofil nach Kategorie" icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-8">
         <Card>
           <CardContent className="p-5">
             <div className="space-y-3">
@@ -197,12 +197,12 @@ const DecisionDNA = () => {
       </CollapsibleSection>
 
       {/* Recommendations – collapsible, default closed */}
-      <CollapsibleSection title="Empfehlungen" subtitle="Basierend auf Schwachstellen" icon={<ArrowRight className="w-4 h-4 text-primary" />} defaultOpen={false}>
+      <CollapsibleSection title="Empfehlungen" subtitle="Basierend auf Schwachstellen" icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
         <div className="space-y-2">
           {traits.filter(t => t.sentiment === "negative").map((trait) => (
             <Card key={trait.id}>
               <CardContent className="p-4 flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <ArrowRight className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
                   <p className="text-sm font-medium">{trait.label} verbessern</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{trait.insight}</p>

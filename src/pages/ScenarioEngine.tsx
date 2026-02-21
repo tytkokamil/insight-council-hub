@@ -164,7 +164,7 @@ const ScenarioEngine = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Simulation</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Scenario Engine</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Scenario Engine</h1>
             <PageHint>
               Simuliere, was passiert wenn Entscheidungen verschoben werden. Wähle einzelne oder alle Entscheidungen und passe die Verzögerung an, um Kaskadeneffekte und Kosten zu berechnen.
             </PageHint>
@@ -261,10 +261,10 @@ const ScenarioEngine = () => {
 
                 {/* AI Insight */}
                 {result.aiInsights && (
-                  <Card className="border-primary/30 bg-primary/5">
+                  <Card className="border-border bg-muted/5">
                     <CardContent className="pt-4">
                       <div className="flex items-start gap-3">
-                        <FlaskConical className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                        <FlaskConical className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                         <div>
                           <p className="text-sm font-medium mb-1">KI-Empfehlung</p>
                           <p className="text-sm text-muted-foreground">{result.aiInsights}</p>
@@ -277,7 +277,7 @@ const ScenarioEngine = () => {
                 <CollapsibleSection
                   title="Detailanalyse"
                   subtitle="Charts & Kaskadeneffekte"
-                  icon={<GitBranch className="w-4 h-4 text-primary" />}
+                  icon={<GitBranch className="w-4 h-4 text-muted-foreground" />}
                 >
                 <Tabs defaultValue="timeline">
                   <TabsList>
@@ -299,7 +299,7 @@ const ScenarioEngine = () => {
                               <Tooltip formatter={(val: number, name: string) => [name.includes("Cost") || name.includes("Kosten") ? `€${val.toLocaleString()}` : `${val}%`, name]} />
                               <Legend />
                               <Line yAxisId="cost" type="monotone" dataKey="cumulativeCost" stroke="hsl(var(--primary))" strokeWidth={2} name="Kumulative Kosten" dot={false} />
-                              <Line yAxisId="risk" type="monotone" dataKey="riskLevel" stroke="#ef4444" strokeWidth={2} name="Risikoniveau" dot={false} />
+                              <Line yAxisId="risk" type="monotone" dataKey="riskLevel" stroke="hsl(var(--destructive))" strokeWidth={2} name="Risikoniveau" dot={false} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -318,8 +318,8 @@ const ScenarioEngine = () => {
                               <YAxis dataKey="decision.title" type="category" width={150} tick={{ fontSize: 11 }} />
                               <Tooltip formatter={(val: number) => [`€${val.toLocaleString()}`, "Kosten"]} />
                               <Bar dataKey="totalCost" name="Gesamtkosten" radius={[0, 4, 4, 0]}>
-                                {result.impacts.slice(0, 10).map((entry, i) => (
-                                  <Cell key={i} fill={entry.severity === "critical" ? "#ef4444" : entry.severity === "high" ? "#f97316" : entry.severity === "medium" ? "#eab308" : "#22c55e"} />
+                                 {result.impacts.slice(0, 10).map((entry, i) => (
+                                   <Cell key={i} fill={entry.severity === "critical" ? "hsl(var(--destructive))" : entry.severity === "high" ? "hsl(var(--warning))" : entry.severity === "medium" ? "hsl(var(--muted-foreground))" : "hsl(var(--success))"} />
                                 ))}
                               </Bar>
                             </BarChart>

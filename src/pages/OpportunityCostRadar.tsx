@@ -48,7 +48,7 @@ const OpportunityCostRadar = () => {
       <div className="mb-8">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold">Opportunity Cost Radar</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Opportunity Cost Radar</h1>
           <PageHint>Berechnet tägliche Verzögerungskosten offener Entscheidungen.</PageHint>
         </div>
       </div>
@@ -57,17 +57,17 @@ const OpportunityCostRadar = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><Flame className="w-4 h-4 text-destructive" /><span className="text-xs text-muted-foreground">Tägliche Verluste</span></div>
-          <p className="font-display text-3xl font-bold text-destructive">{totalDailyCost.toLocaleString("de-DE")} €</p>
+          <p className="text-3xl font-bold tabular-nums text-destructive">{totalDailyCost.toLocaleString("de-DE")} €</p>
           <p className="text-[10px] text-muted-foreground mt-1">pro Tag durch offene Entscheidungen</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-warning" /><span className="text-xs text-muted-foreground">Kumulierte Kosten</span></div>
-          <p className="font-display text-3xl font-bold text-warning">{totalAccumulated.toLocaleString("de-DE")} €</p>
+          <p className="text-3xl font-bold tabular-nums text-warning">{totalAccumulated.toLocaleString("de-DE")} €</p>
           <p className="text-[10px] text-muted-foreground mt-1">bisher aufgelaufen</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><Timer className="w-4 h-4 text-primary" /><span className="text-xs text-muted-foreground">Offene Entscheidungen</span></div>
-          <p className="font-display text-3xl font-bold">{entries.length}</p>
+          <p className="text-3xl font-bold tabular-nums">{entries.length}</p>
           <p className="text-[10px] text-muted-foreground mt-1">davon {entries.filter(e => e.isOverdue).length} überfällig</p>
         </CardContent></Card>
       </div>
@@ -78,13 +78,13 @@ const OpportunityCostRadar = () => {
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xs text-muted-foreground">Sortieren:</span>
           {([{ key: "urgency", label: "Dringlichkeit" }, { key: "daily", label: "€/Tag" }, { key: "total", label: "Kumuliert" }] as const).map(s => (
-            <button key={s.key} onClick={() => setSortBy(s.key)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${sortBy === s.key ? "bg-primary/20 text-primary font-medium" : "text-muted-foreground hover:bg-muted/30"}`}>{s.label}</button>
+            <button key={s.key} onClick={() => setSortBy(s.key)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${sortBy === s.key ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:bg-muted/30"}`}>{s.label}</button>
           ))}
         </div>
 
         <div className="space-y-2">
           {sorted.map((entry, i) => (
-            <Card key={entry.id} className="hover:border-primary/20 transition-colors">
+            <Card key={entry.id} className="hover:border-foreground/15 transition-colors">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${i < 3 ? "bg-destructive/20 text-destructive" : "bg-muted/30 text-muted-foreground"}`}>{i + 1}</div>

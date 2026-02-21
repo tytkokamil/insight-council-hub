@@ -180,7 +180,7 @@ const PredictiveTimeline = () => {
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
           <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Predictive Timeline</h1>
+            <h1 className="text-xl font-semibold tracking-tight">Predictive Timeline</h1>
             <PageHint>
               KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten.
             </PageHint>
@@ -203,28 +203,28 @@ const PredictiveTimeline = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">Offene Entscheidungen</p>
-                <p className="text-xl font-bold font-display">{decisions.length}</p>
+                <p className="text-xl font-bold tabular-nums">{decisions.length}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">Ø Tage bis Abschluss</p>
-                <p className="text-xl font-bold font-display">{avgPredicted}</p>
+                <p className="text-xl font-bold tabular-nums">{avgPredicted}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3 text-warning" /> Gefährdet
                 </p>
-                <p className="text-xl font-bold font-display text-warning">{atRisk}</p>
+                <p className="text-xl font-bold tabular-nums text-warning">{atRisk}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">Ø Konfidenz</p>
-                <p className="text-xl font-bold font-display">{avgConfidence}%</p>
+                <p className="text-xl font-bold tabular-nums">{avgConfidence}%</p>
               </div>
             </div>
 
             <CollapsibleSection
               title="Gantt-Prognose"
               subtitle="Timeline aller offenen Entscheidungen"
-              icon={<BarChart3 className="w-4 h-4 text-primary" />}
+              icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />}
             >
             {/* Sort Controls */}
             <div className="flex gap-2 mb-4">
@@ -237,7 +237,7 @@ const PredictiveTimeline = () => {
                   key={s.key}
                   onClick={() => setSortBy(s.key)}
                   className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
-                    sortBy === s.key ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                    sortBy === s.key ? "bg-foreground/10 text-foreground font-medium" : "bg-muted/50 text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {s.label}
