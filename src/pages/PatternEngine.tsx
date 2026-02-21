@@ -13,6 +13,7 @@ import { differenceInDays, parseISO } from "date-fns";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 
 interface DecisionProfile {
   profileId: string;
@@ -246,6 +247,21 @@ const PatternEngine = () => {
             </Card>
           </div>
         </CollapsibleSection>
+
+        {/* AI Deep Analysis */}
+        <AiInsightPanel
+          type="pattern"
+          context={{
+            totalDecisions: patterns.totalDecisions,
+            avgSpeed: patterns.avgSpeed,
+            escalationRate: Math.round(patterns.escalationRate),
+            impactAccuracy: patterns.impactAccuracy,
+            categoryStats: patterns.categoryStats,
+            priorityStats: patterns.priorityStats,
+            statusCounts: patterns.statusCounts,
+            insightCount: patterns.insights.length,
+          }}
+        />
 
         {/* Recommendations – collapsible, default closed */}
         {patterns.recommendations.length > 0 && (

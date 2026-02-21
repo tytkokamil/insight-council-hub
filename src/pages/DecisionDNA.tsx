@@ -12,6 +12,7 @@ import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { motion } from "framer-motion";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 
 interface Trait { id: string; label: string; description: string; score: number; sentiment: "positive" | "negative" | "neutral"; icon: any; insight: string; }
 interface CategoryProfile { category: string; label: string; avgDays: number; total: number; implementRate: number; escalationRate: number; }
@@ -195,6 +196,20 @@ const DecisionDNA = () => {
           </CardContent>
         </Card>
       </CollapsibleSection>
+
+      {/* AI Deep Analysis */}
+      <AiInsightPanel
+        type="dna"
+        context={{
+          archetype: overallArchetype,
+          archetypeDescription,
+          traits: traits.map(t => ({ label: t.label, score: t.score, sentiment: t.sentiment, insight: t.insight })),
+          categoryProfiles,
+          strengths: traits.filter(t => t.sentiment === "positive").length,
+          weaknesses: traits.filter(t => t.sentiment === "negative").length,
+        }}
+        className="mb-8"
+      />
 
       {/* Recommendations – collapsible, default closed */}
       <CollapsibleSection title="Empfehlungen" subtitle="Basierend auf Schwachstellen" icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
