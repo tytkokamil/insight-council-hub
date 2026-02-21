@@ -40,14 +40,16 @@ import StrategyLinkPanel from "@/components/decisions/StrategyLinkPanel";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 
-const statusOptions = ["draft", "review", "approved", "implemented", "rejected"] as const;
+const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
+  proposed: "bg-accent text-accent-foreground",
   review: "bg-warning/20 text-warning",
   approved: "bg-success/20 text-success",
-  implemented: "bg-primary/20 text-primary",
   rejected: "bg-destructive/20 text-destructive",
+  implemented: "bg-primary/20 text-primary",
+  archived: "bg-muted/50 text-muted-foreground/60",
 };
 
 const priorityStyles: Record<string, string> = {

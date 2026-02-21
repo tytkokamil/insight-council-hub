@@ -13,10 +13,12 @@ import { priorityColor, statusDot } from "./CalendarConstants";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Entwurf" },
+  { value: "proposed", label: "Vorschlag" },
   { value: "review", label: "Review" },
   { value: "approved", label: "Genehmigt" },
-  { value: "implemented", label: "Umgesetzt" },
   { value: "rejected", label: "Abgelehnt" },
+  { value: "implemented", label: "Umgesetzt" },
+  { value: "archived", label: "Archiviert" },
 ];
 
 const PRIORITY_OPTIONS = [

@@ -6,10 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Entwurf",
+  proposed: "Vorschlag",
   review: "In Review",
   approved: "Genehmigt",
-  implemented: "Umgesetzt",
   rejected: "Abgelehnt",
+  implemented: "Umgesetzt",
+  archived: "Archiviert",
 };
 
 const PRIORITY_LABELS: Record<string, string> = {

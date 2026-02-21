@@ -1088,10 +1088,12 @@ export type Database = {
       decision_priority: "low" | "medium" | "high" | "critical"
       decision_status:
         | "draft"
+        | "proposed"
         | "review"
         | "approved"
         | "implemented"
         | "rejected"
+        | "archived"
       task_category:
         | "general"
         | "strategic"
@@ -1242,10 +1244,12 @@ export const Constants = {
       decision_priority: ["low", "medium", "high", "critical"],
       decision_status: [
         "draft",
+        "proposed",
         "review",
         "approved",
         "implemented",
         "rejected",
+        "archived",
       ],
       task_category: [
         "general",

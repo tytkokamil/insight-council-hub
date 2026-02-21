@@ -12,10 +12,12 @@ const PRIORITY_LABELS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "Entwurf",
+  proposed: "Vorschlag",
   review: "Review",
   approved: "Genehmigt",
-  implemented: "Umgesetzt",
   rejected: "Abgelehnt",
+  implemented: "Umgesetzt",
+  archived: "Archiviert",
 };
 
 const CalendarLegend = memo(() => (
