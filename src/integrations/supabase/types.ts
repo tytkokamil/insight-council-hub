@@ -796,6 +796,7 @@ export type Database = {
           feature_key: string
           id: string
           label: string
+          min_plan: string
           updated_at: string
         }
         Insert: {
@@ -806,6 +807,7 @@ export type Database = {
           feature_key: string
           id?: string
           label: string
+          min_plan?: string
           updated_at?: string
         }
         Update: {
@@ -816,6 +818,7 @@ export type Database = {
           feature_key?: string
           id?: string
           label?: string
+          min_plan?: string
           updated_at?: string
         }
         Relationships: []
@@ -1665,6 +1668,10 @@ export type Database = {
     }
     Functions: {
       get_active_delegate: { Args: { _user_id: string }; Returns: string }
+      get_dashboard_kpis: {
+        Args: { _team_id?: string; _user_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["org_role"]

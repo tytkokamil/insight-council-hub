@@ -41,6 +41,7 @@ export const useTasks = () => {
       return (data ?? []) as Task[];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 };
 
@@ -57,6 +58,7 @@ export const useTeamTasks = (teamId: string) => {
       return (data ?? []) as Task[];
     },
     staleTime: 30_000,
+    gcTime: 5 * 60_000,
   });
 };
 

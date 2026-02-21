@@ -2,9 +2,10 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Beaker, BarChart3, Brain, Zap } from "lucide-react";
+import { Shield, Beaker, BarChart3, Brain, Zap, Lock } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const categoryConfig: Record<string, { label: string; icon: React.ElementType; description: string }> = {
   core: { label: "Kern-Module", icon: Shield, description: "Essenzielle Funktionen für den täglichen Betrieb" },
@@ -99,6 +100,17 @@ const PilotSettings = () => {
                                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                                   Kern
                                 </Badge>
+                              )}
+                              {flag.min_plan !== "starter" && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 capitalize">
+                                      <Lock className="w-2.5 h-2.5" />
+                                      {flag.min_plan}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Ab Plan „{flag.min_plan}" verfügbar</TooltipContent>
+                                </Tooltip>
                               )}
                             </div>
                             {flag.description && (
