@@ -4,10 +4,16 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
-import { decisionTemplates, getTemplateByCategory, type DecisionTemplate, type RequiredField } from "@/lib/decisionTemplates";
+import {
+  decisionTemplates, getTemplateByCategory, evaluateConditionalRules,
+  type DecisionTemplate, type RequiredField,
+} from "@/lib/decisionTemplates";
 import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
 import ReviewFlowSelector from "./ReviewFlowSelector";
-import { FileText, Users, Shield, AlertCircle, Lightbulb, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  FileText, Users, Shield, AlertCircle, Lightbulb, ThumbsUp, ThumbsDown,
+  ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
@@ -25,6 +31,15 @@ const categoryLabels: Record<string, string> = {
   technical: "Technisch", operational: "Operativ", marketing: "Marketing",
 };
 
+const priorityLabels: Record<string, string> = {
+  low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch",
+};
+
+const categoryIcons: Record<string, string> = {
+  strategic: "🎯", budget: "💰", hr: "👥",
+  technical: "⚙️", operational: "📋", marketing: "📣",
+};
+
 const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
@@ -37,14 +52,43 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showTemplates, setShowTemplates] = useState(true);
+  const [step, setStep] = useState<"template" | "form">("template");
   const [selectedTemplate, setSelectedTemplate] = useState<DecisionTemplate | null>(null);
   const [extraFields, setExtraFields] = useState<Record<string, string>>({});
   const [showRecommendations, setShowRecommendations] = useState(false);
+  const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
   
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
   const [selectedReviewFlow, setSelectedReviewFlow] = useState<ReviewFlowTemplate | null>(null);
+
+  // Evaluate conditional rules based on current form state
+  const conditionalResult = useMemo(() => {
+    return evaluateConditionalRules(selectedTemplate?.conditionalRules, {
+      priority,
+      category,
+      extraFields,
+    });
+  }, [selectedTemplate, priority, category, extraFields]);
+
+  // Merge base + conditional fields
+  const allRequiredFields = useMemo(() => {
+    if (!selectedTemplate) return [];
+    const base = selectedTemplate.requiredFields;
+    const extra = conditionalResult.extraFields;
+    // Avoid duplicates
+    const keys = new Set(base.map(f => f.key));
+    return [...base, ...extra.filter(f => !keys.has(f.key))];
+  }, [selectedTemplate, conditionalResult.extraFields]);
+
+  // Merge base + conditional approval steps
+  const allApprovalSteps = useMemo(() => {
+    if (!selectedTemplate) return [];
+    const base = selectedTemplate.approvalSteps;
+    const extra = conditionalResult.extraApprovalSteps;
+    const labels = new Set(base.map(s => s.label));
+    return [...base, ...extra.filter(s => !labels.has(s.label))];
+  }, [selectedTemplate, conditionalResult.extraApprovalSteps]);
 
   // Fetch lessons learned for recommendations
   const { data: lessonsWithDecisions = [] } = useQuery({
@@ -116,10 +160,14 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setSelectedTemplate(t);
     setExtraFields({});
     setValidationErrors([]);
-    setShowTemplates(false);
-    // Auto-suggest review flow based on template
+    setStep("form");
     const suggested = suggestReviewFlow(t.category, t.priority);
     setReviewFlowId(suggested);
+  };
+
+  const startWithoutTemplate = () => {
+    setSelectedTemplate(null);
+    setStep("form");
   };
 
   const handleCategoryChange = (newCat: string) => {
@@ -130,7 +178,6 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       setExtraFields({});
       setValidationErrors([]);
     }
-    // Update review flow suggestion
     setReviewFlowId(suggestReviewFlow(newCat, priority));
   };
 
@@ -142,7 +189,6 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const handleTeamChange = async (newTeamId: string) => {
     setTeamId(newTeamId);
     if (!newTeamId) return;
-    // Fetch and apply team defaults
     const { data } = await supabase
       .from("team_defaults")
       .select("*")
@@ -157,7 +203,6 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         due.setDate(due.getDate() + data.default_sla_days);
         setDueDate(due.toISOString().split("T")[0]);
       }
-      // Update template if category changed
       const tpl = getTemplateByCategory(data.default_category);
       if (tpl) {
         setSelectedTemplate(tpl);
@@ -172,9 +217,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   };
 
   const validateRequiredFields = (): boolean => {
-    if (!selectedTemplate) return true;
     const missing: string[] = [];
-    selectedTemplate.requiredFields.forEach(f => {
+    allRequiredFields.forEach(f => {
       if (!extraFields[f.key]?.trim()) missing.push(f.label);
     });
     setValidationErrors(missing);
@@ -194,13 +238,17 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     const contextParts: string[] = [];
     if (description.trim()) contextParts.push(description.trim());
     if (selectedTemplate) {
-      selectedTemplate.requiredFields.forEach(f => {
+      allRequiredFields.forEach(f => {
         const val = extraFields[f.key]?.trim();
         if (val) contextParts.push(`**${f.label}:** ${val}`);
       });
       if (selectedTemplate.governanceNotes) {
         contextParts.push(`\n---\n_Governance: ${selectedTemplate.governanceNotes}_`);
       }
+      // Add triggered governance hints
+      conditionalResult.governanceHints.forEach(hint => {
+        contextParts.push(`_⚠️ ${hint}_`);
+      });
     }
 
     const { data, error: err } = await supabase.from("decisions").insert([{
@@ -225,7 +273,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
           new_value: title.trim(),
         });
 
-        // Auto-create review steps from selected Review-Flow
+        // Auto-create review steps from selected Review-Flow + conditional approval steps
         const { reviewFlowTemplates } = await import("@/lib/reviewFlowTemplates");
         const flow = reviewFlowTemplates.find(f => f.id === reviewFlowId);
         if (flow && flow.steps.length > 0) {
@@ -247,7 +295,18 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               step_order: i + 1,
               status: "review" as const,
             }));
-            await supabase.from("decision_reviews").insert(reviewSteps);
+
+            // Add conditional approval steps
+            const extraSteps = conditionalResult.extraApprovalSteps.map((s, i) => ({
+              decision_id: data.id,
+              reviewer_id: availableMembers.length > 0
+                ? availableMembers[(flowSteps.length + i) % availableMembers.length]
+                : user.id,
+              step_order: flowSteps.length + i + 1,
+              status: "review" as const,
+            }));
+
+            await supabase.from("decision_reviews").insert([...reviewSteps, ...extraSteps]);
           } else {
             const reviewSteps = flowSteps.map((step, i) => ({
               decision_id: data.id,
@@ -268,228 +327,357 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
   const resetForm = () => {
     setTitle(""); setDescription(""); setCategory("operational"); setPriority("medium");
-    setDueDate(""); setTeamId(""); setShowTemplates(true); setSelectedTemplate(null);
-    setExtraFields({}); setValidationErrors([]);
+    setDueDate(""); setTeamId(""); setStep("template"); setSelectedTemplate(null);
+    setExtraFields({}); setValidationErrors([]); setExpandedTemplate(null);
     setReviewFlowId(suggestReviewFlow("operational", "medium")); setSelectedReviewFlow(null);
   };
 
-  const renderExtraField = (field: RequiredField) => {
+  const renderExtraField = (field: RequiredField, isConditional = false) => {
     const hasError = validationErrors.includes(field.label);
     const baseClass = `w-full px-3 rounded-lg bg-muted/50 border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm ${hasError ? "border-destructive" : "border-border"}`;
 
-    if (field.type === "textarea") {
-      return (
-        <textarea
-          value={extraFields[field.key] || ""}
-          onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-          placeholder={field.placeholder}
-          className={`${baseClass} h-20 resize-none py-2`}
-        />
-      );
-    }
-    if (field.type === "select" && field.options) {
-      return (
-        <select
-          value={extraFields[field.key] || ""}
-          onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-          className={`${baseClass} h-10`}
-        >
-          <option value="" className="bg-card">Bitte wählen...</option>
-          {field.options.map(o => (
-            <option key={o.value} value={o.value} className="bg-card">{o.label}</option>
-          ))}
-        </select>
-      );
-    }
     return (
-      <input
-        type="text"
-        value={extraFields[field.key] || ""}
-        onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
-        placeholder={field.placeholder}
-        className={`${baseClass} h-10`}
-      />
+      <div key={field.key}>
+        <label className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+          {field.label} <span className="text-destructive">*</span>
+          {isConditional && (
+            <Badge variant="outline" className="text-[9px] ml-1 px-1 py-0 border-warning/40 text-warning">
+              <Zap className="w-2.5 h-2.5 mr-0.5" />bedingt
+            </Badge>
+          )}
+        </label>
+        {field.type === "textarea" ? (
+          <textarea
+            value={extraFields[field.key] || ""}
+            onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+            placeholder={field.placeholder}
+            className={`${baseClass} h-20 resize-none py-2`}
+          />
+        ) : field.type === "select" && field.options ? (
+          <select
+            value={extraFields[field.key] || ""}
+            onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+            className={`${baseClass} h-10`}
+          >
+            <option value="" className="bg-card">Bitte wählen...</option>
+            {field.options.map(o => (
+              <option key={o.value} value={o.value} className="bg-card">{o.label}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type="text"
+            value={extraFields[field.key] || ""}
+            onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
+            placeholder={field.placeholder}
+            className={`${baseClass} h-10`}
+          />
+        )}
+      </div>
     );
   };
 
   const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
 
+  // ─── Template Selection Step ───
+  const renderTemplateStep = () => (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">
+        Wähle ein Template für strukturierte Governance oder starte frei.
+      </p>
+      <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+        {decisionTemplates.map((t) => {
+          const isExpanded = expandedTemplate === t.category;
+          return (
+            <div
+              key={t.category}
+              className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40"
+            >
+              {/* Card header – always visible */}
+              <button
+                type="button"
+                onClick={() => setExpandedTemplate(isExpanded ? null : t.category)}
+                className="w-full text-left p-3 flex items-start gap-3"
+              >
+                <span className="text-xl mt-0.5">{categoryIcons[t.category] || "📄"}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm font-semibold">{t.name}</span>
+                    <Badge variant="outline" className="text-[10px] capitalize">{priorityLabels[t.priority]}</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{t.requiredFields.length} Pflichtfelder</span>
+                    <span className="flex items-center gap-1"><CheckSquare className="w-3 h-3" />{t.approvalSteps.length} Approval-Stufen</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{t.defaultDurationDays} Tage</span>
+                    {t.conditionalRules && t.conditionalRules.length > 0 && (
+                      <span className="flex items-center gap-1 text-warning"><Zap className="w-3 h-3" />{t.conditionalRules.length} Regeln</span>
+                    )}
+                  </div>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Expanded preview */}
+              {isExpanded && (
+                <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+                  {t.whenToUse && (
+                    <p className="text-xs text-primary/80 italic">💡 {t.whenToUse}</p>
+                  )}
+
+                  {/* Required fields preview */}
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Pflichtfelder</p>
+                    <div className="flex flex-wrap gap-1">
+                      {t.requiredFields.map(f => (
+                        <span key={f.key} className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground border border-border">
+                          {f.label}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Approval steps preview */}
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Freigabe-Stufen</p>
+                    <div className="flex items-center gap-1.5">
+                      {t.approvalSteps.map((s, i) => (
+                        <span key={i} className="flex items-center gap-1">
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${s.required ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}>
+                            {s.label}
+                          </span>
+                          {i < t.approvalSteps.length - 1 && <span className="text-muted-foreground text-[10px]">→</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Conditional rules preview */}
+                  {t.conditionalRules && t.conditionalRules.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Bedingte Regeln</p>
+                      <div className="space-y-1">
+                        {t.conditionalRules.map((r, i) => (
+                          <p key={i} className="text-[10px] text-warning/80 flex items-start gap-1">
+                            <Zap className="w-3 h-3 shrink-0 mt-0.5" />
+                            {r.governanceHint || `Wenn ${r.when} ${r.operator} ${Array.isArray(r.value) ? r.value.join("/") : r.value}`}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Governance note */}
+                  {t.governanceNotes && (
+                    <p className="text-[10px] text-muted-foreground italic border-l-2 border-primary/30 pl-2">
+                      {t.governanceNotes}
+                    </p>
+                  )}
+
+                  <Button size="sm" className="w-full gap-2" onClick={() => applyTemplate(t)}>
+                    <FileText className="w-3.5 h-3.5" /> Template verwenden
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <button onClick={startWithoutTemplate} className="text-xs text-primary hover:underline w-full text-center py-1">
+        Ohne Vorlage fortfahren →
+      </button>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="glass-card border-border max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Neue Entscheidung</DialogTitle>
+          <DialogTitle className="font-display text-xl flex items-center gap-2">
+            {step === "form" && selectedTemplate && (
+              <button type="button" onClick={() => setStep("template")} className="text-muted-foreground hover:text-foreground transition-colors">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            {step === "template" ? "Entscheidungs-Template wählen" : "Neue Entscheidung"}
+            {selectedTemplate && step === "form" && (
+              <Badge variant="outline" className="text-[10px]">{categoryIcons[selectedTemplate.category]} {selectedTemplate.name}</Badge>
+            )}
+          </DialogTitle>
         </DialogHeader>
 
-        {showTemplates && !title && (
-          <div className="space-y-2 mb-4">
-            <p className="text-xs text-muted-foreground font-medium">Vorlage verwenden:</p>
-            <div className="grid grid-cols-2 gap-2">
-              {decisionTemplates.map((t) => (
-                <button
-                  key={t.name}
-                  onClick={() => applyTemplate(t)}
-                  className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 hover:bg-muted/60 border border-border/50 transition-colors text-left"
-                >
-                  <FileText className="w-4 h-4 text-primary shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium">{t.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-muted-foreground capitalize">{categoryLabels[t.category]}</span>
-                      <span className="text-[10px] text-muted-foreground">•</span>
-                      <span className="text-[10px] text-muted-foreground">{t.requiredFields.length} Pflichtfelder</span>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <button onClick={() => setShowTemplates(false)} className="text-xs text-primary hover:underline">
-              Ohne Vorlage fortfahren →
-            </button>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Titel *</label>
-            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Entscheidungstitel..." className={inputClass} required />
-          </div>
-          <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Beschreibung</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details zur Entscheidung..." className={`${inputClass} h-24 resize-none py-2`} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        {step === "template" ? renderTemplateStep() : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Kategorie</label>
-              <select value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputClass}>
-                {categories.map((c) => (<option key={c} value={c} className="bg-card">{categoryLabels[c]}</option>))}
-              </select>
+              <label className="text-sm text-muted-foreground mb-1 block">Titel *</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Entscheidungstitel..." className={inputClass} required />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Priorität</label>
-              <select value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
-                {priorities.map((p) => (<option key={p} value={p} className="bg-card">{p.charAt(0).toUpperCase() + p.slice(1)}</option>))}
-              </select>
+              <label className="text-sm text-muted-foreground mb-1 block">Beschreibung</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details zur Entscheidung..." className={`${inputClass} h-24 resize-none py-2`} />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">
-                <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Team</span>
-              </label>
-              <select value={teamId} onChange={(e) => handleTeamChange(e.target.value)} className={inputClass}>
-                <option value="" className="bg-card">Kein Team (öffentlich)</option>
-                {teams.map((t) => (<option key={t.id} value={t.id} className="bg-card">{t.name}</option>))}
-              </select>
-            </div>
-          </div>
-
-          {/* Review-Flow Selector */}
-          <ReviewFlowSelector
-            selectedFlowId={reviewFlowId}
-            onSelect={handleReviewFlowSelect}
-            category={category}
-            priority={priority}
-          />
-
-          {/* Required fields from template */}
-          {selectedTemplate && selectedTemplate.requiredFields.length > 0 && (
-            <div className="space-y-3 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Pflichtfelder – {categoryLabels[selectedTemplate.category]}</span>
-                <Badge variant="outline" className="text-[10px]">{selectedTemplate.requiredFields.length} Felder</Badge>
-              </div>
-              {selectedTemplate.requiredFields.map(field => (
-                <div key={field.key}>
-                  <label className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                    {field.label} <span className="text-destructive">*</span>
-                  </label>
-                  {renderExtraField(field)}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Governance notes from template */}
-          {selectedTemplate?.governanceNotes && (
-            <p className="text-[11px] text-muted-foreground italic p-2 rounded-lg bg-warning/5 border border-warning/20">
-              {selectedTemplate.governanceNotes}
-            </p>
-          )}
-
-          {/* Lessons Learned Recommendations */}
-          {relevantLessons.length > 0 && (
-            <div className="pt-3 border-t border-border">
-              <button
-                type="button"
-                onClick={() => setShowRecommendations(v => !v)}
-                className="flex items-center gap-2 w-full text-left group"
-              >
-                <Lightbulb className="w-4 h-4 text-warning" />
-                <span className="text-sm font-medium flex-1">
-                  Lessons Learned ({relevantLessons.length})
-                </span>
-                <Badge variant="outline" className="text-[10px]">{categoryLabels[category]}</Badge>
-                {showRecommendations ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-              </button>
-              {showRecommendations && (
-                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                  {relevantLessons.map(l => (
-                    <div key={l.id} className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
-                      <p className="font-medium text-foreground flex items-start gap-1.5">
-                        <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
-                        {l.key_takeaway}
-                      </p>
-                      {l.what_went_well && (
-                        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-                          <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
-                          {l.what_went_well}
-                        </p>
-                      )}
-                      {l.what_went_wrong && (
-                        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-                          <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-                          {l.what_went_wrong}
-                        </p>
-                      )}
-                      {l.recommendations && (
-                        <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
-                          → {l.recommendations}
-                        </p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground/60 pl-4">
-                        Aus: {l.decision?.title}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {validationErrors.length > 0 && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="font-medium">Pflichtfelder nicht ausgefüllt:</p>
-                <ul className="mt-1 space-y-0.5">
-                  {validationErrors.map(e => <li key={e}>• {e}</li>)}
-                </ul>
+                <label className="text-sm text-muted-foreground mb-1 block">Kategorie</label>
+                <select value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputClass}>
+                  {categories.map((c) => (<option key={c} value={c} className="bg-card">{categoryLabels[c]}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Priorität</label>
+                <select value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
+                  {priorities.map((p) => (<option key={p} value={p} className="bg-card">{priorityLabels[p]}</option>))}
+                </select>
               </div>
             </div>
-          )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
+                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1 block">
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Team</span>
+                </label>
+                <select value={teamId} onChange={(e) => handleTeamChange(e.target.value)} className={inputClass}>
+                  <option value="" className="bg-card">Kein Team (öffentlich)</option>
+                  {teams.map((t) => (<option key={t.id} value={t.id} className="bg-card">{t.name}</option>))}
+                </select>
+              </div>
+            </div>
 
-          {error && <p className="text-destructive text-sm">{error}</p>}
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>Abbrechen</Button>
-            <Button type="submit" disabled={loading || !title.trim()}>{loading ? "Erstellen..." : "Erstellen"}</Button>
-          </div>
-        </form>
+            {/* Review-Flow Selector */}
+            <ReviewFlowSelector
+              selectedFlowId={reviewFlowId}
+              onSelect={handleReviewFlowSelect}
+              category={category}
+              priority={priority}
+            />
+
+            {/* Base required fields from template */}
+            {selectedTemplate && selectedTemplate.requiredFields.length > 0 && (
+              <div className="space-y-3 pt-3 border-t border-border">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">Pflichtfelder – {categoryLabels[selectedTemplate.category]}</span>
+                  <Badge variant="outline" className="text-[10px]">{allRequiredFields.length} Felder</Badge>
+                </div>
+                {selectedTemplate.requiredFields.map(field => renderExtraField(field, false))}
+              </div>
+            )}
+
+            {/* Conditional fields (dynamically added) */}
+            {conditionalResult.extraFields.length > 0 && (
+              <div className="space-y-3 pt-3 border-t border-warning/30">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-warning" />
+                  <span className="text-sm font-medium text-warning">Bedingte Pflichtfelder</span>
+                  <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">{conditionalResult.extraFields.length} aktiviert</Badge>
+                </div>
+                {conditionalResult.extraFields.map(field => renderExtraField(field, true))}
+              </div>
+            )}
+
+            {/* Conditional approval steps info */}
+            {conditionalResult.extraApprovalSteps.length > 0 && (
+              <div className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
+                <p className="font-medium text-warning flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5" /> Zusätzliche Freigabe-Stufen aktiviert
+                </p>
+                {conditionalResult.extraApprovalSteps.map((s, i) => (
+                  <p key={i} className="text-muted-foreground pl-5">+ {s.label} {s.required ? "(Pflicht)" : "(Optional)"}</p>
+                ))}
+              </div>
+            )}
+
+            {/* Governance hints from conditional rules */}
+            {conditionalResult.governanceHints.length > 0 && (
+              <div className="space-y-1">
+                {conditionalResult.governanceHints.map((hint, i) => (
+                  <p key={i} className="text-[11px] text-warning italic p-2 rounded-lg bg-warning/5 border border-warning/20 flex items-start gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    {hint}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Static governance notes from template */}
+            {selectedTemplate?.governanceNotes && conditionalResult.governanceHints.length === 0 && (
+              <p className="text-[11px] text-muted-foreground italic p-2 rounded-lg bg-warning/5 border border-warning/20">
+                {selectedTemplate.governanceNotes}
+              </p>
+            )}
+
+            {/* Lessons Learned Recommendations */}
+            {relevantLessons.length > 0 && (
+              <div className="pt-3 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setShowRecommendations(v => !v)}
+                  className="flex items-center gap-2 w-full text-left group"
+                >
+                  <Lightbulb className="w-4 h-4 text-warning" />
+                  <span className="text-sm font-medium flex-1">
+                    Lessons Learned ({relevantLessons.length})
+                  </span>
+                  <Badge variant="outline" className="text-[10px]">{categoryLabels[category]}</Badge>
+                  {showRecommendations ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                </button>
+                {showRecommendations && (
+                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                    {relevantLessons.map(l => (
+                      <div key={l.id} className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
+                        <p className="font-medium text-foreground flex items-start gap-1.5">
+                          <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
+                          {l.key_takeaway}
+                        </p>
+                        {l.what_went_well && (
+                          <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+                            <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                            {l.what_went_well}
+                          </p>
+                        )}
+                        {l.what_went_wrong && (
+                          <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+                            <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+                            {l.what_went_wrong}
+                          </p>
+                        )}
+                        {l.recommendations && (
+                          <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
+                            → {l.recommendations}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-muted-foreground/60 pl-4">
+                          Aus: {l.decision?.title}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {validationErrors.length > 0 && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium">Pflichtfelder nicht ausgefüllt:</p>
+                  <ul className="mt-1 space-y-0.5">
+                    {validationErrors.map(e => <li key={e}>• {e}</li>)}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>Abbrechen</Button>
+              <Button type="submit" disabled={loading || !title.trim()}>{loading ? "Erstellen..." : "Erstellen"}</Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

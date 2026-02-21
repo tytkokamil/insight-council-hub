@@ -12,6 +12,22 @@ export interface ApprovalStep {
   required: boolean;
 }
 
+/** A rule that conditionally adds fields or approval steps based on current form values */
+export interface ConditionalRule {
+  /** Which form field to evaluate */
+  when: "priority" | "category" | "budget_impact" | "stakeholder_count";
+  /** Comparison operator */
+  operator: "equals" | "not_equals" | "greater_than" | "in";
+  /** Value(s) to compare against */
+  value: string | string[];
+  /** Extra fields to require when condition is met */
+  addFields?: RequiredField[];
+  /** Extra approval steps to add when condition is met */
+  addApprovalSteps?: ApprovalStep[];
+  /** Governance hint shown when condition is met */
+  governanceHint?: string;
+}
+
 export interface DecisionTemplate {
   name: string;
   category: string;
@@ -21,6 +37,11 @@ export interface DecisionTemplate {
   requiredFields: RequiredField[];
   approvalSteps: ApprovalStep[];
   governanceNotes?: string;
+  conditionalRules?: ConditionalRule[];
+  /** Short "when to use" hint for the template picker */
+  whenToUse?: string;
+  /** Icon key for visual differentiation */
+  iconColor?: string;
 }
 
 // Shared fields used across multiple templates
@@ -35,12 +56,46 @@ const timelineField: RequiredField = { key: "timeline", label: "Zeithorizont", t
 ]};
 const stakeholdersField: RequiredField = { key: "stakeholders", label: "Betroffene Stakeholder", type: "text", placeholder: "z.B. Vertrieb, Produkt, Vorstand" };
 
+// Conditional-only fields (added dynamically)
+const alignmentField: RequiredField = { key: "stakeholder_alignment", label: "Stakeholder-Alignment-Plan", type: "textarea", placeholder: "Wie wird Alignment zwischen den Stakeholdern hergestellt?" };
+const executiveJustification: RequiredField = { key: "executive_justification", label: "Executive Justification", type: "textarea", placeholder: "Begründung für die Geschäftsführung..." };
+const detailedRiskField: RequiredField = { key: "detailed_risk", label: "Detaillierte Risikoanalyse", type: "textarea", placeholder: "Eintrittswahrscheinlichkeit, Impact, Mitigationsmaßnahmen..." };
+const complianceField: RequiredField = { key: "compliance_check", label: "Compliance-Prüfung", type: "textarea", placeholder: "Relevante regulatorische oder rechtliche Aspekte..." };
+
+// Shared conditional rules reused across templates
+const highPriorityRiskRule: ConditionalRule = {
+  when: "priority",
+  operator: "in",
+  value: ["high", "critical"],
+  addFields: [detailedRiskField],
+  governanceHint: "Bei hoher/kritischer Priorität ist eine detaillierte Risikoanalyse Pflicht.",
+};
+
+const criticalApprovalRule: ConditionalRule = {
+  when: "priority",
+  operator: "equals",
+  value: "critical",
+  addApprovalSteps: [{ role: "admin", label: "Geschäftsführung (Pflicht bei Kritisch)", required: true }],
+  governanceHint: "Kritische Entscheidungen erfordern zwingend eine Geschäftsführungsfreigabe.",
+};
+
+const largeBudgetRule: ConditionalRule = {
+  when: "budget_impact",
+  operator: "greater_than",
+  value: "50000",
+  addFields: [executiveJustification, complianceField],
+  addApprovalSteps: [{ role: "admin", label: "CFO-Freigabe (> 50.000€)", required: true }],
+  governanceHint: "Budget-Entscheidungen > 50.000€ erfordern CFO-Freigabe und Compliance-Prüfung.",
+};
+
 export const decisionTemplates: DecisionTemplate[] = [
   {
     name: "Strategische Ausrichtung",
     category: "strategic",
     priority: "critical",
     description: "Grundlegende strategische Richtungsentscheidung mit langfristiger Auswirkung auf das Unternehmen.",
+    whenToUse: "Für Markteintritte, Pivots, M&A oder langfristige Weichenstellungen.",
+    iconColor: "text-primary",
     defaultDurationDays: 30,
     requiredFields: [contextField, alternativesField, riskField, budgetField, timelineField, stakeholdersField],
     approvalSteps: [
@@ -49,12 +104,24 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "admin", label: "Vorstandsfreigabe", required: true },
     ],
     governanceNotes: "Strategische Entscheidungen erfordern vollständige Dokumentation aller Alternativen und eine dreistufige Freigabe.",
+    conditionalRules: [
+      {
+        when: "stakeholder_count",
+        operator: "greater_than",
+        value: "5",
+        addFields: [alignmentField],
+        governanceHint: "Bei mehr als 5 Stakeholdern ist ein expliziter Alignment-Plan erforderlich.",
+      },
+      largeBudgetRule,
+    ],
   },
   {
     name: "Budgetfreigabe",
     category: "budget",
     priority: "high",
     description: "Freigabe eines Budgets für ein Projekt oder eine Abteilung. Finanzielle Prüfung erforderlich.",
+    whenToUse: "Für Projektbudgets, Investitionen oder Kostenstellen-Freigaben.",
+    iconColor: "text-success",
     defaultDurationDays: 14,
     requiredFields: [
       contextField,
@@ -69,12 +136,18 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "admin", label: "CFO / Geschäftsführung", required: true },
     ],
     governanceNotes: "Budget-Entscheidungen > 10.000€ erfordern CFO-Freigabe. ROI-Schätzung ist Pflicht.",
+    conditionalRules: [
+      largeBudgetRule,
+      highPriorityRiskRule,
+    ],
   },
   {
     name: "Personalentscheidung",
     category: "hr",
     priority: "high",
     description: "Entscheidung zu Einstellung, Beförderung oder Teamstruktur.",
+    whenToUse: "Für Hiring, Beförderungen, Umstrukturierungen oder Trennungen.",
+    iconColor: "text-warning",
     defaultDurationDays: 21,
     requiredFields: [
       contextField,
@@ -94,12 +167,24 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "admin", label: "Geschäftsführung", required: false },
     ],
     governanceNotes: "Personalentscheidungen mit Budget-Auswirkung > 80.000€/Jahr benötigen GF-Freigabe.",
+    conditionalRules: [
+      criticalApprovalRule,
+      {
+        when: "budget_impact",
+        operator: "greater_than",
+        value: "80000",
+        addApprovalSteps: [{ role: "admin", label: "GF-Freigabe (> 80.000€/Jahr)", required: true }],
+        governanceHint: "Personalkosten > 80.000€/Jahr erfordern Geschäftsführungsfreigabe.",
+      },
+    ],
   },
   {
     name: "Technische Architektur",
     category: "technical",
     priority: "medium",
     description: "Technologische Entscheidung zu Architektur, Stack oder Infrastruktur.",
+    whenToUse: "Für Stack-Wechsel, neue Services, Infrastruktur oder Architektur-Änderungen.",
+    iconColor: "text-accent-foreground",
     defaultDurationDays: 14,
     requiredFields: [
       contextField,
@@ -117,12 +202,25 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "reviewer", label: "Architecture Review", required: true },
     ],
     governanceNotes: "Architektur-Entscheidungen mit hohem Migrationsaufwand erfordern zusätzliche Stakeholder-Abstimmung.",
+    conditionalRules: [
+      highPriorityRiskRule,
+      criticalApprovalRule,
+      {
+        when: "budget_impact",
+        operator: "greater_than",
+        value: "30000",
+        addFields: [executiveJustification],
+        governanceHint: "Tech-Investitionen > 30.000€ erfordern eine Executive Justification.",
+      },
+    ],
   },
   {
     name: "Operative Prozessänderung",
     category: "operational",
     priority: "medium",
     description: "Anpassung eines operativen Prozesses zur Effizienzsteigerung.",
+    whenToUse: "Für Workflow-Optimierungen, Tool-Einführungen oder Prozess-Standardisierungen.",
+    iconColor: "text-muted-foreground",
     defaultDurationDays: 7,
     requiredFields: [
       contextField,
@@ -135,12 +233,24 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "reviewer", label: "Operations Review", required: false },
     ],
     governanceNotes: "Operative Änderungen mit teamübergreifender Wirkung benötigen Review.",
+    conditionalRules: [
+      highPriorityRiskRule,
+      {
+        when: "stakeholder_count",
+        operator: "greater_than",
+        value: "3",
+        addFields: [alignmentField],
+        governanceHint: "Bei >3 betroffenen Stakeholdern ist ein Alignment-Plan empfohlen.",
+      },
+    ],
   },
   {
     name: "Marketing-Kampagne",
     category: "marketing",
     priority: "medium",
     description: "Planung und Freigabe einer Marketing-Kampagne oder -Initiative.",
+    whenToUse: "Für Kampagnen, Launch-Events, Rebrandings oder Partner-Kooperationen.",
+    iconColor: "text-destructive",
     defaultDurationDays: 10,
     requiredFields: [
       contextField,
@@ -154,8 +264,110 @@ export const decisionTemplates: DecisionTemplate[] = [
       { role: "reviewer", label: "Budget-Review", required: false },
     ],
     governanceNotes: "Kampagnen > 5.000€ Budget benötigen Budget-Review.",
+    conditionalRules: [
+      largeBudgetRule,
+      highPriorityRiskRule,
+    ],
   },
 ];
+
+/**
+ * Evaluate conditional rules against the current form state.
+ * Returns extra fields, approval steps, and governance hints that should be applied.
+ */
+export function evaluateConditionalRules(
+  rules: ConditionalRule[] | undefined,
+  formState: {
+    priority: string;
+    category: string;
+    extraFields: Record<string, string>;
+  }
+): {
+  extraFields: RequiredField[];
+  extraApprovalSteps: ApprovalStep[];
+  governanceHints: string[];
+} {
+  const result = {
+    extraFields: [] as RequiredField[],
+    extraApprovalSteps: [] as ApprovalStep[],
+    governanceHints: [] as string[],
+  };
+
+  if (!rules) return result;
+
+  // Count stakeholders from the stakeholders field (comma-separated)
+  const stakeholderText = formState.extraFields["stakeholders"] || "";
+  const stakeholderCount = stakeholderText.trim()
+    ? stakeholderText.split(",").filter(s => s.trim()).length
+    : 0;
+
+  // Parse budget from budget_impact field
+  const budgetText = formState.extraFields["budget_impact"] || "";
+  const budgetValue = parseFloat(budgetText.replace(/[^0-9.,]/g, "").replace(",", ".")) || 0;
+
+  for (const rule of rules) {
+    let fieldValue: string | number;
+
+    switch (rule.when) {
+      case "priority":
+        fieldValue = formState.priority;
+        break;
+      case "category":
+        fieldValue = formState.category;
+        break;
+      case "budget_impact":
+        fieldValue = budgetValue;
+        break;
+      case "stakeholder_count":
+        fieldValue = stakeholderCount;
+        break;
+      default:
+        continue;
+    }
+
+    let conditionMet = false;
+
+    switch (rule.operator) {
+      case "equals":
+        conditionMet = String(fieldValue) === String(rule.value);
+        break;
+      case "not_equals":
+        conditionMet = String(fieldValue) !== String(rule.value);
+        break;
+      case "greater_than":
+        conditionMet = Number(fieldValue) > Number(rule.value);
+        break;
+      case "in":
+        conditionMet = Array.isArray(rule.value) && rule.value.includes(String(fieldValue));
+        break;
+    }
+
+    if (conditionMet) {
+      if (rule.addFields) {
+        // Avoid duplicates by key
+        for (const f of rule.addFields) {
+          if (!result.extraFields.some(ef => ef.key === f.key)) {
+            result.extraFields.push(f);
+          }
+        }
+      }
+      if (rule.addApprovalSteps) {
+        for (const s of rule.addApprovalSteps) {
+          if (!result.extraApprovalSteps.some(es => es.label === s.label)) {
+            result.extraApprovalSteps.push(s);
+          }
+        }
+      }
+      if (rule.governanceHint) {
+        if (!result.governanceHints.includes(rule.governanceHint)) {
+          result.governanceHints.push(rule.governanceHint);
+        }
+      }
+    }
+  }
+
+  return result;
+}
 
 export const getTemplateByCategory = (category: string): DecisionTemplate | undefined =>
   decisionTemplates.find(t => t.category === category);
