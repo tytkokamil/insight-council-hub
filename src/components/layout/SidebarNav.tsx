@@ -44,7 +44,6 @@ const navGroups: NavGroup[] = [
       { icon: Calendar, label: "Calendar", path: "/calendar", featureKey: "calendar" },
       { icon: Users, label: "Teams", path: "/teams", featureKey: "teams" },
       { icon: Video, label: "Meeting Mode", path: "/meeting" },
-      { icon: SearchIcon, label: "Suche", path: "/search" },
     ],
   },
   {
@@ -53,26 +52,22 @@ const navGroups: NavGroup[] = [
       { icon: BarChart3, label: "Analytics Hub", path: "/analytics", featureKey: "analytics" },
       { icon: Cpu, label: "Process Hub", path: "/process", featureKey: "bottlenecks" },
       { icon: Briefcase, label: "Executive Hub", path: "/executive", featureKey: "executive" },
-      { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
-      { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
-      { icon: Target, label: "Strategy", path: "/strategy", featureKey: "strategy" },
     ],
   },
   {
     label: "GOVERNANCE",
-    defaultCollapsed: true,
     items: [
       { icon: Zap, label: "Escalation Center", path: "/engine", featureKey: "engine" },
       { icon: Shield, label: "Risk Register", path: "/risks" },
+      { icon: Lightbulb, label: "Automations", path: "/automations" },
       { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
-      { icon: Zap, label: "Automations", path: "/automations", adminOnly: true },
     ],
   },
   {
     label: "SYSTEM",
     items: [
       { icon: BookOpen, label: "Knowledge Base", path: "/knowledge" },
-      { icon: Settings2, label: "Template Editor", path: "/template-editor" },
+      { icon: Settings2, label: "Templates", path: "/template-editor" },
       { icon: Archive, label: "Archive", path: "/archive" },
       { icon: Settings, label: "Settings", path: "/settings" },
       { icon: UserCog, label: "Users", path: "/admin/users", adminOnly: true },
@@ -245,8 +240,8 @@ const SidebarNav = memo(({
             {!collapsed && (
               <button
                 onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.label) : undefined}
-                className={`w-full flex items-center px-2 mb-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/40 ${
-                  group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/70 cursor-pointer" : "cursor-default"
+                className={`w-full flex items-center px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 ${
+                  group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
                 }`}
               >
                 <span className="flex-1 text-left">{group.label}</span>
@@ -278,6 +273,7 @@ const SidebarNav = memo(({
                   }
 
                   const active = pathname === item.path;
+                  const isMeeting = item.path === "/meeting";
                   return (
                     <Link
                       key={item.path}
@@ -287,13 +283,22 @@ const SidebarNav = memo(({
                       className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
                         active
                           ? "bg-primary/10 text-primary border-l-2 border-primary"
-                          : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                          : isMeeting
+                            ? "text-primary/80 hover:bg-primary/5 hover:text-primary"
+                            : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                       }`}
                       title={collapsed ? item.label : undefined}
                     >
-                      <item.icon className="w-4 h-4 shrink-0 opacity-60" />
+                      <item.icon className={`w-4 h-4 shrink-0 ${isMeeting ? "opacity-80" : "opacity-60"}`} />
                       {!collapsed && (
-                        <span className="whitespace-nowrap">{item.label}</span>
+                        <span className="whitespace-nowrap flex items-center gap-1.5">
+                          {item.label}
+                          {isMeeting && (
+                            <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary">
+                              Live
+                            </span>
+                          )}
+                        </span>
                       )}
                     </Link>
                   );
