@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,11 +15,13 @@ import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
   ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
+  Filter, ClipboardCheck,
 } from "lucide-react";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -32,6 +34,8 @@ interface DecisionRow {
   priority: string;
   status: string;
   outcome_notes: string | null;
+  actual_impact_score: number | null;
+  ai_impact_score: number | null;
   implemented_at: string | null;
   created_at: string;
   created_by: string;
@@ -52,24 +56,50 @@ interface LessonRow {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Tag colors                                                         */
+/*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 const TAG_COLORS = [
   "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
   "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#14b8a6",
 ];
 
+/** Highlight matching text with <mark> */
+const Highlight = ({ text, query }: { text: string; query: string }) => {
+  if (!query || !text) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase()
+          ? <mark key={i} className="bg-primary/20 text-primary rounded-sm px-0.5">{part}</mark>
+          : part
+      )}
+    </>
+  );
+};
+
+const ALL_CATEGORIES = ["strategic", "budget", "hr", "technical", "operational", "marketing"] as const;
+const OUTCOME_FILTERS = [
+  { value: "implemented", label: "Umgesetzt" },
+  { value: "rejected", label: "Abgelehnt" },
+  { value: "approved", label: "Genehmigt" },
+] as const;
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 const KnowledgeBase = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedOutcomes, setSelectedOutcomes] = useState<string[]>([]);
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [lessonOpen, setLessonOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Lesson form
   const [lessonForm, setLessonForm] = useState({
@@ -85,7 +115,7 @@ const KnowledgeBase = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("decisions")
-        .select("id,title,description,category,priority,status,outcome_notes,implemented_at,created_at,created_by,team_id")
+        .select("id,title,description,category,priority,status,outcome_notes,actual_impact_score,ai_impact_score,implemented_at,created_at,created_by,team_id")
         .in("status", ["implemented", "approved", "rejected"])
         .order("implemented_at", { ascending: false, nullsFirst: false });
       return (data ?? []) as DecisionRow[];
@@ -163,21 +193,72 @@ const KnowledgeBase = () => {
 
   /* --- Derived data --- */
   const tagMap = useMemo(() => new Map(tags.map(t => [t.id, t])), [tags]);
+  const lessonsMap = useMemo(() => {
+    const m = new Map<string, LessonRow[]>();
+    lessons.forEach(l => {
+      const arr = m.get(l.decision_id) || [];
+      arr.push(l);
+      m.set(l.decision_id, arr);
+    });
+    return m;
+  }, [lessons]);
+
+  // Fulltext search: search across decisions AND lessons fields
+  const searchMatchesLesson = useCallback((l: LessonRow, q: string): boolean => {
+    return [l.key_takeaway, l.what_went_well, l.what_went_wrong, l.recommendations]
+      .some(field => field?.toLowerCase().includes(q));
+  }, []);
 
   const filteredDecisions = useMemo(() => {
     let list = decisions;
-    if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(d => d.title.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q) || d.outcome_notes?.toLowerCase().includes(q));
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      list = list.filter(d => selectedCategories.includes(d.category));
     }
+
+    // Outcome filter
+    if (selectedOutcomes.length > 0) {
+      list = list.filter(d => selectedOutcomes.includes(d.status));
+    }
+
+    // Tag filter
     if (selectedTags.length > 0) {
       const decIdsWithTags = new Set(
         decisionTags.filter(dt => selectedTags.includes(dt.tag_id)).map(dt => dt.decision_id)
       );
       list = list.filter(d => decIdsWithTags.has(d.id));
     }
+
+    // Fulltext search (decisions + lessons)
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(d => {
+        // Match in decision fields
+        const decMatch = d.title.toLowerCase().includes(q) ||
+          d.description?.toLowerCase().includes(q) ||
+          d.outcome_notes?.toLowerCase().includes(q);
+        if (decMatch) return true;
+        // Match in lessons fields
+        const dLessons = lessonsMap.get(d.id) || [];
+        return dLessons.some(l => searchMatchesLesson(l, q));
+      });
+
+      // Sort: relevance (lessons match first) then recency
+      list = [...list].sort((a, b) => {
+        const aLessonMatch = (lessonsMap.get(a.id) || []).some(l => searchMatchesLesson(l, q));
+        const bLessonMatch = (lessonsMap.get(b.id) || []).some(l => searchMatchesLesson(l, q));
+        if (aLessonMatch && !bLessonMatch) return -1;
+        if (!aLessonMatch && bLessonMatch) return 1;
+        // Recency
+        const aDate = a.implemented_at || a.created_at;
+        const bDate = b.implemented_at || b.created_at;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
+      });
+    }
+
     return list;
-  }, [decisions, search, selectedTags, decisionTags]);
+  }, [decisions, search, selectedTags, selectedCategories, selectedOutcomes, decisionTags, lessonsMap, searchMatchesLesson]);
 
   const selected = decisions.find(d => d.id === selectedDecision);
   const selectedLessons = lessons.filter(l => l.decision_id === selectedDecision);
@@ -224,6 +305,8 @@ const KnowledgeBase = () => {
     return counts;
   }, [decisions]);
 
+  const activeFilterCount = selectedCategories.length + selectedOutcomes.length + selectedTags.length;
+
   return (
     <AppLayout>
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -233,7 +316,7 @@ const KnowledgeBase = () => {
             <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Wissen</p>
             <h1 className="text-2xl font-semibold tracking-tight">Knowledge Base</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Lessons Learned aus {decisions.length} abgeschlossenen Entscheidungen
+              {totalLessons} Lessons aus {decisions.length} abgeschlossenen Entscheidungen
             </p>
           </div>
           <Button
@@ -264,48 +347,125 @@ const KnowledgeBase = () => {
           ))}
         </div>
 
-        {/* Search & Tag filter */}
+        {/* Search & Filters */}
         <div className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Entscheidungen, Learnings oder Keywords suchen…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="text-xs text-muted-foreground">Filter:</span>
-            {tags.map(tag => {
-              const active = selectedTags.includes(tag.id);
-              return (
-                <button
-                  key={tag.id}
-                  onClick={() => setSelectedTags(prev => active ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
-                    active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
-                  {tag.name}
-                  {active && <X className="w-3 h-3" />}
-                </button>
-              );
-            })}
-            <div className="flex items-center gap-1">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Neuer Tag…"
-                value={newTagName}
-                onChange={e => setNewTagName(e.target.value)}
-                className="h-7 w-28 text-xs"
-                onKeyDown={e => { if (e.key === "Enter" && newTagName.trim()) createTag.mutate(newTagName.trim()); }}
+                placeholder="Entscheidungen, Learnings, Takeaways oder Empfehlungen suchen…"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-9"
               />
-              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => newTagName.trim() && createTag.mutate(newTagName.trim())}>
-                <Plus className="w-3.5 h-3.5" />
-              </Button>
             </div>
+            <Button
+              variant={showFilters || activeFilterCount > 0 ? "default" : "outline"}
+              size="icon"
+              onClick={() => setShowFilters(v => !v)}
+              className="relative shrink-0"
+            >
+              <Filter className="w-4 h-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
           </div>
+
+          {/* Expanded filter panel */}
+          {showFilters && (
+            <Card className="p-4 space-y-3">
+              {/* Category filter */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Kategorie</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ALL_CATEGORIES.map(cat => {
+                    const active = selectedCategories.includes(cat);
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategories(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${
+                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        {categoryLabels[cat] ?? cat}
+                        {categoryCounts[cat] ? ` (${categoryCounts[cat]})` : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Outcome filter */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Ergebnis</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {OUTCOME_FILTERS.map(of => {
+                    const active = selectedOutcomes.includes(of.value);
+                    return (
+                      <button
+                        key={of.value}
+                        onClick={() => setSelectedOutcomes(prev => active ? prev.filter(o => o !== of.value) : [...prev, of.value])}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${
+                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        {of.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tag filter */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tags</p>
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  {tags.map(tag => {
+                    const active = selectedTags.includes(tag.id);
+                    return (
+                      <button
+                        key={tag.id}
+                        onClick={() => setSelectedTags(prev => active ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
+                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                        {tag.name}
+                        {active && <X className="w-3 h-3" />}
+                      </button>
+                    );
+                  })}
+                  <div className="flex items-center gap-1">
+                    <Input
+                      placeholder="Neuer Tag…"
+                      value={newTagName}
+                      onChange={e => setNewTagName(e.target.value)}
+                      className="h-7 w-28 text-xs"
+                      onKeyDown={e => { if (e.key === "Enter" && newTagName.trim()) createTag.mutate(newTagName.trim()); }}
+                    />
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => newTagName.trim() && createTag.mutate(newTagName.trim())}>
+                      <Plus className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {activeFilterCount > 0 && (
+                <Button
+                  variant="ghost" size="sm"
+                  onClick={() => { setSelectedCategories([]); setSelectedOutcomes([]); setSelectedTags([]); }}
+                  className="text-xs text-muted-foreground"
+                >
+                  <X className="w-3 h-3 mr-1" /> Alle Filter zurücksetzen
+                </Button>
+              )}
+            </Card>
+          )}
         </div>
 
         {/* Main content */}
@@ -319,34 +479,45 @@ const KnowledgeBase = () => {
                 </div>
                 <h3 className="font-display font-semibold mb-1">Keine Entscheidungen gefunden</h3>
                 <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  {search ? "Passe die Suche an." : "Sobald Entscheidungen umgesetzt sind, kannst du hier Lessons Learned und Tags dokumentieren."}
+                  {search ? "Passe die Suche oder Filter an." : "Sobald Entscheidungen umgesetzt sind, erscheinen sie hier."}
                 </p>
               </Card>
             )}
             {filteredDecisions.map(d => {
               const dTags = getDecisionTags(d.id);
-              const dLessons = lessons.filter(l => l.decision_id === d.id);
+              const dLessons = lessonsMap.get(d.id) || [];
               const isActive = selectedDecision === d.id;
+              // Show first lesson takeaway as preview
+              const firstTakeaway = dLessons[0]?.key_takeaway;
               return (
-                  <Card
+                <Card
                   key={d.id}
                   className={`p-3 cursor-pointer transition-all ${isActive ? "border-foreground/20 bg-muted/40" : "hover:bg-muted/30"}`}
                   onClick={() => setSelectedDecision(d.id)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate">{d.title}</h3>
+                      <h3 className="font-medium text-sm truncate">
+                        <Highlight text={d.title} query={search} />
+                      </h3>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
                         <Badge variant={d.status === "implemented" ? "default" : d.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
                           {statusLabels[d.status] ?? d.status}
                         </Badge>
                         {dLessons.length > 0 && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
                             <Lightbulb className="w-3 h-3" /> {dLessons.length}
                           </span>
                         )}
                       </div>
+                      {/* Compact PIR preview */}
+                      {firstTakeaway && (
+                        <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 italic">
+                          <Lightbulb className="w-3 h-3 inline mr-0.5 text-warning" />
+                          <Highlight text={firstTakeaway} query={search} />
+                        </p>
+                      )}
                       {dTags.length > 0 && (
                         <div className="flex gap-1 mt-1.5 flex-wrap">
                           {dTags.map(t => (
@@ -383,8 +554,19 @@ const KnowledgeBase = () => {
               <div className="space-y-4">
                 {/* Decision header */}
                 <Card className="p-4">
-                  <h2 className="font-semibold text-lg">{selected.title}</h2>
-                  {selected.description && <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-semibold text-lg">{selected.title}</h2>
+                      {selected.description && <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>}
+                    </div>
+                    <Button
+                      variant="ghost" size="sm"
+                      className="text-xs text-muted-foreground shrink-0"
+                      onClick={() => navigate(`/decisions/${selected.id}`)}
+                    >
+                      Zur Entscheidung →
+                    </Button>
+                  </div>
                   <div className="flex gap-2 mt-3 flex-wrap">
                     <Badge variant="outline">{categoryLabels[selected.category] ?? selected.category}</Badge>
                     <Badge variant="outline">{priorityLabels[selected.priority] ?? selected.priority}</Badge>
@@ -395,10 +577,84 @@ const KnowledgeBase = () => {
                   {selected.outcome_notes && (
                     <div className="mt-3 p-3 bg-muted/30 rounded-lg text-sm">
                       <span className="text-xs font-medium text-muted-foreground block mb-1">Ergebnis</span>
-                      {selected.outcome_notes}
+                      <Highlight text={selected.outcome_notes} query={search} />
                     </div>
                   )}
                 </Card>
+
+                {/* PIR Summary Card */}
+                {(selected.actual_impact_score !== null || selectedLessons.length > 0) && (
+                  <Card className="p-4 border-primary/20 bg-primary/[0.02]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <ClipboardCheck className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-semibold">Post-Implementation Review</h3>
+                    </div>
+
+                    {/* Impact comparison */}
+                    {selected.actual_impact_score !== null && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <div className="p-2 rounded-lg bg-muted/30 text-center">
+                          <p className="text-[10px] text-muted-foreground">KI-Vorhersage</p>
+                          <p className="text-lg font-bold font-display text-primary">{selected.ai_impact_score ?? 0}%</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-muted/30 text-center">
+                          <p className="text-[10px] text-muted-foreground">Tatsächlich</p>
+                          <p className="text-lg font-bold font-display">{selected.actual_impact_score}%</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-muted/30 text-center">
+                          <p className="text-[10px] text-muted-foreground">Genauigkeit</p>
+                          {(() => {
+                            const pred = selected.ai_impact_score ?? 0;
+                            const acc = pred > 0 ? Math.round(100 - Math.abs(pred - selected.actual_impact_score!)) : null;
+                            return (
+                              <p className={`text-lg font-bold font-display ${
+                                acc !== null ? (acc > 80 ? "text-success" : acc > 60 ? "text-warning" : "text-destructive") : "text-muted-foreground"
+                              }`}>
+                                {acc !== null ? `${acc}%` : "—"}
+                              </p>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Latest lesson structured */}
+                    {selectedLessons[0] && (
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <div className="flex items-start gap-2">
+                          <Lightbulb className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
+                          <p className="text-sm font-medium">
+                            <Highlight text={selectedLessons[0].key_takeaway} query={search} />
+                          </p>
+                        </div>
+                        {selectedLessons[0].what_went_well && (
+                          <div className="flex items-start gap-2 text-xs">
+                            <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+                            <span className="text-muted-foreground">
+                              <Highlight text={selectedLessons[0].what_went_well} query={search} />
+                            </span>
+                          </div>
+                        )}
+                        {selectedLessons[0].what_went_wrong && (
+                          <div className="flex items-start gap-2 text-xs">
+                            <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+                            <span className="text-muted-foreground">
+                              <Highlight text={selectedLessons[0].what_went_wrong} query={search} />
+                            </span>
+                          </div>
+                        )}
+                        {selectedLessons[0].recommendations && (
+                          <div className="flex items-start gap-2 text-xs">
+                            <ArrowRight className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                            <span className="text-muted-foreground">
+                              <Highlight text={selectedLessons[0].recommendations} query={search} />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                )}
 
                 <Tabs defaultValue="lessons" className="w-full">
                   <TabsList className="w-full">
@@ -419,24 +675,26 @@ const KnowledgeBase = () => {
                       <Card key={l.id} className="p-4 space-y-3">
                         <div className="flex items-start gap-2">
                           <Lightbulb className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                          <p className="text-sm font-medium">{l.key_takeaway}</p>
+                          <p className="text-sm font-medium">
+                            <Highlight text={l.key_takeaway} query={search} />
+                          </p>
                         </div>
                         {l.what_went_well && (
                           <div className="flex items-start gap-2 text-sm">
                             <ThumbsUp className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
-                            <span>{l.what_went_well}</span>
+                            <span><Highlight text={l.what_went_well} query={search} /></span>
                           </div>
                         )}
                         {l.what_went_wrong && (
                           <div className="flex items-start gap-2 text-sm">
                             <ThumbsDown className="w-3.5 h-3.5 text-destructive mt-0.5 shrink-0" />
-                            <span>{l.what_went_wrong}</span>
+                            <span><Highlight text={l.what_went_wrong} query={search} /></span>
                           </div>
                         )}
                         {l.recommendations && (
                           <div className="flex items-start gap-2 text-sm">
                             <ArrowRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                            <span>{l.recommendations}</span>
+                            <span><Highlight text={l.recommendations} query={search} /></span>
                           </div>
                         )}
                         <div className="text-[10px] text-muted-foreground">
@@ -518,10 +776,10 @@ const KnowledgeBase = () => {
                             </button>
                           );
                         })}
+                        {tags.length === 0 && (
+                          <p className="text-xs text-muted-foreground">Erstelle oben in der Filterleiste neue Tags.</p>
+                        )}
                       </div>
-                      {tags.length === 0 && (
-                        <p className="text-xs text-muted-foreground">Erstelle oben in der Filterleiste neue Tags.</p>
-                      )}
                     </Card>
                   </TabsContent>
 
@@ -556,7 +814,7 @@ const KnowledgeBase = () => {
                       </Card>
                     )}
                     {similarDecisions.map(({ decision: d, score, reason }) => {
-                      const dLessons = lessons.filter(l => l.decision_id === d.id);
+                      const dLessons = lessonsMap.get(d.id) || [];
                       return (
                         <Card
                           key={d.id}
@@ -575,7 +833,7 @@ const KnowledgeBase = () => {
                                 <Badge variant="outline" className="text-[10px]">{statusLabels[d.status] ?? d.status}</Badge>
                                 <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
                                 {dLessons.length > 0 && (
-                                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                                     <Lightbulb className="w-3 h-3" /> {dLessons.length}
                                   </span>
                                 )}
