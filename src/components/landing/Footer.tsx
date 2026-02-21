@@ -1,19 +1,15 @@
-import { Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => (
-  <footer className="border-t border-border/40 py-16 relative overflow-hidden">
-    {/* Subtle ambient */}
-    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] rounded-full bg-primary/[0.02] blur-[80px] pointer-events-none" />
-
-    <div className="container mx-auto px-4 relative z-10">
+  <footer className="border-t border-border py-16">
+    <div className="container mx-auto px-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
         <div className="col-span-2 md:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-4 group">
-            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center group-hover:bg-primary/12 transition-colors duration-300">
-              <Sparkles className="w-4 h-4 text-primary" />
+            <div className="w-7 h-7 rounded-md bg-foreground flex items-center justify-center">
+              <span className="text-background text-xs font-bold">D</span>
             </div>
-            <span className="font-display font-bold tracking-tight">DecisionOS</span>
+            <span className="font-bold tracking-tight">DecisionOS</span>
           </Link>
           <p className="text-sm text-muted-foreground/70 leading-relaxed max-w-[220px]">
             Enterprise Decision Management für Teams, die Transparenz und Geschwindigkeit fordern.
@@ -26,7 +22,7 @@ const Footer = () => (
           { title: "Rechtliches", links: ["Datenschutz", "AGB", "Sicherheit", "DSGVO"] },
         ].map(section => (
           <div key={section.title}>
-            <h4 className="text-xs font-medium tracking-widest uppercase text-muted-foreground/50 mb-4">{section.title}</h4>
+            <h4 className="text-xs font-medium tracking-[0.15em] uppercase text-muted-foreground/50 mb-4">{section.title}</h4>
             <ul className="space-y-2.5">
               {section.links.map(link => (
                 <li key={link}>
