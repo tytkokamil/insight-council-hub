@@ -42,6 +42,8 @@ export interface DecisionTemplate {
   whenToUse?: string;
   /** Icon key for visual differentiation */
   iconColor?: string;
+  /** Template version — increment when structure/rules change */
+  version: number;
 }
 
 // Shared fields used across multiple templates
@@ -93,6 +95,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Strategische Ausrichtung",
     category: "strategic",
     priority: "critical",
+    version: 1,
     description: "Grundlegende strategische Richtungsentscheidung mit langfristiger Auswirkung auf das Unternehmen.",
     whenToUse: "Für Markteintritte, Pivots, M&A oder langfristige Weichenstellungen.",
     iconColor: "text-primary",
@@ -119,6 +122,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Budgetfreigabe",
     category: "budget",
     priority: "high",
+    version: 1,
     description: "Freigabe eines Budgets für ein Projekt oder eine Abteilung. Finanzielle Prüfung erforderlich.",
     whenToUse: "Für Projektbudgets, Investitionen oder Kostenstellen-Freigaben.",
     iconColor: "text-success",
@@ -145,6 +149,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Personalentscheidung",
     category: "hr",
     priority: "high",
+    version: 1,
     description: "Entscheidung zu Einstellung, Beförderung oder Teamstruktur.",
     whenToUse: "Für Hiring, Beförderungen, Umstrukturierungen oder Trennungen.",
     iconColor: "text-warning",
@@ -182,6 +187,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Technische Architektur",
     category: "technical",
     priority: "medium",
+    version: 1,
     description: "Technologische Entscheidung zu Architektur, Stack oder Infrastruktur.",
     whenToUse: "Für Stack-Wechsel, neue Services, Infrastruktur oder Architektur-Änderungen.",
     iconColor: "text-accent-foreground",
@@ -218,6 +224,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Operative Prozessänderung",
     category: "operational",
     priority: "medium",
+    version: 1,
     description: "Anpassung eines operativen Prozesses zur Effizienzsteigerung.",
     whenToUse: "Für Workflow-Optimierungen, Tool-Einführungen oder Prozess-Standardisierungen.",
     iconColor: "text-muted-foreground",
@@ -248,6 +255,7 @@ export const decisionTemplates: DecisionTemplate[] = [
     name: "Marketing-Kampagne",
     category: "marketing",
     priority: "medium",
+    version: 1,
     description: "Planung und Freigabe einer Marketing-Kampagne oder -Initiative.",
     whenToUse: "Für Kampagnen, Launch-Events, Rebrandings oder Partner-Kooperationen.",
     iconColor: "text-destructive",

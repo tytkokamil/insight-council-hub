@@ -21,7 +21,9 @@ import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
 import ShareDecisionDialog from "./ShareDecisionDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield } from "lucide-react";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle } from "lucide-react";
+import { decisionTemplates } from "@/lib/decisionTemplates";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   decision: any;
@@ -162,6 +164,33 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{decision.description || "Keine Beschreibung"}</p>
+          {/* Template version info */}
+          {decision.template_used && (() => {
+            const currentTpl = decisionTemplates.find(t => t.name === decision.template_used);
+            const savedVersion = decision.template_version || null;
+            const currentVersion = currentTpl?.version || null;
+            const isOutdated = savedVersion && currentVersion && savedVersion < currentVersion;
+            return (
+              <div className="flex items-center gap-2 mt-1.5">
+                <Badge variant="outline" className="text-[10px] gap-1">
+                  <FileText className="w-3 h-3" /> {decision.template_used}
+                  {savedVersion && <span className="text-muted-foreground">v{savedVersion}</span>}
+                </Badge>
+                {isOutdated && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-[10px] gap-1 border-warning/40 text-warning">
+                        <AlertTriangle className="w-3 h-3" /> Neue Version v{currentVersion} verfügbar
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs max-w-56">
+                      Diese Entscheidung nutzt Template v{savedVersion}. Die aktuelle Version ist v{currentVersion}. Die gespeicherte Vorlage bleibt unverändert.
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+            );
+          })()}
           {(() => {
             const rc = riskDecLinks.filter(l => l.decision_id === decision.id).length;
             return rc > 0 ? (
