@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Plus, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, XCircle, Plus, User, UserCheck } from "lucide-react";
 
 const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
   const { user } = useAuth();
@@ -11,6 +12,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
   const [selectedReviewer, setSelectedReviewer] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
+  const [delegationsForMe, setDelegationsForMe] = useState<string[]>([]); // user IDs I'm delegating for
 
   const fetchReviews = async () => {
     const { data } = await supabase
@@ -26,9 +28,24 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     if (data) setProfiles(data.filter((p) => p.user_id !== user?.id));
   };
 
+  const fetchDelegations = async () => {
+    if (!user) return;
+    // Find active delegations where I'm the delegate
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("review_delegations")
+      .select("delegator_id")
+      .eq("delegate_id", user.id)
+      .eq("active", true)
+      .lte("start_date", today)
+      .gte("end_date", today);
+    if (data) setDelegationsForMe(data.map(d => d.delegator_id));
+  };
+
   useEffect(() => {
     fetchReviews();
     fetchProfiles();
+    fetchDelegations();
   }, [decision.id]);
 
   const addReviewer = async () => {
@@ -76,25 +93,46 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     rejected: "text-destructive",
   };
 
+  // Check if current user can act on a review (direct or via delegation)
+  const canActOnReview = (r: any) => {
+    if (r.status !== "review") return false;
+    if (r.reviewer_id === user?.id) return true;
+    // Check if I'm a delegate for the reviewer
+    return delegationsForMe.includes(r.reviewer_id);
+  };
+
+  const getDelegatorName = (reviewerId: string) => {
+    const profile = profiles.find(p => p.user_id === reviewerId);
+    return profile?.full_name || "Unbekannt";
+  };
+
   return (
     <div className="space-y-4 mt-4">
       <div className="space-y-2">
         {reviews.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">Noch keine Reviewer zugewiesen.</p>
         ) : reviews.map((r, i) => {
-          const isMyReview = r.reviewer_id === user?.id && r.status === "review";
+          const canAct = canActOnReview(r);
+          const isDelegated = canAct && r.reviewer_id !== user?.id;
           return (
             <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
               <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold">
                 {i + 1}
               </div>
               <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium flex-1">{r.profiles?.full_name || "Unbekannt"}</span>
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium">{r.profiles?.full_name || "Unbekannt"}</span>
+                {isDelegated && (
+                  <span className="flex items-center gap-1 text-[10px] text-primary mt-0.5">
+                    <UserCheck className="w-3 h-3" /> Du vertrittst {getDelegatorName(r.reviewer_id)}
+                  </span>
+                )}
+              </div>
               <span className={`text-xs font-medium capitalize ${statusColors[r.status] || ""}`}>
                 {r.status === "review" ? "Ausstehend" : r.status === "approved" ? "Genehmigt" : r.status === "rejected" ? "Abgelehnt" : r.status}
               </span>
               {r.feedback && <span className="text-xs text-muted-foreground truncate max-w-32">"{r.feedback}"</span>}
-              {isMyReview && (
+              {canAct && (
                 <div className="flex gap-1">
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success" onClick={() => handleReview(r.id, "approved")} disabled={loading}>
                     <CheckCircle2 className="w-3 h-3" /> Genehmigen
@@ -109,7 +147,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
         })}
       </div>
 
-      {reviews.some((r) => r.reviewer_id === user?.id && r.status === "review") && (
+      {reviews.some((r) => canActOnReview(r)) && (
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}

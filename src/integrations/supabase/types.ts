@@ -723,6 +723,42 @@ export type Database = {
         }
         Relationships: []
       }
+      review_delegations: {
+        Row: {
+          active: boolean
+          created_at: string
+          delegate_id: string
+          delegator_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          delegate_id: string
+          delegator_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          delegate_id?: string
+          delegator_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sla_configs: {
         Row: {
           category: string
@@ -1172,6 +1208,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_delegate: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["org_role"]
