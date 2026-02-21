@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -68,12 +68,12 @@ const DecisionBenchmarking = () => {
   return (
     <AppLayout>
       <div className="space-y-8">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vergleich</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vergleich</p>
             <h1 className="text-xl font-semibold tracking-tight">Decision Benchmarking</h1>
-            <PageHint>Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen.</PageHint>
           </div>
+          <PageHelpButton title="Decision Benchmarking" description="Vergleiche deine Entscheidungskultur mit Branchen-Durchschnitt und High-Performance-Unternehmen." />
         </div>
 
         {loading ? <AnalysisPageSkeleton cards={3} sections={1} showChart /> : !metrics ? (

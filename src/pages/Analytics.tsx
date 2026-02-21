@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { categoryLabels } from "@/lib/labels";
 import {
   TrendingUp, Clock, CheckCircle2, AlertTriangle, FileText,
@@ -204,14 +204,12 @@ const Analytics = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
           <h1 className="font-display text-xl font-bold">Analytics</h1>
-          <PageHint>
-            Muster & Trends erkennen: Durchlaufzeiten, Durchsatz, Ablehnungsquoten, Teamvergleiche und Engpässe.
-          </PageHint>
         </div>
+        <PageHelpButton title="Analytics" description="Muster & Trends erkennen: Durchlaufzeiten, Durchsatz, Ablehnungsquoten, Teamvergleiche und Engpässe." />
       </div>
 
       {/* ═══ Summary KPIs ═══ */}

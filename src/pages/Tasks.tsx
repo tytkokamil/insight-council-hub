@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { motion } from "framer-motion";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useProfiles, buildProfileMap } from "@/hooks/useDecisions";
@@ -250,15 +250,11 @@ const Tasks = () => {
       {/* Header – matching Decisions page */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold">Aufgaben</h1>
-            <PageHint>
-              Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht.
-            </PageHint>
-          </div>
+          <h1 className="font-display text-2xl font-bold">Aufgaben</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Überblick über alle Aufgaben</p>
         </div>
         <div className="flex items-center gap-2">
+          <PageHelpButton title="Aufgaben" description="Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht." />
           <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2">
             <FileUp className="w-4 h-4" />
             Import

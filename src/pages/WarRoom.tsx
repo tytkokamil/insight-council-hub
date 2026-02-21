@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -156,15 +156,13 @@ const WarRoom = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kommandozentrale</p>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kommandozentrale</p>
             <h1 className="font-display text-xl font-bold">War Room</h1>
-            <PageHint>
-              Echtzeit-Lagebild für kritische Situationen. Zeigt aktive Eskalationen, blockierte Entscheidungen und Handlungsbedarf auf einen Blick. Ideal für Status-Meetings.
-            </PageHint>
+            <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: de })} Uhr</p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: de })} Uhr</p>
+          <PageHelpButton title="War Room" description="Echtzeit-Lagebild für kritische Situationen. Zeigt aktive Eskalationen, blockierte Entscheidungen und Handlungsbedarf auf einen Blick. Ideal für Status-Meetings." />
         </div>
 
         {loading ? (

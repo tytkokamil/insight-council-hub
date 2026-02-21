@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
@@ -123,12 +123,12 @@ const DecisionDNA = () => {
 
   return (
     <AppLayout>
-      <div className="mb-8">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
           <h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1>
-          <PageHint>Tiefenanalyse deiner Entscheidungsmuster mit konkreten Handlungsempfehlungen.</PageHint>
         </div>
+        <PageHelpButton title="Decision DNA" description="Tiefenanalyse deiner Entscheidungsmuster mit konkreten Handlungsempfehlungen." />
       </div>
 
       {/* Archetype – always visible */}

@@ -15,7 +15,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import AppLayout from "@/components/layout/AppLayout";
 import { AlertTriangle, DollarSign, GitBranch, Info } from "lucide-react";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 
 const statusColors: Record<string, string> = {
@@ -209,14 +209,10 @@ const DecisionGraph = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Netzwerk</p>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Decision Graph</h1>
-            <PageHint>
-              Visualisiert Abhängigkeiten zwischen Entscheidungen. Öffne eine Entscheidung und wechsle zum Tab „Abhängigkeiten", um Verknüpfungen (blockiert, beeinflusst, benötigt) zu erstellen. Klicke auf einen Knoten für die Kaskaden-Analyse.
-            </PageHint>
-          </div>
+          <h1 className="font-display text-xl font-bold">Decision Graph</h1>
         </div>
         <div className="flex items-center gap-4 text-xs">
+          <PageHelpButton title="Decision Graph" description="Visualisiert Abhängigkeiten zwischen Entscheidungen. Öffne eine Entscheidung und wechsle zum Tab 'Abhängigkeiten', um Verknüpfungen (blockiert, beeinflusst, benötigt) zu erstellen. Klicke auf einen Knoten für die Kaskaden-Analyse." />
           {([
             ["draft", "Entwurf"], ["review", "Review"], ["approved", "Genehmigt"],
             ["implemented", "Umgesetzt"], ["rejected", "Abgelehnt"],

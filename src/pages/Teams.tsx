@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import PageHint from "@/components/shared/PageHint";
+import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Plus, Users as UsersIcon, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,17 +29,15 @@ const Teams = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Verwaltung</p>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-xl font-bold">Teams</h1>
-            <PageHint>
-              Erstelle Teams und lade Mitglieder per E-Mail ein. Entscheidungen können Teams zugeordnet werden, um Verantwortlichkeiten klar zu definieren.
-            </PageHint>
-          </div>
+          <h1 className="font-display text-xl font-bold">Teams</h1>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Neues Team
-        </Button>
+        <div className="flex items-center gap-2">
+          <PageHelpButton title="Teams" description="Erstelle Teams und lade Mitglieder per E-Mail ein. Entscheidungen können Teams zugeordnet werden, um Verantwortlichkeiten klar zu definieren." />
+          <Button onClick={() => setShowCreate(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Neues Team
+          </Button>
+        </div>
       </div>
 
       {teams.length === 0 ? (
