@@ -18,6 +18,7 @@ import ApplyLearningPanel from "./ApplyLearningPanel";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
+import { Crown } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -60,7 +61,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
   const [pinnedLessons, setPinnedLessons] = useState<any[]>([]);
-  
+  const [ownerId, setOwnerId] = useState("");
+
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
   const [selectedReviewFlow, setSelectedReviewFlow] = useState<ReviewFlowTemplate | null>(null);
@@ -94,6 +96,17 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   }, [selectedTemplate, conditionalResult.extraApprovalSteps]);
 
   // (Lessons fetched inside ApplyLearningPanel)
+
+  // Fetch profiles for owner selector
+  const { data: profilesList = [] } = useQuery({
+    queryKey: ["profiles"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, full_name");
+      return data ?? [];
+    },
+    staleTime: 60_000,
+    enabled: open,
+  });
 
   // Fetch historical decision data for AI template recommendation
   const { data: historicalDecisions = [] } = useQuery({
@@ -331,6 +344,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       });
     }
 
+    const effectiveOwnerId = ownerId || user.id;
     const { data, error: err } = await supabase.from("decisions").insert([{
       title: title.trim(),
       description: description.trim() || null,
@@ -340,7 +354,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       due_date: dueDate || null,
       team_id: teamId || null,
       created_by: user.id,
-      owner_id: user.id,
+      owner_id: effectiveOwnerId,
       template_used: selectedTemplate?.name || null,
       template_version: selectedTemplate?.version || null,
       template_snapshot: templateSnapshot,
@@ -415,7 +429,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setDueDate(""); setTeamId(""); setStep("template"); setSelectedTemplate(null);
     setExtraFields({}); setValidationErrors([]); setExpandedTemplate(null);
     setReviewFlowId(suggestReviewFlow("operational", "medium")); setSelectedReviewFlow(null);
-    setPinnedLessons([]); setShowRecommendations(false);
+    setPinnedLessons([]); setShowRecommendations(false); setOwnerId("");
   };
 
   const renderExtraField = (field: RequiredField, isConditional = false) => {
@@ -676,6 +690,22 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               </div>
             </div>
 
+            {/* Owner selector */}
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                <Crown className="w-3.5 h-3.5 text-warning" /> Owner (Accountable)
+              </label>
+              <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className={inputClass}>
+                <option value="" className="bg-card">Ich selbst (Standard)</option>
+                {profilesList.map(p => (
+                  <option key={p.user_id} value={p.user_id} className="bg-card">
+                    {p.full_name || p.user_id.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1">Owner ist verantwortlich für Status, Freigabe und Teilen.</p>
+            </div>
+
             {/* Review-Flow Selector */}
             <ReviewFlowSelector
               selectedFlowId={reviewFlowId}
@@ -683,7 +713,6 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               category={category}
               priority={priority}
             />
-
             {/* Base required fields from template */}
             {selectedTemplate && selectedTemplate.requiredFields.length > 0 && (
               <div className="space-y-3 pt-3 border-t border-border">
