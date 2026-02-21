@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { decisionTemplates, getTemplateByCategory, type DecisionTemplate, type RequiredField } from "@/lib/decisionTemplates";
-import { FileText, Users, Shield, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
+import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
+import ReviewFlowSelector from "./ReviewFlowSelector";
+import { FileText, Users, Shield, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface Props {
@@ -37,8 +39,10 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [showTemplates, setShowTemplates] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<DecisionTemplate | null>(null);
   const [extraFields, setExtraFields] = useState<Record<string, string>>({});
-  const [showGovernance, setShowGovernance] = useState(false);
+  
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
+  const [selectedReviewFlow, setSelectedReviewFlow] = useState<ReviewFlowTemplate | null>(null);
 
   useEffect(() => {
     if (open && user) {
@@ -79,6 +83,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setExtraFields({});
     setValidationErrors([]);
     setShowTemplates(false);
+    // Auto-suggest review flow based on template
+    const suggested = suggestReviewFlow(t.category, t.priority);
+    setReviewFlowId(suggested);
   };
 
   const handleCategoryChange = (newCat: string) => {
@@ -89,6 +96,18 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       setExtraFields({});
       setValidationErrors([]);
     }
+    // Update review flow suggestion
+    setReviewFlowId(suggestReviewFlow(newCat, priority));
+  };
+
+  const handlePriorityChange = (newPri: string) => {
+    setPriority(newPri);
+    setReviewFlowId(suggestReviewFlow(category, newPri));
+  };
+
+  const handleReviewFlowSelect = (flow: ReviewFlowTemplate) => {
+    setReviewFlowId(flow.id);
+    setSelectedReviewFlow(flow);
   };
 
   const validateRequiredFields = (): boolean => {
@@ -145,11 +164,12 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
           new_value: title.trim(),
         });
 
-        // Auto-create review steps from approval matrix with team members
-        if (selectedTemplate?.approvalSteps.length) {
-          const requiredSteps = selectedTemplate.approvalSteps.filter(s => s.required);
-          if (requiredSteps.length > 0 && teamId) {
-            // Fetch team members (excluding creator)
+        // Auto-create review steps from selected Review-Flow
+        const { reviewFlowTemplates } = await import("@/lib/reviewFlowTemplates");
+        const flow = reviewFlowTemplates.find(f => f.id === reviewFlowId);
+        if (flow && flow.steps.length > 0) {
+          const flowSteps = flow.steps;
+          if (teamId) {
             const { data: members } = await supabase
               .from("team_members")
               .select("user_id")
@@ -158,9 +178,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
             const availableMembers = members?.map(m => m.user_id) || [];
 
-            const reviewSteps = requiredSteps.map((step, i) => ({
+            const reviewSteps = flowSteps.map((step, i) => ({
               decision_id: data.id,
-              // Round-robin assign team members, fallback to creator if no members
               reviewer_id: availableMembers.length > 0
                 ? availableMembers[i % availableMembers.length]
                 : user.id,
@@ -168,9 +187,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               status: "review" as const,
             }));
             await supabase.from("decision_reviews").insert(reviewSteps);
-          } else if (requiredSteps.length > 0) {
-            // No team selected – assign creator as placeholder
-            const reviewSteps = requiredSteps.map((step, i) => ({
+          } else {
+            const reviewSteps = flowSteps.map((step, i) => ({
               decision_id: data.id,
               reviewer_id: user.id,
               step_order: i + 1,
@@ -190,7 +208,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const resetForm = () => {
     setTitle(""); setDescription(""); setCategory("operational"); setPriority("medium");
     setDueDate(""); setTeamId(""); setShowTemplates(true); setSelectedTemplate(null);
-    setExtraFields({}); setValidationErrors([]); setShowGovernance(false);
+    setExtraFields({}); setValidationErrors([]);
+    setReviewFlowId(suggestReviewFlow("operational", "medium")); setSelectedReviewFlow(null);
   };
 
   const renderExtraField = (field: RequiredField) => {
@@ -287,7 +306,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Priorität</label>
-              <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputClass}>
+              <select value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
                 {priorities.map((p) => (<option key={p} value={p} className="bg-card">{p.charAt(0).toUpperCase() + p.slice(1)}</option>))}
               </select>
             </div>
@@ -308,6 +327,14 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
           </div>
 
+          {/* Review-Flow Selector */}
+          <ReviewFlowSelector
+            selectedFlowId={reviewFlowId}
+            onSelect={handleReviewFlowSelect}
+            category={category}
+            priority={priority}
+          />
+
           {/* Required fields from template */}
           {selectedTemplate && selectedTemplate.requiredFields.length > 0 && (
             <div className="space-y-3 pt-3 border-t border-border">
@@ -327,42 +354,11 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             </div>
           )}
 
-          {/* Approval matrix */}
-          {selectedTemplate && selectedTemplate.approvalSteps.length > 0 && (
-            <div className="pt-3 border-t border-border">
-              <button
-                type="button"
-                onClick={() => setShowGovernance(!showGovernance)}
-                className="flex items-center gap-2 w-full text-left"
-              >
-                <Shield className="w-4 h-4 text-warning" />
-                <span className="text-sm font-medium flex-1">Approval-Matrix</span>
-                {showGovernance ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-              </button>
-              {showGovernance && (
-                <div className="mt-2 space-y-2">
-                  {selectedTemplate.approvalSteps.map((step, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 text-xs">
-                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                        {i + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{step.label}</p>
-                        <p className="text-muted-foreground capitalize">{step.role.replace("_", " ")}</p>
-                      </div>
-                      <Badge variant={step.required ? "destructive" : "secondary"} className="text-[10px]">
-                        {step.required ? "Pflicht" : "Optional"}
-                      </Badge>
-                    </div>
-                  ))}
-                  {selectedTemplate.governanceNotes && (
-                    <p className="text-[11px] text-muted-foreground italic p-2 rounded-lg bg-warning/5 border border-warning/20">
-                      {selectedTemplate.governanceNotes}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Governance notes from template */}
+          {selectedTemplate?.governanceNotes && (
+            <p className="text-[11px] text-muted-foreground italic p-2 rounded-lg bg-warning/5 border border-warning/20">
+              {selectedTemplate.governanceNotes}
+            </p>
           )}
 
           {validationErrors.length > 0 && (
