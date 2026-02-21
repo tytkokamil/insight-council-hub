@@ -7,10 +7,12 @@ export const priorityColor: Record<string, string> = {
 
 export const statusDot: Record<string, string> = {
   draft: "bg-muted-foreground",
+  proposed: "bg-accent-foreground/60",
   review: "bg-warning",
   approved: "bg-success",
-  implemented: "bg-primary",
   rejected: "bg-destructive",
+  implemented: "bg-primary",
+  archived: "bg-muted-foreground/40",
 };
 
 export const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];

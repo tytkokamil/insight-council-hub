@@ -11,10 +11,12 @@ export const categoryLabels: Record<string, string> = {
 
 export const statusLabels: Record<string, string> = {
   draft: "Entwurf",
+  proposed: "Vorschlag",
   review: "Review",
   approved: "Genehmigt",
-  implemented: "Umgesetzt",
   rejected: "Abgelehnt",
+  implemented: "Umgesetzt",
+  archived: "Archiviert",
 };
 
 export const priorityLabels: Record<string, string> = {

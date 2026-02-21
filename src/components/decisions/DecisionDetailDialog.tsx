@@ -27,14 +27,16 @@ interface Props {
   onUpdated: () => void;
 }
 
-const statusOptions = ["draft", "review", "approved", "implemented", "rejected"] as const;
+const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
 
 const statusLabels: Record<string, string> = {
   draft: "Entwurf",
+  proposed: "Vorschlag",
   review: "Review",
   approved: "Genehmigt",
-  implemented: "Umgesetzt",
   rejected: "Abgelehnt",
+  implemented: "Umgesetzt",
+  archived: "Archiviert",
 };
 
 const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {

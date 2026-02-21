@@ -35,10 +35,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const STATUS_OPTIONS = [
   { value: "draft", label: "Entwurf" },
+  { value: "proposed", label: "Vorschlag" },
   { value: "review", label: "Review" },
   { value: "approved", label: "Genehmigt" },
-  { value: "implemented", label: "Umgesetzt" },
   { value: "rejected", label: "Abgelehnt" },
+  { value: "implemented", label: "Umgesetzt" },
+  { value: "archived", label: "Archiviert" },
 ];
 
 const PRIORITY_OPTIONS = [
@@ -59,10 +61,12 @@ const CATEGORY_OPTIONS = [
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
+  proposed: "bg-accent text-accent-foreground",
   review: "bg-warning/20 text-warning",
   approved: "bg-success/20 text-success",
-  implemented: "bg-primary/20 text-primary",
   rejected: "bg-destructive/20 text-destructive",
+  implemented: "bg-primary/20 text-primary",
+  archived: "bg-muted/50 text-muted-foreground/60",
 };
 
 const priorityStyles: Record<string, string> = {
