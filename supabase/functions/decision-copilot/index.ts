@@ -68,9 +68,24 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { decision, teamMembers, historicalStats } = await req.json();
+    const body = await req.json();
     const userId = extractUserId(req);
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
+
+    // Free-form prompt mode (used by Meeting Mode)
+    if (body.prompt && !body.decision) {
+      const messages = [
+        { role: "system", content: "Du bist ein professioneller KI-Assistent für Geschäftsentscheidungen. Antworte auf Deutsch." },
+        { role: "user", content: body.prompt },
+      ];
+      const result = await callProvider(settings, messages, [], undefined);
+      const text = typeof result === "string" ? result : JSON.stringify(result);
+      return new Response(JSON.stringify({ response: text }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { decision, teamMembers, historicalStats } = body;
 
     const prompt = `Du bist ein KI-Co-Pilot für Geschäftsentscheidungen. Analysiere diese Entscheidung und gib strategische Steuerungsempfehlungen.
 
