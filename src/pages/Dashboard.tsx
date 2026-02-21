@@ -36,6 +36,7 @@ import {
 
 const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
+const RoiDashboardWidget = lazy(() => import("@/components/dashboard/RoiDashboardWidget"));
 
 type TimeRange = 7 | 30 | 90 | "custom";
 
@@ -485,6 +486,15 @@ const Dashboard = () => {
               </div>
             </div>
           </section>
+        )}
+
+        {/* ═══ ROI DASHBOARD ═══ */}
+        {!isLoading && (
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
+            <WidgetErrorBoundary>
+              <RoiDashboardWidget />
+            </WidgetErrorBoundary>
+          </Suspense>
         )}
 
         {/* ═══ ECONOMIC IMPACT ═══ */}
