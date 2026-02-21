@@ -1,14 +1,18 @@
 import { useMemo, useState } from "react";
-import { Trophy, Medal, Zap, Target, Star, CheckCircle2 } from "lucide-react";
+import { Users, Zap, Target, CheckCircle2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useProfiles, buildProfileMap, useReviews } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import WidgetSkeleton from "./WidgetSkeleton";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
+import { useTeamContext } from "@/hooks/useTeamContext";
 
 type Tab = "makers" | "reviewers";
 
 const LeaderboardWidget = () => {
   const [tab, setTab] = useState<Tab>("makers");
+  const { isEnabled } = useFeatureFlags();
+  const { selectedTeamId } = useTeamContext();
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: profiles = [], isLoading: loadingProfiles } = useProfiles();
   const { data: allReviews = [], isLoading: loadingReviews } = useReviews();
@@ -16,11 +20,23 @@ const LeaderboardWidget = () => {
 
   const isLoading = loadingDec || loadingProfiles || loadingReviews;
 
-  // Decision makers leaderboard
+  // Filter to active team only (team-level, not org-wide)
+  const teamDecisions = useMemo(() => {
+    if (!selectedTeamId) return allDecisions;
+    return allDecisions.filter(d => d.team_id === selectedTeamId);
+  }, [allDecisions, selectedTeamId]);
+
+  const teamReviews = useMemo(() => {
+    if (!selectedTeamId) return allReviews;
+    const teamDecIds = new Set(teamDecisions.map(d => d.id));
+    return allReviews.filter(r => teamDecIds.has(r.decision_id));
+  }, [allReviews, selectedTeamId, teamDecisions]);
+
+  // Decision makers
   const makers = useMemo(() => {
-    if (allDecisions.length === 0) return [];
+    if (teamDecisions.length === 0) return [];
     const userMap: Record<string, { decisions: number; implemented: number; velocities: number[] }> = {};
-    allDecisions.forEach(d => {
+    teamDecisions.forEach(d => {
       if (!userMap[d.created_by]) userMap[d.created_by] = { decisions: 0, implemented: 0, velocities: [] };
       userMap[d.created_by].decisions++;
       if (d.status === "implemented") {
@@ -43,11 +59,11 @@ const LeaderboardWidget = () => {
       }))
       .sort((a, b) => b.implemented - a.implemented || a.avgVelocity - b.avgVelocity)
       .slice(0, 5);
-  }, [allDecisions, profileMap]);
+  }, [teamDecisions, profileMap]);
 
-  // Reviewer leaderboard
+  // Reviewers
   const reviewers = useMemo(() => {
-    const completed = allReviews.filter(r => r.reviewed_at && (r.status === "approved" || r.status === "rejected"));
+    const completed = teamReviews.filter(r => r.reviewed_at && (r.status === "approved" || r.status === "rejected"));
     if (completed.length === 0) return [];
     const userMap: Record<string, { count: number; approved: number; speeds: number[] }> = {};
     completed.forEach(r => {
@@ -71,14 +87,10 @@ const LeaderboardWidget = () => {
       }))
       .sort((a, b) => b.count - a.count || a.avgSpeed - b.avgSpeed)
       .slice(0, 5);
-  }, [allReviews, profileMap]);
+  }, [teamReviews, profileMap]);
 
-  const rankIcons = [
-    <Trophy key="1" className="w-4 h-4 text-warning" />,
-    <Medal key="2" className="w-4 h-4 text-muted-foreground" />,
-    <Medal key="3" className="w-4 h-4 text-warning/60" />,
-  ];
-
+  // Feature flag: default OFF (isEnabled defaults true for unknown keys, so "leaderboard" must exist and be enabled)
+  if (!isEnabled("leaderboard")) return null;
   if (isLoading) return <WidgetSkeleton rows={5} showScore={false} />;
   if (makers.length === 0 && reviewers.length === 0) return null;
 
@@ -88,14 +100,14 @@ const LeaderboardWidget = () => {
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-warning/10 flex items-center justify-center">
-            <Trophy className="w-4 h-4 text-warning" />
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Users className="w-4 h-4 text-primary" />
           </div>
           <div className="flex items-center gap-1.5">
-            <CardTitle className="text-sm">Leaderboard</CardTitle>
+            <CardTitle className="text-sm">Contribution Overview</CardTitle>
             <ScoreMethodology
-              title="Leaderboard"
-              description="Ranking nach Leistung und Geschwindigkeit."
+              title="Contribution Overview"
+              description="Team-Level Beitragsübersicht nach Leistung und Geschwindigkeit. Kein Ranking – nur Transparenz."
               items={[
                 { label: "Entscheider", formula: "Sortiert nach umgesetzten Entscheidungen, dann Ø Velocity" },
                 { label: "Reviewer", formula: "Sortiert nach Reviews, dann Ø Reaktionszeit" },
@@ -103,7 +115,9 @@ const LeaderboardWidget = () => {
             />
           </div>
         </div>
-        {/* Tab switcher */}
+        {selectedTeamId && (
+          <p className="text-[10px] text-muted-foreground mt-1">Nur Team-Daten</p>
+        )}
         <div className="flex gap-1 mt-2 bg-muted/50 rounded-lg p-0.5">
           <button
             onClick={() => setTab("makers")}
@@ -124,11 +138,8 @@ const LeaderboardWidget = () => {
           {activeList.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-4">Noch keine Daten vorhanden.</p>
           ) : tab === "makers" ? (
-            makers.map((leader, i) => (
-              <div key={leader.userId} className={`flex items-center gap-3 p-3 rounded-lg ${i === 0 ? "bg-warning/5 border border-warning/20" : "bg-muted/30"}`}>
-                <div className="w-6 flex justify-center shrink-0">
-                  {i < 3 ? rankIcons[i] : <span className="text-xs text-muted-foreground font-bold">#{i + 1}</span>}
-                </div>
+            makers.map((leader) => (
+              <div key={leader.userId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{leader.name}</p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
@@ -145,11 +156,8 @@ const LeaderboardWidget = () => {
               </div>
             ))
           ) : (
-            reviewers.map((rev, i) => (
-              <div key={rev.userId} className={`flex items-center gap-3 p-3 rounded-lg ${i === 0 ? "bg-warning/5 border border-warning/20" : "bg-muted/30"}`}>
-                <div className="w-6 flex justify-center shrink-0">
-                  {i < 3 ? rankIcons[i] : <span className="text-xs text-muted-foreground font-bold">#{i + 1}</span>}
-                </div>
+            reviewers.map((rev) => (
+              <div key={rev.userId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{rev.name}</p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">

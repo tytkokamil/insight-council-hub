@@ -62,7 +62,6 @@ const navGroups: NavGroup[] = [
     defaultCollapsed: true,
     items: [
       { icon: Zap, label: "Escalation Center", path: "/engine", featureKey: "engine" },
-      { icon: Shield, label: "War Room", path: "/warroom", featureKey: "warroom" },
       { icon: Shield, label: "Risk Register", path: "/risks" },
       { icon: History, label: "Audit Trail", path: "/audit", featureKey: "audit" },
       { icon: Zap, label: "Automations", path: "/automations", adminOnly: true },
