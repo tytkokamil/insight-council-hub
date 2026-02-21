@@ -1,15 +1,20 @@
-import { useMemo } from "react";
-import { Users, Zap, CheckCircle2, AlertTriangle, FileText, Clock, TrendingUp, Shield } from "lucide-react";
+import { useMemo, useCallback } from "react";
+import { Users, Zap, CheckCircle2, AlertTriangle, FileText, Clock, TrendingUp, Shield, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHint from "@/components/shared/PageHint";
 import { useTeams, useProfiles, buildProfileMap, useReviews } from "@/hooks/useDecisions";
 import { useRisks } from "@/hooks/useRisks";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface TeamStats {
   teamId: string;
@@ -107,6 +112,51 @@ const TeamPerformance = () => {
 
   const maxDecisions = Math.max(...teamStats.map(t => t.totalDecisions), 1);
 
+  const formatSpeed = (h: number) => h > 0 ? (h < 24 ? `${h}h` : `${Math.round(h / 24 * 10) / 10}d`) : "–";
+
+  const exportCSV = useCallback(() => {
+    if (teamStats.length === 0) return;
+    const headers = ["Rang", "Team", "Entscheidungen", "Umgesetzt", "Completion Rate %", "Ø Velocity (Tage)", "Ø Review-Speed (h)", "Offene Reviews", "Offene Risiken", "Kritische Risiken", "Überfällig"];
+    const rows = teamStats.map((t, i) => [
+      i + 1, t.teamName, t.totalDecisions, t.implemented, t.completionRate,
+      t.avgVelocityDays, t.avgReviewHours, t.pendingReviews,
+      t.openRisks, t.criticalRisks, t.overdueCount,
+    ]);
+    const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `team-performance-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [teamStats]);
+
+  const exportPDF = useCallback(() => {
+    if (teamStats.length === 0) return;
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Team-Performance Vergleich", 14, 18);
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`Erstellt am ${format(new Date(), "dd.MM.yyyy HH:mm")}`, 14, 25);
+
+    autoTable(doc, {
+      startY: 32,
+      head: [["#", "Team", "Entsch.", "Umgesetzt", "Compl. %", "Ø Velocity", "Ø Review", "Reviews offen", "Risiken", "Kritisch", "Überfällig"]],
+      body: teamStats.map((t, i) => [
+        i + 1, t.teamName, t.totalDecisions, t.implemented, `${t.completionRate}%`,
+        t.avgVelocityDays > 0 ? `${t.avgVelocityDays}d` : "–",
+        formatSpeed(t.avgReviewHours),
+        t.pendingReviews, t.openRisks, t.criticalRisks, t.overdueCount,
+      ]),
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [40, 40, 40] },
+    });
+
+    doc.save(`team-performance-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  }, [teamStats]);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -120,9 +170,24 @@ const TeamPerformance = () => {
               KPIs aller Teams im direkten Vergleich
             </p>
           </div>
-          <PageHint>
-            Vergleicht Velocity, Completion Rate, offene Risiken und Review-Geschwindigkeit aller Teams.
-          </PageHint>
+          <div className="flex items-center gap-2">
+            {teamStats.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Download className="w-3.5 h-3.5" /> Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={exportCSV}>CSV herunterladen</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportPDF}>PDF herunterladen</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <PageHint>
+              Vergleicht Velocity, Completion Rate, offene Risiken und Review-Geschwindigkeit aller Teams.
+            </PageHint>
+          </div>
         </div>
 
         {isLoading ? (
