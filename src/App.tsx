@@ -48,6 +48,7 @@ const TeamDetail = lazy(() => import("./pages/TeamDetail"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
 const Templates = lazy(() => import("./pages/Templates"));
 const TimelinePage = lazy(() => import("./pages/TimelinePage"));
+const TemplateEditor = lazy(() => import("./pages/TemplateEditor"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
 const DecisionDetail = lazy(() => import("./pages/DecisionDetail"));
 const AutomationRules = lazy(() => import("./pages/AutomationRules"));
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
               <Route path="/patterns" element={<P><PatternEngine /></P>} />
               <Route path="/templates" element={<P><Templates /></P>} />
+              <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
               <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
               <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />
               <Route path="/automations" element={<P><AutomationRules /></P>} />

@@ -366,6 +366,36 @@ const DecisionDetail = () => {
         </div>
       </div>
 
+      {/* Lifecycle banners */}
+      {decision.status === "cancelled" && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/40 border border-border mb-4">
+          <Ban className="w-5 h-5 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-muted-foreground">Entscheidung abgebrochen</p>
+            <p className="text-xs text-muted-foreground/70">
+              {decision.cancelled_at ? `Am ${format(new Date(decision.cancelled_at), "dd.MM.yyyy HH:mm", { locale: de })}` : "Kein Datum"}
+              {" · "}Keine weiteren Aktionen möglich.
+            </p>
+          </div>
+        </div>
+      )}
+      {decision.status === "superseded" && (
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-accent/20 border border-accent/30 mb-4">
+          <Replace className="w-5 h-5 text-accent-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-accent-foreground">Entscheidung ersetzt</p>
+            <p className="text-xs text-muted-foreground">
+              Diese Entscheidung wurde durch eine neuere Version ersetzt.
+              {decision.superseded_by && (
+                <Button variant="link" size="sm" className="text-xs p-0 h-auto ml-1" onClick={() => navigate(`/decisions/${decision.superseded_by}`)}>
+                  Nachfolger anzeigen →
+                </Button>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Open tasks warning */}
       {openLinkedTasks > 0 && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 mb-4">
