@@ -5,7 +5,7 @@ import {
   Activity, DollarSign, Zap, FileText, Eye, TrendingUp, TrendingDown,
   Minus, ShieldAlert, CheckCircle2, Info, Command, ListTodo,
   Link2, ChevronDown, ChevronRight, Users, ExternalLink, Bell,
-  Download, CalendarIcon, RefreshCw,
+  Download, CalendarIcon, RefreshCw, Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import { useRisks } from "@/hooks/useRisks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { statusLabels, priorityLabels, categoryLabels } from "@/lib/labels";
@@ -50,6 +51,7 @@ const KpiSkeleton = () => (
 const Dashboard = () => {
   const { data: allDecisions = [], isLoading: loadingDec, isError: errorDec, refetch: refetchDec } = useDecisions();
   const { data: profiles = [] } = useProfiles();
+  const { data: risks = [] } = useRisks();
   const { data: tasks = [], isLoading: loadingTasks, isError: errorTasks, refetch: refetchTasks } = useTasks();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useReviews();
@@ -488,6 +490,77 @@ const Dashboard = () => {
             </div>
           </section>
         )}
+
+        {/* ═══ RISK OVERVIEW ═══ */}
+        {!isLoading && risks.length > 0 && (() => {
+          const openRisks = risks.filter((r: any) => r.status === "open" || r.status === "mitigating");
+          const criticalRisks = openRisks.filter((r: any) => (r.risk_score ?? r.likelihood * r.impact) >= 16);
+          const highRisks = openRisks.filter((r: any) => { const s = r.risk_score ?? r.likelihood * r.impact; return s >= 9 && s < 16; });
+          const withMitigation = openRisks.filter((r: any) => r.mitigation_plan && r.mitigation_plan.trim().length > 0);
+          const withoutMitigation = openRisks.filter((r: any) => !r.mitigation_plan || r.mitigation_plan.trim().length === 0);
+          const avgScore = openRisks.length > 0 ? Math.round(openRisks.reduce((s: number, r: any) => s + (r.risk_score ?? r.likelihood * r.impact), 0) / openRisks.length * 10) / 10 : 0;
+
+          return (
+            <section>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Risk Overview</h2>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Total open */}
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
+                  <div className="flex items-center justify-between mb-2">
+                    <Shield className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Ø {avgScore}</span>
+                  </div>
+                  <p className="text-2xl font-semibold tracking-tight">{openRisks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Offene Risiken</p>
+                </div>
+
+                {/* Critical */}
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
+                  <ShieldAlert className="w-4 h-4 text-destructive mb-2" />
+                  <p className={`text-2xl font-semibold tracking-tight ${criticalRisks.length > 0 ? "text-destructive" : ""}`}>{criticalRisks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Kritische Risiken</p>
+                </div>
+
+                {/* High */}
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
+                  <AlertTriangle className="w-4 h-4 text-warning mb-2" />
+                  <p className={`text-2xl font-semibold tracking-tight ${highRisks.length > 0 ? "text-warning" : ""}`}>{highRisks.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Hohe Risiken</p>
+                </div>
+
+                {/* Without mitigation */}
+                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
+                  <FileText className="w-4 h-4 text-muted-foreground mb-2" />
+                  <p className="text-2xl font-semibold tracking-tight">{withoutMitigation.length}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Ohne Mitigation</p>
+                </div>
+              </div>
+
+              {/* Critical risks list */}
+              {criticalRisks.length > 0 && (
+                <div className="border border-destructive/20 rounded-lg p-4 mt-3">
+                  <p className="text-xs font-medium text-destructive mb-2 flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5" /> Kritische Risiken – sofortige Aufmerksamkeit
+                  </p>
+                  <div className="space-y-1.5">
+                    {criticalRisks.slice(0, 5).map((r: any) => (
+                      <button key={r.id} onClick={() => navigate("/risks")} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-1.5 -mx-1.5 transition-colors text-left">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xs font-medium text-destructive shrink-0 tabular-nums">{r.risk_score ?? r.likelihood * r.impact}</span>
+                          <span className="text-xs truncate">{r.title}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {!r.mitigation_plan && <Badge variant="outline" className="text-[10px] text-warning">Keine Mitigation</Badge>}
+                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })()}
 
         {/* ═══ RECENT ═══ */}
         {!isLoading && (
