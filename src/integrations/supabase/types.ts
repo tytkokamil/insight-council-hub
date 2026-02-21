@@ -222,6 +222,33 @@ export type Database = {
           },
         ]
       }
+      data_retention_config: {
+        Row: {
+          auto_archive_days: number
+          auto_delete_archived_days: number | null
+          enabled: boolean
+          id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          auto_archive_days?: number
+          auto_delete_archived_days?: number | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          auto_archive_days?: number
+          auto_delete_archived_days?: number | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
       decision_dependencies: {
         Row: {
           created_at: string
@@ -503,6 +530,7 @@ export type Database = {
           ai_risk_factors: string[] | null
           ai_risk_score: number | null
           ai_success_factors: string[] | null
+          archived_at: string | null
           assignee_id: string | null
           category: Database["public"]["Enums"]["decision_category"]
           context: string | null
@@ -530,6 +558,7 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          archived_at?: string | null
           assignee_id?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           context?: string | null
@@ -557,6 +586,7 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          archived_at?: string | null
           assignee_id?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           context?: string | null

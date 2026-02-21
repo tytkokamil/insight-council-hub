@@ -83,9 +83,12 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const handleStatusChange = async (newStatus: string) => {
     setSaving(true);
     const oldStatus = status;
+    const updates: Record<string, any> = { status: newStatus as any };
+    if (newStatus === "archived") updates.archived_at = new Date().toISOString();
+    if (newStatus !== "archived" && oldStatus === "archived") updates.archived_at = null;
     const { error } = await supabase
       .from("decisions")
-      .update({ status: newStatus as any })
+      .update(updates)
       .eq("id", decision.id);
     if (!error) {
       setStatus(newStatus);
