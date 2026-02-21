@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Send, FileText, Trash2, Paperclip, File, X, Download, Link2 } from "lucide-react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { Send, FileText, Trash2, Paperclip, File, X, Download, Link2, AtSign } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface TeamMessage {
   id: string;
@@ -27,6 +28,30 @@ interface TeamChatProps {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
+/** Renders message content with highlighted @mentions */
+const RenderMentionContent = ({ content, isOwn }: { content: string; isOwn: boolean }) => {
+  const parts = content.split(/(@\[([^\]]+)\]\([a-f0-9\-]{36}\))/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (i % 3 === 1) return null;
+        if (i % 3 === 2) {
+          return (
+            <span key={i} className={cn(
+              "inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-xs font-medium",
+              isOwn ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"
+            )}>
+              <AtSign className="w-3 h-3" />
+              {part}
+            </span>
+          );
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+};
+
 const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<TeamMessage[]>([]);
@@ -41,6 +66,9 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const [showLinkMenu, setShowLinkMenu] = useState(false);
   const [linkFilter, setLinkFilter] = useState("");
   const [linkMenuIndex, setLinkMenuIndex] = useState(0);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const [mentionCursorPos, setMentionCursorPos] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +96,34 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const lower = linkFilter.toLowerCase();
     return entries.filter(([, title]) => title.toLowerCase().includes(lower));
   }, [decisions, linkFilter]);
+
+  // Mention autocomplete
+  const profilesList = useMemo(() => Object.entries(profiles).map(([id, p]) => ({ user_id: id, full_name: p.name, avatar: p.avatar })), [profiles]);
+
+  const filteredMentionProfiles = useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    return profilesList
+      .filter(p => p.user_id !== user?.id && p.full_name.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [mentionQuery, profilesList, user?.id]);
+
+  const insertMention = useCallback((profile: { user_id: string; full_name: string }) => {
+    const textBefore = newMessage.slice(0, mentionCursorPos);
+    const textAfter = newMessage.slice(mentionCursorPos);
+    const atStart = textBefore.lastIndexOf("@");
+    const mention = `@[${profile.full_name}](${profile.user_id}) `;
+    const result = textBefore.slice(0, atStart) + mention + textAfter;
+    setNewMessage(result);
+    setMentionQuery(null);
+    setTimeout(() => {
+      if (inputRef.current) {
+        const newPos = atStart + mention.length;
+        inputRef.current.focus();
+        inputRef.current.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
+  }, [newMessage, mentionCursorPos]);
 
   const selectDecision = (id: string, title: string) => {
     setLinkedDecisionId(id);
@@ -269,30 +325,38 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     await supabase.from("team_messages").delete().eq("id", id);
   };
 
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const pos = e.target.selectionStart || 0;
+    setNewMessage(val);
+    setMentionCursorPos(pos);
+    if (!val.match(/\/link\s*/i)) {
+      const textBefore = val.slice(0, pos);
+      const atMatch = textBefore.match(/@(\w*)$/);
+      if (atMatch) {
+        setMentionQuery(atMatch[1]);
+        setMentionIndex(0);
+      } else {
+        setMentionQuery(null);
+      }
+    } else {
+      setMentionQuery(null);
+    }
+  }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Mention menu takes priority
+    if (mentionQuery !== null && filteredMentionProfiles.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex(i => Math.min(i + 1, filteredMentionProfiles.length - 1)); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex(i => Math.max(i - 1, 0)); return; }
+      if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(filteredMentionProfiles[mentionIndex]); return; }
+      if (e.key === "Escape") { setMentionQuery(null); return; }
+    }
     if (showLinkMenu && filteredDecisions.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setLinkMenuIndex((i) => Math.min(i + 1, filteredDecisions.length - 1));
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setLinkMenuIndex((i) => Math.max(i - 1, 0));
-        return;
-      }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const [id, title] = filteredDecisions[linkMenuIndex];
-        selectDecision(id, title);
-        return;
-      }
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowLinkMenu(false);
-        setNewMessage(newMessage.replace(/\/link\s*.*/i, ""));
-        return;
-      }
+      if (e.key === "ArrowDown") { e.preventDefault(); setLinkMenuIndex((i) => Math.min(i + 1, filteredDecisions.length - 1)); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setLinkMenuIndex((i) => Math.max(i - 1, 0)); return; }
+      if (e.key === "Enter") { e.preventDefault(); const [id, title] = filteredDecisions[linkMenuIndex]; selectDecision(id, title); return; }
+      if (e.key === "Escape") { e.preventDefault(); setShowLinkMenu(false); setNewMessage(newMessage.replace(/\/link\s*.*/i, "")); return; }
     }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -382,7 +446,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
                     <div className={`inline-block px-3 py-2 rounded-xl text-sm ${
                       isOwn ? "bg-primary text-primary-foreground" : "bg-muted/60"
                     }`}>
-                      {msg.content}
+                      <RenderMentionContent content={msg.content} isOwn={isOwn} />
                     </div>
                   )}
                   {renderAttachment(msg)}
@@ -477,13 +541,35 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
           >
             <Paperclip className="w-4 h-4" />
           </Button>
+          {/* Mention autocomplete dropdown */}
+          {mentionQuery !== null && filteredMentionProfiles.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50">
+              <p className="text-[10px] text-muted-foreground px-3 pt-2 pb-1 font-semibold uppercase tracking-wider">Personen erwähnen</p>
+              {filteredMentionProfiles.map((p, i) => (
+                <button
+                  key={p.user_id}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
+                    i === mentionIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted/50"
+                  )}
+                  onMouseDown={(e) => { e.preventDefault(); insertMention(p); }}
+                  onMouseEnter={() => setMentionIndex(i)}
+                >
+                  <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
+                    {(p.full_name || "?")[0].toUpperCase()}
+                  </div>
+                  <span className="truncate">{p.full_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <input
             ref={inputRef}
             type="text"
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Nachricht schreiben... /link zum Verknüpfen"
+            placeholder="Nachricht schreiben... @ erwähnen · /link verknüpfen"
             className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
           <Button
