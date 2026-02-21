@@ -70,6 +70,7 @@ export const BASIC_MODE_PATHS = new Set([
   "/tasks",
   "/teams",
   "/calendar",
-  "/search",
+  "/meeting",
+  "/knowledge",
   "/settings",
 ]);
