@@ -11,9 +11,10 @@ import {
 import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
 import ReviewFlowSelector from "./ReviewFlowSelector";
 import {
-  FileText, Users, Shield, AlertCircle, Lightbulb, ThumbsUp, ThumbsDown,
+  FileText, Users, Shield, AlertCircle,
   ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft, Sparkles, TrendingUp,
 } from "lucide-react";
+import ApplyLearningPanel from "./ApplyLearningPanel";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
@@ -58,6 +59,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [extraFields, setExtraFields] = useState<Record<string, string>>({});
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
+  const [pinnedLessons, setPinnedLessons] = useState<any[]>([]);
   
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
@@ -91,27 +93,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     return [...base, ...extra.filter(s => !labels.has(s.label))];
   }, [selectedTemplate, conditionalResult.extraApprovalSteps]);
 
-  // Fetch lessons learned for recommendations
-  const { data: lessonsWithDecisions = [] } = useQuery({
-    queryKey: ["lessons-recommendations"],
-    queryFn: async () => {
-      const { data: lessons } = await supabase
-        .from("lessons_learned")
-        .select("id, decision_id, key_takeaway, what_went_well, what_went_wrong, recommendations")
-        .order("created_at", { ascending: false })
-        .limit(100);
-      if (!lessons?.length) return [];
-      const decisionIds = [...new Set(lessons.map(l => l.decision_id))];
-      const { data: decisions } = await supabase
-        .from("decisions")
-        .select("id, title, category, priority")
-        .in("id", decisionIds);
-      const decMap = new Map((decisions ?? []).map(d => [d.id, d]));
-      return lessons.map(l => ({ ...l, decision: decMap.get(l.decision_id) })).filter(l => l.decision);
-    },
-    enabled: open,
-    staleTime: 60_000,
-  });
+  // (Lessons fetched inside ApplyLearningPanel)
 
   // Fetch historical decision data for AI template recommendation
   const { data: historicalDecisions = [] } = useQuery({
@@ -194,12 +176,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     return null;
   }, [historicalDecisions, teamId]);
 
-  const relevantLessons = useMemo(() => {
-    if (!category) return [];
-    return lessonsWithDecisions
-      .filter(l => l.decision?.category === category)
-      .slice(0, 5);
-  }, [lessonsWithDecisions, category]);
+  // (relevantLessons now handled by ApplyLearningPanel)
 
   useEffect(() => {
     if (open && user) {
@@ -345,10 +322,19 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       defaultDurationDays: selectedTemplate.defaultDurationDays,
     } : null;
 
+    // Append pinned lessons to context
+    if (pinnedLessons.length > 0) {
+      contextParts.push(`\n---\n**📌 Angeheftete Learnings (${pinnedLessons.length}):**`);
+      pinnedLessons.forEach((l, i) => {
+        contextParts.push(`${i + 1}. _"${l.key_takeaway}"_ (aus: ${l.decision?.title ?? "Entscheidung"})`);
+        if (l.recommendations) contextParts.push(`   → ${l.recommendations}`);
+      });
+    }
+
     const { data, error: err } = await supabase.from("decisions").insert([{
       title: title.trim(),
       description: description.trim() || null,
-      context: contextParts.length > 1 ? contextParts.join("\n\n") : null,
+      context: contextParts.length > 0 ? contextParts.join("\n\n") : null,
       category: category as any,
       priority: priority as any,
       due_date: dueDate || null,
@@ -428,6 +414,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setDueDate(""); setTeamId(""); setStep("template"); setSelectedTemplate(null);
     setExtraFields({}); setValidationErrors([]); setExpandedTemplate(null);
     setReviewFlowId(suggestReviewFlow("operational", "medium")); setSelectedReviewFlow(null);
+    setPinnedLessons([]); setShowRecommendations(false);
   };
 
   const renderExtraField = (field: RequiredField, isConditional = false) => {
@@ -751,55 +738,14 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               </p>
             )}
 
-            {/* Lessons Learned Recommendations */}
-            {relevantLessons.length > 0 && (
-              <div className="pt-3 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setShowRecommendations(v => !v)}
-                  className="flex items-center gap-2 w-full text-left group"
-                >
-                  <Lightbulb className="w-4 h-4 text-warning" />
-                  <span className="text-sm font-medium flex-1">
-                    Lessons Learned ({relevantLessons.length})
-                  </span>
-                  <Badge variant="outline" className="text-[10px]">{categoryLabels[category]}</Badge>
-                  {showRecommendations ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                </button>
-                {showRecommendations && (
-                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                    {relevantLessons.map(l => (
-                      <div key={l.id} className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
-                        <p className="font-medium text-foreground flex items-start gap-1.5">
-                          <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
-                          {l.key_takeaway}
-                        </p>
-                        {l.what_went_well && (
-                          <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-                            <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
-                            {l.what_went_well}
-                          </p>
-                        )}
-                        {l.what_went_wrong && (
-                          <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-                            <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-                            {l.what_went_wrong}
-                          </p>
-                        )}
-                        {l.recommendations && (
-                          <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
-                            → {l.recommendations}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground/60 pl-4">
-                          Aus: {l.decision?.title}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Apply Learning Panel */}
+            <ApplyLearningPanel
+              title={title}
+              description={description}
+              category={category}
+              pinnedLessons={pinnedLessons}
+              onPinnedChange={setPinnedLessons}
+            />
 
             {validationErrors.length > 0 && (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
