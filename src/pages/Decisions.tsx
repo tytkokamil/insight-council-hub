@@ -41,6 +41,8 @@ const STATUS_OPTIONS = [
   { value: "approved", label: "Genehmigt" },
   { value: "rejected", label: "Abgelehnt" },
   { value: "implemented", label: "Umgesetzt" },
+  { value: "cancelled", label: "Abgebrochen" },
+  { value: "superseded", label: "Ersetzt" },
   { value: "archived", label: "Archiviert" },
 ];
 
@@ -67,6 +69,8 @@ const statusStyles: Record<string, string> = {
   approved: "bg-success/15 text-success border border-success/20",
   rejected: "bg-destructive/15 text-destructive border border-destructive/20",
   implemented: "bg-primary/15 text-primary border border-primary/20",
+  cancelled: "bg-muted/60 text-muted-foreground line-through",
+  superseded: "bg-accent-violet/10 text-accent-violet border border-accent-violet/20",
   archived: "bg-muted/50 text-muted-foreground/60",
 };
 
@@ -125,7 +129,7 @@ const Decisions = () => {
         }
       });
 
-      const isActive = !["implemented", "rejected"].includes(d.status);
+      const isActive = !["implemented", "rejected", "cancelled", "superseded", "archived"].includes(d.status);
       const isOverdue = !!(d.due_date && new Date(d.due_date) < now && isActive);
       const isEscalated = (d.escalation_level || 0) > 0;
       const needsReview = allReviews.some(r => r.decision_id === d.id && !r.reviewed_at && r.reviewer_id === user?.id);

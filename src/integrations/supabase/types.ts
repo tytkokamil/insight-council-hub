@@ -576,6 +576,7 @@ export type Database = {
           ai_success_factors: string[] | null
           archived_at: string | null
           assignee_id: string | null
+          cancelled_at: string | null
           category: Database["public"]["Enums"]["decision_category"]
           confidential: boolean
           context: string | null
@@ -595,6 +596,7 @@ export type Database = {
           owner_id: string
           priority: Database["public"]["Enums"]["decision_priority"]
           status: Database["public"]["Enums"]["decision_status"]
+          superseded_by: string | null
           team_id: string | null
           template_snapshot: Json | null
           template_used: string | null
@@ -611,6 +613,7 @@ export type Database = {
           ai_success_factors?: string[] | null
           archived_at?: string | null
           assignee_id?: string | null
+          cancelled_at?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
           context?: string | null
@@ -630,6 +633,7 @@ export type Database = {
           owner_id: string
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
+          superseded_by?: string | null
           team_id?: string | null
           template_snapshot?: Json | null
           template_used?: string | null
@@ -646,6 +650,7 @@ export type Database = {
           ai_success_factors?: string[] | null
           archived_at?: string | null
           assignee_id?: string | null
+          cancelled_at?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
           context?: string | null
@@ -665,6 +670,7 @@ export type Database = {
           owner_id?: string
           priority?: Database["public"]["Enums"]["decision_priority"]
           status?: Database["public"]["Enums"]["decision_status"]
+          superseded_by?: string | null
           team_id?: string | null
           template_snapshot?: Json | null
           template_used?: string | null
@@ -673,6 +679,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "decisions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "decisions_team_id_fkey"
             columns: ["team_id"]
@@ -1599,6 +1612,8 @@ export type Database = {
         | "implemented"
         | "rejected"
         | "archived"
+        | "cancelled"
+        | "superseded"
       event_type:
         | "decision.created"
         | "decision.updated"
@@ -1789,6 +1804,8 @@ export const Constants = {
         "implemented",
         "rejected",
         "archived",
+        "cancelled",
+        "superseded",
       ],
       event_type: [
         "decision.created",
