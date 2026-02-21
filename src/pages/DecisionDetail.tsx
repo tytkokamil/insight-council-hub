@@ -6,7 +6,7 @@ import {
   GitPullRequest, Brain, History, Target, Users, GitBranch, Link2,
   Compass, Crosshair, Clock, ShieldAlert, AlertTriangle, DollarSign,
   ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare, Shield,
-  GitCommit,
+  GitCommit, ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ import StrategyLinkPanel from "@/components/decisions/StrategyLinkPanel";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 import VersionHistoryPanel from "@/components/decisions/VersionHistoryPanel";
+import PostImplementationReview from "@/components/decisions/PostImplementationReview";
 
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
 
@@ -83,6 +84,7 @@ const tabGroups = [
     tabs: [
       { value: "dependencies", icon: Link2, label: "Dependencies" },
       { value: "impact", icon: DollarSign, label: "Impact" },
+      { value: "pir", icon: ClipboardCheck, label: "PIR" },
       { value: "ai", icon: Brain, label: "KI Insights" },
       { value: "whatif", icon: GitBranch, label: "What-If" },
     ],
@@ -597,6 +599,7 @@ const DecisionDetail = () => {
         <TabsContent value="whatif"><WhatIfSimulatorPanel decision={decision} /></TabsContent>
         <TabsContent value="dependencies"><DependenciesPanel decisionId={decision.id} /></TabsContent>
         <TabsContent value="impact"><ImpactTrackerPanel decision={decision} onUpdated={invalidate} /></TabsContent>
+        <TabsContent value="pir"><PostImplementationReview decision={decision} onCompleted={invalidate} /></TabsContent>
         <TabsContent value="copilot"><CoPilotPanel decision={decision} /></TabsContent>
         <TabsContent value="strategy"><StrategyLinkPanel decisionId={decision.id} /></TabsContent>
         <TabsContent value="versions"><VersionHistoryPanel decisionId={decision.id} currentDecision={decision} /></TabsContent>
