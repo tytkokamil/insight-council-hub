@@ -48,6 +48,7 @@ const navGroups: NavGroup[] = [
     label: "ANALYTICS",
     items: [
       { icon: TrendingUp, label: "Analytics", path: "/analytics", featureKey: "analytics" },
+      { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
       { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
       { icon: Crosshair, label: "Strategy", path: "/strategy", featureKey: "strategy" },
       { icon: History, label: "Audit", path: "/audit", featureKey: "audit" },
