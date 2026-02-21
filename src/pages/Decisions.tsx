@@ -307,9 +307,17 @@ const Decisions = () => {
             <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary/15 to-accent-violet/15 border border-primary/20 flex items-center justify-center">
               <BarChart3 className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen vorhanden.</h3>
-            <p className="text-sm text-muted-foreground mb-6">Starte mit deiner ersten Entscheidung.</p>
-            <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> Erste Entscheidung erstellen</Button>
+            <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen vorhanden</h3>
+            <p className="text-sm text-muted-foreground mb-6">Erstelle deine erste Entscheidung oder starte mit Beispieldaten, um die Plattform zu erkunden.</p>
+            <div className="flex items-center justify-center gap-3">
+              <Button variant="outline" onClick={async () => {
+                toast.info("Demo-Daten werden erstellt…");
+                const { data, error } = await supabase.functions.invoke("seed-demo-data");
+                if (error || data?.error) { toast.error(data?.error || "Fehler"); return; }
+                toast.success("Demo-Daten erstellt!"); window.location.reload();
+              }} className="gap-2"><Zap className="w-4 h-4" /> Beispieldaten laden</Button>
+              <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> Erste Entscheidung erstellen</Button>
+            </div>
           </div>
         </motion.div>
       ) : (

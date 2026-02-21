@@ -274,12 +274,20 @@ const Tasks = () => {
             </div>
             <h3 className="font-display text-xl font-bold mb-2">Noch keine Aufgaben</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Erstelle deine erste Aufgabe und verwalte alle Todos deines Teams an einem Ort.
+              Erstelle deine erste Aufgabe oder starte mit Beispieldaten.
             </p>
-            <Button onClick={openCreate} className="gap-2 mb-8">
-              <Plus className="w-4 h-4" />
-              Erste Aufgabe erstellen
-            </Button>
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <Button variant="outline" onClick={async () => {
+                const { toast: t } = await import("sonner");
+                t.info("Demo-Daten werden erstellt…");
+                const { data, error } = await supabase.functions.invoke("seed-demo-data");
+                if (error || data?.error) { t.error(data?.error || "Fehler"); return; }
+                t.success("Demo-Daten erstellt!"); window.location.reload();
+              }} className="gap-2"><Zap className="w-4 h-4" /> Beispieldaten laden</Button>
+              <Button onClick={openCreate} className="gap-2">
+                <Plus className="w-4 h-4" /> Erste Aufgabe erstellen
+              </Button>
+            </div>
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Zap, label: "Status-Tracking", desc: "Fortschritt im Blick" },
