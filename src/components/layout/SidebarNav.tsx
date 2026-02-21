@@ -49,40 +49,12 @@ const navGroups: NavGroup[] = [
   {
     label: "INSIGHTS",
     items: [
-      {
-        icon: TrendingUp,
-        label: "Analytics Hub",
-        children: [
-          { icon: BarChart3, label: "Analytics", path: "/analytics", featureKey: "analytics" },
-          { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
-          { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
-          { icon: Crosshair, label: "Strategy", path: "/strategy", featureKey: "strategy" },
-        ],
-      },
-      {
-        icon: Cpu,
-        label: "Process Hub",
-        children: [
-          { icon: Radar, label: "Bottlenecks", path: "/bottlenecks", featureKey: "bottlenecks" },
-          { icon: Flame, label: "Friction Map", path: "/friction", featureKey: "friction" },
-          { icon: Activity, label: "Health Heatmap", path: "/health", featureKey: "health" },
-          { icon: Brain, label: "Pattern Engine", path: "/patterns", featureKey: "patterns" },
-        ],
-      },
-      {
-        icon: Briefcase,
-        label: "Executive Hub",
-        featureKey: "executive",
-        children: [
-          { icon: Target, label: "Executive Dashboard", path: "/executive", featureKey: "executive" },
-          { icon: Sun, label: "CEO Briefing", path: "/briefing", featureKey: "briefing" },
-          { icon: CalendarDays, label: "Predictive Timeline", path: "/timeline", featureKey: "timeline" },
-          { icon: Dna, label: "Decision DNA", path: "/dna", featureKey: "dna" },
-          { icon: Trophy, label: "Benchmarking", path: "/benchmarking", featureKey: "benchmarking" },
-          { icon: DollarSign, label: "Economic Impact", path: "/costs", featureKey: "costs" },
-          { icon: FlaskConical, label: "Scenario Engine", path: "/scenarios", featureKey: "scenarios" },
-        ],
-      },
+      { icon: BarChart3, label: "Analytics Hub", path: "/analytics", featureKey: "analytics" },
+      { icon: Cpu, label: "Process Hub", path: "/process", featureKey: "bottlenecks" },
+      { icon: Briefcase, label: "Executive Hub", path: "/executive", featureKey: "executive" },
+      { icon: Trophy, label: "Team-Performance", path: "/team-performance" },
+      { icon: GitBranch, label: "Decision Graph", path: "/graph", featureKey: "graph" },
+      { icon: Target, label: "Strategy", path: "/strategy", featureKey: "strategy" },
     ],
   },
   {

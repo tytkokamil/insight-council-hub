@@ -49,7 +49,7 @@ interface UnifiedItem {
   itemType: "decision" | "task";
 }
 
-const HealthHeatmap = () => {
+const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
@@ -191,8 +191,8 @@ const HealthHeatmap = () => {
   if (loading) return <AnalysisPageSkeleton cards={4} sections={1} showChart />;
 
   if (items.length === 0) {
-    return (
-      <AppLayout>
+    const empty = (
+      <>
         <div className="mb-6">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
           <h1 className="font-display text-xl font-bold">Health Heatmap</h1>
@@ -203,12 +203,14 @@ const HealthHeatmap = () => {
           description="Erstelle Entscheidungen oder Aufgaben, um die Gesundheits-Heatmap zu generieren."
           hint="Die Heatmap zeigt Health Scores für Entscheidungen und Aufgaben"
         />
-      </AppLayout>
+      </>
     );
+    return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Gesundheitsanalyse</p>
@@ -375,7 +377,7 @@ const HealthHeatmap = () => {
           </div>
         </CollapsibleSection>
       )}
-    </AppLayout>
+    </Wrap>
   );
 };
 

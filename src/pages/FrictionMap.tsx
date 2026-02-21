@@ -12,7 +12,7 @@ import { useTasks } from "@/hooks/useTasks";
 interface TeamFriction { teamId: string; teamName: string; avgReviewTime: number; reviewLoops: number; escalationRate: number; overdueRate: number; totalDecisions: number; totalTasks: number; frictionScore: number; }
 interface CrossTeamFriction { teamA: string; teamB: string; teamAName: string; teamBName: string; sharedDecisions: number; avgDelay: number; frictionLevel: "low" | "medium" | "high" | "critical"; }
 
-const FrictionMap = () => {
+const FrictionMap = ({ embedded }: { embedded?: boolean }) => {
   const [teamFriction, setTeamFriction] = useState<TeamFriction[]>([]);
   const [crossFriction, setCrossFriction] = useState<CrossTeamFriction[]>([]);
   const [view, setView] = useState<"teams" | "heatmap">("teams");
@@ -117,19 +117,21 @@ const FrictionMap = () => {
   if (loading) return <AnalysisPageSkeleton cards={4} sections={2} />;
 
   if (teamFriction.length === 0) {
-    return (
-      <AppLayout>
+    const empty = (
+      <>
         <div className="mb-6">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
           <h1 className="text-xl font-semibold tracking-tight">Friction Map</h1>
         </div>
         <EmptyAnalysisState icon={Flame} title="Keine Friction-Daten" description="Erstelle Teams und weise ihnen Entscheidungen oder Aufgaben zu." ctaLabel="Teams erstellen" ctaRoute="/teams" hint="Friction wird automatisch analysiert" />
-      </AppLayout>
+      </>
     );
+    return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
-    <AppLayout>
+    <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Reibungsanalyse</p>
@@ -244,7 +246,7 @@ const FrictionMap = () => {
           </div>
         </CollapsibleSection>
       )}
-    </AppLayout>
+    </Wrap>
   );
 };
 

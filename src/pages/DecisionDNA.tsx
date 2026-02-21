@@ -17,7 +17,7 @@ import AiInsightPanel from "@/components/shared/AiInsightPanel";
 interface Trait { id: string; label: string; description: string; score: number; sentiment: "positive" | "negative" | "neutral"; icon: any; insight: string; }
 interface CategoryProfile { category: string; label: string; avgDays: number; total: number; implementRate: number; escalationRate: number; }
 
-const DecisionDNA = () => {
+const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
   const [traits, setTraits] = useState<Trait[]>([]);
   const [categoryProfiles, setCategoryProfiles] = useState<CategoryProfile[]>([]);
   const [overallArchetype, setOverallArchetype] = useState("");
@@ -113,17 +113,18 @@ const DecisionDNA = () => {
 
   if (loading) return <AnalysisPageSkeleton cards={3} sections={2} />;
 
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   if (traits.length === 0) {
     return (
-      <AppLayout>
+      <Wrap>
         <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p><h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1></div>
         <EmptyAnalysisState icon={Dna} title="Noch keine DNA-Daten" description="Erstelle Entscheidungen für die DNA-Analyse." hint="Mindestens eine Entscheidung benötigt" />
-      </AppLayout>
+      </Wrap>
     );
   }
 
   return (
-    <AppLayout>
+    <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
@@ -230,7 +231,7 @@ const DecisionDNA = () => {
           )}
         </div>
       </CollapsibleSection>
-    </AppLayout>
+    </Wrap>
   );
 };
 
