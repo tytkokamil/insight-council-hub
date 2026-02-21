@@ -8,6 +8,7 @@ import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews, useProfiles, useFilteredNotifications, buildProfileMap } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import AiInsightPanel from "@/components/shared/AiInsightPanel";
 
 interface PersonBottleneck { userId: string; name: string; avgDays: number; openCount: number; blockingCount: number; openTasks: number; percentile: string; }
 interface CategoryBottleneck { category: string; avgDays: number; globalAvg: number; ratio: number; count: number; taskCount: number; }
@@ -283,6 +284,18 @@ const BottleneckIntelligence = () => {
           )}
         </CardContent></Card>
       </CollapsibleSection>
+
+      {/* AI Deep Analysis */}
+      <AiInsightPanel
+        type="bottleneck"
+        context={{
+          personBottlenecks: personBottlenecks.slice(0, 5).map(p => ({ name: p.name, avgDays: p.avgDays, openCount: p.openCount, blockingCount: p.blockingCount, percentile: p.percentile })),
+          categoryBottlenecks: categoryBottlenecks.map(c => ({ category: c.category, avgDays: c.avgDays, ratio: c.ratio, count: c.count })),
+          teamFrictions: teamFrictions.slice(0, 5).map(t => ({ teamName: t.teamName, score: t.score, escalationCount: t.escalationCount, blockedCount: t.blockedCount })),
+          slaViolations: { total: slaViolations.total, thisWeek: slaViolations.thisWeek, avgResponse: slaViolations.avgResponse },
+        }}
+        className="mb-6"
+      />
 
       {/* Recommendations Panel */}
       <CollapsibleSection title="Top 3 Maßnahmen" subtitle="Priorisierte Empfehlungen" icon={<Lightbulb className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
