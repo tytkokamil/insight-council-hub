@@ -60,19 +60,19 @@ const CATEGORY_OPTIONS = [
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  proposed: "bg-accent text-accent-foreground",
-  review: "bg-warning/20 text-warning",
-  approved: "bg-success/20 text-success",
-  rejected: "bg-destructive/20 text-destructive",
-  implemented: "bg-primary/20 text-primary",
+  proposed: "bg-accent-blue/10 text-accent-blue border border-accent-blue/20",
+  review: "bg-warning/15 text-warning border border-warning/20",
+  approved: "bg-success/15 text-success border border-success/20",
+  rejected: "bg-destructive/15 text-destructive border border-destructive/20",
+  implemented: "bg-primary/15 text-primary border border-primary/20",
   archived: "bg-muted/50 text-muted-foreground/60",
 };
 
 const priorityStyles: Record<string, string> = {
   low: "text-muted-foreground",
-  medium: "text-primary",
+  medium: "text-accent-blue",
   high: "text-warning",
-  critical: "text-destructive",
+  critical: "text-destructive font-semibold",
 };
 
 const Decisions = () => {
@@ -298,7 +298,7 @@ const Decisions = () => {
       {decisions.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">
           <div className="max-w-lg mx-auto text-center">
-            <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary/15 to-accent-violet/15 border border-primary/20 flex items-center justify-center">
               <BarChart3 className="w-7 h-7 text-primary" />
             </div>
             <h3 className="font-display text-xl font-bold mb-2">Noch keine Entscheidungen vorhanden.</h3>
