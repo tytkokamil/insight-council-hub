@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import { HelmetProvider } from "react-helmet-async";
 
 // Eagerly loaded (critical path)
 import Index from "./pages/Index";
@@ -66,6 +67,7 @@ const P = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
+  <HelmetProvider>
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -123,6 +125,7 @@ const App = () => (
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>
+  </HelmetProvider>
 );
 
 export default App;
