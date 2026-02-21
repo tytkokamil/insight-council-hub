@@ -15,21 +15,19 @@ const CTASection = () => (
         className="max-w-3xl mx-auto"
       >
         <div className="relative rounded-3xl border border-primary/15 bg-gradient-to-b from-primary/[0.04] to-transparent p-12 md:p-16 text-center overflow-hidden">
-          {/* Subtle glow orbs */}
           <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-accent-blue/[0.06] blur-[80px]" />
           <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-accent-teal/[0.06] blur-[80px]" />
 
           <div className="relative">
             <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight leading-[0.95]">
-              Bereit für bessere{" "}
+              Bereit, Entscheidungen{" "}
               <span className="bg-gradient-to-r from-accent-blue to-accent-violet bg-clip-text text-transparent">
-                Entscheidungen?
+                strukturiert zu treffen?
               </span>
             </h2>
 
             <p className="text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed">
-              Schließe dich hunderten Enterprise-Teams an, die mit DecisionOS
-              strukturierter und schneller entscheiden.
+              Schließen Sie sich Unternehmen an, die mit DecisionOS schneller, transparenter und messbarer entscheiden.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-10">
@@ -60,7 +58,7 @@ const CTASection = () => (
               className="flex flex-col sm:flex-row gap-3 justify-center"
             >
               <Button size="lg" className="rounded-full group bg-primary hover:bg-primary/90 shadow-glow">
-                Kostenlos testen
+                Kostenlos starten
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Button variant="outline" size="lg" className="rounded-full">

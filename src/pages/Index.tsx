@@ -1,11 +1,12 @@
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
-import FeaturesSection from "@/components/landing/FeaturesSection";
-import AIShowcaseSection from "@/components/landing/AIShowcaseSection";
-import StatsSection from "@/components/landing/StatsSection";
-import PricingSection from "@/components/landing/PricingSection";
+import ProblemSection from "@/components/landing/ProblemSection";
+import HowItWorksSection from "@/components/landing/HowItWorksSection";
+import BenefitsSection from "@/components/landing/BenefitsSection";
+import UseCasesSection from "@/components/landing/UseCasesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
+import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 
@@ -13,16 +14,17 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>DecisionOS — Enterprise Decision Intelligence Platform</title>
-        <meta name="description" content="DecisionOS macht jede Geschäftsentscheidung nachvollziehbar, KI-gestützt und termingerecht — vom Entwurf bis zur Umsetzung." />
+        <title>DecisionOS — Structure every important decision in your company</title>
+        <meta name="description" content="DecisionOS gibt Ihrer Organisation Struktur, Governance und KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />
         <main>
           <HeroSection />
-          <FeaturesSection />
-          <AIShowcaseSection />
-          <StatsSection />
+          <ProblemSection />
+          <HowItWorksSection />
+          <BenefitsSection />
+          <UseCasesSection />
           <TestimonialsSection />
           <PricingSection />
           <CTASection />
