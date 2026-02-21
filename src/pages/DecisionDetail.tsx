@@ -6,6 +6,7 @@ import {
   GitPullRequest, Brain, History, Target, Users, GitBranch, Link2,
   Compass, Crosshair, Clock, ShieldAlert, AlertTriangle, DollarSign,
   ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, HelpCircle, CheckSquare, Shield,
+  GitCommit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ import CoPilotPanel from "@/components/decisions/CoPilotPanel";
 import StrategyLinkPanel from "@/components/decisions/StrategyLinkPanel";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
+import VersionHistoryPanel from "@/components/decisions/VersionHistoryPanel";
 
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "archived"] as const;
 
@@ -90,6 +92,7 @@ const tabGroups = [
     tabs: [
       { value: "copilot", icon: Compass, label: "Co-Pilot" },
       { value: "strategy", icon: Crosshair, label: "Strategie" },
+      { value: "versions", icon: GitCommit, label: "Versionen" },
       { value: "audit", icon: History, label: "Audit" },
     ],
   },
@@ -595,6 +598,7 @@ const DecisionDetail = () => {
         <TabsContent value="impact"><ImpactTrackerPanel decision={decision} onUpdated={invalidate} /></TabsContent>
         <TabsContent value="copilot"><CoPilotPanel decision={decision} /></TabsContent>
         <TabsContent value="strategy"><StrategyLinkPanel decisionId={decision.id} /></TabsContent>
+        <TabsContent value="versions"><VersionHistoryPanel decisionId={decision.id} currentDecision={decision} /></TabsContent>
         <TabsContent value="audit"><AuditTrailPanel decisionId={decision.id} /></TabsContent>
       </Tabs>
 

@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -37,6 +38,7 @@ const PRIORITY_OPTIONS: { value: DecisionPriority; label: string }[] = [
 
 const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -44,6 +46,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [category, setCategory] = useState<DecisionCategory>("operational");
   const [priority, setPriority] = useState<DecisionPriority>("medium");
   const [dueDate, setDueDate] = useState("");
+  const [changeReason, setChangeReason] = useState("");
 
   useEffect(() => {
     if (decision) {
@@ -53,6 +56,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       setCategory(decision.category || "operational");
       setPriority(decision.priority || "medium");
       setDueDate(decision.due_date || "");
+      setChangeReason("");
     }
   }, [decision]);
 
@@ -61,7 +65,42 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       toast.error("Titel ist erforderlich");
       return;
     }
+    if (!changeReason.trim()) {
+      toast.error("Bitte gib eine Änderungsbegründung an");
+      return;
+    }
     setSaving(true);
+
+    // 1. Determine next version number
+    const { data: existingVersions } = await supabase
+      .from("decision_versions")
+      .select("version_number")
+      .eq("decision_id", decision.id)
+      .order("version_number", { ascending: false })
+      .limit(1);
+
+    const nextVersion = (existingVersions?.[0]?.version_number || 0) + 1;
+
+    // 2. Snapshot current state BEFORE updating
+    const snapshot = {
+      title: decision.title,
+      description: decision.description,
+      context: decision.context,
+      category: decision.category,
+      priority: decision.priority,
+      due_date: decision.due_date,
+      status: decision.status,
+    };
+
+    await supabase.from("decision_versions").insert({
+      decision_id: decision.id,
+      version_number: nextVersion,
+      snapshot,
+      change_reason: changeReason.trim(),
+      created_by: user!.id,
+    });
+
+    // 3. Update the decision
     const { error } = await supabase
       .from("decisions")
       .update({
@@ -83,10 +122,11 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         user_id: user!.id,
         action: "decision_edited",
         field_name: "multiple",
-        old_value: null,
-        new_value: null,
+        old_value: `v${nextVersion}`,
+        new_value: changeReason.trim(),
       });
-      toast.success("Entscheidung aktualisiert");
+      qc.invalidateQueries({ queryKey: ["decision-versions", decision.id] });
+      toast.success(`Entscheidung aktualisiert (Version ${nextVersion + 1})`);
       onUpdated();
       onOpenChange(false);
     }
@@ -140,10 +180,23 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             <label className="text-xs font-medium text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
+          <div className="border-t border-border pt-4">
+            <label className="text-xs font-medium text-foreground mb-1 block">Änderungsbegründung *</label>
+            <Textarea
+              value={changeReason}
+              onChange={(e) => setChangeReason(e.target.value)}
+              rows={2}
+              placeholder="Warum wird diese Änderung vorgenommen?"
+              className="border-primary/30 focus:border-primary"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Wird in der Versionshistorie dokumentiert (Governance-Pflicht).
+            </p>
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || !changeReason.trim()}>
             {saving ? "Speichern…" : "Speichern"}
           </Button>
         </DialogFooter>
