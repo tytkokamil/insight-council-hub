@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
-  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch,
+  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive,
 } from "lucide-react";
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
@@ -29,14 +29,18 @@ import { toast } from "sonner";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
 const STATUS_CONFIG = {
+  backlog: { label: "Backlog", icon: Archive, color: "text-muted-foreground/60" },
   open: { label: "Offen", icon: Circle, color: "text-muted-foreground" },
   in_progress: { label: "In Arbeit", icon: Clock, color: "text-warning" },
+  blocked: { label: "Blockiert", icon: Ban, color: "text-destructive" },
   done: { label: "Erledigt", icon: CheckCircle2, color: "text-success" },
 } as const;
 
 const statusStyles: Record<string, string> = {
+  backlog: "bg-muted/50 text-muted-foreground/60",
   open: "bg-muted text-muted-foreground",
   in_progress: "bg-warning/20 text-warning",
+  blocked: "bg-destructive/20 text-destructive",
   done: "bg-success/20 text-success",
 };
 
@@ -65,8 +69,10 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const STATUS_OPTIONS = [
+  { value: "backlog", label: "Backlog" },
   { value: "open", label: "Offen" },
   { value: "in_progress", label: "In Arbeit" },
+  { value: "blocked", label: "Blockiert" },
   { value: "done", label: "Erledigt" },
 ];
 
@@ -415,7 +421,10 @@ const Tasks = () => {
                         <tr key={task.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                           <td className="p-3">
                             <button
-                              onClick={() => changeStatus(task, task.status === "done" ? "open" : task.status === "open" ? "in_progress" : "done")}
+                              onClick={() => {
+                                const cycle: Record<string, string> = { backlog: "open", open: "in_progress", in_progress: "done", blocked: "open", done: "backlog" };
+                                changeStatus(task, cycle[task.status] || "open");
+                              }}
                               className={sc.color}
                               title="Status wechseln"
                             >
