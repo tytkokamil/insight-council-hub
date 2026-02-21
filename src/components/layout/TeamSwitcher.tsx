@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 
-
 interface Team {
   id: string;
   name: string;
@@ -17,7 +16,6 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const [open, setOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [isAdmin, setIsAdmin] = useState(false);
-
   const teamsLoaded = useRef(false);
 
   useEffect(() => {
@@ -57,15 +55,12 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
 
   const fetchUnreadCounts = useCallback(async () => {
     if (!user || teams.length === 0) return;
-
     const { data: reads } = await supabase
       .from("team_chat_reads")
       .select("team_id, last_read_at")
       .eq("user_id", user.id);
-
     const readMap: Record<string, string> = {};
     reads?.forEach((r) => { readMap[r.team_id] = r.last_read_at; });
-
     const counts: Record<string, number> = {};
     for (const team of teams) {
       const lastRead = readMap[team.id];
@@ -87,7 +82,6 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
     fetchUnreadCounts();
   }, [fetchUnreadCounts]);
 
-  // Listen for new messages in real-time to update badges
   useEffect(() => {
     if (teams.length === 0) return;
     const channel = supabase
@@ -110,34 +104,34 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   if (teamsLoaded.current && teams.length === 0 && !isAdmin) return null;
 
   return (
-    <div className="relative px-3 py-2 border-b border-border">
+    <div className="relative px-2 py-1.5 border-b border-border/40">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-[13px] font-medium hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium hover:bg-foreground/[0.04] transition-colors"
         title={collapsed ? label : undefined}
       >
-        <div className="relative w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+        <div className="relative w-5 h-5 rounded bg-foreground/[0.06] flex items-center justify-center shrink-0">
           {selectedTeamId ? (
-            <Building2 className="w-3.5 h-3.5 text-primary" />
+            <Building2 className="w-3 h-3 text-muted-foreground" />
           ) : (
-            <User className="w-3.5 h-3.5 text-primary" />
+            <User className="w-3 h-3 text-muted-foreground" />
           )}
           {collapsed && totalUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-0.5">
+            <span className="absolute -top-1 -right-1 min-w-[12px] h-[12px] rounded-full bg-foreground text-background text-[8px] font-bold flex items-center justify-center px-0.5">
               {totalUnread > 99 ? "99+" : totalUnread}
             </span>
           )}
         </div>
         {!collapsed && (
           <div className="flex-1 flex items-center justify-between min-w-0">
-            <span className="truncate text-foreground">{label}</span>
-            <div className="flex items-center gap-1.5">
+            <span className="truncate text-foreground/80">{label}</span>
+            <div className="flex items-center gap-1">
               {totalUnread > 0 && (
-                <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                <span className="min-w-[16px] h-[16px] rounded-full bg-foreground text-background text-[9px] font-bold flex items-center justify-center px-0.5">
                   {totalUnread > 99 ? "99+" : totalUnread}
                 </span>
               )}
-              <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+              <ChevronDown className={`w-3 h-3 text-muted-foreground/50 transition-transform ${open ? "rotate-180" : ""}`} />
             </div>
           </div>
         )}
@@ -145,34 +139,34 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
 
       {open && (
         <div
-          className="fixed z-[100] w-56 mt-1 rounded-lg border border-border bg-card shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100"
+          className="fixed z-[100] w-52 mt-1 rounded-lg border border-border/60 bg-popover shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-100"
           style={{ left: collapsed ? 64 : 12, marginTop: 4 }}
         >
           <div className="py-1">
             <button
               onClick={() => { setSelectedTeamId(null); setOpen(false); }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-muted/50 ${
-                !selectedTeamId ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+              className={`w-full flex items-center gap-2 px-3 py-1.5 text-[13px] transition-colors hover:bg-foreground/[0.04] ${
+                !selectedTeamId ? "text-foreground font-medium" : "text-muted-foreground"
               }`}
             >
-              <User className="w-3.5 h-3.5" />
+              <User className="w-3.5 h-3.5 opacity-60" />
               Persönlich
             </button>
             {teams.length > 0 && (
-              <div className="border-t border-border/50 my-1" />
+              <div className="border-t border-border/30 my-0.5" />
             )}
             {teams.map((team) => (
               <button
                 key={team.id}
                 onClick={() => { setSelectedTeamId(team.id); setOpen(false); }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] transition-colors hover:bg-muted/50 ${
-                  selectedTeamId === team.id ? "bg-primary/10 text-primary font-medium" : "text-foreground"
+                className={`w-full flex items-center gap-2 px-3 py-1.5 text-[13px] transition-colors hover:bg-foreground/[0.04] ${
+                  selectedTeamId === team.id ? "text-foreground font-medium" : "text-muted-foreground"
                 }`}
               >
-                <Building2 className="w-3.5 h-3.5" />
+                <Building2 className="w-3.5 h-3.5 opacity-60" />
                 <span className="truncate flex-1 text-left">{team.name}</span>
                 {unreadCounts[team.id] > 0 && (
-                  <span className="min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center px-1">
+                  <span className="min-w-[16px] h-[16px] rounded-full bg-foreground text-background text-[9px] font-bold flex items-center justify-center px-0.5">
                     {unreadCounts[team.id] > 99 ? "99+" : unreadCounts[team.id]}
                   </span>
                 )}
