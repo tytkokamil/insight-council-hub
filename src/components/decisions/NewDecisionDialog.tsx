@@ -12,9 +12,10 @@ import { suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemp
 import ReviewFlowSelector from "./ReviewFlowSelector";
 import {
   FileText, Users, Shield, AlertCircle, Lightbulb, ThumbsUp, ThumbsDown,
-  ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft,
+  ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft, Sparkles, TrendingUp,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 
 interface Props {
@@ -111,6 +112,87 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     enabled: open,
     staleTime: 60_000,
   });
+
+  // Fetch historical decision data for AI template recommendation
+  const { data: historicalDecisions = [] } = useQuery({
+    queryKey: ["template-recommendation-data", teamId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("decisions")
+        .select("category, priority, template_used, status, created_at, implemented_at, team_id")
+        .not("template_used", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      return data || [];
+    },
+    enabled: open,
+    staleTime: 120_000,
+  });
+
+  // AI Template Recommendation Engine
+  const templateRecommendation = useMemo(() => {
+    if (historicalDecisions.length < 3) return null;
+
+    type TemplateStats = {
+      name: string;
+      total: number;
+      implemented: number;
+      rejected: number;
+      avgDays: number;
+      teamMatch: number;
+    };
+
+    const statsMap = new Map<string, TemplateStats>();
+
+    for (const d of historicalDecisions) {
+      const tpl = d.template_used as string;
+      if (!statsMap.has(tpl)) {
+        statsMap.set(tpl, { name: tpl, total: 0, implemented: 0, rejected: 0, avgDays: 0, teamMatch: 0 });
+      }
+      const s = statsMap.get(tpl)!;
+      s.total++;
+      if (d.status === "implemented") {
+        s.implemented++;
+        if (d.implemented_at && d.created_at) {
+          const days = (new Date(d.implemented_at).getTime() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          s.avgDays = (s.avgDays * (s.implemented - 1) + days) / s.implemented;
+        }
+      }
+      if (d.status === "rejected") s.rejected++;
+      if (teamId && d.team_id === teamId) s.teamMatch++;
+    }
+
+    // Score each template
+    let bestScore = -1;
+    let bestTemplate: (TemplateStats & { score: number; reasons: string[] }) | null = null;
+
+    for (const [, stats] of statsMap) {
+      if (stats.total < 2) continue;
+      const successRate = stats.implemented / stats.total;
+      const rejectionPenalty = stats.rejected / stats.total;
+      const teamBonus = teamId ? (stats.teamMatch / stats.total) * 0.2 : 0;
+      const speedBonus = stats.avgDays > 0 ? Math.max(0, 1 - stats.avgDays / 60) * 0.15 : 0;
+
+      const score = successRate * 0.5 - rejectionPenalty * 0.3 + teamBonus + speedBonus;
+
+      if (score > bestScore) {
+        bestScore = score;
+        const reasons: string[] = [];
+        if (successRate > 0.6) reasons.push(`${Math.round(successRate * 100)}% Erfolgsrate`);
+        if (stats.avgDays > 0) reasons.push(`Ø ${Math.round(stats.avgDays)} Tage bis Umsetzung`);
+        if (teamId && stats.teamMatch > 0) reasons.push(`${stats.teamMatch}× in diesem Team genutzt`);
+        if (rejectionPenalty < 0.1) reasons.push("Niedrige Ablehnungsrate");
+        bestTemplate = { ...stats, score, reasons };
+      }
+    }
+
+    // Match to actual template object
+    if (bestTemplate) {
+      const match = decisionTemplates.find(t => t.name === bestTemplate!.name);
+      if (match) return { template: match, stats: bestTemplate };
+    }
+    return null;
+  }, [historicalDecisions, teamId]);
 
   const relevantLessons = useMemo(() => {
     if (!category) return [];
@@ -386,13 +468,45 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       <p className="text-sm text-muted-foreground">
         Wähle ein Template für strukturierte Governance oder starte frei.
       </p>
+
+      {/* AI Template Recommendation */}
+      {templateRecommendation && (
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-primary">KI-Empfehlung</span>
+            <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+              basierend auf {templateRecommendation.stats.total} Entscheidungen
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">
+                {categoryIcons[templateRecommendation.template.category]} {templateRecommendation.template.name}
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {templateRecommendation.stats.reasons.map((r, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-[10px] text-primary/80">
+                    <TrendingUp className="w-2.5 h-2.5" />{r}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Button size="sm" variant="default" className="shrink-0 gap-1.5" onClick={() => applyTemplate(templateRecommendation.template)}>
+              <Sparkles className="w-3.5 h-3.5" /> Übernehmen
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
         {decisionTemplates.map((t) => {
           const isExpanded = expandedTemplate === t.category;
+          const isRecommended = templateRecommendation?.template.category === t.category;
           return (
             <div
               key={t.category}
-              className="rounded-lg border border-border bg-card overflow-hidden transition-all hover:border-primary/40"
+              className={`rounded-lg border bg-card overflow-hidden transition-all hover:border-primary/40 ${isRecommended ? "border-primary/30 ring-1 ring-primary/10" : "border-border"}`}
             >
               {/* Card header – always visible */}
               <button
@@ -404,6 +518,18 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm font-semibold">{t.name}</span>
+                    {isRecommended && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge className="text-[9px] gap-0.5 bg-primary/10 text-primary border-primary/30 hover:bg-primary/20">
+                            <Sparkles className="w-2.5 h-2.5" /> Empfohlen
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-xs max-w-48">
+                          Basierend auf historischen Erfolgsraten und Team-Nutzung
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                     <Badge variant="outline" className="text-[10px] capitalize">{priorityLabels[t.priority]}</Badge>
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
