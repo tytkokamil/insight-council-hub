@@ -6,13 +6,16 @@ import { Plus, Users as UsersIcon, ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
 
 const Teams = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [teams, setTeams] = useState<any[]>([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [canCreateTeam, setCanCreateTeam] = useState(false);
 
   const fetchTeams = async () => {
     const { data } = await supabase
@@ -24,6 +27,13 @@ const Teams = () => {
 
   useEffect(() => { fetchTeams(); }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).single().then(({ data }) => {
+      setCanCreateTeam(data?.role === "org_owner" || data?.role === "org_admin");
+    });
+  }, [user]);
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
@@ -33,10 +43,12 @@ const Teams = () => {
         </div>
         <div className="flex items-center gap-2">
           <PageHelpButton title="Teams" description="Erstelle Teams und lade Mitglieder per E-Mail ein. Entscheidungen können Teams zugeordnet werden, um Verantwortlichkeiten klar zu definieren." />
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Neues Team
-          </Button>
+          {canCreateTeam && (
+            <Button onClick={() => setShowCreate(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Neues Team
+            </Button>
+          )}
         </div>
       </div>
 

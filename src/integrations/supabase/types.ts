@@ -1051,17 +1051,17 @@ export type Database = {
       user_roles: {
         Row: {
           id: string
-          role: Database["public"]["Enums"]["user_role"]
+          role: Database["public"]["Enums"]["org_role"]
           user_id: string
         }
         Insert: {
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: Database["public"]["Enums"]["org_role"]
           user_id: string
         }
         Update: {
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
+          role?: Database["public"]["Enums"]["org_role"]
           user_id?: string
         }
         Relationships: []
@@ -1073,7 +1073,7 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["user_role"]
+          _role: Database["public"]["Enums"]["org_role"]
           _user_id: string
         }
         Returns: boolean
@@ -1086,6 +1086,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }
       is_team_lead_or_admin: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -1109,6 +1110,7 @@ export type Database = {
         | "implemented"
         | "rejected"
         | "archived"
+      org_role: "org_owner" | "org_admin" | "org_member"
       task_category:
         | "general"
         | "strategic"
@@ -1119,8 +1121,7 @@ export type Database = {
         | "budget"
       task_priority: "low" | "medium" | "high" | "critical"
       task_status: "backlog" | "open" | "in_progress" | "blocked" | "done"
-      team_role: "lead" | "member" | "viewer"
-      user_role: "admin" | "decision_maker" | "reviewer" | "observer"
+      team_role: "lead" | "member" | "viewer" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1267,6 +1268,7 @@ export const Constants = {
         "rejected",
         "archived",
       ],
+      org_role: ["org_owner", "org_admin", "org_member"],
       task_category: [
         "general",
         "strategic",
@@ -1278,8 +1280,7 @@ export const Constants = {
       ],
       task_priority: ["low", "medium", "high", "critical"],
       task_status: ["backlog", "open", "in_progress", "blocked", "done"],
-      team_role: ["lead", "member", "viewer"],
-      user_role: ["admin", "decision_maker", "reviewer", "observer"],
+      team_role: ["lead", "member", "viewer", "admin"],
     },
   },
 } as const

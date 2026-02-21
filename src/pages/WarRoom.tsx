@@ -48,8 +48,8 @@ const WarRoom = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
-      setIsAdmin((data?.length ?? 0) > 0);
+    supabase.from("user_roles").select("role").eq("user_id", user.id).single().then(({ data }) => {
+      setIsAdmin(data?.role === "org_owner" || data?.role === "org_admin");
       setCheckingAdmin(false);
     });
   }, [user]);

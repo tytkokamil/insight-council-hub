@@ -15,29 +15,27 @@ import { toast } from "@/components/ui/sonner";
 import { useDecisions } from "@/hooks/useDecisions";
 import type { Database } from "@/integrations/supabase/types";
 
-type UserRole = Database["public"]["Enums"]["user_role"];
+type OrgRole = Database["public"]["Enums"]["org_role"];
 
 interface UserWithRole {
   user_id: string;
   full_name: string | null;
   avatar_url: string | null;
   email: string;
-  role: UserRole;
+  role: OrgRole;
   joined: string;
 }
 
-const roleBadgeVariant: Record<UserRole, string> = {
-  admin: "bg-destructive/10 text-destructive border-destructive/20",
-  decision_maker: "bg-primary/10 text-primary border-primary/20",
-  reviewer: "bg-accent/10 text-accent-foreground border-accent/20",
-  observer: "bg-muted text-muted-foreground border-border",
+const roleBadgeVariant: Record<OrgRole, string> = {
+  org_owner: "bg-destructive/10 text-destructive border-destructive/20",
+  org_admin: "bg-primary/10 text-primary border-primary/20",
+  org_member: "bg-muted text-muted-foreground border-border",
 };
 
-const roleLabels: Record<UserRole, string> = {
-  admin: "Admin",
-  decision_maker: "Decision Maker",
-  reviewer: "Reviewer",
-  observer: "Observer",
+const roleLabels: Record<OrgRole, string> = {
+  org_owner: "Org Owner",
+  org_admin: "Org Admin",
+  org_member: "Mitglied",
 };
 
 const AdminUsers = () => {
@@ -75,8 +73,8 @@ const AdminUsers = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").then(({ data }) => {
-      const admin = (data?.length ?? 0) > 0;
+    supabase.from("user_roles").select("role").eq("user_id", user.id).single().then(({ data }) => {
+      const admin = data?.role === "org_owner" || data?.role === "org_admin";
       setIsAdmin(admin);
       if (!admin) navigate("/dashboard");
     });
@@ -94,16 +92,16 @@ const AdminUsers = () => {
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (!profiles || !roles) { setLoading(false); return; }
-    const roleMap = new Map(roles.map((r) => [r.user_id, r.role as UserRole]));
+    const roleMap = new Map(roles.map((r) => [r.user_id, r.role as OrgRole]));
     const merged: UserWithRole[] = profiles.map((p) => ({
       user_id: p.user_id, full_name: p.full_name, avatar_url: p.avatar_url,
-      email: p.full_name || p.user_id, role: roleMap.get(p.user_id) || "observer", joined: p.created_at,
+      email: p.full_name || p.user_id, role: roleMap.get(p.user_id) || "org_member", joined: p.created_at,
     }));
     setUsers(merged);
     setLoading(false);
   };
 
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+  const handleRoleChange = async (userId: string, newRole: OrgRole) => {
     if (userId === user?.id) { toast.error("Du kannst deine eigene Rolle nicht ändern."); return; }
     setUpdating(userId);
     const { error } = await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
@@ -200,13 +198,12 @@ const AdminUsers = () => {
                       <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(u.joined).toLocaleDateString("de-DE")}</td>
                       <td className="px-4 py-3 text-right">
                         {u.user_id === user?.id ? <span className="text-xs text-muted-foreground italic">Du</span> : (
-                          <Select value={u.role} onValueChange={(v) => handleRoleChange(u.user_id, v as UserRole)} disabled={updating === u.user_id}>
+                          <Select value={u.role} onValueChange={(v) => handleRoleChange(u.user_id, v as OrgRole)} disabled={updating === u.user_id}>
                             <SelectTrigger className="w-[160px] h-8 text-xs ml-auto"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="decision_maker">Decision Maker</SelectItem>
-                              <SelectItem value="reviewer">Reviewer</SelectItem>
-                              <SelectItem value="observer">Observer</SelectItem>
+                              <SelectItem value="org_owner">Org Owner</SelectItem>
+                              <SelectItem value="org_admin">Org Admin</SelectItem>
+                              <SelectItem value="org_member">Mitglied</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
