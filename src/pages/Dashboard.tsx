@@ -1,10 +1,9 @@
 import { useMemo, useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, AlertTriangle, Clock, ArrowRight, Activity,
-  Zap, FileText, Eye, TrendingUp, TrendingDown,
-  Minus, ShieldAlert, CheckCircle2, Command, ListTodo,
-  Link2, Users, RefreshCw, Shield, History, Compass,
+  Plus, AlertTriangle, Clock, ArrowRight,
+  Zap, FileText, Eye, TrendingUp,
+  CheckCircle2, Command, Link2, Users, RefreshCw, Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +16,7 @@ import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useRisks } from "@/hooks/useRisks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTranslatedLabels } from "@/lib/labels";
@@ -30,12 +27,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid,
-  BarChart, Bar,
 } from "recharts";
 
-const LeaderboardWidget = lazy(() => import("@/components/dashboard/LeaderboardWidget"));
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
-const RoiDashboardWidget = lazy(() => import("@/components/dashboard/RoiDashboardWidget"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 
 type TimeRange = 7 | 30 | 90;
@@ -45,13 +39,10 @@ const Dashboard = () => {
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const { statusLabels: tStatusLabels } = useTranslatedLabels(t);
   const { data: allDecisions = [], isLoading: loadingDec, isError: errorDec, refetch: refetchDec } = useDecisions();
-  const { data: profiles = [] } = useProfiles();
-  const { data: risks = [] } = useRisks();
   const { data: tasks = [], isLoading: loadingTasks, isError: errorTasks, refetch: refetchTasks } = useTasks();
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useReviews();
   const { data: dependencies = [] } = useFilteredDependencies();
-  const profileMap = buildProfileMap(profiles);
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
@@ -95,8 +86,6 @@ const Dashboard = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [navigate]);
 
-  const effectiveDays = timeRange;
-
   const decisions = isPersonal
     ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
     : allDecisions;
@@ -107,7 +96,6 @@ const Dashboard = () => {
   // === ALL COMPUTED DATA ===
   const computed = useMemo(() => {
     const now = new Date();
-    const rangeStart = subDays(now, effectiveDays);
     const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
     const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
     const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
@@ -123,68 +111,25 @@ const Dashboard = () => {
 
     const maxEscalation = escalated.length > 0 ? Math.max(...escalated.map(d => d.escalation_level || 0)) : 0;
 
-    const implemented = decisions.filter(d => d.status === "implemented");
-    const velocities = implemented.filter(d => d.implemented_at).map(d => differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)));
-    const avgDecisionTime = velocities.length > 0 ? Math.round(velocities.reduce((s, v) => s + v, 0) / velocities.length * 10) / 10 : null;
-
-    const completionRate = decisions.length > 0 ? Math.round((implemented.length / decisions.length) * 100) : 0;
-
-    // Before/After comparison
-    const last90 = subDays(now, 90);
-    const prev90 = subDays(now, 180);
-    const currentImpl = implemented.filter(d => d.implemented_at && new Date(d.implemented_at) >= last90);
-    const prevImpl = implemented.filter(d => d.implemented_at && new Date(d.implemented_at) >= prev90 && new Date(d.implemented_at) < last90);
-
-    const currentAvgDays = currentImpl.length > 0
-      ? Math.round(currentImpl.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / currentImpl.length)
-      : null;
-    const prevAvgDays = prevImpl.length > 0
-      ? Math.round(prevImpl.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / prevImpl.length)
-      : null;
-
-    const currentEsc = decisions.filter(d => (d.escalation_level || 0) >= 1 && new Date(d.created_at) >= last90).length;
-    const prevEsc = decisions.filter(d => (d.escalation_level || 0) >= 1 && new Date(d.created_at) >= prev90 && new Date(d.created_at) < last90).length;
-
-    const defaultRate = currentTeam?.hourly_rate || 75;
-    const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
-    let totalDelayCost = 0;
-    const costItems: { title: string; cost: number; days: number; priority: string; id: string }[] = [];
-    active.forEach(d => {
-      const daysOpen = Math.max(0, differenceInDays(now, new Date(d.created_at)));
-      const mult = priorityMultiplier[d.priority] || 1.5;
-      const cost = Math.round(daysOpen * 2 * defaultRate * mult);
-      totalDelayCost += cost;
-      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, id: d.id });
-    });
-    costItems.sort((a, b) => b.cost - a.cost);
-
-    // Speed improvement potential
-    const avgDaysAll = avgDecisionTime ?? 0;
-    const speedImprovementPotential = avgDaysAll > 0 ? Math.round(totalDelayCost * 0.15) : 0;
-
-    // Weekly chart data
+    // Weekly chart data – decisions + escalations
     const weekData = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
       const weekLabel = format(weekEnd, "dd.MM", { locale: dateFnsLocale });
       const completed = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd).length;
       const created = decisions.filter(d => new Date(d.created_at) >= weekStart && new Date(d.created_at) < weekEnd).length;
-      return { week: weekLabel, completed, created };
+      const escalations = decisions.filter(d => (d.escalation_level || 0) >= 1 && new Date(d.updated_at) >= weekStart && new Date(d.updated_at) < weekEnd).length;
+      return { week: weekLabel, completed, created, escalations };
     });
 
     const recentlyOpened = [...decisions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
 
     return {
       overdue, escalated, pendingReviews, active, blockedTasks,
-      maxEscalation, implemented,
-      openCount: active.length, avgDecisionTime, completionRate, totalDelayCost,
-      currentAvgDays, prevAvgDays, currentEsc, prevEsc,
-      speedImprovementPotential,
-      weekData, costItems, recentlyOpened,
+      maxEscalation,
+      weekData, recentlyOpened,
     };
-  }, [decisions, contextTasks, reviews, dependencies, user, effectiveDays, currentTeam, dateFnsLocale]);
-
-  const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
+  }, [decisions, contextTasks, reviews, dependencies, user, dateFnsLocale]);
 
   const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
 
@@ -295,7 +240,7 @@ const Dashboard = () => {
       {/* ═══ HEADER ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight">{dashboardTitle}</h1>
+          <h1 className="text-xl font-bold tracking-tight">{dashboardTitle}</h1>
           <p className="text-sm text-muted-foreground">{t("dashboard.whatNeedsAttention")}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -315,92 +260,14 @@ const Dashboard = () => {
 
       <div className="space-y-8">
 
-        {/* ═══ 1. DQI — HERO SECTION (Primary) ═══ */}
+        {/* ═══ 1. DQI — HERO (Primary, dominant) ═══ */}
         {!isLoading && (
           <WidgetErrorBoundary>
             <DecisionQualityIndex />
           </WidgetErrorBoundary>
         )}
 
-        {/* ═══ 2. AI BRIEFING ═══ */}
-        {!isLoading && (
-          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
-            <AiBriefingWidget />
-          </Suspense>
-        )}
-
-        {/* ═══ 3. THREE PRIMARY KPIs (Secondary) ═══ */}
-        {!isLoading && (
-          <section>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Speed */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all group"
-                onClick={() => navigate("/analytics")}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  {computed.currentAvgDays != null && computed.prevAvgDays != null && (
-                    <Badge variant="outline" className={cn("text-[10px]",
-                      computed.currentAvgDays < computed.prevAvgDays ? "text-success border-success/30" : "text-destructive border-destructive/30"
-                    )}>
-                      {computed.currentAvgDays < computed.prevAvgDays ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />}
-                      {computed.prevAvgDays}d → {computed.currentAvgDays}d
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-3xl font-bold tracking-tight mb-1">
-                  {computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—"}
-                </p>
-                <p className="text-sm text-muted-foreground">Ø Time-to-Decision</p>
-              </motion.div>
-
-              {/* Escalations */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all"
-                onClick={() => navigate("/engine")}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center",
-                    computed.escalated.length > 0 ? "bg-warning/10" : "bg-muted")}>
-                    <AlertTriangle className={cn("w-5 h-5", computed.escalated.length > 0 ? "text-warning" : "text-muted-foreground")} />
-                  </div>
-                  {computed.prevEsc > 0 && (
-                    <Badge variant="outline" className={cn("text-[10px]",
-                      computed.currentEsc < computed.prevEsc ? "text-success border-success/30" : "text-muted-foreground"
-                    )}>
-                      {computed.prevEsc} → {computed.currentEsc}
-                    </Badge>
-                  )}
-                </div>
-                <p className={cn("text-3xl font-bold tracking-tight mb-1", computed.escalated.length > 0 && "text-warning")}>
-                  {computed.escalated.length}
-                </p>
-                <p className="text-sm text-muted-foreground">Aktive Eskalationen</p>
-              </motion.div>
-
-              {/* Delay Cost */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all"
-                onClick={() => navigate("/analytics")}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-destructive" />
-                  </div>
-                </div>
-                <p className="text-3xl font-bold tracking-tight text-destructive mb-1">{formatCost(computed.totalDelayCost)}</p>
-                <p className="text-sm text-muted-foreground">Verzögerungskosten</p>
-                {computed.speedImprovementPotential > 0 && (
-                  <p className="text-xs text-success mt-2">
-                    Potenzial: −{formatCost(computed.speedImprovementPotential)} bei 15% Speed↑
-                  </p>
-                )}
-              </motion.div>
-            </div>
-          </section>
-        )}
-
-        {/* ═══ 4. ACTION REQUIRED (Secondary) ═══ */}
+        {/* ═══ 2. ACTION REQUIRED (Critical) ═══ */}
         {!isLoading && actionCount > 0 && (
           <section>
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.actionRequired")}</h2>
@@ -410,18 +277,14 @@ const Dashboard = () => {
                   count: computed.overdue.length,
                   label: t("dashboard.overdue"),
                   icon: Clock,
-                  borderColor: "border-destructive/20",
-                  bgColor: "bg-destructive/[0.03]",
-                  iconColor: "text-destructive",
+                  severity: "destructive" as const,
                   path: "/decisions",
                 },
                 {
                   count: computed.escalated.length,
                   label: t("dashboard.escalations"),
                   icon: AlertTriangle,
-                  borderColor: "border-warning/20",
-                  bgColor: "bg-warning/[0.03]",
-                  iconColor: "text-warning",
+                  severity: "warning" as const,
                   path: "/engine",
                   extra: computed.maxEscalation > 0 ? `L${computed.maxEscalation}` : undefined,
                 },
@@ -429,9 +292,7 @@ const Dashboard = () => {
                   count: computed.pendingReviews.length,
                   label: t("dashboard.openReviews"),
                   icon: Eye,
-                  borderColor: "border-primary/20",
-                  bgColor: "bg-primary/[0.03]",
-                  iconColor: "text-primary",
+                  severity: "primary" as const,
                   path: computed.pendingReviews.length > 0 ? `/decisions/${computed.pendingReviews[0].decision_id}` : "/decisions",
                   actionLabel: t("dashboard.startReviewBtn"),
                 },
@@ -439,39 +300,50 @@ const Dashboard = () => {
                   count: computed.blockedTasks.length,
                   label: t("dashboard.blockedTasks"),
                   icon: Link2,
-                  borderColor: "border-accent-violet/20",
-                  bgColor: "bg-accent-violet/[0.03]",
-                  iconColor: "text-accent-violet",
+                  severity: "accent-violet" as const,
                   path: "/tasks",
                 },
-              ].map((item) => (
-                <motion.div
-                  key={item.label}
-                  initial={{ opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`${item.borderColor} ${item.bgColor} border rounded-lg p-4`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <item.icon className={`w-4 h-4 ${item.iconColor}`} />
-                    {item.extra && <span className={`text-[10px] font-medium ${item.iconColor}`}>{item.extra}</span>}
-                  </div>
-                  <motion.p
-                    key={item.count}
-                    initial={{ scale: 1.15 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                    className="text-2xl font-semibold tracking-tight"
+              ].map((item) => {
+                const colorMap = {
+                  destructive: { border: "border-destructive/20", bg: "bg-destructive/[0.03]", text: "text-destructive", badge: "bg-destructive text-destructive-foreground" },
+                  warning: { border: "border-warning/20", bg: "bg-warning/[0.03]", text: "text-warning", badge: "bg-warning text-warning-foreground" },
+                  primary: { border: "border-primary/20", bg: "bg-primary/[0.03]", text: "text-primary", badge: "bg-primary text-primary-foreground" },
+                  "accent-violet": { border: "border-accent-violet/20", bg: "bg-accent-violet/[0.03]", text: "text-accent-violet", badge: "bg-accent-violet/20 text-accent-violet" },
+                };
+                const colors = colorMap[item.severity];
+                return (
+                  <motion.div
+                    key={item.label}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className={`${colors.border} ${colors.bg} border rounded-lg p-4`}
                   >
-                    {item.count}
-                  </motion.p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
-                  {item.count > 0 && (
-                    <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(item.path)}>
-                      {item.actionLabel || t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  )}
-                </motion.div>
-              ))}
+                    <div className="flex items-center justify-between mb-3">
+                      <item.icon className={`w-4 h-4 ${colors.text}`} />
+                      {item.count > 0 && (
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
+                          {item.extra || item.count}
+                        </span>
+                      )}
+                    </div>
+                    <motion.p
+                      key={item.count}
+                      initial={{ scale: 1.15 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                      className="text-2xl font-semibold tracking-tight"
+                    >
+                      {item.count}
+                    </motion.p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                    {item.count > 0 && (
+                      <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(item.path)}>
+                        {item.actionLabel || t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
+                      </Button>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           </section>
         )}
@@ -490,7 +362,7 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* ═══ 5. MAIN CHART (Secondary) ═══ */}
+        {/* ═══ 3. PERFORMANCE TRENDS (1-2 Charts) ═══ */}
         {!isLoading && (
           <section>
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
@@ -498,7 +370,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                  <p className="text-xs text-muted-foreground">{t("dashboard.weekTrend")}</p>
+                  <p className="text-xs text-muted-foreground">Abgeschlossen vs. Erstellt vs. Eskalationen</p>
                 </div>
               </div>
               <div className="h-52">
@@ -520,6 +392,7 @@ const Dashboard = () => {
                     <RechartsTooltip contentStyle={chartTooltipStyle} />
                     <Area type="monotone" dataKey="completed" name="Abgeschlossen" stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
                     <Area type="monotone" dataKey="created" name="Erstellt" stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
+                    <Area type="monotone" dataKey="escalations" name="Eskalationen" stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -527,16 +400,14 @@ const Dashboard = () => {
           </section>
         )}
 
-        {/* ═══ 6. BEFORE/AFTER ROI (Tertiary) ═══ */}
+        {/* ═══ 4. KI DAILY BRIEF (Prominent) ═══ */}
         {!isLoading && (
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
-            <WidgetErrorBoundary>
-              <RoiDashboardWidget />
-            </WidgetErrorBoundary>
+          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+            <AiBriefingWidget />
           </Suspense>
         )}
 
-        {/* ═══ 7. RECENTLY OPENED (Tertiary/Compact) ═══ */}
+        {/* ═══ 5. RECENTLY OPENED (Compact) ═══ */}
         {!isLoading && computed.recentlyOpened.length > 0 && (
           <section>
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.recentlyOpened")}</h2>
@@ -557,15 +428,6 @@ const Dashboard = () => {
               ))}
             </div>
           </section>
-        )}
-
-        {/* ═══ 8. LEADERBOARD (Tertiary) ═══ */}
-        {!isLoading && (
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
-            <WidgetErrorBoundary>
-              <LeaderboardWidget />
-            </WidgetErrorBoundary>
-          </Suspense>
         )}
       </div>
     </AppLayout>
