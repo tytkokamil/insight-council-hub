@@ -68,7 +68,7 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "governance",
     items: [
-      { icon: Zap, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
+      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
       { icon: Shield, label: "nav.riskRegister", path: "/risks" },
       { icon: Lightbulb, label: "nav.automations", path: "/automations" },
       { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },

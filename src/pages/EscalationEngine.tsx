@@ -133,17 +133,17 @@ const EscalationEngine = () => {
     setRunning(false);
   };
 
-  if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Escalation Center...</div></AppLayout>;
+  if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Decision Control...</div></AppLayout>;
 
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">SLA & Eskalation</p>
-          <h1 className="font-display text-xl font-bold">Escalation Center</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Governance & Compliance</p>
+          <h1 className="font-display text-xl font-bold">Decision Control</h1>
         </div>
         <div className="flex items-center gap-2">
-          <PageHelpButton title="Escalation Center" description="Steuert SLA-basierte Eskalationen, zeigt aktive Fälle, Regeln, Historie und Analytik." />
+          <PageHelpButton title="Decision Control" description="Zentrale Governance-Steuerung: SLA-Management, Eskalationen, aktive Fälle, Regeln und Analytik." />
           <Button onClick={runEngine} disabled={running} className="gap-2">
             {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {running ? "Läuft..." : "Engine starten"}

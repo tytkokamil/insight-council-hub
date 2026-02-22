@@ -13,7 +13,7 @@
     "analyticsHub": "Analytics Hub",
     "processHub": "Process Hub",
     "executiveHub": "Executive Hub",
-    "escalationCenter": "Escalation Center",
+    "escalationCenter": "Decision Control",
     "riskRegister": "Risk Register",
     "automations": "Automations",
     "auditTrail": "Audit Trail",
@@ -28,7 +28,7 @@
     "live": "Live",
     "switchToAdvanced": "Switch to Advanced →",
     "teaserInsights": "Trends, bottlenecks & executive reports",
-    "teaserGovernance": "Escalations, risks & audit"
+    "teaserGovernance": "Governance, risks & compliance"
   },
   "auth": {
     "signIn": "Sign In",

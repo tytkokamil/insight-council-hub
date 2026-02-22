@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, Target, TrendingUp } from "lucide-react";
 import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
+import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
 
 interface AiInsightPanelProps {
   type: "pattern" | "dna" | "bottleneck";
@@ -177,6 +178,12 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
             )}
           </div>
         )}
+
+        {/* AI Explainability */}
+        <AiExplainabilityBadge
+          confidence={insights?.confidence}
+          factors={insights?.deep_patterns?.slice(0, 2).map((p: any) => p.title) || insights?.strengths?.slice(0, 2) || insights?.root_causes?.slice(0, 2).map((rc: any) => rc.cause)}
+        />
 
         {/* AI Feedback */}
         <AiFeedbackButton context={`intelligence-${type}`} />
