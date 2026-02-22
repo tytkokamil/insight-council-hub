@@ -26,6 +26,7 @@ import {
   AlertTriangle, Plus, Search, Trash2, Pencil, Link2, X, FileText, ListTodo, Shield,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import PageHeader from "@/components/shared/PageHeader";
 
 const statusLabels: Record<string, string> = {
   open: "Offen",
@@ -157,17 +158,17 @@ const RiskRegister = () => {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-display font-bold flex items-center gap-2">
-              <Shield className="w-6 h-6 text-destructive" /> Risk Register
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">Risiken erfassen, bewerten und mit Entscheidungen & Aufgaben verknüpfen</p>
-          </div>
-          <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }}>
-            <Plus className="w-4 h-4 mr-1" /> Neues Risiko
-          </Button>
-        </div>
+        <PageHeader
+          title="Risk Register"
+          subtitle="Risiken erfassen, bewerten und mit Entscheidungen & Aufgaben verknüpfen"
+          role="governance"
+          help={{ title: "Risk Register", description: "Erfasse Risiken, bewerte ihre Eintrittswahrscheinlichkeit und Auswirkung, und verknüpfe sie mit Entscheidungen und Aufgaben." }}
+          primaryAction={
+            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }}>
+              <Plus className="w-4 h-4 mr-1" /> Neues Risiko
+            </Button>
+          }
+        />
 
         {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">

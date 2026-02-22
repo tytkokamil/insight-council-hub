@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,13 +22,12 @@ const ProcessHub = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prozess-Analyse</p>
-          <h1 className="font-display text-xl font-bold">Process Hub</h1>
-        </div>
-        <PageHelpButton title="Process Hub" description="Engpässe, Reibungspunkte, Gesundheitsanalyse und Muster in einer Übersicht." />
-      </div>
+      <PageHeader
+        title="Process Hub"
+        subtitle="Engpässe, Reibungspunkte und Muster erkennen"
+        role="intelligence"
+        help={{ title: "Process Hub", description: "Engpässe, Reibungspunkte, Gesundheitsanalyse und Muster in einer Übersicht." }}
+      />
 
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState

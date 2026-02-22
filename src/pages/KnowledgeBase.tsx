@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -311,24 +312,22 @@ const KnowledgeBase = () => {
     <AppLayout>
       <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground">Wissen</p>
-            <h1 className="text-2xl font-semibold tracking-tight">Knowledge Base</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {totalLessons} Lessons aus {decisions.length} abgeschlossenen Entscheidungen
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)}
-            disabled={decisions.length === 0}
-          >
-            <Download className="w-4 h-4 mr-1.5" />
-            PDF-Report
-          </Button>
-        </div>
+        <PageHeader
+          title="Knowledge Base"
+          subtitle={`${totalLessons} Lessons aus ${decisions.length} abgeschlossenen Entscheidungen`}
+          role="knowledge"
+          help={{ title: "Knowledge Base", description: "Lessons Learned aus abgeschlossenen Entscheidungen. Suche, filtere und exportiere dein organisationales Wissen." }}
+          primaryAction={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)}
+              disabled={decisions.length === 0}
+            >
+              <Download className="w-4 h-4 mr-1.5" /> PDF-Report
+            </Button>
+          }
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

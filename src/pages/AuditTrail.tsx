@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles, Pencil, Plus, AlertTriangle, RotateCcw, Archive, Share2, Zap, Users, Target, MessageSquare } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -111,16 +112,12 @@ const AuditTrail = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Protokoll</p>
-            <h1 className="font-display text-xl font-bold">Audit Trail</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Vollständige Änderungshistorie aller Entscheidungen
-            </p>
-          </div>
-          <PageHelpButton title="Audit Trail" description="Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert." />
-        </div>
+        <PageHeader
+          title="Audit Trail"
+          subtitle="Vollständige Änderungshistorie aller Entscheidungen"
+          role="governance"
+          help={{ title: "Audit Trail", description: "Lückenlose Änderungshistorie aller Entscheidungen. Filtere nach Aktionstyp oder durchsuche Einträge. Jede Statusänderung, Bearbeitung und KI-Analyse wird protokolliert." }}
+        />
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { motion } from "framer-motion";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useProfiles, buildProfileMap } from "@/hooks/useDecisions";
@@ -247,24 +248,23 @@ const Tasks = () => {
 
   return (
     <AppLayout>
-      {/* Header – matching Decisions page */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Aufgaben</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Überblick über alle Aufgaben</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <PageHelpButton title="Aufgaben" description="Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht." />
+      {/* Header */}
+      <PageHeader
+        title="Aufgaben"
+        subtitle="Überblick über alle Aufgaben"
+        role="execution"
+        help={{ title: "Aufgaben", description: "Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht." }}
+        secondaryActions={
           <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2">
-            <FileUp className="w-4 h-4" />
-            Import
+            <FileUp className="w-4 h-4" /> Import
           </Button>
+        }
+        primaryAction={
           <Button onClick={openCreate} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Neue Aufgabe
+            <Plus className="w-4 h-4" /> Neue Aufgabe
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {tasks.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">

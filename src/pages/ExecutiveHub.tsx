@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,13 +26,12 @@ const ExecutiveHub = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
-          <h1 className="font-display text-xl font-bold">Executive Hub</h1>
-        </div>
-        <PageHelpButton title="Executive Hub" description="C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien." />
-      </div>
+      <PageHeader
+        title="Executive Hub"
+        subtitle="C-Level Cockpit mit Briefing, Prognosen und Szenarien"
+        role="intelligence"
+        help={{ title: "Executive Hub", description: "C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien." }}
+      />
 
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState

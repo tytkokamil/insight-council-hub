@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHeader from "@/components/shared/PageHeader";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
@@ -257,30 +258,31 @@ const Decisions = () => {
   return (
     <AppLayout>
       {/* ═══ A) HEADER ═══ */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold">{t("decisions.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{t("decisions.countShown", { total: decisions.length, shown: filtered.length })}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHelp(true)}>
-            <HelpCircle className="w-4 h-4" />
-          </Button>
-          {decisions.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2"><Download className="w-4 h-4" /> {t("common.export")}</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleExportCSV} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportPDF} className="gap-2"><FileText className="w-4 h-4" /> PDF</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-2"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+      <PageHeader
+        title={t("decisions.title")}
+        subtitle={t("decisions.countShown", { total: decisions.length, shown: filtered.length })}
+        role="execution"
+        help={{ title: t("decisions.title"), description: "Zentrale Arbeitsfläche für alle Entscheidungen. Nutze Filter, Quick-Chips und Suche, um gezielt zu finden." }}
+        secondaryActions={
+          <>
+            {decisions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2"><Download className="w-4 h-4" /> {t("common.export")}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportCSV} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2"><FileText className="w-4 h-4" /> PDF</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-2"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+          </>
+        }
+        primaryAction={
           <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> {t("decisions.new")}</Button>
-        </div>
-      </div>
+        }
+      />
 
       {decisions.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">

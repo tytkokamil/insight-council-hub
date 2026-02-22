@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -137,19 +138,18 @@ const EscalationEngine = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Governance & Compliance</p>
-          <h1 className="font-display text-xl font-bold">Decision Control</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <PageHelpButton title="Decision Control" description="Zentrale Governance-Steuerung: SLA-Management, Eskalationen, aktive Fälle, Regeln und Analytik." />
+      <PageHeader
+        title="Decision Control"
+        subtitle="SLA-Management, Eskalationen und automatische Governance"
+        role="governance"
+        help={{ title: "Decision Control", description: "Zentrale Governance-Steuerung: SLA-Management, Eskalationen, aktive Fälle, Regeln und Analytik." }}
+        primaryAction={
           <Button onClick={runEngine} disabled={running} className="gap-2">
             {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {running ? "Läuft..." : "Engine starten"}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
