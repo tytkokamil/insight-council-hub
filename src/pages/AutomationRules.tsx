@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -262,26 +263,22 @@ const AutomationRules = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">System</p>
-          <h1 className="font-display text-xl font-bold">Automation Rules</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <PageHelpButton
-            title="Automation Rules"
-            description="Erstelle Regeln, die automatisch Aktionen ausführen wenn bestimmte Bedingungen eintreten. Beispiel: Wenn Priorität = Hoch → SLA auf 3 Tage setzen. Regeln werden bei jeder Entscheidungs-Erstellung oder -Änderung evaluiert."
-          />
+      <PageHeader
+        title="Automation Rules"
+        subtitle="Regeln für automatische Aktionen bei bestimmten Bedingungen"
+        role="governance"
+        help={{ title: "Automation Rules", description: "Erstelle Regeln, die automatisch Aktionen ausführen wenn bestimmte Bedingungen eintreten. Beispiel: Wenn Priorität = Hoch → SLA auf 3 Tage setzen." }}
+        secondaryActions={
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => { fetchLogs(); setShowLogs(true); }}>
-            <History className="w-3.5 h-3.5" />
-            Log
+            <History className="w-3.5 h-3.5" /> Log
           </Button>
+        }
+        primaryAction={
           <Button size="sm" className="gap-1.5" onClick={() => { resetForm(); setShowCreate(true); }}>
-            <Plus className="w-3.5 h-3.5" />
-            Neue Regel
+            <Plus className="w-3.5 h-3.5" /> Neue Regel
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Preset Templates */}
       {rules.length === 0 && !loading && (

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -19,13 +20,12 @@ const AnalyticsHub = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-          <h1 className="font-display text-xl font-bold">Analytics Hub</h1>
-        </div>
-        <PageHelpButton title="Analytics Hub" description="Status, Trends, Durchlaufzeiten und Team-Vergleiche in einer zentralen Übersicht." />
-      </div>
+      <PageHeader
+        title="Analytics Hub"
+        subtitle="Status, Trends und Team-Vergleiche"
+        role="intelligence"
+        help={{ title: "Analytics Hub", description: "Status, Trends, Durchlaufzeiten und Team-Vergleiche in einer zentralen Übersicht." }}
+      />
 
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState

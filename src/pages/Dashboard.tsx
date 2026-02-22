@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTranslatedLabels } from "@/lib/labels";
+import PageHeader from "@/components/shared/PageHeader";
 import { format, differenceInDays, subDays, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
@@ -238,12 +239,11 @@ const Dashboard = () => {
       )}
 
       {/* ═══ HEADER ═══ */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">{dashboardTitle}</h1>
-          <p className="text-sm text-muted-foreground">{t("dashboard.whatNeedsAttention")}</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        title={dashboardTitle}
+        subtitle={t("dashboard.whatNeedsAttention")}
+        role="execution"
+        secondaryActions={
           <div className="flex items-center rounded-md border border-border p-0.5">
             {([7, 30, 90] as const).map(r => (
               <button key={r} onClick={() => setTimeRange(r)}
@@ -252,11 +252,13 @@ const Dashboard = () => {
               </button>
             ))}
           </div>
+        }
+        primaryAction={
           <Button onClick={() => navigate("/decisions")} size="sm" className="gap-1.5">
             <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <div className="space-y-8">
 
