@@ -1,301 +1,467 @@
-import { useMemo } from "react";
-import PageHelpButton from "@/components/shared/PageHelpButton";
-import { categoryLabels } from "@/lib/labels";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   TrendingUp, Clock, CheckCircle2, AlertTriangle, FileText,
-  BarChart3, Users, Zap, Activity, ListTodo, ArrowUpRight, ArrowDownRight,
+  BarChart3, Users, Zap, Activity, DollarSign, Shield, Target,
+  ArrowUpRight, ArrowDownRight, ExternalLink, Lightbulb, GaugeCircle,
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import TemplateAnalyticsSection from "@/components/analytics/TemplateAnalyticsSection";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area,
+  PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, ComposedChart,
 } from "recharts";
-import { useDecisions, useTeams, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useFilteredReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
-import { useTeamContext } from "@/hooks/useTeamContext";
-import { differenceInDays, subDays, format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { differenceInDays, subDays, format, isAfter, isBefore, subWeeks } from "date-fns";
 import { de } from "date-fns/locale";
+import type { AnalyticsTimeRange } from "./AnalyticsHub";
 
-const CHART_COLORS = {
+const COLORS = {
   primary: "hsl(var(--primary))",
-  success: "hsl(142 71% 45%)",
-  warning: "hsl(38 92% 50%)",
+  success: "hsl(var(--success))",
+  warning: "hsl(var(--warning))",
   destructive: "hsl(var(--destructive))",
   muted: "hsl(var(--muted-foreground))",
   violet: "hsl(280 65% 60%)",
   slate: "hsl(215 20% 65%)",
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  "Entwurf": CHART_COLORS.slate,
-  "Review": CHART_COLORS.warning,
-  "Genehmigt": CHART_COLORS.primary,
-  "Umgesetzt": CHART_COLORS.success,
-  "Abgelehnt": CHART_COLORS.destructive,
-};
-
-const PRIORITY_COLORS: Record<string, string> = {
-  "Kritisch": CHART_COLORS.destructive,
-  "Hoch": CHART_COLORS.warning,
-  "Mittel": CHART_COLORS.primary,
-  "Niedrig": CHART_COLORS.slate,
-};
+const tooltipCls = "rounded-lg border border-border/50 bg-popover px-3 py-2 shadow-lg";
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-border/50 bg-popover px-3 py-2 shadow-lg">
+    <div className={tooltipCls}>
       {label && <p className="text-xs font-medium text-foreground mb-1">{label}</p>}
-      {payload.map((entry: any, i: number) => (
+      {payload.map((e: any, i: number) => (
         <div key={i} className="flex items-center gap-2 text-xs">
-          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
-          <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="font-semibold text-foreground">{entry.value}</span>
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: e.color }} />
+          <span className="text-muted-foreground">{e.name}:</span>
+          <span className="font-semibold text-foreground">{e.value}</span>
         </div>
       ))}
     </div>
   );
 };
 
-const renderCustomPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, name, value, percent }: any) => {
-  if (percent < 0.05) return null;
-  const RADIAN = Math.PI / 180;
-  const radius = outerRadius + 20;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  return (
-    <text x={x} y={y} fill="hsl(var(--foreground))" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" className="text-[11px]">
-      {name} ({value})
-    </text>
-  );
-};
+function median(arr: number[]): number {
+  if (!arr.length) return 0;
+  const s = [...arr].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 !== 0 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
 
-const Analytics = ({ embedded }: { embedded?: boolean }) => {
+const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRange?: AnalyticsTimeRange }) => {
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allTasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
   const { data: profiles = [] } = useProfiles();
+  const { data: reviews = [] } = useFilteredReviews();
   const profileMap = buildProfileMap(profiles);
-  const { selectedTeamId } = useTeamContext();
+
+  const { data: goals = [] } = useQuery({
+    queryKey: ["strategic-goals"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("strategic_goals").select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: goalLinks = [] } = useQuery({
+    queryKey: ["decision-goal-links"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("decision_goal_links").select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: lessons = [] } = useQuery({
+    queryKey: ["lessons-learned"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("lessons_learned").select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+
   const loading = loadingDec || loadingTasks;
 
-  const data = useMemo(() => {
-    const decisions = allDecisions;
-    const tasks = allTasks;
+  const d = useMemo(() => {
     const now = new Date();
+    const rangeDays = timeRange === "all" ? 9999 : parseInt(timeRange);
+    const rangeStart = subDays(now, rangeDays);
+
+    // Filter by time range
+    const decisions = timeRange === "all" ? allDecisions : allDecisions.filter(d => isAfter(new Date(d.created_at), rangeStart));
+    const tasks = timeRange === "all" ? allTasks : allTasks.filter(t => isAfter(new Date(t.created_at), rangeStart));
+    const prevRangeStart = subDays(rangeStart, rangeDays);
+    const prevDecisions = timeRange === "all" ? [] : allDecisions.filter(d => {
+      const date = new Date(d.created_at);
+      return isAfter(date, prevRangeStart) && isBefore(date, rangeStart);
+    });
 
     const total = decisions.length;
+    const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
     const implemented = decisions.filter(d => d.status === "implemented");
-    const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
-    const rejected = decisions.filter(d => d.status === "rejected");
+    const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
+    const escalated = active.filter(d => (d.escalation_level ?? 0) > 0);
+    const critical = decisions.filter(d => d.priority === "critical" || (d.ai_risk_score ?? 0) > 60 || (d.escalation_level ?? 0) > 0);
+    const highRisk = decisions.filter(d => (d.ai_risk_score ?? 0) > 60);
 
-    const statusData = [
-      { name: "Entwurf", value: decisions.filter(d => d.status === "draft").length },
-      { name: "Review", value: decisions.filter(d => d.status === "review").length },
-      { name: "Genehmigt", value: decisions.filter(d => d.status === "approved").length },
-      { name: "Umgesetzt", value: implemented.length },
-      { name: "Abgelehnt", value: rejected.length },
-    ].filter(d => d.value > 0);
+    // Durations
+    const implDurations = implemented.filter(d => d.implemented_at).map(d =>
+      differenceInDays(new Date(d.implemented_at!), new Date(d.created_at))
+    );
+    const medianDuration = median(implDurations);
+    const avgDuration = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 0;
 
-    const categoryData = Object.entries(
-      decisions.reduce((acc: Record<string, number>, d) => {
-        acc[d.category] = (acc[d.category] || 0) + 1;
-        return acc;
-      }, {})
-    ).map(([name, value]) => ({ name: categoryLabels[name] || name, value })).sort((a, b) => b.value - a.value);
+    // SLA Compliance
+    const withDueDate = decisions.filter(d => d.due_date);
+    const slaCompliant = withDueDate.filter(d => {
+      if (d.status === "implemented" && d.implemented_at) {
+        return new Date(d.implemented_at) <= new Date(d.due_date!);
+      }
+      return d.status !== "implemented" ? new Date(d.due_date!) >= now : true;
+    });
+    const slaRate = withDueDate.length > 0 ? Math.round((slaCompliant.length / withDueDate.length) * 100) : 100;
 
-    const durations = implemented
-      .filter(d => d.implemented_at)
-      .map(d => ({
-        days: differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)),
-        category: d.category,
-        priority: d.priority,
-      }));
+    // Overdue Rate
+    const overdueRate = active.length > 0 ? Math.round((overdue.length / active.length) * 100) : 0;
 
-    const avgDuration = durations.length > 0
-      ? Math.round(durations.reduce((s, d) => s + d.days, 0) / durations.length * 10) / 10
-      : null;
+    // Implementation Rate
+    const approved = decisions.filter(d => d.status === "approved" || d.status === "implemented");
+    const implRate = approved.length > 0 ? Math.round((implemented.length / approved.length) * 100) : 0;
 
-    const durationByCategory = Object.entries(
-      durations.reduce((acc: Record<string, number[]>, d) => {
-        if (!acc[d.category]) acc[d.category] = [];
-        acc[d.category].push(d.days);
-        return acc;
-      }, {})
-    ).map(([cat, days]) => ({
-      name: categoryLabels[cat] || cat,
-      avg: Math.round(days.reduce((s, d) => s + d, 0) / days.length * 10) / 10,
-      count: days.length,
-    })).sort((a, b) => b.avg - a.avg);
+    // Cost of Delay
+    const costOfDelay = active.reduce((sum, dec) => {
+      const team = teams.find((t: any) => t.id === dec.team_id);
+      const rate = team?.hourly_rate || 75;
+      const daysOpen = differenceInDays(now, new Date(dec.created_at));
+      const mult = dec.priority === "critical" ? 4 : dec.priority === "high" ? 2.5 : 1.5;
+      return sum + Math.round(rate * (daysOpen / 7) * 8 * mult);
+    }, 0);
 
-    const durationByPriority = ["critical", "high", "medium", "low"]
-      .map(p => {
-        const d = durations.filter(x => x.priority === p);
-        return {
-          name: p === "critical" ? "Kritisch" : p === "high" ? "Hoch" : p === "medium" ? "Mittel" : "Niedrig",
-          avg: d.length > 0 ? Math.round(d.reduce((s, x) => s + x.days, 0) / d.length * 10) / 10 : 0,
-          count: d.length,
-        };
+    // Previous period cost
+    const prevCostOfDelay = prevDecisions.filter(pd => !["implemented", "rejected", "archived", "cancelled"].includes(pd.status)).reduce((sum, dec) => {
+      const team = teams.find((t: any) => t.id === dec.team_id);
+      const rate = team?.hourly_rate || 75;
+      const daysOpen = differenceInDays(rangeStart, new Date(dec.created_at));
+      const mult = dec.priority === "critical" ? 4 : dec.priority === "high" ? 2.5 : 1.5;
+      return sum + Math.round(rate * (daysOpen / 7) * 8 * mult);
+    }, 0);
+
+    // Decision Quality Index (composite 0-100)
+    const rejRate = total > 0 ? decisions.filter(d => d.status === "rejected").length / total : 0;
+    const qualityIndex = Math.round(Math.max(0, Math.min(100,
+      (implRate * 0.3) +
+      ((100 - overdueRate) * 0.25) +
+      (slaRate * 0.25) +
+      ((100 - (escalated.length / Math.max(1, active.length) * 100)) * 0.2)
+    )));
+
+    // Insights
+    const insights: { text: string; type: "warning" | "info" | "success"; action?: string }[] = [];
+    const prevOverdueRate = prevDecisions.length > 0 ? Math.round((prevDecisions.filter(d => d.due_date && new Date(d.due_date) < rangeStart).length / prevDecisions.length) * 100) : 0;
+    const costDelta = costOfDelay - prevCostOfDelay;
+
+    // Top cost driver
+    const topCostDrivers = [...active]
+      .map(dec => {
+        const team = teams.find((t: any) => t.id === dec.team_id);
+        const rate = team?.hourly_rate || 75;
+        const daysOpen = differenceInDays(now, new Date(dec.created_at));
+        const mult = dec.priority === "critical" ? 4 : dec.priority === "high" ? 2.5 : 1.5;
+        return { ...dec, cost: Math.round(rate * (daysOpen / 7) * 8 * mult), teamName: team?.name || "—" };
       })
-      .filter(d => d.count > 0);
+      .sort((a, b) => b.cost - a.cost);
 
-    const weekData = Array.from({ length: 8 }, (_, i) => {
+    if (costDelta > 0 && topCostDrivers.length > 0) {
+      insights.push({ text: `Cost of Delay +€${costDelta.toLocaleString()} vs. Vorperiode (Top-Treiber: ${topCostDrivers[0].title}).`, type: "warning", action: "Zeige betroffene Entscheidungen" });
+    }
+    if (escalated.length > 0) {
+      const escTeams = escalated.reduce((acc: Record<string, number>, d) => {
+        const t = teams.find((t: any) => t.id === d.team_id);
+        const n = t?.name || "Ohne Team";
+        acc[n] = (acc[n] || 0) + 1;
+        return acc;
+      }, {});
+      const topEscTeam = Object.entries(escTeams).sort((a, b) => b[1] - a[1])[0];
+      insights.push({ text: `${escalated.length} aktive Eskalationen${topEscTeam ? ` (Top: ${topEscTeam[0]})` : ""}.`, type: "warning" });
+    }
+    if (slaRate < 80) {
+      insights.push({ text: `SLA Compliance bei ${slaRate}% – unter Zielwert 80%.`, type: "warning" });
+    }
+    if (qualityIndex >= 75) {
+      insights.push({ text: `Decision Quality Index bei ${qualityIndex}/100 – gute Governance.`, type: "success" });
+    }
+    if (medianDuration > 30) {
+      insights.push({ text: `Median Time-to-Decision ${medianDuration} Tage – Review-Engpässe prüfen.`, type: "warning" });
+    }
+
+    // Flow chart data (8 weeks)
+    const weekCount = Math.min(12, Math.max(8, Math.ceil(rangeDays / 7)));
+    const weekData = Array.from({ length: weekCount }, (_, i) => {
+      const weekEnd = subDays(now, (weekCount - 1 - i) * 7);
+      const weekStart = subDays(weekEnd, 7);
+      const label = format(weekEnd, "dd.MM", { locale: de });
+      const created = allDecisions.filter(dd => {
+        const date = new Date(dd.created_at);
+        return date >= weekStart && date < weekEnd;
+      }).length;
+      const completed = allDecisions.filter(dd => dd.implemented_at && new Date(dd.implemented_at) >= weekStart && new Date(dd.implemented_at) < weekEnd).length;
+      const rejected = allDecisions.filter(dd => dd.status === "rejected" && new Date(dd.updated_at) >= weekStart && new Date(dd.updated_at) < weekEnd).length;
+      const backlog = allDecisions.filter(dd => {
+        const date = new Date(dd.created_at);
+        return date < weekEnd && !["implemented", "rejected", "archived", "cancelled"].includes(dd.status);
+      }).length;
+      return { week: label, Erstellt: created, Umgesetzt: completed, Abgelehnt: rejected, Backlog: backlog };
+    });
+
+    // Bottleneck: Duration by status phase
+    const statusDurations: Record<string, number[]> = {};
+    decisions.forEach(dec => {
+      const created = new Date(dec.created_at);
+      const phases: { status: string; start: Date; end: Date }[] = [];
+      // Simplified: estimate time in current status
+      const daysInCurrent = differenceInDays(now, new Date(dec.updated_at));
+      const totalDays = differenceInDays(now, created);
+      const statusKey = statusLabels[dec.status] || dec.status;
+      if (!statusDurations[statusKey]) statusDurations[statusKey] = [];
+      statusDurations[statusKey].push(Math.max(1, daysInCurrent));
+    });
+    const statusPhaseData = Object.entries(statusDurations)
+      .map(([name, days]) => ({
+        name,
+        median: median(days),
+        count: days.length,
+      }))
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.median - a.median);
+
+    // Bottleneck Heatmap: Status × Team
+    const heatmapData: { team: string; status: string; count: number; medianDays: number }[] = [];
+    const statusKeys = ["draft", "review", "approved", "implemented"];
+    teams.forEach((team: any) => {
+      statusKeys.forEach(s => {
+        const teamStatusDecs = decisions.filter(dd => dd.team_id === team.id && dd.status === s);
+        const days = teamStatusDecs.map(dd => differenceInDays(now, new Date(dd.updated_at)));
+        heatmapData.push({
+          team: team.name,
+          status: statusLabels[s] || s,
+          count: teamStatusDecs.length,
+          medianDays: median(days),
+        });
+      });
+    });
+
+    // Risk Distribution
+    const riskDistribution = [
+      { name: "Niedrig", value: decisions.filter(dd => (dd.ai_risk_score || 0) <= 30).length, fill: COLORS.success },
+      { name: "Mittel", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 30 && (dd.ai_risk_score || 0) <= 60).length, fill: COLORS.warning },
+      { name: "Hoch", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 60 && (dd.ai_risk_score || 0) <= 80).length, fill: COLORS.destructive },
+      { name: "Kritisch", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 80).length, fill: "hsl(0 90% 40%)" },
+    ].filter(dd => dd.value > 0);
+
+    // Cost by category
+    const costByCategory = Object.entries(
+      active.reduce((acc: Record<string, number>, dec) => {
+        const cat = categoryLabels[dec.category] || dec.category;
+        const team = teams.find((t: any) => t.id === dec.team_id);
+        const rate = team?.hourly_rate || 75;
+        const daysOpen = differenceInDays(now, new Date(dec.created_at));
+        const mult = dec.priority === "critical" ? 4 : dec.priority === "high" ? 2.5 : 1.5;
+        acc[cat] = (acc[cat] || 0) + Math.round(rate * (daysOpen / 7) * 8 * mult);
+        return acc;
+      }, {})
+    ).map(([name, cost]) => ({ name, cost })).sort((a, b) => b.cost - a.cost);
+
+    // Governance: Escalations per week
+    const escPerWeek = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
       const label = format(weekEnd, "dd.MM", { locale: de });
-      const created = decisions.filter(d => {
-        const date = new Date(d.created_at);
-        return date >= weekStart && date < weekEnd;
-      }).length;
-      const completed = [
-        ...decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd),
-        ...tasks.filter(t => t.completed_at && new Date(t.completed_at) >= weekStart && new Date(t.completed_at) < weekEnd),
-      ].length;
-      const rejectedW = decisions.filter(d =>
-        d.status === "rejected" && new Date(d.updated_at) >= weekStart && new Date(d.updated_at) < weekEnd
+      const escCount = allDecisions.filter(dd =>
+        dd.last_escalated_at && new Date(dd.last_escalated_at) >= weekStart && new Date(dd.last_escalated_at) < weekEnd
       ).length;
-      return { week: label, Erstellt: created, Abgeschlossen: completed, Abgelehnt: rejectedW };
+      // SLA compliance for that week
+      const weekDecs = allDecisions.filter(dd => {
+        const date = new Date(dd.created_at);
+        return date < weekEnd && dd.due_date;
+      });
+      const weekCompliant = weekDecs.filter(dd => {
+        if (dd.status === "implemented" && dd.implemented_at) return new Date(dd.implemented_at) <= new Date(dd.due_date!);
+        return new Date(dd.due_date!) >= weekEnd;
+      });
+      const compliance = weekDecs.length > 0 ? Math.round((weekCompliant.length / weekDecs.length) * 100) : 100;
+      return { week: label, Eskalationen: escCount, "SLA %": compliance };
     });
 
-    const rejectionRate = total > 0 ? Math.round((rejected.length / total) * 100) : 0;
-    const avgRisk = total > 0 ? Math.round(decisions.reduce((s, d) => s + (d.ai_risk_score || 0), 0) / total) : 0;
+    // Review queue
+    const openReviews = reviews.filter(r => !r.reviewed_at);
+    const reviewWaitDays = openReviews.map(r => differenceInDays(now, new Date(r.created_at)));
+    const medianReviewWait = median(reviewWaitDays);
 
-    const riskDistribution = [
-      { name: "Niedrig", value: decisions.filter(d => (d.ai_risk_score || 0) <= 40).length, fill: CHART_COLORS.success },
-      { name: "Mittel", value: decisions.filter(d => (d.ai_risk_score || 0) > 40 && (d.ai_risk_score || 0) <= 60).length, fill: CHART_COLORS.warning },
-      { name: "Hoch", value: decisions.filter(d => (d.ai_risk_score || 0) > 60).length, fill: CHART_COLORS.destructive },
-    ].filter(d => d.value > 0);
+    // Strategic alignment
+    const goalAlignment = goals.map((g: any) => {
+      const linkedDecIds = goalLinks.filter((gl: any) => gl.goal_id === g.id).map((gl: any) => gl.decision_id);
+      const linkedDecs = decisions.filter(dd => linkedDecIds.includes(dd.id));
+      const activeLinked = linkedDecs.filter(dd => !["implemented", "rejected", "archived", "cancelled"].includes(dd.status));
+      const hasOverdue = activeLinked.some(dd => dd.due_date && new Date(dd.due_date) < now);
+      const hasEscalated = activeLinked.some(dd => (dd.escalation_level ?? 0) > 0);
+      const health: "stable" | "at_risk" | "critical" = hasEscalated ? "critical" : hasOverdue ? "at_risk" : "stable";
+      return { ...g, linkedCount: linkedDecs.length, health };
+    });
 
-    const teamComparison = teams.map(team => {
-      const teamDec = decisions.filter(d => d.team_id === team.id);
-      const teamTasks = tasks.filter(t => t.team_id === team.id);
-      const teamImpl = teamDec.filter(d => d.status === "implemented");
-      const teamVels = teamImpl.filter(d => d.implemented_at).map(d =>
-        differenceInDays(new Date(d.implemented_at!), new Date(d.created_at))
-      );
-      const avgVel = teamVels.length > 0 ? Math.round(teamVels.reduce((s, v) => s + v, 0) / teamVels.length) : 0;
-      const taskDoneRate = teamTasks.length > 0 ? Math.round((teamTasks.filter(t => t.status === "done").length / teamTasks.length) * 100) : 0;
-      const overdue = teamDec.filter(d => d.due_date && new Date(d.due_date) < now && !["implemented", "rejected"].includes(d.status)).length;
-      return { name: team.name, entscheidungen: teamDec.length, umgesetzt: teamImpl.length, avgTage: avgVel, taskRate: taskDoneRate, überfällig: overdue };
-    }).filter(t => t.entscheidungen > 0);
+    // Quality trend (monthly, last 6 months)
+    const qualityTrend = Array.from({ length: 6 }, (_, i) => {
+      const monthEnd = subDays(now, i * 30);
+      const monthStart = subDays(monthEnd, 30);
+      const label = format(monthEnd, "MMM", { locale: de });
+      const monthDecs = allDecisions.filter(dd => {
+        const date = new Date(dd.created_at);
+        return date >= monthStart && date < monthEnd;
+      });
+      const monthTotal = monthDecs.length || 1;
+      const monthImpl = monthDecs.filter(dd => dd.status === "implemented").length;
+      const monthRej = monthDecs.filter(dd => dd.status === "rejected").length;
+      const monthOverdue = monthDecs.filter(dd => dd.due_date && new Date(dd.due_date) < monthEnd && !["implemented", "rejected"].includes(dd.status)).length;
+      const qi = Math.round(Math.max(0, Math.min(100,
+        (monthImpl / monthTotal * 100 * 0.4) + ((100 - monthOverdue / monthTotal * 100) * 0.3) + ((100 - monthRej / monthTotal * 100) * 0.3)
+      )));
+      return { month: label, "Quality Index": qi, "Ablehnungsrate": Math.round(monthRej / monthTotal * 100) };
+    }).reverse();
 
-    const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
-    const overduePercent = active.length > 0 ? Math.round((overdue.length / active.length) * 100) : 0;
-    const taskTotal = tasks.length;
-    const taskDone = tasks.filter(t => t.status === "done").length;
-    const taskDoneRate = taskTotal > 0 ? Math.round((taskDone / taskTotal) * 100) : 0;
+    // Lessons stats
+    const lessonsRate = implemented.length > 0 ? Math.round((lessons.length / implemented.length) * 100) : 0;
 
     return {
-      total, implemented: implemented.length, rejectionRate, avgRisk, avgDuration,
-      overduePercent, taskTotal, taskDone, taskDoneRate,
-      statusData, categoryData, riskDistribution,
-      durationByCategory, durationByPriority,
-      weekData, teamComparison,
+      total, active, implemented, overdue, escalated, critical, highRisk,
+      medianDuration, avgDuration, slaRate, overdueRate, implRate, costOfDelay,
+      qualityIndex, insights, weekData, statusPhaseData, heatmapData,
+      riskDistribution, topCostDrivers: topCostDrivers.slice(0, 5), costByCategory,
+      escPerWeek, openReviews: openReviews.length, medianReviewWait,
+      goalAlignment, qualityTrend, lessonsRate, costDelta,
     };
-  }, [allDecisions, allTasks, teams]);
+  }, [allDecisions, allTasks, teams, reviews, goals, goalLinks, lessons, timeRange]);
 
-  if (loading) return <AnalysisPageSkeleton cards={4} sections={0} showChart />;
+  if (loading) return <AnalysisPageSkeleton cards={8} sections={0} showChart />;
 
   if (allDecisions.length === 0) {
     const empty = (
-      <>
-        <div className="mb-6">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-          <h1 className="font-display text-xl font-bold">Analytics</h1>
-        </div>
-        <EmptyAnalysisState
-          icon={BarChart3}
-          title="Noch keine Analyse-Daten"
-          description="Erstelle Entscheidungen, um Statistiken und Diagramme zu sehen."
-          hint="Daten werden automatisch analysiert, sobald Entscheidungen vorhanden sind"
-        />
-      </>
+      <EmptyAnalysisState
+        icon={BarChart3}
+        title="Noch keine Analyse-Daten"
+        description="Erstelle Entscheidungen, um das Executive Control Center zu aktivieren."
+        hint="Daten werden automatisch analysiert, sobald Entscheidungen vorhanden sind"
+      />
     );
     return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
   const kpis = [
-    { label: "Gesamt", value: data.total, icon: FileText, color: "text-primary" },
-    { label: "Umgesetzt", value: data.implemented, icon: CheckCircle2, color: "text-emerald-500" },
-    { label: "Ø Tage", value: data.avgDuration ?? "—", icon: Zap, color: "text-primary" },
-    { label: "Überfällig", value: `${data.overduePercent}%`, icon: AlertTriangle, color: data.overduePercent > 20 ? "text-destructive" : "text-muted-foreground" },
-    { label: "Ablehnungsrate", value: `${data.rejectionRate}%`, icon: Clock, color: data.rejectionRate > 20 ? "text-amber-500" : "text-muted-foreground" },
-    { label: "Task-Rate", value: `${data.taskDoneRate}%`, icon: ListTodo, color: data.taskDoneRate > 60 ? "text-emerald-500" : "text-amber-500" },
+    { label: "Aktive Entscheidungen", value: d.active.length, icon: FileText },
+    { label: "Kritisch", value: d.critical.length, icon: AlertTriangle, color: d.critical.length > 0 ? "text-destructive" : undefined },
+    { label: "Median Time-to-Decision", value: d.medianDuration > 0 ? `${d.medianDuration}d` : "—", icon: Clock },
+    { label: "SLA Compliance", value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success" },
+    { label: "Overdue Rate", value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined },
+    { label: "Cost of Delay", value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
+    { label: "Quality Index", value: d.qualityIndex, icon: GaugeCircle, color: d.qualityIndex >= 75 ? "text-success" : d.qualityIndex >= 50 ? "text-warning" : "text-destructive" },
+    { label: "Implementation Rate", value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive" },
   ];
 
   const content = (
-    <div className="space-y-6">
-      {!embedded && (
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Auswertung</p>
-            <h1 className="font-display text-xl font-bold">Analytics</h1>
-          </div>
-          <PageHelpButton title="Analytics" description="Muster & Trends erkennen: Durchlaufzeiten, Durchsatz, Ablehnungsquoten, Teamvergleiche und Engpässe." />
-        </div>
-      )}
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="space-y-8">
+      {/* SECTION 1: Executive Summary KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {kpis.map((kpi, i) => (
-          <Card key={i} className="group hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="p-1.5 rounded-md bg-muted/60">
-                  <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
-                </div>
-                <span className="text-[11px] font-medium text-muted-foreground tracking-wide">{kpi.label}</span>
+          <Card key={i}>
+            <CardContent className="p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
+                <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
               </div>
-              <p className={`text-2xl font-bold tracking-tight ${kpi.color}`}>{kpi.value}</p>
+              <div className={`text-xl font-bold tabular-nums ${kpi.color || ""}`}>{kpi.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Throughput Trends */}
+      {/* SECTION 2: Insight Bar */}
+      {d.insights.length > 0 && (
+        <Card className="border-l-4 border-l-warning">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-4 h-4 text-warning" />
+              <span className="text-sm font-semibold">Was hat sich verändert?</span>
+            </div>
+            <div className="space-y-1.5">
+              {d.insights.map((insight, i) => (
+                <div key={i} className="flex items-start gap-2 text-sm">
+                  <span className={`mt-1 w-1.5 h-1.5 rounded-full shrink-0 ${insight.type === "warning" ? "bg-warning" : insight.type === "success" ? "bg-success" : "bg-primary"}`} />
+                  <span className="text-foreground">{insight.text}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* SECTION 3: Flow & Trends */}
       <CollapsibleSection
-        title="Durchsatz & Trends"
-        subtitle="Erstellt vs. Abgeschlossen (8 Wochen)"
+        title="Decision Throughput"
+        subtitle="Erstellt vs. Umgesetzt vs. Backlog"
         icon={<TrendingUp className="w-4 h-4 text-primary" />}
       >
         <Card>
           <CardContent className="pt-6 pb-4 px-4">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.weekData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                <AreaChart data={d.weekData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
                   <defs>
                     <linearGradient id="gCreated" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={CHART_COLORS.primary} stopOpacity={0.2} />
-                      <stop offset="100%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
+                      <stop offset="0%" stopColor={COLORS.primary} stopOpacity={0.15} />
+                      <stop offset="100%" stopColor={COLORS.primary} stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="gCompleted" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={CHART_COLORS.success} stopOpacity={0.2} />
-                      <stop offset="100%" stopColor={CHART_COLORS.success} stopOpacity={0} />
+                    <linearGradient id="gResolved" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={COLORS.success} stopOpacity={0.15} />
+                      <stop offset="100%" stopColor={COLORS.success} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
                   <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={8} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="Erstellt" stroke={CHART_COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                  <Area type="monotone" dataKey="Abgeschlossen" stroke={CHART_COLORS.success} fill="url(#gCompleted)" strokeWidth={2} dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                  <Area type="monotone" dataKey="Abgelehnt" stroke={CHART_COLORS.destructive} fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  <Area type="monotone" dataKey="Erstellt" stroke={COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="Umgesetzt" stroke={COLORS.success} fill="url(#gResolved)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Area type="monotone" dataKey="Abgelehnt" stroke={COLORS.destructive} fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  <Area type="monotone" dataKey="Backlog" stroke={COLORS.muted} fill="none" strokeWidth={1} strokeDasharray="2 2" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex items-center justify-center gap-6 mt-3">
+            <div className="flex items-center justify-center gap-5 mt-3">
               {[
-                { label: "Erstellt", color: CHART_COLORS.primary },
-                { label: "Abgeschlossen", color: CHART_COLORS.success },
-                { label: "Abgelehnt", color: CHART_COLORS.destructive },
+                { label: "Erstellt", color: COLORS.primary },
+                { label: "Umgesetzt", color: COLORS.success },
+                { label: "Abgelehnt", color: COLORS.destructive },
+                { label: "Backlog", color: COLORS.muted },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: l.color }} />
+                  <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
                   {l.label}
                 </div>
               ))}
@@ -304,260 +470,344 @@ const Analytics = ({ embedded }: { embedded?: boolean }) => {
         </Card>
       </CollapsibleSection>
 
-      {/* Duration Analysis */}
+      {/* SECTION 4: Bottleneck Intelligence */}
       <CollapsibleSection
-        title="Durchlaufzeiten"
-        subtitle="Ø Tage bis Umsetzung"
-        icon={<Zap className="w-4 h-4 text-primary" />}
+        title="Bottleneck Intelligence"
+        subtitle="Wo stauen sich Entscheidungen?"
+        icon={<Activity className="w-4 h-4 text-warning" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Where Time is Lost */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Nach Kategorie</CardTitle>
+              <CardTitle className="text-sm font-medium">Median Tage nach Status-Phase</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
-              {data.durationByCategory.length > 0 ? (
+              {d.statusPhaseData.length > 0 ? (
                 <div className="space-y-3">
-                  {data.durationByCategory.map((item, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-foreground font-medium">{item.name}</span>
-                        <span className="text-muted-foreground">{item.avg} Tage</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-primary/80 transition-all"
-                          style={{ width: `${Math.min(100, (item.avg / Math.max(...data.durationByCategory.map(d => d.avg))) * 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground py-8 text-center">Noch keine umgesetzten Entscheidungen</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Nach Priorität</CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {data.durationByPriority.length > 0 ? (
-                <div className="space-y-3">
-                  {data.durationByPriority.map((item, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full" style={{ background: PRIORITY_COLORS[item.name] || CHART_COLORS.primary }} />
-                          <span className="text-foreground font-medium">{item.name}</span>
-                        </div>
-                        <span className="text-muted-foreground">{item.avg} Tage</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(100, (item.avg / Math.max(...data.durationByPriority.map(d => d.avg))) * 100)}%`,
-                            background: PRIORITY_COLORS[item.name] || CHART_COLORS.primary,
-                            opacity: 0.8,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground py-8 text-center">Noch keine umgesetzten Entscheidungen</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </CollapsibleSection>
-
-      {/* Distribution */}
-      <CollapsibleSection
-        title="Verteilung"
-        subtitle="Status, Kategorien & Risiko"
-        icon={<BarChart3 className="w-4 h-4 text-primary" />}
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Status Donut */}
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium">Status</CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {data.statusData.length > 0 ? (
-                <>
-                  <div className="h-52 flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={data.statusData}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={75}
-                          innerRadius={40}
-                          dataKey="value"
-                          paddingAngle={3}
-                          stroke="none"
-                        >
-                          {data.statusData.map((entry, i) => (
-                            <Cell key={i} fill={STATUS_COLORS[entry.name] || CHART_COLORS.primary} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-1">
-                    {data.statusData.map((entry, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: STATUS_COLORS[entry.name] || CHART_COLORS.primary }} />
-                        {entry.name}: <span className="font-semibold text-foreground">{entry.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          {/* Categories */}
-          <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium">Kategorien</CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {data.categoryData.length > 0 ? (
-                <div className="pt-4 space-y-2.5">
-                  {data.categoryData.map((item, i) => {
-                    const maxVal = Math.max(...data.categoryData.map(d => d.value));
+                  {d.statusPhaseData.map((item, i) => {
+                    const maxMedian = Math.max(...d.statusPhaseData.map(x => x.median));
+                    const isBottleneck = item.median === maxMedian && item.median > 7;
                     return (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground w-20 text-right shrink-0 truncate">{item.name}</span>
-                        <div className="flex-1 h-5 rounded bg-muted/40 overflow-hidden relative">
+                      <div key={i} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{item.name}</span>
+                            {isBottleneck && <Badge variant="destructive" className="text-[9px] px-1 py-0">Bottleneck</Badge>}
+                          </div>
+                          <span className="text-muted-foreground tabular-nums">{item.median} Tage <span className="text-[10px]">({item.count})</span></span>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
                           <div
-                            className="h-full rounded transition-all"
-                            style={{
-                              width: `${(item.value / maxVal) * 100}%`,
-                              background: CHART_COLORS.primary,
-                              opacity: 0.75,
-                            }}
+                            className={`h-full rounded-full transition-all ${isBottleneck ? "bg-destructive/80" : "bg-primary/70"}`}
+                            style={{ width: `${Math.min(100, (item.median / maxMedian) * 100)}%` }}
                           />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-foreground">
-                            {item.value}
-                          </span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              ) : null}
+              ) : (
+                <p className="text-xs text-muted-foreground text-center py-8">Keine Daten für Phasenanalyse</p>
+              )}
             </CardContent>
           </Card>
 
-          {/* Risk Distribution */}
+          {/* Status × Team Heatmap */}
           <Card>
-            <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium">Risikoverteilung</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Status × Team Heatmap</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
-              {data.riskDistribution.length > 0 ? (
-                <>
-                  <div className="h-52 flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={data.riskDistribution}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={75}
-                          innerRadius={40}
-                          dataKey="value"
-                          paddingAngle={3}
-                          stroke="none"
-                        >
-                          {data.riskDistribution.map((d, i) => (
-                            <Cell key={i} fill={d.fill} />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 mt-1">
-                    {data.riskDistribution.map((entry, i) => (
-                      <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: entry.fill }} />
-                        {entry.name}: <span className="font-semibold text-foreground">{entry.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground mt-3">
-                    Ø Risiko: <span className="font-bold text-foreground">{data.avgRisk}%</span>
-                  </p>
-                </>
+              {d.heatmapData.length > 0 && teams.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
+                        {["Entwurf", "Review", "Genehmigt", "Umgesetzt"].map(s => (
+                          <th key={s} className="text-center py-2 px-2 font-medium text-muted-foreground">{s}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teams.map((team: any) => (
+                        <tr key={team.id} className="border-b border-border/30">
+                          <td className="py-2 px-2 font-medium truncate max-w-[120px]">{team.name}</td>
+                          {["Entwurf", "Review", "Genehmigt", "Umgesetzt"].map(s => {
+                            const cell = d.heatmapData.find(h => h.team === team.name && h.status === s);
+                            const count = cell?.count ?? 0;
+                            const days = cell?.medianDays ?? 0;
+                            const bg = count === 0 ? "bg-muted/20" : days > 14 ? "bg-destructive/20 text-destructive" : days > 7 ? "bg-warning/20 text-warning" : "bg-success/20 text-success";
+                            return (
+                              <td key={s} className="text-center py-2 px-2">
+                                <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-medium ${bg}`}>
+                                  {count > 0 ? `${count} (${days}d)` : "—"}
+                                </span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <p className="text-xs text-muted-foreground py-8 text-center">Keine KI-Analysen</p>
+                <p className="text-xs text-muted-foreground text-center py-8">Teams anlegen für Heatmap-Ansicht</p>
               )}
             </CardContent>
           </Card>
         </div>
       </CollapsibleSection>
 
-      {/* Team Comparison */}
-      {data.teamComparison.length > 0 && (
-        <CollapsibleSection
-          title="Teamvergleich"
-          subtitle="Performance pro Team"
-          icon={<Users className="w-4 h-4 text-primary" />}
-          defaultOpen={false}
-        >
+      {/* SECTION 5: Risk & Economic Impact */}
+      <CollapsibleSection
+        title="Risiko & Wirtschaftlicher Impact"
+        subtitle={`Gesamt: €${d.costOfDelay.toLocaleString()} Verzögerungskosten`}
+        icon={<DollarSign className="w-4 h-4 text-destructive" />}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Risk Distribution Donut */}
           <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      {["Team", "Entscheidungen", "Umgesetzt", "Ø Tage", "Task-Rate", "Überfällig"].map(h => (
-                        <th key={h} className={`p-3 text-xs font-medium text-muted-foreground ${h === "Team" ? "text-left" : "text-right"}`}>
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.teamComparison.map((team, i) => (
-                      <tr key={i} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                        <td className="p-3 text-sm font-medium">{team.name}</td>
-                        <td className="p-3 text-sm text-right tabular-nums">{team.entscheidungen}</td>
-                        <td className="p-3 text-sm text-right tabular-nums text-emerald-600 dark:text-emerald-400">{team.umgesetzt}</td>
-                        <td className="p-3 text-sm text-right tabular-nums">{team.avgTage || "—"}</td>
-                        <td className="p-3 text-sm text-right tabular-nums">
-                          <span className={team.taskRate > 60 ? "text-emerald-600 dark:text-emerald-400" : team.taskRate > 30 ? "text-amber-600 dark:text-amber-400" : "text-destructive"}>
-                            {team.taskRate}%
-                          </span>
-                        </td>
-                        <td className="p-3 text-sm text-right tabular-nums">
-                          <span className={team.überfällig > 0 ? "text-destructive font-medium" : "text-muted-foreground"}>
-                            {team.überfällig}
-                          </span>
-                        </td>
-                      </tr>
+            <CardHeader className="pb-0">
+              <CardTitle className="text-sm font-medium">Risikoverteilung</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {d.riskDistribution.length > 0 ? (
+                <>
+                  <div className="h-48 flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={d.riskDistribution} cx="50%" cy="50%" outerRadius={70} innerRadius={38} dataKey="value" paddingAngle={3} stroke="none">
+                          {d.riskDistribution.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-1">
+                    {d.riskDistribution.map((entry, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                        <span className="w-2 h-2 rounded-full" style={{ background: entry.fill }} />
+                        {entry.name}: <span className="font-semibold text-foreground">{entry.value}</span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </>
+              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine Risikodaten</p>}
+            </CardContent>
+          </Card>
+
+          {/* Top 5 Cost Drivers */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Top 5 Kostenverursacher</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {d.topCostDrivers.length > 0 ? (
+                <div className="space-y-3">
+                  {d.topCostDrivers.map((item, i) => (
+                    <div key={item.id} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-bold text-muted-foreground w-4">{i + 1}.</span>
+                        <Link to={`/decisions/${item.id}`} className="text-xs font-medium truncate hover:underline">{item.title}</Link>
+                      </div>
+                      <span className="text-xs font-bold text-destructive tabular-nums shrink-0">€{item.cost.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine offenen Entscheidungen</p>}
+            </CardContent>
+          </Card>
+
+          {/* Cost by Category */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Kosten nach Kategorie</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {d.costByCategory.length > 0 ? (
+                <div className="space-y-3">
+                  {d.costByCategory.map((item, i) => {
+                    const maxCost = Math.max(...d.costByCategory.map(c => c.cost));
+                    return (
+                      <div key={i} className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-muted-foreground tabular-nums">€{item.cost.toLocaleString()}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
+                          <div className="h-full rounded-full bg-destructive/60" style={{ width: `${(item.cost / maxCost) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine Kostendaten</p>}
+            </CardContent>
+          </Card>
+        </div>
+      </CollapsibleSection>
+
+      {/* SECTION 6: Governance & SLA Control */}
+      <CollapsibleSection
+        title="Governance & SLA Control"
+        subtitle={`SLA Compliance: ${d.slaRate}% | Offene Reviews: ${d.openReviews}`}
+        icon={<Shield className="w-4 h-4 text-primary" />}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* SLA + Escalation Trend */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">SLA Compliance & Eskalationen</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                   <ComposedChart data={d.escPerWeek} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
+                    <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} unit="%" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar yAxisId="left" dataKey="Eskalationen" fill={COLORS.destructive} radius={[3, 3, 0, 0]} barSize={16} />
+                    <Line yAxisId="right" type="monotone" dataKey="SLA %" stroke={COLORS.success} strokeWidth={2} dot={false} />
+                  </ComposedChart>
+                </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-        </CollapsibleSection>
-      )}
 
-      {/* Template Analytics */}
-      <TemplateAnalyticsSection decisions={allDecisions as any} />
+          {/* Review Queue & Governance KPIs */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Review Queue & Governance</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">Offene Reviews</p>
+                  <p className="text-2xl font-bold">{d.openReviews}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">Median Wartezeit</p>
+                  <p className={`text-2xl font-bold ${d.medianReviewWait > 7 ? "text-destructive" : ""}`}>{d.medianReviewWait}d</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">Aktive Eskalationen</p>
+                  <p className={`text-2xl font-bold ${d.escalated.length > 0 ? "text-destructive" : "text-success"}`}>{d.escalated.length}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-[10px] text-muted-foreground mb-1">SLA Compliance</p>
+                  <p className={`text-2xl font-bold ${d.slaRate >= 80 ? "text-success" : "text-destructive"}`}>{d.slaRate}%</p>
+                </div>
+              </div>
+              {d.escalated.length > 0 && (
+                <div className="border-t border-border pt-3">
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Eskalierte Entscheidungen</p>
+                  <div className="space-y-1.5">
+                    {d.escalated.slice(0, 3).map(dec => (
+                      <Link key={dec.id} to={`/decisions/${dec.id}`} className="flex items-center justify-between gap-2 text-xs hover:bg-muted/30 rounded px-2 py-1 transition-colors">
+                        <span className="truncate font-medium">{dec.title}</span>
+                        <Badge variant="destructive" className="text-[9px] px-1 py-0 shrink-0">Lvl {dec.escalation_level}</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </CollapsibleSection>
+
+      {/* SECTION 7: Decision Quality & Strategic Alignment */}
+      <CollapsibleSection
+        title="Decision Quality & Alignment"
+        subtitle={`Quality Index: ${d.qualityIndex}/100 | Lessons: ${d.lessonsRate}%`}
+        icon={<Target className="w-4 h-4 text-success" />}
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Quality Index Trend */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Decision Quality Trend (6 Monate)</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={d.qualityTrend} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} unit="" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line type="monotone" dataKey="Quality Index" stroke={COLORS.primary} strokeWidth={2.5} dot={{ r: 3, fill: COLORS.primary }} />
+                    <Line type="monotone" dataKey="Ablehnungsrate" stroke={COLORS.destructive} strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center gap-5 mt-2">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.primary }} />Quality Index
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.destructive }} />Ablehnungsrate
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Strategic Goal Alignment */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Strategische Zielabdeckung</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {d.goalAlignment.length > 0 ? (
+                <div className="space-y-3">
+                  {d.goalAlignment.map((goal: any) => {
+                    const healthBg = goal.health === "critical" ? "bg-destructive/15 text-destructive" : goal.health === "at_risk" ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
+                    const healthLabel = goal.health === "critical" ? "Kritisch" : goal.health === "at_risk" ? "Gefährdet" : "Stabil";
+                    return (
+                      <div key={goal.id} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium truncate">{goal.title}</p>
+                          <p className="text-[10px] text-muted-foreground">{goal.linkedCount} Entscheidungen</p>
+                        </div>
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}>{healthLabel}</Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-xs text-muted-foreground mb-2">Keine strategischen Ziele angelegt.</p>
+                  <Link to="/strategy">
+                    <Button size="sm" variant="outline" className="text-xs gap-1.5">
+                      <Target className="w-3 h-3" /> Ziele erstellen
+                    </Button>
+                  </Link>
+                </div>
+              )}
+
+              {/* Learning signal */}
+              <div className="border-t border-border mt-4 pt-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Lessons Learned Abdeckung</span>
+                  <span className={`font-bold ${d.lessonsRate >= 50 ? "text-success" : d.lessonsRate >= 20 ? "text-warning" : "text-destructive"}`}>{d.lessonsRate}%</span>
+                </div>
+                <Progress value={d.lessonsRate} className="mt-1.5 h-1.5" />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {d.lessonsRate < 30
+                    ? "Empfehlung: Post-Implementation Reviews für mehr Lernen."
+                    : d.lessonsRate < 60
+                      ? "Gute Basis – Reviews weiter ausbauen."
+                      : "Exzellente Learning-Kultur."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </CollapsibleSection>
     </div>
   );
 

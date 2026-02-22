@@ -1,30 +1,71 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useMemo } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { BarChart3, Users, TrendingUp, PieChart } from "lucide-react";
-import { useDecisions } from "@/hooks/useDecisions";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { BarChart3, TrendingUp, PieChart, Users, FileDown, Loader2 } from "lucide-react";
+import { useDecisions, useTeams } from "@/hooks/useDecisions";
+import { useTeamContext } from "@/hooks/useTeamContext";
+import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
+import { useToast } from "@/hooks/use-toast";
 
 const Analytics = lazy(() => import("./Analytics"));
-const TeamPerformance = lazy(() => import("./TeamPerformance"));
 
 const MIN_DECISIONS_FOR_ANALYTICS = 5;
 
+export type AnalyticsTimeRange = "7" | "30" | "90" | "all";
+
 const AnalyticsHub = () => {
-  const [tab, setTab] = useState("analytics");
+  const [timeRange, setTimeRange] = useState<AnalyticsTimeRange>("30");
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
   const { data: decisions = [], isLoading } = useDecisions();
   const hasEnoughData = decisions.length >= MIN_DECISIONS_FOR_ANALYTICS;
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const data = await fetchBoardReportData();
+      generateBoardReport(data);
+      toast({ title: "Exportiert", description: "Executive Snapshot als PDF." });
+    } catch {
+      toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" });
+    }
+    setExporting(false);
+  };
 
   return (
     <AppLayout>
       <PageHeader
         title="Analytics Hub"
-        subtitle="Status, Trends und Team-Vergleiche"
+        subtitle="Performance & Governance über alle Entscheidungen"
         role="intelligence"
-        help={{ title: "Analytics Hub", description: "Status, Trends, Durchlaufzeiten und Team-Vergleiche in einer zentralen Übersicht." }}
+        help={{ title: "Analytics Hub", description: "Executive Control Center: KPIs, Bottlenecks, Risiko, Governance und Decision Quality auf einen Blick." }}
+        secondaryActions={
+          hasEnoughData ? (
+            <Select value={timeRange} onValueChange={(v) => setTimeRange(v as AnalyticsTimeRange)}>
+              <SelectTrigger className="w-[140px] h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Letzte 7 Tage</SelectItem>
+                <SelectItem value="30">Letzte 30 Tage</SelectItem>
+                <SelectItem value="90">Letzte 90 Tage</SelectItem>
+                <SelectItem value="all">Gesamt</SelectItem>
+              </SelectContent>
+            </Select>
+          ) : undefined
+        }
+        primaryAction={
+          hasEnoughData ? (
+            <Button size="sm" variant="outline" disabled={exporting} onClick={handleExport} className="gap-2">
+              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+              Executive Snapshot
+            </Button>
+          ) : undefined
+        }
       />
 
       {!isLoading && !hasEnoughData ? (
@@ -43,28 +84,9 @@ const AnalyticsHub = () => {
           ]}
         />
       ) : (
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="analytics" className="gap-1.5 text-xs">
-              <BarChart3 className="w-3.5 h-3.5" /> Statistiken
-            </TabsTrigger>
-            <TabsTrigger value="teams" className="gap-1.5 text-xs">
-              <Users className="w-3.5 h-3.5" /> Team-Performance
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="analytics">
-            <Suspense fallback={<PageLoadingFallback />}>
-              <Analytics embedded />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="teams">
-            <Suspense fallback={<PageLoadingFallback />}>
-              <TeamPerformance embedded />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
+        <Suspense fallback={<PageLoadingFallback />}>
+          <Analytics embedded timeRange={timeRange} />
+        </Suspense>
       )}
     </AppLayout>
   );
