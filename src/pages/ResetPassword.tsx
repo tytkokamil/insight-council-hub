@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, AlertCircle, LayoutDashboard, ArrowLeft } from "lucide-react";
+import { Mail, Lock, AlertCircle, ArrowLeft } from "lucide-react";
+import decivioLogo from "@/assets/decivio-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,8 +94,8 @@ const ResetPassword = () => {
         className="w-full max-w-[420px] relative z-10"
       >
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
-            <LayoutDashboard className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-4">
+            <img src={decivioLogo} alt="Decivio" className="w-full h-full" />
           </div>
           <h1 className="font-display text-2xl font-bold">Decivio</h1>
           <p className="text-sm text-muted-foreground mt-1">

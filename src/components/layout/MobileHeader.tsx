@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Sun, Moon, Menu } from "lucide-react";
+import decivioLogo from "@/assets/decivio-logo.png";
 
 interface MobileHeaderProps {
   theme: string;
@@ -21,9 +22,7 @@ const MobileHeader = ({
       <Menu className="w-4 h-4" />
     </button>
     <Link to="/dashboard" className="flex items-center gap-2" aria-label="Decivio Startseite">
-      <span className="w-6 h-6 rounded bg-foreground/10 flex items-center justify-center text-[11px] font-bold text-foreground/70">
-        D
-      </span>
+      <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded" />
       <span className="font-medium text-[13px] text-foreground">Decivio</span>
     </Link>
     <button
