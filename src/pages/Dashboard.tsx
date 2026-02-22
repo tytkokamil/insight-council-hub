@@ -1,22 +1,19 @@
 import { useMemo, useState, useEffect, lazy, Suspense, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, AlertTriangle, Clock, ArrowRight, BarChart3,
-  Activity, DollarSign, Zap, FileText, Eye, TrendingUp, TrendingDown,
-  Minus, ShieldAlert, CheckCircle2, Info, Command, ListTodo,
-  Link2, ChevronDown, ChevronRight, Users, ExternalLink, Bell,
-  Download, CalendarIcon, RefreshCw, Shield, History, Compass,
+  Plus, AlertTriangle, Clock, ArrowRight, Activity,
+  Zap, FileText, Eye, TrendingUp, TrendingDown,
+  Minus, ShieldAlert, CheckCircle2, Command, ListTodo,
+  Link2, Users, RefreshCw, Shield, History, Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
@@ -31,8 +28,6 @@ import { de } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid,
   BarChart, Bar,
@@ -43,19 +38,7 @@ const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWid
 const RoiDashboardWidget = lazy(() => import("@/components/dashboard/RoiDashboardWidget"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 
-type TimeRange = 7 | 30 | 90 | "custom";
-
-// ─── KPI Skeleton ───
-const KpiSkeleton = () => (
-  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <div key={i} className="border border-border rounded-lg p-4 space-y-3">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="h-7 w-16" />
-      </div>
-    ))}
-  </div>
-);
+type TimeRange = 7 | 30 | 90;
 
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
@@ -74,28 +57,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { mode, setMode, shouldShowAdvanced, decisionCount, implementedCount } = useGuidedMode();
 
-  // Recent audit trail for current user
-  const { data: myAuditLogs = [] } = useQuery({
-    queryKey: ["my-audit-logs", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from("audit_logs")
-        .select("*, decisions!audit_logs_decision_id_fkey(title)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!user?.id,
-    staleTime: 30_000,
-  });
-
   const [timeRange, setTimeRange] = useState<TimeRange>(30);
-  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
-  const [expandedAction, setExpandedAction] = useState<string | null>(null);
-  const [velocityToggle, setVelocityToggle] = useState<"completed" | "created">("completed");
   const [dismissedAdvancedHint, setDismissedAdvancedHint] = useState(() => localStorage.getItem("advanced-hint-dismissed") === "true");
   const [seedingDemo, setSeedingDemo] = useState(false);
 
@@ -106,7 +68,7 @@ const Dashboard = () => {
   const isLoading = loadingDec || loadingTasks;
   const hasError = errorDec || errorTasks;
 
-  // Onboarding tour — auto-trigger on first visit
+  // Onboarding tour
   const [showOnboarding, setShowOnboarding] = useState(false);
   useEffect(() => {
     const seen = localStorage.getItem("onboarding-completed");
@@ -133,12 +95,7 @@ const Dashboard = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [navigate]);
 
-  const effectiveDays = useMemo(() => {
-    if (timeRange === "custom" && customRange.from && customRange.to) {
-      return differenceInDays(customRange.to, customRange.from) || 1;
-    }
-    return timeRange === "custom" ? 30 : timeRange;
-  }, [timeRange, customRange]);
+  const effectiveDays = timeRange;
 
   const decisions = isPersonal
     ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
@@ -150,8 +107,8 @@ const Dashboard = () => {
   // === ALL COMPUTED DATA ===
   const computed = useMemo(() => {
     const now = new Date();
-    const rangeStart = timeRange === "custom" && customRange.from ? customRange.from : subDays(now, effectiveDays);
-    const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
+    const rangeStart = subDays(now, effectiveDays);
+    const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
     const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
     const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
     const pendingReviews = reviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
@@ -164,90 +121,72 @@ const Dashboard = () => {
     });
     const blockedTasks = contextTasks.filter(t => blockedTaskIds.has(t.id) && t.status !== "done");
 
-    const oldestOverdue = overdue.length > 0
-      ? overdue.reduce((oldest, d) => new Date(d.due_date!) < new Date(oldest.due_date!) ? d : oldest)
-      : null;
-    const oldestOverdueDays = oldestOverdue ? differenceInDays(now, new Date(oldestOverdue.due_date!)) : 0;
-
-    const lastWeek = subDays(now, 7);
-    const overdueLastWeek = decisions.filter(d => {
-      if (["implemented", "rejected"].includes(d.status)) return false;
-      if (!d.due_date) return false;
-      const due = new Date(d.due_date);
-      return due < lastWeek && new Date(d.created_at) <= lastWeek;
-    }).length;
-    const overdueDelta = overdue.length - overdueLastWeek;
     const maxEscalation = escalated.length > 0 ? Math.max(...escalated.map(d => d.escalation_level || 0)) : 0;
 
     const implemented = decisions.filter(d => d.status === "implemented");
-    const completedInRange = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= rangeStart).length;
     const velocities = implemented.filter(d => d.implemented_at).map(d => differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)));
     const avgDecisionTime = velocities.length > 0 ? Math.round(velocities.reduce((s, v) => s + v, 0) / velocities.length * 10) / 10 : null;
-    const overdueRate = active.length > 0 ? Math.round((overdue.length / active.length) * 100) : 0;
 
-    const completionRate = decisions.length > 0 ? (implemented.length / decisions.length) * 100 : 0;
-    const slaRate = active.length > 0 ? Math.max(0, 100 - (overdue.length / active.length) * 100) : 100;
-    const speedScore = avgDecisionTime != null ? Math.max(0, Math.min(100, 100 - avgDecisionTime * 1.5)) : 50;
-    const performanceIndex = Math.round(speedScore * 0.4 + slaRate * 0.3 + completionRate * 0.3);
+    const completionRate = decisions.length > 0 ? Math.round((implemented.length / decisions.length) * 100) : 0;
 
-    const halfRange = Math.floor(effectiveDays / 2);
-    const halfStart = subDays(now, halfRange);
-    const prevHalfStart = subDays(now, effectiveDays);
-    const openPrev = decisions.filter(d => { const c = new Date(d.created_at); return c >= prevHalfStart && c < halfStart && !["implemented", "rejected"].includes(d.status); }).length;
-    const openCurr = decisions.filter(d => { const c = new Date(d.created_at); return c >= halfStart && !["implemented", "rejected"].includes(d.status); }).length;
-    const completedCurr = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= halfStart).length;
-    const completedPrev = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= prevHalfStart && new Date(d.implemented_at) < halfStart).length;
-    const trend = (curr: number, prev: number): "up" | "down" | "neutral" => curr > prev ? "up" : curr < prev ? "down" : "neutral";
-    const delta = (curr: number, prev: number) => prev === 0 ? (curr > 0 ? "+100%" : "—") : `${curr > prev ? "+" : ""}${Math.round(((curr - prev) / prev) * 100)}%`;
+    // Before/After comparison
+    const last90 = subDays(now, 90);
+    const prev90 = subDays(now, 180);
+    const currentImpl = implemented.filter(d => d.implemented_at && new Date(d.implemented_at) >= last90);
+    const prevImpl = implemented.filter(d => d.implemented_at && new Date(d.implemented_at) >= prev90 && new Date(d.implemented_at) < last90);
 
+    const currentAvgDays = currentImpl.length > 0
+      ? Math.round(currentImpl.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / currentImpl.length)
+      : null;
+    const prevAvgDays = prevImpl.length > 0
+      ? Math.round(prevImpl.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / prevImpl.length)
+      : null;
+
+    const currentEsc = decisions.filter(d => (d.escalation_level || 0) >= 1 && new Date(d.created_at) >= last90).length;
+    const prevEsc = decisions.filter(d => (d.escalation_level || 0) >= 1 && new Date(d.created_at) >= prev90 && new Date(d.created_at) < last90).length;
+
+    const defaultRate = currentTeam?.hourly_rate || 75;
+    const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
+    let totalDelayCost = 0;
+    const costItems: { title: string; cost: number; days: number; priority: string; id: string }[] = [];
+    active.forEach(d => {
+      const daysOpen = Math.max(0, differenceInDays(now, new Date(d.created_at)));
+      const mult = priorityMultiplier[d.priority] || 1.5;
+      const cost = Math.round(daysOpen * 2 * defaultRate * mult);
+      totalDelayCost += cost;
+      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, id: d.id });
+    });
+    costItems.sort((a, b) => b.cost - a.cost);
+
+    // Speed improvement potential
+    const avgDaysAll = avgDecisionTime ?? 0;
+    const speedImprovementPotential = avgDaysAll > 0 ? Math.round(totalDelayCost * 0.15) : 0;
+
+    // Weekly chart data
     const weekData = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
       const weekLabel = format(weekEnd, "dd.MM", { locale: dateFnsLocale });
       const completed = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd).length;
       const created = decisions.filter(d => new Date(d.created_at) >= weekStart && new Date(d.created_at) < weekEnd).length;
-      const overdueAtEnd = decisions.filter(d => { if (!d.due_date) return false; const due = new Date(d.due_date); const c = new Date(d.created_at); if (c > weekEnd || due > weekEnd) return false; if (d.implemented_at && new Date(d.implemented_at) <= weekEnd) return false; if (d.status === "rejected") return false; return true; }).length;
-      const completedDecs = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd);
-      const avgTime = completedDecs.length > 0 ? Math.round(completedDecs.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / completedDecs.length) : null;
-      const escalatedCount = decisions.filter(d => { if ((d.escalation_level || 0) < 1) return false; const c = new Date(d.created_at); return c <= weekEnd && (!d.implemented_at || new Date(d.implemented_at) > weekEnd); }).length;
-      return { week: weekLabel, completed, created, overdue: overdueAtEnd, avgTime: avgTime ?? 0, escalated: escalatedCount };
+      return { week: weekLabel, completed, created };
     });
 
-    const defaultRate = currentTeam?.hourly_rate || 75;
-    const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
-    let totalDelayCost = 0;
-    const costItems: { title: string; cost: number; days: number; priority: string; category: string; team_id: string | null; id: string }[] = [];
-    active.forEach(d => {
-      const daysOpen = Math.max(0, differenceInDays(now, new Date(d.created_at)));
-      const mult = priorityMultiplier[d.priority] || 1.5;
-      const cost = Math.round(daysOpen * 2 * defaultRate * mult);
-      totalDelayCost += cost;
-      costItems.push({ title: d.title, cost, days: daysOpen, priority: d.priority, category: d.category, team_id: d.team_id, id: d.id });
-    });
-    costItems.sort((a, b) => b.cost - a.cost);
-    const staleDecisions = active.filter(d => differenceInDays(now, new Date(d.created_at)) > 14);
-
-    const costByCategory: Record<string, number> = {};
-    const costByPriority: Record<string, number> = {};
-    costItems.forEach(c => { costByCategory[c.category] = (costByCategory[c.category] || 0) + c.cost; costByPriority[c.priority] = (costByPriority[c.priority] || 0) + c.cost; });
-
-    const recentlyOpened = [...decisions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 3);
-    const recentlyEscalated = [...escalated].sort((a, b) => new Date(b.last_escalated_at || b.updated_at).getTime() - new Date(a.last_escalated_at || a.updated_at).getTime()).slice(0, 3);
+    const recentlyOpened = [...decisions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
 
     return {
       overdue, escalated, pendingReviews, active, blockedTasks,
-      oldestOverdueDays, overdueDelta, maxEscalation,
-      openCount: active.length, completedInRange, avgDecisionTime, overdueRate, performanceIndex, totalDelayCost,
-      openTrend: trend(openCurr, openPrev), completedTrend: trend(completedCurr, completedPrev),
-      openDelta: delta(openCurr, openPrev), completedDelta: delta(completedCurr, completedPrev),
-      weekData, costItems, staleDecisions, implemented,
-      costByCategory, costByPriority,
-      recentlyOpened, recentlyEscalated,
+      maxEscalation, implemented,
+      openCount: active.length, avgDecisionTime, completionRate, totalDelayCost,
+      currentAvgDays, prevAvgDays, currentEsc, prevEsc,
+      speedImprovementPotential,
+      weekData, costItems, recentlyOpened,
     };
-  }, [decisions, contextTasks, reviews, dependencies, user, effectiveDays, timeRange, customRange, currentTeam]);
+  }, [decisions, contextTasks, reviews, dependencies, user, effectiveDays, currentTeam, dateFnsLocale]);
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
-  const priorityColors: Record<string, string> = { critical: "text-destructive", high: "text-warning", medium: "text-muted-foreground", low: "text-muted-foreground" };
+
+  const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
 
   if (hasError) {
     return (
@@ -264,6 +203,7 @@ const Dashboard = () => {
     );
   }
 
+  // Empty state
   if (!isLoading && allDecisions.length === 0 && tasks.length === 0) {
     const handleSeedDemo = async () => {
       setSeedingDemo(true);
@@ -288,25 +228,17 @@ const Dashboard = () => {
             </div>
             <h1 className="text-2xl font-semibold tracking-tight mb-2">{t("dashboard.welcome", { name: firstName })}</h1>
             <p className="text-muted-foreground mb-2">{t("dashboard.readyDesc")}</p>
-            <p className="text-sm text-muted-foreground/70 mb-8">
-              {t("dashboard.startSteps")}
-            </p>
+            <p className="text-sm text-muted-foreground/70 mb-8">{t("dashboard.startSteps")}</p>
 
-            {/* Onboarding Steps */}
             <div className="grid gap-3 mb-8 text-left">
               {[
                 { num: "1", label: t("dashboard.createTeam"), desc: t("dashboard.createTeamDesc"), path: "/teams", icon: Users },
                 { num: "2", label: t("dashboard.firstDecision"), desc: t("dashboard.firstDecisionDesc"), path: "/decisions", icon: FileText },
                 { num: "3", label: t("dashboard.startReview"), desc: t("dashboard.startReviewDesc"), path: "/decisions", icon: Eye },
               ].map(step => (
-                <button
-                  key={step.num}
-                  onClick={() => navigate(step.path)}
-                  className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/[0.02] transition-all group"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center justify-center shrink-0">
-                    {step.num}
-                  </div>
+                <button key={step.num} onClick={() => navigate(step.path)}
+                  className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/[0.02] transition-all group">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center justify-center shrink-0">{step.num}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium group-hover:text-primary transition-colors">{step.label}</p>
                     <p className="text-xs text-muted-foreground">{step.desc}</p>
@@ -340,38 +272,23 @@ const Dashboard = () => {
 
   const dashboardTitle = isPersonal ? t("dashboard.myWorkspace") : `${currentTeam?.name || "Team"}`;
   const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.blockedTasks.length;
-  const hasNoActions = actionCount === 0;
-
-  const toggleExpand = (key: string) => setExpandedAction(prev => prev === key ? null : key);
-
-  const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
-
 
   return (
     <AppLayout>
       {/* Progressive Disclosure Banner */}
       {shouldShowAdvanced && mode === "basic" && !dismissedAdvancedHint && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 p-4 rounded-lg border border-primary/20 bg-primary/[0.03] flex items-center gap-3"
-        >
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-lg border border-primary/20 bg-primary/[0.03] flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <Zap className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">{t("dashboard.advancedAvailable")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("dashboard.advancedDesc", { decisionCount, implementedCount })}
-            </p>
+            <p className="text-xs text-muted-foreground">{t("dashboard.advancedDesc", { decisionCount, implementedCount })}</p>
           </div>
-          <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={() => setMode("advanced")}>
-            {t("common.activate")}
-          </Button>
-          <button
-            onClick={() => { setDismissedAdvancedHint(true); localStorage.setItem("advanced-hint-dismissed", "true"); }}
-            className="text-muted-foreground/40 hover:text-muted-foreground text-xs shrink-0"
-          >✕</button>
+          <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={() => setMode("advanced")}>{t("common.activate")}</Button>
+          <button onClick={() => { setDismissedAdvancedHint(true); localStorage.setItem("advanced-hint-dismissed", "true"); }}
+            className="text-muted-foreground/40 hover:text-muted-foreground text-xs shrink-0">✕</button>
         </motion.div>
       )}
 
@@ -391,210 +308,226 @@ const Dashboard = () => {
             ))}
           </div>
           <Button onClick={() => navigate("/decisions")} size="sm" className="gap-1.5">
-             <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
+            <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
           </Button>
         </div>
       </div>
 
       <div className="space-y-8">
 
-        {/* ═══ ACTION REQUIRED ═══ */}
-        {!isLoading && !hasNoActions && (
-          <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.actionRequired")}</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Overdue */}
-              <div className="border border-destructive/20 bg-destructive/[0.03] rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <Clock className="w-4 h-4 text-destructive" />
-                  {computed.overdueDelta !== 0 && (
-                    <span className={`text-[10px] font-medium ${computed.overdueDelta > 0 ? "text-destructive" : "text-success"}`}>
-                      {computed.overdueDelta > 0 ? "+" : ""}{computed.overdueDelta}
-                    </span>
-                  )}
-                </div>
-                <p className="text-2xl font-semibold tracking-tight">{computed.overdue.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.overdue")}</p>
-                {computed.overdue.length > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/decisions")}>
-                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Escalations */}
-              <div className="border border-warning/20 bg-warning/[0.03] rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <AlertTriangle className="w-4 h-4 text-warning" />
-                  {computed.maxEscalation > 0 && <span className="text-[10px] font-medium text-warning">L{computed.maxEscalation}</span>}
-                </div>
-                <p className="text-2xl font-semibold tracking-tight">{computed.escalated.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.escalations")}</p>
-                {computed.escalated.length > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/engine")}>
-                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Reviews */}
-              <div className="border border-primary/20 bg-primary/[0.03] rounded-lg p-4">
-                <Eye className="w-4 h-4 text-primary mb-3" />
-                <p className="text-2xl font-semibold tracking-tight">{computed.pendingReviews.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openReviews")}</p>
-                {computed.pendingReviews.length > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(`/decisions/${computed.pendingReviews[0].decision_id}`)}>
-                    {t("dashboard.startReviewBtn")} <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                )}
-              </div>
-
-              {/* Blocked */}
-              <div className="border border-accent-violet/20 bg-accent-violet/[0.03] rounded-lg p-4">
-                <Link2 className="w-4 h-4 text-accent-violet mb-3" />
-                <p className="text-2xl font-semibold tracking-tight">{computed.blockedTasks.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.blockedTasks")}</p>
-                {computed.blockedTasks.length > 0 && (
-                  <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/tasks")}>
-                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </section>
+        {/* ═══ 1. DQI — HERO SECTION (Primary) ═══ */}
+        {!isLoading && (
+          <WidgetErrorBoundary>
+            <DecisionQualityIndex />
+          </WidgetErrorBoundary>
         )}
 
-        {!isLoading && hasNoActions && (
-          <div className="border border-success/20 bg-success/[0.04] rounded-lg p-6 text-center">
-            <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-2" />
-            <p className="text-sm font-medium text-success">{t("dashboard.allGood")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noActions")}</p>
-          </div>
-        )}
-
-        {/* ═══ AI BRIEFING ═══ */}
+        {/* ═══ 2. AI BRIEFING ═══ */}
         {!isLoading && (
           <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
             <AiBriefingWidget />
           </Suspense>
         )}
 
-        {/* ═══ KPIs ═══ */}
-        <section>
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.metrics")}</h2>
-          {isLoading ? <KpiSkeleton /> : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-              {[
-                { label: t("dashboard.open"), value: computed.openCount, trend: computed.openTrend, delta: computed.openDelta },
-                { label: t("dashboard.avgDuration"), value: computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—" },
-                { label: t("dashboard.overdueRate"), value: `${computed.overdueRate}%`, color: computed.overdueRate > 20 ? "text-destructive" : undefined },
-                { label: t("dashboard.performance"), value: `${computed.performanceIndex}%`, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive" },
-                { label: t("dashboard.delayCost"), value: formatCost(computed.totalDelayCost), color: "text-destructive" },
-              ].map((kpi, i) => (
-                <div key={kpi.label} className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/analytics")}>
-                  <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-                  <div className="flex items-end justify-between">
-                    <p className={`text-xl font-semibold tracking-tight ${(kpi as any).color || ""}`}>{kpi.value}</p>
-                    {(kpi as any).trend && (kpi as any).delta !== "—" && (
-                      <span className={`text-[10px] ${(kpi as any).trend === "up" ? "text-success" : (kpi as any).trend === "down" ? "text-destructive" : "text-muted-foreground"}`}>
-                        {(kpi as any).delta}
-                      </span>
-                    )}
+        {/* ═══ 3. THREE PRIMARY KPIs (Secondary) ═══ */}
+        {!isLoading && (
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Speed */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all group"
+                onClick={() => navigate("/analytics")}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-primary" />
+                  </div>
+                  {computed.currentAvgDays != null && computed.prevAvgDays != null && (
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      computed.currentAvgDays < computed.prevAvgDays ? "text-success border-success/30" : "text-destructive border-destructive/30"
+                    )}>
+                      {computed.currentAvgDays < computed.prevAvgDays ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />}
+                      {computed.prevAvgDays}d → {computed.currentAvgDays}d
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-3xl font-bold tracking-tight mb-1">
+                  {computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—"}
+                </p>
+                <p className="text-sm text-muted-foreground">Ø Time-to-Decision</p>
+              </motion.div>
+
+              {/* Escalations */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all"
+                onClick={() => navigate("/engine")}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center",
+                    computed.escalated.length > 0 ? "bg-warning/10" : "bg-muted")}>
+                    <AlertTriangle className={cn("w-5 h-5", computed.escalated.length > 0 ? "text-warning" : "text-muted-foreground")} />
+                  </div>
+                  {computed.prevEsc > 0 && (
+                    <Badge variant="outline" className={cn("text-[10px]",
+                      computed.currentEsc < computed.prevEsc ? "text-success border-success/30" : "text-muted-foreground"
+                    )}>
+                      {computed.prevEsc} → {computed.currentEsc}
+                    </Badge>
+                  )}
+                </div>
+                <p className={cn("text-3xl font-bold tracking-tight mb-1", computed.escalated.length > 0 && "text-warning")}>
+                  {computed.escalated.length}
+                </p>
+                <p className="text-sm text-muted-foreground">Aktive Eskalationen</p>
+              </motion.div>
+
+              {/* Delay Cost */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                className="border border-border rounded-xl p-6 cursor-pointer hover:border-foreground/20 transition-all"
+                onClick={() => navigate("/analytics")}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-destructive" />
                   </div>
                 </div>
+                <p className="text-3xl font-bold tracking-tight text-destructive mb-1">{formatCost(computed.totalDelayCost)}</p>
+                <p className="text-sm text-muted-foreground">Verzögerungskosten</p>
+                {computed.speedImprovementPotential > 0 && (
+                  <p className="text-xs text-success mt-2">
+                    Potenzial: −{formatCost(computed.speedImprovementPotential)} bei 15% Speed↑
+                  </p>
+                )}
+              </motion.div>
+            </div>
+          </section>
+        )}
+
+        {/* ═══ 4. ACTION REQUIRED (Secondary) ═══ */}
+        {!isLoading && actionCount > 0 && (
+          <section>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.actionRequired")}</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                {
+                  count: computed.overdue.length,
+                  label: t("dashboard.overdue"),
+                  icon: Clock,
+                  borderColor: "border-destructive/20",
+                  bgColor: "bg-destructive/[0.03]",
+                  iconColor: "text-destructive",
+                  path: "/decisions",
+                },
+                {
+                  count: computed.escalated.length,
+                  label: t("dashboard.escalations"),
+                  icon: AlertTriangle,
+                  borderColor: "border-warning/20",
+                  bgColor: "bg-warning/[0.03]",
+                  iconColor: "text-warning",
+                  path: "/engine",
+                  extra: computed.maxEscalation > 0 ? `L${computed.maxEscalation}` : undefined,
+                },
+                {
+                  count: computed.pendingReviews.length,
+                  label: t("dashboard.openReviews"),
+                  icon: Eye,
+                  borderColor: "border-primary/20",
+                  bgColor: "bg-primary/[0.03]",
+                  iconColor: "text-primary",
+                  path: computed.pendingReviews.length > 0 ? `/decisions/${computed.pendingReviews[0].decision_id}` : "/decisions",
+                  actionLabel: t("dashboard.startReviewBtn"),
+                },
+                {
+                  count: computed.blockedTasks.length,
+                  label: t("dashboard.blockedTasks"),
+                  icon: Link2,
+                  borderColor: "border-accent-violet/20",
+                  bgColor: "bg-accent-violet/[0.03]",
+                  iconColor: "text-accent-violet",
+                  path: "/tasks",
+                },
+              ].map((item) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`${item.borderColor} ${item.bgColor} border rounded-lg p-4`}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <item.icon className={`w-4 h-4 ${item.iconColor}`} />
+                    {item.extra && <span className={`text-[10px] font-medium ${item.iconColor}`}>{item.extra}</span>}
+                  </div>
+                  <motion.p
+                    key={item.count}
+                    initial={{ scale: 1.15 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                    className="text-2xl font-semibold tracking-tight"
+                  >
+                    {item.count}
+                  </motion.p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                  {item.count > 0 && (
+                    <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(item.path)}>
+                      {item.actionLabel || t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  )}
+                </motion.div>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
-        {/* ═══ CHARTS ═══ */}
+        {!isLoading && actionCount === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="border border-success/20 bg-success/[0.04] rounded-lg p-6 text-center"
+          >
+            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
+              <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-2" />
+            </motion.div>
+            <p className="text-sm font-medium text-success">{t("dashboard.allGood")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noActions")}</p>
+          </motion.div>
+        )}
+
+        {/* ═══ 5. MAIN CHART (Secondary) ═══ */}
         {!isLoading && (
           <section>
             <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Velocity */}
-              <div className="border border-border rounded-lg p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                    <p className="text-xs text-muted-foreground">{t("dashboard.weekTrend")}</p>
-                  </div>
-                  <div className="flex items-center rounded-md border border-border p-0.5">
-                    {(["completed", "created"] as const).map(tog => (
-                      <button key={tog} onClick={() => setVelocityToggle(tog)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${velocityToggle === tog ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                        {tog === "completed" ? t("dashboard.completedLabel") : t("dashboard.createdLabel")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="h-44">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                      <defs>
-                        <linearGradient id="gradVelocity" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.08} />
-                          <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Area type="monotone" dataKey={velocityToggle} name={velocityToggle === "completed" ? t("dashboard.completedLabel") : t("dashboard.createdLabel")} stroke="hsl(var(--foreground))" fill="url(#gradVelocity)" strokeWidth={1.5} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+            <div className="border border-border rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.weekTrend")}</p>
                 </div>
               </div>
-
-              {/* Overdue + Duration */}
-              <div className="border border-border rounded-lg p-5">
-                <div className="mb-4">
-                  <p className="text-sm font-medium">{t("dashboard.overdueAndDuration")}</p>
-                  <p className="text-xs text-muted-foreground">{t("dashboard.overdueAndDurationDesc")}</p>
-                </div>
-                <div className="h-44">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                      <defs>
-                        <linearGradient id="gradOverdue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.1} />
-                          <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Area type="monotone" dataKey="overdue" name={t("dashboard.overdueChartLabel")} stroke="hsl(var(--destructive))" fill="url(#gradOverdue)" strokeWidth={1.5} />
-                      <Area type="monotone" dataKey="avgTime" name={t("dashboard.avgDaysLabel")} stroke="hsl(var(--muted-foreground))" fill="none" strokeWidth={1} strokeDasharray="4 4" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Escalation */}
-              <div className="border border-border rounded-lg p-5 lg:col-span-2">
-                <div className="mb-4">
-                  <p className="text-sm font-medium">{t("dashboard.escalationsPerWeek")}</p>
-                </div>
-                <div className="h-36">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Bar dataKey="escalated" name={t("dashboard.escalations")} fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} opacity={0.7} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="h-52">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                    <defs>
+                      <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
+                        <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                    <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                    <RechartsTooltip contentStyle={chartTooltipStyle} />
+                    <Area type="monotone" dataKey="completed" name="Abgeschlossen" stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="created" name="Erstellt" stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </section>
         )}
 
-        {/* ═══ ROI DASHBOARD ═══ */}
+        {/* ═══ 6. BEFORE/AFTER ROI (Tertiary) ═══ */}
         {!isLoading && (
           <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
             <WidgetErrorBoundary>
@@ -603,305 +536,36 @@ const Dashboard = () => {
           </Suspense>
         )}
 
-        {/* ═══ ECONOMIC IMPACT ═══ */}
-        {!isLoading && computed.totalDelayCost > 0 && (
+        {/* ═══ 7. RECENTLY OPENED (Tertiary/Compact) ═══ */}
+        {!isLoading && computed.recentlyOpened.length > 0 && (
           <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.economicImpact")}</h2>
-            <div className="border border-border rounded-lg p-5">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t("dashboard.totalDelayCost")}</p>
-                  <p className="text-2xl font-semibold tracking-tight text-destructive">{formatCost(computed.totalDelayCost)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{computed.active.length} {t("dashboard.openDecisions")}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{t("dashboard.staleDecisions")}</p>
-                  <p className="text-2xl font-semibold tracking-tight">{computed.staleDecisions.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t("dashboard.staleDesc")}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">{t("dashboard.topExpensive")}</p>
-                  <div className="space-y-1.5">
-                    {computed.costItems.slice(0, 3).map((c, i) => (
-                      <button key={i} onClick={() => navigate(`/decisions/${c.id}`)} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-1 -mx-1 transition-colors text-left">
-                        <span className="text-xs truncate mr-2">{c.title}</span>
-                        <span className="text-xs font-medium text-destructive shrink-0">{formatCost(c.cost)}</span>
-                      </button>
-                    ))}
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.recentlyOpened")}</h2>
+            <div className="border border-border rounded-lg divide-y divide-border">
+              {computed.recentlyOpened.map(d => (
+                <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)}
+                  className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={cn("w-2 h-2 rounded-full shrink-0",
+                      d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary")} />
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
+                    <span className="text-sm truncate">{d.title}</span>
                   </div>
-                </div>
-              </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                    {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
+                  </span>
+                </button>
+              ))}
             </div>
           </section>
         )}
 
-        {/* ═══ RISK OVERVIEW ═══ */}
-        {!isLoading && risks.length > 0 && (() => {
-          const openRisks = risks.filter((r: any) => r.status === "open" || r.status === "mitigating");
-          const criticalRisks = openRisks.filter((r: any) => (r.risk_score ?? r.likelihood * r.impact) >= 16);
-          const highRisks = openRisks.filter((r: any) => { const s = r.risk_score ?? r.likelihood * r.impact; return s >= 9 && s < 16; });
-          const withMitigation = openRisks.filter((r: any) => r.mitigation_plan && r.mitigation_plan.trim().length > 0);
-          const withoutMitigation = openRisks.filter((r: any) => !r.mitigation_plan || r.mitigation_plan.trim().length === 0);
-          const avgScore = openRisks.length > 0 ? Math.round(openRisks.reduce((s: number, r: any) => s + (r.risk_score ?? r.likelihood * r.impact), 0) / openRisks.length * 10) / 10 : 0;
-
-          return (
-            <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.riskOverview")}</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Total open */}
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
-                  <div className="flex items-center justify-between mb-2">
-                    <Shield className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">Ø {avgScore}</span>
-                  </div>
-                  <p className="text-2xl font-semibold tracking-tight">{openRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openRisks")}</p>
-                </div>
-
-                {/* Critical */}
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
-                  <ShieldAlert className="w-4 h-4 text-destructive mb-2" />
-                  <p className={`text-2xl font-semibold tracking-tight ${criticalRisks.length > 0 ? "text-destructive" : ""}`}>{criticalRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.criticalRisks")}</p>
-                </div>
-
-                {/* High */}
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
-                  <AlertTriangle className="w-4 h-4 text-warning mb-2" />
-                  <p className={`text-2xl font-semibold tracking-tight ${highRisks.length > 0 ? "text-warning" : ""}`}>{highRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.highRisks")}</p>
-                </div>
-
-                {/* Without mitigation */}
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
-                  <FileText className="w-4 h-4 text-muted-foreground mb-2" />
-                  <p className="text-2xl font-semibold tracking-tight">{withoutMitigation.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noMitigation")}</p>
-                </div>
-              </div>
-
-              {/* Critical risks list */}
-              {criticalRisks.length > 0 && (
-                <div className="border border-destructive/20 rounded-lg p-4 mt-3">
-                  <p className="text-xs font-medium text-destructive mb-2 flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5" /> {t("dashboard.criticalAttention")}
-                  </p>
-                  <div className="space-y-1.5">
-                    {criticalRisks.slice(0, 5).map((r: any) => (
-                      <button key={r.id} onClick={() => navigate("/risks")} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-1.5 -mx-1.5 transition-colors text-left">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-xs font-medium text-destructive shrink-0 tabular-nums">{r.risk_score ?? r.likelihood * r.impact}</span>
-                          <span className="text-xs truncate">{r.title}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {!r.mitigation_plan && <Badge variant="outline" className="text-[10px] text-warning">{t("dashboard.noMitigation")}</Badge>}
-                          <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
-          );
-        })()}
-
-        {/* ═══ TASK OVERVIEW ═══ */}
-        {!isLoading && tasks.length > 0 && (() => {
-          const now = new Date();
-          const activeTasks = tasks.filter(t => t.status !== "done");
-          const openTasks = activeTasks.filter(t => t.status === "open" || t.status === "backlog");
-          const inProgressTasks = activeTasks.filter(t => t.status === "in_progress");
-          const blockedTasks = activeTasks.filter(t => t.status === "blocked");
-          const overdueTasks = activeTasks.filter(t => t.due_date && new Date(t.due_date) < now);
-          
-          // Task velocity per week (last 6 weeks)
-          const taskWeekData: { week: string; completed: number }[] = [];
-          for (let w = 5; w >= 0; w--) {
-            const wStart = subDays(now, (w + 1) * 7);
-            const wEnd = subDays(now, w * 7);
-            const label = `KW${format(wEnd, "w")}`;
-            const completed = tasks.filter(t =>
-              t.status === "done" && t.completed_at &&
-              new Date(t.completed_at) >= wStart && new Date(t.completed_at) < wEnd
-            ).length;
-            taskWeekData.push({ week: label, completed });
-          }
-
-          return (
-            <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.taskOverview")}</h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
-                  <ListTodo className="w-4 h-4 text-muted-foreground mb-2" />
-                  <p className="text-2xl font-semibold tracking-tight">{openTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openBacklog")}</p>
-                </div>
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
-                  <Activity className="w-4 h-4 text-primary mb-2" />
-                  <p className="text-2xl font-semibold tracking-tight">{inProgressTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.inProgress")}</p>
-                </div>
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
-                  <AlertTriangle className={`w-4 h-4 mb-2 ${overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground"}`} />
-                  <p className={`text-2xl font-semibold tracking-tight ${overdueTasks.length > 0 ? "text-destructive" : ""}`}>{overdueTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.overdue")}</p>
-                </div>
-                <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
-                  <ShieldAlert className={`w-4 h-4 mb-2 ${blockedTasks.length > 0 ? "text-warning" : "text-muted-foreground"}`} />
-                  <p className={`text-2xl font-semibold tracking-tight ${blockedTasks.length > 0 ? "text-warning" : ""}`}>{blockedTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("decisions.blocked")}</p>
-                </div>
-              </div>
-
-              {/* Task velocity chart */}
-              <div className="border border-border rounded-lg p-5">
-                <div className="mb-4">
-                  <p className="text-sm font-medium">{t("dashboard.taskVelocity")}</p>
-                  <p className="text-xs text-muted-foreground">{t("dashboard.taskVelocityDesc")}</p>
-                </div>
-                <div className="h-36">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={taskWeekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                      <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Bar dataKey="completed" name={t("dashboard.doneLabel")} fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} opacity={0.7} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </section>
-          );
-        })()}
-
-        {/* ═══ UPCOMING DEADLINES ═══ */}
-        {!isLoading && (() => {
-          const now = new Date();
-          const upcoming = decisions
-            .filter(d => d.due_date && !["implemented", "rejected"].includes(d.status) && new Date(d.due_date) >= now)
-            .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
-            .slice(0, 5);
-          if (upcoming.length === 0) return null;
-          return (
-            <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.nextDeadlines")}</h2>
-              <div className="border border-border rounded-lg divide-y divide-border">
-                {upcoming.map(d => {
-                  const daysLeft = differenceInDays(new Date(d.due_date!), now);
-                  return (
-                    <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)} className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary"}`} />
-                        <span className="text-sm truncate">{d.title}</span>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`text-xs font-medium tabular-nums ${daysLeft <= 2 ? "text-destructive" : daysLeft <= 5 ? "text-warning" : "text-muted-foreground"}`}>
-                          {daysLeft === 0 ? t("common.today") : daysLeft === 1 ? t("common.tomorrow") : `${daysLeft}d`}
-                        </span>
-                        <ArrowRight className="w-3 h-3 text-muted-foreground" />
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })()}
-
-        {/* ═══ LEADERBOARD ═══ */}
+        {/* ═══ 8. LEADERBOARD (Tertiary) ═══ */}
         {!isLoading && (
           <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
             <WidgetErrorBoundary>
               <LeaderboardWidget />
             </WidgetErrorBoundary>
           </Suspense>
-        )}
-
-        {/* ═══ RECENT & ACTIVITY ═══ */}
-        {!isLoading && (
-          <section>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* My Activity Feed */}
-              <div className="border border-border rounded-lg p-5">
-                <p className="text-sm font-medium mb-3 flex items-center gap-1.5">
-                  <History className="w-3.5 h-3.5 text-muted-foreground" /> {t("dashboard.myActivities")}
-                </p>
-                {myAuditLogs.length > 0 ? (
-                  <div className="space-y-1.5">
-                    {myAuditLogs.map((log: any) => {
-                      const actionLabels: Record<string, string> = {
-                        created: t("dashboard.actionCreated"), status_changed: t("dashboard.actionStatusChanged"),
-                        review_approved: t("dashboard.actionApproved"), review_rejected: t("dashboard.actionRejected"),
-                        ai_analysis: t("dashboard.actionAiAnalysis"), field_updated: t("dashboard.actionUpdated"),
-                      };
-                      return (
-                        <button key={log.id} onClick={() => navigate(`/decisions/${log.decision_id}`)} className="w-full flex items-start gap-2 hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
-                          <Clock className="w-3 h-3 text-muted-foreground mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">
-                                {actionLabels[log.action] || log.action}
-                              </Badge>
-                              {log.field_name && <span className="text-[10px] text-muted-foreground">({log.field_name})</span>}
-                            </div>
-                            <p className="text-xs truncate mt-0.5">{(log as any).decisions?.title || t("dashboard.decisionLabel")}</p>
-                            <span className="text-[10px] text-muted-foreground">
-                              {formatDistanceToNow(new Date(log.created_at), { locale: dateFnsLocale, addSuffix: true })}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">{t("dashboard.noActivities")}</p>
-                )}
-              </div>
-              <div className="border border-border rounded-lg p-5">
-                <p className="text-sm font-medium mb-3">{t("dashboard.recentlyOpened")}</p>
-                {computed.recentlyOpened.length > 0 ? (
-                  <div className="space-y-1">
-                    {computed.recentlyOpened.map(d => (
-                      <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
-                          <span className="text-xs truncate">{d.title}</span>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                          {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">{t("dashboard.noRecentDecisions")}</p>
-                )}
-              </div>
-
-              <div className="border border-border rounded-lg p-5">
-                <p className="text-sm font-medium mb-3">{t("dashboard.recentlyEscalated")}</p>
-                {computed.recentlyEscalated.length > 0 ? (
-                  <div className="space-y-1">
-                    {computed.recentlyEscalated.map(d => (
-                      <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">L{d.escalation_level}</Badge>
-                          <span className="text-xs truncate">{d.title}</span>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                          {formatDistanceToNow(new Date(d.last_escalated_at || d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">{t("dashboard.noEscalations")}</p>
-                )}
-              </div>
-            </div>
-          </section>
         )}
       </div>
     </AppLayout>
