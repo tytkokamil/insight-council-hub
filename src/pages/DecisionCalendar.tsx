@@ -35,6 +35,7 @@ import UnscheduledSidebar from "@/components/calendar/UnscheduledSidebar";
 import { exportDecisionsAsICS } from "@/components/calendar/exportICS";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TaskPill from "@/components/calendar/TaskPill";
+import CalendarSummaryBar from "@/components/calendar/CalendarSummaryBar";
 
 const DecisionCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -289,8 +290,15 @@ const DecisionCalendar = () => {
           </div>
         </div>
 
+        {/* Summary bar */}
+        <CalendarSummaryBar
+          decisions={decisions ?? []}
+          tasks={allTasks}
+          currentDate={currentDate}
+          viewMode={viewMode}
+        />
+
         <div>
-          {/* Main calendar view */}
           <AnimatePresence mode="wait">
             <motion.div
               key={viewMode}
