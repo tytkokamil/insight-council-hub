@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,13 +19,14 @@ import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
   ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
-  Filter, ClipboardCheck,
+  Filter, ClipboardCheck, TrendingUp, TrendingDown, AlertTriangle, Shield, Gauge, Info,
+  Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw,
 } from "lucide-react";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
-import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -37,6 +41,7 @@ interface DecisionRow {
   outcome_notes: string | null;
   actual_impact_score: number | null;
   ai_impact_score: number | null;
+  ai_risk_score: number | null;
   implemented_at: string | null;
   created_at: string;
   created_by: string;
@@ -64,7 +69,6 @@ const TAG_COLORS = [
   "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#14b8a6",
 ];
 
-/** Highlight matching text with <mark> */
 const Highlight = ({ text, query }: { text: string; query: string }) => {
   if (!query || !text) return <>{text}</>;
   const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
@@ -101,8 +105,8 @@ const KnowledgeBase = () => {
   const [lessonOpen, setLessonOpen] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [detailTab, setDetailTab] = useState("lessons");
 
-  // Lesson form
   const [lessonForm, setLessonForm] = useState({
     key_takeaway: "",
     what_went_well: "",
@@ -116,7 +120,7 @@ const KnowledgeBase = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("decisions")
-        .select("id,title,description,category,priority,status,outcome_notes,actual_impact_score,ai_impact_score,implemented_at,created_at,created_by,team_id")
+        .select("id,title,description,category,priority,status,outcome_notes,actual_impact_score,ai_impact_score,ai_risk_score,implemented_at,created_at,created_by,team_id")
         .in("status", ["implemented", "approved", "rejected"])
         .order("implemented_at", { ascending: false, nullsFirst: false });
       return (data ?? []) as DecisionRow[];
@@ -204,7 +208,6 @@ const KnowledgeBase = () => {
     return m;
   }, [lessons]);
 
-  // Fulltext search: search across decisions AND lessons fields
   const searchMatchesLesson = useCallback((l: LessonRow, q: string): boolean => {
     return [l.key_takeaway, l.what_went_well, l.what_went_wrong, l.recommendations]
       .some(field => field?.toLowerCase().includes(q));
@@ -212,52 +215,28 @@ const KnowledgeBase = () => {
 
   const filteredDecisions = useMemo(() => {
     let list = decisions;
-
-    // Category filter
-    if (selectedCategories.length > 0) {
-      list = list.filter(d => selectedCategories.includes(d.category));
-    }
-
-    // Outcome filter
-    if (selectedOutcomes.length > 0) {
-      list = list.filter(d => selectedOutcomes.includes(d.status));
-    }
-
-    // Tag filter
+    if (selectedCategories.length > 0) list = list.filter(d => selectedCategories.includes(d.category));
+    if (selectedOutcomes.length > 0) list = list.filter(d => selectedOutcomes.includes(d.status));
     if (selectedTags.length > 0) {
-      const decIdsWithTags = new Set(
-        decisionTags.filter(dt => selectedTags.includes(dt.tag_id)).map(dt => dt.decision_id)
-      );
+      const decIdsWithTags = new Set(decisionTags.filter(dt => selectedTags.includes(dt.tag_id)).map(dt => dt.decision_id));
       list = list.filter(d => decIdsWithTags.has(d.id));
     }
-
-    // Fulltext search (decisions + lessons)
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(d => {
-        // Match in decision fields
-        const decMatch = d.title.toLowerCase().includes(q) ||
-          d.description?.toLowerCase().includes(q) ||
-          d.outcome_notes?.toLowerCase().includes(q);
+        const decMatch = d.title.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q) || d.outcome_notes?.toLowerCase().includes(q);
         if (decMatch) return true;
-        // Match in lessons fields
         const dLessons = lessonsMap.get(d.id) || [];
         return dLessons.some(l => searchMatchesLesson(l, q));
       });
-
-      // Sort: relevance (lessons match first) then recency
       list = [...list].sort((a, b) => {
         const aLessonMatch = (lessonsMap.get(a.id) || []).some(l => searchMatchesLesson(l, q));
         const bLessonMatch = (lessonsMap.get(b.id) || []).some(l => searchMatchesLesson(l, q));
         if (aLessonMatch && !bLessonMatch) return -1;
         if (!aLessonMatch && bLessonMatch) return 1;
-        // Recency
-        const aDate = a.implemented_at || a.created_at;
-        const bDate = b.implemented_at || b.created_at;
-        return new Date(bDate).getTime() - new Date(aDate).getTime();
+        return new Date(b.implemented_at || b.created_at).getTime() - new Date(a.implemented_at || a.created_at).getTime();
       });
     }
-
     return list;
   }, [decisions, search, selectedTags, selectedCategories, selectedOutcomes, decisionTags, lessonsMap, searchMatchesLesson]);
 
@@ -265,7 +244,7 @@ const KnowledgeBase = () => {
   const selectedLessons = lessons.filter(l => l.decision_id === selectedDecision);
   const selectedDecTags = decisionTags.filter(dt => dt.decision_id === selectedDecision);
 
-  // AI-based similarity
+  // AI similarity
   const [aiSimilarities, setAiSimilarities] = useState<{ decision_id: string; score: number; reason: string }[]>([]);
   const [similarLoading, setSimilarLoading] = useState(false);
   const [similarError, setSimilarError] = useState<string | null>(null);
@@ -275,14 +254,11 @@ const KnowledgeBase = () => {
     setSimilarError(null);
     setAiSimilarities([]);
     try {
-      const { data, error } = await supabase.functions.invoke("similarity-score", {
-        body: { decisionId: decId },
-      });
+      const { data, error } = await supabase.functions.invoke("similarity-score", { body: { decisionId: decId } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setAiSimilarities(data?.similarities ?? []);
     } catch (e: any) {
-      console.error("Similarity error:", e);
       setSimilarError(e.message || "Fehler bei der Ähnlichkeitsanalyse");
     } finally {
       setSimilarLoading(false);
@@ -298,8 +274,6 @@ const KnowledgeBase = () => {
   const getDecisionTags = (decisionId: string) =>
     decisionTags.filter(dt => dt.decision_id === decisionId).map(dt => tagMap.get(dt.tag_id)).filter(Boolean) as TagRow[];
 
-  /* --- Stats --- */
-  const totalLessons = lessons.length;
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     decisions.forEach(d => { counts[d.category] = (counts[d.category] || 0) + 1; });
@@ -308,132 +282,329 @@ const KnowledgeBase = () => {
 
   const activeFilterCount = selectedCategories.length + selectedOutcomes.length + selectedTags.length;
 
+  /* ── 1. Learning Snapshot KPIs (90 days) ── */
+  const snapshot = useMemo(() => {
+    const cutoff90 = new Date(); cutoff90.setDate(cutoff90.getDate() - 90);
+    const recentDec = decisions.filter(d => new Date(d.implemented_at || d.created_at) > cutoff90);
+    const recentLessons = lessons.filter(l => new Date(l.created_at) > cutoff90);
+    const documented = recentDec.filter(d => lessonsMap.has(d.id)).length;
+    const docRate = recentDec.length > 0 ? Math.round((documented / recentDec.length) * 100) : 0;
+
+    // Recurring patterns: categories with >2 lessons that have similar what_went_wrong
+    const wrongPatterns = new Map<string, string[]>();
+    lessons.forEach(l => {
+      if (l.what_went_wrong) {
+        const dec = decisions.find(d => d.id === l.decision_id);
+        const cat = dec?.category || "other";
+        const arr = wrongPatterns.get(cat) || [];
+        arr.push(l.what_went_wrong);
+        wrongPatterns.set(cat, arr);
+      }
+    });
+    const recurringPatterns = Array.from(wrongPatterns.values()).filter(arr => arr.length >= 2).length;
+
+    // Repeated failures: decisions with what_went_wrong and rejected status
+    const repeatedFailures = lessons.filter(l => {
+      const dec = decisions.find(d => d.id === l.decision_id);
+      return dec?.status === "rejected" && l.what_went_wrong;
+    }).length;
+
+    // Avg time to document lesson
+    const timesToDoc: number[] = [];
+    lessons.forEach(l => {
+      const dec = decisions.find(d => d.id === l.decision_id);
+      if (dec?.implemented_at) {
+        const days = Math.round((new Date(l.created_at).getTime() - new Date(dec.implemented_at).getTime()) / 86400000);
+        if (days >= 0) timesToDoc.push(days);
+      }
+    });
+    const avgTimeToDoc = timesToDoc.length > 0 ? Math.round(timesToDoc.reduce((a, b) => a + b, 0) / timesToDoc.length) : 0;
+
+    return { completedDec: recentDec.length, documented, docRate, recurringPatterns, repeatedFailures, avgTimeToDoc };
+  }, [decisions, lessons, lessonsMap]);
+
+  /* ── 4. Pattern Recognition ── */
+  const patterns = useMemo(() => {
+    const results: { title: string; detail: string; severity: "info" | "warning" | "error" }[] = [];
+
+    // Category-based failure patterns
+    const catFailures: Record<string, number> = {};
+    const catTotal: Record<string, number> = {};
+    decisions.forEach(d => {
+      catTotal[d.category] = (catTotal[d.category] || 0) + 1;
+      if (d.status === "rejected") catFailures[d.category] = (catFailures[d.category] || 0) + 1;
+    });
+    Object.entries(catFailures).forEach(([cat, count]) => {
+      const total = catTotal[cat] || 1;
+      const rate = Math.round((count / total) * 100);
+      if (rate >= 25 && count >= 2) {
+        results.push({
+          title: `${categoryLabels[cat] || cat}: ${rate}% Ablehnungsrate`,
+          detail: `${count} von ${total} Entscheidungen abgelehnt – potentielles Strukturproblem.`,
+          severity: rate >= 40 ? "error" : "warning",
+        });
+      }
+    });
+
+    // Lessons with repeated what_went_wrong keywords
+    const wrongKeywords: Record<string, number> = {};
+    lessons.forEach(l => {
+      if (l.what_went_wrong) {
+        const words = l.what_went_wrong.toLowerCase().split(/\s+/).filter(w => w.length > 5);
+        words.forEach(w => { wrongKeywords[w] = (wrongKeywords[w] || 0) + 1; });
+      }
+    });
+    const frequentProblems = Object.entries(wrongKeywords).filter(([, c]) => c >= 3).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    if (frequentProblems.length > 0) {
+      results.push({
+        title: `Wiederkehrende Problem-Themen erkannt`,
+        detail: `Häufige Begriffe in Fehleranalysen: ${frequentProblems.map(([w, c]) => `"${w}" (${c}×)`).join(", ")}`,
+        severity: "warning",
+      });
+    }
+
+    // Decisions without lessons that are older than 14 days
+    const cutoff14 = new Date(); cutoff14.setDate(cutoff14.getDate() - 14);
+    const undocumented = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) < cutoff14 && !lessonsMap.has(d.id));
+    if (undocumented.length >= 3) {
+      results.push({
+        title: `${undocumented.length} Entscheidungen ohne Lessons (>14 Tage)`,
+        detail: "Dokumentationslücke – organisationales Wissen geht verloren.",
+        severity: "warning",
+      });
+    }
+
+    return results;
+  }, [decisions, lessons, lessonsMap]);
+
+  /* ── 7. Knowledge Quality Score ── */
+  const knowledgeScore = useMemo(() => {
+    let score = 0;
+    // Documentation rate (max 40)
+    score += Math.min(snapshot.docRate * 0.4, 40);
+    // Avg time to document (<7 days = 20, <14 = 10)
+    if (snapshot.avgTimeToDoc <= 7) score += 20;
+    else if (snapshot.avgTimeToDoc <= 14) score += 10;
+    // Lesson quality: % with recommendations (max 20)
+    const withRec = lessons.filter(l => l.recommendations && l.recommendations.length > 10).length;
+    const recRate = lessons.length > 0 ? withRec / lessons.length : 0;
+    score += recRate * 20;
+    // Low repeat failures (max 20)
+    score += Math.max(0, 20 - snapshot.repeatedFailures * 5);
+    return Math.max(0, Math.min(100, Math.round(score)));
+  }, [snapshot, lessons]);
+
+  /* ── 9. Category Intelligence Heatmap ── */
+  const categoryHeatmap = useMemo(() => {
+    return ALL_CATEGORIES.map(cat => {
+      const catDecs = decisions.filter(d => d.category === cat);
+      const catLessons = lessons.filter(l => catDecs.some(d => d.id === l.decision_id));
+      const failures = catDecs.filter(d => d.status === "rejected").length;
+      const failRate = catDecs.length > 0 ? Math.round((failures / catDecs.length) * 100) : 0;
+      const reworks = catLessons.filter(l => l.what_went_wrong && l.what_went_wrong.length > 10).length;
+      return {
+        category: cat,
+        label: categoryLabels[cat] || cat,
+        decisions: catDecs.length,
+        lessons: catLessons.length,
+        failRate,
+        reworks,
+      };
+    }).filter(c => c.decisions > 0);
+  }, [decisions, lessons]);
+
   return (
     <AppLayout>
-      <div className="p-4 md:p-6 space-y-6 max-w-[1600px] mx-auto">
+      <div className="space-y-6">
         {/* Header */}
         <PageHeader
           title="Knowledge Base"
-          subtitle={`${totalLessons} Lessons aus ${decisions.length} abgeschlossenen Entscheidungen`}
+          subtitle="Organisationales Lernen & Decision Intelligence"
           role="knowledge"
-          help={{ title: "Knowledge Base", description: "Lessons Learned aus abgeschlossenen Entscheidungen. Suche, filtere und exportiere dein organisationales Wissen." }}
+          help={{ title: "Knowledge Base", description: "Lessons Learned aus abgeschlossenen Entscheidungen. Pattern Recognition, Similarity Engine und Knowledge Quality Tracking." }}
           primaryAction={
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)}
-              disabled={decisions.length === 0}
-              className="gap-1.5"
-            >
-              <Download className="w-4 h-4" /> PDF-Report
+            <Button variant="outline" size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5">
+              <Download className="w-4 h-4" /> Executive Report
             </Button>
           }
         />
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* ── 1. Learning Snapshot ──────────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: "Entscheidungen", value: decisions.length, icon: FileText },
-            { label: "Lessons Learned", value: totalLessons, icon: Lightbulb },
-            { label: "Tags", value: tags.length, icon: Tag },
-            { label: "Kategorien", value: Object.keys(categoryCounts).length, icon: Users },
-          ].map(s => (
-            <Card key={s.label} className="p-3">
-              <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
-                <s.icon className="w-3.5 h-3.5" /> {s.label}
-              </div>
-              <div className="text-xl font-bold">{s.value}</div>
-            </Card>
+            { label: "Abgeschlossen (90T)", value: snapshot.completedDec, icon: <CheckCircle2 className="w-4 h-4 text-primary" /> },
+            { label: "Lessons dokumentiert", value: snapshot.documented, icon: <Lightbulb className="w-4 h-4 text-warning" /> },
+            { label: "Dokumentationsquote", value: `${snapshot.docRate}%`, icon: <BarChart3 className="w-4 h-4 text-primary" />, highlight: snapshot.docRate < 50 },
+            { label: "Wiederkehrende Muster", value: snapshot.recurringPatterns, icon: <Repeat className="w-4 h-4 text-accent-foreground" /> },
+            { label: "Wiederholte Fehler", value: snapshot.repeatedFailures, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: snapshot.repeatedFailures > 0 },
+            { label: "Ø Zeit bis Learning", value: `${snapshot.avgTimeToDoc} Tage`, icon: <Clock className="w-4 h-4 text-muted-foreground" /> },
+          ].map((kpi, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+              <Card className={kpi.highlight ? "border-warning/30 bg-warning/5" : ""}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {kpi.icon}
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                  </div>
+                  <p className={`text-xl font-bold ${kpi.highlight ? "text-warning" : ""}`}>{kpi.value}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 
-        {/* Search & Filters */}
+        {/* ── 7. Knowledge Quality Score + 9. Category Heatmap ───── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Knowledge Quality Score */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Gauge className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold">Knowledge Maturity Score</h3>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
+                    <TooltipContent className="max-w-xs text-xs">
+                      <p>Basiert auf: Dokumentationsquote, Erfassungszeit, Empfehlungsqualität, Wiederholungsrate</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <div className="flex items-end gap-3">
+                <span className={`text-4xl font-bold ${knowledgeScore >= 70 ? "text-success" : knowledgeScore >= 40 ? "text-warning" : "text-destructive"}`}>{knowledgeScore}</span>
+                <div className="flex-1">
+                  <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${knowledgeScore}%` }} transition={{ duration: 1 }}
+                      className={`h-full rounded-full ${knowledgeScore >= 70 ? "bg-success" : knowledgeScore >= 40 ? "bg-warning" : "bg-destructive"}`} />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
+                <p>Dokumentation: {snapshot.docRate}% (max 40p)</p>
+                <p>Erfassungszeit: {snapshot.avgTimeToDoc}d (max 20p)</p>
+                <p>Empfehlungsqualität: {lessons.filter(l => l.recommendations && l.recommendations.length > 10).length}/{lessons.length} (max 20p)</p>
+                <p>Fehlerwiederholung: -{snapshot.repeatedFailures * 5}p</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Category Heatmap */}
+          <Card className="md:col-span-2">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold">Kategorie-Intelligence</h3>
+              </div>
+              {categoryHeatmap.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Keine Daten</p>
+              ) : (
+                <div className="space-y-2">
+                  {categoryHeatmap.map(cat => (
+                    <div key={cat.category} className="flex items-center gap-3 text-xs">
+                      <span className="w-24 font-medium truncate">{cat.label}</span>
+                      <div className="flex-1 grid grid-cols-4 gap-2">
+                        <div className="text-center p-1.5 rounded bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground">Entscheidungen</p>
+                          <p className="font-bold">{cat.decisions}</p>
+                        </div>
+                        <div className="text-center p-1.5 rounded bg-muted/30">
+                          <p className="text-[10px] text-muted-foreground">Lessons</p>
+                          <p className="font-bold">{cat.lessons}</p>
+                        </div>
+                        <div className={`text-center p-1.5 rounded ${cat.failRate >= 30 ? "bg-destructive/10" : "bg-muted/30"}`}>
+                          <p className="text-[10px] text-muted-foreground">Fehlerquote</p>
+                          <p className={`font-bold ${cat.failRate >= 30 ? "text-destructive" : ""}`}>{cat.failRate}%</p>
+                        </div>
+                        <div className={`text-center p-1.5 rounded ${cat.reworks >= 3 ? "bg-warning/10" : "bg-muted/30"}`}>
+                          <p className="text-[10px] text-muted-foreground">Reworks</p>
+                          <p className={`font-bold ${cat.reworks >= 3 ? "text-warning" : ""}`}>{cat.reworks}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* ── 4. Pattern Recognition ───────────────────────────────── */}
+        {patterns.length > 0 && (
+          <Card className="border-warning/30 bg-warning/5">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Brain className="w-4 h-4 text-warning" />
+                <h3 className="text-sm font-semibold">Erkannte Muster & Governance-Signale</h3>
+                <Badge variant="outline" className="text-[10px] text-warning border-warning/30">{patterns.length}</Badge>
+              </div>
+              <div className="space-y-2">
+                {patterns.map((p, i) => (
+                  <div key={i} className={`p-2.5 rounded-lg bg-background border ${p.severity === "error" ? "border-destructive/30" : "border-warning/30"} flex items-start gap-2 text-xs`}>
+                    <AlertTriangle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${p.severity === "error" ? "text-destructive" : "text-warning"}`} />
+                    <div>
+                      <p className="font-medium">{p.title}</p>
+                      <p className="text-muted-foreground">{p.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Search & Filters ─────────────────────────────────────── */}
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Entscheidungen, Learnings, Takeaways oder Empfehlungen suchen…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-9"
-              />
+              <Input placeholder="Entscheidungen, Learnings, Takeaways oder Empfehlungen suchen…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <Button
-              variant={showFilters || activeFilterCount > 0 ? "default" : "outline"}
-              size="icon"
-              onClick={() => setShowFilters(v => !v)}
-              className="relative shrink-0"
-            >
+            <Button variant={showFilters || activeFilterCount > 0 ? "default" : "outline"} size="icon" onClick={() => setShowFilters(v => !v)} className="relative shrink-0">
               <Filter className="w-4 h-4" />
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">
-                  {activeFilterCount}
-                </span>
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center font-bold">{activeFilterCount}</span>
               )}
             </Button>
           </div>
 
-          {/* Expanded filter panel */}
           {showFilters && (
             <Card className="p-4 space-y-3">
-              {/* Category filter */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Kategorie</p>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_CATEGORIES.map(cat => {
                     const active = selectedCategories.includes(cat);
                     return (
-                      <button
-                        key={cat}
-                        onClick={() => setSelectedCategories(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${
-                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                        }`}
-                      >
-                        {categoryLabels[cat] ?? cat}
-                        {categoryCounts[cat] ? ` (${categoryCounts[cat]})` : ""}
+                      <button key={cat} onClick={() => setSelectedCategories(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
+                        {categoryLabels[cat] ?? cat} {categoryCounts[cat] ? `(${categoryCounts[cat]})` : ""}
                       </button>
                     );
                   })}
                 </div>
               </div>
-
-              {/* Outcome filter */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Ergebnis</p>
                 <div className="flex flex-wrap gap-1.5">
                   {OUTCOME_FILTERS.map(of => {
                     const active = selectedOutcomes.includes(of.value);
                     return (
-                      <button
-                        key={of.value}
-                        onClick={() => setSelectedOutcomes(prev => active ? prev.filter(o => o !== of.value) : [...prev, of.value])}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${
-                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                        }`}
-                      >
+                      <button key={of.value} onClick={() => setSelectedOutcomes(prev => active ? prev.filter(o => o !== of.value) : [...prev, of.value])}
+                        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
                         {of.label}
                       </button>
                     );
                   })}
                 </div>
               </div>
-
-              {/* Tag filter */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tags</p>
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {tags.map(tag => {
                     const active = selectedTags.includes(tag.id);
                     return (
-                      <button
-                        key={tag.id}
-                        onClick={() => setSelectedTags(prev => active ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${
-                          active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"
-                        }`}
-                      >
+                      <button key={tag.id} onClick={() => setSelectedTags(prev => active ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all border ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
                         {tag.name}
                         {active && <X className="w-3 h-3" />}
@@ -441,26 +612,16 @@ const KnowledgeBase = () => {
                     );
                   })}
                   <div className="flex items-center gap-1">
-                    <Input
-                      placeholder="Neuer Tag…"
-                      value={newTagName}
-                      onChange={e => setNewTagName(e.target.value)}
-                      className="h-7 w-28 text-xs"
-                      onKeyDown={e => { if (e.key === "Enter" && newTagName.trim()) createTag.mutate(newTagName.trim()); }}
-                    />
+                    <Input placeholder="Neuer Tag…" value={newTagName} onChange={e => setNewTagName(e.target.value)} className="h-7 w-28 text-xs"
+                      onKeyDown={e => { if (e.key === "Enter" && newTagName.trim()) createTag.mutate(newTagName.trim()); }} />
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => newTagName.trim() && createTag.mutate(newTagName.trim())}>
                       <Plus className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
               </div>
-
               {activeFilterCount > 0 && (
-                <Button
-                  variant="ghost" size="sm"
-                  onClick={() => { setSelectedCategories([]); setSelectedOutcomes([]); setSelectedTags([]); }}
-                  className="text-xs text-muted-foreground"
-                >
+                <Button variant="ghost" size="sm" onClick={() => { setSelectedCategories([]); setSelectedOutcomes([]); setSelectedTags([]); }} className="text-xs text-muted-foreground">
                   <X className="w-3 h-3 mr-1" /> Alle Filter zurücksetzen
                 </Button>
               )}
@@ -468,9 +629,9 @@ const KnowledgeBase = () => {
           )}
         </div>
 
-        {/* Main content */}
+        {/* ── Main Content: List + Detail ───────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Decision list */}
+          {/* ── 2. Enriched Decision List ──────────────────────────── */}
           <div className="lg:col-span-2 space-y-2 max-h-[70vh] overflow-y-auto pr-1">
             {filteredDecisions.length === 0 && (
               <Card className="p-8 text-center">
@@ -487,31 +648,37 @@ const KnowledgeBase = () => {
               const dTags = getDecisionTags(d.id);
               const dLessons = lessonsMap.get(d.id) || [];
               const isActive = selectedDecision === d.id;
-              // Show first lesson takeaway as preview
               const firstTakeaway = dLessons[0]?.key_takeaway;
               return (
-                <Card
-                  key={d.id}
-                  className={`p-3 cursor-pointer transition-all ${isActive ? "border-foreground/20 bg-muted/40" : "hover:bg-muted/30"}`}
-                  onClick={() => setSelectedDecision(d.id)}
-                >
+                <Card key={d.id} className={`p-3 cursor-pointer transition-all ${isActive ? "border-foreground/20 bg-muted/40" : "hover:bg-muted/30"}`}
+                  onClick={() => { setSelectedDecision(d.id); setAiSimilarities([]); }}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-sm truncate">
-                        <Highlight text={d.title} query={search} />
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <h3 className="font-medium text-sm truncate"><Highlight text={d.title} query={search} /></h3>
+                      <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
                         <Badge variant={d.status === "implemented" ? "default" : d.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
                           {statusLabels[d.status] ?? d.status}
                         </Badge>
+                        {d.ai_risk_score != null && d.ai_risk_score > 0 && (
+                          <Badge variant="outline" className="text-[10px] text-warning border-warning/30">Risk {d.ai_risk_score}</Badge>
+                        )}
                         {dLessons.length > 0 && (
                           <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground">
                             <Lightbulb className="w-3 h-3" /> {dLessons.length}
                           </span>
                         )}
                       </div>
-                      {/* Compact PIR preview */}
+                      {/* Economic Impact preview */}
+                      {d.actual_impact_score != null && (
+                        <div className="flex items-center gap-2 mt-1 text-[10px]">
+                          <span className="text-muted-foreground">Impact:</span>
+                          <span className={`font-medium ${d.actual_impact_score >= 70 ? "text-success" : d.actual_impact_score >= 40 ? "text-warning" : "text-destructive"}`}>{d.actual_impact_score}%</span>
+                          {d.ai_impact_score != null && d.ai_impact_score > 0 && (
+                            <span className="text-muted-foreground">(KI: {d.ai_impact_score}%)</span>
+                          )}
+                        </div>
+                      )}
                       {firstTakeaway && (
                         <p className="text-[11px] text-muted-foreground mt-1.5 line-clamp-2 italic">
                           <Lightbulb className="w-3 h-3 inline mr-0.5 text-warning" />
@@ -542,13 +709,13 @@ const KnowledgeBase = () => {
             })}
           </div>
 
-          {/* Detail panel */}
+          {/* ── 3. Structured Detail View ──────────────────────────── */}
           <div className="lg:col-span-3">
             {!selected ? (
               <Card className="p-12 text-center text-muted-foreground">
                 <Sparkles className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p className="font-medium">Entscheidung auswählen</p>
-                <p className="text-xs mt-1">Wähle links eine abgeschlossene Entscheidung um Lessons Learned und ähnliche Fälle zu sehen.</p>
+                <p className="text-xs mt-1">Wähle links eine abgeschlossene Entscheidung um strukturierte Analyse, Lessons und ähnliche Fälle zu sehen.</p>
               </Card>
             ) : (
               <div className="space-y-4">
@@ -559,11 +726,7 @@ const KnowledgeBase = () => {
                       <h2 className="font-semibold text-lg">{selected.title}</h2>
                       {selected.description && <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>}
                     </div>
-                    <Button
-                      variant="ghost" size="sm"
-                      className="text-xs text-muted-foreground shrink-0"
-                      onClick={() => navigate(`/decisions/${selected.id}`)}
-                    >
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground shrink-0" onClick={() => navigate(`/decisions/${selected.id}`)}>
                       Zur Entscheidung →
                     </Button>
                   </div>
@@ -574,23 +737,25 @@ const KnowledgeBase = () => {
                       {statusLabels[selected.status] ?? selected.status}
                     </Badge>
                   </div>
-                  {selected.outcome_notes && (
-                    <div className="mt-3 p-3 bg-muted/30 rounded-lg text-sm">
-                      <span className="text-xs font-medium text-muted-foreground block mb-1">Ergebnis</span>
-                      <Highlight text={selected.outcome_notes} query={search} />
-                    </div>
-                  )}
                 </Card>
 
-                {/* PIR Summary Card */}
-                {(selected.actual_impact_score !== null || selectedLessons.length > 0) && (
+                {/* ── 3F. Economic Outcome ── */}
+                {(selected.actual_impact_score !== null || selected.outcome_notes) && (
                   <Card className="p-4 border-primary/20 bg-primary/[0.02]">
                     <div className="flex items-center gap-2 mb-3">
                       <ClipboardCheck className="w-4 h-4 text-primary" />
                       <h3 className="text-sm font-semibold">Post-Implementation Review</h3>
                     </div>
 
-                    {/* Impact comparison */}
+                    {/* A) Kontext */}
+                    {selected.description && (
+                      <div className="mb-3">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kontext</p>
+                        <p className="text-xs text-muted-foreground">{selected.description}</p>
+                      </div>
+                    )}
+
+                    {/* B) Ergebnis: Erwartet vs Tatsächlich */}
                     {selected.actual_impact_score !== null && (
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
@@ -602,15 +767,13 @@ const KnowledgeBase = () => {
                           <p className="text-lg font-bold font-display">{selected.actual_impact_score}%</p>
                         </div>
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
-                          <p className="text-[10px] text-muted-foreground">Genauigkeit</p>
+                          <p className="text-[10px] text-muted-foreground">Abweichung</p>
                           {(() => {
                             const pred = selected.ai_impact_score ?? 0;
-                            const acc = pred > 0 ? Math.round(100 - Math.abs(pred - selected.actual_impact_score!)) : null;
+                            const diff = selected.actual_impact_score! - pred;
                             return (
-                              <p className={`text-lg font-bold font-display ${
-                                acc !== null ? (acc > 80 ? "text-success" : acc > 60 ? "text-warning" : "text-destructive") : "text-muted-foreground"
-                              }`}>
-                                {acc !== null ? `${acc}%` : "—"}
+                              <p className={`text-lg font-bold font-display ${diff >= 0 ? "text-success" : "text-destructive"}`}>
+                                {diff >= 0 ? "+" : ""}{diff}%
                               </p>
                             );
                           })()}
@@ -618,37 +781,38 @@ const KnowledgeBase = () => {
                       </div>
                     )}
 
-                    {/* Latest lesson structured */}
+                    {/* C) Outcome Notes */}
+                    {selected.outcome_notes && (
+                      <div className="p-3 bg-muted/30 rounded-lg text-sm mb-3">
+                        <span className="text-xs font-medium text-muted-foreground block mb-1">Ergebnis</span>
+                        <Highlight text={selected.outcome_notes} query={search} />
+                      </div>
+                    )}
+
+                    {/* D/E) Latest lesson structured */}
                     {selectedLessons[0] && (
                       <div className="space-y-2 pt-2 border-t border-border">
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Lessons Learned</p>
                         <div className="flex items-start gap-2">
                           <Lightbulb className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
-                          <p className="text-sm font-medium">
-                            <Highlight text={selectedLessons[0].key_takeaway} query={search} />
-                          </p>
+                          <p className="text-sm font-medium"><Highlight text={selectedLessons[0].key_takeaway} query={search} /></p>
                         </div>
                         {selectedLessons[0].what_went_well && (
                           <div className="flex items-start gap-2 text-xs">
                             <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
-                            <span className="text-muted-foreground">
-                              <Highlight text={selectedLessons[0].what_went_well} query={search} />
-                            </span>
+                            <span className="text-muted-foreground"><Highlight text={selectedLessons[0].what_went_well} query={search} /></span>
                           </div>
                         )}
                         {selectedLessons[0].what_went_wrong && (
                           <div className="flex items-start gap-2 text-xs">
                             <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-                            <span className="text-muted-foreground">
-                              <Highlight text={selectedLessons[0].what_went_wrong} query={search} />
-                            </span>
+                            <span className="text-muted-foreground"><Highlight text={selectedLessons[0].what_went_wrong} query={search} /></span>
                           </div>
                         )}
                         {selectedLessons[0].recommendations && (
                           <div className="flex items-start gap-2 text-xs">
                             <ArrowRight className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-                            <span className="text-muted-foreground">
-                              <Highlight text={selectedLessons[0].recommendations} query={search} />
-                            </span>
+                            <span className="text-muted-foreground"><Highlight text={selectedLessons[0].recommendations} query={search} /></span>
                           </div>
                         )}
                       </div>
@@ -656,31 +820,30 @@ const KnowledgeBase = () => {
                   </Card>
                 )}
 
-                <Tabs defaultValue="lessons" className="w-full">
+                {/* Tabs */}
+                <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
                   <TabsList className="w-full">
                     <TabsTrigger value="lessons" className="flex-1">
                       <Lightbulb className="w-3.5 h-3.5 mr-1" /> Lessons ({selectedLessons.length})
                     </TabsTrigger>
-                    <TabsTrigger value="apply" className="flex-1">
-                      <ClipboardCheck className="w-3.5 h-3.5 mr-1" /> Apply Learning
+                    <TabsTrigger value="action" className="flex-1">
+                      <Zap className="w-3.5 h-3.5 mr-1" /> Action
                     </TabsTrigger>
                     <TabsTrigger value="tags" className="flex-1">
                       <Tag className="w-3.5 h-3.5 mr-1" /> Tags ({selectedDecTags.length})
                     </TabsTrigger>
                     <TabsTrigger value="similar" className="flex-1" onClick={() => { if (selectedDecision && aiSimilarities.length === 0 && !similarLoading) fetchSimilarity(selectedDecision); }}>
-                      <Brain className="w-3.5 h-3.5 mr-1" /> KI-Ähnliche ({similarDecisions.length})
+                      <Brain className="w-3.5 h-3.5 mr-1" /> Ähnliche ({similarDecisions.length})
                     </TabsTrigger>
                   </TabsList>
 
-                  {/* Lessons */}
+                  {/* Lessons Tab */}
                   <TabsContent value="lessons" className="space-y-3">
                     {selectedLessons.map(l => (
                       <Card key={l.id} className="p-4 space-y-3">
                         <div className="flex items-start gap-2">
                           <Lightbulb className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-                          <p className="text-sm font-medium">
-                            <Highlight text={l.key_takeaway} query={search} />
-                          </p>
+                          <p className="text-sm font-medium"><Highlight text={l.key_takeaway} query={search} /></p>
                         </div>
                         {l.what_went_well && (
                           <div className="flex items-start gap-2 text-sm">
@@ -708,97 +871,76 @@ const KnowledgeBase = () => {
 
                     <Dialog open={lessonOpen} onOpenChange={setLessonOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" className="w-full">
-                          <Plus className="w-4 h-4 mr-1" /> Lesson Learned hinzufügen
-                        </Button>
+                        <Button size="sm" className="w-full"><Plus className="w-4 h-4 mr-1" /> Lesson Learned hinzufügen</Button>
                       </DialogTrigger>
                       <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Lesson Learned erfassen</DialogTitle>
-                        </DialogHeader>
+                        <DialogHeader><DialogTitle>Lesson Learned erfassen</DialogTitle></DialogHeader>
                         <div className="space-y-3">
                           <div>
                             <label className="text-xs font-medium">Kernerkenntnis *</label>
-                            <Textarea
-                              placeholder="Was ist die wichtigste Erkenntnis?"
-                              value={lessonForm.key_takeaway}
-                              onChange={e => setLessonForm(f => ({ ...f, key_takeaway: e.target.value }))}
-                            />
+                            <Textarea placeholder="Was ist die wichtigste Erkenntnis?" value={lessonForm.key_takeaway} onChange={e => setLessonForm(f => ({ ...f, key_takeaway: e.target.value }))} />
                           </div>
                           <div>
                             <label className="text-xs font-medium">Was lief gut?</label>
-                            <Textarea
-                              placeholder="Erfolgsfaktoren…"
-                              value={lessonForm.what_went_well}
-                              onChange={e => setLessonForm(f => ({ ...f, what_went_well: e.target.value }))}
-                            />
+                            <Textarea placeholder="Erfolgsfaktoren…" value={lessonForm.what_went_well} onChange={e => setLessonForm(f => ({ ...f, what_went_well: e.target.value }))} />
                           </div>
                           <div>
                             <label className="text-xs font-medium">Was lief schlecht?</label>
-                            <Textarea
-                              placeholder="Probleme und Hindernisse…"
-                              value={lessonForm.what_went_wrong}
-                              onChange={e => setLessonForm(f => ({ ...f, what_went_wrong: e.target.value }))}
-                            />
+                            <Textarea placeholder="Probleme und Hindernisse…" value={lessonForm.what_went_wrong} onChange={e => setLessonForm(f => ({ ...f, what_went_wrong: e.target.value }))} />
                           </div>
                           <div>
                             <label className="text-xs font-medium">Empfehlungen</label>
-                            <Textarea
-                              placeholder="Was sollte nächstes Mal anders gemacht werden?"
-                              value={lessonForm.recommendations}
-                              onChange={e => setLessonForm(f => ({ ...f, recommendations: e.target.value }))}
-                            />
+                            <Textarea placeholder="Was sollte nächstes Mal anders gemacht werden?" value={lessonForm.recommendations} onChange={e => setLessonForm(f => ({ ...f, recommendations: e.target.value }))} />
                           </div>
-                          <Button onClick={() => createLesson.mutate()} disabled={!lessonForm.key_takeaway.trim()} className="w-full">
-                            Speichern
-                          </Button>
+                          <Button onClick={() => createLesson.mutate()} disabled={!lessonForm.key_takeaway.trim()} className="w-full">Speichern</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
                   </TabsContent>
 
-                  {/* Apply Learning */}
-                  <TabsContent value="apply" className="space-y-3">
+                  {/* ── 6. Learning-to-Action ──────────────────────────── */}
+                  <TabsContent value="action" className="space-y-3">
                     <Card className="p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <ClipboardCheck className="w-4 h-4 text-primary" />
-                        <h4 className="text-sm font-semibold">Learning anwenden</h4>
+                        <Zap className="w-4 h-4 text-primary" />
+                        <h4 className="text-sm font-semibold">Learning → Aktion</h4>
                       </div>
                       <p className="text-xs text-muted-foreground mb-4">
-                        Verknüpfe die Erkenntnisse aus dieser Entscheidung mit einer neuen oder bestehenden Entscheidung, um Wiederholungsfehler zu vermeiden.
+                        Lessons müssen ins System zurückfließen. Verwandle Erkenntnisse in Templates, Regeln oder Checklisten.
                       </p>
                       {selectedLessons.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">Noch keine Lessons vorhanden. Erstelle zuerst ein Lesson Learned im „Lessons"-Tab.</p>
+                        <p className="text-xs text-muted-foreground italic">Noch keine Lessons vorhanden. Erstelle zuerst ein Lesson Learned.</p>
                       ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {selectedLessons.map(l => (
-                            <div key={l.id} className="p-3 rounded-lg bg-muted/30 border border-border">
-                              <p className="text-xs font-medium mb-1">{l.key_takeaway}</p>
+                            <div key={l.id} className="p-3 rounded-lg bg-muted/30 border border-border space-y-2">
+                              <p className="text-xs font-medium">{l.key_takeaway}</p>
                               {l.recommendations && (
                                 <p className="text-[11px] text-muted-foreground">
-                                  <ArrowRight className="w-3 h-3 inline mr-0.5 text-primary" />
-                                  {l.recommendations}
+                                  <ArrowRight className="w-3 h-3 inline mr-0.5 text-primary" />{l.recommendations}
                                 </p>
                               )}
+                              <div className="flex gap-2 flex-wrap">
+                                <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
+                                  onClick={() => { navigate("/automation"); toast.info("Erstelle eine Automation-Regel basierend auf diesem Learning"); }}>
+                                  <Zap className="w-3 h-3" /> Automation-Regel
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
+                                  onClick={() => { navigate("/templates"); toast.info("Übernimm dieses Learning als Template-Regel"); }}>
+                                  <FileText className="w-3 h-3" /> Template-Regel
+                                </Button>
+                                <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
+                                  onClick={() => {
+                                    const text = `• ${l.key_takeaway}${l.recommendations ? `\n  → ${l.recommendations}` : ""}`;
+                                    navigator.clipboard.writeText(text);
+                                    toast.success("In Zwischenablage kopiert");
+                                  }}>
+                                  <ClipboardCheck className="w-3 h-3" /> Kopieren
+                                </Button>
+                              </div>
                             </div>
                           ))}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full gap-1.5 mt-2"
-                            onClick={() => {
-                              const text = selectedLessons.map(l => `• ${l.key_takeaway}${l.recommendations ? `\n  → ${l.recommendations}` : ""}`).join("\n");
-                              navigator.clipboard.writeText(text);
-                              toast.success("Lessons in Zwischenablage kopiert – füge sie in eine neue Entscheidung ein");
-                            }}
-                          >
-                            <ClipboardCheck className="w-3.5 h-3.5" /> Lessons kopieren
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="w-full gap-1.5"
-                            onClick={() => navigate("/decisions")}
-                          >
+                          <Button size="sm" className="w-full gap-1.5" onClick={() => navigate("/decisions")}>
                             <Plus className="w-3.5 h-3.5" /> Neue Entscheidung mit Lessons erstellen
                           </Button>
                         </div>
@@ -806,7 +948,7 @@ const KnowledgeBase = () => {
                     </Card>
                   </TabsContent>
 
-                  {/* Tags */}
+                  {/* Tags Tab */}
                   <TabsContent value="tags">
                     <Card className="p-4">
                       <h4 className="text-sm font-medium mb-3">Tags verwalten</h4>
@@ -815,27 +957,20 @@ const KnowledgeBase = () => {
                           const link = decisionTags.find(dt => dt.decision_id === selectedDecision && dt.tag_id === tag.id);
                           const isLinked = !!link;
                           return (
-                            <button
-                              key={tag.id}
-                              onClick={() => toggleTag.mutate({ decisionId: selectedDecision!, tagId: tag.id, exists: isLinked, linkId: link?.id })}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                                isLinked ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/20 text-muted-foreground hover:bg-muted/40"
-                              }`}
-                            >
+                            <button key={tag.id} onClick={() => toggleTag.mutate({ decisionId: selectedDecision!, tagId: tag.id, exists: isLinked, linkId: link?.id })}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all border ${isLinked ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/20 text-muted-foreground hover:bg-muted/40"}`}>
                               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
                               {tag.name}
                               {isLinked && <X className="w-3 h-3" />}
                             </button>
                           );
                         })}
-                        {tags.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Erstelle oben in der Filterleiste neue Tags.</p>
-                        )}
+                        {tags.length === 0 && <p className="text-xs text-muted-foreground">Erstelle oben in der Filterleiste neue Tags.</p>}
                       </div>
                     </Card>
                   </TabsContent>
 
-                  {/* Similar - AI powered */}
+                  {/* ── 5. Similarity Engine ──────────────────────────── */}
                   <TabsContent value="similar" className="space-y-3">
                     {similarLoading && (
                       <Card className="p-6 text-center">
@@ -846,40 +981,31 @@ const KnowledgeBase = () => {
                     {similarError && (
                       <Card className="p-4 text-center">
                         <p className="text-sm text-destructive">{similarError}</p>
-                        <Button size="sm" variant="outline" className="mt-2" onClick={() => fetchSimilarity(selectedDecision!)}>
-                          Erneut versuchen
-                        </Button>
+                        <Button size="sm" variant="outline" className="mt-2" onClick={() => fetchSimilarity(selectedDecision!)}>Erneut versuchen</Button>
                       </Card>
                     )}
                     {!similarLoading && !similarError && similarDecisions.length === 0 && aiSimilarities.length === 0 && (
                       <Card className="p-6 text-center">
                         <Brain className="w-8 h-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Klicke auf diesen Tab um die KI-Ähnlichkeitsanalyse zu starten</p>
+                        <p className="text-sm text-muted-foreground">KI-Ähnlichkeitsanalyse starten</p>
                         <Button size="sm" variant="outline" className="mt-3" onClick={() => fetchSimilarity(selectedDecision!)}>
                           <Sparkles className="w-3.5 h-3.5 mr-1" /> Analyse starten
                         </Button>
                       </Card>
                     )}
                     {!similarLoading && similarDecisions.length === 0 && aiSimilarities.length > 0 && (
-                      <Card className="p-6 text-center text-muted-foreground text-sm">
-                        Keine ähnlichen Entscheidungen gefunden
-                      </Card>
+                      <Card className="p-6 text-center text-muted-foreground text-sm">Keine ähnlichen Entscheidungen gefunden</Card>
                     )}
                     {similarDecisions.map(({ decision: d, score, reason }) => {
                       const dLessons = lessonsMap.get(d.id) || [];
                       return (
-                        <Card
-                          key={d.id}
-                          className="p-3 cursor-pointer hover:bg-muted/30 transition-all"
-                          onClick={() => { setSelectedDecision(d.id); setAiSimilarities([]); }}
-                        >
+                        <Card key={d.id} className="p-3 cursor-pointer hover:bg-muted/30 transition-all"
+                          onClick={() => { setSelectedDecision(d.id); setAiSimilarities([]); }}>
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <h4 className="text-sm font-medium truncate">{d.title}</h4>
-                                <Badge variant="outline" className="text-[10px] shrink-0 font-bold tabular-nums">
-                                  {score}%
-                                </Badge>
+                                <Badge variant="outline" className="text-[10px] shrink-0 font-bold tabular-nums">{score}%</Badge>
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <Badge variant="outline" className="text-[10px]">{statusLabels[d.status] ?? d.status}</Badge>
