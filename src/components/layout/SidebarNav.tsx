@@ -225,6 +225,19 @@ const SidebarNav = memo(({
       )}
       {navGroupsDef.map((group) => {
         const groupLabel = t(`nav.${group.labelKey}`);
+        // Color coding per section
+        const groupAccent: Record<string, string> = {
+          core: "",
+          insights: "text-accent-teal/70",
+          governance: "text-accent-rose/70",
+          system: "text-muted-foreground/40",
+        };
+        const groupDot: Record<string, string> = {
+          core: "bg-foreground/20",
+          insights: "bg-accent-teal/50",
+          governance: "bg-accent-rose/50",
+          system: "bg-muted-foreground/30",
+        };
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
@@ -253,7 +266,7 @@ const SidebarNav = memo(({
           };
           return (
             <div key={group.labelKey}>
-              <p className="px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/40">
+              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
                 {groupLabel}
               </p>
               <button
@@ -282,10 +295,11 @@ const SidebarNav = memo(({
             {!collapsed && (
               <button
                 onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.labelKey) : undefined}
-                className={`w-full flex items-center px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/60 ${
+                className={`w-full flex items-center gap-1.5 px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/60"} ${
                   group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
                 }`}
               >
+                <span className={`w-1.5 h-1.5 rounded-full ${groupDot[group.labelKey] || "bg-muted-foreground/30"}`} />
                 <span className="flex-1 text-left">{groupLabel}</span>
                 {group.defaultCollapsed !== undefined && (
                   isGroupCollapsed && !hasActiveItem ? (

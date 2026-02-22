@@ -141,10 +141,10 @@ const PricingSection = () => {
         >
           <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Preise</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-            Flexible Preise für <span className="gradient-text">strukturierte Entscheidungen</span>
+            Investieren Sie in <span className="gradient-text">Entscheidungsqualität</span>
           </h2>
           <p className="text-muted-foreground leading-relaxed">
-            Von wachsenden Teams bis Enterprise-Governance — skalieren Sie Ihren Entscheidungsprozess mit Sicherheit.
+            Von ersten strukturierten Prozessen bis hin zu skalierbarer Enterprise-Governance — Ihre Entscheidungsqualität wächst mit.
           </p>
         </motion.div>
 

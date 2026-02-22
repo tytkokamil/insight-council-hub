@@ -34,6 +34,7 @@ const AnalyticsHub = () => {
           description={`Analytics werden ab ${MIN_DECISIONS_FOR_ANALYTICS} Entscheidungen aussagekräftig. Du hast aktuell ${decisions.length}.`}
           ctaLabel="Entscheidung erstellen"
           ctaRoute="/decisions"
+          motivation="Teams mit datengetriebener Entscheidungsanalyse verbessern ihre Zykluszeit um durchschnittlich 31% innerhalb von 3 Monaten."
           hint="Erstelle weitere Entscheidungen, um Trends und Muster zu erkennen."
           features={[
             { icon: TrendingUp, label: "Trends", desc: "Status-Verteilung und Velocity über Zeit" },

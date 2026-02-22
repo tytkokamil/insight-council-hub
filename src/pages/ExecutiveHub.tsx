@@ -40,6 +40,7 @@ const ExecutiveHub = () => {
           description={`Für aussagekräftige C-Level-Analysen brauchst du mindestens 15 Entscheidungen (aktuell ${decisions.length}) und 3 implementierte (aktuell ${implemented}).`}
           ctaLabel="Entscheidungen erstellen"
           ctaRoute="/decisions"
+          motivation="Unternehmen mit systematischer Entscheidungsanalyse treffen 40% bessere strategische Entscheidungen und reduzieren Fehlentscheidungen um 28%."
           hint="Treibe Entscheidungen bis zur Implementierung, um Prognosen und ROI-Daten zu erhalten."
           features={[
             { icon: Sun, label: "KI-Briefing", desc: "Tägliche Zusammenfassung für die Führungsebene" },

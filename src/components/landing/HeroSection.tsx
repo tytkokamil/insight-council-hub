@@ -37,7 +37,7 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
-              Decision Intelligence Platform
+              Decision Quality Platform
             </span>
           </motion.div>
 
@@ -78,7 +78,7 @@ const HeroSection = () => {
             transition={{ delay: 0.7, duration: 0.8, ease }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            Messen und verbessern Sie Ihre Entscheidungsqualität — mit Struktur, Governance und KI-gestützter Intelligenz. Schneller. Messbar. Nachvollziehbar.
+            Das System, das Ihre Entscheidungsqualität sichtbar und messbar macht — mit Struktur, Governance und KI. Decision Quality Index, Executive Briefings und automatische Eskalation in einer Plattform.
           </motion.p>
 
           {/* CTA */}
