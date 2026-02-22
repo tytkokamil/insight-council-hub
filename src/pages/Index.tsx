@@ -14,8 +14,8 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>DecisionOS — Structure every important decision in your company</title>
-        <meta name="description" content="DecisionOS gibt Ihrer Organisation Struktur, Governance und KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar." />
+        <title>Decivio — Structure every important decision in your company</title>
+        <meta name="description" content="Decivio gibt Ihrer Organisation Struktur, Governance und KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />

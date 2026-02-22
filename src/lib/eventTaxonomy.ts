@@ -1,5 +1,5 @@
 /**
- * Standardized Event Taxonomy for DecisionOS
+ * Standardized Event Taxonomy for Decivio
  * 
  * All audit_log actions, automation triggers, and notification events
  * MUST use these constants to ensure consistency across the platform.

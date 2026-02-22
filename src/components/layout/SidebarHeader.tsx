@@ -24,7 +24,7 @@ const SidebarHeader = memo(({
       </span>
       {!collapsed && (
         <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
-          DecisionOS
+          Decivio
         </span>
       )}
     </Link>

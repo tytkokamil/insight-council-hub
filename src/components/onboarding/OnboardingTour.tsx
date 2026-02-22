@@ -44,7 +44,7 @@ const steps: OnboardingStep[] = [
     id: "welcome",
     phase: "welcome",
     icon: Sparkles,
-    title: "Willkommen bei DecisionOS!",
+    title: "Willkommen bei Decivio!",
     subtitle: "Dein Entscheidungs-Cockpit",
     description:
       "In wenigen Schritten zeigen wir dir, wie du dein Team aufstellst, deine erste Entscheidung erstellst und den Review-Prozess nutzt.",

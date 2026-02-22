@@ -81,7 +81,7 @@ const ProblemSection = () => (
       >
         <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/20 bg-primary/[0.04]">
           <ArrowRight className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">DecisionOS löst genau das.</span>
+          <span className="text-sm font-medium text-primary">Decivio löst genau das.</span>
         </div>
       </motion.div>
     </div>

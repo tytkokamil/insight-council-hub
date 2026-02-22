@@ -31,7 +31,7 @@ export async function exportAllDataAsJSON() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `decisionos-export-${format(new Date(), "yyyy-MM-dd", { locale: de })}.json`;
+  a.download = `decivio-export-${format(new Date(), "yyyy-MM-dd", { locale: de })}.json`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

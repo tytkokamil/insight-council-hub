@@ -40,7 +40,7 @@ const Navbar = () => {
                 <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
                   <span className="text-white text-xs font-bold">D</span>
                 </div>
-                <span className="font-bold text-base tracking-tight">DecisionOS</span>
+                <span className="font-bold text-base tracking-tight">Decivio</span>
               </Link>
 
               <div className="hidden md:flex items-center gap-0.5">

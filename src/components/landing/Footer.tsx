@@ -9,7 +9,7 @@ const Footer = () => (
             <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
               <span className="text-white text-xs font-bold">D</span>
             </div>
-            <span className="font-bold tracking-tight">DecisionOS</span>
+            <span className="font-bold tracking-tight">Decivio</span>
           </Link>
           <p className="text-sm text-muted-foreground/70 leading-relaxed max-w-[220px]">
             Enterprise Decision Management für Teams, die Transparenz und Geschwindigkeit fordern.
@@ -38,7 +38,7 @@ const Footer = () => (
 
       <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/30">
         <p className="text-xs text-muted-foreground/50">
-          © 2026 DecisionOS. Alle Rechte vorbehalten.
+          © 2026 Decivio. Alle Rechte vorbehalten.
         </p>
         <div className="flex items-center gap-6 mt-4 md:mt-0">
           {[
