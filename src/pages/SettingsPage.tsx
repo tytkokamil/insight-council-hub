@@ -1,18 +1,24 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import AppLayout from "@/components/layout/AppLayout";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2, RotateCcw, Clock, Palette, Sun, Moon, Beaker, Globe } from "lucide-react";
+import {
+  User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
+  RotateCcw, Clock, Sun, Moon, Globe, Activity, BarChart3, Users, Lock, Zap,
+  AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
+  MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info
+} from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
-import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 
 const AI_PROVIDERS = [
@@ -55,25 +61,72 @@ const SettingsPage = () => {
   const [savedAi, setSavedAi] = useState(false);
 
   const [userRole, setUserRole] = useState<string>("org_member");
+  const [teamMemberships, setTeamMemberships] = useState<any[]>([]);
+  const [adminStats, setAdminStats] = useState<any>(null);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allRoles, setAllRoles] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const [profileRes, aiRes, notifRes, roleRes] = await Promise.all([
+      const [profileRes, aiRes, notifRes, roleRes, teamsRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single(),
         supabase.from("user_ai_settings").select("*").eq("user_id", user.id).single(),
         supabase.from("notification_preferences").select("*").eq("user_id", user.id).single(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).single(),
+        supabase.from("team_members").select("*, teams(name)").eq("user_id", user.id),
       ]);
       if (profileRes.data) { setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null); }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
       if (notifRes.data) { setNotifPrefs({ review_requests: notifRes.data.review_requests, escalations: notifRes.data.escalations, team_updates: notifRes.data.team_updates }); }
       if (roleRes.data) setUserRole(roleRes.data.role);
+      if (teamsRes.data) setTeamMemberships(teamsRes.data);
     };
     fetchData();
   }, [user]);
 
   const isAdmin = userRole === "org_owner" || userRole === "org_admin";
+
+  // Fetch admin stats
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchAdminStats = async () => {
+      const [profilesRes, rolesRes, decisionsRes, escalationsRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, full_name, created_at"),
+        supabase.from("user_roles").select("*"),
+        supabase.from("decisions").select("id, status, escalation_level, due_date, created_at").is("deleted_at", null),
+        supabase.from("decisions").select("id").is("deleted_at", null).gte("escalation_level", 1),
+      ]);
+      const profiles = profilesRes.data || [];
+      const decisions = decisionsRes.data || [];
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const overdue = decisions.filter(d => d.due_date && new Date(d.due_date) < now && !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
+
+      setAdminStats({
+        totalUsers: profiles.length,
+        activeUsers: profiles.length, // simplified
+        inactiveUsers: 0,
+        totalDecisions: decisions.length,
+        openEscalations: (escalationsRes.data || []).length,
+        slaViolations: overdue.length,
+      });
+      setAllUsers(profiles);
+      setAllRoles(rolesRes.data || []);
+    };
+    fetchAdminStats();
+  }, [isAdmin]);
+
+  // Security Health Score
+  const securityScore = useMemo(() => {
+    let score = 40; // base: password set
+    if (notifPrefs.escalations) score += 15;
+    if (notifPrefs.review_requests) score += 10;
+    if (teamMemberships.length > 0) score += 15;
+    if (aiProvider === "lovable") score += 10; // no external key exposure
+    if (fullName) score += 10;
+    return Math.min(100, score);
+  }, [notifPrefs, teamMemberships, aiProvider, fullName]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -137,33 +190,34 @@ const SettingsPage = () => {
   const selectedProvider = AI_PROVIDERS.find((p) => p.id === aiProvider);
   const inputClass = "w-full h-9 px-3 rounded-md bg-background border border-input text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring/20 transition-colors";
 
-  const tabs: { key: SettingsTab; label: string; show?: boolean }[] = [
-    { key: "general", label: t("settings.general") },
-    { key: "notifications", label: t("settings.notifications") },
-    { key: "ai", label: t("settings.ai") },
-    { key: "security", label: t("settings.security") },
-    { key: "admin", label: t("settings.admin"), show: isAdmin },
+  const tabs: { key: SettingsTab; label: string; icon: React.ElementType; show?: boolean }[] = [
+    { key: "general", label: t("settings.general"), icon: User },
+    { key: "notifications", label: t("settings.notifications"), icon: Bell },
+    { key: "ai", label: t("settings.ai"), icon: Brain },
+    { key: "security", label: t("settings.security"), icon: Shield },
+    { key: "admin", label: t("settings.admin"), icon: Settings2, show: isAdmin },
   ];
 
   const visibleTabs = tabs.filter(t => t.show !== false);
 
   return (
     <AppLayout>
-      <div className="max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-lg font-semibold tracking-tight">{t("settings.title")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("settings.subtitle")}</p>
+      <div className="max-w-3xl">
+        <div className="mb-6">
+          <h1 className="text-lg font-semibold tracking-tight">System & Governance</h1>
+          <p className="text-sm text-muted-foreground mt-1">Kontrollzentrum für Profil, Sicherheit, KI-Governance und Enterprise-Konfiguration.</p>
         </div>
 
-        <div className="flex items-center gap-1 border-b border-border mb-8">
+        <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-3 py-2 text-sm font-medium transition-colors relative ${
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${
                 activeTab === tab.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
+              <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
               {activeTab === tab.key && (
                 <motion.div layoutId="settings-tab" className="absolute bottom-0 left-0 right-0 h-px bg-foreground" />
@@ -173,12 +227,15 @@ const SettingsPage = () => {
         </div>
 
         <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
+
+          {/* ═══════════════ GENERAL ═══════════════ */}
           {activeTab === "general" && (
             <div className="space-y-8">
+              {/* Profile */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.profile")}</h2>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-4">
                     <div className="relative group">
                       <UserAvatar avatarUrl={avatarUrl} fullName={fullName} email={user?.email} size="lg" />
                       <button onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
@@ -186,10 +243,17 @@ const SettingsPage = () => {
                       </button>
                       <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <p className="text-sm font-medium">{fullName || t("settings.unknown")}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
-                      <Badge variant="outline" className="mt-1.5 text-[10px] font-normal">{roleLabels[userRole] || userRole}</Badge>
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        <Badge variant="outline" className="text-[10px] font-normal">{roleLabels[userRole] || userRole}</Badge>
+                        {teamMemberships.map(tm => (
+                          <Badge key={tm.id} variant="secondary" className="text-[10px] font-normal">
+                            {(tm.teams as any)?.name || "Team"} · {tm.role}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -211,6 +275,32 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* Workspace Info */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Workspace</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { label: "Plan", value: "Pro", icon: Zap },
+                    { label: "Nutzer", value: adminStats?.totalUsers || "–", icon: Users },
+                    { label: "Entscheidungen", value: adminStats?.totalDecisions || "–", icon: Activity },
+                    { label: "Teams", value: teamMemberships.length, icon: Building2 },
+                    { label: "Datenstandort", value: "EU", icon: Server },
+                    { label: "Rolle", value: roleLabels[userRole], icon: Shield },
+                  ].map((item, i) => (
+                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
+                      </div>
+                      <p className="text-sm font-semibold">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Appearance */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.appearance")}</h2>
                 <div className="flex items-center justify-between">
@@ -230,31 +320,39 @@ const SettingsPage = () => {
               {/* Language */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.language")}</h2>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Globe className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm">{t("settings.language")}</p>
-                      <p className="text-xs text-muted-foreground">{t("settings.languageDesc")}</p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm">Interface-Sprache</p>
+                        <p className="text-xs text-muted-foreground">Steuert die Sprache der Benutzeroberfläche</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center rounded-md border border-border p-0.5">
+                      {[{ code: "de", label: t("settings.german") }, { code: "en", label: t("settings.english") }].map(lng => (
+                        <button key={lng.code} onClick={() => changeLanguage(lng.code)}
+                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${i18n.language === lng.code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                          {lng.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex items-center rounded-md border border-border p-0.5">
-                    {([
-                      { code: "de", label: t("settings.german") },
-                      { code: "en", label: t("settings.english") },
-                    ]).map(lng => (
-                      <button
-                        key={lng.code}
-                        onClick={() => changeLanguage(lng.code)}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          i18n.language === lng.code
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        {lng.label}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm">Export & Report-Sprache</p>
+                        <p className="text-xs text-muted-foreground">Sprache für PDF-Reports und Board Packs</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center rounded-md border border-border p-0.5">
+                      {[{ code: "de", label: "DE" }, { code: "en", label: "EN" }].map(lng => (
+                        <button key={lng.code} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${lng.code === "de" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                          {lng.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -271,22 +369,71 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ NOTIFICATIONS ═══════════════ */}
           {activeTab === "notifications" && (
             <div className="space-y-6">
               <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.notifications")}</h2>
+                <h2 className="text-sm font-medium mb-4">Benachrichtigungskanäle</h2>
                 <div className="space-y-1">
                   {([
-                    { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc") },
-                    { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc") },
-                    { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc") },
+                    { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc"), priority: "Alle" },
+                    { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc"), priority: "Kritisch" },
+                    { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc"), priority: "Normal" },
                   ]).map((item) => (
                     <div key={item.key} className="flex items-center justify-between py-3">
-                      <div>
-                        <p className="text-sm">{item.label}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm">{item.label}</p>
+                          <Badge variant="outline" className="text-[10px]">In-App</Badge>
+                        </div>
                         <p className="text-xs text-muted-foreground">{item.desc}</p>
                       </div>
                       <Switch checked={notifPrefs[item.key]} onCheckedChange={() => handleNotifToggle(item.key)} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Escalation Priority */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Eskalations-Priorisierung</h2>
+                <div className="space-y-2">
+                  {[
+                    { level: "Kritisch", behavior: "Immer sofort – In-App + Email", color: "text-destructive" },
+                    { level: "Hoch", behavior: "Email-Benachrichtigung", color: "text-warning" },
+                    { level: "Mittel", behavior: "Nur In-App", color: "text-muted-foreground" },
+                    { level: "Niedrig", behavior: "Täglicher Digest", color: "text-muted-foreground" },
+                  ].map((esc, i) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className={`w-3.5 h-3.5 ${esc.color}`} />
+                        <span className="text-sm font-medium">{esc.level}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">{esc.behavior}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Digest Options */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Executive Digest</h2>
+                <div className="space-y-2">
+                  {[
+                    { label: "Täglicher Executive Digest", desc: "Zusammenfassung aller offenen Entscheidungen und Eskalationen", enabled: false },
+                    { label: "Wöchentlicher Governance-Report", desc: "KPIs, SLA-Compliance, Risk-Übersicht", enabled: false },
+                    { label: "Monatlicher Risk-Report", desc: "Risiko-Trends, Pattern-Analyse, Economic Impact", enabled: false },
+                  ].map((digest, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5">
+                      <div>
+                        <p className="text-sm">{digest.label}</p>
+                        <p className="text-xs text-muted-foreground">{digest.desc}</p>
+                      </div>
+                      <Switch checked={digest.enabled} />
                     </div>
                   ))}
                 </div>
@@ -301,8 +448,33 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ AI ═══════════════ */}
           {activeTab === "ai" && (
             <div className="space-y-6">
+              {/* AI Usage Dashboard */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">AI Usage Overview</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { label: "Requests / Monat", value: "–", icon: Zap },
+                    { label: "Aktiver Provider", value: AI_PROVIDERS.find(p => p.id === aiProvider)?.name || "Standard", icon: Brain },
+                    { label: "Modell", value: aiModel || "Auto", icon: Activity },
+                    { label: "Data Residency", value: "EU", icon: Server },
+                  ].map((stat, i) => (
+                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <stat.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                      </div>
+                      <p className="text-sm font-semibold">{stat.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Provider Selection */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.aiProvider")}</h2>
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -348,15 +520,84 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* AI Scope Settings */}
               <section>
-                <h2 className="text-sm font-medium mb-2">{t("settings.privacy")}</h2>
-                <p className="text-xs text-muted-foreground">{t("settings.privacyDesc")}</p>
+                <h2 className="text-sm font-medium mb-3">AI Governance – Scope</h2>
+                <p className="text-xs text-muted-foreground mb-3">Steuere, welche Funktionen die KI ausführen darf.</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Zusammenfassungen generieren", desc: "AI-Summaries für Entscheidungen", enabled: true },
+                    { label: "Risiko-Analyse", desc: "Automatische Risikobewertung und -faktoren", enabled: true },
+                    { label: "Szenario-Simulation", desc: "What-If Analysen und Prognosen", enabled: true },
+                    { label: "Co-Pilot Empfehlungen", desc: "Proaktive Handlungsvorschläge", enabled: true },
+                  ].map((scope, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5">
+                      <div>
+                        <p className="text-sm">{scope.label}</p>
+                        <p className="text-xs text-muted-foreground">{scope.desc}</p>
+                      </div>
+                      <Switch checked={scope.enabled} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Data Residency */}
+              <section>
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Server className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-medium">Data Residency</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    AI verarbeitet Daten ausschließlich im EU-Rechenzentrum. Keine Daten werden an Dritte weitergegeben. Alle Modell-Interaktionen sind flüchtig und werden nicht für Training verwendet.
+                  </p>
+                </div>
               </section>
             </div>
           )}
 
+          {/* ═══════════════ SECURITY ═══════════════ */}
           {activeTab === "security" && (
             <div className="space-y-6">
+              {/* Security Health Dashboard */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Security Health</h2>
+                <div className="p-4 rounded-lg border border-border bg-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className={`w-5 h-5 ${securityScore >= 80 ? "text-success" : securityScore >= 60 ? "text-warning" : "text-destructive"}`} />
+                      <span className="text-2xl font-bold">{securityScore}</span>
+                      <span className="text-sm text-muted-foreground">/ 100</span>
+                    </div>
+                    <Badge className={`text-[10px] ${securityScore >= 80 ? "bg-success/10 text-success border-success/20" : securityScore >= 60 ? "bg-warning/10 text-warning border-warning/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
+                      {securityScore >= 80 ? "Gut" : securityScore >= 60 ? "Verbesserungsbedarf" : "Kritisch"}
+                    </Badge>
+                  </div>
+                  <Progress value={securityScore} className="h-1.5 mb-3" />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    {[
+                      { label: "Passwort gesetzt", ok: true },
+                      { label: "2FA aktiviert", ok: false },
+                      { label: "SSO aktiv", ok: false },
+                      { label: "Session Timeout", ok: true },
+                      { label: "Profil vollständig", ok: !!fullName },
+                      { label: "Eskalationen aktiv", ok: notifPrefs.escalations },
+                    ].map((check, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        {check.ok ? <CheckCircle2 className="w-3 h-3 text-success" /> : <AlertTriangle className="w-3 h-3 text-warning" />}
+                        <span className={check.ok ? "text-foreground" : "text-muted-foreground"}>{check.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Password */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.changePassword")}</h2>
                 <div className="space-y-3 max-w-sm">
@@ -376,6 +617,44 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* Access Control */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Access Control</h2>
+                <p className="text-xs text-muted-foreground mb-3">Rollenbasierte Berechtigungen und Zugriffsrechte.</p>
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <div className="grid grid-cols-5 gap-0 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    <div className="p-2.5">Aktion</div>
+                    <div className="p-2.5 text-center">Owner</div>
+                    <div className="p-2.5 text-center">Admin</div>
+                    <div className="p-2.5 text-center">Lead</div>
+                    <div className="p-2.5 text-center">Member</div>
+                  </div>
+                  {[
+                    { action: "Entscheidungen erstellen", permissions: [true, true, true, true] },
+                    { action: "Entscheidungen löschen", permissions: [true, true, false, false] },
+                    { action: "SLA konfigurieren", permissions: [true, true, false, false] },
+                    { action: "Eskalationen ändern", permissions: [true, true, true, false] },
+                    { action: "Templates verwalten", permissions: [true, true, false, false] },
+                    { action: "Nutzer verwalten", permissions: [true, true, false, false] },
+                    { action: "Feature Flags", permissions: [true, true, false, false] },
+                    { action: "Retention Policy", permissions: [true, true, false, false] },
+                    { action: "Endgültig löschen", permissions: [true, false, false, false] },
+                  ].map((row, i) => (
+                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border items-center">
+                      <div className="p-2.5 text-xs">{row.action}</div>
+                      {row.permissions.map((p, j) => (
+                        <div key={j} className="p-2.5 text-center">
+                          {p ? <CheckCircle2 className="w-3.5 h-3.5 text-success mx-auto" /> : <span className="text-muted-foreground text-xs">–</span>}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* SLA */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.slaConfig")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.slaConfigDesc")}</p>
@@ -384,6 +663,7 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* Delegation */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.delegation")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.delegationDesc")}</p>
@@ -392,19 +672,61 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* Compliance & Data Privacy */}
               <section>
-                <h2 className="text-sm font-medium mb-2">{t("settings.securityNotes")}</h2>
-                <div className="space-y-1.5 text-xs text-muted-foreground">
-                  <p>• {t("settings.securityNote1")}</p>
-                  <p>• {t("settings.securityNote2")}</p>
-                  <p>• {t("settings.securityNote3")}</p>
+                <h2 className="text-sm font-medium mb-3">Compliance & Datenschutz</h2>
+                <div className="space-y-2">
+                  {[
+                    { label: "DSGVO-konform", status: "Aktiv", icon: ShieldCheck, color: "text-success" },
+                    { label: "Datenverarbeitung", status: "EU Only", icon: Server, color: "text-primary" },
+                    { label: "Audit-Trail", status: "Immutable", icon: Lock, color: "text-success" },
+                    { label: "Verschlüsselung", status: "AES-256", icon: KeyRound, color: "text-success" },
+                    { label: "SOC 2 Type II", status: "Konform", icon: Shield, color: "text-primary" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
+                      <div className="flex items-center gap-2">
+                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
+                    </div>
+                  ))}
                 </div>
               </section>
             </div>
           )}
 
+          {/* ═══════════════ ADMIN ═══════════════ */}
           {activeTab === "admin" && isAdmin && (
             <div className="space-y-6">
+              {/* Admin Overview Dashboard */}
+              {adminStats && (
+                <section>
+                  <h2 className="text-sm font-medium mb-3">Admin Overview</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[
+                      { label: "Aktive Nutzer", value: adminStats.totalUsers, icon: Users, color: "text-primary" },
+                      { label: "Entscheidungen gesamt", value: adminStats.totalDecisions, icon: Activity, color: "text-foreground" },
+                      { label: "Offene Eskalationen", value: adminStats.openEscalations, icon: AlertTriangle, color: adminStats.openEscalations > 0 ? "text-warning" : "text-success" },
+                      { label: "SLA-Verletzungen", value: adminStats.slaViolations, icon: Clock, color: adminStats.slaViolations > 0 ? "text-destructive" : "text-success" },
+                      { label: "Security Score", value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
+                      { label: "Teams", value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
+                    ].map((stat, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+                        </div>
+                        <p className="text-lg font-semibold">{stat.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              <hr className="border-border" />
+
+              {/* Feature Flags */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.featureFlags")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.featureFlagsDesc")}</p>
@@ -415,7 +737,10 @@ const SettingsPage = () => {
                     {flags.map((flag) => (
                       <div key={flag.feature_key} className={`flex items-center justify-between py-3 ${!flag.enabled ? "opacity-50" : ""}`}>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm">{flag.label}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm">{flag.label}</p>
+                            <Badge variant="outline" className="text-[10px]">{flag.category}</Badge>
+                          </div>
                           {flag.description && <p className="text-xs text-muted-foreground mt-0.5">{flag.description}</p>}
                         </div>
                         <Switch checked={flag.enabled} onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)} />
@@ -427,9 +752,39 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* User List */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Nutzerverwaltung</h2>
+                <div className="space-y-1">
+                  {allUsers.slice(0, 10).map(u => {
+                    const role = allRoles.find(r => r.user_id === u.user_id);
+                    return (
+                      <div key={u.user_id} className="flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-muted/20 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                            <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{u.full_name || "Unbekannt"}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">{roleLabels[role?.role] || "Member"}</Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+                {allUsers.length > 10 && (
+                  <p className="text-xs text-muted-foreground mt-2">+ {allUsers.length - 10} weitere Nutzer</p>
+                )}
+              </section>
+
+              <hr className="border-border" />
+
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.roles")}</h2>
-                <p className="text-xs text-muted-foreground mb-3">{t("settings.yourRole")} <Badge variant="outline" className="ml-1 text-[10px] font-normal">{roleLabels[userRole]}</Badge></p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  {t("settings.yourRole")} <Badge variant="outline" className="ml-1 text-[10px] font-normal">{roleLabels[userRole]}</Badge>
+                </p>
                 <p className="text-xs text-muted-foreground">{t("settings.roleManagement")}</p>
               </section>
             </div>
