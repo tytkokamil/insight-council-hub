@@ -33,7 +33,7 @@ import {
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 
-type TimeRange = 7 | 30 | 90;
+
 
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
@@ -49,7 +49,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { mode, setMode, shouldShowAdvanced, decisionCount, implementedCount } = useGuidedMode();
 
-  const [timeRange, setTimeRange] = useState<TimeRange>(30);
+  
   const [dismissedAdvancedHint, setDismissedAdvancedHint] = useState(() => localStorage.getItem("advanced-hint-dismissed") === "true");
   const [seedingDemo, setSeedingDemo] = useState(false);
 
@@ -243,16 +243,6 @@ const Dashboard = () => {
         title={dashboardTitle}
         subtitle={t("dashboard.whatNeedsAttention")}
         role="execution"
-        secondaryActions={
-          <div className="flex items-center rounded-md border border-border p-0.5">
-            {([7, 30, 90] as const).map(r => (
-              <button key={r} onClick={() => setTimeRange(r)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${timeRange === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                {r}d
-              </button>
-            ))}
-          </div>
-        }
         primaryAction={
           <Button onClick={() => navigate("/decisions")} size="sm" className="gap-1.5">
             <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
