@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import decivioLogo from "@/assets/decivio-logo.png";
 
 const navItems = [
   { label: "Vorteile", href: "#features" },
@@ -37,9 +38,7 @@ const Navbar = () => {
           <div className="container mx-auto px-6">
             <div className="flex items-center justify-between h-14">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">D</span>
-                </div>
+                <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-md" />
                 <span className="font-bold text-base tracking-tight">Decivio</span>
               </Link>
 

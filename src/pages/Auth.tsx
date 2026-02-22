@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, AlertCircle, LayoutDashboard, Shield, Zap } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, Shield, Zap } from "lucide-react";
+import decivioLogo from "@/assets/decivio-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,8 +73,8 @@ const Auth = () => {
 
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-[420px] relative z-10">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent-violet/20 border border-primary/20 flex items-center justify-center mx-auto mb-4">
-            <LayoutDashboard className="w-6 h-6 text-primary" />
+          <div className="w-12 h-12 rounded-xl overflow-hidden mx-auto mb-4">
+            <img src={decivioLogo} alt="Decivio" className="w-full h-full" />
           </div>
           <h1 className="font-display text-2xl font-bold">Decivio</h1>
           <p className="text-sm text-muted-foreground mt-1">

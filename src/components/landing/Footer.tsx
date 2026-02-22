@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import decivioLogo from "@/assets/decivio-logo.png";
 
 const Footer = () => (
   <footer className="border-t border-border py-16">
@@ -6,9 +7,7 @@ const Footer = () => (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-16">
         <div className="col-span-2 md:col-span-1">
           <Link to="/" className="flex items-center gap-2 mb-4 group">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-primary to-accent-violet flex items-center justify-center">
-              <span className="text-white text-xs font-bold">D</span>
-            </div>
+            <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-md" />
             <span className="font-bold tracking-tight">Decivio</span>
           </Link>
           <p className="text-sm text-muted-foreground/70 leading-relaxed max-w-[220px]">

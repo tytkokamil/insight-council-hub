@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
+import decivioLogo from "@/assets/decivio-logo.png";
 
 interface SidebarHeaderProps {
   collapsed: boolean;
@@ -18,12 +19,10 @@ const SidebarHeader = memo(({
   onNavigate,
 }: SidebarHeaderProps) => (
   <div className="flex items-center justify-between px-3 h-12 border-b border-border/40">
-    <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden" onClick={onNavigate}>
-      <span className="w-6 h-6 rounded bg-primary/15 flex items-center justify-center shrink-0 text-[11px] font-bold text-primary">
-        D
-      </span>
-      {!collapsed && (
-        <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
+      <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden" onClick={onNavigate}>
+        <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded shrink-0" />
+        {!collapsed && (
+          <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
           Decivio
         </span>
       )}
