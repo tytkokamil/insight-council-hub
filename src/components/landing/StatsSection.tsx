@@ -2,10 +2,10 @@ import { motion, animate } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 const metrics = [
-  { value: 73, suffix: "%", label: "Schnellere Entscheidungen", description: "durchschnittliche Verbesserung", accent: "from-accent-blue/10 to-transparent border-accent-blue/15" },
-  { value: 94, suffix: "%", label: "Umsetzungsrate", description: "bei strukturierten Decisions", accent: "from-accent-teal/10 to-transparent border-accent-teal/15" },
-  { value: 2.5, suffix: "x", label: "Bessere Outcomes", description: "gegenüber klassischen Tools", accent: "from-accent-violet/10 to-transparent border-accent-violet/15" },
-  { value: 500, suffix: "+", label: "Enterprise-Teams", description: "vertrauen auf DecisionOS", accent: "from-accent-amber/10 to-transparent border-accent-amber/15" },
+  { value: 32, suffix: "%", label: "Schnellere Entscheidungen", description: "durchschnittliche Zeitersparnis", accent: "from-accent-blue/10 to-transparent border-accent-blue/15" },
+  { value: 18, suffix: "%", label: "Weniger Eskalationen", description: "durch proaktive Governance", accent: "from-accent-teal/10 to-transparent border-accent-teal/15" },
+  { value: 24, suffix: "%", label: "Bessere Outcomes", description: "vorhersagbare Ergebnisse", accent: "from-accent-violet/10 to-transparent border-accent-violet/15" },
+  { value: 43, suffix: "%", label: "Kosteneinsparung", description: "bei Verzögerungskosten", accent: "from-accent-amber/10 to-transparent border-accent-amber/15" },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;

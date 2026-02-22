@@ -22,7 +22,7 @@ const plans = [
       "Tasks + Kanban",
       "Kalender-Ansicht",
       "Knowledge Base (nur Lesen)",
-      "Bis zu 30 Entscheidungen",
+      "Bis zu 5 aktive Entscheidungen",
     ],
     cta: "Kostenlos starten",
     ctaLink: "/auth",
@@ -32,7 +32,7 @@ const plans = [
   },
   {
     name: "Pro",
-    monthlyPrice: 39,
+    monthlyPrice: 49,
     description: "Für Teams, die Geschwindigkeit, Governance und KI-Insights wollen.",
     bestFor: "Wachsende Teams, die messbare Entscheidungsqualität wollen.",
     features: [
@@ -60,7 +60,7 @@ const plans = [
   },
   {
     name: "Business",
-    monthlyPrice: 69,
+    monthlyPrice: 99,
     description: "Für Unternehmen, die Governance über Abteilungen skalieren.",
     bestFor: "Organisationen, die Governance und strategisches Alignment formalisieren.",
     features: [
