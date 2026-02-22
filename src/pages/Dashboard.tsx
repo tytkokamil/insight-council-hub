@@ -13,7 +13,8 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
-import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies } from "@/hooks/useDecisions";
+import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies, useDependencies } from "@/hooks/useDecisions";
+import { useRisks } from "@/hooks/useRisks";
 import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,8 @@ import {
 
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
+import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
+import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview";
 
 
 
@@ -44,6 +47,8 @@ const Dashboard = () => {
   const { data: teams = [] } = useTeams();
   const { data: reviews = [] } = useReviews();
   const { data: dependencies = [] } = useFilteredDependencies();
+  const { data: allDependencies = [] } = useDependencies();
+  const { data: riskData = [] } = useRisks();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
@@ -347,6 +352,16 @@ const Dashboard = () => {
             <p className="text-sm font-medium text-success">{t("dashboard.allGood")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noActions")}</p>
           </motion.div>
+        )}
+
+        {/* ═══ 2b. STUCK DECISION ANALYZER ═══ */}
+        {!isLoading && (
+          <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} />
+        )}
+
+        {/* ═══ 2c. PORTFOLIO RISK OVERVIEW ═══ */}
+        {!isLoading && (
+          <PortfolioRiskOverview decisions={decisions} risks={riskData} />
         )}
 
         {/* ═══ 3. PERFORMANCE TRENDS (1-2 Charts) ═══ */}

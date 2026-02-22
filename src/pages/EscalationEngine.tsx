@@ -371,24 +371,45 @@ const EscalationEngine = () => {
   );
 };
 
-/* ── War Room: Top 5 Critical Decisions + Systemic Risks ── */
+/* ── War Room: Top 5 Critical Decisions + Systemic Risks + Cost of Delay ── */
 function CriticalDecisionsTab({ decisions, allDeps, escalationNotifications }: { decisions: any[]; allDeps: any[]; escalationNotifications: any[] }) {
   const now = new Date();
   const open = decisions.filter(d => !["implemented", "rejected", "cancelled", "superseded", "archived"].includes(d.status));
   const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+  const priorityMultiplier: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+  const BASE_HOURLY_RATE = 85;
+  const PERSONS_PER_DECISION = 3;
+  const HOURS_PER_DAY = 2;
 
   const scored = open.map(d => {
     const daysOpen = differenceInDays(now, new Date(d.created_at));
     const overdue = d.due_date ? new Date(d.due_date) < now : false;
+    const daysOverdue = overdue && d.due_date ? differenceInDays(now, new Date(d.due_date)) : 0;
     const riskWeight = (d.ai_risk_score || 0) / 20;
+
+    // Dependency cascade count
+    const dependentCount = allDeps.filter(dep =>
+      dep.source_decision_id === d.id || dep.target_decision_id === d.id
+    ).length;
+
+    // Cost of Delay
+    const costOfDelay = overdue
+      ? daysOverdue * PERSONS_PER_DECISION * HOURS_PER_DAY * BASE_HOURLY_RATE * (priorityMultiplier[d.priority] || 1)
+      : 0;
+
     const urgencyScore =
       (priorityWeight[d.priority] || 1) * 25 +
       (overdue ? 30 : 0) +
       Math.min(daysOpen, 30) * 1.5 +
       riskWeight * 10 +
-      (d.escalation_level || 0) * 15;
-    return { ...d, daysOpen, overdue, urgencyScore };
+      (d.escalation_level || 0) * 15 +
+      dependentCount * 5;
+
+    return { ...d, daysOpen, overdue, daysOverdue, urgencyScore, costOfDelay, dependentCount };
   }).sort((a, b) => b.urgencyScore - a.urgencyScore).slice(0, 5);
+
+  // Total Cost of Delay
+  const totalCostOfDelay = scored.reduce((sum, d) => sum + d.costOfDelay, 0);
 
   // Systemic risks
   const risks: { severity: string; title: string; detail: string; metric: string }[] = [];
@@ -405,30 +426,46 @@ function CriticalDecisionsTab({ decisions, allDeps, escalationNotifications }: {
   const priorityBadge = (p: string) =>
     p === "critical" ? "bg-destructive/20 text-destructive" : p === "high" ? "bg-warning/20 text-warning" : p === "medium" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground";
 
+  const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k €` : `${cost} €`;
+
   return (
     <div className="grid lg:grid-cols-5 gap-6">
       <div className="lg:col-span-3 space-y-3">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
-          <Flame className="w-4 h-4 text-destructive" /> Top 5 Kritische Entscheidungen
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Flame className="w-4 h-4 text-destructive" /> Top 5 Kritische Entscheidungen
+          </h2>
+          {totalCostOfDelay > 0 && (
+            <span className="text-xs font-semibold text-destructive flex items-center gap-1">
+              <Target className="w-3.5 h-3.5" />
+              Verzögerungskosten: {formatCost(totalCostOfDelay)}
+            </span>
+          )}
+        </div>
         <div className="space-y-2">
           {scored.map((d, i) => (
             <Link key={d.id} to={`/decisions/${d.id}`} className="block">
               <div className={`p-4 rounded-lg border hover:bg-muted/30 transition-colors ${d.overdue ? "border-destructive/50 bg-destructive/5" : "border-border bg-muted/20"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge(d.priority)}`}>
                         {d.priority === "critical" ? "Kritisch" : d.priority === "high" ? "Hoch" : d.priority === "medium" ? "Mittel" : "Niedrig"}
                       </span>
                       {d.overdue && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">ÜBERFÄLLIG</span>}
+                      {d.costOfDelay > 0 && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/10 text-destructive font-mono">
+                          {formatCost(d.costOfDelay)} Delay
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm font-medium truncate">{d.title}</p>
                     <div className="flex items-center gap-4 mt-1.5 text-[10px] text-muted-foreground">
                       <span>{d.daysOpen}d offen</span>
                       {d.ai_risk_score != null && <span>Risiko: {d.ai_risk_score}%</span>}
                       {(d.escalation_level || 0) > 0 && <span className="text-destructive">Lv.{d.escalation_level}</span>}
+                      {d.dependentCount > 0 && <span className="flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3" />{d.dependentCount} Abhängigkeiten</span>}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -464,5 +501,4 @@ function CriticalDecisionsTab({ decisions, allDeps, escalationNotifications }: {
     </div>
   );
 }
-
 export default EscalationEngine;
