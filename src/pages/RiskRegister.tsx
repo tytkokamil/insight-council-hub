@@ -164,8 +164,8 @@ const RiskRegister = () => {
           role="governance"
           help={{ title: "Risk Register", description: "Erfasse Risiken, bewerte ihre Eintrittswahrscheinlichkeit und Auswirkung, und verknüpfe sie mit Entscheidungen und Aufgaben." }}
           primaryAction={
-            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }}>
-              <Plus className="w-4 h-4 mr-1" /> Neues Risiko
+            <Button size="sm" onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-1.5">
+              <Plus className="w-4 h-4" /> Neues Risiko
             </Button>
           }
         />

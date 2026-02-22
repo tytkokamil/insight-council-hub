@@ -191,7 +191,7 @@ const Decisions = () => {
             {decisions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2"><Download className="w-4 h-4" /> {t("common.export")}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => { exportCSV(prepareExport()); toast.success(t("decisions.csvExported")); }} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
@@ -199,11 +199,11 @@ const Decisions = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-2"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
           </>
         }
         primaryAction={
-          <Button onClick={() => setShowNewDialog(true)} className="gap-2"><Plus className="w-4 h-4" /> {t("decisions.new")}</Button>
+          <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.new")}</Button>
         }
       />
 
