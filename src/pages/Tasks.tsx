@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
@@ -106,6 +107,7 @@ const emptyForm = {
 };
 
 const Tasks = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const { data: tasks = [], isLoading } = useTasks();
@@ -435,8 +437,8 @@ const Tasks = () => {
                               <StatusIcon className="w-4 h-4" />
                             </button>
                           </td>
-                          <td className="p-3">
-                            <p className={`text-sm font-medium ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                          <td className="p-3 cursor-pointer" onClick={() => navigate(`/tasks/${task.id}`)}>
+                            <p className={`text-sm font-medium hover:text-primary transition-colors ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
                             {task.description && <p className="text-xs text-muted-foreground truncate max-w-[300px]">{task.description}</p>}
                           </td>
                           <td className="p-3">
@@ -467,6 +469,9 @@ const Tasks = () => {
                                 <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => navigate(`/tasks/${task.id}`)} className="gap-2">
+                                  <Eye className="w-3.5 h-3.5" /> Details
+                                </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => openEdit(task)} className="gap-2">
                                   <Pencil className="w-3.5 h-3.5" /> Bearbeiten
                                 </DropdownMenuItem>
