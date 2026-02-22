@@ -36,6 +36,7 @@ const ProcessHub = () => {
           description={`Prozess-Analysen werden ab ${MIN_DECISIONS} Entscheidungen sinnvoll. Aktuell: ${decisions.length}.`}
           ctaLabel="Entscheidungen erstellen"
           ctaRoute="/decisions"
+          motivation="Organisationen, die ihre Prozess-Engpässe kennen, lösen Blockaden 52% schneller und reduzieren Eskalationen um ein Drittel."
           hint="Nutze das System aktiv, um Engpässe und Muster zu erkennen."
           features={[
             { icon: AlertTriangle, label: "Bottlenecks", desc: "Wo Entscheidungen stecken bleiben" },

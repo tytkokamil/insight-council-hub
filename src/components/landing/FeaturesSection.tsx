@@ -249,13 +249,13 @@ const FeaturesSection = () => {
           transition={{ duration: 0.7, ease }}
           className="text-center max-w-3xl mx-auto mb-12"
         >
-          <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Power Features</p>
+          <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Decision Quality Engine</p>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
             Nicht nur Tracking —{" "}
-            <span className="text-foreground">echte Entscheidungs-Intelligenz</span>
+            <span className="text-foreground">messbare Entscheidungsqualität</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Von KI-gestützter Analyse bis zur automatischen Eskalation — alles was Enterprise-Teams brauchen.
+            Jedes Feature zahlt auf ein Ziel ein: Ihre Entscheidungsqualität sichtbar machen und systematisch verbessern.
           </p>
         </motion.div>
 
