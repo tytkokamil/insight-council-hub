@@ -103,7 +103,7 @@ const plans = [
       "Security & Compliance Review",
     ],
     cta: "Sales kontaktieren",
-    ctaLink: "mailto:sales@decisionos.com",
+    ctaLink: "mailto:sales@decivio.com",
     highlighted: false,
     checkColor: "text-accent-rose",
     borderColor: "border-accent-rose/20",

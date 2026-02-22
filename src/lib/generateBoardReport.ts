@@ -79,7 +79,7 @@ export function generateBoardReport(data: BoardReportData) {
   doc.text("Board Report", 14, 16);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("DecisionOS — Entscheidungsbericht für den Vorstand", 14, 23);
+  doc.text("Decivio — Entscheidungsbericht für den Vorstand", 14, 23);
   doc.setFontSize(8);
   doc.text(`Erstellt: ${now}`, 14, 30);
   doc.text(`${decisions.length} Entscheidungen`, pageWidth - 14, 30, { align: "right" });
@@ -375,7 +375,7 @@ export function generateBoardReport(data: BoardReportData) {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(150, 150, 150);
     const pageH = doc.internal.pageSize.getHeight();
-    doc.text("DecisionOS — Vertraulich", 14, pageH - 8);
+    doc.text("Decivio — Vertraulich", 14, pageH - 8);
     doc.text(`Seite ${i} von ${pageCount}`, pageWidth - 14, pageH - 8, { align: "right" });
     doc.line(14, pageH - 12, pageWidth - 14, pageH - 12);
   }

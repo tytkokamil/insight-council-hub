@@ -5,7 +5,7 @@ interface TeamContextType {
   setSelectedTeamId: (id: string | null) => void;
 }
 
-const STORAGE_KEY = "decisionos_team_id";
+const STORAGE_KEY = "decivio_team_id";
 
 const TeamContext = createContext<TeamContextType>({
   selectedTeamId: null,

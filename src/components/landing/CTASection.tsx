@@ -27,7 +27,7 @@ const CTASection = () => (
             </h2>
 
             <p className="text-muted-foreground max-w-lg mx-auto mb-10 leading-relaxed">
-              Schließen Sie sich Unternehmen an, die mit DecisionOS schneller, transparenter und messbarer entscheiden.
+              Schließen Sie sich Unternehmen an, die mit Decivio schneller, transparenter und messbarer entscheiden.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-10">

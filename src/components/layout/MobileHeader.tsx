@@ -20,11 +20,11 @@ const MobileHeader = ({
     >
       <Menu className="w-4 h-4" />
     </button>
-    <Link to="/dashboard" className="flex items-center gap-2" aria-label="DecisionOS Startseite">
+    <Link to="/dashboard" className="flex items-center gap-2" aria-label="Decivio Startseite">
       <span className="w-6 h-6 rounded bg-foreground/10 flex items-center justify-center text-[11px] font-bold text-foreground/70">
         D
       </span>
-      <span className="font-medium text-[13px] text-foreground">DecisionOS</span>
+      <span className="font-medium text-[13px] text-foreground">Decivio</span>
     </Link>
     <button
       onClick={toggleTheme}

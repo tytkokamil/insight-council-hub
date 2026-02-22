@@ -75,7 +75,7 @@ const Auth = () => {
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent-violet/20 border border-primary/20 flex items-center justify-center mx-auto mb-4">
             <LayoutDashboard className="w-6 h-6 text-primary" />
           </div>
-          <h1 className="font-display text-2xl font-bold">DecisionOS</h1>
+          <h1 className="font-display text-2xl font-bold">Decivio</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isLogin ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
           </p>

@@ -78,7 +78,7 @@ const HeroSection = () => {
             transition={{ delay: 0.7, duration: 0.8, ease }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            DecisionOS gibt Ihrer Organisation Struktur, Governance und
+            Decivio gibt Ihrer Organisation Struktur, Governance und
             KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar.
           </motion.p>
 
@@ -153,7 +153,7 @@ const HeroSection = () => {
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1 rounded-md bg-muted/50 text-[11px] text-muted-foreground/60 font-mono border border-border/30">
-                  app.decisionos.com
+                  app.decivio.com
                 </div>
               </div>
             </div>
