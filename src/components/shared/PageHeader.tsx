@@ -64,7 +64,7 @@ const PageHeader = ({
         </div>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
-      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap [&>button]:h-9 [&>button]:text-sm [&>*>button]:h-9 [&>*>button]:text-sm">
         {secondaryActions}
         {primaryAction}
       </div>

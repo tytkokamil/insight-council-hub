@@ -323,8 +323,9 @@ const KnowledgeBase = () => {
               size="sm"
               onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)}
               disabled={decisions.length === 0}
+              className="gap-1.5"
             >
-              <Download className="w-4 h-4 mr-1.5" /> PDF-Report
+              <Download className="w-4 h-4" /> PDF-Report
             </Button>
           }
         />

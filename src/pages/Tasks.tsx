@@ -255,12 +255,12 @@ const Tasks = () => {
         role="execution"
         help={{ title: "Aufgaben", description: "Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht." }}
         secondaryActions={
-          <Button variant="outline" onClick={() => setShowImport(true)} className="gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
             <FileUp className="w-4 h-4" /> Import
           </Button>
         }
         primaryAction={
-          <Button onClick={openCreate} className="gap-2">
+          <Button size="sm" onClick={openCreate} className="gap-1.5">
             <Plus className="w-4 h-4" /> Neue Aufgabe
           </Button>
         }

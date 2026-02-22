@@ -144,7 +144,7 @@ const EscalationEngine = () => {
         role="governance"
         help={{ title: "Decision Control", description: "Zentrale Governance-Steuerung: SLA-Management, Eskalationen, aktive Fälle, Regeln und Analytik." }}
         primaryAction={
-          <Button onClick={runEngine} disabled={running} className="gap-2">
+          <Button size="sm" onClick={runEngine} disabled={running} className="gap-1.5">
             {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             {running ? "Läuft..." : "Engine starten"}
           </Button>
