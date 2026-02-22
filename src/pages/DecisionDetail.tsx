@@ -46,6 +46,7 @@ import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 import VersionHistoryPanel from "@/components/decisions/VersionHistoryPanel";
 import PostImplementationReview from "@/components/decisions/PostImplementationReview";
 import DecisionScorecard from "@/components/decisions/DecisionScorecard";
+import DecisionLifecycleBar from "@/components/decisions/DecisionLifecycleBar";
 
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
@@ -607,27 +608,12 @@ const DecisionDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* D) Timeline Visual */}
+              {/* D) Lifecycle Visual */}
               <Card>
                 <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-4">Timeline</h3>
-                  {/* Visual pipeline */}
-                  <div className="flex items-center gap-1 mb-4">
-                    {timelineSteps.map((step, i) => (
-                      <div key={step.label} className="flex-1 flex items-center">
-                        <div className={`flex-1 h-1.5 rounded-full ${step.done ? "bg-primary" : "bg-muted"}`} />
-                        {i < timelineSteps.length - 1 && <div className="w-1" />}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[10px] text-muted-foreground mb-4">
-                    {timelineSteps.map(step => (
-                      <span key={step.label} className={step.done ? "text-primary font-medium" : ""}>{step.label}</span>
-                    ))}
-                  </div>
-
-                  <Separator className="my-3" />
-
+                  <h3 className="text-sm font-semibold mb-4">Decision Lifecycle</h3>
+                  <DecisionLifecycleBar decision={decision} />
+                  <Separator className="my-4" />
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Erstellt</span>
@@ -651,10 +637,6 @@ const DecisionDetail = () => {
                         <span className="text-success">{format(new Date(decision.implemented_at), "dd.MM.yyyy", { locale: de })}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <span className="text-muted-foreground">Laufzeit</span>
-                      <span className="font-semibold number-highlight">{differenceInDays(new Date(), new Date(decision.created_at))}d</span>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

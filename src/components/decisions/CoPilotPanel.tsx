@@ -7,6 +7,7 @@ import {
   Zap, ArrowRight, Shield, TrendingDown, ChevronRight,
 } from "lucide-react";
 import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
+import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
 
 interface CoPilotResult {
   rejection_probability: number;
@@ -200,13 +201,11 @@ const CoPilotPanel = ({ decision }: { decision: any }) => {
             </div>
           </div>
 
-          {/* Confidence */}
-          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
-            <span className="flex items-center gap-1">
-              <Shield className="w-3 h-3" /> Konfidenz der Empfehlungen
-            </span>
-            <span className="font-medium text-foreground">{result.confidence}%</span>
-          </div>
+          {/* AI Explainability */}
+          <AiExplainabilityBadge
+            confidence={result.confidence}
+            factors={result.rejection_reasons?.slice(0, 3)}
+          />
 
           {/* AI Feedback */}
           <AiFeedbackButton context="copilot" />

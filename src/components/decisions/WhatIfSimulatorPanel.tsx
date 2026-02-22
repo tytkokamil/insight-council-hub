@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { GitBranch, Plus, Loader2, Trash2, Brain, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
 
 const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
   const { user } = useAuth();
@@ -174,6 +175,13 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
               </div>
             </div>
           ))}
+
+          {/* AI Explainability */}
+          <AiExplainabilityBadge
+            confidence={analysisResult.confidence || analysisResult.best_case_probability}
+            factors={analysisResult.scenario_results?.slice(0, 2).map((sr: any) => sr.scenario_title)}
+            dataPoints={scenarios.length}
+          />
 
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
             <p className="text-xs font-medium text-primary mb-1">🎯 Gesamtempfehlung</p>
