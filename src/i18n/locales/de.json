@@ -305,5 +305,21 @@
     "demoError": "Fehler beim Erstellen der Demo-Daten",
     "demoSuccess": "Demo-Daten erstellt! Dashboard wird geladen...",
     "newLabel": "Neu"
+  },
+  "kpi": {
+    "openDecisions": "Offene Entscheidungen",
+    "overdueTasks": "Überfällige Tasks",
+    "completedWeek": "Abgeschlossen (7d)",
+    "activityWeek": "Aktivität (7d)",
+    "teamActivityWeek": "Team-Aktivität (7d)",
+    "increase": "Zunahme",
+    "decrease": "Rückgang",
+    "stable": "Stabil",
+    "allOnTrack": "Alles im Plan",
+    "urgent": "{{count}} dringend",
+    "vsLastWeek": "vs. Vorwoche",
+    "sameAsLastWeek": "Wie Vorwoche",
+    "moreActivity": "Mehr Aktivität",
+    "lessActivity": "Weniger Aktivität"
   }
 }

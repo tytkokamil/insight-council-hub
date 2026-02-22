@@ -9,6 +9,7 @@ import { useDecisions, useTeams } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { useTranslation } from "react-i18next";
 
 /** Tiny SVG sparkline – no external dependency */
 const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
@@ -70,6 +71,7 @@ const resolveColor = (colorClass: string) => {
 };
 
 const KpiOverviewWidget = () => {
+  const { t } = useTranslation();
   const { data: allDecisions = [] } = useDecisions();
   const { data: allTasks = [] } = useTasks();
   const { data: teams = [] } = useTeams();
@@ -157,47 +159,47 @@ const KpiOverviewWidget = () => {
 
     return [
       {
-        label: "Offene Entscheidungen",
+        label: t("kpi.openDecisions"),
         value: openNow,
         icon: FileText,
         color: "text-primary",
         bg: "bg-primary/10",
         trend: trend(openNow, openPrev),
-        trendLabel: openNow > openPrev ? "Zunahme" : openNow < openPrev ? "Rückgang" : "Stabil",
+        trendLabel: openNow > openPrev ? t("kpi.increase") : openNow < openPrev ? t("kpi.decrease") : t("kpi.stable"),
         sparkData: openDecisionsPerWeek,
       },
       {
-        label: "Überfällige Tasks",
+        label: t("kpi.overdueTasks"),
         value: overdueNow,
         icon: AlertTriangle,
         color: overdueNow > 0 ? "text-destructive" : "text-success",
         bg: overdueNow > 0 ? "bg-destructive/10" : "bg-success/10",
         trend: overdueNow > 0 ? "up" as const : "neutral" as const,
-        trendLabel: overdueNow === 0 ? "Alles im Plan" : `${overdueNow} dringend`,
+        trendLabel: overdueNow === 0 ? t("kpi.allOnTrack") : t("kpi.urgent", { count: overdueNow }),
         sparkData: overdueTasksPerWeek,
       },
       {
-        label: "Abgeschlossen (7d)",
+        label: t("kpi.completedWeek"),
         value: completedNow,
         icon: CheckCircle2,
         color: "text-success",
         bg: "bg-success/10",
         trend: trend(completedNow, completedPrev),
-        trendLabel: completedNow > completedPrev ? `+${completedNow - completedPrev} vs. Vorwoche` : completedNow < completedPrev ? `${completedNow - completedPrev} vs. Vorwoche` : "Wie Vorwoche",
+        trendLabel: completedNow > completedPrev ? `+${completedNow - completedPrev} ${t("kpi.vsLastWeek")}` : completedNow < completedPrev ? `${completedNow - completedPrev} ${t("kpi.vsLastWeek")}` : t("kpi.sameAsLastWeek"),
         sparkData: completedPerWeek,
       },
       {
-        label: isPersonal ? "Aktivität (7d)" : "Team-Aktivität (7d)",
+        label: isPersonal ? t("kpi.activityWeek") : t("kpi.teamActivityWeek"),
         value: activityNow,
         icon: isPersonal ? ListChecks : Users,
         color: "text-accent-foreground",
         bg: "bg-accent/30",
         trend: trend(activityNow, activityPrev),
-        trendLabel: activityNow > activityPrev ? "Mehr Aktivität" : activityNow < activityPrev ? "Weniger Aktivität" : "Stabil",
+        trendLabel: activityNow > activityPrev ? t("kpi.moreActivity") : activityNow < activityPrev ? t("kpi.lessActivity") : t("kpi.stable"),
         sparkData: activityPerWeek,
       },
     ];
-  }, [allDecisions, allTasks, teams, user, isPersonal, selectedTeamId]);
+  }, [allDecisions, allTasks, teams, user, isPersonal, selectedTeamId, t]);
 
   const TrendIcon = ({ trend }: { trend: string }) => {
     if (trend === "up") return <TrendingUp className="w-3 h-3" />;
@@ -205,11 +207,13 @@ const KpiOverviewWidget = () => {
     return <Minus className="w-3 h-3" />;
   };
 
-  const trendColor = (trend: string, label: string) => {
-    if (label.includes("Überfällig")) {
+  const trendColor = (trend: string, index: number) => {
+    // index 1 = overdue tasks (up is bad)
+    if (index === 1) {
       return trend === "up" ? "text-destructive" : trend === "down" ? "text-success" : "text-muted-foreground";
     }
-    if (label.includes("Abgeschlossen") || label.includes("Aktivität")) {
+    // index 2,3 = completed/activity (up is good)
+    if (index === 2 || index === 3) {
       return trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";
     }
     return "text-muted-foreground";
@@ -236,7 +240,7 @@ const KpiOverviewWidget = () => {
                 <p className="text-2xl font-bold">{kpi.value}</p>
                 <Sparkline data={kpi.sparkData} color={resolveColor(kpi.color)} />
               </div>
-              <div className={`flex items-center gap-1 ${trendColor(kpi.trend, kpi.label)}`}>
+              <div className={`flex items-center gap-1 ${trendColor(kpi.trend, i)}`}>
                 <TrendIcon trend={kpi.trend} />
                 <span className="text-[11px]">{kpi.trendLabel}</span>
               </div>

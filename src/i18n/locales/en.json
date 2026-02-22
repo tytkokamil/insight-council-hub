@@ -305,5 +305,21 @@
     "demoError": "Error creating demo data",
     "demoSuccess": "Demo data created! Loading dashboard...",
     "newLabel": "New"
+  },
+  "kpi": {
+    "openDecisions": "Open Decisions",
+    "overdueTasks": "Overdue Tasks",
+    "completedWeek": "Completed (7d)",
+    "activityWeek": "Activity (7d)",
+    "teamActivityWeek": "Team Activity (7d)",
+    "increase": "Increase",
+    "decrease": "Decrease",
+    "stable": "Stable",
+    "allOnTrack": "All on track",
+    "urgent": "{{count}} urgent",
+    "vsLastWeek": "vs. last week",
+    "sameAsLastWeek": "Same as last week",
+    "moreActivity": "More activity",
+    "lessActivity": "Less activity"
   }
 }

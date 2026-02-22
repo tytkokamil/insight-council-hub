@@ -25,9 +25,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRisks } from "@/hooks/useRisks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
-import { statusLabels, priorityLabels, categoryLabels } from "@/lib/labels";
+import { useTranslatedLabels } from "@/lib/labels";
 import { format, differenceInDays, subDays, formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -56,6 +58,9 @@ const KpiSkeleton = () => (
 );
 
 const Dashboard = () => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+  const { statusLabels: tStatusLabels } = useTranslatedLabels(t);
   const { data: allDecisions = [], isLoading: loadingDec, isError: errorDec, refetch: refetchDec } = useDecisions();
   const { data: profiles = [] } = useProfiles();
   const { data: risks = [] } = useRisks();
@@ -198,7 +203,7 @@ const Dashboard = () => {
     const weekData = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
-      const weekLabel = format(weekEnd, "dd.MM", { locale: de });
+      const weekLabel = format(weekEnd, "dd.MM", { locale: dateFnsLocale });
       const completed = decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= weekStart && new Date(d.implemented_at) < weekEnd).length;
       const created = decisions.filter(d => new Date(d.created_at) >= weekStart && new Date(d.created_at) < weekEnd).length;
       const overdueAtEnd = decisions.filter(d => { if (!d.due_date) return false; const due = new Date(d.due_date); const c = new Date(d.created_at); if (c > weekEnd || due > weekEnd) return false; if (d.implemented_at && new Date(d.implemented_at) <= weekEnd) return false; if (d.status === "rejected") return false; return true; }).length;
@@ -249,10 +254,10 @@ const Dashboard = () => {
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
           <AlertTriangle className="w-8 h-8 text-muted-foreground mb-4" />
-          <h1 className="text-lg font-semibold mb-1">Laden fehlgeschlagen</h1>
-          <p className="text-sm text-muted-foreground mb-4">Bitte versuche es erneut.</p>
+          <h1 className="text-lg font-semibold mb-1">{t("dashboard.loadFailed")}</h1>
+          <p className="text-sm text-muted-foreground mb-4">{t("dashboard.retryDesc")}</p>
           <Button variant="outline" size="sm" onClick={() => { refetchDec(); refetchTasks(); }} className="gap-1.5">
-            <RefreshCw className="w-3.5 h-3.5" /> Erneut versuchen
+            <RefreshCw className="w-3.5 h-3.5" /> {t("common.retry")}
           </Button>
         </div>
       </AppLayout>
@@ -266,10 +271,10 @@ const Dashboard = () => {
         const { data, error } = await supabase.functions.invoke("seed-demo-data");
         if (error) throw error;
         if (data?.error) { toast.error(data.error); setSeedingDemo(false); return; }
-        toast.success("Demo-Daten erstellt! Dashboard wird geladen...");
+        toast.success(t("dashboard.demoSuccess"));
         setTimeout(() => { refetchDec(); refetchTasks(); window.location.reload(); }, 1000);
       } catch (e: any) {
-        toast.error("Fehler beim Erstellen der Demo-Daten");
+        toast.error(t("dashboard.demoError"));
         setSeedingDemo(false);
       }
     };
@@ -281,18 +286,18 @@ const Dashboard = () => {
             <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
               <Zap className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mb-2">Willkommen, {firstName}!</h1>
-            <p className="text-muted-foreground mb-2">Dein Decision Operating System ist bereit.</p>
+            <h1 className="text-2xl font-semibold tracking-tight mb-2">{t("dashboard.welcome", { name: firstName })}</h1>
+            <p className="text-muted-foreground mb-2">{t("dashboard.readyDesc")}</p>
             <p className="text-sm text-muted-foreground/70 mb-8">
-              Starte in 3 Schritten: Team erstellen → Erste Entscheidung → Review starten
+              {t("dashboard.startSteps")}
             </p>
 
             {/* Onboarding Steps */}
             <div className="grid gap-3 mb-8 text-left">
               {[
-                { num: "1", label: "Team erstellen", desc: "Lade Kollegen ein und definiere Rollen", path: "/teams", icon: Users },
-                { num: "2", label: "Erste Entscheidung", desc: "Nutze ein Template für strukturierte Entscheidungen", path: "/decisions", icon: FileText },
-                { num: "3", label: "Review starten", desc: "Hole Feedback ein und tracke den Fortschritt", path: "/decisions", icon: Eye },
+                { num: "1", label: t("dashboard.createTeam"), desc: t("dashboard.createTeamDesc"), path: "/teams", icon: Users },
+                { num: "2", label: t("dashboard.firstDecision"), desc: t("dashboard.firstDecisionDesc"), path: "/decisions", icon: FileText },
+                { num: "3", label: t("dashboard.startReview"), desc: t("dashboard.startReviewDesc"), path: "/decisions", icon: Eye },
               ].map(step => (
                 <button
                   key={step.num}
@@ -314,13 +319,13 @@ const Dashboard = () => {
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <Button onClick={handleSeedDemo} variant="outline" className="gap-1.5" disabled={seedingDemo}>
                 {seedingDemo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                {seedingDemo ? "Wird erstellt…" : "Mit Beispieldaten starten"}
+                {seedingDemo ? t("dashboard.creating") : t("dashboard.startWithDemo")}
               </Button>
               <Button onClick={() => setShowOnboarding(true)} variant="outline" className="gap-1.5">
-                <Compass className="w-4 h-4" /> Tour starten
+                <Compass className="w-4 h-4" /> {t("dashboard.startTour")}
               </Button>
               <Button onClick={() => navigate("/decisions")} className="gap-1.5">
-                <Plus className="w-4 h-4" /> Neue Entscheidung
+                <Plus className="w-4 h-4" /> {t("dashboard.newDecision")}
               </Button>
             </div>
           </motion.div>
@@ -333,7 +338,7 @@ const Dashboard = () => {
     );
   }
 
-  const dashboardTitle = isPersonal ? "Mein Arbeitsbereich" : `${currentTeam?.name || "Team"}`;
+  const dashboardTitle = isPersonal ? t("dashboard.myWorkspace") : `${currentTeam?.name || "Team"}`;
   const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.blockedTasks.length;
   const hasNoActions = actionCount === 0;
 
@@ -355,13 +360,13 @@ const Dashboard = () => {
             <Zap className="w-4 h-4 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">Advanced-Modus verfügbar</p>
+            <p className="text-sm font-medium">{t("dashboard.advancedAvailable")}</p>
             <p className="text-xs text-muted-foreground">
-              Du hast {decisionCount} Entscheidungen und {implementedCount} implementiert — schalte Intelligence-Features frei.
+              {t("dashboard.advancedDesc", { decisionCount, implementedCount })}
             </p>
           </div>
           <Button size="sm" variant="outline" className="shrink-0 text-xs" onClick={() => setMode("advanced")}>
-            Aktivieren
+            {t("common.activate")}
           </Button>
           <button
             onClick={() => { setDismissedAdvancedHint(true); localStorage.setItem("advanced-hint-dismissed", "true"); }}
@@ -374,7 +379,7 @@ const Dashboard = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">{dashboardTitle}</h1>
-          <p className="text-sm text-muted-foreground">Was braucht heute deine Aufmerksamkeit?</p>
+          <p className="text-sm text-muted-foreground">{t("dashboard.whatNeedsAttention")}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center rounded-md border border-border p-0.5">
@@ -386,7 +391,7 @@ const Dashboard = () => {
             ))}
           </div>
           <Button onClick={() => navigate("/decisions")} size="sm" className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> Neu
+             <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
           </Button>
         </div>
       </div>
@@ -396,7 +401,7 @@ const Dashboard = () => {
         {/* ═══ ACTION REQUIRED ═══ */}
         {!isLoading && !hasNoActions && (
           <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Action Required</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.actionRequired")}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Overdue */}
               <div className="border border-destructive/20 bg-destructive/[0.03] rounded-lg p-4">
@@ -409,10 +414,10 @@ const Dashboard = () => {
                   )}
                 </div>
                 <p className="text-2xl font-semibold tracking-tight">{computed.overdue.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Überfällig</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.overdue")}</p>
                 {computed.overdue.length > 0 && (
                   <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/decisions")}>
-                    Anzeigen <ArrowRight className="w-3 h-3 ml-1" />
+                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
                 )}
               </div>
@@ -424,10 +429,10 @@ const Dashboard = () => {
                   {computed.maxEscalation > 0 && <span className="text-[10px] font-medium text-warning">L{computed.maxEscalation}</span>}
                 </div>
                 <p className="text-2xl font-semibold tracking-tight">{computed.escalated.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Eskalationen</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.escalations")}</p>
                 {computed.escalated.length > 0 && (
                   <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/engine")}>
-                    Anzeigen <ArrowRight className="w-3 h-3 ml-1" />
+                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
                 )}
               </div>
@@ -436,10 +441,10 @@ const Dashboard = () => {
               <div className="border border-primary/20 bg-primary/[0.03] rounded-lg p-4">
                 <Eye className="w-4 h-4 text-primary mb-3" />
                 <p className="text-2xl font-semibold tracking-tight">{computed.pendingReviews.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Offene Reviews</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openReviews")}</p>
                 {computed.pendingReviews.length > 0 && (
                   <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(`/decisions/${computed.pendingReviews[0].decision_id}`)}>
-                    Review starten <ArrowRight className="w-3 h-3 ml-1" />
+                    {t("dashboard.startReviewBtn")} <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
                 )}
               </div>
@@ -448,10 +453,10 @@ const Dashboard = () => {
               <div className="border border-accent-violet/20 bg-accent-violet/[0.03] rounded-lg p-4">
                 <Link2 className="w-4 h-4 text-accent-violet mb-3" />
                 <p className="text-2xl font-semibold tracking-tight">{computed.blockedTasks.length}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Blockierte Tasks</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.blockedTasks")}</p>
                 {computed.blockedTasks.length > 0 && (
                   <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate("/tasks")}>
-                    Anzeigen <ArrowRight className="w-3 h-3 ml-1" />
+                    {t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
                   </Button>
                 )}
               </div>
@@ -462,8 +467,8 @@ const Dashboard = () => {
         {!isLoading && hasNoActions && (
           <div className="border border-success/20 bg-success/[0.04] rounded-lg p-6 text-center">
             <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-2" />
-            <p className="text-sm font-medium text-success">Alles im grünen Bereich</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Keine offenen Aktionspunkte.</p>
+            <p className="text-sm font-medium text-success">{t("dashboard.allGood")}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noActions")}</p>
           </div>
         )}
 
@@ -476,15 +481,15 @@ const Dashboard = () => {
 
         {/* ═══ KPIs ═══ */}
         <section>
-          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Metriken</h2>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.metrics")}</h2>
           {isLoading ? <KpiSkeleton /> : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
               {[
-                { label: "Offen", value: computed.openCount, trend: computed.openTrend, delta: computed.openDelta },
-                { label: "Ø Dauer", value: computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—" },
-                { label: "Überfällig", value: `${computed.overdueRate}%`, color: computed.overdueRate > 20 ? "text-destructive" : undefined },
-                { label: "Performance", value: `${computed.performanceIndex}%`, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive" },
-                { label: "Delay Cost", value: formatCost(computed.totalDelayCost), color: "text-destructive" },
+                { label: t("dashboard.open"), value: computed.openCount, trend: computed.openTrend, delta: computed.openDelta },
+                { label: t("dashboard.avgDuration"), value: computed.avgDecisionTime != null ? `${computed.avgDecisionTime}d` : "—" },
+                { label: t("dashboard.overdueRate"), value: `${computed.overdueRate}%`, color: computed.overdueRate > 20 ? "text-destructive" : undefined },
+                { label: t("dashboard.performance"), value: `${computed.performanceIndex}%`, color: computed.performanceIndex > 60 ? "text-success" : computed.performanceIndex > 30 ? "text-warning" : "text-destructive" },
+                { label: t("dashboard.delayCost"), value: formatCost(computed.totalDelayCost), color: "text-destructive" },
               ].map((kpi, i) => (
                 <div key={kpi.label} className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/analytics")}>
                   <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
@@ -505,20 +510,20 @@ const Dashboard = () => {
         {/* ═══ CHARTS ═══ */}
         {!isLoading && (
           <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Trends</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Velocity */}
               <div className="border border-border rounded-lg p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="text-sm font-medium">Decisions / Woche</p>
-                    <p className="text-xs text-muted-foreground">8-Wochen Trend</p>
+                    <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
+                    <p className="text-xs text-muted-foreground">{t("dashboard.weekTrend")}</p>
                   </div>
                   <div className="flex items-center rounded-md border border-border p-0.5">
-                    {(["completed", "created"] as const).map(t => (
-                      <button key={t} onClick={() => setVelocityToggle(t)}
-                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${velocityToggle === t ? "bg-foreground text-background" : "text-muted-foreground"}`}>
-                        {t === "completed" ? "Completed" : "Created"}
+                    {(["completed", "created"] as const).map(tog => (
+                      <button key={tog} onClick={() => setVelocityToggle(tog)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${velocityToggle === tog ? "bg-foreground text-background" : "text-muted-foreground"}`}>
+                        {tog === "completed" ? t("dashboard.completedLabel") : t("dashboard.createdLabel")}
                       </button>
                     ))}
                   </div>
@@ -536,7 +541,7 @@ const Dashboard = () => {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Area type="monotone" dataKey={velocityToggle} name={velocityToggle === "completed" ? "Abgeschlossen" : "Erstellt"} stroke="hsl(var(--foreground))" fill="url(#gradVelocity)" strokeWidth={1.5} />
+                      <Area type="monotone" dataKey={velocityToggle} name={velocityToggle === "completed" ? t("dashboard.completedLabel") : t("dashboard.createdLabel")} stroke="hsl(var(--foreground))" fill="url(#gradVelocity)" strokeWidth={1.5} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -545,8 +550,8 @@ const Dashboard = () => {
               {/* Overdue + Duration */}
               <div className="border border-border rounded-lg p-5">
                 <div className="mb-4">
-                  <p className="text-sm font-medium">Überfällig & Dauer</p>
-                  <p className="text-xs text-muted-foreground">Bearbeitungszeit & Overdue pro Woche</p>
+                  <p className="text-sm font-medium">{t("dashboard.overdueAndDuration")}</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.overdueAndDurationDesc")}</p>
                 </div>
                 <div className="h-44">
                   <ResponsiveContainer width="100%" height="100%">
@@ -561,8 +566,8 @@ const Dashboard = () => {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Area type="monotone" dataKey="overdue" name="Überfällig" stroke="hsl(var(--destructive))" fill="url(#gradOverdue)" strokeWidth={1.5} />
-                      <Area type="monotone" dataKey="avgTime" name="Ø Tage" stroke="hsl(var(--muted-foreground))" fill="none" strokeWidth={1} strokeDasharray="4 4" />
+                      <Area type="monotone" dataKey="overdue" name={t("dashboard.overdueChartLabel")} stroke="hsl(var(--destructive))" fill="url(#gradOverdue)" strokeWidth={1.5} />
+                      <Area type="monotone" dataKey="avgTime" name={t("dashboard.avgDaysLabel")} stroke="hsl(var(--muted-foreground))" fill="none" strokeWidth={1} strokeDasharray="4 4" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -571,7 +576,7 @@ const Dashboard = () => {
               {/* Escalation */}
               <div className="border border-border rounded-lg p-5 lg:col-span-2">
                 <div className="mb-4">
-                  <p className="text-sm font-medium">Eskalationen / Woche</p>
+                  <p className="text-sm font-medium">{t("dashboard.escalationsPerWeek")}</p>
                 </div>
                 <div className="h-36">
                   <ResponsiveContainer width="100%" height="100%">
@@ -580,7 +585,7 @@ const Dashboard = () => {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Bar dataKey="escalated" name="Eskalationen" fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} opacity={0.7} />
+                      <Bar dataKey="escalated" name={t("dashboard.escalations")} fill="hsl(var(--foreground))" radius={[3, 3, 0, 0]} opacity={0.7} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -601,21 +606,21 @@ const Dashboard = () => {
         {/* ═══ ECONOMIC IMPACT ═══ */}
         {!isLoading && computed.totalDelayCost > 0 && (
           <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Economic Impact</h2>
+            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.economicImpact")}</h2>
             <div className="border border-border rounded-lg p-5">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Total Delay Cost</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("dashboard.totalDelayCost")}</p>
                   <p className="text-2xl font-semibold tracking-tight text-destructive">{formatCost(computed.totalDelayCost)}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{computed.active.length} offene Entscheidungen</p>
+                  <p className="text-xs text-muted-foreground mt-1">{computed.active.length} {t("dashboard.openDecisions")}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Stale Decisions</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("dashboard.staleDecisions")}</p>
                   <p className="text-2xl font-semibold tracking-tight">{computed.staleDecisions.length}</p>
-                  <p className="text-xs text-muted-foreground mt-1">&gt;14 Tage ohne Fortschritt</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("dashboard.staleDesc")}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Top 3 teuerste</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t("dashboard.topExpensive")}</p>
                   <div className="space-y-1.5">
                     {computed.costItems.slice(0, 3).map((c, i) => (
                       <button key={i} onClick={() => navigate(`/decisions/${c.id}`)} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-1 -mx-1 transition-colors text-left">
@@ -641,7 +646,7 @@ const Dashboard = () => {
 
           return (
             <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Risk Overview</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.riskOverview")}</h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Total open */}
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
@@ -650,28 +655,28 @@ const Dashboard = () => {
                     <span className="text-[10px] text-muted-foreground">Ø {avgScore}</span>
                   </div>
                   <p className="text-2xl font-semibold tracking-tight">{openRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Offene Risiken</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openRisks")}</p>
                 </div>
 
                 {/* Critical */}
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
                   <ShieldAlert className="w-4 h-4 text-destructive mb-2" />
                   <p className={`text-2xl font-semibold tracking-tight ${criticalRisks.length > 0 ? "text-destructive" : ""}`}>{criticalRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Kritische Risiken</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.criticalRisks")}</p>
                 </div>
 
                 {/* High */}
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
                   <AlertTriangle className="w-4 h-4 text-warning mb-2" />
                   <p className={`text-2xl font-semibold tracking-tight ${highRisks.length > 0 ? "text-warning" : ""}`}>{highRisks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Hohe Risiken</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.highRisks")}</p>
                 </div>
 
                 {/* Without mitigation */}
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/risks")}>
                   <FileText className="w-4 h-4 text-muted-foreground mb-2" />
                   <p className="text-2xl font-semibold tracking-tight">{withoutMitigation.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Ohne Mitigation</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noMitigation")}</p>
                 </div>
               </div>
 
@@ -679,7 +684,7 @@ const Dashboard = () => {
               {criticalRisks.length > 0 && (
                 <div className="border border-destructive/20 rounded-lg p-4 mt-3">
                   <p className="text-xs font-medium text-destructive mb-2 flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5" /> Kritische Risiken – sofortige Aufmerksamkeit
+                    <ShieldAlert className="w-3.5 h-3.5" /> {t("dashboard.criticalAttention")}
                   </p>
                   <div className="space-y-1.5">
                     {criticalRisks.slice(0, 5).map((r: any) => (
@@ -689,7 +694,7 @@ const Dashboard = () => {
                           <span className="text-xs truncate">{r.title}</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {!r.mitigation_plan && <Badge variant="outline" className="text-[10px] text-warning">Keine Mitigation</Badge>}
+                          {!r.mitigation_plan && <Badge variant="outline" className="text-[10px] text-warning">{t("dashboard.noMitigation")}</Badge>}
                           <ArrowRight className="w-3 h-3 text-muted-foreground" />
                         </div>
                       </button>
@@ -725,35 +730,35 @@ const Dashboard = () => {
 
           return (
             <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Task Overview</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.taskOverview")}</h2>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
                   <ListTodo className="w-4 h-4 text-muted-foreground mb-2" />
                   <p className="text-2xl font-semibold tracking-tight">{openTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Offen / Backlog</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.openBacklog")}</p>
                 </div>
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
                   <Activity className="w-4 h-4 text-primary mb-2" />
                   <p className="text-2xl font-semibold tracking-tight">{inProgressTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">In Bearbeitung</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.inProgress")}</p>
                 </div>
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
                   <AlertTriangle className={`w-4 h-4 mb-2 ${overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground"}`} />
                   <p className={`text-2xl font-semibold tracking-tight ${overdueTasks.length > 0 ? "text-destructive" : ""}`}>{overdueTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Überfällig</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.overdue")}</p>
                 </div>
                 <div className="border border-border rounded-lg p-4 cursor-pointer hover:border-foreground/20 transition-colors" onClick={() => navigate("/tasks")}>
                   <ShieldAlert className={`w-4 h-4 mb-2 ${blockedTasks.length > 0 ? "text-warning" : "text-muted-foreground"}`} />
                   <p className={`text-2xl font-semibold tracking-tight ${blockedTasks.length > 0 ? "text-warning" : ""}`}>{blockedTasks.length}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Blockiert</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("decisions.blocked")}</p>
                 </div>
               </div>
 
               {/* Task velocity chart */}
               <div className="border border-border rounded-lg p-5">
                 <div className="mb-4">
-                  <p className="text-sm font-medium">Task-Velocity / Woche</p>
-                  <p className="text-xs text-muted-foreground">Erledigte Tasks pro Kalenderwoche</p>
+                  <p className="text-sm font-medium">{t("dashboard.taskVelocity")}</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.taskVelocityDesc")}</p>
                 </div>
                 <div className="h-36">
                   <ResponsiveContainer width="100%" height="100%">
@@ -762,7 +767,7 @@ const Dashboard = () => {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <RechartsTooltip contentStyle={chartTooltipStyle} />
-                      <Bar dataKey="completed" name="Erledigt" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} opacity={0.7} />
+                      <Bar dataKey="completed" name={t("dashboard.doneLabel")} fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} opacity={0.7} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -781,7 +786,7 @@ const Dashboard = () => {
           if (upcoming.length === 0) return null;
           return (
             <section>
-              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">Nächste Deadlines</h2>
+              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.nextDeadlines")}</h2>
               <div className="border border-border rounded-lg divide-y divide-border">
                 {upcoming.map(d => {
                   const daysLeft = differenceInDays(new Date(d.due_date!), now);
@@ -793,7 +798,7 @@ const Dashboard = () => {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className={`text-xs font-medium tabular-nums ${daysLeft <= 2 ? "text-destructive" : daysLeft <= 5 ? "text-warning" : "text-muted-foreground"}`}>
-                          {daysLeft === 0 ? "Heute" : daysLeft === 1 ? "Morgen" : `${daysLeft}d`}
+                          {daysLeft === 0 ? t("common.today") : daysLeft === 1 ? t("common.tomorrow") : `${daysLeft}d`}
                         </span>
                         <ArrowRight className="w-3 h-3 text-muted-foreground" />
                       </div>
@@ -821,15 +826,15 @@ const Dashboard = () => {
               {/* My Activity Feed */}
               <div className="border border-border rounded-lg p-5">
                 <p className="text-sm font-medium mb-3 flex items-center gap-1.5">
-                  <History className="w-3.5 h-3.5 text-muted-foreground" /> Meine Aktivitäten
+                  <History className="w-3.5 h-3.5 text-muted-foreground" /> {t("dashboard.myActivities")}
                 </p>
                 {myAuditLogs.length > 0 ? (
                   <div className="space-y-1.5">
                     {myAuditLogs.map((log: any) => {
                       const actionLabels: Record<string, string> = {
-                        created: "Erstellt", status_changed: "Status geändert",
-                        review_approved: "Genehmigt", review_rejected: "Abgelehnt",
-                        ai_analysis: "KI-Analyse", field_updated: "Aktualisiert",
+                        created: t("dashboard.actionCreated"), status_changed: t("dashboard.actionStatusChanged"),
+                        review_approved: t("dashboard.actionApproved"), review_rejected: t("dashboard.actionRejected"),
+                        ai_analysis: t("dashboard.actionAiAnalysis"), field_updated: t("dashboard.actionUpdated"),
                       };
                       return (
                         <button key={log.id} onClick={() => navigate(`/decisions/${log.decision_id}`)} className="w-full flex items-start gap-2 hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
@@ -841,9 +846,9 @@ const Dashboard = () => {
                               </Badge>
                               {log.field_name && <span className="text-[10px] text-muted-foreground">({log.field_name})</span>}
                             </div>
-                            <p className="text-xs truncate mt-0.5">{(log as any).decisions?.title || "Entscheidung"}</p>
+                            <p className="text-xs truncate mt-0.5">{(log as any).decisions?.title || t("dashboard.decisionLabel")}</p>
                             <span className="text-[10px] text-muted-foreground">
-                              {formatDistanceToNow(new Date(log.created_at), { locale: de, addSuffix: true })}
+                              {formatDistanceToNow(new Date(log.created_at), { locale: dateFnsLocale, addSuffix: true })}
                             </span>
                           </div>
                         </button>
@@ -851,32 +856,32 @@ const Dashboard = () => {
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Noch keine Aktivitäten.</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.noActivities")}</p>
                 )}
               </div>
               <div className="border border-border rounded-lg p-5">
-                <p className="text-sm font-medium mb-3">Zuletzt geöffnet</p>
+                <p className="text-sm font-medium mb-3">{t("dashboard.recentlyOpened")}</p>
                 {computed.recentlyOpened.length > 0 ? (
                   <div className="space-y-1">
                     {computed.recentlyOpened.map(d => (
                       <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)} className="w-full flex items-center justify-between hover:bg-muted/50 rounded p-2 -mx-2 transition-colors text-left">
                         <div className="flex items-center gap-2 min-w-0">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{statusLabels[d.status] || d.status}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
                           <span className="text-xs truncate">{d.title}</span>
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                          {formatDistanceToNow(new Date(d.updated_at), { locale: de, addSuffix: true })}
+                          {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
                         </span>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Keine kürzlich geöffneten Entscheidungen</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.noRecentDecisions")}</p>
                 )}
               </div>
 
               <div className="border border-border rounded-lg p-5">
-                <p className="text-sm font-medium mb-3">Zuletzt eskaliert</p>
+                <p className="text-sm font-medium mb-3">{t("dashboard.recentlyEscalated")}</p>
                 {computed.recentlyEscalated.length > 0 ? (
                   <div className="space-y-1">
                     {computed.recentlyEscalated.map(d => (
@@ -886,13 +891,13 @@ const Dashboard = () => {
                           <span className="text-xs truncate">{d.title}</span>
                         </div>
                         <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                          {formatDistanceToNow(new Date(d.last_escalated_at || d.updated_at), { locale: de, addSuffix: true })}
+                          {formatDistanceToNow(new Date(d.last_escalated_at || d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
                         </span>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Keine kürzlichen Eskalationen</p>
+                  <p className="text-xs text-muted-foreground">{t("dashboard.noEscalations")}</p>
                 )}
               </div>
             </div>
