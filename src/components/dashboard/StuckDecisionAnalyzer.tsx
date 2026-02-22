@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { differenceInDays } from "date-fns";
-import { AlertTriangle, Clock, Users, MessageSquare, Link2, ArrowRight, Zap, Pause } from "lucide-react";
+import { AlertTriangle, Clock, Users, MessageSquare, Link2, ArrowRight, Zap, Pause, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,8 @@ interface StuckDecision {
   daysStuck: number;
   reasons: StuckReason[];
   recommendation: string;
+  delayCost: number;
+  blockerDetail: string;
 }
 
 const REASON_CONFIG: Record<string, { icon: any; color: string; bgColor: string }> = {
@@ -36,11 +38,18 @@ interface Props {
   decisions: any[];
   reviews?: any[];
   dependencies?: any[];
+  teams?: any[];
 }
 
-const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: Props) => {
+const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [], teams = [] }: Props) => {
   const navigate = useNavigate();
   const now = new Date();
+
+  const teamRateMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    teams.forEach((t: any) => { if (t.hourly_rate) map[t.id] = t.hourly_rate; });
+    return map;
+  }, [teams]);
 
   const stuckDecisions = useMemo<StuckDecision[]>(() => {
     const active = decisions.filter(d =>
@@ -53,8 +62,8 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
       const reasons: StuckReason[] = [];
       const daysSinceUpdate = differenceInDays(now, new Date(d.updated_at));
       const daysSinceCreation = differenceInDays(now, new Date(d.created_at));
+      let blockerDetail = "";
 
-      // No activity for 7+ days
       if (daysSinceUpdate >= 7) {
         reasons.push({
           type: "no_activity",
@@ -64,30 +73,18 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
         });
       }
 
-      // In review but no reviewers assigned or no reviews done
       if (d.status === "review") {
         const decReviews = reviews.filter(r => r.decision_id === d.id);
+        const pendingCount = decReviews.filter(r => !r.reviewed_at).length;
         if (decReviews.length === 0) {
-          reasons.push({
-            type: "missing_reviewer",
-            label: "Kein Reviewer zugewiesen",
-            icon: Users,
-            severity: "high",
-          });
-        } else {
-          const pendingAll = decReviews.every(r => !r.reviewed_at);
-          if (pendingAll && daysSinceUpdate >= 5) {
-            reasons.push({
-              type: "missing_reviewer",
-              label: "Alle Reviews ausstehend",
-              icon: Users,
-              severity: "medium",
-            });
-          }
+          reasons.push({ type: "missing_reviewer", label: "Kein Reviewer zugewiesen", icon: Users, severity: "high" });
+          blockerDetail = "Blockiert durch: Kein Reviewer zugewiesen";
+        } else if (pendingCount > 0 && daysSinceUpdate >= 5) {
+          reasons.push({ type: "missing_reviewer", label: `${pendingCount} Reviews ausstehend`, icon: Users, severity: "medium" });
+          blockerDetail = `Blockiert durch: ${pendingCount} fehlende Reviewer`;
         }
       }
 
-      // Blocked by dependency
       const blockedBy = dependencies.filter(
         dep => dep.target_decision_id === d.id && dep.dependency_type === "blocks"
       );
@@ -100,10 +97,10 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
             icon: Link2,
             severity: "high",
           });
+          blockerDetail = `Blockiert durch: "${blockingDecision.title?.substring(0, 40)}"`;
         }
       }
 
-      // SLA violation (overdue)
       if (d.due_date && new Date(d.due_date) < now) {
         const daysOverdue = differenceInDays(now, new Date(d.due_date));
         reasons.push({
@@ -114,7 +111,6 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
         });
       }
 
-      // Stale draft (draft for 10+ days)
       if (d.status === "draft" && daysSinceCreation >= 10) {
         reasons.push({
           type: "stale_draft",
@@ -125,7 +121,6 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
       }
 
       if (reasons.length > 0) {
-        // Generate recommendation
         const topReason = reasons.sort((a, b) => {
           const sev = { critical: 3, high: 2, medium: 1 };
           return sev[b.severity] - sev[a.severity];
@@ -133,22 +128,17 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
 
         let recommendation = "";
         switch (topReason.type) {
-          case "no_activity":
-            recommendation = "Statusupdate anfordern oder Eskalation einleiten";
-            break;
-          case "missing_reviewer":
-            recommendation = "Reviewer zuweisen oder Review-Flow starten";
-            break;
-          case "blocked_dependency":
-            recommendation = "Blockierende Entscheidung priorisieren";
-            break;
-          case "sla_violation":
-            recommendation = "Sofortige Eskalation – SLA verletzt";
-            break;
-          case "stale_draft":
-            recommendation = "Draft abschließen oder archivieren";
-            break;
+          case "no_activity": recommendation = "Statusupdate anfordern oder Eskalation einleiten"; break;
+          case "missing_reviewer": recommendation = "Reviewer zuweisen oder Review-Flow starten"; break;
+          case "blocked_dependency": recommendation = "Blockierende Entscheidung priorisieren"; break;
+          case "sla_violation": recommendation = "Sofortige Eskalation – SLA verletzt"; break;
+          case "stale_draft": recommendation = "Draft abschließen oder archivieren"; break;
         }
+
+        // Calculate delay cost
+        const rate = d.team_id && teamRateMap[d.team_id] ? teamRateMap[d.team_id] : 75;
+        const multiplier = d.priority === "critical" ? 4 : d.priority === "high" ? 2 : 1;
+        const delayCost = Math.round(Math.max(daysSinceUpdate, 1) * 2 * 2 * rate * multiplier);
 
         results.push({
           id: d.id,
@@ -158,20 +148,22 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
           daysStuck: Math.max(daysSinceUpdate, daysSinceCreation >= 10 ? daysSinceCreation : 0),
           reasons,
           recommendation,
+          delayCost,
+          blockerDetail: blockerDetail || `${daysSinceUpdate} Tage ohne Fortschritt`,
         });
       }
     }
 
     return results.sort((a, b) => {
       const maxSev = (r: StuckReason[]) => Math.max(...r.map(x => x.severity === "critical" ? 3 : x.severity === "high" ? 2 : 1));
-      return maxSev(b.reasons) - maxSev(a.reasons) || b.daysStuck - a.daysStuck;
+      return maxSev(b.reasons) - maxSev(a.reasons) || b.delayCost - a.delayCost;
     }).slice(0, 5);
-  }, [decisions, reviews, dependencies]);
+  }, [decisions, reviews, dependencies, teamRateMap]);
 
   if (stuckDecisions.length === 0) return null;
 
-  const severityColor = (s: string) =>
-    s === "critical" ? "text-destructive" : s === "high" ? "text-warning" : "text-muted-foreground";
+  const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k€` : `${cost}€`;
+  const totalCost = stuckDecisions.reduce((s, d) => s + d.delayCost, 0);
 
   return (
     <section>
@@ -180,9 +172,15 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
           <Zap className="w-3.5 h-3.5 text-warning" />
           Stuck Decision Analyzer
         </h2>
-        <Badge variant="outline" className="text-[10px] font-normal">
-          {stuckDecisions.length} blockiert
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-[10px] font-normal text-destructive border-destructive/20">
+            <DollarSign className="w-3 h-3 mr-0.5" />
+            {formatCost(totalCost)} Verzögerungskosten
+          </Badge>
+          <Badge variant="outline" className="text-[10px] font-normal">
+            {stuckDecisions.length} blockiert
+          </Badge>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -202,9 +200,13 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
                       {d.title}
                     </button>
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0 capitalize">{d.status}</Badge>
+                    <span className="text-[10px] font-bold text-destructive ml-auto shrink-0">{formatCost(d.delayCost)}</span>
                   </div>
 
-                  {/* Reasons */}
+                  {/* Blocker detail */}
+                  <p className="text-[11px] text-destructive/80 font-medium mb-1.5">{d.blockerDetail}</p>
+
+                  {/* Reason pills */}
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {d.reasons.map((r, i) => {
                       const cfg = REASON_CONFIG[r.type];
@@ -225,13 +227,16 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [] }: P
                   </div>
 
                   {/* Recommendation */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground">💡</span>
-                    <span className="text-[11px] text-muted-foreground">{d.recommendation}</span>
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-muted/30">
+                    <span className="text-[10px]">💡</span>
+                    <span className="text-[11px] text-muted-foreground flex-1">
+                      <span className="font-medium text-foreground">Empfohlen: </span>
+                      {d.recommendation}
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-5 px-1.5 text-[10px] ml-auto shrink-0"
+                      className="h-5 px-1.5 text-[10px] shrink-0"
                       onClick={() => navigate(`/decisions/${d.id}`)}
                     >
                       Öffnen <ArrowRight className="w-3 h-3 ml-0.5" />
