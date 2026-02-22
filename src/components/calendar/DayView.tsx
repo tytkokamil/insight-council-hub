@@ -1,7 +1,7 @@
 import { memo, DragEvent, useMemo } from "react";
-import { format, isToday } from "date-fns";
+import { format, isToday, differenceInCalendarDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { Sunrise, Sun, CloudSun, Moon } from "lucide-react";
+import { Sunrise, Sun, CloudSun, Moon, AlertTriangle, DollarSign, Zap, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WEEKDAYS_LONG } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
@@ -14,6 +14,8 @@ const TIME_SLOTS = [
   { key: "afternoon", label: "Nachmittags", subtitle: "14:00 – 18:00", icon: CloudSun },
   { key: "evening", label: "Abends", subtitle: "18:00 – 23:59", icon: Moon },
 ] as const;
+
+const PRIORITY_MULTIPLIER: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
 
 function distributeBySlot(decisions: any[]) {
   const slots: Record<string, any[]> = { morning: [], midday: [], afternoon: [], evening: [] };
@@ -66,21 +68,73 @@ const DayView = memo(({
   const slotted = useMemo(() => distributeBySlot(dayDecisions), [dayDecisions]);
   const slottedTasks = useMemo(() => distributeBySlot(dayTasks), [dayTasks]);
 
+  // Day impact summary
+  const summary = useMemo(() => {
+    const critical = dayDecisions.filter((d) => d.priority === "critical" || d.priority === "high").length;
+    const escalated = dayDecisions.filter((d) => (d.escalation_level ?? 0) >= 1).length;
+    let delayCost = 0;
+    for (const d of dayDecisions) {
+      if (!d.due_date || ["implemented", "rejected", "archived"].includes(d.status)) continue;
+      const days = differenceInCalendarDays(new Date(), new Date(d.due_date));
+      if (days > 0) delayCost += days * 120 * (PRIORITY_MULTIPLIER[d.priority] ?? 1);
+    }
+    return { total: dayDecisions.length, tasks: dayTasks.length, critical, escalated, delayCost };
+  }, [dayDecisions, dayTasks]);
+
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card">
+      {/* Day header with impact summary */}
       <div className={cn(
         "px-4 py-4 border-b border-border",
         today && "bg-primary/5"
       )}>
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {WEEKDAYS_LONG[dayOfWeek]}
-        </p>
-        <p className={cn(
-          "text-2xl font-bold mt-0.5",
-          today ? "text-primary" : "text-foreground"
-        )}>
-          {format(day, "d. MMMM yyyy", { locale: de })}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              {WEEKDAYS_LONG[dayOfWeek]}
+            </p>
+            <p className={cn(
+              "text-2xl font-bold mt-0.5",
+              today ? "text-primary" : "text-foreground"
+            )}>
+              {format(day, "d. MMMM yyyy", { locale: de })}
+            </p>
+          </div>
+
+          {/* Impact summary panel */}
+          {(summary.total > 0 || summary.tasks > 0) && (
+            <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                <span className="font-semibold">{summary.total}</span>
+                <span className="text-muted-foreground">Entsch.</span>
+              </div>
+              {summary.tasks > 0 && (
+                <div className="text-muted-foreground">
+                  {summary.tasks} Aufg.
+                </div>
+              )}
+              {summary.critical > 0 && (
+                <div className="flex items-center gap-1 text-destructive">
+                  <Zap className="w-3 h-3" />
+                  <span className="font-semibold">{summary.critical} kritisch</span>
+                </div>
+              )}
+              {summary.escalated > 0 && (
+                <div className="flex items-center gap-1 text-warning">
+                  <AlertTriangle className="w-3 h-3" />
+                  <span className="font-semibold">{summary.escalated} eskaliert</span>
+                </div>
+              )}
+              {summary.delayCost > 0 && (
+                <div className="flex items-center gap-1 text-destructive">
+                  <DollarSign className="w-3 h-3" />
+                  <span className="font-semibold">{summary.delayCost.toLocaleString("de-DE")}€</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div
