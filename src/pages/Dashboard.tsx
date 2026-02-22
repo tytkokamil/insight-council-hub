@@ -243,11 +243,6 @@ const Dashboard = () => {
         title={dashboardTitle}
         subtitle={t("dashboard.whatNeedsAttention")}
         role="execution"
-        primaryAction={
-          <Button onClick={() => navigate("/decisions")} size="sm" className="gap-1.5">
-            <Plus className="w-3.5 h-3.5" /> {t("dashboard.newLabel")}
-          </Button>
-        }
       />
 
       <div className="space-y-8">
