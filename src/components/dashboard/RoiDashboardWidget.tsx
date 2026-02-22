@@ -93,16 +93,25 @@ const RoiDashboardWidget = () => {
       return { month: `M-${i}`, implemented: impl, avgDays: avgT };
     }).reverse();
 
-    return {
-      avgTimeCurrent, avgTimePrev, timeSaved, timeSavedPercent,
-      currentEscalations, prevEscalations, escalationReduction,
-      currentCost, prevCost, costReduction,
-      successRate, prevSuccessRate, successDelta,
-      currentImplemented: currentImplemented.length,
-      prevImplementedCount: prevImplemented.length,
-      months,
-      hasData: decisions.length >= 5,
-    };
+      // Savings potential projection
+      const avgCostPerDay = currentCost > 0 && currentImplemented.length > 0
+        ? currentCost / currentImplemented.length / Math.max(1, avgTimeCurrent || 1)
+        : 150;
+      const potentialSavings15 = avgTimeCurrent && avgTimeCurrent > 0
+        ? Math.round(currentImplemented.length * (avgTimeCurrent * 0.15) * 2 * 75)
+        : Math.round(decisions.length * 0.15 * 3 * 150);
+
+      return {
+        avgTimeCurrent, avgTimePrev, timeSaved, timeSavedPercent,
+        currentEscalations, prevEscalations, escalationReduction,
+        currentCost, prevCost, costReduction,
+        successRate, prevSuccessRate, successDelta,
+        currentImplemented: currentImplemented.length,
+        prevImplementedCount: prevImplemented.length,
+        months,
+        hasData: decisions.length >= 5,
+        potentialSavings15,
+      };
   }, [allDecisions, isPersonal, user]);
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
@@ -199,6 +208,25 @@ const RoiDashboardWidget = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Savings projection */}
+      {roi.potentialSavings15 > 0 && (
+        <div className="border border-accent-teal/20 rounded-lg p-4 mb-4 bg-accent-teal/[0.03]">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent-teal/10 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4 text-accent-teal" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">
+                Einspar-Potenzial: <span className="text-accent-teal">{formatCost(roi.potentialSavings15)}</span>
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                bei 15% Geschwindigkeits-Verbesserung in den nächsten 90 Tagen
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Trend chart */}
       <div className="border border-border rounded-lg p-5">

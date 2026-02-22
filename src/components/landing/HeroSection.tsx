@@ -37,7 +37,7 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
-              Decision Operating System
+              Decision Intelligence Platform
             </span>
           </motion.div>
 
@@ -49,7 +49,7 @@ const HeroSection = () => {
               transition={{ delay: 0.2, duration: 0.8, ease }}
               className="inline-block"
             >
-              Ihr Unternehmen hat kein
+              Schlechte Entscheidungen kosten
             </motion.span>
             <br />
             <motion.span
@@ -58,7 +58,7 @@ const HeroSection = () => {
               transition={{ delay: 0.35, duration: 0.8, ease }}
               className="inline-block"
             >
-              Task-Problem. Es hat ein
+              Unternehmen Millionen.
             </motion.span>
             <br />
             <motion.span
@@ -67,7 +67,7 @@ const HeroSection = () => {
               transition={{ delay: 0.5, duration: 1, ease }}
               className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent pb-2 -mb-2 decoration-clone"
             >
-              Entscheidungs-Problem.
+              Decivio verhindert sie.
             </motion.span>
           </h1>
 
@@ -78,8 +78,7 @@ const HeroSection = () => {
             transition={{ delay: 0.7, duration: 0.8, ease }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            Decivio gibt Ihrer Organisation Struktur, Governance und
-            KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar.
+            Messen und verbessern Sie Ihre Entscheidungsqualität — mit Struktur, Governance und KI-gestützter Intelligenz. Schneller. Messbar. Nachvollziehbar.
           </motion.p>
 
           {/* CTA */}
@@ -106,7 +105,7 @@ const HeroSection = () => {
             transition={{ delay: 1.1, duration: 0.8 }}
             className="mt-8 text-xs text-muted-foreground/60"
           >
-            Für wachsende Teams und Unternehmen, die strategische Entscheidungen strukturieren wollen.
+            Vertraut von wachsenden Teams und Enterprise-Organisationen weltweit.
           </motion.p>
 
           {/* Trust badges */}
