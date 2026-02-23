@@ -270,8 +270,56 @@ const ProcessHub = () => {
       const worstHandoff = tInteractions[0];
       recs.push({ title: `${worstHandoff.teamAName} ↔ ${worstHandoff.teamBName} beschleunigen`, description: `Ø ${worstHandoff.handoffTime}d Übergabe (Org Ø = ${worstHandoff.orgAvgHandoff}d).`, impact: "mittel", timeSaved: `${Math.round((worstHandoff.handoffTime - worstHandoff.orgAvgHandoff) * worstHandoff.sharedCount)}d`, costSaved: "Prozessoptimierung", severity: "medium" });
     }
+
+    // ═══════════════════════════════════════
+    // 7b) AUTO-GENERATE AUTOMATION SUGGESTIONS
+    // ═══════════════════════════════════════
+    // High-risk decisions without automation
+    const highRiskDecs = decisions.filter(d => (d.ai_risk_score ?? 0) > 60 && !["implemented", "rejected", "archived"].includes(d.status));
+    if (highRiskDecs.length >= 2) {
+      recs.push({
+        title: "Risk-Automation erstellen",
+        description: `${highRiskDecs.length} High-Risk-Entscheidungen ohne automatische Eskalation. Empfehlung: Automation-Regel für Risk Score > 60.`,
+        impact: "hoch",
+        timeSaved: "Automatische Eskalation",
+        costSaved: `~${highRiskDecs.length * 2100}€ Risk-Mitigation`,
+        route: "/automation",
+        severity: "high",
+      });
+    }
+    // Categories with high rejection but no automation
+    const highRejectionCats = fMetrics.filter(f => f.rejectionRate > 25);
+    if (highRejectionCats.length > 0) {
+      const cat = highRejectionCats[0];
+      recs.push({
+        title: `${categoryLabels[cat.category] || cat.category}: Auto-Review einrichten`,
+        description: `${cat.rejectionRate}% Ablehnungsrate. Empfehlung: Automatische Review-Zuweisung bei ${categoryLabels[cat.category] || cat.category}-Entscheidungen.`,
+        impact: "hoch",
+        timeSaved: "~30% weniger Ablehnungen",
+        costSaved: "Qualitätssteigerung",
+        route: "/automation",
+        severity: "high",
+      });
+    }
+    // SLA gaps that could be automated
+    const catsWithoutSla = fMetrics.filter(f => {
+      const catDecs = decisions.filter(d => d.category === f.category && !d.due_date);
+      return catDecs.length >= 3;
+    });
+    if (catsWithoutSla.length > 0) {
+      recs.push({
+        title: "SLA-Automation für fehlende Deadlines",
+        description: `${catsWithoutSla.length} Kategorie(n) mit Entscheidungen ohne SLA. Automation kann automatisch Deadlines setzen.`,
+        impact: "mittel",
+        timeSaved: "Governance-Compliance",
+        costSaved: "Vermeidbare Delays",
+        route: "/automation",
+        severity: "medium",
+      });
+    }
+
     if (recs.length === 0) recs.push({ title: "Keine kritischen Engpässe", description: "Prozesse laufen im Normbereich.", impact: "niedrig", timeSaved: "—", costSaved: "—", severity: "low" });
-    setRecommendations(recs.slice(0, 5));
+    setRecommendations(recs.slice(0, 7));
   }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
 
   if (loading) return <AppLayout><AnalysisPageSkeleton cards={4} sections={4} /></AppLayout>;
