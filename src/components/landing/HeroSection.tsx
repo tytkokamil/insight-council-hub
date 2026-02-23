@@ -68,11 +68,11 @@ const HeroSection = () => {
               transition={{ delay: 0.35, duration: 0.9, ease }}
               className="block mt-1"
             >
-              <span className="bg-gradient-to-r from-aurora-blue via-accent-violet to-aurora-mint bg-clip-text text-transparent bg-[length:200%_auto] animate-aurora-shift">
+               <span className="bg-gradient-to-r from-primary via-accent-teal to-accent-blue bg-clip-text text-transparent">
                 Strukturiert.
               </span>
               {" "}
-              <span className="bg-gradient-to-r from-accent-violet to-aurora-blue bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-accent-teal to-primary bg-clip-text text-transparent">
                 Nachvollziehbar.
               </span>
             </motion.span>
