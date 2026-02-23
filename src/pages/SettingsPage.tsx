@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
+import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -65,22 +66,25 @@ const SettingsPage = () => {
   const [adminStats, setAdminStats] = useState<any>(null);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allRoles, setAllRoles] = useState<any[]>([]);
+  const [mfaActive, setMfaActive] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      const [profileRes, aiRes, notifRes, roleRes, teamsRes] = await Promise.all([
+      const [profileRes, aiRes, notifRes, roleRes, teamsRes, mfaRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single(),
         supabase.from("user_ai_settings").select("*").eq("user_id", user.id).single(),
         supabase.from("notification_preferences").select("*").eq("user_id", user.id).single(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).single(),
         supabase.from("team_members").select("*, teams(name)").eq("user_id", user.id),
+        supabase.from("mfa_settings").select("totp_enabled, email_otp_enabled").eq("user_id", user.id).single(),
       ]);
       if (profileRes.data) { setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null); }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
       if (notifRes.data) { setNotifPrefs({ review_requests: notifRes.data.review_requests, escalations: notifRes.data.escalations, team_updates: notifRes.data.team_updates }); }
       if (roleRes.data) setUserRole(roleRes.data.role);
       if (teamsRes.data) setTeamMemberships(teamsRes.data);
+      if (mfaRes.data) setMfaActive(mfaRes.data.totp_enabled || mfaRes.data.email_otp_enabled);
     };
     fetchData();
   }, [user]);
@@ -119,14 +123,15 @@ const SettingsPage = () => {
 
   // Security Health Score
   const securityScore = useMemo(() => {
-    let score = 40; // base: password set
-    if (notifPrefs.escalations) score += 15;
+    let score = 30; // base: password set
+    if (mfaActive) score += 20;
+    if (notifPrefs.escalations) score += 10;
     if (notifPrefs.review_requests) score += 10;
-    if (teamMemberships.length > 0) score += 15;
+    if (teamMemberships.length > 0) score += 10;
     if (aiProvider === "lovable") score += 10; // no external key exposure
     if (fullName) score += 10;
     return Math.min(100, score);
-  }, [notifPrefs, teamMemberships, aiProvider, fullName]);
+  }, [notifPrefs, teamMemberships, aiProvider, fullName, mfaActive]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -580,7 +585,7 @@ const SettingsPage = () => {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                     {[
                       { label: "Passwort gesetzt", ok: true },
-                      { label: "2FA aktiviert", ok: false },
+                      { label: "2FA aktiviert", ok: mfaActive },
                       { label: "SSO aktiv", ok: false },
                       { label: "Session Timeout", ok: true },
                       { label: "Profil vollständig", ok: !!fullName },
@@ -593,6 +598,13 @@ const SettingsPage = () => {
                     ))}
                   </div>
                 </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* 2FA Settings */}
+              <section>
+                <MfaSettingsPanel />
               </section>
 
               <hr className="border-border" />
