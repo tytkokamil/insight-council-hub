@@ -51,7 +51,11 @@
     "wrongCredentials": "E-Mail oder Passwort ist falsch.",
     "emailNotConfirmed": "Bitte bestätige zuerst deine E-Mail-Adresse.",
     "alreadyRegistered": "Diese E-Mail ist bereits registriert.",
-    "signUpSuccess": "Registrierung erfolgreich! Bitte überprüfe deine E-Mail zur Bestätigung."
+    "signUpSuccess": "Registrierung erfolgreich! Bitte überprüfe deine E-Mail zur Bestätigung.",
+    "accountLocked": "Zu viele Fehlversuche. Bitte warte {{seconds}} Sekunden.",
+    "attemptsRemaining": "Versuche übrig",
+    "lockedTimer": "Account gesperrt – noch {{minutes}}:{{seconds}} Minuten warten",
+    "locked": "Gesperrt"
   },
   "settings": {
     "title": "Einstellungen",
