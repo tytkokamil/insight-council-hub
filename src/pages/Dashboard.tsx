@@ -24,6 +24,7 @@ import HeroKpi from "@/components/shared/HeroKpi";
 import PowerGrid from "@/components/shared/PowerGrid";
 import DeepDiveSection from "@/components/shared/DeepDiveSection";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies, useDependencies } from "@/hooks/useDecisions";
+import { useKpiEngine } from "@/hooks/useKpiEngine";
 import { useRisks } from "@/hooks/useRisks";
 import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
@@ -236,6 +237,18 @@ const Dashboard = () => {
     };
   }, [decisions, contextTasks, reviews, dependencies, allDependencies, user, dateFnsLocale, riskData]);
 
+  // ═══ CENTRALIZED KPI ENGINE ═══
+  const currentTeamRate = currentTeam?.hourly_rate ?? undefined;
+  const kpiEngine = useKpiEngine({
+    decisions,
+    tasks: contextTasks,
+    risks: riskData,
+    reviews,
+    dependencies: allDependencies,
+    userId: user?.id,
+    teamHourlyRate: currentTeamRate,
+  });
+
   const chartTooltipStyle = { fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "var(--shadow-md)" };
 
   if (hasError) {
@@ -392,35 +405,35 @@ const Dashboard = () => {
 
             <HeroKpi items={[
               {
-                label: "Decision Health",
-                value: `${computed.healthScore}%`,
-                subLabel: computed.healthScore >= 70 ? "Stabil" : computed.healthScore >= 45 ? "Beobachten" : "Kritisch",
+                label: kpiEngine.getKpi("decision_health")?.label ?? "Decision Health",
+                value: kpiEngine.getKpi("decision_health")?.formatted ?? `${computed.healthScore}%`,
+                subLabel: (kpiEngine.getKpi("decision_health")?.value ?? computed.healthScore) >= 70 ? "Stabil" : (kpiEngine.getKpi("decision_health")?.value ?? computed.healthScore) >= 45 ? "Beobachten" : "Kritisch",
                 icon: Gauge,
-                sentiment: computed.healthScore >= 70 ? "positive" : computed.healthScore >= 45 ? "warning" : "critical",
+                sentiment: kpiEngine.getKpi("decision_health")?.sentiment ?? "neutral",
                 tooltip: "Gesamtgesundheit: 50% Eskalationsfreiheit + 50% Erfolgsquote",
               },
               {
-                label: "Risk Exposure",
-                value: `${computed.riskExposure}`,
+                label: kpiEngine.getKpi("risk_exposure")?.label ?? "Risk Exposure",
+                value: kpiEngine.getKpi("risk_exposure")?.formatted ?? `${computed.riskExposure}`,
                 subLabel: `${computed.openRisks} Risiken · ${computed.highRisk} High-Risk`,
                 icon: Shield,
-                sentiment: computed.riskExposure === 0 ? "positive" : computed.riskExposure <= 3 ? "warning" : "critical",
+                sentiment: kpiEngine.getKpi("risk_exposure")?.sentiment ?? "neutral",
                 tooltip: "Offene Risiken + Entscheidungen mit AI-Risk ≥ 60",
               },
               {
-                label: "Cost of Delay",
-                value: computed.formattedCost,
+                label: kpiEngine.getKpi("cost_of_delay")?.label ?? "Cost of Delay",
+                value: kpiEngine.getKpi("cost_of_delay")?.formatted ?? computed.formattedCost,
                 subLabel: `${computed.active.filter(d => d.status === "draft" || d.status === "review").length} offene Entscheidungen`,
                 icon: DollarSign,
-                sentiment: computed.totalCost < 5000 ? "neutral" : computed.totalCost < 20000 ? "warning" : "critical",
+                sentiment: kpiEngine.getKpi("cost_of_delay")?.sentiment ?? "neutral",
                 tooltip: "Opportunitätskosten durch offene Entscheidungen",
               },
               {
-                label: "SLA Compliance",
-                value: `${computed.slaCompliance}%`,
+                label: kpiEngine.getKpi("sla_compliance")?.label ?? "SLA Compliance",
+                value: kpiEngine.getKpi("sla_compliance")?.formatted ?? `${computed.slaCompliance}%`,
                 subLabel: `${computed.active.filter(d => d.due_date && new Date(d.due_date) >= new Date()).length} im Plan`,
                 icon: Timer,
-                sentiment: computed.slaCompliance >= 80 ? "positive" : computed.slaCompliance >= 60 ? "warning" : "critical",
+                sentiment: kpiEngine.getKpi("sla_compliance")?.sentiment ?? "neutral",
                 tooltip: "Anteil aktiver Entscheidungen im Zeitplan",
               },
             ]} />

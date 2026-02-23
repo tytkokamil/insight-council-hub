@@ -787,6 +787,39 @@ export type Database = {
           },
         ]
       }
+      economic_config: {
+        Row: {
+          category: string
+          config_key: string
+          config_value: number
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          config_key: string
+          config_value: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          config_key?: string
+          config_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_otp_codes: {
         Row: {
           code: string
@@ -846,6 +879,60 @@ export type Database = {
           id?: string
           label?: string
           min_plan?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kpi_definitions: {
+        Row: {
+          adaptive: boolean
+          calculation_key: string
+          category: string
+          created_at: string
+          default_threshold_critical: number | null
+          default_threshold_good: number | null
+          default_threshold_warning: number | null
+          description: string | null
+          id: string
+          kpi_key: string
+          label: string
+          positive_direction: string
+          sort_order: number
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          adaptive?: boolean
+          calculation_key: string
+          category?: string
+          created_at?: string
+          default_threshold_critical?: number | null
+          default_threshold_good?: number | null
+          default_threshold_warning?: number | null
+          description?: string | null
+          id?: string
+          kpi_key: string
+          label: string
+          positive_direction?: string
+          sort_order?: number
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          adaptive?: boolean
+          calculation_key?: string
+          category?: string
+          created_at?: string
+          default_threshold_critical?: number | null
+          default_threshold_good?: number | null
+          default_threshold_warning?: number | null
+          description?: string | null
+          id?: string
+          kpi_key?: string
+          label?: string
+          positive_direction?: string
+          sort_order?: number
+          unit?: string
           updated_at?: string
         }
         Relationships: []
@@ -1003,6 +1090,53 @@ export type Database = {
             columns: ["decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_kpi_config: {
+        Row: {
+          benchmark_mode: string
+          created_at: string
+          custom_threshold_critical: number | null
+          custom_threshold_good: number | null
+          custom_threshold_warning: number | null
+          custom_weight: number
+          enabled: boolean
+          id: string
+          kpi_id: string
+          updated_at: string
+        }
+        Insert: {
+          benchmark_mode?: string
+          created_at?: string
+          custom_threshold_critical?: number | null
+          custom_threshold_good?: number | null
+          custom_threshold_warning?: number | null
+          custom_weight?: number
+          enabled?: boolean
+          id?: string
+          kpi_id: string
+          updated_at?: string
+        }
+        Update: {
+          benchmark_mode?: string
+          created_at?: string
+          custom_threshold_critical?: number | null
+          custom_threshold_good?: number | null
+          custom_threshold_warning?: number | null
+          custom_weight?: number
+          enabled?: boolean
+          id?: string
+          kpi_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_kpi_config_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: true
+            referencedRelation: "kpi_definitions"
             referencedColumns: ["id"]
           },
         ]
