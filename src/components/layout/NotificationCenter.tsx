@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { de } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { toast as sonnerToast } from "sonner";
 
 interface Notification {
   id: string;
@@ -85,6 +86,8 @@ const groupByDate = (notifications: Notification[]): GroupedNotifications[] => {
 const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate;
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
@@ -119,7 +122,20 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
         { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            setNotifications((prev) => [payload.new as Notification, ...prev].slice(0, 50));
+            const newNotif = payload.new as Notification;
+            setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
+            // Show in-app toast
+            const Icon = typeIcon[newNotif.type] || Bell;
+            sonnerToast(newNotif.title, {
+              description: newNotif.message || undefined,
+              duration: 6000,
+              action: newNotif.decision_id
+                ? {
+                    label: "Anzeigen",
+                    onClick: () => navigateRef.current(`/decisions/${newNotif.decision_id}`),
+                  }
+                : undefined,
+            });
           } else if (payload.eventType === "UPDATE") {
             setNotifications((prev) =>
               prev.map((n) => (n.id === (payload.new as Notification).id ? (payload.new as Notification) : n))
