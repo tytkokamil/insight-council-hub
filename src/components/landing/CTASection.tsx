@@ -22,7 +22,7 @@ const CTASection = () => (
       >
         <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-[-0.04em] leading-[1.05]">
           Bereit für{" "}
-          <span className="bg-gradient-to-r from-aurora-blue via-accent-violet to-aurora-mint bg-clip-text text-transparent bg-[length:200%_auto] animate-aurora-shift">
+           <span className="bg-gradient-to-r from-primary via-accent-teal to-accent-blue bg-clip-text text-transparent">
             strukturierte Entscheidungen
           </span>
           ?
