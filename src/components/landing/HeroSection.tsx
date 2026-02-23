@@ -123,32 +123,32 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Dashboard Preview */}
+        {/* Dashboard Preview — compact */}
         <motion.div
-          initial={{ opacity: 0, y: 80 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 1.4, ease }}
+          transition={{ delay: 1.0, duration: 1.2, ease }}
           style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity }}
-          className="mt-20 relative max-w-4xl mx-auto"
+          className="mt-16 relative max-w-2xl mx-auto"
         >
-          <div className="relative rounded-2xl border border-border/60 bg-card overflow-hidden shadow-2xl shadow-primary/[0.04]">
+          <div className="relative rounded-xl border border-border/50 bg-card overflow-hidden shadow-xl shadow-primary/[0.03]">
             {/* Browser chrome */}
-            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/30 bg-muted/15">
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border/20 bg-muted/10">
               <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
+                <div className="w-2 h-2 rounded-full bg-foreground/[0.07]" />
+                <div className="w-2 h-2 rounded-full bg-foreground/[0.07]" />
+                <div className="w-2 h-2 rounded-full bg-foreground/[0.07]" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md bg-muted/40 text-[11px] text-muted-foreground/50 font-mono border border-border/20">
+                <div className="px-3 py-0.5 rounded bg-muted/30 text-[10px] text-muted-foreground/40 font-mono border border-border/15">
                   app.decivio.com
                 </div>
               </div>
             </div>
 
-            {/* Dashboard mockup */}
-            <div className="relative p-5 md:p-8 space-y-5">
-              <div className="grid grid-cols-3 gap-3">
+            {/* Dashboard mockup — compact */}
+            <div className="relative p-4 md:p-5 space-y-3">
+              <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: "Freigegeben", value: "12", color: "text-accent-teal" },
                   { label: "Im Review", value: "5", color: "text-accent-amber" },
@@ -156,13 +156,13 @@ const HeroSection = () => {
                 ].map((s, i) => (
                   <motion.div
                     key={s.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 1.4 + i * 0.1, duration: 0.5, ease }}
-                    className="p-4 rounded-xl border border-border/40 bg-muted/10"
+                    transition={{ delay: 1.3 + i * 0.08, duration: 0.4, ease }}
+                    className="p-3 rounded-lg border border-border/30 bg-muted/5"
                   >
-                    <div className={`text-2xl md:text-3xl font-bold font-display tabular-nums ${s.color}`}>{s.value}</div>
-                    <div className="text-[11px] text-muted-foreground mt-1">{s.label}</div>
+                    <div className={`text-lg md:text-xl font-bold font-display ${s.color}`}>{s.value}</div>
+                    <div className="text-[10px] text-muted-foreground/60 mt-0.5">{s.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -170,50 +170,27 @@ const HeroSection = () => {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.7, duration: 0.6 }}
-                className="p-5 rounded-xl bg-muted/10 border border-border/30"
+                transition={{ delay: 1.6, duration: 0.5 }}
+                className="p-3 rounded-lg bg-muted/5 border border-border/20"
               >
-                <div className="text-xs font-medium text-muted-foreground mb-4">Decision Velocity</div>
-                <div className="flex items-end gap-1.5 h-20">
+                <div className="text-[10px] font-medium text-muted-foreground/60 mb-2">Decision Velocity</div>
+                <div className="flex items-end gap-1 h-10">
                   {[40, 65, 50, 80, 55, 90, 70, 95, 75, 60, 85, 72].map((h, i) => (
                     <motion.div
                       key={i}
-                      className="flex-1 rounded-sm bg-primary/8 hover:bg-primary/15 transition-colors"
+                      className="flex-1 rounded-sm bg-primary/8"
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
-                      transition={{ delay: 1.8 + i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                      transition={{ delay: 1.7 + i * 0.03, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                     />
                   ))}
                 </div>
               </motion.div>
               
-              <div className="space-y-2">
-                {[
-                  { title: "Q4 Budget-Freigabe", status: "Freigegeben", color: "text-accent-teal bg-accent-teal/8" },
-                  { title: "Engineering Hiring Plan", status: "Review", color: "text-accent-amber bg-accent-amber/8" },
-                  { title: "Cloud Migration", status: "Entwurf", color: "text-muted-foreground bg-muted/50" },
-                ].map((row, i) => (
-                  <motion.div
-                    key={row.title}
-                    initial={{ opacity: 0, x: -16 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 2.0 + i * 0.08, duration: 0.4, ease }}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-border/20 bg-card"
-                  >
-                    <div className="w-1 h-1 rounded-full bg-foreground/20" />
-                    <span className="text-xs font-medium flex-1 truncate">{row.title}</span>
-                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${row.color}`}>{row.status}</span>
-                  </motion.div>
-                ))}
-              </div>
-              
               {/* Fade out gradient */}
-              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent" />
             </div>
           </div>
-          
-          {/* Subtle glow under dashboard */}
-          <div className="absolute -bottom-8 left-[10%] right-[10%] h-16 bg-primary/[0.03] blur-[40px] rounded-full" />
         </motion.div>
       </div>
 
