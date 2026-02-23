@@ -13,6 +13,8 @@ import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import { HelmetProvider } from "react-helmet-async";
+import OfflineIndicator from "@/components/shared/OfflineIndicator";
+import CookieBanner from "@/components/shared/CookieBanner";
 
 // Eagerly loaded (critical path)
 import Index from "./pages/Index";
@@ -63,6 +65,9 @@ const MeetingMode = lazy(() => import("./pages/MeetingMode"));
 const AnalyticsHub = lazy(() => import("./pages/AnalyticsHub"));
 const ProcessHub = lazy(() => import("./pages/ProcessHub"));
 const ExecutiveHub = lazy(() => import("./pages/ExecutiveHub"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Imprint = lazy(() => import("./pages/Imprint"));
 
 const queryClient = new QueryClient();
 
@@ -92,6 +97,9 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/login" element={<Auth />} />
+              <Route path="/privacy" element={<Suspense fallback={<PageLoadingFallback />}><PrivacyPolicy /></Suspense>} />
+              <Route path="/terms" element={<Suspense fallback={<PageLoadingFallback />}><TermsOfService /></Suspense>} />
+              <Route path="/imprint" element={<Suspense fallback={<PageLoadingFallback />}><Imprint /></Suspense>} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoadingFallback />}><ResetPassword /></Suspense>} />
               <Route path="/dashboard" element={<P><Dashboard /></P>} />
               <Route path="/decisions" element={<P><Decisions /></P>} />
@@ -139,6 +147,8 @@ const App = () => (
             </GuidedModeProvider>
             </FeatureFlagsProvider>
           </AuthProvider>
+          <OfflineIndicator />
+          <CookieBanner />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
