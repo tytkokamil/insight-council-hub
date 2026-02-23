@@ -36,6 +36,7 @@ import {
 
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
 import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
@@ -300,6 +301,9 @@ const Dashboard = () => {
       </div>
 
       <div className="space-y-10">
+
+        {/* ═══ LOADING SKELETON ═══ */}
+        {isLoading && <DashboardSkeleton />}
 
         {/* ═══ 1. DQI — HERO ═══ */}
         {!isLoading && (

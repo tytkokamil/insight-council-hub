@@ -90,10 +90,10 @@
 
   .dark {
     --background: 228 16% 12%;
-    --foreground: 225 15% 92%;
+    --foreground: 225 15% 93%;
 
-    --card: 228 16% 14%;
-    --card-foreground: 225 15% 92%;
+    --card: 228 16% 14.5%;
+    --card-foreground: 225 15% 93%;
 
     --popover: 228 16% 14%;
     --popover-foreground: 225 15% 92%;
@@ -101,11 +101,11 @@
     --primary: 230 65% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 14% 18%;
-    --secondary-foreground: 225 15% 92%;
+    --secondary: 228 14% 19%;
+    --secondary-foreground: 225 15% 93%;
 
-    --muted: 228 14% 18%;
-    --muted-foreground: 225 10% 55%;
+    --muted: 228 14% 19%;
+    --muted-foreground: 225 10% 58%;
 
     --accent: 175 40% 14%;
     --accent-foreground: 175 55% 65%;
@@ -119,8 +119,8 @@
     --warning: 38 90% 55%;
     --warning-foreground: 38 80% 18%;
 
-    --border: 228 12% 22%;
-    --input: 228 12% 22%;
+    --border: 228 12% 24%;
+    --input: 228 12% 24%;
     --ring: 230 65% 60%;
 
     --chart-1: 230 65% 60%;
@@ -183,6 +183,22 @@
     letter-spacing: -0.025em;
   }
 
+  /* Focus visible – clear ring for keyboard users */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Skip link transitions */
+  [href="#main-content"]:focus {
+    clip: auto !important;
+    clip-path: none !important;
+    width: auto !important;
+    height: auto !important;
+    position: fixed !important;
+  }
+
   /* Scrollbar – barely visible */
   ::-webkit-scrollbar {
     width: 6px;
@@ -197,6 +213,11 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--foreground) / 0.2);
+  }
+
+  /* Dark mode: ensure sufficient contrast on muted elements */
+  .dark .text-muted-foreground {
+    color: hsl(225 10% 60%);
   }
 }
 
