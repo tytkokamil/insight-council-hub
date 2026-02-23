@@ -3,24 +3,24 @@ import { Briefcase, DollarSign, Target, ShieldAlert } from "lucide-react";
 
 const useCases = [
   {
-    icon: Briefcase,
-    title: "Produktentscheidungen",
-    description: "Feature-Priorisierung, Roadmap-Änderungen und technische Architekturentscheidungen mit klaren Verantwortlichkeiten.",
-  },
-  {
     icon: DollarSign,
-    title: "Budgetfreigaben",
-    description: "Investitionsentscheidungen mit Szenario-Analyse, Risiko-Scoring und automatischer Eskalation bei Überschreitung.",
+    title: "Budgetfreigaben & Investitionen",
+    description: "SLA-gesteuerte Freigabe-Workflows mit Risiko-Scoring, Szenario-Analyse und automatischer Eskalation bei Überschreitung.",
   },
   {
     icon: Target,
     title: "Strategische Initiativen",
-    description: "Markteintritte, Partnerschaften und Expansionspläne mit vollständigem Stakeholder-Alignment und Audit Trail.",
+    description: "M&A, Expansionen und Partnerschaften mit Stakeholder-Alignment, Audit Trail und Executive Dashboard für das C-Level.",
   },
   {
     icon: ShieldAlert,
-    title: "Risikoentscheidungen",
-    description: "Compliance, Security und regulatorische Entscheidungen mit vertraulicher Markierung und eingeschränktem Zugriff.",
+    title: "Compliance & Regulatorik",
+    description: "Dokumentationspflichten erfüllen, Audit-Trails sichern und vertrauliche Entscheidungen mit rollenbasiertem Zugriff schützen.",
+  },
+  {
+    icon: Briefcase,
+    title: "Führungsentscheidungen",
+    description: "Hiring, Restrukturierung und Organisationsentscheidungen mit klaren Verantwortlichkeiten und messbaren Outcomes.",
   },
 ];
 
@@ -38,7 +38,7 @@ const UseCasesSection = () => (
       >
         <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Use Cases</p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Gebaut für die Entscheidungen, <span className="gradient-text">die zählen</span>
+          Gebaut für Unternehmen mit <span className="gradient-text">Entscheidungsdruck</span>
         </h2>
       </motion.div>
 

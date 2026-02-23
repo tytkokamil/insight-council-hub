@@ -28,7 +28,14 @@
     "live": "Live",
     "switchToAdvanced": "Wechsle zu Advanced →",
     "teaserInsights": "Trends, Engpässe & Executive Reports",
-    "teaserGovernance": "Governance, Risiken & Compliance"
+    "teaserGovernance": "Governance, Risiken & Compliance",
+    "advancedAnalytics": "Advanced Analytics",
+    "decisionGraph": "Decision Graph",
+    "decisionRadar": "Decision Radar",
+    "decisionDna": "Decision DNA",
+    "benchmarking": "Benchmarking",
+    "healthHeatmap": "Health Heatmap",
+    "predictiveTimeline": "Predictive Timeline"
   },
   "auth": {
     "signIn": "Anmelden",

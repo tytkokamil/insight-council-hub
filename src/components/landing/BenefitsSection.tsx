@@ -56,7 +56,7 @@ const BenefitsSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center max-w-2xl mx-auto mb-14"
       >
-        <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Warum Decivio</p>
+        <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Executive Decision Governance</p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
           Entscheidungsqualität wird <span className="gradient-text">messbar</span>
         </h2>

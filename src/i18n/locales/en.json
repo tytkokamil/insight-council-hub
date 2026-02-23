@@ -28,7 +28,14 @@
     "live": "Live",
     "switchToAdvanced": "Switch to Advanced →",
     "teaserInsights": "Trends, bottlenecks & executive reports",
-    "teaserGovernance": "Governance, risks & compliance"
+    "teaserGovernance": "Governance, risks & compliance",
+    "advancedAnalytics": "Advanced Analytics",
+    "decisionGraph": "Decision Graph",
+    "decisionRadar": "Decision Radar",
+    "decisionDna": "Decision DNA",
+    "benchmarking": "Benchmarking",
+    "healthHeatmap": "Health Heatmap",
+    "predictiveTimeline": "Predictive Timeline"
   },
   "auth": {
     "signIn": "Sign In",
