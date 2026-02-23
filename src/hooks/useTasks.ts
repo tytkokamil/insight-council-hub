@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { toast } from "sonner";
 
 export const TASKS_KEY = ["tasks"] as const;
 
@@ -94,6 +95,71 @@ export const useUpdateTaskStatus = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Statusänderung fehlgeschlagen – wurde zurückgesetzt.");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: TASKS_KEY });
+    },
+  });
+};
+
+/** Optimistic mutation for soft-deleting a task */
+export const useDeleteTask = () => {
+  const qc = useQueryClient();
+  const { selectedTeamId } = useTeamContext();
+  const queryKey = [...TASKS_KEY, selectedTeamId];
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData(queryKey);
+      qc.setQueryData(queryKey, (old: Task[] | undefined) =>
+        old?.filter((t) => t.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Löschen fehlgeschlagen – wurde zurückgesetzt.");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: TASKS_KEY });
+    },
+  });
+};
+
+/** Optimistic mutation for updating task priority */
+export const useUpdateTaskPriority = () => {
+  const qc = useQueryClient();
+  const { selectedTeamId } = useTeamContext();
+  const queryKey = [...TASKS_KEY, selectedTeamId];
+
+  return useMutation({
+    mutationFn: async ({ id, priority }: { id: string; priority: "low" | "medium" | "high" | "critical" }) => {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ priority, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, priority }) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData(queryKey);
+      qc.setQueryData(queryKey, (old: Task[] | undefined) =>
+        old?.map((t) => t.id === id ? { ...t, priority, updated_at: new Date().toISOString() } : t)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Prioritätsänderung fehlgeschlagen – wurde zurückgesetzt.");
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: TASKS_KEY });
