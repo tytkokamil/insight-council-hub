@@ -6,6 +6,8 @@ import decivioLogo from "@/assets/decivio-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import MfaVerificationScreen from "@/components/auth/MfaVerificationScreen";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 
@@ -18,6 +20,8 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [mfaMethod, setMfaMethod] = useState<"totp" | "email" | "both">("totp");
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
 
@@ -47,6 +51,21 @@ const Auth = () => {
           if (error.message.includes("Invalid login")) setError(t("auth.wrongCredentials"));
           else if (error.message.includes("Email not confirmed")) setError(t("auth.emailNotConfirmed"));
           else setError(error.message);
+        } else {
+          // Check if user has MFA enabled
+          const { data: mfaSettings } = await supabase
+            .from("mfa_settings")
+            .select("totp_enabled, email_otp_enabled, preferred_method")
+            .eq("user_id", (await supabase.auth.getUser()).data.user?.id || "")
+            .single();
+
+          if (mfaSettings && (mfaSettings.totp_enabled || mfaSettings.email_otp_enabled)) {
+            const method = mfaSettings.totp_enabled && mfaSettings.email_otp_enabled
+              ? "both"
+              : mfaSettings.totp_enabled ? "totp" : "email";
+            setMfaMethod(method);
+            setMfaRequired(true);
+          }
         }
       } else {
         signupSchema.parse({ email, password, fullName });
@@ -64,6 +83,19 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  if (mfaRequired) {
+    return (
+      <MfaVerificationScreen
+        mfaMethod={mfaMethod}
+        onVerified={() => navigate("/dashboard")}
+        onCancel={async () => {
+          await supabase.auth.signOut();
+          setMfaRequired(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
