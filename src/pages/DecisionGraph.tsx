@@ -91,7 +91,8 @@ const edgeTypeStyles: Record<string, any> = {
   requires: { stroke: "#3b82f6", strokeWidth: 1.5 },
 };
 
-const DecisionGraph = () => {
+const DecisionGraph = ({ embedded }: { embedded?: boolean }) => {
+  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
@@ -205,7 +206,7 @@ const DecisionGraph = () => {
   }, [decisions]);
 
   return (
-    <AppLayout>
+    <Wrapper>
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Netzwerk</p>
@@ -363,7 +364,7 @@ const DecisionGraph = () => {
           </ReactFlow>
         )}
       </div>
-    </AppLayout>
+    </Wrapper>
   );
 };
 

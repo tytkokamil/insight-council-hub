@@ -28,7 +28,8 @@ interface ActionableRec { title: string; description: string; impact: "hoch" | "
 const statusLabels: Record<string, string> = { draft: "Draft", proposed: "Proposed", review: "Review", approved: "Approved", implemented: "Implementiert" };
 const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
 
-const ProcessHub = () => {
+const ProcessHub = ({ embedded }: { embedded?: boolean }) => {
+  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   const navigate = useNavigate();
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: tasks = [], isLoading: taskLoading } = useTasks();
@@ -322,11 +323,11 @@ const ProcessHub = () => {
     setRecommendations(recs.slice(0, 7));
   }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
 
-  if (loading) return <AppLayout><AnalysisPageSkeleton cards={4} sections={4} /></AppLayout>;
+  if (loading) return <Wrapper><AnalysisPageSkeleton cards={4} sections={4} /></Wrapper>;
 
   if (decisions.length < 5) {
     return (
-      <AppLayout>
+      <Wrapper>
         <PageHeader title="Process Intelligence" subtitle="Engpässe, Reibung und Governance analysieren" role="intelligence" />
         <EmptyAnalysisState
           icon={Radar}
@@ -342,7 +343,7 @@ const ProcessHub = () => {
             { icon: Shield, label: "SLA", desc: "Governance & Compliance" },
           ]}
         />
-      </AppLayout>
+      </Wrapper>
     );
   }
 
@@ -352,7 +353,7 @@ const ProcessHub = () => {
   const riskIcon = (r: "ok" | "watch" | "critical") => r === "critical" ? "🔴" : r === "watch" ? "🟡" : "🟢";
 
   return (
-    <AppLayout>
+    <Wrapper>
       <PageHeader
         title="Process Intelligence"
         subtitle="Engpässe, Reibung und Governance – Letzte 30 Tage"
@@ -682,7 +683,7 @@ const ProcessHub = () => {
           ))}
         </div>
       </CollapsibleSection>
-    </AppLayout>
+    </Wrapper>
   );
 };
 
