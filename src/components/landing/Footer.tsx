@@ -15,24 +15,37 @@ const Footer = () => (
           </p>
         </div>
 
-        {[
-          { title: "Produkt", links: ["Funktionen", "Templates", "Integrationen", "Preise"], color: "text-accent-blue" },
-          { title: "Unternehmen", links: ["Über uns", "Blog", "Karriere", "Kontakt"], color: "text-accent-violet" },
-          { title: "Rechtliches", links: ["Datenschutz", "AGB", "Sicherheit", "DSGVO"], color: "text-accent-teal" },
-        ].map(section => (
-          <div key={section.title}>
-            <h4 className={`text-xs font-medium tracking-[0.15em] uppercase ${section.color}/50 mb-4`}>{section.title}</h4>
-            <ul className="space-y-2.5">
-              {section.links.map(link => (
-                <li key={link}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">
-                    {link}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <div>
+          <h4 className="text-xs font-medium tracking-[0.15em] uppercase text-accent-blue/50 mb-4">Produkt</h4>
+          <ul className="space-y-2.5">
+            {["Funktionen", "Templates", "Integrationen", "Preise"].map(link => (
+              <li key={link}>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">{link}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-medium tracking-[0.15em] uppercase text-accent-violet/50 mb-4">Unternehmen</h4>
+          <ul className="space-y-2.5">
+            {["Über uns", "Blog", "Karriere", "Kontakt"].map(link => (
+              <li key={link}>
+                <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">{link}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-medium tracking-[0.15em] uppercase text-accent-teal/50 mb-4">Rechtliches</h4>
+          <ul className="space-y-2.5">
+            <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">Datenschutz</Link></li>
+            <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">AGB</Link></li>
+            <li><Link to="/imprint" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">Impressum</Link></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-200">DSGVO</a></li>
+          </ul>
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/30">

@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import MfaVerificationScreen from "@/components/auth/MfaVerificationScreen";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
+import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -150,6 +151,8 @@ const Auth = () => {
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input type="password" placeholder={t("auth.passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                 </div>
+                
+                {!isLogin && <PasswordStrengthIndicator password={password} />}
               </div>
 
               {error && (
