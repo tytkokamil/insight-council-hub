@@ -37,28 +37,33 @@ const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) =>
   return <span ref={ref}>0{suffix}</span>;
 };
 
+const ease = [0.16, 1, 0.3, 1] as const;
+
 const StatsSection = () => (
-  <section className="py-0 relative">
+  <section className="py-20 relative">
     <div className="container mx-auto px-4">
-      <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4">
-        {metrics.map((stat, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="py-16 pr-8 border-r border-border last:border-r-0"
-          >
-            <div className="text-5xl md:text-6xl font-bold tracking-[-0.05em] font-display">
-              <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-            </div>
-            <div className="text-sm text-muted-foreground mt-3">{stat.label}</div>
-          </motion.div>
-        ))}
+      <div className="max-w-4xl mx-auto">
+        <div className="aurora-card p-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/40">
+            {metrics.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: i * 0.08, duration: 0.6, ease }}
+                className="text-center px-6 py-6"
+              >
+                <div className="text-4xl md:text-5xl font-bold tracking-[-0.04em] font-display text-foreground">
+                  <AnimatedNumber value={stat.value} suffix={stat.suffix} />
+                </div>
+                <div className="text-sm text-muted-foreground mt-2">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
-    <div className="absolute bottom-0 left-0 right-0 h-px bg-border" />
   </section>
 );
 
