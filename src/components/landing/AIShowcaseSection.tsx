@@ -15,36 +15,40 @@ const capabilities = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const AIShowcaseSection = () => (
-  <section className="py-24 relative overflow-hidden">
+  <section className="py-28 relative overflow-hidden">
+    {/* Background */}
+    <div className="absolute inset-0 bg-muted/20" />
+    
     <div className="container mx-auto px-4 relative z-10">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease }}
-        className="text-center max-w-lg mx-auto mb-14"
+        transition={{ duration: 0.7, ease }}
+        className="max-w-3xl mx-auto mb-16"
       >
-        <p className="text-[11px] font-medium text-muted-foreground/50 mb-3 tracking-[0.15em] uppercase">KI & Automation</p>
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-          Intelligenz, die mitdenkt
+        <p className="text-xs font-medium text-accent-violet/50 mb-4 tracking-[0.15em] uppercase">KI & Automation</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-[-0.03em]">
+          Intelligenz, die{" "}
+          <span className="bg-gradient-to-r from-accent-violet to-primary bg-clip-text text-transparent">mitdenkt</span>
         </h2>
       </motion.div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {capabilities.map((cap, i) => (
           <motion.div
             key={cap.title}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: i * 0.06, duration: 0.5, ease }}
-            className="group p-5 rounded-xl border border-border/40 bg-card/50 hover:bg-card hover:border-border transition-all duration-300"
+            transition={{ delay: i * 0.06, duration: 0.6, ease }}
+            className="group p-6 rounded-2xl border border-border/40 bg-card hover:border-accent-violet/20 transition-all duration-500"
           >
-            <div className="w-8 h-8 rounded-lg bg-accent-violet/[0.06] flex items-center justify-center mb-3 group-hover:bg-accent-violet/10 transition-colors">
-              <cap.icon className="w-4 h-4 text-accent-violet/50 group-hover:text-accent-violet transition-colors" />
+            <div className="w-10 h-10 rounded-xl bg-accent-violet/[0.06] flex items-center justify-center mb-4 group-hover:bg-accent-violet/[0.1] transition-colors duration-500">
+              <cap.icon className="w-5 h-5 text-accent-violet/40 group-hover:text-accent-violet transition-colors duration-500" />
             </div>
-            <h4 className="text-sm font-semibold mb-1">{cap.title}</h4>
-            <p className="text-xs text-muted-foreground/55 leading-relaxed">
+            <h4 className="text-base font-semibold mb-2 tracking-tight">{cap.title}</h4>
+            <p className="text-sm text-muted-foreground/45 leading-relaxed">
               {cap.description}
             </p>
           </motion.div>

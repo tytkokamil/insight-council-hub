@@ -246,22 +246,22 @@ const FeaturesSection = () => {
   const Preview = previewMap[current.preview];
 
   return (
-    <section id="features" className="py-20 relative overflow-hidden">
+    <section className="py-28 relative overflow-hidden">
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.7, ease }}
-          className="text-center max-w-3xl mx-auto mb-12"
+          className="max-w-3xl mx-auto mb-16"
         >
-          <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Governance Engine</p>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
+          <p className="text-xs font-medium text-muted-foreground/50 mb-4 tracking-[0.15em] uppercase">Governance Engine</p>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-[-0.04em] leading-[1.1] mb-5">
             Nicht nur Tracking —{" "}
-            <span className="text-foreground">volle Entscheidungskontrolle</span>
+            <span className="bg-gradient-to-r from-primary to-accent-violet bg-clip-text text-transparent">volle Kontrolle</span>
           </h2>
-          <p className="text-lg text-muted-foreground leading-relaxed">
+          <p className="text-base text-muted-foreground/50 leading-relaxed max-w-xl">
             SLA-Steuerung, Eskalation, Risk Scoring und Executive Dashboards — die Governance-Infrastruktur für Ihre wichtigsten Entscheidungen.
           </p>
         </motion.div>
@@ -274,17 +274,17 @@ const FeaturesSection = () => {
           transition={{ duration: 0.8, ease }}
           className="max-w-5xl mx-auto"
         >
-          <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="relative rounded-2xl border border-border/40 bg-card overflow-hidden">
             {/* Tabs */}
-            <div className="relative flex overflow-x-auto border-b border-border bg-muted/20">
+            <div className="relative flex overflow-x-auto border-b border-border/20 bg-muted/10">
               {features.map((f, i) => (
                 <button
                   key={f.id}
                   onClick={() => setActive(i)}
-                  className={`relative flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                  className={`relative flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition-colors duration-300 ${
                     i === active
                       ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground/70"
+                      : "text-muted-foreground/50 hover:text-foreground/70"
                   }`}
                 >
                   <f.icon className="w-4 h-4" />
@@ -292,7 +292,7 @@ const FeaturesSection = () => {
                   {i === active && (
                     <motion.div
                       layoutId="activeFeatureTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-primary"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
@@ -302,7 +302,7 @@ const FeaturesSection = () => {
 
             {/* Content */}
             <div className="relative grid md:grid-cols-2 gap-0">
-              <div className="p-8 md:p-10 flex flex-col justify-center border-r border-border">
+              <div className="p-8 md:p-10 flex flex-col justify-center border-r border-border/20">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={active}
@@ -311,24 +311,20 @@ const FeaturesSection = () => {
                     exit={{ opacity: 0, x: 12 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <div className={`w-12 h-12 rounded-xl ${accentStyles[current.accent]?.bg} flex items-center justify-center mb-5`}>
+                    <div className={`w-12 h-12 rounded-xl ${accentStyles[current.accent]?.bg} flex items-center justify-center mb-6`}>
                       <current.icon className={`w-6 h-6 ${accentStyles[current.accent]?.text}`} />
                     </div>
                     <h3 className="text-xl md:text-2xl font-bold mb-3 tracking-tight">
                       {current.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed mb-6">
+                    <p className="text-muted-foreground/50 leading-relaxed">
                       {current.description}
                     </p>
-                    <div className="flex items-center gap-1.5 text-sm text-foreground font-medium cursor-pointer group">
-                      <span>Mehr erfahren</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              <div className="p-6 md:p-8 bg-muted/10 min-h-[280px] flex items-center">
+              <div className="p-6 md:p-8 bg-muted/5 min-h-[280px] flex items-center">
                 <div className="w-full">
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -347,13 +343,13 @@ const FeaturesSection = () => {
           </div>
         </motion.div>
 
-        {/* Quick feature badges */}
+        {/* Feature badges */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3, duration: 0.8 }}
-          className="mt-12 flex flex-wrap justify-center gap-3"
+          className="mt-14 flex flex-wrap justify-center gap-2.5"
         >
           {[
             "CEO Briefing", "Decision DNA", "Health Heatmap", "Predictive Timeline",
@@ -366,7 +362,7 @@ const FeaturesSection = () => {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 + i * 0.04, duration: 0.4 }}
-              className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground hover:border-foreground/15 hover:text-foreground transition-all duration-300 cursor-default"
+              className="px-3.5 py-1.5 rounded-full text-xs font-medium bg-muted/30 border border-border/40 text-muted-foreground/50 hover:border-border hover:text-foreground transition-all duration-300 cursor-default"
             >
               {badge}
             </motion.span>

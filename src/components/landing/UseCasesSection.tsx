@@ -37,36 +37,35 @@ const useCases = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const UseCasesSection = () => (
-  <section className="py-24 relative">
-    <div className="absolute inset-0 bg-muted/15" />
-    
-    <div id="use-cases" className="container mx-auto px-4 relative z-10">
+  <section className="py-28 relative">
+    <div id="use-cases" className="container mx-auto px-4">
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease }}
-        className="text-center max-w-lg mx-auto mb-14"
+        transition={{ duration: 0.7, ease }}
+        className="max-w-3xl mx-auto mb-16"
       >
-        <p className="text-[11px] font-medium text-muted-foreground/50 mb-3 tracking-[0.15em] uppercase">Use Cases</p>
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-          Gebaut für Entscheidungsdruck
+        <p className="text-xs font-medium text-muted-foreground/50 mb-4 tracking-[0.15em] uppercase">Use Cases</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-[-0.03em]">
+          Gebaut für{" "}
+          <span className="text-muted-foreground/40">Entscheidungsdruck</span>
         </h2>
       </motion.div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {useCases.map((useCase, i) => (
           <motion.div
             key={useCase.title}
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: i * 0.05, duration: 0.5, ease }}
-            className="group p-5 rounded-xl border border-border/35 bg-card/50 hover:bg-card hover:border-border transition-all duration-300"
+            transition={{ delay: i * 0.06, duration: 0.6, ease }}
+            className="group p-6 rounded-2xl border border-border/40 bg-card hover:border-border/80 transition-all duration-500"
           >
-            <useCase.icon className="w-4 h-4 text-muted-foreground/30 mb-3 group-hover:text-primary/50 transition-colors" />
-            <h3 className="text-sm font-semibold mb-1">{useCase.title}</h3>
-            <p className="text-xs text-muted-foreground/50 leading-relaxed">{useCase.description}</p>
+            <useCase.icon className="w-5 h-5 text-muted-foreground/25 mb-4 group-hover:text-primary/50 transition-colors duration-500" />
+            <h3 className="text-base font-semibold mb-2 tracking-tight">{useCase.title}</h3>
+            <p className="text-sm text-muted-foreground/45 leading-relaxed">{useCase.description}</p>
           </motion.div>
         ))}
       </div>
