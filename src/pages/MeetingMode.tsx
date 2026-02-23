@@ -160,20 +160,22 @@ const MeetingMode = () => {
                     <button
                       key={d.id}
                       onClick={() => toggleSelect(d.id)}
-                      className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-colors text-left ${
+                      className={`w-full flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-4 rounded-lg border transition-colors text-left ${
                         selectedIds.has(d.id) ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
-                        selectedIds.has(d.id) ? "border-primary bg-primary" : "border-muted-foreground/30"
-                      }`}>
-                        {selectedIds.has(d.id) && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                      <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
+                          selectedIds.has(d.id) ? "border-primary bg-primary" : "border-muted-foreground/30"
+                        }`}>
+                          {selectedIds.has(d.id) && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{d.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{d.description || "Keine Beschreibung"}</p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{d.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{d.description || "Keine Beschreibung"}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap pl-8 sm:pl-0 shrink-0">
                         <Badge variant="outline" className="text-[10px]">{statusLabels[d.status]}</Badge>
                         <Badge variant={d.priority === "critical" ? "destructive" : "outline"} className="text-[10px]">
                           {priorityLabels[d.priority]}

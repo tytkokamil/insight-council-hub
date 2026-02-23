@@ -4,7 +4,7 @@ import {
   Plus, AlertTriangle, Clock, ArrowRight,
   Zap, FileText, Eye, TrendingUp,
   CheckCircle2, Command, Link2, Users, RefreshCw, Compass,
-  LayoutDashboard, Crown,
+  LayoutDashboard, Crown, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,8 @@ import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
 import PrimaryFocusBanner from "@/components/dashboard/PrimaryFocusBanner";
 import DecisionRadar from "@/components/dashboard/DecisionRadar";
+import TopActionNow from "@/components/dashboard/TopActionNow";
+import CoreKpiGrid from "@/components/dashboard/CoreKpiGrid";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useReviews, useFilteredDependencies, useDependencies } from "@/hooks/useDecisions";
 import { useRisks } from "@/hooks/useRisks";
 import { useGuidedMode } from "@/hooks/useGuidedMode";
@@ -66,6 +68,7 @@ const Dashboard = () => {
   const [dashboardMode, setDashboardMode] = useState<DashboardMode>(() =>
     (localStorage.getItem("dashboard-mode") as DashboardMode) || "operational"
   );
+  const [showDeepDive, setShowDeepDive] = useState(false);
 
   const toggleDashboardMode = useCallback((m: DashboardMode) => {
     setDashboardMode(m);
@@ -129,8 +132,6 @@ const Dashboard = () => {
     });
     const blockedTasks = contextTasks.filter(t => blockedTaskIds.has(t.id) && t.status !== "done");
 
-    const maxEscalation = escalated.length > 0 ? Math.max(...escalated.map(d => d.escalation_level || 0)) : 0;
-
     const weekData = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
@@ -141,7 +142,6 @@ const Dashboard = () => {
       return { week: weekLabel, completed, created, escalations };
     });
 
-    // Trend insight
     const lastThreeWeeks = weekData.slice(-3);
     const avgCreated = lastThreeWeeks.reduce((s, w) => s + w.created, 0) / 3;
     const avgCompleted = lastThreeWeeks.reduce((s, w) => s + w.completed, 0) / 3;
@@ -156,7 +156,6 @@ const Dashboard = () => {
 
     return {
       overdue, escalated, pendingReviews, active, blockedTasks,
-      maxEscalation,
       weekData, recentlyOpened, trendInsight,
     };
   }, [decisions, contextTasks, reviews, dependencies, user, dateFnsLocale]);
@@ -246,7 +245,6 @@ const Dashboard = () => {
   }
 
   const dashboardTitle = isPersonal ? t("dashboard.myWorkspace") : `${currentTeam?.name || "Team"}`;
-  const actionCount = computed.overdue.length + computed.escalated.length + computed.pendingReviews.length + computed.blockedTasks.length;
   const isExecutive = dashboardMode === "executive";
 
   return (
@@ -301,16 +299,24 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="space-y-10">
+      <div className="space-y-8">
 
         {/* ═══ LOADING SKELETON ═══ */}
         {isLoading && <DashboardSkeleton />}
 
-        {/* ═══ 1. DQI — HERO ═══ */}
+        {/* ═══ 1. TOP ACTION NOW — Most important thing to do ═══ */}
         {!isLoading && (
-          <WidgetErrorBoundary>
-            <DecisionQualityIndex />
-          </WidgetErrorBoundary>
+          <TopActionNow
+            overdue={computed.overdue}
+            escalated={computed.escalated}
+            pendingReviews={computed.pendingReviews}
+            blockedTasks={computed.blockedTasks}
+          />
+        )}
+
+        {/* ═══ 2. FOUR CORE KPIs ═══ */}
+        {!isLoading && (
+          <CoreKpiGrid />
         )}
 
         {/* ═══ ONBOARDING CHECKLIST ═══ */}
@@ -323,7 +329,7 @@ const Dashboard = () => {
           />
         )}
 
-        {/* ═══ 1b. PRIMARY FOCUS BANNER ═══ */}
+        {/* ═══ PRIMARY FOCUS BANNER (financial warning) ═══ */}
         {!isLoading && (
           <PrimaryFocusBanner
             decisions={decisions}
@@ -333,115 +339,14 @@ const Dashboard = () => {
           />
         )}
 
-        {/* ═══ 2. ACTION REQUIRED ═══ */}
-        {!isLoading && actionCount > 0 && !isExecutive && (
-          <section>
-            <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.actionRequired")}</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                {
-                  count: computed.overdue.length,
-                  label: t("dashboard.overdue"),
-                  icon: Clock,
-                  severity: "destructive" as const,
-                  path: "/decisions",
-                },
-                {
-                  count: computed.escalated.length,
-                  label: t("dashboard.escalations"),
-                  icon: AlertTriangle,
-                  severity: "warning" as const,
-                  path: "/engine",
-                  extra: computed.maxEscalation > 0 ? `L${computed.maxEscalation}` : undefined,
-                },
-                {
-                  count: computed.pendingReviews.length,
-                  label: t("dashboard.openReviews"),
-                  icon: Eye,
-                  severity: "primary" as const,
-                  path: computed.pendingReviews.length > 0 ? `/decisions/${computed.pendingReviews[0].decision_id}` : "/decisions",
-                  actionLabel: t("dashboard.startReviewBtn"),
-                },
-                {
-                  count: computed.blockedTasks.length,
-                  label: t("dashboard.blockedTasks"),
-                  icon: Link2,
-                  severity: "accent-violet" as const,
-                  path: "/tasks",
-                },
-              ].map((item) => {
-                const colorMap = {
-                  destructive: { border: "border-destructive/20", bg: "bg-destructive/[0.03]", text: "text-destructive", badge: "bg-destructive text-destructive-foreground" },
-                  warning: { border: "border-warning/20", bg: "bg-warning/[0.03]", text: "text-warning", badge: "bg-warning text-warning-foreground" },
-                  primary: { border: "border-primary/20", bg: "bg-primary/[0.03]", text: "text-primary", badge: "bg-primary text-primary-foreground" },
-                  "accent-violet": { border: "border-accent-violet/20", bg: "bg-accent-violet/[0.03]", text: "text-accent-violet", badge: "bg-accent-violet/20 text-accent-violet" },
-                };
-                const colors = colorMap[item.severity];
-                const isEscalation = item.severity === "warning" && item.count > 0;
-                return (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={cn(
-                      `${colors.border} ${colors.bg} border rounded-lg p-4 transition-all`,
-                      isEscalation && "ring-1 ring-warning/30"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className={cn("relative", isEscalation && "animate-pulse")}>
-                        <item.icon className={`w-4 h-4 ${colors.text}`} />
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        {isEscalation && (
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-warning">Action required</span>
-                        )}
-                        {item.count > 0 && (
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colors.badge}`}>
-                            {item.extra || item.count}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <motion.p
-                      key={item.count}
-                      initial={{ scale: 1.15 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                      className="text-2xl font-semibold tracking-tight"
-                    >
-                      {item.count}
-                    </motion.p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
-                    {item.count > 0 && (
-                      <Button variant="ghost" size="sm" className="w-full mt-3 text-xs h-7" onClick={() => navigate(item.path)}>
-                        {item.actionLabel || t("common.show")} <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {!isLoading && actionCount === 0 && !isExecutive && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="border border-success/20 bg-success/[0.04] rounded-lg p-6 text-center"
-          >
-            <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}>
-              <CheckCircle2 className="w-5 h-5 text-success mx-auto mb-2" />
-            </motion.div>
-            <p className="text-sm font-medium text-success">{t("dashboard.allGood")}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.noActions")}</p>
-          </motion.div>
-        )}
-
         {/* ═══ EXECUTIVE MODE: Compact Layout ═══ */}
         {isExecutive && !isLoading && (
           <>
+            {/* DQI Hero */}
+            <WidgetErrorBoundary>
+              <DecisionQualityIndex />
+            </WidgetErrorBoundary>
+
             {/* Escalations + Cost side by side */}
             <div className="grid md:grid-cols-2 gap-5">
               <WidgetErrorBoundary>
@@ -455,92 +360,27 @@ const Dashboard = () => {
             {/* Portfolio Risk */}
             <PortfolioRiskOverview decisions={decisions} risks={riskData} />
 
-            {/* Decision Radar + AI Brief */}
-            <div className="grid md:grid-cols-2 gap-5">
-              <DecisionRadar />
-              <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-                <AiBriefingWidget />
-              </Suspense>
-            </div>
+            {/* AI Brief */}
+            <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+              <AiBriefingWidget />
+            </Suspense>
           </>
         )}
 
-        {/* ═══ OPERATIONAL MODE: Full Layout ═══ */}
+        {/* ═══ OPERATIONAL MODE: Streamlined Layout ═══ */}
         {!isExecutive && !isLoading && (
           <>
-            {/* Stuck + Cost of Delay side by side */}
+            {/* Stuck Decisions + Escalations */}
             <div className="grid md:grid-cols-3 gap-5">
               <div className="md:col-span-2">
                 <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
               </div>
               <div className="space-y-5">
                 <WidgetErrorBoundary>
-                  <DecisionCostWidget />
-                </WidgetErrorBoundary>
-                <WidgetErrorBoundary>
                   <EscalationWidget />
                 </WidgetErrorBoundary>
               </div>
             </div>
-
-            {/* Portfolio Risk */}
-            <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-
-            {/* Trends + Radar */}
-            <div className="grid md:grid-cols-3 gap-5">
-              <div className="md:col-span-2">
-                <section>
-                  <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
-                  <div className="border border-border rounded-xl p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                        <p className="text-xs text-muted-foreground">Abgeschlossen vs. Erstellt vs. Eskalationen</p>
-                      </div>
-                    </div>
-                    <div className="h-52">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                          <defs>
-                            <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
-                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                            </linearGradient>
-                            <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
-                              <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                          <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                          <RechartsTooltip contentStyle={chartTooltipStyle} />
-                          <Area type="monotone" dataKey="completed" name="Abgeschlossen" stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
-                          <Area type="monotone" dataKey="created" name="Erstellt" stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
-                          <Area type="monotone" dataKey="escalations" name="Eskalationen" stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                    {/* Trend Insight */}
-                    {computed.trendInsight && (
-                      <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
-                        <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">Insight: </span>
-                          {computed.trendInsight}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </section>
-              </div>
-              <DecisionRadar />
-            </div>
-
-            {/* AI Brief */}
-            <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
-              <AiBriefingWidget />
-            </Suspense>
 
             {/* Recently Opened */}
             {computed.recentlyOpened.length > 0 && (
@@ -564,6 +404,98 @@ const Dashboard = () => {
                 </div>
               </section>
             )}
+
+            {/* ═══ DEEP DIVE — Expandable Details ═══ */}
+            <div className="border-t border-border pt-4">
+              <button
+                onClick={() => setShowDeepDive(!showDeepDive)}
+                className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+              >
+                {showDeepDive ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                <span>Detaillierte Analysen {showDeepDive ? "ausblenden" : "anzeigen"}</span>
+                <span className="text-[10px] text-muted-foreground/50 ml-1">DQI · Trends · Radar · Cost of Delay · Risk Portfolio</span>
+              </button>
+
+              <AnimatePresence>
+                {showDeepDive && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-8 mt-6"
+                  >
+                    {/* DQI */}
+                    <WidgetErrorBoundary>
+                      <DecisionQualityIndex />
+                    </WidgetErrorBoundary>
+
+                    {/* Cost + Risk side by side */}
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <WidgetErrorBoundary>
+                        <DecisionCostWidget />
+                      </WidgetErrorBoundary>
+                      <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                    </div>
+
+                    {/* Trends + Radar */}
+                    <div className="grid md:grid-cols-3 gap-5">
+                      <div className="md:col-span-2">
+                        <section>
+                          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
+                          <div className="border border-border rounded-xl p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <div>
+                                <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
+                                <p className="text-xs text-muted-foreground">Abgeschlossen vs. Erstellt vs. Eskalationen</p>
+                              </div>
+                            </div>
+                            <div className="h-52">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                                  <defs>
+                                    <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
+                                      <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                  <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                                  <RechartsTooltip contentStyle={chartTooltipStyle} />
+                                  <Area type="monotone" dataKey="completed" name="Abgeschlossen" stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
+                                  <Area type="monotone" dataKey="created" name="Erstellt" stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
+                                  <Area type="monotone" dataKey="escalations" name="Eskalationen" stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </div>
+                            {computed.trendInsight && (
+                              <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
+                                <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+                                <p className="text-xs text-muted-foreground">
+                                  <span className="font-medium text-foreground">Insight: </span>
+                                  {computed.trendInsight}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </section>
+                      </div>
+                      <DecisionRadar />
+                    </div>
+
+                    {/* AI Brief */}
+                    <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+                      <AiBriefingWidget />
+                    </Suspense>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </>
         )}
       </div>
