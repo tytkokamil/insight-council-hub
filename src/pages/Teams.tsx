@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageHelpButton from "@/components/shared/PageHelpButton";
-import { Plus, Users as UsersIcon, ArrowRight, Mail, Shield, MessageSquare, BarChart3 } from "lucide-react";
+import { Plus, Users as UsersIcon, ArrowRight, Mail, Shield, MessageSquare, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,9 +60,13 @@ const Teams = () => {
                 <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                   <UsersIcon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="font-display text-xl font-bold mb-2">Erstelle dein erstes Team</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Teams ermöglichen kollaborative Entscheidungsfindung. Lade Mitglieder per E-Mail ein und teile Entscheidungen.
+                <h3 className="font-display text-xl font-bold mb-2">Governance beginnt im Team</h3>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Teams ermöglichen kollaborative Entscheidungsfindung mit klaren Rollen, SLA-Tracking und Review-Workflows.
+                </p>
+                <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5" />
+                  Teams mit strukturierter Governance entscheiden 38% schneller.
                 </p>
                 <Button onClick={() => setShowCreate(true)} className="gap-2 mb-6">
                   <Plus className="w-4 h-4" />
