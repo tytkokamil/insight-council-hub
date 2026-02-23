@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 interface SidebarHeaderProps {
@@ -30,10 +31,22 @@ const SidebarHeader = memo(({
     <div className="flex items-center gap-0.5 shrink-0">
       <button
         onClick={toggleTheme}
-        className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
+        className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground relative overflow-hidden"
         title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+        aria-label={theme === "dark" ? "Zu Light Mode wechseln" : "Zu Dark Mode wechseln"}
       >
-        {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={theme}
+            initial={{ y: -14, opacity: 0, rotate: -90 }}
+            animate={{ y: 0, opacity: 1, rotate: 0 }}
+            exit={{ y: 14, opacity: 0, rotate: 90 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center"
+          >
+            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </motion.span>
+        </AnimatePresence>
       </button>
       <button
         onClick={onCollapse}

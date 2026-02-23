@@ -25,7 +25,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("decisionos-theme", theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+  const toggleTheme = () => {
+    const root = document.documentElement;
+    root.classList.add("theme-transition");
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+    // Remove transition class after animation completes
+    setTimeout(() => root.classList.remove("theme-transition"), 350);
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
