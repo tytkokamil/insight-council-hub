@@ -898,7 +898,7 @@ const KnowledgeBase = () => {
                     </Dialog>
                   </TabsContent>
 
-                  {/* ── 6. Learning-to-Action ──────────────────────────── */}
+                  {/* ── 6. Learning-to-Action + Template Feedback Loop ── */}
                   <TabsContent value="action" className="space-y-3">
                     <Card className="p-4">
                       <div className="flex items-center gap-2 mb-3">
@@ -906,8 +906,62 @@ const KnowledgeBase = () => {
                         <h4 className="text-sm font-semibold">Learning → Aktion</h4>
                       </div>
                       <p className="text-xs text-muted-foreground mb-4">
-                        Lessons müssen ins System zurückfließen. Verwandle Erkenntnisse in Templates, Regeln oder Checklisten.
+                        Lessons fließen zurück ins System: Templates, Automation-Regeln oder Governance-Checklisten.
                       </p>
+
+                      {/* Template Feedback Insights */}
+                      {selected && (() => {
+                        const catLessons = lessons.filter(l => {
+                          const d = decisions.find(dd => dd.id === l.decision_id);
+                          return d?.category === selected.category;
+                        });
+                        const failedInCat = decisions.filter(d => d.category === selected.category && d.status === "rejected");
+                        const recurringIssues = catLessons.filter(l => l.what_went_wrong && l.what_went_wrong.length > 10);
+                        if (catLessons.length < 2) return null;
+                        return (
+                          <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/15">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Target className="w-4 h-4 text-primary" />
+                              <h5 className="text-xs font-semibold">Template-Feedback für „{categoryLabels[selected.category] || selected.category}"</h5>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                              <div className="text-center">
+                                <p className="text-lg font-bold">{catLessons.length}</p>
+                                <p className="text-[10px] text-muted-foreground">Lessons in Kategorie</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-destructive">{failedInCat.length}</p>
+                                <p className="text-[10px] text-muted-foreground">Abgelehnt</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-lg font-bold text-warning">{recurringIssues.length}</p>
+                                <p className="text-[10px] text-muted-foreground">Wiederkehrende Probleme</p>
+                              </div>
+                            </div>
+                            {recurringIssues.length >= 2 && (
+                              <div className="mb-2 p-2 rounded bg-warning/10 border border-warning/20">
+                                <p className="text-[11px] font-medium text-warning flex items-center gap-1">
+                                  <AlertTriangle className="w-3 h-3" /> Template-Anpassung empfohlen
+                                </p>
+                                <p className="text-[10px] text-muted-foreground mt-1">
+                                  {recurringIssues.length} wiederkehrende Probleme erkannt. Empfehlung: Pflichtfelder oder Checklisten im Template ergänzen.
+                                </p>
+                              </div>
+                            )}
+                            <Button size="sm" variant="outline" className="w-full text-[10px] h-7 gap-1"
+                              onClick={() => {
+                                const suggestions = recurringIssues.map(l => l.what_went_wrong).filter(Boolean).slice(0, 3);
+                                const text = `Template-Feedback (${categoryLabels[selected.category] || selected.category}):\n\nWiederkehrende Probleme:\n${suggestions.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nEmpfehlung: Pflichtfelder oder Validierungsregeln ergänzen.`;
+                                navigator.clipboard.writeText(text);
+                                toast.success("Template-Feedback kopiert – jetzt im Template Editor einfügen");
+                                navigate("/templates");
+                              }}>
+                              <FileText className="w-3 h-3" /> Feedback → Template Editor übernehmen
+                            </Button>
+                          </div>
+                        );
+                      })()}
+
                       {selectedLessons.length === 0 ? (
                         <p className="text-xs text-muted-foreground italic">Noch keine Lessons vorhanden. Erstelle zuerst ein Lesson Learned.</p>
                       ) : (
@@ -926,8 +980,13 @@ const KnowledgeBase = () => {
                                   <Zap className="w-3 h-3" /> Automation-Regel
                                 </Button>
                                 <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
-                                  onClick={() => { navigate("/templates"); toast.info("Übernimm dieses Learning als Template-Regel"); }}>
-                                  <FileText className="w-3 h-3" /> Template-Regel
+                                  onClick={() => {
+                                    const text = `Governance-Hinweis (aus Lesson Learned):\n• ${l.key_takeaway}${l.recommendations ? `\n→ ${l.recommendations}` : ""}${l.what_went_wrong ? `\n⚠ Problem: ${l.what_went_wrong}` : ""}`;
+                                    navigator.clipboard.writeText(text);
+                                    toast.success("Als Governance-Hinweis kopiert");
+                                    navigate("/templates");
+                                  }}>
+                                  <FileText className="w-3 h-3" /> → Template-Regel
                                 </Button>
                                 <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
                                   onClick={() => {

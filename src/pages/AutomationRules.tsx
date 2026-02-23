@@ -52,18 +52,22 @@ const TRIGGER_LABELS: Record<string, string> = {
   decision_created: "Entscheidung erstellt",
   status_changed: "Status geändert",
   priority_changed: "Priorität geändert",
+  risk_score_changed: "Risk Score geändert",
 };
 
 const FIELD_LABELS: Record<string, string> = {
   priority: "Priorität",
   category: "Kategorie",
   status: "Status",
+  ai_risk_score: "Risk Score",
 };
 
 const OPERATOR_LABELS: Record<string, string> = {
   equals: "ist gleich",
   not_equals: "ist nicht",
   contains: "enthält",
+  greater_than: "größer als",
+  less_than: "kleiner als",
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -97,6 +101,12 @@ const FIELD_VALUES: Record<string, { value: string; label: string }[]> = {
     { value: "implemented", label: "Umgesetzt" },
     { value: "rejected", label: "Abgelehnt" },
   ],
+  ai_risk_score: [
+    { value: "30", label: "30 (Niedrig)" },
+    { value: "50", label: "50 (Mittel)" },
+    { value: "60", label: "60 (Hoch)" },
+    { value: "80", label: "80 (Kritisch)" },
+  ],
 };
 
 const ACTION_VALUE_OPTIONS: Record<string, { value: string; label: string }[]> = {
@@ -118,6 +128,8 @@ const PRESET_RULES = [
   { name: "Critical → Sofort eskalieren", description: "Eskaliert automatisch wenn eine kritische Entscheidung erstellt wird", trigger_event: "decision_created", condition_field: "priority", condition_operator: "equals", condition_value: "critical", action_type: "escalate", action_value: "1", category: "escalation" },
   { name: "Budget → CFO-Benachrichtigung", description: "Benachrichtigt bei jeder neuen Budget-Entscheidung", trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "budget", action_type: "send_notification", action_value: "Neue Budget-Entscheidung erfordert Überprüfung", category: "notification" },
   { name: "Strategisch → 5 Tage SLA", description: "Strategische Entscheidungen erhalten automatisch ein 5-Tage-SLA", trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "strategic", action_type: "set_sla_days", action_value: "5", category: "sla" },
+  { name: "High Risk → Eskalation", description: "Eskaliert automatisch wenn Risk Score über 60 steigt", trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "60", action_type: "escalate", action_value: "1", category: "risk" },
+  { name: "Risk > 80 → Kritische Priorität", description: "Setzt Priorität auf Kritisch wenn Risk Score über 80 steigt", trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "80", action_type: "change_priority", action_value: "critical", category: "risk" },
 ];
 
 // ── Helper: classify rule into category ──
