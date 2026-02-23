@@ -2,6 +2,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { toast } from "sonner";
 
 export const DECISIONS_KEY = ["decisions"] as const;
 export const TEAMS_KEY = ["teams"] as const;
@@ -181,6 +182,71 @@ export const useUpdateDecisionStatus = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Statusänderung fehlgeschlagen – wurde zurückgesetzt.");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+/** Optimistic mutation for soft-deleting a decision */
+export const useDeleteDecision = () => {
+  const qc = useQueryClient();
+  const { selectedTeamId } = useTeamContext();
+  const queryKey = [...DECISIONS_KEY, selectedTeamId];
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("decisions")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async (id) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData(queryKey);
+      qc.setQueryData(queryKey, (old: any[] | undefined) =>
+        old?.filter((d) => d.id !== id)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Löschen fehlgeschlagen – wurde zurückgesetzt.");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey });
+    },
+  });
+};
+
+/** Optimistic mutation for updating decision priority */
+export const useUpdateDecisionPriority = () => {
+  const qc = useQueryClient();
+  const { selectedTeamId } = useTeamContext();
+  const queryKey = [...DECISIONS_KEY, selectedTeamId];
+
+  return useMutation({
+    mutationFn: async ({ id, priority }: { id: string; priority: "low" | "medium" | "high" | "critical" }) => {
+      const { error } = await supabase
+        .from("decisions")
+        .update({ priority, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onMutate: async ({ id, priority }) => {
+      await qc.cancelQueries({ queryKey });
+      const previous = qc.getQueryData(queryKey);
+      qc.setQueryData(queryKey, (old: any[] | undefined) =>
+        old?.map((d) => d.id === id ? { ...d, priority, updated_at: new Date().toISOString() } : d)
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) qc.setQueryData(queryKey, context.previous);
+      toast.error("Prioritätsänderung fehlgeschlagen – wurde zurückgesetzt.");
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey });
