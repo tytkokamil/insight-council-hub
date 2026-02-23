@@ -41,6 +41,7 @@ import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer"
 import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 type DashboardMode = "operational" | "executive";
 
@@ -310,6 +311,16 @@ const Dashboard = () => {
           <WidgetErrorBoundary>
             <DecisionQualityIndex />
           </WidgetErrorBoundary>
+        )}
+
+        {/* ═══ ONBOARDING CHECKLIST ═══ */}
+        {!isLoading && !isExecutive && (
+          <OnboardingChecklist
+            hasTeam={teams.length > 0}
+            hasDecision={decisions.length > 0}
+            hasReview={reviews.length > 0}
+            hasTemplate={decisions.some(d => !!d.template_used)}
+          />
         )}
 
         {/* ═══ 1b. PRIMARY FOCUS BANNER ═══ */}

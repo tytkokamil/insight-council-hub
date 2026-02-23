@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PageHelpButton from "@/components/shared/PageHelpButton";
-import { Plus, Users as UsersIcon, ArrowRight, Mail } from "lucide-react";
+import { Plus, Users as UsersIcon, ArrowRight, Mail, Shield, MessageSquare, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,14 +68,17 @@ const Teams = () => {
                   <Plus className="w-4 h-4" />
                   Team erstellen
                 </Button>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { icon: Mail, label: "E-Mail-Einladungen" },
-                    { icon: UsersIcon, label: "Team-Sichtbarkeit" },
+                    { icon: Mail, label: "E-Mail-Einladungen", desc: "Kollegen einladen" },
+                    { icon: Shield, label: "Rollenmanagement", desc: "Lead, Member, Viewer" },
+                    { icon: MessageSquare, label: "Team-Chat", desc: "Direkte Kommunikation" },
+                    { icon: BarChart3, label: "Team-Analytik", desc: "Performance messen" },
                   ].map((f, i) => (
-                    <div key={i} className="p-2.5 rounded-lg bg-muted/30 border border-border">
-                      <f.icon className="w-3.5 h-3.5 text-primary mx-auto mb-1" />
-                      <p className="text-xs text-muted-foreground">{f.label}</p>
+                    <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border text-center">
+                      <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
+                      <p className="text-xs font-medium">{f.label}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
                     </div>
                   ))}
                 </div>
