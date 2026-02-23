@@ -1,64 +1,71 @@
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 const steps = [
   {
     number: "01",
-    title: "Decision erfassen",
-    description: "Strukturiert mit Templates, Kontext und klaren Verantwortlichkeiten.",
+    title: "Erfassen",
+    description: "Templates, Kontext, klare Verantwortlichkeiten — strukturiert von Anfang an.",
   },
   {
     number: "02",
-    title: "Review & Governance",
-    description: "Konfigurierbare Review-Flows, SLA-Tracking und automatische Eskalation.",
+    title: "Bewerten",
+    description: "KI-Risikoanalyse, Reviewer-Vorschläge und Stakeholder-Alignment in Echtzeit.",
   },
   {
     number: "03",
-    title: "Umsetzung tracken",
-    description: "Status jeder Entscheidung bis zur Implementierung verfolgen.",
+    title: "Steuern",
+    description: "SLA-Tracking, automatische Eskalation und konfigurierbare Review-Flows.",
   },
   {
     number: "04",
-    title: "Lernen & Optimieren",
-    description: "Outcome-Tracking und Pattern-Erkennung für bessere Entscheidungen.",
+    title: "Lernen",
+    description: "Outcome-Tracking, Decision DNA und Pattern-Erkennung für bessere Ergebnisse.",
   },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const HowItWorksSection = () => (
-  <section className="py-28 relative">
-    {/* Subtle background */}
-    <div className="absolute inset-0 bg-muted/20" />
+  <section className="py-24 relative">
+    <div className="absolute inset-0 bg-muted/15" />
     
     <div className="container mx-auto px-4 relative z-10">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease }}
-        className="text-center max-w-xl mx-auto mb-16"
+        transition={{ duration: 0.6, ease }}
+        className="text-center max-w-lg mx-auto mb-14"
       >
-        <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">So funktioniert's</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Vier Schritte zum Ergebnis
+        <p className="text-[11px] font-medium text-muted-foreground/50 mb-3 tracking-[0.15em] uppercase">So funktioniert's</p>
+        <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+          Von der Idee zum Ergebnis
         </h2>
       </motion.div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px max-w-4xl mx-auto bg-border/40 rounded-2xl overflow-hidden border border-border/40">
-        {steps.map((step, i) => (
-          <motion.div
-            key={step.number}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: i * 0.1, duration: 0.5, ease }}
-            className="bg-card p-7 flex flex-col"
-          >
-            <span className="text-4xl font-bold text-foreground/[0.06] mb-4 font-display">{step.number}</span>
-            <h3 className="text-[15px] font-semibold mb-2">{step.title}</h3>
-            <p className="text-sm text-muted-foreground/70 leading-relaxed">{step.description}</p>
-          </motion.div>
-        ))}
+      <div className="max-w-3xl mx-auto">
+        <div className="grid md:grid-cols-4 gap-0">
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.number}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease }}
+              className="relative p-5 flex flex-col"
+            >
+              {/* Connector arrow */}
+              {i < 3 && (
+                <ArrowRight className="hidden md:block absolute -right-2 top-6 w-4 h-4 text-primary/20 z-10" />
+              )}
+              
+              <span className="text-2xl font-bold text-primary/15 mb-3 font-display">{step.number}</span>
+              <h3 className="text-sm font-semibold mb-1.5">{step.title}</h3>
+              <p className="text-xs text-muted-foreground/60 leading-relaxed">{step.description}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   </section>
