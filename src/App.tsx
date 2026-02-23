@@ -12,6 +12,7 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import GlobalErrorBoundary from "@/components/shared/GlobalErrorBoundary";
 import { HelmetProvider } from "react-helmet-async";
 import OfflineIndicator from "@/components/shared/OfflineIndicator";
 import CookieBanner from "@/components/shared/CookieBanner";
@@ -82,6 +83,7 @@ const P = ({ children }: { children: React.ReactNode }) => (
 );
 
 const App = () => (
+  <GlobalErrorBoundary>
   <HelmetProvider>
   <ThemeProvider>
     <QueryClientProvider client={queryClient}>
@@ -154,6 +156,7 @@ const App = () => (
     </QueryClientProvider>
   </ThemeProvider>
   </HelmetProvider>
+  </GlobalErrorBoundary>
 );
 
 export default App;
