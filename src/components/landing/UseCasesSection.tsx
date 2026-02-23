@@ -4,59 +4,59 @@ import { Briefcase, DollarSign, Target, ShieldAlert } from "lucide-react";
 const useCases = [
   {
     icon: DollarSign,
-    title: "Budgetfreigaben & Investitionen",
-    description: "SLA-gesteuerte Freigabe-Workflows mit Risiko-Scoring, Szenario-Analyse und automatischer Eskalation bei Überschreitung.",
+    title: "Budgetfreigaben",
+    description: "SLA-gesteuerte Freigabe-Workflows mit Risiko-Scoring und Eskalation.",
   },
   {
     icon: Target,
     title: "Strategische Initiativen",
-    description: "M&A, Expansionen und Partnerschaften mit Stakeholder-Alignment, Audit Trail und Executive Dashboard für das C-Level.",
+    description: "M&A, Expansionen und Partnerschaften mit Stakeholder-Alignment.",
   },
   {
     icon: ShieldAlert,
     title: "Compliance & Regulatorik",
-    description: "Dokumentationspflichten erfüllen, Audit-Trails sichern und vertrauliche Entscheidungen mit rollenbasiertem Zugriff schützen.",
+    description: "Audit-Trails sichern und vertrauliche Entscheidungen schützen.",
   },
   {
     icon: Briefcase,
     title: "Führungsentscheidungen",
-    description: "Hiring, Restrukturierung und Organisationsentscheidungen mit klaren Verantwortlichkeiten und messbaren Outcomes.",
+    description: "Hiring und Restrukturierung mit klaren Verantwortlichkeiten.",
   },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const UseCasesSection = () => (
-  <section className="py-20 relative overflow-hidden">
+  <section className="py-28 relative">
+    <div className="absolute inset-0 bg-muted/20" />
+    
     <div id="use-cases" className="container mx-auto px-4 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-14"
+        className="text-center max-w-xl mx-auto mb-16"
       >
-        <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Use Cases</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Gebaut für Unternehmen mit <span className="gradient-text">Entscheidungsdruck</span>
+        <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">Use Cases</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          Gebaut für Entscheidungsdruck
         </h2>
       </motion.div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
         {useCases.map((useCase, i) => (
           <motion.div
             key={useCase.title}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: i * 0.08, duration: 0.6, ease }}
-            className="group p-6 rounded-2xl border border-border bg-card hover:border-foreground/10 transition-all duration-300 text-center"
+            transition={{ delay: i * 0.06, duration: 0.5, ease }}
+            className="group p-6 rounded-2xl border border-border/40 bg-card/80 hover:bg-card hover:border-border transition-all duration-300 text-center"
           >
-            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4 group-hover:bg-foreground/[0.06] transition-colors">
-              <useCase.icon className="w-6 h-6 text-muted-foreground group-hover:text-foreground transition-colors" />
-            </div>
+            <useCase.icon className="w-5 h-5 text-muted-foreground/40 mx-auto mb-4 group-hover:text-foreground/60 transition-colors" />
             <h3 className="text-sm font-semibold mb-2">{useCase.title}</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">{useCase.description}</p>
+            <p className="text-xs text-muted-foreground/60 leading-relaxed">{useCase.description}</p>
           </motion.div>
         ))}
       </div>

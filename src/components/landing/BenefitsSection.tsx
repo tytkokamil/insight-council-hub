@@ -5,96 +5,74 @@ const benefits = [
   {
     icon: Zap,
     title: "Schnellere Entscheidungen",
-    subtitle: "73% kürzere Zykluszeiten",
-    description: "Strukturierte Templates, klare Review-Flows und automatische Erinnerungen. Keine Entscheidung bleibt länger liegen als nötig.",
-    details: ["Vordefinierte Templates", "Review-Flows mit SLA", "Automatische Erinnerungen"],
-    accent: "text-accent-blue",
-    accentBg: "bg-accent-blue/8",
-    accentBorder: "border-accent-blue/15",
+    stat: "73%",
+    statLabel: "kürzere Zykluszeiten",
+    description: "Strukturierte Templates, klare Review-Flows und automatische Erinnerungen.",
   },
   {
     icon: Shield,
     title: "Mehr Kontrolle & Governance",
-    subtitle: "Lückenloser Audit Trail",
-    description: "SLA-Tracking, Eskalations-Engine und vollständiger Audit Trail. Jede Entscheidung ist nachvollziehbar und compliant.",
-    details: ["Auto-Eskalation", "Audit Trail & Compliance", "Rollen & Berechtigungen"],
-    accent: "text-accent-teal",
-    accentBg: "bg-accent-teal/8",
-    accentBorder: "border-accent-teal/15",
+    stat: "100%",
+    statLabel: "Audit-Trail-Abdeckung",
+    description: "SLA-Tracking, Eskalations-Engine und vollständiger Audit Trail.",
   },
   {
     icon: Brain,
     title: "KI-Intelligenz die mitdenkt",
-    subtitle: "Risiko-Scoring & Szenarien",
-    description: "Automatische Risikoanalyse, What-If-Simulationen und personalisierte Empfehlungen basierend auf Ihren Entscheidungsmustern.",
-    details: ["Explainable AI Scores", "Szenario-Simulationen", "Confidence Meter"],
-    accent: "text-accent-violet",
-    accentBg: "bg-accent-violet/8",
-    accentBorder: "border-accent-violet/15",
+    stat: "87%",
+    statLabel: "Accuracy bei Risiko-Scoring",
+    description: "Automatische Risikoanalyse, What-If-Simulationen und Empfehlungen.",
   },
   {
     icon: BarChart3,
     title: "Transparenz für Führung",
-    subtitle: "Executive Dashboard & Briefings",
-    description: "CEO Briefings, Decision Health Heatmap und Bottleneck Intelligence. Ihr C-Level sieht auf einen Blick, was Aufmerksamkeit braucht.",
-    details: ["CEO Briefing (KI)", "Health Heatmap", "Bottleneck Analytics"],
-    accent: "text-accent-amber",
-    accentBg: "bg-accent-amber/8",
-    accentBorder: "border-accent-amber/15",
+    stat: "5min",
+    statLabel: "zum Executive Briefing",
+    description: "CEO Briefings, Health Heatmap und Bottleneck Intelligence.",
   },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const BenefitsSection = () => (
-  <section id="features" className="py-20 relative overflow-hidden">
-    <div className="container mx-auto px-4 relative z-10">
+  <section id="features" className="py-28 relative">
+    <div className="container mx-auto px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-14"
+        className="text-center max-w-xl mx-auto mb-16"
       >
-        <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Executive Decision Governance</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Entscheidungsqualität wird <span className="gradient-text">messbar</span>
+        <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">Vorteile</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          Entscheidungsqualität wird messbar
         </h2>
-        <p className="text-muted-foreground leading-relaxed">
-          Der Decision Quality Index macht sichtbar, was bisher unsichtbar war — und zeigt, wo Ihre Organisation sich verbessern kann.
-        </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+      <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
         {benefits.map((benefit, i) => (
           <motion.div
             key={benefit.title}
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
-            transition={{ delay: i * 0.1, duration: 0.7, ease }}
-            className={`group relative p-7 rounded-2xl border ${benefit.accentBorder} bg-card hover:border-foreground/10 transition-all duration-300`}
+            transition={{ delay: i * 0.08, duration: 0.6, ease }}
+            className="group relative p-7 rounded-2xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300"
           >
-            <div className="flex items-start gap-4">
-              <div className={`w-12 h-12 rounded-xl ${benefit.accentBg} flex items-center justify-center shrink-0`}>
-                <benefit.icon className={`w-6 h-6 ${benefit.accent}`} />
+            <div className="flex items-start gap-5">
+              <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-primary/[0.06] transition-colors">
+                <benefit.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold mb-1">{benefit.title}</h3>
-                <p className={`text-xs font-medium ${benefit.accent} mb-3`}>{benefit.subtitle}</p>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                <h3 className="text-[15px] font-semibold mb-1">{benefit.title}</h3>
+                <div className="flex items-baseline gap-1.5 mb-3">
+                  <span className="text-2xl font-bold text-primary font-mono">{benefit.stat}</span>
+                  <span className="text-xs text-muted-foreground/60">{benefit.statLabel}</span>
+                </div>
+                <p className="text-sm text-muted-foreground/70 leading-relaxed">
                   {benefit.description}
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {benefit.details.map((detail) => (
-                    <span
-                      key={detail}
-                      className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-muted/50 border border-border text-muted-foreground"
-                    >
-                      {detail}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
           </motion.div>
