@@ -164,9 +164,12 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
   };
 
   return (
-    <div ref={ref} className="relative px-2">
+    <div ref={ref} className="relative px-2" role="region" aria-label="Benachrichtigungen">
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={`Benachrichtigungen${unreadCount > 0 ? `, ${unreadCount} ungelesen` : ""}`}
         className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 text-muted-foreground hover:bg-muted/50 hover:text-foreground relative"
         title={collapsed ? `Benachrichtigungen (${unreadCount})` : undefined}
       >
@@ -194,6 +197,8 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.15 }}
+            role="dialog"
+            aria-label="Benachrichtigungen"
             className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border bg-card shadow-xl overflow-hidden flex flex-col"
             style={{ left: collapsed ? 64 : 248 }}
           >
@@ -262,10 +267,14 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
                       return (
                         <div
                           key={n.id}
-                          className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/30 ${
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`${n.title}${!n.read ? " (ungelesen)" : ""}`}
+                          className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                             !n.read ? "bg-primary/5" : ""
                           }`}
                           onClick={() => handleNotifClick(n)}
+                          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleNotifClick(n); } }}
                         >
                           <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${colorClass}`}>
                             <Icon className="w-3.5 h-3.5" />

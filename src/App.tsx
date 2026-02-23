@@ -100,7 +100,7 @@ const App = () => (
               <Route path="/teams/:teamId" element={<P><TeamDetail /></P>} />
               <Route path="/tasks" element={<P><TasksPage /></P>} />
               <Route path="/tasks/:id" element={<P><TaskDetail /></P>} />
-              <Route path="/analytics" element={<P><Analytics /></P>} />
+              <Route path="/analytics" element={<P><AnalyticsHub /></P>} />
               <Route path="/briefing" element={<P><Briefing /></P>} />
               <Route path="/graph" element={<P><DecisionGraph /></P>} />
               <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
@@ -114,7 +114,7 @@ const App = () => (
               <Route path="/engine" element={<P><EscalationEngine /></P>} />
               <Route path="/benchmarking" element={<P><DecisionBenchmarking /></P>} />
               <Route path="/scenarios" element={<P><ScenarioEngine /></P>} />
-              <Route path="/executive" element={<P><ExecutiveDashboard /></P>} />
+              <Route path="/executive" element={<P><ExecutiveHub /></P>} />
               <Route path="/settings" element={<P><SettingsPage /></P>} />
               <Route path="/admin/users" element={<P><AdminUsers /></P>} />
               <Route path="/audit" element={<P><AuditTrail /></P>} />
