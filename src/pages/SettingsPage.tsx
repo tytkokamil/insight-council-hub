@@ -52,7 +52,7 @@ const SettingsPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
 
-  const [notifPrefs, setNotifPrefs] = useState({ review_requests: true, escalations: true, team_updates: true });
+  const [notifPrefs, setNotifPrefs] = useState({ review_requests: true, escalations: true, team_updates: true, mention_enabled: true, deadline_enabled: true, status_change_enabled: true, digest_frequency: "instant" as string });
 
   const [aiProvider, setAiProvider] = useState("lovable");
   const [aiApiKey, setAiApiKey] = useState("");
@@ -81,7 +81,7 @@ const SettingsPage = () => {
       ]);
       if (profileRes.data) { setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null); }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
-      if (notifRes.data) { setNotifPrefs({ review_requests: notifRes.data.review_requests, escalations: notifRes.data.escalations, team_updates: notifRes.data.team_updates }); }
+      if (notifRes.data) { setNotifPrefs({ review_requests: notifRes.data.review_requests, escalations: notifRes.data.escalations, team_updates: notifRes.data.team_updates, mention_enabled: notifRes.data.mention_enabled ?? true, deadline_enabled: notifRes.data.deadline_enabled ?? true, status_change_enabled: notifRes.data.status_change_enabled ?? true, digest_frequency: notifRes.data.digest_frequency ?? "instant" }); }
       if (roleRes.data) setUserRole(roleRes.data.role);
       if (teamsRes.data) setTeamMemberships(teamsRes.data);
       if (mfaRes.data) setMfaActive(mfaRes.data.totp_enabled || mfaRes.data.email_otp_enabled);
@@ -381,9 +381,12 @@ const SettingsPage = () => {
                 <h2 className="text-sm font-medium mb-4">Benachrichtigungskanäle</h2>
                 <div className="space-y-1">
                   {([
-                    { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc"), priority: "Alle" },
-                    { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc"), priority: "Kritisch" },
-                    { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc"), priority: "Normal" },
+                    { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc") },
+                    { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc") },
+                    { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc") },
+                    { key: "mention_enabled" as const, label: "Erwähnungen (@Mentions)", desc: "Benachrichtigung wenn du in Kommentaren oder Chats erwähnt wirst" },
+                    { key: "deadline_enabled" as const, label: "Deadlines & Fristen", desc: "Erinnerungen vor Ablauf von Entscheidungs- und Aufgaben-Fristen" },
+                    { key: "status_change_enabled" as const, label: "Statusänderungen", desc: "Updates wenn sich der Status von Entscheidungen ändert, die dich betreffen" },
                   ]).map((item) => (
                     <div key={item.key} className="flex items-center justify-between py-3">
                       <div className="flex-1">
@@ -393,8 +396,41 @@ const SettingsPage = () => {
                         </div>
                         <p className="text-xs text-muted-foreground">{item.desc}</p>
                       </div>
-                      <Switch checked={notifPrefs[item.key]} onCheckedChange={() => handleNotifToggle(item.key)} />
+                      <Switch checked={notifPrefs[item.key] as boolean} onCheckedChange={() => handleNotifToggle(item.key)} />
                     </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Digest Frequency */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">Zusammenfassung (Digest)</h2>
+                <p className="text-xs text-muted-foreground mb-3">Wie möchtest du nicht-kritische Benachrichtigungen erhalten?</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {([
+                    { value: "instant", label: "Sofort", desc: "Jede einzeln" },
+                    { value: "daily", label: "Täglich", desc: "1× pro Tag" },
+                    { value: "weekly", label: "Wöchentlich", desc: "1× pro Woche" },
+                    { value: "off", label: "Aus", desc: "Keine Digests" },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={async () => {
+                        const updated = { ...notifPrefs, digest_frequency: opt.value };
+                        setNotifPrefs(updated);
+                        if (user) await supabase.from("notification_preferences").upsert({ user_id: user.id, ...updated }, { onConflict: "user_id" });
+                      }}
+                      className={`p-3 rounded-lg border text-left transition-colors ${
+                        notifPrefs.digest_frequency === opt.value
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <p className="text-sm font-medium">{opt.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
+                    </button>
                   ))}
                 </div>
               </section>

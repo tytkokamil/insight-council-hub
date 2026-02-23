@@ -927,27 +927,39 @@ export type Database = {
       notification_preferences: {
         Row: {
           created_at: string
+          deadline_enabled: boolean
+          digest_frequency: string
           escalations: boolean
           id: string
+          mention_enabled: boolean
           review_requests: boolean
+          status_change_enabled: boolean
           team_updates: boolean
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          deadline_enabled?: boolean
+          digest_frequency?: string
           escalations?: boolean
           id?: string
+          mention_enabled?: boolean
           review_requests?: boolean
+          status_change_enabled?: boolean
           team_updates?: boolean
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          deadline_enabled?: boolean
+          digest_frequency?: string
           escalations?: boolean
           id?: string
+          mention_enabled?: boolean
           review_requests?: boolean
+          status_change_enabled?: boolean
           team_updates?: boolean
           updated_at?: string
           user_id?: string
