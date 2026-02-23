@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Plus, Download, FileText, FileUp } from "lucide-react";
+import { Plus, Download, FileText, FileUp, Layers, Clock, AlertTriangle, Shield, Target, GitBranch, CheckCircle2, Percent, Timer, Ban, TrendingUp, DollarSign } from "lucide-react";
 import { useTranslatedLabels } from "@/lib/labels";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
+import HeroKpi from "@/components/shared/HeroKpi";
+import PowerGrid from "@/components/shared/PowerGrid";
+import DeepDiveSection from "@/components/shared/DeepDiveSection";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
@@ -89,6 +92,37 @@ const Decisions = () => {
     });
     return meta;
   }, [decisions, allDeps, allTasks, goalLinks, allReviews, user?.id]);
+
+  // ── Portfolio summary KPIs ──
+  const portfolio = useMemo(() => {
+    const now = new Date();
+    const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled", "superseded"].includes(d.status));
+    const critical = active.filter(d => d.priority === "critical").length;
+    const implemented = decisions.filter(d => d.status === "implemented" && d.implemented_at);
+    const avgDuration = implemented.length > 0
+      ? Math.round(implemented.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / implemented.length)
+      : 0;
+    const highRisk = active.filter(d => (d.ai_risk_score || 0) >= 60).length;
+
+    // Status counts
+    const sc: Record<string, number> = {};
+    decisions.forEach(d => { sc[d.status] = (sc[d.status] || 0) + 1; });
+
+    const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now).length;
+    const escalated = active.filter(d => (d.escalation_level || 0) >= 1).length;
+    const withDeps = new Set<string>();
+    allDeps.forEach(dep => {
+      if (dep.source_decision_id) withDeps.add(dep.source_decision_id);
+      if (dep.target_decision_id) withDeps.add(dep.target_decision_id);
+    });
+    const linkedToGoals = goalLinks.length > 0 ? new Set(goalLinks.map(l => l.decision_id)).size : 0;
+    const highImpact = decisions.filter(d => (d.ai_impact_score || 0) >= 70).length;
+
+    return {
+      total: decisions.length, critical, avgDuration, highRisk,
+      sc, overdue, escalated, withDeps: withDeps.size, linkedToGoals, highImpact,
+    };
+  }, [decisions, allDeps, goalLinks]);
 
   // ── Filter state ──
   const [searchQuery, setSearchQuery] = useState("");
@@ -186,7 +220,7 @@ const Decisions = () => {
         title={t("decisions.title")}
         subtitle={t("decisions.countShown", { total: decisions.length, shown: filtered.length })}
         role="execution"
-        help={{ title: t("decisions.title"), description: "Zentrale Arbeitsfläche für alle Entscheidungen. Nutze Filter, Quick-Chips und Suche, um gezielt zu finden. Jede Entscheidung durchläuft: Entwurf → Review → Genehmigt → Umgesetzt." }}
+        help={{ title: t("decisions.title"), description: "Zentrale Arbeitsfläche für alle Entscheidungen. Nutze Filter, Quick-Chips und Suche, um gezielt zu finden." }}
         secondaryActions={
           <>
             {decisions.length > 0 && (
@@ -213,6 +247,39 @@ const Decisions = () => {
         <DecisionEmptyState onNewDecision={() => setShowNewDialog(true)} />
       ) : (
         <>
+          {/* ═══ LAYER 1 – DOMINANCE ═══ */}
+          <div className="mb-8">
+            <HeroKpi items={[
+              { label: "Gesamt", value: `${portfolio.total}`, icon: Layers, sentiment: "neutral" },
+              { label: "Kritisch", value: `${portfolio.critical}`, icon: AlertTriangle, sentiment: portfolio.critical > 0 ? "critical" : "positive" },
+              { label: "Ø Dauer (Tage)", value: `${portfolio.avgDuration}`, icon: Timer, sentiment: "neutral" },
+              { label: "Risk Exposure", value: `${portfolio.highRisk}`, icon: Shield, sentiment: portfolio.highRisk > 0 ? "warning" : "positive" },
+            ]} />
+          </div>
+
+          {/* ═══ LAYER 2 – POWER GRID ═══ */}
+          <div className="mb-8">
+            <PowerGrid
+              title="Status & Qualität"
+              columns={4}
+              items={[
+                { label: "Entwurf", value: portfolio.sc["draft"] || 0, icon: FileText },
+                { label: "Review", value: portfolio.sc["review"] || 0, icon: CheckCircle2 },
+                { label: "Genehmigt", value: portfolio.sc["approved"] || 0, icon: CheckCircle2 },
+                { label: "Umgesetzt", value: portfolio.sc["implemented"] || 0, icon: CheckCircle2, sentiment: "positive" },
+                { label: "Abgelehnt", value: portfolio.sc["rejected"] || 0, icon: Ban },
+                { label: "Ersetzt", value: portfolio.sc["superseded"] || 0 },
+                { label: "Eskaliert", value: portfolio.escalated, icon: AlertTriangle, sentiment: portfolio.escalated > 0 ? "warning" : "positive" },
+                { label: "Überfällig", value: portfolio.overdue, icon: Clock, sentiment: portfolio.overdue > 0 ? "critical" : "positive" },
+                { label: "Mit Dependencies", value: portfolio.withDeps, icon: GitBranch },
+                { label: "High Risk", value: portfolio.highRisk, icon: Shield, sentiment: portfolio.highRisk > 0 ? "critical" : "positive" },
+                { label: "High Impact", value: portfolio.highImpact, icon: Target },
+                { label: "Linked to Goals", value: portfolio.linkedToGoals, icon: Target },
+              ]}
+            />
+          </div>
+
+          {/* Filters & Table */}
           <DecisionFilterBar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
