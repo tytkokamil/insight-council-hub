@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
-  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive,
+  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive, TrendingUp,
 } from "lucide-react";
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
@@ -274,9 +274,13 @@ const Tasks = () => {
             <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
               <ListTodo className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="font-display text-xl font-bold mb-2">Noch keine Aufgaben</h3>
-            <p className="text-sm text-muted-foreground mb-6">
-              Erstelle deine erste Aufgabe oder starte mit Beispieldaten.
+            <h3 className="font-display text-xl font-bold mb-2">Aufgaben strukturiert steuern</h3>
+            <p className="text-sm text-muted-foreground mb-2">
+              Verknüpfe Aufgaben mit Entscheidungen und behalte den Überblick über alle Action Items.
+            </p>
+            <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+              Teams mit Task-Tracking setzen 27% mehr Entscheidungen erfolgreich um.
             </p>
             <div className="flex items-center justify-center gap-3 mb-8">
               <Button variant="outline" onClick={async () => {
