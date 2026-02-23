@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
+import HeroKpi from "@/components/shared/HeroKpi";
+import PowerGrid from "@/components/shared/PowerGrid";
 import { motion } from "framer-motion";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useProfiles, buildProfileMap } from "@/hooks/useDecisions";
@@ -22,6 +24,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
   ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive, TrendingUp,
+  Layers, Percent, Timer, Users,
 } from "lucide-react";
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
@@ -267,6 +270,44 @@ const Tasks = () => {
           </Button>
         }
       />
+
+      {/* ═══ LAYER 1 + 2 – KPI OVERVIEW ═══ */}
+      {tasks.length > 0 && (() => {
+        const now = new Date();
+        const open = tasks.filter(t => t.status === "open" || t.status === "backlog").length;
+        const inProgress = tasks.filter(t => t.status === "in_progress").length;
+        const blocked = tasks.filter(t => t.status === "blocked").length;
+        const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < now && t.status !== "done").length;
+        const done = tasks.filter(t => t.status === "done").length;
+        const completionRate = tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0;
+        const doneWithTime = tasks.filter(t => t.status === "done" && t.completed_at);
+        const avgCompletionDays = doneWithTime.length > 0
+          ? Math.round(doneWithTime.reduce((s, t) => s + ((new Date(t.completed_at!).getTime() - new Date(t.created_at).getTime()) / 86400000), 0) / doneWithTime.length)
+          : 0;
+        const highPriority = tasks.filter(t => t.priority === "high" || t.priority === "critical").length;
+
+        return (
+          <>
+            <div className="mb-6">
+              <HeroKpi columns={5} items={[
+                { label: "Offen", value: `${open}`, icon: Circle, sentiment: "neutral" },
+                { label: "In Arbeit", value: `${inProgress}`, icon: Clock, sentiment: "neutral" },
+                { label: "Blockiert", value: `${blocked}`, icon: Ban, sentiment: blocked > 0 ? "critical" : "positive" },
+                { label: "Überfällig", value: `${overdue}`, icon: AlertTriangle, sentiment: overdue > 0 ? "critical" : "positive" },
+                { label: "Completion Rate", value: `${completionRate}%`, icon: Percent, sentiment: completionRate >= 60 ? "positive" : completionRate >= 30 ? "warning" : "critical" },
+              ]} />
+            </div>
+            <div className="mb-6">
+              <PowerGrid title="Aufgaben-Matrix" columns={4} items={[
+                { label: "Ø Abschlusszeit", value: `${avgCompletionDays}d`, icon: Timer },
+                { label: "Hohe Priorität", value: highPriority, icon: AlertTriangle, sentiment: highPriority > 3 ? "warning" : "neutral" },
+                { label: "Erledigt", value: done, icon: CheckCircle2, sentiment: "positive" },
+                { label: "Gesamt", value: tasks.length, icon: Layers },
+              ]} />
+            </div>
+          </>
+        );
+      })()}
 
       {tasks.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">
