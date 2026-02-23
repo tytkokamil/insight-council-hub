@@ -10,7 +10,6 @@ import AIShowcaseSection from "@/components/landing/AIShowcaseSection";
 import UseCasesSection from "@/components/landing/UseCasesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
-import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 
 const Index = () => {
@@ -33,7 +32,6 @@ const Index = () => {
           <UseCasesSection />
           <TestimonialsSection />
           <PricingSection />
-          <CTASection />
         </main>
         <Footer />
       </div>
