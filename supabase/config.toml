@@ -32,3 +32,15 @@ verify_jwt = false
 
 [functions.send-mfa-otp]
 verify_jwt = false
+
+[functions.smart-knowledge]
+verify_jwt = false
+
+[functions.intelligence-analyze]
+verify_jwt = false
+
+[functions.ai-proxy]
+verify_jwt = false
+
+[functions.seed-demo-data]
+verify_jwt = false
