@@ -67,7 +67,7 @@ const BenefitsSection = () => (
               <div className="flex-1 min-w-0">
                 <h3 className="text-[15px] font-semibold mb-1">{benefit.title}</h3>
                 <div className="flex items-baseline gap-1.5 mb-3">
-                  <span className="text-2xl font-bold text-primary font-mono">{benefit.stat}</span>
+                  <span className="text-2xl font-bold text-primary font-display">{benefit.stat}</span>
                   <span className="text-xs text-muted-foreground/60">{benefit.statLabel}</span>
                 </div>
                 <p className="text-sm text-muted-foreground/70 leading-relaxed">

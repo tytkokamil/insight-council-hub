@@ -57,7 +57,7 @@ const TestimonialsSection = () => (
           >
             {/* Metric highlight */}
             <div className="mb-5">
-              <span className="text-3xl font-bold font-mono text-primary">{t.metric}</span>
+              <span className="text-3xl font-bold font-display text-primary">{t.metric}</span>
               <span className="text-xs text-muted-foreground/60 ml-2">{t.metricLabel}</span>
             </div>
 
