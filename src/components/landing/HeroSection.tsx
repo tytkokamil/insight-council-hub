@@ -161,7 +161,7 @@ const HeroSection = () => {
                     transition={{ delay: 1.4 + i * 0.1, duration: 0.5, ease }}
                     className="p-4 rounded-xl border border-border/40 bg-muted/10"
                   >
-                    <div className={`text-2xl md:text-3xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
+                    <div className={`text-2xl md:text-3xl font-bold font-display tabular-nums ${s.color}`}>{s.value}</div>
                     <div className="text-[11px] text-muted-foreground mt-1">{s.label}</div>
                   </motion.div>
                 ))}

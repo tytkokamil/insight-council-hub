@@ -54,10 +54,10 @@ const StatsSection = () => (
             transition={{ delay: i * 0.06, duration: 0.5, ease }}
             className="bg-card text-center p-6"
           >
-            <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-mono text-foreground">
+            <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display text-primary">
               <AnimatedNumber value={stat.value} suffix={stat.suffix} />
             </div>
-            <div className="text-[11px] text-muted-foreground/50 font-medium">{stat.label}</div>
+            <div className="text-[11px] text-muted-foreground/60 font-medium">{stat.label}</div>
           </motion.div>
         ))}
       </div>
