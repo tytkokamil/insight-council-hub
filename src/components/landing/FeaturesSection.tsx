@@ -249,13 +249,13 @@ const FeaturesSection = () => {
           transition={{ duration: 0.7, ease }}
           className="text-center max-w-3xl mx-auto mb-12"
         >
-          <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Decision Quality Engine</p>
+          <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">Governance Engine</p>
           <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
             Nicht nur Tracking —{" "}
-            <span className="text-foreground">messbare Entscheidungsqualität</span>
+            <span className="text-foreground">volle Entscheidungskontrolle</span>
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Jedes Feature zahlt auf ein Ziel ein: Ihre Entscheidungsqualität sichtbar machen und systematisch verbessern.
+            SLA-Steuerung, Eskalation, Risk Scoring und Executive Dashboards — die Governance-Infrastruktur für Ihre wichtigsten Entscheidungen.
           </p>
         </motion.div>
 

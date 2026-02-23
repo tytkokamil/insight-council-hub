@@ -58,20 +58,31 @@ const navGroupsDef: NavGroupDef[] = [
     ],
   },
   {
+    labelKey: "governance",
+    items: [
+      { icon: Briefcase, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
+      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
+      { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks" },
+      { icon: Zap, label: "nav.automations", path: "/automations" },
+      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+    ],
+  },
+  {
     labelKey: "insights",
     items: [
       { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
       { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks" },
-      { icon: Briefcase, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
-    ],
-  },
-  {
-    labelKey: "governance",
-    items: [
-      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
-      { icon: Shield, label: "nav.riskRegister", path: "/risks" },
-      { icon: Lightbulb, label: "nav.automations", path: "/automations" },
-      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+      {
+        icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics",
+        children: [
+          { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
+          { icon: Radar, label: "nav.decisionRadar", path: "/radar" },
+          { icon: Dna, label: "nav.decisionDna", path: "/dna" },
+          { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
+          { icon: Activity, label: "nav.healthHeatmap", path: "/health-heatmap" },
+          { icon: Clock, label: "nav.predictiveTimeline", path: "/predictive-timeline" },
+        ],
+      } as NavSubGroup,
     ],
   },
   {
@@ -228,14 +239,14 @@ const SidebarNav = memo(({
         // Color coding per section
         const groupAccent: Record<string, string> = {
           core: "",
-          insights: "text-accent-teal/70",
           governance: "text-accent-rose/70",
+          insights: "text-accent-teal/70",
           system: "text-muted-foreground/40",
         };
         const groupDot: Record<string, string> = {
           core: "bg-foreground/20",
-          insights: "bg-accent-teal/50",
           governance: "bg-accent-rose/50",
+          insights: "bg-accent-teal/50",
           system: "bg-muted-foreground/30",
         };
         // In basic mode, collect locked items for teaser display

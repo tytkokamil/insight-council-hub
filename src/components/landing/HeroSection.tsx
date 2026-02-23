@@ -37,7 +37,7 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
-              Decision Quality Platform
+              Executive Decision Governance
             </span>
           </motion.div>
 
@@ -49,7 +49,7 @@ const HeroSection = () => {
               transition={{ delay: 0.2, duration: 0.8, ease }}
               className="inline-block"
             >
-              Schlechte Entscheidungen kosten
+              Governance für jede
             </motion.span>
             <br />
             <motion.span
@@ -58,7 +58,7 @@ const HeroSection = () => {
               transition={{ delay: 0.35, duration: 0.8, ease }}
               className="inline-block"
             >
-              Unternehmen Millionen.
+              Entscheidung die zählt.
             </motion.span>
             <br />
             <motion.span
@@ -67,7 +67,7 @@ const HeroSection = () => {
               transition={{ delay: 0.5, duration: 1, ease }}
               className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent pb-2 -mb-2 decoration-clone"
             >
-              Decivio verhindert sie.
+              Kontrolle statt Chaos.
             </motion.span>
           </h1>
 
@@ -78,7 +78,7 @@ const HeroSection = () => {
             transition={{ delay: 0.7, duration: 0.8, ease }}
             className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            Das System, das Ihre Entscheidungsqualität sichtbar und messbar macht — mit Struktur, Governance und KI. Decision Quality Index, Executive Briefings und automatische Eskalation in einer Plattform.
+            Die Governance-Plattform für Führungsteams in Unternehmen mit 100–500 Mitarbeitern. SLA-gesteuerte Freigaben, automatische Eskalation, Risk Scoring und Executive Dashboards — damit keine Entscheidung liegen bleibt.
           </motion.p>
 
           {/* CTA */}
@@ -105,7 +105,7 @@ const HeroSection = () => {
             transition={{ delay: 1.1, duration: 0.8 }}
             className="mt-8 text-xs text-muted-foreground/60"
           >
-            Vertraut von wachsenden Teams und Enterprise-Organisationen weltweit.
+            Für Unternehmen mit mehreren Führungsebenen, Budgetverantwortung und Compliance-Anforderungen.
           </motion.p>
 
           {/* Trust badges */}

@@ -14,8 +14,8 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Decivio — Structure every important decision in your company</title>
-        <meta name="description" content="Decivio gibt Ihrer Organisation Struktur, Governance und KI-gestützte Intelligenz für jede wichtige Entscheidung — schneller, messbar, nachvollziehbar." />
+        <title>Decivio — Executive Decision Governance Platform</title>
+        <meta name="description" content="Die Governance-Plattform für Entscheidungen in wachsenden Unternehmen. SLA-Tracking, Eskalation, Risk Scoring und Executive Dashboards — für Führungsteams mit 100–500 Mitarbeitern." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />

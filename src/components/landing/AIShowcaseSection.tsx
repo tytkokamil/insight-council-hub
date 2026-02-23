@@ -34,13 +34,13 @@ const AIShowcaseSection = () => (
           >
             <div className="w-1.5 h-1.5 rounded-full bg-foreground/30" />
             <span className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase">
-              AI-Powered
+              KI-gestützte Governance
             </span>
           </motion.div>
 
           <h2 className="text-3xl md:text-4xl font-bold mb-5 tracking-tight leading-tight">
-            Künstliche Intelligenz die{" "}
-            <span className="text-foreground">mitdenkt</span>
+            KI die Risiken erkennt,{" "}
+            <span className="text-foreground">bevor sie eskalieren</span>
           </h2>
 
           <motion.p
@@ -50,8 +50,7 @@ const AIShowcaseSection = () => (
             transition={{ delay: 0.5, duration: 0.6 }}
             className="text-muted-foreground leading-relaxed mb-10 max-w-md"
           >
-            Unsere KI analysiert nicht nur — sie lernt aus deinen Entscheidungsmustern,
-            erkennt Risiken bevor sie auftreten, und liefert personalisierte Empfehlungen.
+            Automatisches Risk Scoring, CEO Briefings und Compliance-Audits — die KI unterstützt Ihre Governance, nicht Ihren Workflow.
           </motion.p>
 
           {/* Analytics mockup */}
