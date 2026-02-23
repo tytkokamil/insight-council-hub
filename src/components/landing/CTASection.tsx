@@ -26,15 +26,10 @@ const CTASection = () => (
           14 Tage kostenlos. Keine Kreditkarte. Jederzeit kündbar.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button size="lg" className="rounded-full group px-8 shadow-lg shadow-primary/10">
-            Kostenlos starten
-            <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-          </Button>
-          <Button variant="outline" size="lg" className="rounded-full border-border/40 px-8">
-            Demo vereinbaren
-          </Button>
-        </div>
+        <Button size="lg" className="rounded-full group px-8 shadow-lg shadow-primary/10">
+          Demo vereinbaren
+          <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+        </Button>
       </motion.div>
     </div>
   </section>
