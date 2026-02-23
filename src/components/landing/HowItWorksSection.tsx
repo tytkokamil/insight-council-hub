@@ -1,98 +1,64 @@
 import { motion } from "framer-motion";
-import { FileText, Users, LineChart, Lightbulb } from "lucide-react";
 
 const steps = [
   {
     number: "01",
-    icon: FileText,
     title: "Decision erfassen",
-    description: "Strukturiert mit Templates, Kontext und klaren Verantwortlichkeiten — statt verstreuter Slack-Threads.",
-    accent: "text-accent-blue",
-    accentBg: "bg-accent-blue/8",
-    accentBorder: "border-accent-blue/20",
+    description: "Strukturiert mit Templates, Kontext und klaren Verantwortlichkeiten.",
   },
   {
     number: "02",
-    icon: Users,
     title: "Review & Governance",
-    description: "Konfigurierbare Review-Flows, SLA-Tracking und automatische Eskalation. Nichts bleibt liegen.",
-    accent: "text-accent-violet",
-    accentBg: "bg-accent-violet/8",
-    accentBorder: "border-accent-violet/20",
+    description: "Konfigurierbare Review-Flows, SLA-Tracking und automatische Eskalation.",
   },
   {
     number: "03",
-    icon: LineChart,
     title: "Umsetzung tracken",
-    description: "Verfolgen Sie den Status jeder Entscheidung bis zur vollständigen Implementierung. Mit KI-Risikoanalyse.",
-    accent: "text-accent-teal",
-    accentBg: "bg-accent-teal/8",
-    accentBorder: "border-accent-teal/20",
+    description: "Status jeder Entscheidung bis zur Implementierung verfolgen.",
   },
   {
     number: "04",
-    icon: Lightbulb,
     title: "Lernen & Optimieren",
-    description: "Outcome-Tracking, Lessons Learned und Pattern-Erkennung. Jede Entscheidung macht die nächste besser.",
-    accent: "text-accent-amber",
-    accentBg: "bg-accent-amber/8",
-    accentBorder: "border-accent-amber/20",
+    description: "Outcome-Tracking und Pattern-Erkennung für bessere Entscheidungen.",
   },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const HowItWorksSection = () => (
-  <section className="py-20 relative overflow-hidden">
+  <section className="py-28 relative">
+    {/* Subtle background */}
+    <div className="absolute inset-0 bg-muted/20" />
+    
     <div className="container mx-auto px-4 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-14"
+        className="text-center max-w-xl mx-auto mb-16"
       >
-        <p className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.15em] uppercase">So funktioniert's</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-5">
-          Von der Idee bis zum <span className="gradient-text">messbaren Ergebnis</span>
+        <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">So funktioniert's</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          Vier Schritte zum Ergebnis
         </h2>
-        <p className="text-muted-foreground leading-relaxed">
-          Vier Schritte, die jeden Entscheidungsprozess in Ihrem Unternehmen transformieren.
-        </p>
       </motion.div>
 
-      <div className="relative max-w-4xl mx-auto">
-        {/* Connecting line */}
-        <div className="absolute left-[29px] top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-border to-transparent hidden md:block" />
-
-        <div className="space-y-6">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, x: -24 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.12, duration: 0.6, ease }}
-              className="relative flex gap-6 items-start"
-            >
-              {/* Step number */}
-              <div className={`relative z-10 w-[58px] h-[58px] shrink-0 rounded-2xl ${step.accentBg} border ${step.accentBorder} flex items-center justify-center`}>
-                <step.icon className={`w-6 h-6 ${step.accent}`} />
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 pb-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className={`text-xs font-bold ${step.accent} tabular-nums`}>{step.number}</span>
-                  <h3 className="text-lg font-semibold">{step.title}</h3>
-                </div>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-lg">
-                  {step.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px max-w-4xl mx-auto bg-border/40 rounded-2xl overflow-hidden border border-border/40">
+        {steps.map((step, i) => (
+          <motion.div
+            key={step.number}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: i * 0.1, duration: 0.5, ease }}
+            className="bg-card p-7 flex flex-col"
+          >
+            <span className="text-4xl font-bold text-foreground/[0.06] mb-4 font-display">{step.number}</span>
+            <h3 className="text-[15px] font-semibold mb-2">{step.title}</h3>
+            <p className="text-sm text-muted-foreground/70 leading-relaxed">{step.description}</p>
+          </motion.div>
+        ))}
       </div>
     </div>
   </section>

@@ -1,9 +1,11 @@
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
+import StatsSection from "@/components/landing/StatsSection";
 import ProblemSection from "@/components/landing/ProblemSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import BenefitsSection from "@/components/landing/BenefitsSection";
+import FeaturesSection from "@/components/landing/FeaturesSection";
 import UseCasesSection from "@/components/landing/UseCasesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
@@ -14,16 +16,18 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Decivio — Executive Decision Governance Platform</title>
-        <meta name="description" content="Die Governance-Plattform für Entscheidungen in wachsenden Unternehmen. SLA-Tracking, Eskalation, Risk Scoring und Executive Dashboards — für Führungsteams mit 100–500 Mitarbeitern." />
+        <title>Decivio — Decision Governance Platform</title>
+        <meta name="description" content="Die Governance-Plattform für Entscheidungen in wachsenden Unternehmen. SLA-Tracking, Eskalation, Risk Scoring und Executive Dashboards." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />
         <main>
           <HeroSection />
+          <StatsSection />
           <ProblemSection />
           <HowItWorksSection />
           <BenefitsSection />
+          <FeaturesSection />
           <UseCasesSection />
           <TestimonialsSection />
           <PricingSection />

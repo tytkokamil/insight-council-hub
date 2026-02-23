@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, Shield, Zap, Lock } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import ProductTourModal from "./ProductTourModal";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -18,177 +18,167 @@ const HeroSection = () => {
   const dashboardOpacity = useTransform(scrollYProgress, [0.4, 0.9], [1, 0]);
 
   return (
-    <section ref={heroRef} className="relative min-h-[90svh] flex items-center justify-center overflow-hidden pt-24 pb-10 w-full">
-      {/* Subtle gradient orbs */}
+    <section ref={heroRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-28 pb-16 w-full">
+      {/* Subtle animated gradient mesh */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-accent-blue/[0.04] blur-[100px]" />
-        <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] rounded-full bg-accent-teal/[0.05] blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-accent-violet/[0.03] blur-[120px]" />
+        <motion.div 
+          animate={{ rotate: [0, 360] }}
+          transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-[40%] -right-[20%] w-[80%] h-[80%] rounded-full opacity-[0.03]"
+          style={{ background: "conic-gradient(from 0deg, hsl(var(--primary)), hsl(var(--accent-teal)), hsl(var(--accent-violet)), hsl(var(--primary)))" }}
+        />
+        <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/[0.02] blur-[120px]" />
       </div>
 
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 opacity-[0.025]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(var(--foreground)) 1px, transparent 1px)",
+        backgroundSize: "32px 32px",
+      }} />
+
       <div className="container relative z-10 mx-auto px-4">
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ delay: 0.1, duration: 0.8, ease }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/[0.06] border border-primary/15 mb-8"
+            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-muted/60 border border-border mb-10"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-medium text-primary/80 tracking-widest uppercase">
-              Executive Decision Governance
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-teal animate-pulse" />
+            <span className="text-[11px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
+              Decision Governance Platform
             </span>
           </motion.div>
 
-          {/* Headline — Problem + Outcome */}
-          <h1 className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.05] pb-1 mb-6">
+          {/* Headline */}
+          <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-bold tracking-[-0.045em] leading-[1.02] mb-8">
             <motion.span
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: 0.2, duration: 0.8, ease }}
-              className="inline-block"
+              className="block"
             >
               Governance für jede
             </motion.span>
-            <br />
             <motion.span
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ delay: 0.35, duration: 0.8, ease }}
-              className="inline-block"
+              className="block"
             >
-              Entscheidung die zählt.
-            </motion.span>
-            <br />
-            <motion.span
-              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ delay: 0.5, duration: 1, ease }}
-              className="inline-block bg-gradient-to-r from-accent-blue via-accent-violet to-accent-teal bg-clip-text text-transparent pb-2 -mb-2 decoration-clone"
-            >
-              Kontrolle statt Chaos.
+              Entscheidung die{" "}
+              <span className="relative">
+                <span className="relative z-10 bg-gradient-to-r from-primary via-accent-violet to-accent-teal bg-clip-text text-transparent">
+                  zählt.
+                </span>
+              </span>
             </motion.span>
           </h1>
 
-          {/* Subline — Value Proposition */}
+          {/* Subline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.8, ease }}
-            className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed"
+            transition={{ delay: 0.6, duration: 0.8, ease }}
+            className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-12 leading-relaxed"
           >
-            Die Governance-Plattform für Führungsteams in Unternehmen mit 100–500 Mitarbeitern. SLA-gesteuerte Freigaben, automatische Eskalation, Risk Scoring und Executive Dashboards — damit keine Entscheidung liegen bleibt.
+            SLA-gesteuerte Freigaben, automatische Eskalation und Executive Dashboards — 
+            damit keine Entscheidung liegen bleibt.
           </motion.p>
 
           {/* CTA */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6, ease }}
+            transition={{ delay: 0.8, duration: 0.6, ease }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
-            <Button size="lg" className="rounded-full group bg-primary hover:bg-primary/90 shadow-glow">
+            <Button size="xl" className="rounded-full group shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/15 transition-all">
               Kostenlos starten
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="outline" size="lg" className="rounded-full" onClick={() => setShowTour(true)}>
+            <Button variant="outline" size="xl" className="rounded-full border-border/60 hover:bg-muted/30" onClick={() => setShowTour(true)}>
               <Play className="w-4 h-4" />
               Demo ansehen
             </Button>
           </motion.div>
 
-          {/* Target audience */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.1, duration: 0.8 }}
-            className="mt-8 text-xs text-muted-foreground/60"
-          >
-            Für Unternehmen mit mehreren Führungsebenen, Budgetverantwortung und Compliance-Anforderungen.
-          </motion.p>
-
-          {/* Trust badges */}
+          {/* Minimal social proof */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.3, duration: 1 }}
-            className="mt-6 flex flex-wrap items-center justify-center gap-6"
+            transition={{ delay: 1.1, duration: 1 }}
+            className="mt-14 flex items-center justify-center gap-8"
           >
             {[
-              { icon: Shield, text: "DSGVO-konform", color: "text-accent-teal" },
-              { icon: Lock, text: "SOC 2 Ready", color: "text-accent-blue" },
-              { icon: Zap, text: "Enterprise-Sicherheit", color: "text-accent-violet" },
-            ].map((badge, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.4 + i * 0.1, duration: 0.5 }}
-                className="flex items-center gap-2 text-muted-foreground"
-              >
-                <badge.icon className={`w-3.5 h-3.5 ${badge.color}`} />
-                <span className="text-xs font-medium tracking-wide">{badge.text}</span>
-              </motion.div>
+              "DSGVO-konform",
+              "SOC 2 Ready",
+              "Enterprise-grade",
+            ].map((text, i) => (
+              <span key={i} className="text-[11px] text-muted-foreground/40 font-medium tracking-wide">
+                {text}
+              </span>
             ))}
           </motion.div>
         </div>
 
         {/* Dashboard Preview */}
         <motion.div
-          initial={{ opacity: 0, y: 60 }}
+          initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 1.2, ease }}
+          transition={{ delay: 1.0, duration: 1.4, ease }}
           style={{ y: dashboardY, scale: dashboardScale, opacity: dashboardOpacity }}
-          className="mt-16 relative max-w-4xl mx-auto"
+          className="mt-20 relative max-w-4xl mx-auto"
         >
-          <div className="relative rounded-2xl border border-border bg-card overflow-hidden shadow-card">
+          <div className="relative rounded-2xl border border-border/60 bg-card overflow-hidden shadow-2xl shadow-primary/[0.04]">
             {/* Browser chrome */}
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-border/40 bg-muted/20">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-border/30 bg-muted/15">
               <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-accent-rose/30" />
-                <div className="w-2.5 h-2.5 rounded-full bg-accent-amber/30" />
-                <div className="w-2.5 h-2.5 rounded-full bg-accent-teal/30" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-foreground/[0.08]" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="px-4 py-1 rounded-md bg-muted/50 text-[11px] text-muted-foreground/60 font-mono border border-border/30">
+                <div className="px-4 py-1 rounded-md bg-muted/40 text-[11px] text-muted-foreground/50 font-mono border border-border/20">
                   app.decivio.com
                 </div>
               </div>
             </div>
 
             {/* Dashboard mockup */}
-            <div className="relative p-5 md:p-6 space-y-4">
+            <div className="relative p-5 md:p-8 space-y-5">
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Freigegeben", value: "12", accent: "border-accent-teal/20 bg-accent-teal/[0.04]" },
-                  { label: "Im Review", value: "5", accent: "border-accent-amber/20 bg-accent-amber/[0.04]" },
-                  { label: "Risiko-Score", value: "34%", accent: "border-accent-blue/20 bg-accent-blue/[0.04]" },
+                  { label: "Freigegeben", value: "12", color: "text-accent-teal" },
+                  { label: "Im Review", value: "5", color: "text-accent-amber" },
+                  { label: "Risiko-Score", value: "34%", color: "text-primary" },
                 ].map((s, i) => (
                   <motion.div
                     key={s.label}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 1.4 + i * 0.1, duration: 0.5, ease }}
-                    className={`p-3 rounded-xl border ${s.accent}`}
+                    className="p-4 rounded-xl border border-border/40 bg-muted/10"
                   >
-                    <div className="text-xl md:text-2xl font-bold tabular-nums">{s.value}</div>
-                    <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                    <div className={`text-2xl md:text-3xl font-bold tabular-nums ${s.color}`}>{s.value}</div>
+                    <div className="text-[11px] text-muted-foreground mt-1">{s.label}</div>
                   </motion.div>
                 ))}
               </div>
+              
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.7, duration: 0.6 }}
-                className="p-4 rounded-xl bg-muted/20 border border-border/40"
+                className="p-5 rounded-xl bg-muted/10 border border-border/30"
               >
-                <div className="text-xs font-medium text-muted-foreground mb-3">Decision Velocity</div>
+                <div className="text-xs font-medium text-muted-foreground mb-4">Decision Velocity</div>
                 <div className="flex items-end gap-1.5 h-20">
                   {[40, 65, 50, 80, 55, 90, 70, 95, 75, 60, 85, 72].map((h, i) => (
                     <motion.div
                       key={i}
-                      className="flex-1 rounded-sm bg-primary/10 hover:bg-primary/20 transition-colors"
+                      className="flex-1 rounded-sm bg-primary/8 hover:bg-primary/15 transition-colors"
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
                       transition={{ delay: 1.8 + i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -196,28 +186,34 @@ const HeroSection = () => {
                   ))}
                 </div>
               </motion.div>
-              <div className="space-y-1.5">
+              
+              <div className="space-y-2">
                 {[
-                  { title: "Q4 Budget-Freigabe", status: "Freigegeben", statusColor: "bg-accent-teal/10 text-accent-teal" },
-                  { title: "Engineering Hiring Plan", status: "Review", statusColor: "bg-accent-amber/10 text-accent-amber" },
-                  { title: "Cloud Migration", status: "Entwurf", statusColor: "bg-muted text-muted-foreground" },
+                  { title: "Q4 Budget-Freigabe", status: "Freigegeben", color: "text-accent-teal bg-accent-teal/8" },
+                  { title: "Engineering Hiring Plan", status: "Review", color: "text-accent-amber bg-accent-amber/8" },
+                  { title: "Cloud Migration", status: "Entwurf", color: "text-muted-foreground bg-muted/50" },
                 ].map((row, i) => (
                   <motion.div
                     key={row.title}
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 2.0 + i * 0.08, duration: 0.4, ease }}
-                    className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/15 border border-border/30"
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border/20 bg-card"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary/30" />
+                    <div className="w-1 h-1 rounded-full bg-foreground/20" />
                     <span className="text-xs font-medium flex-1 truncate">{row.title}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${row.statusColor}`}>{row.status}</span>
+                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${row.color}`}>{row.status}</span>
                   </motion.div>
                 ))}
               </div>
-              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent" />
+              
+              {/* Fade out gradient */}
+              <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent" />
             </div>
           </div>
+          
+          {/* Subtle glow under dashboard */}
+          <div className="absolute -bottom-8 left-[10%] right-[10%] h-16 bg-primary/[0.03] blur-[40px] rounded-full" />
         </motion.div>
       </div>
 
