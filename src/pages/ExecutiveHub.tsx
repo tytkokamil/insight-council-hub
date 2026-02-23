@@ -1,12 +1,15 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useState, useCallback } from "react";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Target, Sun, CalendarDays, DollarSign, FlaskConical, Dna, Trophy, Briefcase } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Target, Sun, CalendarDays, DollarSign, FlaskConical, Dna, Trophy, Briefcase, FileDown } from "lucide-react";
 import { useDecisions } from "@/hooks/useDecisions";
+import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
+import { toast } from "sonner";
 
 const ExecutiveDashboard = lazy(() => import("./ExecutiveDashboard"));
 const Briefing = lazy(() => import("./Briefing"));
@@ -20,18 +23,46 @@ const MIN_DECISIONS = 15;
 
 const ExecutiveHub = () => {
   const [tab, setTab] = useState("dashboard");
+  const [exporting, setExporting] = useState(false);
   const { data: decisions = [], isLoading } = useDecisions();
   const implemented = decisions.filter(d => d.status === "implemented").length;
   const hasEnoughData = decisions.length >= MIN_DECISIONS && implemented >= 3;
 
+  const handleBoardPack = useCallback(async () => {
+    setExporting(true);
+    try {
+      const data = await fetchBoardReportData();
+      generateBoardReport(data);
+      toast.success("Board Pack PDF exportiert");
+    } catch {
+      toast.error("Export fehlgeschlagen");
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
   return (
     <AppLayout>
-      <PageHeader
-        title="Executive Hub"
-        subtitle="C-Level Cockpit mit Briefing, Prognosen und Szenarien"
-        role="intelligence"
-        help={{ title: "Executive Hub", description: "C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien." }}
-      />
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <PageHeader
+          title="Executive Hub"
+          subtitle="C-Level Cockpit mit Briefing, Prognosen und Szenarien"
+          role="intelligence"
+          help={{ title: "Executive Hub", description: "C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien." }}
+        />
+        {hasEnoughData && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 shrink-0"
+            onClick={handleBoardPack}
+            disabled={exporting}
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            {exporting ? "Exportiere…" : "Board Pack PDF"}
+          </Button>
+        )}
+      </div>
 
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState

@@ -16,6 +16,7 @@ import {
   ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft, Sparkles, TrendingUp,
 } from "lucide-react";
 import ApplyLearningPanel from "./ApplyLearningPanel";
+import ContextualAINudges from "./ContextualAINudges";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
@@ -777,6 +778,15 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
                 {selectedTemplate.governanceNotes}
               </p>
             )}
+
+            {/* Contextual AI Nudges */}
+            <ContextualAINudges
+              category={category}
+              priority={priority}
+              title={title}
+              description={description}
+              hasStakeholders={!!teamId && allApprovalSteps.length > 0}
+            />
 
             {/* Apply Learning Panel */}
             <ApplyLearningPanel

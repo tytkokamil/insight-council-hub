@@ -44,6 +44,7 @@ import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview"
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
+import GamificationWidget from "@/components/dashboard/GamificationWidget";
 
 type DashboardMode = "operational" | "executive";
 
@@ -370,7 +371,7 @@ const Dashboard = () => {
         {/* ═══ OPERATIONAL MODE: Streamlined Layout ═══ */}
         {!isExecutive && !isLoading && (
           <>
-            {/* Stuck Decisions + Escalations */}
+            {/* Stuck Decisions + Escalations + Gamification */}
             <div className="grid md:grid-cols-3 gap-5">
               <div className="md:col-span-2">
                 <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
@@ -378,6 +379,9 @@ const Dashboard = () => {
               <div className="space-y-5">
                 <WidgetErrorBoundary>
                   <EscalationWidget />
+                </WidgetErrorBoundary>
+                <WidgetErrorBoundary>
+                  <GamificationWidget decisions={decisions} tasks={contextTasks} teams={teams} />
                 </WidgetErrorBoundary>
               </div>
             </div>

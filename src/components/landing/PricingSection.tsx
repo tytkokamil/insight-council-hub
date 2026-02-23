@@ -6,6 +6,7 @@ import PricingTrust from "./pricing/PricingTrust";
 import PricingValue from "./pricing/PricingValue";
 import PricingFAQ from "./pricing/PricingFAQ";
 import PricingCTA from "./pricing/PricingCTA";
+import PricingROICalculator from "./pricing/PricingROICalculator";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -84,6 +85,9 @@ const PricingSection = () => {
 
         {/* Trust */}
         <PricingTrust />
+
+        {/* ROI Calculator */}
+        <PricingROICalculator />
 
         {/* Value Justification */}
         <PricingValue />
