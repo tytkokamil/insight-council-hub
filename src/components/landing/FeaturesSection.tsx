@@ -50,7 +50,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const CopilotPreview = () => (
   <div className="space-y-3">
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-4 rounded-lg border border-border bg-card">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-4 rounded-xl border border-border/50 bg-card/70 backdrop-blur-sm">
       <div className="flex items-center gap-2 mb-3">
         <Brain className="w-3.5 h-3.5 text-primary" />
         <span className="text-xs font-semibold">Analyse</span>

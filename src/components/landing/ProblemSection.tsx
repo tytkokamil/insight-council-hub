@@ -1,52 +1,64 @@
 import { motion } from "framer-motion";
+import { Clock, Users, MessageSquareX, EyeOff } from "lucide-react";
 
 const problems = [
-  { number: "01", title: "Entscheidungen dauern Wochen", detail: "Ø 14 Tage bis zur Freigabe" },
-  { number: "02", title: "Verantwortung ist unklar", detail: "73% ohne klaren Owner" },
-  { number: "03", title: "Kontext verstreut", detail: "Slack, E-Mail, Meetings" },
-  { number: "04", title: "Risiken werden unsichtbar", detail: "Kein Echtzeit-Überblick" },
+  { icon: Clock, title: "Entscheidungen dauern Wochen", cost: "Ø 14 Tage bis zur Freigabe" },
+  { icon: Users, title: "Verantwortung ist unklar", cost: "73% ohne klaren Owner" },
+  { icon: MessageSquareX, title: "Kontext verstreut", cost: "Slack, E-Mail, Meetings" },
+  { icon: EyeOff, title: "Risiken werden unsichtbar", cost: "Kein Echtzeit-Überblick" },
 ];
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const ProblemSection = () => (
-  <section className="py-32 relative">
-    <div className="container mx-auto px-4">
-      <div className="max-w-5xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6, ease }}
-          className="mb-20"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="h-px w-12 bg-destructive/50" />
-            <span className="text-xs font-medium tracking-[0.2em] uppercase text-destructive/60">Das Problem</span>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-[-0.04em] leading-[1.05] max-w-3xl">
-            Entscheidungen scheitern nicht an Daten — sondern an fehlender Struktur.
-          </h2>
-        </motion.div>
+  <section className="py-28 relative overflow-hidden">
+    {/* Subtle aurora tint */}
+    <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute top-0 right-[-10%] w-[500px] h-[500px] rounded-full bg-aurora-rose/[0.06] blur-[120px]" />
+    </div>
 
-        <div className="space-y-0">
-          {problems.map((p, i) => (
-            <motion.div
-              key={p.number}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: i * 0.08, duration: 0.5, ease }}
-              className="group flex items-baseline gap-6 md:gap-10 py-6 border-b border-border hover:border-foreground/20 transition-colors duration-300"
-            >
-              <span className="text-xs font-mono text-muted-foreground/40 w-6">{p.number}</span>
-              <h3 className="text-lg md:text-xl font-semibold tracking-tight flex-1 group-hover:translate-x-1 transition-transform duration-300">
-                {p.title}
-              </h3>
-              <span className="text-sm text-muted-foreground hidden md:block">{p.detail}</span>
-            </motion.div>
-          ))}
-        </div>
+    <div className="container mx-auto px-4 relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, ease }}
+        className="max-w-3xl mx-auto mb-16"
+      >
+        <p className="text-xs font-medium text-accent-rose/60 mb-4 tracking-[0.15em] uppercase">Das Problem</p>
+        <h2 className="text-3xl md:text-5xl font-bold tracking-[-0.04em] leading-[1.1]">
+          Entscheidungen scheitern nicht an{" "}
+          <span className="text-muted-foreground/50">fehlenden Daten</span>
+          {" "}— sondern an fehlender{" "}
+          <span className="relative">
+            Struktur
+            <motion.span
+              className="absolute -bottom-1 left-0 right-0 h-[2px] bg-gradient-to-r from-aurora-rose/40 to-aurora-violet/30 rounded-full"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5, duration: 0.8, ease }}
+              style={{ originX: 0 }}
+            />
+          </span>.
+        </h2>
+      </motion.div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        {problems.map((problem, i) => (
+          <motion.div
+            key={problem.title}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: i * 0.08, duration: 0.6, ease }}
+            className="group aurora-card p-6 hover:border-aurora-rose/20"
+          >
+            <problem.icon className="w-5 h-5 text-muted-foreground/30 mb-5 group-hover:text-accent-rose/50 transition-colors duration-500" />
+            <h3 className="text-base font-semibold mb-2 tracking-tight">{problem.title}</h3>
+            <p className="text-sm text-muted-foreground/60">{problem.cost}</p>
+          </motion.div>
+        ))}
       </div>
     </div>
   </section>
