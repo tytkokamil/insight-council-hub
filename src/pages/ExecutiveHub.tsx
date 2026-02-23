@@ -21,7 +21,8 @@ const DecisionBenchmarking = lazy(() => import("./DecisionBenchmarking"));
 
 const MIN_DECISIONS = 15;
 
-const ExecutiveHub = () => {
+const ExecutiveHub = ({ embedded }: { embedded?: boolean }) => {
+  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   const [tab, setTab] = useState("dashboard");
   const [exporting, setExporting] = useState(false);
   const { data: decisions = [], isLoading } = useDecisions();
@@ -42,7 +43,7 @@ const ExecutiveHub = () => {
   }, []);
 
   return (
-    <AppLayout>
+    <Wrapper>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <PageHeader
           title="Executive Hub"
@@ -128,7 +129,7 @@ const ExecutiveHub = () => {
           </TabsContent>
         </Tabs>
       )}
-    </AppLayout>
+    </Wrapper>
   );
 };
 

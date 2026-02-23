@@ -42,7 +42,7 @@ const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2
 
 const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k €` : `${Math.round(cost)} €`;
 
-const EscalationEngine = () => {
+const EscalationEngine = ({ embedded }: { embedded?: boolean }) => {
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -292,10 +292,11 @@ const EscalationEngine = () => {
   const priorityBadge = (p: string) =>
     p === "critical" ? "bg-destructive/20 text-destructive" : p === "high" ? "bg-warning/20 text-warning" : p === "medium" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground";
 
-  if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Decision Control...</div></AppLayout>;
+  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
+  if (loading) return <Wrapper><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">Lade Decision Control...</div></Wrapper>;
 
   return (
-    <AppLayout>
+    <Wrapper>
       <PageHeader
         title="Decision Control"
         subtitle="Governance-Zentrale: SLA, Eskalationen, Economic Exposure & Automation"
@@ -856,7 +857,7 @@ const EscalationEngine = () => {
           </div>
         </CardContent>
       </Card>
-    </AppLayout>
+    </Wrapper>
   );
 };
 

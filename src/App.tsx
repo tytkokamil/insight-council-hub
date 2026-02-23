@@ -32,7 +32,6 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DecisionGraph = lazy(() => import("./pages/DecisionGraph"));
 const BottleneckIntelligence = lazy(() => import("./pages/BottleneckIntelligence"));
 const OpportunityCostRadar = lazy(() => import("./pages/OpportunityCostRadar"));
-// WarRoom removed – integrated into EscalationEngine
 const PredictiveTimeline = lazy(() => import("./pages/PredictiveTimeline"));
 const Strategy = lazy(() => import("./pages/Strategy"));
 const FrictionMap = lazy(() => import("./pages/FrictionMap"));
@@ -51,7 +50,6 @@ const PatternEngine = lazy(() => import("./pages/PatternEngine"));
 const TeamDetail = lazy(() => import("./pages/TeamDetail"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
 const TaskDetail = lazy(() => import("./pages/TaskDetail"));
-// Templates page removed – integrated into TemplateEditor
 const TimelinePage = lazy(() => import("./pages/TimelinePage"));
 const TemplateEditor = lazy(() => import("./pages/TemplateEditor"));
 const KnowledgeBase = lazy(() => import("./pages/KnowledgeBase"));
@@ -66,6 +64,9 @@ const MeetingMode = lazy(() => import("./pages/MeetingMode"));
 const AnalyticsHub = lazy(() => import("./pages/AnalyticsHub"));
 const ProcessHub = lazy(() => import("./pages/ProcessHub"));
 const ExecutiveHub = lazy(() => import("./pages/ExecutiveHub"));
+const GovernanceCenter = lazy(() => import("./pages/GovernanceCenter"));
+const IntelligenceCenter = lazy(() => import("./pages/IntelligenceCenter"));
+const ProcessIntelligence = lazy(() => import("./pages/ProcessIntelligence"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Imprint = lazy(() => import("./pages/Imprint"));
@@ -121,37 +122,48 @@ const App = () => (
               <Route path="/tasks" element={<P><TasksPage /></P>} />
               <Route path="/tasks/:id" element={<P><TaskDetail /></P>} />
               <Route path="/analytics" element={<P><AnalyticsHub /></P>} />
+              <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
+              <Route path="/meeting" element={<P><MeetingMode /></P>} />
+              
+              {/* Consolidated hubs */}
+              <Route path="/governance" element={<P><GovernanceCenter /></P>} />
+              <Route path="/intelligence" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/process-intelligence" element={<P><ProcessIntelligence /></P>} />
+              
+              {/* Legacy redirects – keep old URLs working */}
+              <Route path="/engine" element={<P><GovernanceCenter /></P>} />
+              <Route path="/executive" element={<P><GovernanceCenter /></P>} />
+              <Route path="/risks" element={<P><GovernanceCenter /></P>} />
+              <Route path="/automations" element={<P><GovernanceCenter /></P>} />
+              <Route path="/graph" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/dna" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/benchmarking" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/health-heatmap" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/predictive-timeline" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/costs" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/scenarios" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/patterns" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/friction" element={<P><IntelligenceCenter /></P>} />
+              <Route path="/bottlenecks" element={<P><ProcessIntelligence /></P>} />
+              <Route path="/process" element={<P><ProcessIntelligence /></P>} />
+              
+              {/* Remaining standalone pages */}
               <Route path="/briefing" element={<P><Briefing /></P>} />
-              <Route path="/graph" element={<P><DecisionGraph /></P>} />
-              <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
-              <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
-              {/* /warroom removed – integrated into /engine */}
               <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
               <Route path="/strategy" element={<P><Strategy /></P>} />
-              <Route path="/friction" element={<P><FrictionMap /></P>} />
               <Route path="/health" element={<P><HealthHeatmap /></P>} />
-              <Route path="/dna" element={<P><DecisionDNA /></P>} />
-              <Route path="/engine" element={<P><EscalationEngine /></P>} />
-              <Route path="/benchmarking" element={<P><DecisionBenchmarking /></P>} />
-              <Route path="/scenarios" element={<P><ScenarioEngine /></P>} />
-              <Route path="/executive" element={<P><ExecutiveHub /></P>} />
               <Route path="/settings" element={<P><SettingsPage /></P>} />
               <Route path="/admin/users" element={<P><AdminUsers /></P>} />
               <Route path="/audit" element={<P><AuditTrail /></P>} />
               <Route path="/pilot" element={<P><PilotSettings /></P>} />
-              <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
-              <Route path="/patterns" element={<P><PatternEngine /></P>} />
               <Route path="/templates" element={<P><TemplateEditor /></P>} />
               <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
               <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
               <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />
-              <Route path="/automations" element={<P><AutomationRules /></P>} />
               <Route path="/archive" element={<P><ArchivePage /></P>} />
-              <Route path="/risks" element={<P><RiskRegister /></P>} />
               <Route path="/team-performance" element={<P><TeamPerformance /></P>} />
               <Route path="/search" element={<P><GlobalSearch /></P>} />
-              <Route path="/meeting" element={<P><MeetingMode /></P>} />
-              <Route path="/process" element={<P><ProcessHub /></P>} />
+              <Route path="/radar" element={<P><IntelligenceCenter /></P>} />
               
               <Route path="*" element={<NotFound />} />
             </Routes>
