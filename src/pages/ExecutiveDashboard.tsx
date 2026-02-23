@@ -20,6 +20,7 @@ import {
   Settings, BookOpen,
 } from "lucide-react";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
+import { exportFullReportExcel } from "@/lib/exportExcel";
 import { useToast } from "@/hooks/use-toast";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -298,7 +299,31 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
               setExporting(false);
             }} className="gap-2">
               {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              Board Report
+              PDF Report
+            </Button>
+            <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
+              setExporting(true);
+              try {
+                const data = await fetchBoardReportData();
+                const profileMap: Record<string, string> = {};
+                data.profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || "Unbekannt"; });
+                const decExport = data.decisions.map((d: any) => ({
+                  ...d,
+                  team_name: data.teams.find((t: any) => t.id === d.team_id)?.name,
+                  assignee_name: profileMap[d.assignee_id] || "—",
+                  creator_name: profileMap[d.created_by] || "—",
+                }));
+                const taskExport = data.tasks.map((t: any) => ({
+                  ...t,
+                  assignee_name: profileMap[t.assignee_id] || "—",
+                }));
+                exportFullReportExcel(decExport, taskExport);
+                toast({ title: "Exportiert", description: "Excel-Report heruntergeladen." });
+              } catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
+              setExporting(false);
+            }} className="gap-2">
+              <FileDown className="w-3.5 h-3.5" />
+              Excel Report
             </Button>
           </div>
         </div>

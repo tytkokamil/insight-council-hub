@@ -21,6 +21,7 @@ import DecisionEmptyState from "@/components/decisions/DecisionEmptyState";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
+import { exportDecisionsExcel } from "@/lib/exportExcel";
 import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
@@ -194,6 +195,7 @@ const Decisions = () => {
                   <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => { exportDecisionsExcel(prepareExport()); toast.success("Excel exportiert"); }} className="gap-2"><FileText className="w-4 h-4" /> Excel (.xlsx)</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { exportCSV(prepareExport()); toast.success(t("decisions.csvExported")); }} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportPDF(prepareExport())} className="gap-2"><FileText className="w-4 h-4" /> PDF</DropdownMenuItem>
                 </DropdownMenuContent>
