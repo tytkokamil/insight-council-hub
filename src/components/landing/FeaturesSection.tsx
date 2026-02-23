@@ -17,43 +17,43 @@ const accentStyles: Record<string, { bg: string; text: string }> = {
 const features = [
   {
     id: "ai-copilot", label: "KI Co-Pilot", icon: Brain,
-    title: "KI-gestützter Decision Co-Pilot",
-    description: "Dein persönlicher KI-Berater analysiert jede Entscheidung in Echtzeit — Risiko-Score, Erfolgswahrscheinlichkeit, und konkrete Handlungsempfehlungen.",
+    title: "Decision Co-Pilot mit Explainability",
+    description: "Automatische Risikoanalyse, Reviewer-Vorschläge und Delegations-Empfehlungen. Jede KI-Bewertung zeigt Confidence-Level, Einflussfaktoren und Datengrundlage — volle Transparenz statt Black-Box.",
     preview: "copilot",
     accent: "accent-violet",
   },
   {
     id: "decision-graph", label: "Decision Graph", icon: GitBranch,
-    title: "Visuelle Entscheidungs-Netzwerke",
-    description: "Sieh wie deine Entscheidungen zusammenhängen. Identifiziere Abhängigkeiten, kritische Pfade und Kaskadeneffekte bevor sie zum Problem werden.",
+    title: "Abhängigkeiten & Kaskadeneffekte",
+    description: "Visualisiere Entscheidungs-Netzwerke mit allen Abhängigkeiten. Erkenne kritische Pfade und blockierende Entscheidungen bevor sie Projekte verzögern.",
     preview: "graph",
     accent: "accent-blue",
   },
   {
     id: "war-room", label: "War Room", icon: Zap,
     title: "Krisenmanagement in Echtzeit",
-    description: "Wenn es brennt, zählt jede Sekunde. Der War Room bündelt kritische Entscheidungen, eskaliert automatisch und koordiniert dein Team.",
+    description: "Bündelt kritische Entscheidungen nach Priorität: Eskalationen → Überfällige → Ausstehende Reviews → Blockierte Tasks. Automatische Koordination deines Teams.",
     preview: "warroom",
     accent: "accent-rose",
   },
   {
     id: "scenario-engine", label: "Szenario Engine", icon: TrendingUp,
-    title: "What-If Simulationen",
-    description: "Simuliere verschiedene Szenarien und deren Auswirkungen bevor du dich festlegst. Die KI berechnet Wahrscheinlichkeiten und Outcomes.",
+    title: "What-If Simulationen mit KI",
+    description: "Drei automatisch generierte Handlungsoptionen mit Pro/Contra, ROI-Schätzung und Confidence Score. Simuliere Auswirkungen bevor du entscheidest.",
     preview: "scenarios",
     accent: "accent-teal",
   },
   {
     id: "escalation", label: "Auto-Eskalation", icon: AlertTriangle,
-    title: "Intelligente Eskalations-Engine",
-    description: "Überfällige Entscheidungen werden automatisch eskaliert. Regeln, Schwellenwerte und Benachrichtigungen — alles konfigurierbar.",
+    title: "SLA-gesteuerte Eskalations-Engine",
+    description: "Konfigurierbare Eskalationsstufen pro Kategorie und Priorität. Automatische Reassignment, Warn-Schwellen und Executive Alerts bei Überschreitung.",
     preview: "escalation",
     accent: "accent-amber",
   },
   {
     id: "analytics", label: "Deep Analytics", icon: BarChart3,
-    title: "Bottleneck & Opportunity Cost Radar",
-    description: "Finde heraus wo Entscheidungen steckenbleiben, was sie kosten, und wo die größten Optimierungspotenziale liegen.",
+    title: "Bottleneck Intelligence & Cost Radar",
+    description: "Heatmaps für Status × Team, Cost-of-Delay Prognosen und ein 'What changed?' Insight Bar. 60-Sekunden Management-Übersicht über die Prozessgesundheit.",
     preview: "analytics",
     accent: "primary",
   },
@@ -67,19 +67,23 @@ const CopilotPreview = () => (
   <div className="space-y-3">
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-3 rounded-xl bg-accent-violet/5 border border-accent-violet/15">
       <div className="flex items-center gap-2 mb-2">
-        <Brain className="w-4 h-4 text-accent-violet" />
-        <span className="text-xs font-semibold text-foreground">KI-Analyse aktiv</span>
-        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-violet/50 animate-pulse" />
+        <Brain className="w-3.5 h-3.5 text-accent-violet" />
+        <span className="text-[11px] font-semibold text-foreground">Analyse</span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-accent-violet/10 text-accent-violet font-medium">High Confidence</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-accent-violet/50 animate-pulse" />
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Risiko", value: "32%" },
-          { label: "Impact", value: "Hoch" },
-          { label: "Erfolg", value: "87%" },
+          { label: "Risiko", value: "32%", sub: "↓ vs. Ø" },
+          { label: "Impact", value: "Hoch", sub: "Revenue" },
+          { label: "Ablehn.", value: "12%", sub: "Historisch" },
         ].map((m, i) => (
           <motion.div key={m.label} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 + i * 0.1 }} className="text-center p-2 rounded-lg bg-card border border-border">
-            <div className="text-lg font-bold tabular-nums">{m.value}</div>
-            <div className="text-[10px] text-muted-foreground">{m.label}</div>
+            <div className="text-base font-bold font-display">{m.value}</div>
+            <div className="text-[9px] text-muted-foreground">{m.label}</div>
+            <div className="text-[8px] text-muted-foreground/50">{m.sub}</div>
           </motion.div>
         ))}
       </div>
@@ -87,10 +91,13 @@ const CopilotPreview = () => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="p-3 rounded-xl bg-muted/30 border border-border">
       <div className="flex items-start gap-2">
         <Sparkles className="w-3.5 h-3.5 text-accent-violet mt-0.5 shrink-0" />
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          <span className="text-foreground font-medium">Empfehlung:</span> Hole vor der Umsetzung Feedback vom Engineering-Team ein.
-          Ähnliche Entscheidungen hatten +34% Erfolgsrate mit technischem Review.
-        </p>
+        <div className="text-xs text-muted-foreground leading-relaxed">
+          <span className="text-foreground font-medium">Reviewer-Vorschlag:</span> Engineering-Lead einbinden — ähnliche Entscheidungen hatten +34% Erfolgsrate mit technischem Review.
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground">12 ähnliche Fälle</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground">3 Faktoren</span>
+          </div>
+        </div>
       </div>
     </motion.div>
   </div>
@@ -351,6 +358,7 @@ const FeaturesSection = () => {
           {[
             "CEO Briefing", "Decision DNA", "Health Heatmap", "Predictive Timeline",
             "Friction Map", "Benchmarking", "Audit Trail", "Strategy Alignment",
+            "Review Delegation", "Template Engine", "Board Pack Export",
           ].map((badge, i) => (
             <motion.span
               key={badge}
