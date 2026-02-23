@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, AlertCircle, Shield, Zap } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, Shield, Zap, Timer } from "lucide-react";
 import decivioLogo from "@/assets/decivio-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import MfaVerificationScreen from "@/components/auth/MfaVerificationScreen";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import PasswordStrengthIndicator from "@/components/auth/PasswordStrengthIndicator";
+import { isLockedOut, recordFailedAttempt, resetAttempts } from "@/lib/rateLimiter";
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -23,8 +24,20 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaMethod, setMfaMethod] = useState<"totp" | "email" | "both">("totp");
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
+
+  // Check lockout on mount and tick down
+  useEffect(() => {
+    const check = () => {
+      const { locked, remainingSeconds } = isLockedOut();
+      setLockoutSeconds(locked ? remainingSeconds : 0);
+    };
+    check();
+    const interval = setInterval(check, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (user) navigate("/dashboard");
@@ -44,15 +57,33 @@ const Auth = () => {
     setSuccess("");
     setLoading(true);
 
+    // Check lockout before attempting
+    const lockCheck = isLockedOut();
+    if (lockCheck.locked) {
+      setError(t("auth.accountLocked", { seconds: lockCheck.remainingSeconds }));
+      setLockoutSeconds(lockCheck.remainingSeconds);
+      setLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         loginSchema.parse({ email, password });
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes("Invalid login")) setError(t("auth.wrongCredentials"));
-          else if (error.message.includes("Email not confirmed")) setError(t("auth.emailNotConfirmed"));
-          else setError(error.message);
+          const result = recordFailedAttempt();
+          if (result.locked) {
+            setError(t("auth.accountLocked", { seconds: result.lockoutSeconds }));
+            setLockoutSeconds(result.lockoutSeconds);
+          } else if (error.message.includes("Invalid login")) {
+            setError(`${t("auth.wrongCredentials")} (${result.remainingAttempts} ${t("auth.attemptsRemaining")})`);
+          } else if (error.message.includes("Email not confirmed")) {
+            setError(t("auth.emailNotConfirmed"));
+          } else {
+            setError(error.message);
+          }
         } else {
+          resetAttempts();
           // Check if user has MFA enabled
           const { data: mfaSettings } = await supabase
             .from("mfa_settings")
@@ -168,8 +199,15 @@ const Auth = () => {
                 </div>
               )}
 
-              <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                {loading ? t("auth.loading") : isLogin ? t("auth.signIn") : t("auth.signUp")}
+              {lockoutSeconds > 0 && (
+                <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                  <Timer className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{t("auth.lockedTimer", { minutes: Math.ceil(lockoutSeconds / 60), seconds: lockoutSeconds % 60 })}</span>
+                </div>
+              )}
+
+              <Button type="submit" size="lg" className="w-full" disabled={loading || lockoutSeconds > 0}>
+                {loading ? t("auth.loading") : lockoutSeconds > 0 ? t("auth.locked") : isLogin ? t("auth.signIn") : t("auth.signUp")}
               </Button>
 
               {isLogin && (
