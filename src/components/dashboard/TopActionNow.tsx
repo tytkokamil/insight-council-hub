@@ -29,62 +29,57 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
   const { t } = useTranslation();
 
   const action = useMemo<TopAction | null>(() => {
-    // Priority 1: Critical escalations
     if (escalated.length > 0) {
       const maxLevel = Math.max(...escalated.map(d => d.escalation_level || 0));
       if (maxLevel >= 2) {
         return {
           urgency: "critical",
           icon: ShieldAlert,
-          title: `${escalated.length} Eskalation${escalated.length > 1 ? "en" : ""} erfordern sofortige Aktion`,
-          description: `Höchste Stufe: L${maxLevel} – "${escalated[0]?.title?.slice(0, 50)}..."`,
+          title: t("widgets.escalationsNeedAction", { count: escalated.length }),
+          description: t("widgets.highestLevel", { level: maxLevel, title: escalated[0]?.title?.slice(0, 50) }),
           path: "/engine",
-          actionLabel: "Eskalation lösen",
+          actionLabel: t("widgets.resolveEscalation"),
         };
       }
     }
 
-    // Priority 2: Overdue decisions
     if (overdue.length > 0) {
       const critical = overdue.filter(d => d.priority === "critical" || d.priority === "high");
       const target = critical[0] || overdue[0];
       return {
         urgency: "warning",
         icon: Clock,
-        title: `${overdue.length} überfällige Entscheidung${overdue.length > 1 ? "en" : ""}`,
-        description: `Dringendste: "${target?.title?.slice(0, 50)}..."`,
+        title: t("widgets.overdueDecisions", { count: overdue.length }),
+        description: t("widgets.mostUrgent", { title: target?.title?.slice(0, 50) }),
         path: `/decisions/${target?.id}`,
-        actionLabel: "Jetzt entscheiden",
+        actionLabel: t("widgets.decideNow"),
       };
     }
 
-    // Priority 3: Pending reviews
     if (pendingReviews.length > 0) {
       return {
         urgency: "info",
         icon: Eye,
-        title: `${pendingReviews.length} Review${pendingReviews.length > 1 ? "s" : ""} warten auf dich`,
-        description: "Offene Reviews verzögern Entscheidungen im Team.",
+        title: t("widgets.reviewsWaiting", { count: pendingReviews.length }),
+        description: t("widgets.reviewsDelay"),
         path: pendingReviews[0]?.decision_id ? `/decisions/${pendingReviews[0].decision_id}` : "/decisions",
-        actionLabel: "Review starten",
+        actionLabel: t("widgets.startReview"),
       };
     }
 
-    // Priority 4: Blocked tasks
     if (blockedTasks.length > 0) {
       return {
         urgency: "info",
         icon: Link2,
-        title: `${blockedTasks.length} Aufgabe${blockedTasks.length > 1 ? "n" : ""} blockiert`,
-        description: "Abhängige Entscheidungen verhindern den Fortschritt.",
+        title: t("widgets.tasksBlocked", { count: blockedTasks.length }),
+        description: t("widgets.blockedDesc"),
         path: "/tasks",
-        actionLabel: "Blockaden lösen",
+        actionLabel: t("widgets.resolveBlocks"),
       };
     }
 
-    // All clear
     return null;
-  }, [overdue, escalated, pendingReviews, blockedTasks]);
+  }, [overdue, escalated, pendingReviews, blockedTasks, t]);
 
   if (!action) {
     return (
@@ -97,8 +92,8 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
           <CheckCircle2 className="w-5 h-5 text-success" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-success">Alles auf Kurs</p>
-          <p className="text-xs text-muted-foreground">Keine offenen Eskalationen, Reviews oder überfällige Entscheidungen.</p>
+          <p className="text-sm font-semibold text-success">{t("widgets.allOnTrack")}</p>
+          <p className="text-xs text-muted-foreground">{t("widgets.noOpenItems")}</p>
         </div>
       </motion.div>
     );
@@ -154,7 +149,7 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            👉 Top Action Now
+            {t("widgets.topActionNow")}
           </span>
         </div>
         <p className={`text-sm font-semibold ${styles.titleColor}`}>{action.title}</p>
