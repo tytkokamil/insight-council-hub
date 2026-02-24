@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight, CheckSquare, Shield, Lightbulb } from "lucide-react";
@@ -13,11 +14,9 @@ import AiInsightPanel from "@/components/shared/AiInsightPanel";
 interface PersonBottleneck { userId: string; name: string; avgDays: number; openCount: number; blockingCount: number; openTasks: number; percentile: string; }
 interface CategoryBottleneck { category: string; avgDays: number; globalAvg: number; ratio: number; count: number; taskCount: number; }
 interface TeamFriction { teamId: string; teamName: string; avgDays: number; escalationCount: number; blockedCount: number; openTasks: number; score: number; }
-interface SLAViolation { teamId: string; teamName: string; violationsThisWeek: number; topTeams: string[]; avgResponseDays: number; }
-
-const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
 
 const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const [personBottlenecks, setPersonBottlenecks] = useState<PersonBottleneck[]>([]);
   const [categoryBottlenecks, setCategoryBottlenecks] = useState<CategoryBottleneck[]>([]);
   const [teamFrictions, setTeamFrictions] = useState<TeamFriction[]>([]);
@@ -33,6 +32,12 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
   const { data: notifications = [] } = useFilteredNotifications();
 
   const loading = decLoading || taskLoading || teamLoading || depLoading || revLoading || profLoading;
+
+  const categoryLabels: Record<string, string> = {
+    strategic: t("bottleneck.catStrategic"), budget: t("bottleneck.catBudget"), hr: t("bottleneck.catHr"),
+    technical: t("bottleneck.catTechnical"), operational: t("bottleneck.catOperational"),
+    marketing: t("bottleneck.catMarketing"), general: t("bottleneck.catGeneral"),
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -52,14 +57,14 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       personStats[pid].count++;
       if (!["implemented", "rejected"].includes(d.status)) personStats[pid].openCount++;
     });
-    tasks.forEach(t => {
-      const pid = t.assignee_id || t.created_by;
+    tasks.forEach(tk => {
+      const pid = tk.assignee_id || tk.created_by;
       if (!pid) return;
       if (!personStats[pid]) personStats[pid] = { totalDays: 0, count: 0, openCount: 0, blockingCount: 0, openTasks: 0 };
-      const days = t.completed_at ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000 : (now - new Date(t.created_at).getTime()) / 86400000;
+      const days = tk.completed_at ? (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / 86400000 : (now - new Date(tk.created_at).getTime()) / 86400000;
       personStats[pid].totalDays += days;
       personStats[pid].count++;
-      if (t.status !== "done") personStats[pid].openTasks++;
+      if (tk.status !== "done") personStats[pid].openTasks++;
     });
     const blockedSourceIds = deps.filter(d => d.dependency_type === "blocks").map(d => d.source_decision_id).filter(Boolean);
     blockedSourceIds.forEach(sourceId => {
@@ -81,7 +86,7 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
     const allAvgDays = Object.values(personStats).map(s => s.totalDays / s.count);
     const globalPersonAvg = allAvgDays.length > 0 ? allAvgDays.reduce((a, b) => a + b, 0) / allAvgDays.length : 7;
     const persons: PersonBottleneck[] = Object.entries(personStats)
-      .map(([userId, s]) => ({ userId, name: nameMap[userId] || userId.slice(0, 8), avgDays: Math.round(s.totalDays / s.count), openCount: s.openCount, blockingCount: s.blockingCount, openTasks: s.openTasks, percentile: s.totalDays / s.count > globalPersonAvg * 1.5 ? "Langsam" : s.totalDays / s.count > globalPersonAvg ? "Durchschnitt" : "Schnell" }))
+      .map(([userId, s]) => ({ userId, name: nameMap[userId] || userId.slice(0, 8), avgDays: Math.round(s.totalDays / s.count), openCount: s.openCount, blockingCount: s.blockingCount, openTasks: s.openTasks, percentile: s.totalDays / s.count > globalPersonAvg * 1.5 ? "slow" : s.totalDays / s.count > globalPersonAvg ? "average" : "fast" }))
       .filter(p => p.avgDays > globalPersonAvg * 0.8)
       .sort((a, b) => b.avgDays - a.avgDays)
       .slice(0, 10);
@@ -95,10 +100,10 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       catStats[d.category].totalDays += days;
       catStats[d.category].decCount++;
     });
-    tasks.forEach(t => {
-      const cat = t.category || "general";
+    tasks.forEach(tk => {
+      const cat = tk.category || "general";
       if (!catStats[cat]) catStats[cat] = { totalDays: 0, decCount: 0, taskCount: 0 };
-      const days = t.completed_at ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000 : (now - new Date(t.created_at).getTime()) / 86400000;
+      const days = tk.completed_at ? (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / 86400000 : (now - new Date(tk.created_at).getTime()) / 86400000;
       catStats[cat].totalDays += days;
       catStats[cat].taskCount++;
     });
@@ -121,16 +126,16 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       if (d.escalation_level && d.escalation_level > 0) teamStats[d.team_id].escalations++;
       if (blockedTargets.has(d.id)) teamStats[d.team_id].blocked++;
     });
-    tasks.forEach(t => {
-      if (!t.team_id) return;
-      if (!teamStats[t.team_id]) teamStats[t.team_id] = { totalDays: 0, count: 0, escalations: 0, blocked: 0, openTasks: 0 };
-      const days = t.completed_at ? (new Date(t.completed_at).getTime() - new Date(t.created_at).getTime()) / 86400000 : (now - new Date(t.created_at).getTime()) / 86400000;
-      teamStats[t.team_id].totalDays += days;
-      teamStats[t.team_id].count++;
-      if (t.status !== "done") teamStats[t.team_id].openTasks++;
+    tasks.forEach(tk => {
+      if (!tk.team_id) return;
+      if (!teamStats[tk.team_id]) teamStats[tk.team_id] = { totalDays: 0, count: 0, escalations: 0, blocked: 0, openTasks: 0 };
+      const days = tk.completed_at ? (new Date(tk.completed_at).getTime() - new Date(tk.created_at).getTime()) / 86400000 : (now - new Date(tk.created_at).getTime()) / 86400000;
+      teamStats[tk.team_id].totalDays += days;
+      teamStats[tk.team_id].count++;
+      if (tk.status !== "done") teamStats[tk.team_id].openTasks++;
     });
     const teamResults: TeamFriction[] = Object.entries(teamStats)
-      .map(([teamId, s]) => { const avgDays = s.totalDays / s.count; const score = Math.round((s.escalations * 15) + (s.blocked * 20) + (s.openTasks * 5) + (avgDays > globalCatAvg ? (avgDays - globalCatAvg) * 3 : 0)); return { teamId, teamName: teamMap[teamId] || "Unbekannt", avgDays: Math.round(avgDays), escalationCount: s.escalations, blockedCount: s.blocked, openTasks: s.openTasks, score }; })
+      .map(([teamId, s]) => { const avgDays = s.totalDays / s.count; const score = Math.round((s.escalations * 15) + (s.blocked * 20) + (s.openTasks * 5) + (avgDays > globalCatAvg ? (avgDays - globalCatAvg) * 3 : 0)); return { teamId, teamName: teamMap[teamId] || t("bottleneck.unknown"), avgDays: Math.round(avgDays), escalationCount: s.escalations, blockedCount: s.blocked, openTasks: s.openTasks, score }; })
       .sort((a, b) => b.score - a.score);
     setTeamFrictions(teamResults);
 
@@ -139,7 +144,7 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
     const thisWeekEsc = escalationNotifs.filter(n => new Date(n.created_at).getTime() > oneWeekAgo);
     const teamViolationCounts: Record<string, number> = {};
     decisions.filter(d => (d.escalation_level ?? 0) > 0).forEach(d => {
-      if (d.team_id) teamViolationCounts[teamMap[d.team_id] || "Unbekannt"] = (teamViolationCounts[teamMap[d.team_id] || "Unbekannt"] || 0) + 1;
+      if (d.team_id) teamViolationCounts[teamMap[d.team_id] || t("bottleneck.unknown")] = (teamViolationCounts[teamMap[d.team_id] || t("bottleneck.unknown")] || 0) + 1;
     });
     const topTeams = Object.entries(teamViolationCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([name, count]) => ({ name, count }));
     const reviewTimes = reviews.filter(r => r.reviewed_at).map(r => (new Date(r.reviewed_at!).getTime() - new Date(r.created_at).getTime()) / 86400000);
@@ -148,17 +153,18 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
 
     // ── Recommendations ──
     const recs: { title: string; description: string; severity: string }[] = [];
-    const slowPersons = persons.filter(p => p.percentile === "Langsam");
-    if (slowPersons.length > 0) recs.push({ title: "Langsame Entscheider coachen", description: `${slowPersons.length} Personen liegen >50% über dem Durchschnitt. Prozessoptimierung oder Delegation empfohlen.`, severity: "high" });
+    const slowPersons = persons.filter(p => p.percentile === "slow");
+    if (slowPersons.length > 0) recs.push({ title: t("bottleneck.recCoachSlow"), description: t("bottleneck.recCoachSlowDesc", { count: slowPersons.length }), severity: "high" });
     const slowCats = cats.filter(c => c.ratio > 1.5);
-    if (slowCats.length > 0) recs.push({ title: "Kategorie-spezifische Prozesse optimieren", description: `${slowCats.map(c => categoryLabels[c.category] || c.category).join(", ")} sind überdurchschnittlich langsam.`, severity: "medium" });
-    const highFrictionTeams = teamResults.filter(t => t.score > 50);
-    if (highFrictionTeams.length > 0) recs.push({ title: "Team-Reibung reduzieren", description: `${highFrictionTeams.map(t => t.teamName).join(", ")} haben hohe Friction Scores. Eskalations- und Blockadenprozesse prüfen.`, severity: "high" });
-    if (recs.length === 0) recs.push({ title: "Keine kritischen Engpässe", description: "Die Organisation zeigt gesunde Entscheidungsgeschwindigkeiten.", severity: "low" });
+    if (slowCats.length > 0) recs.push({ title: t("bottleneck.recOptimizeCat"), description: t("bottleneck.recOptimizeCatDesc", { cats: slowCats.map(c => categoryLabels[c.category] || c.category).join(", ") }), severity: "medium" });
+    const highFrictionTeams = teamResults.filter(tr => tr.score > 50);
+    if (highFrictionTeams.length > 0) recs.push({ title: t("bottleneck.recReduceFriction"), description: t("bottleneck.recReduceFrictionDesc", { teams: highFrictionTeams.map(tr => tr.teamName).join(", ") }), severity: "high" });
+    if (recs.length === 0) recs.push({ title: t("bottleneck.recNoCritical"), description: t("bottleneck.recNoCriticalDesc"), severity: "low" });
     setRecommendations(recs.slice(0, 3));
   }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
 
-  const percentileColor = (p: string) => p === "Langsam" ? "text-destructive bg-destructive/10" : p === "Durchschnitt" ? "text-warning bg-warning/10" : "text-success bg-success/10";
+  const percentileLabel = (p: string) => p === "slow" ? t("bottleneck.percentileSlow") : p === "average" ? t("bottleneck.percentileAvg") : t("bottleneck.percentileFast");
+  const percentileColor = (p: string) => p === "slow" ? "text-destructive bg-destructive/10" : p === "average" ? "text-warning bg-warning/10" : "text-success bg-success/10";
   const ratioBar = (ratio: number) => {
     const w = Math.min(ratio * 50, 100);
     const color = ratio > 2 ? "bg-destructive" : ratio > 1.3 ? "bg-warning" : "bg-success";
@@ -170,8 +176,8 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
   if (personBottlenecks.length === 0 && categoryBottlenecks.length === 0 && teamFrictions.length === 0) {
     const empty = (
       <>
-        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p><h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1></div>
-        <EmptyAnalysisState icon={Zap} title="Keine Engpässe erkannt" description="Erstelle Entscheidungen und Aufgaben, um strukturelle Bottlenecks zu identifizieren." hint="Engpässe werden automatisch erkannt" />
+        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("bottleneck.label")}</p><h1 className="text-xl font-semibold tracking-tight">{t("bottleneck.title")}</h1></div>
+        <EmptyAnalysisState icon={Zap} title={t("bottleneck.noBottlenecks")} description={t("bottleneck.noBottlenecksDesc")} hint={t("bottleneck.noBottlenecksHint")} />
       </>
     );
     return embedded ? empty : <AppLayout>{empty}</AppLayout>;
@@ -182,29 +188,29 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
     <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Process Intelligence</p>
-          <h1 className="text-xl font-semibold tracking-tight">Process Intelligence</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("bottleneck.label")}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("bottleneck.title")}</h1>
         </div>
-        <PageHelpButton title="Process Intelligence" description="Identifiziert strukturelle Probleme: Engpässe bei Personen und Kategorien, Team-Reibung, SLA-Verletzungen und liefert Top-3-Maßnahmen." />
+        <PageHelpButton title={t("bottleneck.title")} description={t("bottleneck.help")} />
       </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><User className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{personBottlenecks.filter(p => p.percentile === "Langsam").length}</span></div><p className="text-xs text-muted-foreground">Personen strukturell langsam</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-warning mb-1"><FolderOpen className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{categoryBottlenecks.filter(c => c.ratio > 1.5).length}</span></div><p className="text-xs text-muted-foreground">Kategorien überdurchschnittlich</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-foreground mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{teamFrictions.filter(t => t.score > 30).length}</span></div><p className="text-xs text-muted-foreground">Teams mit hoher Reibung</p></CardContent></Card>
-        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><Shield className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{slaViolations.thisWeek}</span></div><p className="text-xs text-muted-foreground">SLA-Verletzungen diese Woche</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><User className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{personBottlenecks.filter(p => p.percentile === "slow").length}</span></div><p className="text-xs text-muted-foreground">{t("bottleneck.personsSlowCount")}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-warning mb-1"><FolderOpen className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{categoryBottlenecks.filter(c => c.ratio > 1.5).length}</span></div><p className="text-xs text-muted-foreground">{t("bottleneck.categoriesAbove")}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-foreground mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{teamFrictions.filter(tf => tf.score > 30).length}</span></div><p className="text-xs text-muted-foreground">{t("bottleneck.teamsHighFriction")}</p></CardContent></Card>
+        <Card><CardContent className="p-5"><div className="flex items-center gap-2 text-destructive mb-1"><Shield className="w-4 h-4" /><span className="text-2xl font-bold tabular-nums">{slaViolations.thisWeek}</span></div><p className="text-xs text-muted-foreground">{t("bottleneck.slaViolationsWeek")}</p></CardContent></Card>
       </div>
 
       {/* Bottleneck Detection – Person */}
-      <CollapsibleSection title="Bottleneck Detection" subtitle="Wer verlangsamt Entscheidungen strukturell?" icon={<User className="w-4 h-4 text-destructive" />} defaultOpen={true} className="mb-6">
+      <CollapsibleSection title={t("bottleneck.bottleneckDetection")} subtitle={t("bottleneck.bottleneckDetectionSub")} icon={<User className="w-4 h-4 text-destructive" />} defaultOpen={true} className="mb-6">
         <Card><CardContent className="p-5">
           {personBottlenecks.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Keine signifikanten Engpässe ✓</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t("bottleneck.noSignificant")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Person</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">Offene Reviews</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">Avg Delay</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">Blockiert</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">Status</th></tr></thead>
+                <thead><tr className="border-b"><th className="text-left py-2 px-3 text-muted-foreground font-medium">{t("bottleneck.colPerson")}</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("bottleneck.colOpenReviews")}</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("bottleneck.colAvgDelay")}</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("bottleneck.colBlocking")}</th><th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("bottleneck.colStatus")}</th></tr></thead>
                 <tbody>
                   {personBottlenecks.map(p => (
                     <tr key={p.userId} className="border-b last:border-0 hover:bg-muted/20">
@@ -212,7 +218,7 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
                       <td className="text-center py-2.5 px-3">{p.openCount}</td>
                       <td className="text-center py-2.5 px-3">{p.avgDays}d</td>
                       <td className="text-center py-2.5 px-3">{p.blockingCount}</td>
-                      <td className="text-center py-2.5 px-3"><span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${percentileColor(p.percentile)}`}>{p.percentile}</span></td>
+                      <td className="text-center py-2.5 px-3"><span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${percentileColor(p.percentile)}`}>{percentileLabel(p.percentile)}</span></td>
                     </tr>
                   ))}
                 </tbody>
@@ -223,7 +229,7 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       </CollapsibleSection>
 
       {/* Friction Map – Cluster */}
-      <CollapsibleSection title="Friction Map" subtitle="Stakeholder-Konflikte, Rework, Ablehnungen" icon={<FolderOpen className="w-4 h-4 text-warning" />} defaultOpen={false} className="mb-6">
+      <CollapsibleSection title={t("bottleneck.frictionMap")} subtitle={t("bottleneck.frictionMapSub")} icon={<FolderOpen className="w-4 h-4 text-warning" />} defaultOpen={false} className="mb-6">
         <Card><CardContent className="p-5">
           <div className="space-y-3">
             {categoryBottlenecks.map(c => (
@@ -231,8 +237,8 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
                 <span className="text-sm font-medium w-24 shrink-0">{categoryLabels[c.category] || c.category}</span>
                 {ratioBar(c.ratio)}
                 <div className="text-right shrink-0 w-36">
-                  <p className="text-xs font-medium">⌀ {c.avgDays} Tage</p>
-                  <p className="text-[10px] text-muted-foreground">{c.count} Entsch. • {c.taskCount} Aufg.</p>
+                  <p className="text-xs font-medium">{t("bottleneck.avgDays", { days: c.avgDays })}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("bottleneck.decCount", { count: c.count })} • {t("bottleneck.taskCount", { count: c.taskCount })}</p>
                 </div>
               </div>
             ))}
@@ -241,21 +247,21 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       </CollapsibleSection>
 
       {/* SLA Violations */}
-      <CollapsibleSection title="SLA Violations" subtitle={`${slaViolations.total} gesamt, ${slaViolations.thisWeek} diese Woche`} icon={<Shield className="w-4 h-4 text-destructive" />} defaultOpen={slaViolations.thisWeek > 0} className="mb-6">
+      <CollapsibleSection title={t("bottleneck.slaViolations")} subtitle={t("bottleneck.slaViolationsSub", { total: slaViolations.total, week: slaViolations.thisWeek })} icon={<Shield className="w-4 h-4 text-destructive" />} defaultOpen={slaViolations.thisWeek > 0} className="mb-6">
         <Card><CardContent className="p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-              <p className="text-xs text-muted-foreground mb-1">Verletzungen diese Woche</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("bottleneck.violationsThisWeek")}</p>
               <p className="text-2xl font-bold text-destructive">{slaViolations.thisWeek}</p>
             </div>
             <div className="p-4 rounded-lg bg-muted/20 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Top Teams</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("bottleneck.topTeams")}</p>
               {slaViolations.topTeams.length > 0 ? (
-                <div className="space-y-1">{slaViolations.topTeams.map(t => <p key={t.name} className="text-sm"><span className="font-medium">{t.name}</span> <span className="text-muted-foreground">({t.count})</span></p>)}</div>
-              ) : <p className="text-sm text-muted-foreground">Keine SLA-Verletzungen</p>}
+                <div className="space-y-1">{slaViolations.topTeams.map(tt => <p key={tt.name} className="text-sm"><span className="font-medium">{tt.name}</span> <span className="text-muted-foreground">({tt.count})</span></p>)}</div>
+              ) : <p className="text-sm text-muted-foreground">{t("bottleneck.noSlaViolations")}</p>}
             </div>
             <div className="p-4 rounded-lg bg-muted/20 border border-border">
-              <p className="text-xs text-muted-foreground mb-1">Ø Reaktionszeit</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("bottleneck.avgResponseTime")}</p>
               <p className="text-2xl font-bold">{slaViolations.avgResponse}d</p>
             </div>
           </div>
@@ -263,22 +269,22 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       </CollapsibleSection>
 
       {/* Team Friction */}
-      <CollapsibleSection title="Team-Reibung" subtitle="Organisatorische Blockaden (inkl. Aufgaben)" icon={<Users className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-6">
+      <CollapsibleSection title={t("bottleneck.teamFriction")} subtitle={t("bottleneck.teamFrictionSub")} icon={<Users className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-6">
         <Card><CardContent className="p-5">
           {teamFrictions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Keine Teams mit Daten</p>
+            <p className="text-sm text-muted-foreground text-center py-4">{t("bottleneck.noTeamsData")}</p>
           ) : (
             <div className="space-y-2">
-              {teamFrictions.map(t => (
-                <div key={t.teamId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors">
+              {teamFrictions.map(tf => (
+                <div key={tf.teamId} className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors">
                   <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"><Users className="w-4 h-4 text-muted-foreground" /></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{t.teamName}</p>
-                    <p className="text-[10px] text-muted-foreground">⌀ {t.avgDays}d • {t.escalationCount} Eskal. • {t.blockedCount} Blockaden • {t.openTasks} Aufg.</p>
+                    <p className="text-sm font-medium">{tf.teamName}</p>
+                    <p className="text-[10px] text-muted-foreground">⌀ {tf.avgDays}d • {tf.escalationCount} {t("bottleneck.escalAbbr")} • {tf.blockedCount} {t("bottleneck.blockades")} • {tf.openTasks} {t("bottleneck.tasks")}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={`text-sm font-bold ${t.score > 50 ? "text-destructive" : t.score > 20 ? "text-warning" : "text-success"}`}>{t.score}</p>
-                    <p className="text-[10px] text-muted-foreground">Friction</p>
+                    <p className={`text-sm font-bold ${tf.score > 50 ? "text-destructive" : tf.score > 20 ? "text-warning" : "text-success"}`}>{tf.score}</p>
+                    <p className="text-[10px] text-muted-foreground">{t("bottleneck.friction")}</p>
                   </div>
                 </div>
               ))}
@@ -293,14 +299,14 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
         context={{
           personBottlenecks: personBottlenecks.slice(0, 5).map(p => ({ name: p.name, avgDays: p.avgDays, openCount: p.openCount, blockingCount: p.blockingCount, percentile: p.percentile })),
           categoryBottlenecks: categoryBottlenecks.map(c => ({ category: c.category, avgDays: c.avgDays, ratio: c.ratio, count: c.count })),
-          teamFrictions: teamFrictions.slice(0, 5).map(t => ({ teamName: t.teamName, score: t.score, escalationCount: t.escalationCount, blockedCount: t.blockedCount })),
+          teamFrictions: teamFrictions.slice(0, 5).map(tf => ({ teamName: tf.teamName, score: tf.score, escalationCount: tf.escalationCount, blockedCount: tf.blockedCount })),
           slaViolations: { total: slaViolations.total, thisWeek: slaViolations.thisWeek, avgResponse: slaViolations.avgResponse },
         }}
         className="mb-6"
       />
 
       {/* Recommendations Panel */}
-      <CollapsibleSection title="Top 3 Maßnahmen" subtitle="Priorisierte Empfehlungen" icon={<Lightbulb className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
+      <CollapsibleSection title={t("bottleneck.top3Actions")} subtitle={t("bottleneck.top3ActionsSub")} icon={<Lightbulb className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
         <div className="space-y-2">
           {recommendations.map((rec, i) => (
             <Card key={i} className={rec.severity === "high" ? "border-destructive/30" : rec.severity === "medium" ? "border-warning/30" : ""}>
