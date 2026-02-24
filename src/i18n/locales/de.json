@@ -34,6 +34,7 @@
     "switchToAdvanced": "Wechsle zu Advanced →",
     "teaserInsights": "Trends, Engpässe & Executive Reports",
     "teaserGovernance": "Governance, Risiken & Compliance",
+    "intelligenceRecommended": "Empfohlen ab {{count}} weiteren Entscheidungen",
     "advancedAnalytics": "Advanced Analytics",
     "decisionGraph": "Decision Graph",
     "decisionRadar": "Decision Radar",

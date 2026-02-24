@@ -279,33 +279,9 @@ const SidebarNav = memo(({
           system: "bg-muted-foreground/30",
         };
 
-        // Progressive disclosure: Intelligence requires 25+ decisions (Stage 3)
+        // Progressive hint: Intelligence recommends 25+ decisions but is always accessible
         const PROGRESSIVE_THRESHOLD = 25;
-        if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && !collapsed) {
-          const remaining = PROGRESSIVE_THRESHOLD - decisionCount;
-          return (
-            <div key={group.labelKey}>
-              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
-                {groupLabel}
-              </p>
-              <div className="px-2 py-2 rounded-md text-[12px] text-muted-foreground/50">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Brain className="w-3.5 h-3.5 shrink-0 opacity-40" />
-                  <span className="text-[11px] font-medium">{t("nav.intelligenceUnlock", { count: remaining, defaultValue: `Intelligence in ${remaining} Entscheidungen verfügbar` })}</span>
-                </div>
-                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-accent-teal rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (decisionCount / PROGRESSIVE_THRESHOLD) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        }
-        if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && collapsed) {
-          return null;
-        }
+        const showProgressiveHint = group.progressive && decisionCount < PROGRESSIVE_THRESHOLD;
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
@@ -380,6 +356,20 @@ const SidebarNav = memo(({
                   )
                 )}
               </button>
+            )}
+            {showProgressiveHint && !collapsed && (
+              <div className="px-2 py-1.5 mb-1 rounded-md">
+                <div className="flex items-center gap-2">
+                  <Brain className="w-3 h-3 shrink-0 text-accent-teal/50" />
+                  <span className="text-[10px] text-muted-foreground/50">{t("nav.intelligenceRecommended", { count: PROGRESSIVE_THRESHOLD - decisionCount })}</span>
+                </div>
+                <div className="w-full h-0.5 bg-muted rounded-full overflow-hidden mt-1">
+                  <div
+                    className="h-full bg-accent-teal/40 rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (decisionCount / PROGRESSIVE_THRESHOLD) * 100)}%` }}
+                  />
+                </div>
+              </div>
             )}
             {(!isGroupCollapsed || hasActiveItem || collapsed) && (
               <div className="space-y-px">
