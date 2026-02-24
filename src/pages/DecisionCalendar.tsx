@@ -14,6 +14,7 @@ import {
   subWeeks,
 } from "date-fns";
 import { de } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import type { ViewMode } from "@/components/calendar/CalendarConstants";
 import MonthView from "@/components/calendar/MonthView";
 import WeekView from "@/components/calendar/WeekView";
@@ -38,6 +40,9 @@ import TaskPill from "@/components/calendar/TaskPill";
 import CalendarSummaryBar from "@/components/calendar/CalendarSummaryBar";
 
 const DecisionCalendar = () => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
@@ -77,11 +82,11 @@ const DecisionCalendar = () => {
 
   const tasksByDate = useMemo(() => {
     const map: Record<string, Task[]> = {};
-    for (const t of allTasks) {
-      if (!t.due_date) continue;
-      const key = t.due_date;
+    for (const tk of allTasks) {
+      if (!tk.due_date) continue;
+      const key = tk.due_date;
       if (!map[key]) map[key] = [];
-      map[key].push(t);
+      map[key].push(tk);
     }
     return map;
   }, [allTasks]);
@@ -103,7 +108,7 @@ const DecisionCalendar = () => {
   }, [decisions, applyFilters]);
 
   const unscheduledTasks = useMemo(() => {
-    return allTasks.filter((t) => !t.due_date);
+    return allTasks.filter((tk) => !tk.due_date);
   }, [allTasks]);
 
   const monthDays = useMemo(() => {
@@ -147,12 +152,12 @@ const DecisionCalendar = () => {
   const goToday = useCallback(() => setCurrentDate(new Date()), []);
 
   const headerLabel = useMemo(() => {
-    if (viewMode === "month") return format(currentDate, "MMMM yyyy", { locale: de });
-    if (viewMode === "day") return format(currentDate, "EEEE, d. MMMM yyyy", { locale: de });
+    if (viewMode === "month") return format(currentDate, "MMMM yyyy", { locale: dateFnsLocale });
+    if (viewMode === "day") return format(currentDate, "EEEE, d. MMMM yyyy", { locale: dateFnsLocale });
     const ws = startOfWeek(currentDate, { weekStartsOn: 1 });
     const we = endOfWeek(currentDate, { weekStartsOn: 1 });
-    return `${format(ws, "d. MMM", { locale: de })} – ${format(we, "d. MMM yyyy", { locale: de })}`;
-  }, [currentDate, viewMode]);
+    return `${format(ws, "d. MMM", { locale: dateFnsLocale })} – ${format(we, "d. MMM yyyy", { locale: dateFnsLocale })}`;
+  }, [currentDate, viewMode, dateFnsLocale]);
 
   const handleDragStart = useCallback((e: DragEvent, decisionId: string) => {
     e.dataTransfer.setData("text/plain", decisionId);
@@ -185,7 +190,7 @@ const DecisionCalendar = () => {
     if (!decision || decision.due_date === newDateKey) return;
 
     const oldDate = decision.due_date;
-    const formattedNew = format(new Date(newDateKey), "dd.MM.yyyy", { locale: de });
+    const formattedNew = format(new Date(newDateKey), "dd.MM.yyyy", { locale: dateFnsLocale });
 
     const { error } = await supabase
       .from("decisions")
@@ -193,38 +198,38 @@ const DecisionCalendar = () => {
       .eq("id", decisionId);
 
     if (error) {
-      toast.error("Fehler beim Verschieben", { description: error.message });
+      toast.error(t("calendar.moveError"), { description: error.message });
     } else {
       queryClient.invalidateQueries({ queryKey: ["decisions"] });
-      toast.success("Fälligkeitsdatum geändert", {
+      toast.success(t("calendar.dateChanged"), {
         description: `„${decision.title}" → ${formattedNew}`,
         action: {
-          label: "Rückgängig",
+          label: t("calendar.undo"),
           onClick: async () => {
             const { error: undoError } = await supabase
               .from("decisions")
               .update({ due_date: oldDate })
               .eq("id", decisionId);
             if (undoError) {
-              toast.error("Rückgängig fehlgeschlagen");
+              toast.error(t("calendar.undoFailed"));
             } else {
-              toast.success("Rückgängig gemacht");
+              toast.success(t("calendar.undone"));
               queryClient.invalidateQueries({ queryKey: ["decisions"] });
             }
           },
         },
       });
     }
-  }, [decisions, queryClient]);
+  }, [decisions, queryClient, dateFnsLocale, t]);
 
   const handleExportICS = useCallback(() => {
     if (!decisions?.length) {
-      toast.error("Keine Entscheidungen zum Exportieren");
+      toast.error(t("calendar.noExportData"));
       return;
     }
     exportDecisionsAsICS(decisions);
-    toast.success("Kalender exportiert", { description: "ICS-Datei wurde heruntergeladen" });
-  }, [decisions]);
+    toast.success(t("calendar.exported"), { description: t("calendar.exportedDesc") });
+  }, [decisions, t]);
 
   const sharedDragProps = {
     dragOverDate,
@@ -245,14 +250,14 @@ const DecisionCalendar = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Planung</p>
-            <h1 className="font-display text-xl font-bold">Entscheidungskalender</h1>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("calendar.planning")}</p>
+            <h1 className="font-display text-xl font-bold">{t("calendar.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Drag & Drop zum Verschieben von Deadlines
+              {t("calendar.subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <PageHelpButton title="Entscheidungskalender" description="Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich." />
+            <PageHelpButton title={t("calendar.title")} description={t("calendar.help")} />
             <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
             <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
               <Download className="w-3.5 h-3.5" />
@@ -265,21 +270,21 @@ const DecisionCalendar = () => {
               onValueChange={(v) => v && setViewMode(v as ViewMode)}
               className="border border-border rounded-lg"
             >
-              <ToggleGroupItem value="month" aria-label="Monatsansicht" className="px-2.5 py-1.5 text-xs gap-1">
+              <ToggleGroupItem value="month" aria-label={t("calendar.monthView")} className="px-2.5 py-1.5 text-xs gap-1">
                 <LayoutGrid className="w-3.5 h-3.5" />
-                Monat
+                {t("calendar.month")}
               </ToggleGroupItem>
-              <ToggleGroupItem value="week" aria-label="Wochenansicht" className="px-2.5 py-1.5 text-xs gap-1">
+              <ToggleGroupItem value="week" aria-label={t("calendar.weekView")} className="px-2.5 py-1.5 text-xs gap-1">
                 <Rows3 className="w-3.5 h-3.5" />
-                Woche
+                {t("calendar.week")}
               </ToggleGroupItem>
-              <ToggleGroupItem value="day" aria-label="Tagesansicht" className="px-2.5 py-1.5 text-xs gap-1">
+              <ToggleGroupItem value="day" aria-label={t("calendar.dayView")} className="px-2.5 py-1.5 text-xs gap-1">
                 <CalendarRange className="w-3.5 h-3.5" />
-                Tag
+                {t("calendar.day")}
               </ToggleGroupItem>
             </ToggleGroup>
             <div className="w-px h-6 bg-border" />
-            <Button variant="outline" size="sm" onClick={goToday}>Heute</Button>
+            <Button variant="outline" size="sm" onClick={goToday}>{t("calendar.today")}</Button>
             <Button variant="ghost" size="icon" onClick={goBack}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -350,7 +355,7 @@ const DecisionCalendar = () => {
               <div className="border border-border rounded-xl bg-card overflow-hidden">
                 <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
                   <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs font-semibold text-muted-foreground">Aufgaben ohne Deadline</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{t("calendar.unscheduledTasks")}</span>
                   <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
                     {unscheduledTasks.length}
                   </span>

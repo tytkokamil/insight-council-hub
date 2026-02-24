@@ -15,7 +15,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import { useTranslatedLabels, categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import { useTranslation } from "react-i18next";
 import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
   ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
@@ -25,6 +26,7 @@ import {
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -84,16 +86,19 @@ const Highlight = ({ text, query }: { text: string; query: string }) => {
 };
 
 const ALL_CATEGORIES = ["strategic", "budget", "hr", "technical", "operational", "marketing"] as const;
-const OUTCOME_FILTERS = [
-  { value: "implemented", label: "Umgesetzt" },
-  { value: "rejected", label: "Abgelehnt" },
-  { value: "approved", label: "Genehmigt" },
+const OUTCOME_FILTERS_KEYS = [
+  { value: "implemented", key: "status.implemented" },
+  { value: "rejected", key: "status.rejected" },
+  { value: "approved", key: "status.approved" },
 ] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 const KnowledgeBase = () => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+  const { statusLabels: tStatusLabels, categoryLabels: tCategoryLabels, priorityLabels: tPriorityLabels } = useTranslatedLabels(t);
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -161,8 +166,8 @@ const KnowledgeBase = () => {
       const { error } = await supabase.from("tags").insert({ name, color });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["kb-tags"] }); setNewTagName(""); toast.success("Tag erstellt"); },
-    onError: () => toast.error("Tag existiert bereits"),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["kb-tags"] }); setNewTagName(""); toast.success(t("knowledge.tagCreated")); },
+    onError: () => toast.error(t("knowledge.tagExists")),
   });
 
   const toggleTag = useMutation({
@@ -192,7 +197,7 @@ const KnowledgeBase = () => {
       qc.invalidateQueries({ queryKey: ["kb-lessons"] });
       setLessonOpen(false);
       setLessonForm({ key_takeaway: "", what_went_well: "", what_went_wrong: "", recommendations: "" });
-      toast.success("Lesson Learned gespeichert");
+      toast.success(t("knowledge.lessonSaved"));
     },
   });
 
@@ -259,7 +264,7 @@ const KnowledgeBase = () => {
       if (data?.error) throw new Error(data.error);
       setAiSimilarities(data?.similarities ?? []);
     } catch (e: any) {
-      setSimilarError(e.message || "Fehler bei der Ähnlichkeitsanalyse");
+      setSimilarError(e.message || t("knowledge.similarityError"));
     } finally {
       setSimilarLoading(false);
     }
@@ -418,13 +423,13 @@ const KnowledgeBase = () => {
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Knowledge Base"
-          subtitle="Organisationales Lernen & Decision Intelligence"
+          title={t("knowledge.title")}
+          subtitle={t("knowledge.subtitle")}
           role="knowledge"
-          help={{ title: "Knowledge Base", description: "Lessons Learned aus abgeschlossenen Entscheidungen. Pattern Recognition, Similarity Engine und Knowledge Quality Tracking." }}
+          help={{ title: t("knowledge.title"), description: t("knowledge.help") }}
           primaryAction={
             <Button variant="outline" size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5">
-              <Download className="w-4 h-4" /> Executive Report
+              <Download className="w-4 h-4" /> {t("knowledge.executiveReport")}
             </Button>
           }
         />
@@ -432,12 +437,12 @@ const KnowledgeBase = () => {
         {/* ── 1. Learning Snapshot ──────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: "Abgeschlossen (90T)", value: snapshot.completedDec, icon: <CheckCircle2 className="w-4 h-4 text-primary" /> },
-            { label: "Lessons dokumentiert", value: snapshot.documented, icon: <Lightbulb className="w-4 h-4 text-warning" /> },
-            { label: "Dokumentationsquote", value: `${snapshot.docRate}%`, icon: <BarChart3 className="w-4 h-4 text-primary" />, highlight: snapshot.docRate < 50 },
-            { label: "Wiederkehrende Muster", value: snapshot.recurringPatterns, icon: <Repeat className="w-4 h-4 text-accent-foreground" /> },
-            { label: "Wiederholte Fehler", value: snapshot.repeatedFailures, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: snapshot.repeatedFailures > 0 },
-            { label: "Ø Zeit bis Learning", value: `${snapshot.avgTimeToDoc} Tage`, icon: <Clock className="w-4 h-4 text-muted-foreground" /> },
+            { label: t("knowledge.completed90d"), value: snapshot.completedDec, icon: <CheckCircle2 className="w-4 h-4 text-primary" /> },
+            { label: t("knowledge.lessonsDocumented"), value: snapshot.documented, icon: <Lightbulb className="w-4 h-4 text-warning" /> },
+            { label: t("knowledge.documentationRate"), value: `${snapshot.docRate}%`, icon: <BarChart3 className="w-4 h-4 text-primary" />, highlight: snapshot.docRate < 50 },
+            { label: t("knowledge.recurringPatterns"), value: snapshot.recurringPatterns, icon: <Repeat className="w-4 h-4 text-accent-foreground" /> },
+            { label: t("knowledge.repeatedFailures"), value: snapshot.repeatedFailures, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: snapshot.repeatedFailures > 0 },
+            { label: t("knowledge.avgTimeToLearning"), value: `${snapshot.avgTimeToDoc} ${t("knowledge.days")}`, icon: <Clock className="w-4 h-4 text-muted-foreground" /> },
           ].map((kpi, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Card className={kpi.highlight ? "border-warning/30 bg-warning/5" : ""}>
@@ -460,12 +465,12 @@ const KnowledgeBase = () => {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Gauge className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Knowledge Maturity Score</h3>
+                <h3 className="text-sm font-semibold">{t("knowledge.knowledgeMaturity")}</h3>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
                     <TooltipContent className="max-w-xs text-xs">
-                      <p>Basiert auf: Dokumentationsquote, Erfassungszeit, Empfehlungsqualität, Wiederholungsrate</p>
+                      <p>{t("knowledge.maturityTooltip")}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -480,10 +485,10 @@ const KnowledgeBase = () => {
                 </div>
               </div>
               <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
-                <p>Dokumentation: {snapshot.docRate}% (max 40p)</p>
-                <p>Erfassungszeit: {snapshot.avgTimeToDoc}d (max 20p)</p>
-                <p>Empfehlungsqualität: {lessons.filter(l => l.recommendations && l.recommendations.length > 10).length}/{lessons.length} (max 20p)</p>
-                <p>Fehlerwiederholung: -{snapshot.repeatedFailures * 5}p</p>
+                <p>{t("knowledge.documentation")}: {snapshot.docRate}% (max 40p)</p>
+                <p>{t("knowledge.captureTime")}: {snapshot.avgTimeToDoc}d (max 20p)</p>
+                <p>{t("knowledge.recommendationQuality")}: {lessons.filter(l => l.recommendations && l.recommendations.length > 10).length}/{lessons.length} (max 20p)</p>
+                <p>{t("knowledge.failureRepeat")}: -{snapshot.repeatedFailures * 5}p</p>
               </div>
             </CardContent>
           </Card>
@@ -493,10 +498,10 @@ const KnowledgeBase = () => {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <BarChart3 className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Kategorie-Intelligence</h3>
+                <h3 className="text-sm font-semibold">{t("knowledge.categoryIntelligence")}</h3>
               </div>
               {categoryHeatmap.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Keine Daten</p>
+                <p className="text-xs text-muted-foreground">{t("knowledge.noData")}</p>
               ) : (
                 <div className="space-y-2">
                   {categoryHeatmap.map(cat => (
@@ -504,19 +509,19 @@ const KnowledgeBase = () => {
                       <span className="w-24 font-medium truncate">{cat.label}</span>
                       <div className="flex-1 grid grid-cols-4 gap-2">
                         <div className="text-center p-1.5 rounded bg-muted/30">
-                          <p className="text-[10px] text-muted-foreground">Entscheidungen</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.decisionsLabel")}</p>
                           <p className="font-bold">{cat.decisions}</p>
                         </div>
                         <div className="text-center p-1.5 rounded bg-muted/30">
-                          <p className="text-[10px] text-muted-foreground">Lessons</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.lessonsLabel")}</p>
                           <p className="font-bold">{cat.lessons}</p>
                         </div>
                         <div className={`text-center p-1.5 rounded ${cat.failRate >= 30 ? "bg-destructive/10" : "bg-muted/30"}`}>
-                          <p className="text-[10px] text-muted-foreground">Fehlerquote</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.failureRate")}</p>
                           <p className={`font-bold ${cat.failRate >= 30 ? "text-destructive" : ""}`}>{cat.failRate}%</p>
                         </div>
                         <div className={`text-center p-1.5 rounded ${cat.reworks >= 3 ? "bg-warning/10" : "bg-muted/30"}`}>
-                          <p className="text-[10px] text-muted-foreground">Reworks</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.reworks")}</p>
                           <p className={`font-bold ${cat.reworks >= 3 ? "text-warning" : ""}`}>{cat.reworks}</p>
                         </div>
                       </div>
@@ -534,7 +539,7 @@ const KnowledgeBase = () => {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Brain className="w-4 h-4 text-warning" />
-                <h3 className="text-sm font-semibold">Erkannte Muster & Governance-Signale</h3>
+                <h3 className="text-sm font-semibold">{t("knowledge.patternsDetected")}</h3>
                 <Badge variant="outline" className="text-[10px] text-warning border-warning/30">{patterns.length}</Badge>
               </div>
               <div className="space-y-2">
@@ -557,7 +562,7 @@ const KnowledgeBase = () => {
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Entscheidungen, Learnings, Takeaways oder Empfehlungen suchen…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              <Input placeholder={t("knowledge.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
             <Button variant={showFilters || activeFilterCount > 0 ? "default" : "outline"} size="icon" onClick={() => setShowFilters(v => !v)} className="relative shrink-0">
               <Filter className="w-4 h-4" />
@@ -570,35 +575,35 @@ const KnowledgeBase = () => {
           {showFilters && (
             <Card className="p-4 space-y-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Kategorie</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("knowledge.categoryFilter")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {ALL_CATEGORIES.map(cat => {
                     const active = selectedCategories.includes(cat);
                     return (
                       <button key={cat} onClick={() => setSelectedCategories(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
                         className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
-                        {categoryLabels[cat] ?? cat} {categoryCounts[cat] ? `(${categoryCounts[cat]})` : ""}
+                        {tCategoryLabels[cat] ?? cat} {categoryCounts[cat] ? `(${categoryCounts[cat]})` : ""}
                       </button>
                     );
                   })}
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Ergebnis</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("knowledge.outcomeFilter")}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {OUTCOME_FILTERS.map(of => {
+                  {OUTCOME_FILTERS_KEYS.map(of => {
                     const active = selectedOutcomes.includes(of.value);
                     return (
                       <button key={of.value} onClick={() => setSelectedOutcomes(prev => active ? prev.filter(o => o !== of.value) : [...prev, of.value])}
                         className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all border ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50"}`}>
-                        {of.label}
+                        {t(of.key)}
                       </button>
                     );
                   })}
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tags</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("knowledge.tagsFilter")}</p>
                 <div className="flex flex-wrap gap-1.5 items-center">
                   {tags.map(tag => {
                     const active = selectedTags.includes(tag.id);
@@ -612,7 +617,7 @@ const KnowledgeBase = () => {
                     );
                   })}
                   <div className="flex items-center gap-1">
-                    <Input placeholder="Neuer Tag…" value={newTagName} onChange={e => setNewTagName(e.target.value)} className="h-7 w-28 text-xs"
+                    <Input placeholder={t("knowledge.newTagPlaceholder")} value={newTagName} onChange={e => setNewTagName(e.target.value)} className="h-7 w-28 text-xs"
                       onKeyDown={e => { if (e.key === "Enter" && newTagName.trim()) createTag.mutate(newTagName.trim()); }} />
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => newTagName.trim() && createTag.mutate(newTagName.trim())}>
                       <Plus className="w-3.5 h-3.5" />
@@ -622,7 +627,7 @@ const KnowledgeBase = () => {
               </div>
               {activeFilterCount > 0 && (
                 <Button variant="ghost" size="sm" onClick={() => { setSelectedCategories([]); setSelectedOutcomes([]); setSelectedTags([]); }} className="text-xs text-muted-foreground">
-                  <X className="w-3 h-3 mr-1" /> Alle Filter zurücksetzen
+                  <X className="w-3 h-3 mr-1" /> {t("knowledge.resetAllFilters")}
                 </Button>
               )}
             </Card>
@@ -638,9 +643,9 @@ const KnowledgeBase = () => {
                 <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
                   <Lightbulb className="w-6 h-6 text-primary opacity-60" />
                 </div>
-                <h3 className="font-display font-semibold mb-1">Keine Entscheidungen gefunden</h3>
+                <h3 className="font-display font-semibold mb-1">{t("knowledge.noDecisionsFound")}</h3>
                 <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  {search ? "Passe die Suche oder Filter an." : "Sobald Entscheidungen umgesetzt sind, erscheinen sie hier."}
+                  {search ? t("knowledge.noDecisionsSearch") : t("knowledge.noDecisionsDefault")}
                 </p>
               </Card>
             )}
@@ -656,9 +661,9 @@ const KnowledgeBase = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-sm truncate"><Highlight text={d.title} query={search} /></h3>
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                        <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{tCategoryLabels[d.category] ?? d.category}</Badge>
                         <Badge variant={d.status === "implemented" ? "default" : d.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
-                          {statusLabels[d.status] ?? d.status}
+                          {tStatusLabels[d.status] ?? d.status}
                         </Badge>
                         {d.ai_risk_score != null && d.ai_risk_score > 0 && (
                           <Badge variant="outline" className="text-[10px] text-warning border-warning/30">Risk {d.ai_risk_score}</Badge>
@@ -701,7 +706,7 @@ const KnowledgeBase = () => {
                   {d.implemented_at && (
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-2">
                       <Clock className="w-3 h-3" />
-                      {format(new Date(d.implemented_at), "dd. MMM yyyy", { locale: de })}
+                      {format(new Date(d.implemented_at), "dd. MMM yyyy", { locale: dateFnsLocale })}
                     </div>
                   )}
                 </Card>
@@ -714,8 +719,8 @@ const KnowledgeBase = () => {
             {!selected ? (
               <Card className="p-12 text-center text-muted-foreground">
                 <Sparkles className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                <p className="font-medium">Entscheidung auswählen</p>
-                <p className="text-xs mt-1">Wähle links eine abgeschlossene Entscheidung um strukturierte Analyse, Lessons und ähnliche Fälle zu sehen.</p>
+                <p className="font-medium">{t("knowledge.selectDecision")}</p>
+                <p className="text-xs mt-1">{t("knowledge.selectDecisionDesc")}</p>
               </Card>
             ) : (
               <div className="space-y-4">
@@ -727,14 +732,14 @@ const KnowledgeBase = () => {
                       {selected.description && <p className="text-sm text-muted-foreground mt-1">{selected.description}</p>}
                     </div>
                     <Button variant="ghost" size="sm" className="text-xs text-muted-foreground shrink-0" onClick={() => navigate(`/decisions/${selected.id}`)}>
-                      Zur Entscheidung →
+                      {t("knowledge.goToDecision")}
                     </Button>
                   </div>
                   <div className="flex gap-2 mt-3 flex-wrap">
-                    <Badge variant="outline">{categoryLabels[selected.category] ?? selected.category}</Badge>
-                    <Badge variant="outline">{priorityLabels[selected.priority] ?? selected.priority}</Badge>
+                    <Badge variant="outline">{tCategoryLabels[selected.category] ?? selected.category}</Badge>
+                    <Badge variant="outline">{tPriorityLabels[selected.priority] ?? selected.priority}</Badge>
                     <Badge variant={selected.status === "implemented" ? "default" : "destructive"}>
-                      {statusLabels[selected.status] ?? selected.status}
+                      {tStatusLabels[selected.status] ?? selected.status}
                     </Badge>
                   </div>
                 </Card>
@@ -744,13 +749,13 @@ const KnowledgeBase = () => {
                   <Card className="p-4 border-primary/20 bg-primary/[0.02]">
                     <div className="flex items-center gap-2 mb-3">
                       <ClipboardCheck className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold">Post-Implementation Review</h3>
+                      <h3 className="text-sm font-semibold">{t("knowledge.postImplementationReview")}</h3>
                     </div>
 
                     {/* A) Kontext */}
                     {selected.description && (
                       <div className="mb-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Kontext</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t("knowledge.context")}</p>
                         <p className="text-xs text-muted-foreground">{selected.description}</p>
                       </div>
                     )}
@@ -759,15 +764,15 @@ const KnowledgeBase = () => {
                     {selected.actual_impact_score !== null && (
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
-                          <p className="text-[10px] text-muted-foreground">KI-Vorhersage</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.aiPrediction")}</p>
                           <p className="text-lg font-bold font-display text-primary">{selected.ai_impact_score ?? 0}%</p>
                         </div>
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
-                          <p className="text-[10px] text-muted-foreground">Tatsächlich</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.actual")}</p>
                           <p className="text-lg font-bold font-display">{selected.actual_impact_score}%</p>
                         </div>
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
-                          <p className="text-[10px] text-muted-foreground">Abweichung</p>
+                          <p className="text-[10px] text-muted-foreground">{t("knowledge.deviation")}</p>
                           {(() => {
                             const pred = selected.ai_impact_score ?? 0;
                             const diff = selected.actual_impact_score! - pred;
@@ -784,7 +789,7 @@ const KnowledgeBase = () => {
                     {/* C) Outcome Notes */}
                     {selected.outcome_notes && (
                       <div className="p-3 bg-muted/30 rounded-lg text-sm mb-3">
-                        <span className="text-xs font-medium text-muted-foreground block mb-1">Ergebnis</span>
+                        <span className="text-xs font-medium text-muted-foreground block mb-1">{t("knowledge.outcome")}</span>
                         <Highlight text={selected.outcome_notes} query={search} />
                       </div>
                     )}
@@ -792,7 +797,7 @@ const KnowledgeBase = () => {
                     {/* D/E) Latest lesson structured */}
                     {selectedLessons[0] && (
                       <div className="space-y-2 pt-2 border-t border-border">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Lessons Learned</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("knowledge.lessonsLearned")}</p>
                         <div className="flex items-start gap-2">
                           <Lightbulb className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
                           <p className="text-sm font-medium"><Highlight text={selectedLessons[0].key_takeaway} query={search} /></p>
@@ -824,16 +829,16 @@ const KnowledgeBase = () => {
                 <Tabs value={detailTab} onValueChange={setDetailTab} className="w-full">
                   <TabsList className="w-full">
                     <TabsTrigger value="lessons" className="flex-1">
-                      <Lightbulb className="w-3.5 h-3.5 mr-1" /> Lessons ({selectedLessons.length})
+                      <Lightbulb className="w-3.5 h-3.5 mr-1" /> {t("knowledge.lessonsTab")} ({selectedLessons.length})
                     </TabsTrigger>
                     <TabsTrigger value="action" className="flex-1">
-                      <Zap className="w-3.5 h-3.5 mr-1" /> Action
+                      <Zap className="w-3.5 h-3.5 mr-1" /> {t("knowledge.actionTab")}
                     </TabsTrigger>
                     <TabsTrigger value="tags" className="flex-1">
-                      <Tag className="w-3.5 h-3.5 mr-1" /> Tags ({selectedDecTags.length})
+                      <Tag className="w-3.5 h-3.5 mr-1" /> {t("knowledge.tagsTab")} ({selectedDecTags.length})
                     </TabsTrigger>
                     <TabsTrigger value="similar" className="flex-1" onClick={() => { if (selectedDecision && aiSimilarities.length === 0 && !similarLoading) fetchSimilarity(selectedDecision); }}>
-                      <Brain className="w-3.5 h-3.5 mr-1" /> Ähnliche ({similarDecisions.length})
+                      <Brain className="w-3.5 h-3.5 mr-1" /> {t("knowledge.similarTab")} ({similarDecisions.length})
                     </TabsTrigger>
                   </TabsList>
 
@@ -864,35 +869,35 @@ const KnowledgeBase = () => {
                           </div>
                         )}
                         <div className="text-[10px] text-muted-foreground">
-                          {format(new Date(l.created_at), "dd. MMM yyyy HH:mm", { locale: de })}
+                          {format(new Date(l.created_at), "dd. MMM yyyy HH:mm", { locale: dateFnsLocale })}
                         </div>
                       </Card>
                     ))}
 
                     <Dialog open={lessonOpen} onOpenChange={setLessonOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" className="w-full"><Plus className="w-4 h-4 mr-1" /> Lesson Learned hinzufügen</Button>
+                        <Button size="sm" className="w-full"><Plus className="w-4 h-4 mr-1" /> {t("knowledge.addLesson")}</Button>
                       </DialogTrigger>
                       <DialogContent>
-                        <DialogHeader><DialogTitle>Lesson Learned erfassen</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle>{t("knowledge.addLessonTitle")}</DialogTitle></DialogHeader>
                         <div className="space-y-3">
                           <div>
-                            <label className="text-xs font-medium">Kernerkenntnis *</label>
-                            <Textarea placeholder="Was ist die wichtigste Erkenntnis?" value={lessonForm.key_takeaway} onChange={e => setLessonForm(f => ({ ...f, key_takeaway: e.target.value }))} />
+                            <label className="text-xs font-medium">{t("knowledge.keyTakeaway")}</label>
+                            <Textarea placeholder={t("knowledge.keyTakeawayPlaceholder")} value={lessonForm.key_takeaway} onChange={e => setLessonForm(f => ({ ...f, key_takeaway: e.target.value }))} />
                           </div>
                           <div>
-                            <label className="text-xs font-medium">Was lief gut?</label>
-                            <Textarea placeholder="Erfolgsfaktoren…" value={lessonForm.what_went_well} onChange={e => setLessonForm(f => ({ ...f, what_went_well: e.target.value }))} />
+                            <label className="text-xs font-medium">{t("knowledge.whatWentWell")}</label>
+                            <Textarea placeholder={t("knowledge.whatWentWellPlaceholder")} value={lessonForm.what_went_well} onChange={e => setLessonForm(f => ({ ...f, what_went_well: e.target.value }))} />
                           </div>
                           <div>
-                            <label className="text-xs font-medium">Was lief schlecht?</label>
-                            <Textarea placeholder="Probleme und Hindernisse…" value={lessonForm.what_went_wrong} onChange={e => setLessonForm(f => ({ ...f, what_went_wrong: e.target.value }))} />
+                            <label className="text-xs font-medium">{t("knowledge.whatWentWrong")}</label>
+                            <Textarea placeholder={t("knowledge.whatWentWrongPlaceholder")} value={lessonForm.what_went_wrong} onChange={e => setLessonForm(f => ({ ...f, what_went_wrong: e.target.value }))} />
                           </div>
                           <div>
-                            <label className="text-xs font-medium">Empfehlungen</label>
-                            <Textarea placeholder="Was sollte nächstes Mal anders gemacht werden?" value={lessonForm.recommendations} onChange={e => setLessonForm(f => ({ ...f, recommendations: e.target.value }))} />
+                            <label className="text-xs font-medium">{t("knowledge.recommendations")}</label>
+                            <Textarea placeholder={t("knowledge.recommendationsPlaceholder")} value={lessonForm.recommendations} onChange={e => setLessonForm(f => ({ ...f, recommendations: e.target.value }))} />
                           </div>
-                          <Button onClick={() => createLesson.mutate()} disabled={!lessonForm.key_takeaway.trim()} className="w-full">Speichern</Button>
+                          <Button onClick={() => createLesson.mutate()} disabled={!lessonForm.key_takeaway.trim()} className="w-full">{t("knowledge.save")}</Button>
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -903,10 +908,10 @@ const KnowledgeBase = () => {
                     <Card className="p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Zap className="w-4 h-4 text-primary" />
-                        <h4 className="text-sm font-semibold">Learning → Aktion</h4>
+                        <h4 className="text-sm font-semibold">{t("knowledge.learningToAction")}</h4>
                       </div>
                       <p className="text-xs text-muted-foreground mb-4">
-                        Lessons fließen zurück ins System: Templates, Automation-Regeln oder Governance-Checklisten.
+                        {t("knowledge.learningToActionDesc")}
                       </p>
 
                       {/* Template Feedback Insights */}
@@ -922,48 +927,49 @@ const KnowledgeBase = () => {
                           <div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/15">
                             <div className="flex items-center gap-2 mb-2">
                               <Target className="w-4 h-4 text-primary" />
-                              <h5 className="text-xs font-semibold">Template-Feedback für „{categoryLabels[selected.category] || selected.category}"</h5>
+                              <h5 className="text-xs font-semibold">{t("knowledge.templateFeedback", { category: tCategoryLabels[selected.category] || selected.category })}</h5>
                             </div>
                             <div className="grid grid-cols-3 gap-2 mb-3">
                               <div className="text-center">
                                 <p className="text-lg font-bold">{catLessons.length}</p>
-                                <p className="text-[10px] text-muted-foreground">Lessons in Kategorie</p>
+                                <p className="text-[10px] text-muted-foreground">{t("knowledge.lessonsInCategory")}</p>
                               </div>
                               <div className="text-center">
                                 <p className="text-lg font-bold text-destructive">{failedInCat.length}</p>
-                                <p className="text-[10px] text-muted-foreground">Abgelehnt</p>
+                                <p className="text-[10px] text-muted-foreground">{t("knowledge.rejected")}</p>
                               </div>
                               <div className="text-center">
                                 <p className="text-lg font-bold text-warning">{recurringIssues.length}</p>
-                                <p className="text-[10px] text-muted-foreground">Wiederkehrende Probleme</p>
+                                <p className="text-[10px] text-muted-foreground">{t("knowledge.recurringProblems")}</p>
                               </div>
                             </div>
                             {recurringIssues.length >= 2 && (
                               <div className="mb-2 p-2 rounded bg-warning/10 border border-warning/20">
                                 <p className="text-[11px] font-medium text-warning flex items-center gap-1">
-                                  <AlertTriangle className="w-3 h-3" /> Template-Anpassung empfohlen
+                                  <AlertTriangle className="w-3 h-3" /> {t("knowledge.templateAdjustmentRecommended")}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground mt-1">
-                                  {recurringIssues.length} wiederkehrende Probleme erkannt. Empfehlung: Pflichtfelder oder Checklisten im Template ergänzen.
+                                  {t("knowledge.templateAdjustmentDesc", { count: recurringIssues.length })}
                                 </p>
                               </div>
                             )}
                             <Button size="sm" variant="outline" className="w-full text-[10px] h-7 gap-1"
                               onClick={() => {
                                 const suggestions = recurringIssues.map(l => l.what_went_wrong).filter(Boolean).slice(0, 3);
-                                const text = `Template-Feedback (${categoryLabels[selected.category] || selected.category}):\n\nWiederkehrende Probleme:\n${suggestions.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nEmpfehlung: Pflichtfelder oder Validierungsregeln ergänzen.`;
+                                const catLabel = tCategoryLabels[selected.category] || selected.category;
+                                const text = `Template-Feedback (${catLabel}):\n\nWiederkehrende Probleme:\n${suggestions.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nEmpfehlung: Pflichtfelder oder Validierungsregeln ergänzen.`;
                                 navigator.clipboard.writeText(text);
-                                toast.success("Template-Feedback kopiert – jetzt im Template Editor einfügen");
+                                toast.success(t("knowledge.feedbackCopied"));
                                 navigate("/templates");
                               }}>
-                              <FileText className="w-3 h-3" /> Feedback → Template Editor übernehmen
+                              <FileText className="w-3 h-3" /> {t("knowledge.feedbackToTemplate")}
                             </Button>
                           </div>
                         );
                       })()}
 
                       {selectedLessons.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">Noch keine Lessons vorhanden. Erstelle zuerst ein Lesson Learned.</p>
+                        <p className="text-xs text-muted-foreground italic">{t("knowledge.noLessonsYet")}</p>
                       ) : (
                         <div className="space-y-3">
                           {selectedLessons.map(l => (
@@ -976,31 +982,31 @@ const KnowledgeBase = () => {
                               )}
                               <div className="flex gap-2 flex-wrap">
                                 <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
-                                  onClick={() => { navigate("/automation"); toast.info("Erstelle eine Automation-Regel basierend auf diesem Learning"); }}>
-                                  <Zap className="w-3 h-3" /> Automation-Regel
+                                  onClick={() => { navigate("/automation"); toast.info(t("knowledge.automationRuleToast")); }}>
+                                  <Zap className="w-3 h-3" /> {t("knowledge.automationRule")}
                                 </Button>
                                 <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
                                   onClick={() => {
                                     const text = `Governance-Hinweis (aus Lesson Learned):\n• ${l.key_takeaway}${l.recommendations ? `\n→ ${l.recommendations}` : ""}${l.what_went_wrong ? `\n⚠ Problem: ${l.what_went_wrong}` : ""}`;
                                     navigator.clipboard.writeText(text);
-                                    toast.success("Als Governance-Hinweis kopiert");
+                                    toast.success(t("knowledge.governanceCopied"));
                                     navigate("/templates");
                                   }}>
-                                  <FileText className="w-3 h-3" /> → Template-Regel
+                                  <FileText className="w-3 h-3" /> {t("knowledge.templateRule")}
                                 </Button>
                                 <Button size="sm" variant="outline" className="text-[10px] h-7 gap-1"
                                   onClick={() => {
                                     const text = `• ${l.key_takeaway}${l.recommendations ? `\n  → ${l.recommendations}` : ""}`;
                                     navigator.clipboard.writeText(text);
-                                    toast.success("In Zwischenablage kopiert");
+                                    toast.success(t("knowledge.copiedToClipboard"));
                                   }}>
-                                  <ClipboardCheck className="w-3 h-3" /> Kopieren
+                                  <ClipboardCheck className="w-3 h-3" /> {t("knowledge.copy")}
                                 </Button>
                               </div>
                             </div>
                           ))}
                           <Button size="sm" className="w-full gap-1.5" onClick={() => navigate("/decisions")}>
-                            <Plus className="w-3.5 h-3.5" /> Neue Entscheidung mit Lessons erstellen
+                            <Plus className="w-3.5 h-3.5" /> {t("knowledge.newDecisionWithLessons")}
                           </Button>
                         </div>
                       )}
@@ -1010,7 +1016,7 @@ const KnowledgeBase = () => {
                   {/* Tags Tab */}
                   <TabsContent value="tags">
                     <Card className="p-4">
-                      <h4 className="text-sm font-medium mb-3">Tags verwalten</h4>
+                      <h4 className="text-sm font-medium mb-3">{t("knowledge.manageTags")}</h4>
                       <div className="flex flex-wrap gap-2">
                         {tags.map(tag => {
                           const link = decisionTags.find(dt => dt.decision_id === selectedDecision && dt.tag_id === tag.id);
@@ -1024,7 +1030,7 @@ const KnowledgeBase = () => {
                             </button>
                           );
                         })}
-                        {tags.length === 0 && <p className="text-xs text-muted-foreground">Erstelle oben in der Filterleiste neue Tags.</p>}
+                        {tags.length === 0 && <p className="text-xs text-muted-foreground">{t("knowledge.noTagsHint")}</p>}
                       </div>
                     </Card>
                   </TabsContent>
@@ -1034,26 +1040,26 @@ const KnowledgeBase = () => {
                     {similarLoading && (
                       <Card className="p-6 text-center">
                         <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">KI analysiert Ähnlichkeiten…</p>
+                        <p className="text-sm text-muted-foreground">{t("knowledge.aiAnalyzing")}</p>
                       </Card>
                     )}
                     {similarError && (
                       <Card className="p-4 text-center">
                         <p className="text-sm text-destructive">{similarError}</p>
-                        <Button size="sm" variant="outline" className="mt-2" onClick={() => fetchSimilarity(selectedDecision!)}>Erneut versuchen</Button>
+                        <Button size="sm" variant="outline" className="mt-2" onClick={() => fetchSimilarity(selectedDecision!)}>{t("knowledge.retryAnalysis")}</Button>
                       </Card>
                     )}
                     {!similarLoading && !similarError && similarDecisions.length === 0 && aiSimilarities.length === 0 && (
                       <Card className="p-6 text-center">
                         <Brain className="w-8 h-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">KI-Ähnlichkeitsanalyse starten</p>
+                        <p className="text-sm text-muted-foreground">{t("knowledge.startSimilarityAnalysis")}</p>
                         <Button size="sm" variant="outline" className="mt-3" onClick={() => fetchSimilarity(selectedDecision!)}>
-                          <Sparkles className="w-3.5 h-3.5 mr-1" /> Analyse starten
+                          <Sparkles className="w-3.5 h-3.5 mr-1" /> {t("knowledge.startAnalysis")}
                         </Button>
                       </Card>
                     )}
                     {!similarLoading && similarDecisions.length === 0 && aiSimilarities.length > 0 && (
-                      <Card className="p-6 text-center text-muted-foreground text-sm">Keine ähnlichen Entscheidungen gefunden</Card>
+                      <Card className="p-6 text-center text-muted-foreground text-sm">{t("knowledge.noSimilarFound")}</Card>
                     )}
                     {similarDecisions.map(({ decision: d, score, reason }) => {
                       const dLessons = lessonsMap.get(d.id) || [];
@@ -1067,8 +1073,8 @@ const KnowledgeBase = () => {
                                 <Badge variant="outline" className="text-[10px] shrink-0 font-bold tabular-nums">{score}%</Badge>
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-[10px]">{statusLabels[d.status] ?? d.status}</Badge>
-                                <Badge variant="outline" className="text-[10px]">{categoryLabels[d.category] ?? d.category}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{tStatusLabels[d.status] ?? d.status}</Badge>
+                                <Badge variant="outline" className="text-[10px]">{tCategoryLabels[d.category] ?? d.category}</Badge>
                                 {dLessons.length > 0 && (
                                   <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                                     <Lightbulb className="w-3 h-3" /> {dLessons.length}
