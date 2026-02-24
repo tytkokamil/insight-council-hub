@@ -2,6 +2,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { toast } from "sonner";
+import i18n from "@/i18n";
 
 export const TASKS_KEY = ["tasks"] as const;
 
@@ -95,7 +96,7 @@ export const useUpdateTaskStatus = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Statusänderung fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.statusChangeFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: TASKS_KEY });
@@ -127,7 +128,7 @@ export const useDeleteTask = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Löschen fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.deleteFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: TASKS_KEY });
@@ -159,7 +160,7 @@ export const useUpdateTaskPriority = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Prioritätsänderung fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.priorityChangeFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: TASKS_KEY });

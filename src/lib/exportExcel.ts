@@ -1,200 +1,151 @@
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
+import i18n from "@/i18n";
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Entwurf",
-  proposed: "Vorschlag",
-  review: "In Review",
-  approved: "Genehmigt",
-  rejected: "Abgelehnt",
-  implemented: "Umgesetzt",
-  archived: "Archiviert",
-};
+const t = (key: string, opts?: Record<string, any>): string => String(i18n.t(key, opts));
+const loc = () => i18n.language?.startsWith("de") ? de : enUS;
 
-const PRIORITY_LABELS: Record<string, string> = {
-  low: "Niedrig",
-  medium: "Mittel",
-  high: "Hoch",
-  critical: "Kritisch",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  strategic: "Strategisch",
-  budget: "Budget",
-  hr: "Personal",
-  technical: "Technisch",
-  operational: "Operativ",
-  marketing: "Marketing",
-};
-
-const TASK_STATUS: Record<string, string> = {
-  open: "Offen",
-  in_progress: "In Bearbeitung",
-  done: "Erledigt",
-  blocked: "Blockiert",
-};
+const getStatusLabels = (): Record<string, string> => ({
+  draft: t("status.draft"), proposed: t("status.proposed"), review: t("status.review"),
+  approved: t("status.approved"), rejected: t("status.rejected"),
+  implemented: t("status.implemented"), archived: t("status.archived"),
+});
+const getPriorityLabels = (): Record<string, string> => ({
+  low: t("priority.low"), medium: t("priority.medium"), high: t("priority.high"), critical: t("priority.critical"),
+});
+const getCategoryLabels = (): Record<string, string> => ({
+  strategic: t("category.strategic"), budget: t("category.budget"), hr: t("category.hr"),
+  technical: t("category.technical"), operational: t("category.operational"), marketing: t("category.marketing"),
+});
+const getTaskStatusLabels = (): Record<string, string> => ({
+  open: t("exports.open"), in_progress: t("exports.inProgress"), done: t("exports.done"), blocked: t("tasksPage.statusBlocked"),
+});
 
 const fmtDate = (d: string | null | undefined) =>
-  d ? format(new Date(d), "dd.MM.yyyy", { locale: de }) : "—";
+  d ? format(new Date(d), "dd.MM.yyyy", { locale: loc() }) : "—";
 
 interface ExcelDecision {
-  title: string;
-  status: string;
-  priority: string;
-  category: string;
-  description?: string | null;
-  context?: string | null;
-  outcome?: string | null;
-  due_date?: string | null;
-  created_at: string;
-  ai_risk_score?: number | null;
-  ai_impact_score?: number | null;
-  team_name?: string;
-  assignee_name?: string;
-  creator_name?: string;
+  title: string; status: string; priority: string; category: string;
+  description?: string | null; context?: string | null; outcome?: string | null;
+  due_date?: string | null; created_at: string;
+  ai_risk_score?: number | null; ai_impact_score?: number | null;
+  team_name?: string; assignee_name?: string; creator_name?: string;
 }
 
 interface ExcelTask {
-  title: string;
-  status: string;
-  priority: string;
-  category: string;
-  description?: string | null;
-  due_date?: string | null;
-  created_at: string;
+  title: string; status: string; priority: string; category: string;
+  description?: string | null; due_date?: string | null; created_at: string;
   assignee_name?: string;
 }
 
 export function exportDecisionsExcel(decisions: ExcelDecision[]) {
+  const S = getStatusLabels(); const P = getPriorityLabels(); const C = getCategoryLabels();
   const data = decisions.map((d) => ({
-    Titel: d.title,
-    Status: STATUS_LABELS[d.status] || d.status,
-    Priorität: PRIORITY_LABELS[d.priority] || d.priority,
-    Kategorie: CATEGORY_LABELS[d.category] || d.category,
-    Team: d.team_name || "—",
-    Verantwortlich: d.assignee_name || "—",
-    Ersteller: d.creator_name || "—",
-    Beschreibung: d.description || "",
-    Kontext: d.context || "",
-    Ergebnis: d.outcome || "",
-    Fällig: fmtDate(d.due_date),
-    Erstellt: fmtDate(d.created_at),
-    "Risiko-Score": d.ai_risk_score ?? 0,
-    "Impact-Score": d.ai_impact_score ?? 0,
+    [t("exports.title")]: d.title,
+    [t("exports.status")]: S[d.status] || d.status,
+    [t("exports.priority")]: P[d.priority] || d.priority,
+    [t("exports.category")]: C[d.category] || d.category,
+    [t("exports.team")]: d.team_name || "—",
+    [t("exports.responsible")]: d.assignee_name || "—",
+    [t("exports.creator")]: d.creator_name || "—",
+    [t("exports.description")]: d.description || "",
+    [t("exports.context")]: d.context || "",
+    [t("exports.outcome")]: d.outcome || "",
+    [t("exports.due")]: fmtDate(d.due_date),
+    [t("exports.created")]: fmtDate(d.created_at),
+    [t("exports.riskScore")]: d.ai_risk_score ?? 0,
+    [t("exports.impactScore")]: d.ai_impact_score ?? 0,
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
-
-  // Set column widths
   ws["!cols"] = [
-    { wch: 35 }, // Titel
-    { wch: 12 }, // Status
-    { wch: 10 }, // Priorität
-    { wch: 12 }, // Kategorie
-    { wch: 15 }, // Team
-    { wch: 18 }, // Verantwortlich
-    { wch: 18 }, // Ersteller
-    { wch: 40 }, // Beschreibung
-    { wch: 30 }, // Kontext
-    { wch: 30 }, // Ergebnis
-    { wch: 12 }, // Fällig
-    { wch: 12 }, // Erstellt
-    { wch: 10 }, // Risiko
-    { wch: 10 }, // Impact
+    { wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 15 },
+    { wch: 18 }, { wch: 18 }, { wch: 40 }, { wch: 30 }, { wch: 30 },
+    { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 },
   ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Entscheidungen");
+  XLSX.utils.book_append_sheet(wb, ws, t("exports.decisionsSheet"));
 
-  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: de });
-  XLSX.writeFile(wb, `Entscheidungen_${dateStr}.xlsx`);
+  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
+  XLSX.writeFile(wb, `${t("exports.decisionsSheet")}_${dateStr}.xlsx`);
 }
 
 export function exportTasksExcel(tasks: ExcelTask[]) {
-  const data = tasks.map((t) => ({
-    Titel: t.title,
-    Status: TASK_STATUS[t.status] || t.status,
-    Priorität: PRIORITY_LABELS[t.priority] || t.priority,
-    Kategorie: CATEGORY_LABELS[t.category] || t.category,
-    Beschreibung: t.description || "",
-    Verantwortlich: t.assignee_name || "—",
-    Fällig: fmtDate(t.due_date),
-    Erstellt: fmtDate(t.created_at),
+  const P = getPriorityLabels(); const C = getCategoryLabels(); const TS = getTaskStatusLabels();
+  const data = tasks.map((task) => ({
+    [t("exports.title")]: task.title,
+    [t("exports.status")]: TS[task.status] || task.status,
+    [t("exports.priority")]: P[task.priority] || task.priority,
+    [t("exports.category")]: C[task.category] || task.category,
+    [t("exports.description")]: task.description || "",
+    [t("exports.responsible")]: task.assignee_name || "—",
+    [t("exports.due")]: fmtDate(task.due_date),
+    [t("exports.created")]: fmtDate(task.created_at),
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
-  ws["!cols"] = [
-    { wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 12 },
-    { wch: 40 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
-  ];
+  ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 18 }, { wch: 12 }, { wch: 12 }];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Aufgaben");
+  XLSX.utils.book_append_sheet(wb, ws, t("exports.tasksSheet"));
 
-  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: de });
-  XLSX.writeFile(wb, `Aufgaben_${dateStr}.xlsx`);
+  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
+  XLSX.writeFile(wb, `${t("exports.tasksSheet")}_${dateStr}.xlsx`);
 }
 
 export function exportFullReportExcel(decisions: ExcelDecision[], tasks: ExcelTask[]) {
   const wb = XLSX.utils.book_new();
+  const S = getStatusLabels(); const P = getPriorityLabels(); const C = getCategoryLabels(); const TS = getTaskStatusLabels();
 
-  // Summary sheet
   const implemented = decisions.filter((d) => d.status === "implemented").length;
   const overdue = decisions.filter((d) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
   const highRisk = decisions.filter((d) => (d.ai_risk_score || 0) > 60).length;
-  const openTasks = tasks.filter((t) => t.status !== "done").length;
+  const openTasks = tasks.filter((task) => task.status !== "done").length;
 
   const summaryData = [
-    { Metrik: "Entscheidungen gesamt", Wert: decisions.length },
-    { Metrik: "Umgesetzt", Wert: implemented },
-    { Metrik: "Überfällig", Wert: overdue },
-    { Metrik: "Hohes Risiko (>60%)", Wert: highRisk },
-    { Metrik: "Aufgaben gesamt", Wert: tasks.length },
-    { Metrik: "Offene Aufgaben", Wert: openTasks },
-    { Metrik: "Erstellt am", Wert: format(new Date(), "dd.MM.yyyy HH:mm", { locale: de }) },
+    { [t("exports.metric")]: t("exports.totalDecisions"), [t("exports.value")]: decisions.length },
+    { [t("exports.metric")]: t("exports.implemented"), [t("exports.value")]: implemented },
+    { [t("exports.metric")]: t("exports.overdue"), [t("exports.value")]: overdue },
+    { [t("exports.metric")]: t("exports.highRiskPct"), [t("exports.value")]: highRisk },
+    { [t("exports.metric")]: t("exports.totalTasks"), [t("exports.value")]: tasks.length },
+    { [t("exports.metric")]: t("exports.openTasks"), [t("exports.value")]: openTasks },
+    { [t("exports.metric")]: t("exports.created"), [t("exports.value")]: format(new Date(), "dd.MM.yyyy HH:mm", { locale: loc() }) },
   ];
 
   const summaryWs = XLSX.utils.json_to_sheet(summaryData);
   summaryWs["!cols"] = [{ wch: 25 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, summaryWs, "Zusammenfassung");
+  XLSX.utils.book_append_sheet(wb, summaryWs, t("exports.summarySheet"));
 
-  // Decisions sheet
   const decData = decisions.map((d) => ({
-    Titel: d.title,
-    Status: STATUS_LABELS[d.status] || d.status,
-    Priorität: PRIORITY_LABELS[d.priority] || d.priority,
-    Kategorie: CATEGORY_LABELS[d.category] || d.category,
-    Team: d.team_name || "—",
-    Verantwortlich: d.assignee_name || "—",
-    "Risiko-Score": d.ai_risk_score ?? 0,
-    "Impact-Score": d.ai_impact_score ?? 0,
-    Fällig: fmtDate(d.due_date),
-    Erstellt: fmtDate(d.created_at),
+    [t("exports.title")]: d.title,
+    [t("exports.status")]: S[d.status] || d.status,
+    [t("exports.priority")]: P[d.priority] || d.priority,
+    [t("exports.category")]: C[d.category] || d.category,
+    [t("exports.team")]: d.team_name || "—",
+    [t("exports.responsible")]: d.assignee_name || "—",
+    [t("exports.riskScore")]: d.ai_risk_score ?? 0,
+    [t("exports.impactScore")]: d.ai_impact_score ?? 0,
+    [t("exports.due")]: fmtDate(d.due_date),
+    [t("exports.created")]: fmtDate(d.created_at),
   }));
   const decWs = XLSX.utils.json_to_sheet(decData);
-  decWs["!cols"] = [
-    { wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 },
-    { wch: 15 }, { wch: 18 }, { wch: 10 }, { wch: 10 },
-    { wch: 12 }, { wch: 12 },
-  ];
-  XLSX.utils.book_append_sheet(wb, decWs, "Entscheidungen");
+  decWs["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, decWs, t("exports.decisionsSheet"));
 
-  // Tasks sheet
-  const taskData = tasks.map((t) => ({
-    Titel: t.title,
-    Status: TASK_STATUS[t.status] || t.status,
-    Priorität: PRIORITY_LABELS[t.priority] || t.priority,
-    Verantwortlich: t.assignee_name || "—",
-    Fällig: fmtDate(t.due_date),
-    Erstellt: fmtDate(t.created_at),
+  const taskData = tasks.map((task) => ({
+    [t("exports.title")]: task.title,
+    [t("exports.status")]: TS[task.status] || task.status,
+    [t("exports.priority")]: P[task.priority] || task.priority,
+    [t("exports.responsible")]: task.assignee_name || "—",
+    [t("exports.due")]: fmtDate(task.due_date),
+    [t("exports.created")]: fmtDate(task.created_at),
   }));
   const taskWs = XLSX.utils.json_to_sheet(taskData);
-  taskWs["!cols"] = [
-    { wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
-  ];
-  XLSX.utils.book_append_sheet(wb, taskWs, "Aufgaben");
+  taskWs["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, taskWs, t("exports.tasksSheet"));
 
-  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: de });
+  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
   XLSX.writeFile(wb, `Decivio-Report_${dateStr}.xlsx`);
 }

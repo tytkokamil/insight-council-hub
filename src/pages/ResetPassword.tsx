@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { Mail, Lock, AlertCircle, ArrowLeft } from "lucide-react";
 import decivioLogo from "@/assets/decivio-logo.png";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const ResetPassword = () => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"request" | "update">("request");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +21,6 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user arrives via recovery link, Supabase sets the session automatically
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         setMode("update");
@@ -35,14 +36,14 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      z.string().email("Ungültige E-Mail-Adresse").parse(email);
+      z.string().email(t("resetPassword.invalidEmail")).parse(email);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link gesendet. Bitte überprüfe dein Postfach.");
+        setSuccess(t("resetPassword.successSent"));
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -60,9 +61,9 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      z.string().min(6, "Mindestens 6 Zeichen").parse(password);
+      z.string().min(6, t("resetPassword.minChars")).parse(password);
       if (password !== confirmPassword) {
-        setError("Passwörter stimmen nicht überein.");
+        setError(t("resetPassword.mismatch"));
         setLoading(false);
         return;
       }
@@ -70,7 +71,7 @@ const ResetPassword = () => {
       if (error) {
         setError(error.message);
       } else {
-        setSuccess("Passwort erfolgreich geändert! Du wirst weitergeleitet...");
+        setSuccess(t("resetPassword.changed"));
         setTimeout(() => navigate("/dashboard"), 2000);
       }
     } catch (err) {
@@ -99,7 +100,7 @@ const ResetPassword = () => {
           </div>
           <h1 className="font-display text-2xl font-bold">Decivio</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {mode === "request" ? "Passwort zurücksetzen" : "Neues Passwort festlegen"}
+            {mode === "request" ? t("resetPassword.title") : t("resetPassword.newPasswordTitle")}
           </p>
         </div>
 
@@ -108,15 +109,15 @@ const ResetPassword = () => {
             {mode === "request" ? (
               <form onSubmit={handleRequestReset} className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen deines Passworts.
+                  {t("resetPassword.description")}
                 </p>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">E-Mail</label>
+                  <label className="text-sm font-medium">{t("resetPassword.emailLabel")}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="email"
-                      placeholder="name@beispiel.de"
+                      placeholder={t("resetPassword.emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -137,18 +138,18 @@ const ResetPassword = () => {
                 )}
 
                 <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                  {loading ? "Laden..." : "Reset-Link senden"}
+                  {loading ? t("resetPassword.loading") : t("resetPassword.sendLink")}
                 </Button>
               </form>
             ) : (
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Neues Passwort</label>
+                  <label className="text-sm font-medium">{t("resetPassword.newPasswordLabel")}</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="password"
-                      placeholder="Mindestens 6 Zeichen"
+                      placeholder={t("resetPassword.newPasswordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -157,12 +158,12 @@ const ResetPassword = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Passwort bestätigen</label>
+                  <label className="text-sm font-medium">{t("resetPassword.confirmLabel")}</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="password"
-                      placeholder="Passwort wiederholen"
+                      placeholder={t("resetPassword.confirmPlaceholder")}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -183,7 +184,7 @@ const ResetPassword = () => {
                 )}
 
                 <Button type="submit" size="lg" className="w-full" disabled={loading}>
-                  {loading ? "Laden..." : "Passwort ändern"}
+                  {loading ? t("resetPassword.loading") : t("resetPassword.changePassword")}
                 </Button>
               </form>
             )}
@@ -193,7 +194,7 @@ const ResetPassword = () => {
               className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mt-4 mx-auto transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Zurück zur Anmeldung
+              {t("resetPassword.backToLogin")}
             </button>
           </CardContent>
         </Card>

@@ -88,7 +88,7 @@ const Strategy = () => {
         .filter(l => l.goal_id === g.id && decMap[l.decision_id])
         .map(l => ({
           id: l.decision_id,
-          title: decMap[l.decision_id]?.title || "Unbekannt",
+          title: decMap[l.decision_id]?.title || t("strategy.unknown"),
           status: decMap[l.decision_id]?.status || "draft",
           impact_weight: l.impact_weight || 50,
         })),
@@ -201,7 +201,7 @@ const Strategy = () => {
               <label className="text-xs text-muted-foreground mb-1 block">{t("strategy.typeLabel")}</label>
               <select value={form.goal_type} onChange={e => setForm(f => ({ ...f, goal_type: e.target.value }))} className={inputClass}>
                 <option value="okr">OKR</option>
-                <option value="revenue">Revenue-Ziel</option>
+                <option value="revenue">{t("strategy.revenueGoal")}</option>
                 <option value="kpi">KPI</option>
                 <option value="quarterly">{t("strategy.quarterlyGoal")}</option>
               </select>
@@ -340,7 +340,7 @@ const Strategy = () => {
                           }`} />
                           <span className="flex-1 truncate">{dec.title}</span>
                           <span className="text-muted-foreground capitalize">{dec.status}</span>
-                          <span className="text-muted-foreground">Impact: {dec.impact_weight}%</span>
+                          <span className="text-muted-foreground">{t("strategy.impactLabel", { pct: dec.impact_weight })}</span>
                         </div>
                       ))}
                     </div>

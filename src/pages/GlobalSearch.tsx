@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, FileText, ListTodo, Lightbulb, AlertTriangle, MessageSquare, X, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
@@ -6,9 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { statusLabels, priorityLabels, categoryLabels } from "@/lib/labels";
+import { useTranslatedLabels } from "@/lib/labels";
 
-/* ── Highlight helper ── */
 const Highlight = ({ text, query }: { text: string; query: string }) => {
   if (!query || !text) return <>{text}</>;
   const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi"));
@@ -16,15 +16,6 @@ const Highlight = ({ text, query }: { text: string; query: string }) => {
 };
 
 type EntityType = "all" | "decisions" | "tasks" | "lessons" | "risks" | "comments";
-
-const ENTITY_TABS: { value: EntityType; label: string; icon: React.ElementType }[] = [
-  { value: "all", label: "Alle", icon: Search },
-  { value: "decisions", label: "Entscheidungen", icon: FileText },
-  { value: "tasks", label: "Aufgaben", icon: ListTodo },
-  { value: "lessons", label: "Lessons", icon: Lightbulb },
-  { value: "risks", label: "Risiken", icon: AlertTriangle },
-  { value: "comments", label: "Kommentare", icon: MessageSquare },
-];
 
 interface SearchResult {
   type: EntityType;
@@ -36,14 +27,25 @@ interface SearchResult {
 }
 
 const GlobalSearch = () => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [entityFilter, setEntityFilter] = useState<EntityType>("all");
 
+  const ENTITY_TABS: { value: EntityType; label: string; icon: React.ElementType }[] = [
+    { value: "all", label: t("globalSearch.all"), icon: Search },
+    { value: "decisions", label: t("globalSearch.decisions"), icon: FileText },
+    { value: "tasks", label: t("globalSearch.tasks"), icon: ListTodo },
+    { value: "lessons", label: t("globalSearch.lessons"), icon: Lightbulb },
+    { value: "risks", label: t("globalSearch.risks"), icon: AlertTriangle },
+    { value: "comments", label: t("globalSearch.comments"), icon: MessageSquare },
+  ];
+
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(timer);
   }, [query]);
 
   const { data: decisions = [] } = useQuery({
@@ -102,7 +104,7 @@ const GlobalSearch = () => {
           res.push({
             type: "decisions", id: d.id, title: d.title,
             subtitle: d.description?.slice(0, 120) || null,
-            meta: `${statusLabels[d.status] || d.status} · ${priorityLabels[d.priority] || d.priority} · ${categoryLabels[d.category] || d.category}`,
+            meta: `${tl.statusLabels[d.status] || d.status} · ${tl.priorityLabels[d.priority] || d.priority} · ${tl.categoryLabels[d.category] || d.category}`,
             link: `/decisions/${d.id}`,
           });
         }
@@ -115,7 +117,7 @@ const GlobalSearch = () => {
           res.push({
             type: "tasks", id: t.id, title: t.title,
             subtitle: t.description?.slice(0, 120) || null,
-            meta: `${t.status} · ${priorityLabels[t.priority] || t.priority}`,
+            meta: `${t.status} · ${tl.priorityLabels[t.priority] || t.priority}`,
             link: "/tasks",
           });
         }
@@ -155,7 +157,7 @@ const GlobalSearch = () => {
           res.push({
             type: "comments", id: c.id, title: c.content.slice(0, 80),
             subtitle: null,
-            meta: `${c.type} · Entscheidung`,
+            meta: `${c.type} · ${t("globalSearch.decision")}`,
             link: c.decision_id ? `/decisions/${c.decision_id}` : "/decisions",
           });
         }
@@ -163,7 +165,7 @@ const GlobalSearch = () => {
     }
 
     return res.slice(0, 50);
-  }, [debouncedQuery, entityFilter, decisions, tasks, lessons, risks, comments]);
+  }, [debouncedQuery, entityFilter, decisions, tasks, lessons, risks, comments, tl, t]);
 
   const entityCounts = useMemo(() => {
     if (!debouncedQuery || debouncedQuery.length < 2) return {} as Record<EntityType, number>;
@@ -190,17 +192,16 @@ const GlobalSearch = () => {
     <AppLayout>
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Suche</p>
-          <h1 className="text-xl font-semibold tracking-tight">Globale Suche</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("globalSearch.label")}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("globalSearch.title")}</h1>
         </div>
 
-        {/* Search input */}
         <div className="relative mb-4">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <input
             autoFocus
             type="text"
-            placeholder="Entscheidungen, Aufgaben, Lessons, Risiken, Kommentare durchsuchen…"
+            placeholder={t("globalSearch.placeholder")}
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="w-full h-12 pl-12 pr-10 rounded-xl bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -212,7 +213,6 @@ const GlobalSearch = () => {
           )}
         </div>
 
-        {/* Entity tabs */}
         <div className="flex items-center gap-1.5 mb-6 flex-wrap">
           {ENTITY_TABS.map(tab => {
             const count = tab.value === "all"
@@ -240,16 +240,15 @@ const GlobalSearch = () => {
           })}
         </div>
 
-        {/* Results */}
         {debouncedQuery.length < 2 ? (
           <div className="text-center py-20 text-muted-foreground">
             <Search className="w-10 h-10 mx-auto mb-3 opacity-20" />
-            <p className="text-sm">Mindestens 2 Zeichen eingeben, um zu suchen</p>
+            <p className="text-sm">{t("globalSearch.minChars")}</p>
           </div>
         ) : results.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <Search className="w-10 h-10 mx-auto mb-3 opacity-20" />
-            <p className="text-sm">Keine Ergebnisse für „{debouncedQuery}"</p>
+            <p className="text-sm">{t("globalSearch.noResults", { query: debouncedQuery })}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -271,7 +270,7 @@ const GlobalSearch = () => {
                           <p className="text-sm font-medium truncate">
                             <Highlight text={r.title} query={debouncedQuery} />
                           </p>
-                          <Badge variant="outline" className="text-[10px] shrink-0">{ENTITY_TABS.find(t => t.value === r.type)?.label}</Badge>
+                          <Badge variant="outline" className="text-[10px] shrink-0">{ENTITY_TABS.find(tab => tab.value === r.type)?.label}</Badge>
                         </div>
                         {r.subtitle && (
                           <p className="text-xs text-muted-foreground truncate">
@@ -287,7 +286,7 @@ const GlobalSearch = () => {
               );
             })}
             {results.length >= 50 && (
-              <p className="text-xs text-muted-foreground text-center py-2">Zeige die ersten 50 Ergebnisse. Verfeinere deine Suche für genauere Resultate.</p>
+              <p className="text-xs text-muted-foreground text-center py-2">{t("globalSearch.showingFirst50")}</p>
             )}
           </div>
         )}

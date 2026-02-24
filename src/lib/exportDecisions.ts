@@ -1,5 +1,6 @@
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
+import i18n from "@/i18n";
 
 interface DecisionExport {
   title: string;
@@ -20,32 +21,23 @@ interface DecisionExport {
   creator_name?: string;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Entwurf",
-  review: "In Review",
-  approved: "Genehmigt",
-  implemented: "Umgesetzt",
-  rejected: "Abgelehnt",
-};
+const t = (key: string, opts?: Record<string, any>): string => String(i18n.t(key, opts));
+const loc = () => i18n.language?.startsWith("de") ? de : enUS;
 
-const PRIORITY_LABELS: Record<string, string> = {
-  low: "Niedrig",
-  medium: "Mittel",
-  high: "Hoch",
-  critical: "Kritisch",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  strategic: "Strategisch",
-  budget: "Budget",
-  hr: "Personal",
-  technical: "Technisch",
-  operational: "Operativ",
-  marketing: "Marketing",
-};
+const getStatusLabels = (): Record<string, string> => ({
+  draft: t("status.draft"), review: t("status.review"), approved: t("status.approved"),
+  implemented: t("status.implemented"), rejected: t("status.rejected"),
+});
+const getPriorityLabels = (): Record<string, string> => ({
+  low: t("priority.low"), medium: t("priority.medium"), high: t("priority.high"), critical: t("priority.critical"),
+});
+const getCategoryLabels = (): Record<string, string> => ({
+  strategic: t("category.strategic"), budget: t("category.budget"), hr: t("category.hr"),
+  technical: t("category.technical"), operational: t("category.operational"), marketing: t("category.marketing"),
+});
 
 const formatDate = (d: string | null | undefined) =>
-  d ? format(new Date(d), "dd.MM.yyyy", { locale: de }) : "—";
+  d ? format(new Date(d), "dd.MM.yyyy", { locale: loc() }) : "—";
 
 const escapeCSV = (val: string) => {
   if (val.includes(",") || val.includes('"') || val.includes("\n")) {
@@ -55,47 +47,46 @@ const escapeCSV = (val: string) => {
 };
 
 export function exportCSV(decisions: DecisionExport[]) {
+  const STATUS = getStatusLabels();
+  const PRIORITY = getPriorityLabels();
+  const CATEGORY = getCategoryLabels();
+
   const headers = [
-    "Titel", "Status", "Priorität", "Kategorie", "Team", "Verantwortlich",
-    "Ersteller", "Beschreibung", "Kontext", "Ergebnis", "Ergebnis-Notizen",
-    "Fällig", "Erstellt", "Aktualisiert", "Risiko-Score", "Impact-Score",
+    t("exports.title"), t("exports.status"), t("exports.priority"), t("exports.category"),
+    t("exports.team"), t("exports.responsible"), t("exports.creator"), t("exports.description"),
+    t("exports.context"), t("exports.outcome"), t("exports.outcomeNotes"),
+    t("exports.due"), t("exports.created"), t("exports.updated"),
+    t("exports.riskScore"), t("exports.impactScore"),
   ];
 
   const rows = decisions.map((d) => [
-    d.title,
-    STATUS_LABELS[d.status] || d.status,
-    PRIORITY_LABELS[d.priority] || d.priority,
-    CATEGORY_LABELS[d.category] || d.category,
-    d.team_name || "—",
-    d.assignee_name || "—",
-    d.creator_name || "—",
-    (d.description || "").replace(/\n/g, " "),
-    (d.context || "").replace(/\n/g, " "),
-    (d.outcome || "").replace(/\n/g, " "),
-    (d.outcome_notes || "").replace(/\n/g, " "),
-    formatDate(d.due_date),
-    formatDate(d.created_at),
-    formatDate(d.updated_at),
-    String(d.ai_risk_score ?? 0),
-    String(d.ai_impact_score ?? 0),
+    d.title, STATUS[d.status] || d.status, PRIORITY[d.priority] || d.priority,
+    CATEGORY[d.category] || d.category, d.team_name || "—", d.assignee_name || "—",
+    d.creator_name || "—", (d.description || "").replace(/\n/g, " "),
+    (d.context || "").replace(/\n/g, " "), (d.outcome || "").replace(/\n/g, " "),
+    (d.outcome_notes || "").replace(/\n/g, " "), formatDate(d.due_date),
+    formatDate(d.created_at), formatDate(d.updated_at),
+    String(d.ai_risk_score ?? 0), String(d.ai_impact_score ?? 0),
   ]);
 
   const csv = [headers, ...rows].map((r) => r.map(escapeCSV).join(",")).join("\n");
-  downloadFile(csv, "entscheidungen.csv", "text/csv;charset=utf-8;");
+  downloadFile(csv, `${t("exports.decisionsFilename")}.csv`, "text/csv;charset=utf-8;");
 }
 
 export function exportPDF(decisions: DecisionExport[]) {
-  // Generate a styled HTML document and trigger print-to-PDF
-  const now = format(new Date(), "dd.MM.yyyy HH:mm", { locale: de });
+  const STATUS = getStatusLabels();
+  const PRIORITY = getPriorityLabels();
+  const CATEGORY = getCategoryLabels();
+  const now = format(new Date(), "dd.MM.yyyy HH:mm", { locale: loc() });
 
   const tableRows = decisions
     .map(
       (d) => `
     <tr>
       <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${d.title}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${STATUS_LABELS[d.status] || d.status}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${PRIORITY_LABELS[d.priority] || d.priority}</td>
-      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${CATEGORY_LABELS[d.category] || d.category}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${STATUS[d.status] || d.status}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${PRIORITY[d.priority] || d.priority}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${CATEGORY[d.category] || d.category}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${d.team_name || "—"}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${d.assignee_name || "—"}</td>
       <td style="padding:6px 8px;border-bottom:1px solid #e5e5e5;font-size:12px;">${d.ai_risk_score ?? 0}%</td>
@@ -105,10 +96,10 @@ export function exportPDF(decisions: DecisionExport[]) {
     .join("");
 
   const html = `<!DOCTYPE html>
-<html lang="de">
+<html lang="${i18n.language}">
 <head>
   <meta charset="utf-8">
-  <title>Entscheidungsbericht</title>
+  <title>${t("exports.reportTitle")}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #1a1a1a; }
     h1 { font-size: 22px; margin-bottom: 4px; }
@@ -123,20 +114,20 @@ export function exportPDF(decisions: DecisionExport[]) {
   </style>
 </head>
 <body>
-  <h1>Entscheidungsbericht</h1>
-  <p class="meta">Erstellt am ${now} · ${decisions.length} Entscheidungen</p>
+  <h1>${t("exports.reportTitle")}</h1>
+  <p class="meta">${t("exports.createdAt", { date: now })} · ${t("exports.decisionsCount", { count: decisions.length })}</p>
   
   <div class="summary">
-    <div class="stat"><div class="stat-value">${decisions.length}</div><div class="stat-label">Gesamt</div></div>
-    <div class="stat"><div class="stat-value">${decisions.filter((d) => d.status === "review").length}</div><div class="stat-label">In Review</div></div>
-    <div class="stat"><div class="stat-value">${decisions.filter((d) => d.status === "approved").length}</div><div class="stat-label">Genehmigt</div></div>
-    <div class="stat"><div class="stat-value">${decisions.filter((d) => (d.ai_risk_score || 0) > 60).length}</div><div class="stat-label">Hohes Risiko</div></div>
+    <div class="stat"><div class="stat-value">${decisions.length}</div><div class="stat-label">${t("exports.total")}</div></div>
+    <div class="stat"><div class="stat-value">${decisions.filter((d) => d.status === "review").length}</div><div class="stat-label">${t("exports.inReview")}</div></div>
+    <div class="stat"><div class="stat-value">${decisions.filter((d) => d.status === "approved").length}</div><div class="stat-label">${t("exports.approved")}</div></div>
+    <div class="stat"><div class="stat-value">${decisions.filter((d) => (d.ai_risk_score || 0) > 60).length}</div><div class="stat-label">${t("exports.highRisk")}</div></div>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Titel</th><th>Status</th><th>Priorität</th><th>Kategorie</th><th>Team</th><th>Verantwortlich</th><th>Risiko</th><th>Fällig</th>
+        <th>${t("exports.title")}</th><th>${t("exports.status")}</th><th>${t("exports.priority")}</th><th>${t("exports.category")}</th><th>${t("exports.team")}</th><th>${t("exports.responsible")}</th><th>${t("exports.risk")}</th><th>${t("exports.due")}</th>
       </tr>
     </thead>
     <tbody>${tableRows}</tbody>
