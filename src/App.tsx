@@ -73,6 +73,8 @@ const Imprint = lazy(() => import("./pages/Imprint"));
 const DataProcessingAgreement = lazy(() => import("./pages/DataProcessingAgreement"));
 const AiDataPolicy = lazy(() => import("./pages/AiDataPolicy"));
 const SubProcessors = lazy(() => import("./pages/SubProcessors"));
+const Changelog = lazy(() => import("./pages/Changelog"));
+const Roadmap = lazy(() => import("./pages/Roadmap"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +122,8 @@ const App = () => (
               <Route path="/avv" element={<Suspense fallback={<PageLoadingFallback />}><DataProcessingAgreement /></Suspense>} />
               <Route path="/ai-policy" element={<Suspense fallback={<PageLoadingFallback />}><AiDataPolicy /></Suspense>} />
               <Route path="/sub-processors" element={<Suspense fallback={<PageLoadingFallback />}><SubProcessors /></Suspense>} />
+              <Route path="/changelog" element={<Suspense fallback={<PageLoadingFallback />}><Changelog /></Suspense>} />
+              <Route path="/roadmap" element={<Suspense fallback={<PageLoadingFallback />}><Roadmap /></Suspense>} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoadingFallback />}><ResetPassword /></Suspense>} />
               <Route path="/dashboard" element={<P><Dashboard /></P>} />
               <Route path="/decisions" element={<P><Decisions /></P>} />
