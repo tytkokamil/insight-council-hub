@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, DragEvent, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, DragEvent, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   format,
@@ -56,7 +56,15 @@ const DecisionCalendar = () => {
   const { data: decisions } = useDecisions();
   const { data: allTasks = [] } = useTasks();
   const { data: profiles } = useProfiles();
+  const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
   const queryClient = useQueryClient();
+
+  // Load SLA configs dynamically
+  useEffect(() => {
+    supabase.from("sla_configs").select("*").then(({ data }) => {
+      if (data) setSlaConfigs(data);
+    });
+  }, []);
 
   const profileMap = useMemo(() => buildProfileMap(profiles ?? []), [profiles]);
 
@@ -317,6 +325,7 @@ const DecisionCalendar = () => {
                   monthDays={monthDays}
                   currentDate={currentDate}
                   decisionsByDate={decisionsByDate}
+                  slaConfigs={slaConfigs}
                   {...sharedDragProps}
                 />
               )}

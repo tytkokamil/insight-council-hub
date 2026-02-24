@@ -102,7 +102,7 @@ const navGroupsDef: NavGroupDef[] = [
       { icon: Archive, label: "nav.archive", path: "/archive" },
       { icon: Settings, label: "nav.settings", path: "/settings" },
       { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
-      { icon: Beaker, label: "nav.pilotMode", path: "/pilot", adminOnly: true },
+      { icon: Beaker, label: "nav.featureManagement", path: "/feature-management", adminOnly: true },
     ],
   },
 ];

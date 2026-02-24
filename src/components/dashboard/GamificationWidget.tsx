@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Flame, Trophy, Zap, Target, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { differenceInCalendarDays, differenceInDays, startOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   decisions: any[];
@@ -23,7 +25,7 @@ interface Achievement {
 
 const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
   const { t } = useTranslation();
-
+  const { user } = useAuth();
   const stats = useMemo(() => {
     const now = new Date();
     const today = startOfDay(now);
@@ -81,8 +83,22 @@ const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
       { id: "velocity-star", icon: Star, label: t("widgets.speedStar"), description: t("widgets.speedStarDesc"), earned: avgVelocity > 0 && avgVelocity < 5, color: "text-purple-500" },
     ];
 
-    return { streakDays, avgVelocity, thisWeekCompleted, achievements, earnedCount: achievements.filter(a => a.earned).length };
+    return { streakDays, avgVelocity, thisWeekCompleted, achievements, earnedCount: achievements.filter(a => a.earned).length, totalPoints: implemented * 10 + thisWeekCompleted * 5 + streakDays };
   }, [decisions, tasks, teams, t]);
+
+  // Persist gamification scores to DB
+  useEffect(() => {
+    if (!user || decisions.length === 0) return;
+    const level = stats.totalPoints >= 500 ? "expert" : stats.totalPoints >= 200 ? "advanced" : stats.totalPoints >= 50 ? "intermediate" : "beginner";
+    supabase.from("gamification_scores").upsert({
+      user_id: user.id,
+      total_points: stats.totalPoints,
+      current_streak: stats.streakDays,
+      longest_streak: stats.streakDays, // simplified: will only grow
+      level,
+      last_activity_date: new Date().toISOString().slice(0, 10),
+    }, { onConflict: "user_id" });
+  }, [user, stats.totalPoints, stats.streakDays, decisions.length]);
 
   if (decisions.length === 0) return null;
 

@@ -9,6 +9,14 @@ import type { Task } from "@/hooks/useTasks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 
+interface SlaConfig {
+  priority: string;
+  category: string;
+  escalation_hours_warn: number;
+  escalation_hours_urgent: number;
+  escalation_hours_overdue: number;
+}
+
 interface MonthViewProps {
   monthDays: Date[];
   currentDate: Date;
@@ -23,6 +31,7 @@ interface MonthViewProps {
   onDrop: (e: DragEvent, dateKey: string) => void;
   onDecisionClick: (id: string) => void;
   profileMap?: Record<string, string>;
+  slaConfigs?: SlaConfig[];
 }
 
 const PRIORITY_MULTIPLIER: Record<string, number> = {
@@ -67,6 +76,7 @@ function getWeekMomentum(weekDecisions: any[]): "green" | "yellow" | "red" | nul
 const MonthView = memo(({
   monthDays, currentDate, decisionsByDate, tasksByDate = {},
   dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
+  slaConfigs = [],
 }: MonthViewProps) => {
   const { t, i18n } = useTranslation();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
@@ -112,9 +122,18 @@ const MonthView = memo(({
           const isDropTarget = dragOverDate === dateKey;
           const riskLevel = getDayRiskLevel(dayDecisions);
           const delayCost = getDayDelayCost(dayDecisions);
-          const hasSLAViolation = dayDecisions.some(
-            (d) => (d.escalation_level ?? 0) >= 2 || (d.due_date && new Date(d.due_date) < new Date() && !["implemented", "rejected", "archived"].includes(d.status))
-          );
+          const hasSLAViolation = dayDecisions.some((d) => {
+            // Dynamic SLA check using sla_configs
+            if (slaConfigs.length > 0) {
+              const config = slaConfigs.find(c => c.priority === d.priority && c.category === d.category)
+                || slaConfigs.find(c => c.priority === d.priority);
+              if (config && d.due_date) {
+                const hoursOverdue = (Date.now() - new Date(d.due_date).getTime()) / (1000 * 60 * 60);
+                if (hoursOverdue > config.escalation_hours_overdue) return true;
+              }
+            }
+            return (d.escalation_level ?? 0) >= 2 || (d.due_date && new Date(d.due_date) < new Date() && !["implemented", "rejected", "archived"].includes(d.status));
+          });
           const weekIdx = Math.floor(idx / 7);
           const isFirstInWeek = idx % 7 === 0;
           const momentum = weekMomentums[weekIdx];
