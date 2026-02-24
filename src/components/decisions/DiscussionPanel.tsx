@@ -6,14 +6,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageSquare, AlertTriangle, ThumbsUp, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
-const typeConfig = {
-  comment: { label: "Kommentar", icon: MessageSquare, color: "text-primary" },
-  feedback: { label: "Feedback", icon: ThumbsUp, color: "text-success" },
-  risk_flag: { label: "Risiko", icon: AlertTriangle, color: "text-destructive" },
-} as const;
-
-type CommentType = keyof typeof typeConfig;
+type CommentType = "comment" | "feedback" | "risk_flag";
 
 /** Renders comment content with highlighted @mentions */
 const RenderContent = ({ content }: { content: string }) => {
@@ -21,8 +16,7 @@ const RenderContent = ({ content }: { content: string }) => {
   return (
     <p className="text-sm mt-1">
       {parts.map((part, i) => {
-        // Every 3rd element (index 1, 4, 7...) is the full match, index 2 is the name
-        if (i % 3 === 1) return null; // skip full match, render name below
+        if (i % 3 === 1) return null;
         if (i % 3 === 2) {
           return (
             <span key={i} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-primary/10 text-primary text-xs font-medium">
@@ -38,6 +32,7 @@ const RenderContent = ({ content }: { content: string }) => {
 };
 
 const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { data: profiles = [] } = useProfiles();
   const [comments, setComments] = useState<any[]>([]);
@@ -45,7 +40,12 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
   const [type, setType] = useState<CommentType>("comment");
   const [loading, setLoading] = useState(false);
 
-  // Mention autocomplete state
+  const typeConfig = useMemo(() => ({
+    comment: { label: t("discussion.comment"), icon: MessageSquare, color: "text-primary" },
+    feedback: { label: t("discussion.feedback"), icon: ThumbsUp, color: "text-success" },
+    risk_flag: { label: t("discussion.riskFlag"), icon: AlertTriangle, color: "text-destructive" },
+  }), [t]);
+
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [cursorPos, setCursorPos] = useState(0);
@@ -71,14 +71,11 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
 
   useEffect(() => { fetchComments(); }, [decisionId]);
 
-  // Detect @ trigger in textarea
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     const pos = e.target.selectionStart || 0;
     setContent(val);
     setCursorPos(pos);
-
-    // Look backwards from cursor for an unmatched @
     const textBefore = val.slice(0, pos);
     const atMatch = textBefore.match(/@(\w*)$/);
     if (atMatch) {
@@ -97,8 +94,6 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
     const newContent = textBefore.slice(0, atStart) + mention + textAfter;
     setContent(newContent);
     setMentionQuery(null);
-    
-    // Focus textarea after insert
     setTimeout(() => {
       if (textareaRef.current) {
         const newPos = atStart + mention.length;
@@ -110,18 +105,10 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (mentionQuery !== null && filteredProfiles.length > 0) {
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setMentionIndex(i => Math.min(i + 1, filteredProfiles.length - 1));
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setMentionIndex(i => Math.max(i - 1, 0));
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        e.preventDefault();
-        insertMention(filteredProfiles[mentionIndex]);
-      } else if (e.key === "Escape") {
-        setMentionQuery(null);
-      }
+      if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex(i => Math.min(i + 1, filteredProfiles.length - 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex(i => Math.max(i - 1, 0)); }
+      else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); insertMention(filteredProfiles[mentionIndex]); }
+      else if (e.key === "Escape") { setMentionQuery(null); }
     }
   }, [mentionQuery, filteredProfiles, mentionIndex, insertMention]);
 
@@ -141,11 +128,13 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
     setLoading(false);
   };
 
+  const locale = i18n.language === "de" ? "de-DE" : "en-US";
+
   return (
     <div className="space-y-4 mt-4">
       <div className="space-y-3 max-h-60 overflow-y-auto">
         {comments.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Noch keine Kommentare.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("discussion.noComments")}</p>
         ) : comments.map((c) => {
           const cfg = typeConfig[c.type as CommentType] || typeConfig.comment;
           const Icon = cfg.icon;
@@ -154,10 +143,10 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
               <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${cfg.color}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{c.profiles?.full_name || "Unbekannt"}</span>
+                  <span className="text-sm font-medium">{c.profiles?.full_name || t("discussion.unknown")}</span>
                   <span className={`text-xs px-1.5 py-0.5 rounded ${cfg.color} bg-current/10`}>{cfg.label}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {new Date(c.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {new Date(c.created_at).toLocaleDateString(locale, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
                 <RenderContent content={c.content} />
@@ -169,17 +158,11 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
 
       <div className="space-y-2 pt-2 border-t border-border">
         <div className="flex gap-1">
-          {(Object.keys(typeConfig) as CommentType[]).map((t) => {
-            const cfg = typeConfig[t];
+          {(Object.keys(typeConfig) as CommentType[]).map((tp) => {
+            const cfg = typeConfig[tp];
             const Icon = cfg.icon;
             return (
-              <Button
-                key={t}
-                size="sm"
-                variant={type === t ? "default" : "outline"}
-                className="text-xs h-7 gap-1"
-                onClick={() => setType(t)}
-              >
+              <Button key={tp} size="sm" variant={type === tp ? "default" : "outline"} className="text-xs h-7 gap-1" onClick={() => setType(tp)}>
                 <Icon className="w-3 h-3" /> {cfg.label}
               </Button>
             );
@@ -192,17 +175,13 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
               value={content}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder="Kommentar schreiben... @Name zum Erwähnen"
+              placeholder={t("discussion.placeholder")}
               className="w-full h-16 px-3 py-2 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm resize-none"
             />
-            {/* Mention autocomplete dropdown */}
             {mentionQuery !== null && filteredProfiles.length > 0 && (
-              <div
-                ref={dropdownRef}
-                className="absolute bottom-full left-0 mb-1 w-64 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50"
-              >
+              <div ref={dropdownRef} className="absolute bottom-full left-0 mb-1 w-64 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50">
                 <p className="text-[10px] text-muted-foreground px-3 pt-2 pb-1 font-semibold uppercase tracking-wider">
-                  Personen erwähnen
+                  {t("discussion.mentionHeading")}
                 </p>
                 {filteredProfiles.map((p, i) => (
                   <button
@@ -211,27 +190,24 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
                       "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
                       i === mentionIndex ? "bg-accent text-accent-foreground" : "hover:bg-muted/50"
                     )}
-                    onMouseDown={(e) => {
-                      e.preventDefault(); // Prevent textarea blur
-                      insertMention(p);
-                    }}
+                    onMouseDown={(e) => { e.preventDefault(); insertMention(p); }}
                     onMouseEnter={() => setMentionIndex(i)}
                   >
                     <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground shrink-0">
                       {(p.full_name || "?")[0].toUpperCase()}
                     </div>
-                    <span className="truncate">{p.full_name || "Unbekannt"}</span>
+                    <span className="truncate">{p.full_name || t("discussion.unknown")}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
           <Button onClick={handleSubmit} disabled={loading || !content.trim()} className="self-end">
-            Senden
+            {t("discussion.send")}
           </Button>
         </div>
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-          <AtSign className="w-3 h-3" /> Tippe @ um Personen zu erwähnen
+          <AtSign className="w-3 h-3" /> {t("discussion.mentionHint")}
         </p>
       </div>
     </div>
