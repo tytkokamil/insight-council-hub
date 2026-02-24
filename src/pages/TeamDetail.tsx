@@ -186,17 +186,15 @@ const TeamDetail = () => {
                           onClick={async () => {
                             setDeleting(true);
                             try {
-                              // Cascade: messages, chat reads, invitations, members, then team
-                              await supabase.from("team_messages").delete().eq("team_id", team.id);
-                              await supabase.from("team_chat_reads").delete().eq("team_id", team.id);
-                              await supabase.from("team_invitations").delete().eq("team_id", team.id);
-                              await supabase.from("team_members").delete().eq("team_id", team.id);
-                              const { error } = await supabase.from("teams").delete().eq("id", team.id);
+                              const { data, error } = await supabase.functions.invoke("delete-team", {
+                                body: { teamId: team.id },
+                              });
                               if (error) throw error;
+                              if (data?.error) throw new Error(data.error);
                               toast.success(t("teamDetail.deleteTeamSuccess"));
                               navigate("/teams");
                             } catch (err: any) {
-                              toast.error(t("teamDetail.deleteTeamError"));
+                              toast.error(t("teamDetail.deleteTeamError"), { description: err.message });
                               setDeleting(false);
                             }
                           }}
