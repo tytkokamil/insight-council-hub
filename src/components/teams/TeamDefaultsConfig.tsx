@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Settings2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const reviewFlowLabels: Record<string, string> = {
@@ -65,11 +64,6 @@ const TeamDefaultsConfig = ({ teamId }: Props) => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-2">
-        <Settings2 className="w-4 h-4 text-muted-foreground" />
-        <h4 className="text-sm font-semibold">{t("team.smartDefaults")}</h4>
-        {exists && <Badge variant="outline" className="text-[10px]">{t("team.configured")}</Badge>}
-      </div>
       <p className="text-xs text-muted-foreground">{t("team.defaultsDesc")}</p>
 
       <div className="grid grid-cols-2 gap-3">
