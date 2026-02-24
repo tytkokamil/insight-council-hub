@@ -217,6 +217,79 @@ Deno.serve(async (req) => {
     if (authError || !user) return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const userId = user.id;
+    const u = userId;
+
+    // ── Helpers ──
+    const now = new Date();
+    const daysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
+    const dueDate = (d: number) => new Date(now.getTime() + d * 86400000).toISOString().split("T")[0];
+    const currentYear = now.getFullYear();
+    const base = { created_by: u, owner_id: u };
+
+    // ── Check if personal data exists ──
+    const { count: personalDecCount } = await supabase.from("decisions").select("id", { count: "exact", head: true }).eq("created_by", u).is("team_id", null);
+    const { count: personalTaskCount } = await supabase.from("tasks").select("id", { count: "exact", head: true }).eq("created_by", u).is("team_id", null);
+    
+    let personalMsg = "";
+
+    if ((personalDecCount || 0) === 0 && (personalTaskCount || 0) === 0) {
+      // ── Seed personal data (decisions, tasks, risks, goals) ──
+      const personalDecisions = [
+        { title: "Weiterbildung: MBA vs. Zertifikat", description: "Persönliche Karriereentwicklung: Vollzeit-MBA oder berufsbegleitendes Product-Management-Zertifikat.", status: "draft", priority: "high", category: "hr", due_date: dueDate(30), created_at: daysAgo(3), ...base, ai_risk_score: 20, ai_impact_score: 70 },
+        { title: "Home-Office Setup Upgrade", description: "Ergonomischer Arbeitsplatz: Standing Desk, Monitor-Arm, Noise-Cancelling Headset.", status: "approved", priority: "medium", category: "operational", due_date: dueDate(14), created_at: daysAgo(5), ...base, ai_risk_score: 5, ai_impact_score: 35 },
+        { title: "Persönliches OKR-Framework", description: "Quartals-Ziele für persönliche Produktivität und Wachstum definieren.", status: "proposed", priority: "medium", category: "strategic", due_date: dueDate(7), created_at: daysAgo(2), ...base, ai_risk_score: 5, ai_impact_score: 50 },
+        { title: "Side-Project: SaaS-Idee validieren", description: "Marktrecherche und Landing Page für persönliches SaaS-Projekt.", status: "draft", priority: "low", category: "strategic", due_date: dueDate(60), created_at: daysAgo(1), ...base, ai_risk_score: 30, ai_impact_score: 45 },
+        { title: "Konferenz-Teilnahme WebSummit 2026", description: "Teilnahme, Reiseplanung und Networking-Strategie.", status: "review", priority: "medium", category: "marketing", due_date: dueDate(45), created_at: daysAgo(4), ...base, ai_risk_score: 10, ai_impact_score: 40 },
+        { title: "Mentoring-Programm starten", description: "Regelmäßiges Mentoring für 2 Junior-Kollegen aufsetzen.", status: "proposed", priority: "medium", category: "hr", due_date: dueDate(21), created_at: daysAgo(6), ...base, ai_risk_score: 5, ai_impact_score: 55 },
+        { title: "Notfallplan persönliche Finanzen", description: "Rücklagen-Strategie, Versicherungs-Check und Investment-Plan.", status: "draft", priority: "high", category: "budget", due_date: dueDate(20), created_at: daysAgo(2), ...base, ai_risk_score: 15, ai_impact_score: 60 },
+        { title: "Produktivitäts-Workflow optimiert", description: "GTD-System mit Notion + Kalender-Blocking eingeführt.", status: "implemented", priority: "medium", category: "operational", created_at: daysAgo(40), implemented_at: daysAgo(15), ...base, ai_risk_score: 5, ai_impact_score: 45, outcome_type: "successful", outcome: "Deep-Work-Stunden pro Woche von 8 auf 18 gestiegen.", actual_impact_score: 55 },
+        { title: "Gesundheitsroutine etabliert", description: "Tägliche Bewegung, Schlaf-Tracking, Ernährungsplan.", status: "implemented", priority: "high", category: "operational", created_at: daysAgo(60), implemented_at: daysAgo(30), ...base, ai_risk_score: 5, ai_impact_score: 50, outcome_type: "successful", outcome: "Energielevel und Fokus deutlich verbessert.", actual_impact_score: 60 },
+        { title: "Networking-Strategie LinkedIn", description: "Wöchentliches Posting, Kommentar-Routine, 3 Events/Monat.", status: "implemented", priority: "low", category: "marketing", created_at: daysAgo(50), implemented_at: daysAgo(20), ...base, ai_risk_score: 5, ai_impact_score: 35, outcome_type: "successful", outcome: "LinkedIn-Reichweite +300%. 4 Leads über Netzwerk.", actual_impact_score: 45 },
+        { title: "Wissensmanagement Obsidian-Setup", description: "Second Brain mit Zettelkasten-Methode aufgebaut.", status: "implemented", priority: "medium", category: "technical", created_at: daysAgo(45), implemented_at: daysAgo(25), ...base, ai_risk_score: 5, ai_impact_score: 40, outcome_type: "successful", outcome: "Wissen schneller abrufbar. Entscheidungen besser fundiert.", actual_impact_score: 50 },
+        { title: "Delegation Framework", description: "Klare Regeln definiert, welche Aufgaben delegiert werden.", status: "implemented", priority: "high", category: "operational", created_at: daysAgo(35), implemented_at: daysAgo(12), ...base, ai_risk_score: 10, ai_impact_score: 65, outcome_type: "successful", outcome: "20% mehr strategische Zeit pro Woche.", actual_impact_score: 60 },
+      ];
+
+      const { data: pDecs } = await supabase.from("decisions").insert(personalDecisions as any[]).select("id, status, created_at");
+
+      const personalTasks = [
+        { title: "MBA-Programme recherchieren", status: "in_progress", priority: "high", category: "hr", due_date: dueDate(7), created_by: u },
+        { title: "Standing Desk bestellen", status: "open", priority: "medium", category: "operational", due_date: dueDate(3), created_by: u },
+        { title: "Quartals-OKRs definieren", status: "open", priority: "medium", category: "strategic", due_date: dueDate(5), created_by: u },
+        { title: "LinkedIn-Artikel schreiben", status: "backlog", priority: "low", category: "marketing", created_by: u },
+        { title: "Versicherungen vergleichen", status: "open", priority: "high", category: "budget", due_date: dueDate(14), created_by: u },
+        { title: "Mentoring Kick-off vorbereiten", status: "open", priority: "medium", category: "hr", due_date: dueDate(10), created_by: u },
+        { title: "Obsidian Templates anlegen", status: "done", priority: "medium", category: "technical", created_by: u, completed_at: daysAgo(20) },
+        { title: "Delegations-Matrix erstellen", status: "done", priority: "high", category: "operational", created_by: u, completed_at: daysAgo(10) },
+      ];
+      await supabase.from("tasks").insert(personalTasks as any[]);
+
+      await supabase.from("risks").insert([
+        { title: "Burnout-Risiko durch Überarbeitung", description: "Hohe Arbeitslast seit 3 Monaten.", likelihood: 3, impact: 4, risk_score: 12, status: "open", created_by: u, mitigation_plan: "Strikte Arbeitszeiten, delegieren, wöchentlicher Check-in." },
+        { title: "Wissensverlust ohne Dokumentation", description: "Kritisches Wissen nur im Kopf.", likelihood: 3, impact: 3, risk_score: 9, status: "open", created_by: u, mitigation_plan: "Obsidian Knowledge Base kontinuierlich pflegen." },
+      ]);
+
+      await supabase.from("strategic_goals").insert([
+        { title: "50 Deep-Work-Blöcke pro Quartal", description: "Fokussierte Arbeit ohne Unterbrechungen.", goal_type: "kpi", target_value: 50, current_value: 32, unit: "Blöcke", year: currentYear, quarter: "Q2", status: "active", created_by: u },
+        { title: "12 Networking-Events besuchen", description: "Mindestens 1 Event pro Monat.", goal_type: "okr", target_value: 12, current_value: 5, unit: "Events", year: currentYear, quarter: "Q4", status: "active", created_by: u },
+      ]);
+
+      // Lessons for personal implemented decisions
+      const pImpl = pDecs?.filter(d => d.status === "implemented") || [];
+      const pLessonData = [
+        { key_takeaway: "Persönliche Systeme brauchen 3 Wochen bis sie zur Gewohnheit werden.", what_went_well: "Produktivität messbar gestiegen.", what_went_wrong: "Anfangs zu viel auf einmal geändert.", recommendations: "Eine Gewohnheit nach der anderen einführen." },
+        { key_takeaway: "Delegation erfordert Vertrauen UND Struktur.", what_went_well: "Strategische Zeit gewonnen.", what_went_wrong: "Erste Woche Kontrollverlust-Gefühl.", recommendations: "Check-in-Rhythmus vereinbaren." },
+        { key_takeaway: "Netzwerken ist ein Langzeit-Investment.", what_went_well: "Unerwartete Opportunities.", what_went_wrong: "Konsistenz schwer durchzuhalten.", recommendations: "Feste Slots im Kalender blocken." },
+      ];
+      const pLessons = pImpl.slice(0, 3).map((d, i) => ({ decision_id: d.id, created_by: u, ...pLessonData[i % pLessonData.length] }));
+      if (pLessons.length > 0) await supabase.from("lessons_learned").insert(pLessons);
+
+      // Audit logs for personal
+      if (pDecs && pDecs.length > 0) {
+        await supabase.from("audit_logs").insert(pDecs.slice(0, 5).map(d => ({ decision_id: d.id, user_id: u, action: "created", created_at: d.created_at })));
+      }
+
+      personalMsg = " + 12 persönliche Entscheidungen, 8 Tasks, 2 Risiken, 2 Ziele";
+    }
 
     // ── Determine which team to create next ──
     const { data: existingTeams } = await supabase.from("teams").select("name").eq("created_by", userId);
@@ -228,12 +301,6 @@ Deno.serve(async (req) => {
       const count = (existingTeams || []).filter((t: any) => t.name.startsWith(baseTpl.name)).length;
       template = { ...baseTpl, name: `${baseTpl.name} ${count + 1}` };
     }
-
-    // ── Helpers ──
-    const now = new Date();
-    const daysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
-    const dueDate = (d: number) => new Date(now.getTime() + d * 86400000).toISOString().split("T")[0];
-    const currentYear = now.getFullYear();
 
     // ── 1. Create Team ──
     const { data: newTeam, error: teamErr } = await supabase.from("teams").insert({
@@ -331,7 +398,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Team "${newTeam.name}" erstellt mit ${decCount} Entscheidungen, ${template.tasks.length} Aufgaben, ${template.risks.length} Risiken und ${template.goals.length} Zielen.`,
+      message: `Team "${newTeam.name}" erstellt mit ${decCount} Entscheidungen, ${template.tasks.length} Aufgaben, ${template.risks.length} Risiken und ${template.goals.length} Zielen${personalMsg}.`,
     }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err) {
