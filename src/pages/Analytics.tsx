@@ -24,7 +24,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays, subDays, format, isAfter, isBefore, subWeeks } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import type { AnalyticsTimeRange } from "./AnalyticsHub";
 
 const COLORS = {
@@ -63,7 +63,8 @@ function median(arr: number[]): number {
 }
 
 const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRange?: AnalyticsTimeRange }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allTasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
@@ -193,26 +194,26 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       .sort((a, b) => b.cost - a.cost);
 
     if (costDelta > 0 && topCostDrivers.length > 0) {
-      insights.push({ text: `Cost of Delay +€${costDelta.toLocaleString()} vs. Vorperiode (Top-Treiber: ${topCostDrivers[0].title}).`, type: "warning", action: "Zeige betroffene Entscheidungen" });
+      insights.push({ text: t("analyticsPage.costDelayVsPrev", { delta: costDelta.toLocaleString(), driver: topCostDrivers[0].title }), type: "warning", action: t("analyticsPage.showAffected") });
     }
     if (escalated.length > 0) {
       const escTeams = escalated.reduce((acc: Record<string, number>, d) => {
-        const t = teams.find((t: any) => t.id === d.team_id);
-        const n = t?.name || "Ohne Team";
+        const t2 = teams.find((t3: any) => t3.id === d.team_id);
+        const n = t2?.name || t("analyticsPage.noTeam");
         acc[n] = (acc[n] || 0) + 1;
         return acc;
       }, {});
       const topEscTeam = Object.entries(escTeams).sort((a, b) => b[1] - a[1])[0];
-      insights.push({ text: `${escalated.length} aktive Eskalationen${topEscTeam ? ` (Top: ${topEscTeam[0]})` : ""}.`, type: "warning" });
+      insights.push({ text: t("analyticsPage.activeEscalationsInsight", { count: escalated.length, top: topEscTeam ? t("analyticsPage.topTeam", { team: topEscTeam[0] }) : "" }), type: "warning" });
     }
     if (slaRate < 80) {
-      insights.push({ text: `SLA Compliance bei ${slaRate}% – unter Zielwert 80%.`, type: "warning" });
+      insights.push({ text: t("analyticsPage.slaBelow", { rate: slaRate }), type: "warning" });
     }
     if (qualityIndex >= 75) {
-      insights.push({ text: `Decision Quality Index bei ${qualityIndex}/100 – gute Governance.`, type: "success" });
+      insights.push({ text: t("analyticsPage.qualityGood", { qi: qualityIndex }), type: "success" });
     }
     if (medianDuration > 30) {
-      insights.push({ text: `Median Time-to-Decision ${medianDuration} Tage – Review-Engpässe prüfen.`, type: "warning" });
+      insights.push({ text: t("analyticsPage.medianTTDLong", { days: medianDuration }), type: "warning" });
     }
 
     // Flow chart data (8 weeks)
@@ -220,7 +221,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const weekData = Array.from({ length: weekCount }, (_, i) => {
       const weekEnd = subDays(now, (weekCount - 1 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
-      const label = format(weekEnd, "dd.MM", { locale: de });
+      const label = format(weekEnd, "dd.MM", { locale: dateFnsLocale });
       const created = allDecisions.filter(dd => {
         const date = new Date(dd.created_at);
         return date >= weekStart && date < weekEnd;
@@ -231,7 +232,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
         const date = new Date(dd.created_at);
         return date < weekEnd && !["implemented", "rejected", "archived", "cancelled"].includes(dd.status);
       }).length;
-      return { week: label, Erstellt: created, Umgesetzt: completed, Abgelehnt: rejected, Backlog: backlog };
+      return { week: label, [t("analyticsPage.created")]: created, [t("analyticsPage.implemented")]: completed, [t("analyticsPage.rejected")]: rejected, [t("analyticsPage.backlog")]: backlog };
     });
 
     // Bottleneck: Duration by status phase
@@ -273,10 +274,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
     // Risk Distribution
     const riskDistribution = [
-      { name: "Niedrig", value: decisions.filter(dd => (dd.ai_risk_score || 0) <= 30).length, fill: COLORS.success },
-      { name: "Mittel", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 30 && (dd.ai_risk_score || 0) <= 60).length, fill: COLORS.warning },
-      { name: "Hoch", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 60 && (dd.ai_risk_score || 0) <= 80).length, fill: COLORS.destructive },
-      { name: "Kritisch", value: decisions.filter(dd => (dd.ai_risk_score || 0) > 80).length, fill: "hsl(0 90% 40%)" },
+      { name: t("analyticsPage.riskLow"), value: decisions.filter(dd => (dd.ai_risk_score || 0) <= 30).length, fill: COLORS.success },
+      { name: t("analyticsPage.riskMedium"), value: decisions.filter(dd => (dd.ai_risk_score || 0) > 30 && (dd.ai_risk_score || 0) <= 60).length, fill: COLORS.warning },
+      { name: t("analyticsPage.riskHigh"), value: decisions.filter(dd => (dd.ai_risk_score || 0) > 60 && (dd.ai_risk_score || 0) <= 80).length, fill: COLORS.destructive },
+      { name: t("analyticsPage.riskCritical"), value: decisions.filter(dd => (dd.ai_risk_score || 0) > 80).length, fill: "hsl(0 90% 40%)" },
     ].filter(dd => dd.value > 0);
 
     // Cost by category
@@ -296,7 +297,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const escPerWeek = Array.from({ length: 8 }, (_, i) => {
       const weekEnd = subDays(now, (7 - i) * 7);
       const weekStart = subDays(weekEnd, 7);
-      const label = format(weekEnd, "dd.MM", { locale: de });
+      const label = format(weekEnd, "dd.MM", { locale: dateFnsLocale });
       const escCount = allDecisions.filter(dd =>
         dd.last_escalated_at && new Date(dd.last_escalated_at) >= weekStart && new Date(dd.last_escalated_at) < weekEnd
       ).length;
@@ -310,7 +311,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
         return new Date(dd.due_date!) >= weekEnd;
       });
       const compliance = weekDecs.length > 0 ? Math.round((weekCompliant.length / weekDecs.length) * 100) : 100;
-      return { week: label, Eskalationen: escCount, "SLA %": compliance };
+      return { week: label, [t("analyticsPage.escalations")]: escCount, "SLA %": compliance };
     });
 
     // Review queue
@@ -333,7 +334,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const qualityTrend = Array.from({ length: 6 }, (_, i) => {
       const monthEnd = subDays(now, i * 30);
       const monthStart = subDays(monthEnd, 30);
-      const label = format(monthEnd, "MMM", { locale: de });
+      const label = format(monthEnd, "MMM", { locale: dateFnsLocale });
       const monthDecs = allDecisions.filter(dd => {
         const date = new Date(dd.created_at);
         return date >= monthStart && date < monthEnd;
@@ -345,7 +346,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       const qi = Math.round(Math.max(0, Math.min(100,
         (monthImpl / monthTotal * 100 * 0.4) + ((100 - monthOverdue / monthTotal * 100) * 0.3) + ((100 - monthRej / monthTotal * 100) * 0.3)
       )));
-      return { month: label, "Quality Index": qi, "Ablehnungsrate": Math.round(monthRej / monthTotal * 100) };
+      return { month: label, [t("analyticsPage.qualityIndex")]: qi, [t("analyticsPage.rejectionRate")]: Math.round(monthRej / monthTotal * 100) };
     }).reverse();
 
     // Lessons stats
@@ -359,7 +360,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       escPerWeek, openReviews: openReviews.length, medianReviewWait,
       goalAlignment, qualityTrend, lessonsRate, costDelta,
     };
-  }, [allDecisions, allTasks, teams, reviews, goals, goalLinks, lessons, timeRange]);
+  }, [allDecisions, allTasks, teams, reviews, goals, goalLinks, lessons, timeRange, t, dateFnsLocale]);
 
   if (loading) return <AnalysisPageSkeleton cards={8} sections={0} showChart />;
 
@@ -448,10 +449,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={8} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="Erstellt" stroke={COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Area type="monotone" dataKey="Umgesetzt" stroke={COLORS.success} fill="url(#gResolved)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Area type="monotone" dataKey="Abgelehnt" stroke={COLORS.destructive} fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
-                  <Area type="monotone" dataKey="Backlog" stroke={COLORS.muted} fill="none" strokeWidth={1} strokeDasharray="2 2" dot={false} />
+                  <Area type="monotone" dataKey={t("analyticsPage.created")} stroke={COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Area type="monotone" dataKey={t("analyticsPage.implemented")} stroke={COLORS.success} fill="url(#gResolved)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Area type="monotone" dataKey={t("analyticsPage.rejected")} stroke={COLORS.destructive} fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  <Area type="monotone" dataKey={t("analyticsPage.backlog")} stroke={COLORS.muted} fill="none" strokeWidth={1} strokeDasharray="2 2" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -510,7 +511,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   })}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-8">Keine Daten für Phasenanalyse</p>
+                <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.noPhaseData")}</p>
               )}
             </CardContent>
           </Card>
@@ -518,7 +519,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           {/* Status × Team Heatmap */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Status × Team Heatmap</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.statusTeamHeatmap")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.heatmapData.length > 0 && teams.length > 0 ? (
@@ -526,8 +527,8 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
-                        {["Entwurf", "Review", "Genehmigt", "Umgesetzt"].map(s => (
+                         <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
+                        {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => (
                           <th key={s} className="text-center py-2 px-2 font-medium text-muted-foreground">{s}</th>
                         ))}
                       </tr>
@@ -536,7 +537,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                       {teams.map((team: any) => (
                         <tr key={team.id} className="border-b border-border/30">
                           <td className="py-2 px-2 font-medium truncate max-w-[120px]">{team.name}</td>
-                          {["Entwurf", "Review", "Genehmigt", "Umgesetzt"].map(s => {
+                          {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => {
                             const cell = d.heatmapData.find(h => h.team === team.name && h.status === s);
                             const count = cell?.count ?? 0;
                             const days = cell?.medianDays ?? 0;
@@ -555,7 +556,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   </table>
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground text-center py-8">Teams anlegen für Heatmap-Ansicht</p>
+                <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.createTeamsForHeatmap")}</p>
               )}
             </CardContent>
           </Card>
@@ -564,15 +565,15 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
       {/* SECTION 5: Risk & Economic Impact */}
       <CollapsibleSection
-        title="Risiko & Wirtschaftlicher Impact"
-        subtitle={`Gesamt: €${d.costOfDelay.toLocaleString()} Verzögerungskosten`}
+        title={t("analyticsPage.riskEconomicImpact")}
+        subtitle={t("analyticsPage.riskEconomicImpactSub", { cost: d.costOfDelay.toLocaleString() })}
         icon={<DollarSign className="w-4 h-4 text-destructive" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Risk Distribution Donut */}
           <Card>
             <CardHeader className="pb-0">
-              <CardTitle className="text-sm font-medium">Risikoverteilung</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.riskDistribution")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.riskDistribution.length > 0 ? (
@@ -596,14 +597,14 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     ))}
                   </div>
                 </>
-              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine Risikodaten</p>}
+              ) : <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.noRiskData")}</p>}
             </CardContent>
           </Card>
 
           {/* Top 5 Cost Drivers */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Top 5 Kostenverursacher</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.top5CostDrivers")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.topCostDrivers.length > 0 ? (
@@ -618,14 +619,14 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     </div>
                   ))}
                 </div>
-              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine offenen Entscheidungen</p>}
+              ) : <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.noOpenDecisions")}</p>}
             </CardContent>
           </Card>
 
           {/* Cost by Category */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Kosten nach Kategorie</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.costByCategory")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.costByCategory.length > 0 ? (
@@ -645,7 +646,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     );
                   })}
                 </div>
-              ) : <p className="text-xs text-muted-foreground text-center py-8">Keine Kostendaten</p>}
+              ) : <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.noCostData")}</p>}
             </CardContent>
           </Card>
         </div>
@@ -653,15 +654,15 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
       {/* SECTION 6: Governance & SLA Control */}
       <CollapsibleSection
-        title="Governance & SLA Control"
-        subtitle={`SLA Compliance: ${d.slaRate}% | Offene Reviews: ${d.openReviews}`}
+        title={t("analyticsPage.governanceSlaControl")}
+        subtitle={t("analyticsPage.governanceSlaControlSub", { sla: d.slaRate, reviews: d.openReviews })}
         icon={<Shield className="w-4 h-4 text-primary" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* SLA + Escalation Trend */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">SLA Compliance & Eskalationen</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.slaComplianceEscalations")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               <div className="h-56">
@@ -672,7 +673,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
                     <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} unit="%" />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar yAxisId="left" dataKey="Eskalationen" fill={COLORS.destructive} radius={[3, 3, 0, 0]} barSize={16} />
+                    <Bar yAxisId="left" dataKey={t("analyticsPage.escalations")} fill={COLORS.destructive} radius={[3, 3, 0, 0]} barSize={16} />
                     <Line yAxisId="right" type="monotone" dataKey="SLA %" stroke={COLORS.success} strokeWidth={2} dot={false} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -683,30 +684,30 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           {/* Review Queue & Governance KPIs */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Review Queue & Governance</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.reviewQueueGovernance")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground mb-1">Offene Reviews</p>
+                  <p className="text-[10px] text-muted-foreground mb-1">{t("analyticsPage.openReviews")}</p>
                   <p className="text-2xl font-bold">{d.openReviews}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground mb-1">Median Wartezeit</p>
+                  <p className="text-[10px] text-muted-foreground mb-1">{t("analyticsPage.medianWaitTime")}</p>
                   <p className={`text-2xl font-bold ${d.medianReviewWait > 7 ? "text-destructive" : ""}`}>{d.medianReviewWait}d</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground mb-1">Aktive Eskalationen</p>
+                  <p className="text-[10px] text-muted-foreground mb-1">{t("analyticsPage.activeEscalations")}</p>
                   <p className={`text-2xl font-bold ${d.escalated.length > 0 ? "text-destructive" : "text-success"}`}>{d.escalated.length}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-[10px] text-muted-foreground mb-1">SLA Compliance</p>
+                  <p className="text-[10px] text-muted-foreground mb-1">{t("analyticsPage.slaCompliance")}</p>
                   <p className={`text-2xl font-bold ${d.slaRate >= 80 ? "text-success" : "text-destructive"}`}>{d.slaRate}%</p>
                 </div>
               </div>
               {d.escalated.length > 0 && (
                 <div className="border-t border-border pt-3">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Eskalierte Entscheidungen</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("analyticsPage.escalatedDecisions")}</p>
                   <div className="space-y-1.5">
                     {d.escalated.slice(0, 3).map(dec => (
                       <Link key={dec.id} to={`/decisions/${dec.id}`} className="flex items-center justify-between gap-2 text-xs hover:bg-muted/30 rounded px-2 py-1 transition-colors">
@@ -724,15 +725,15 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
       {/* SECTION 7: Decision Quality & Strategic Alignment */}
       <CollapsibleSection
-        title="Decision Quality & Alignment"
-        subtitle={`Quality Index: ${d.qualityIndex}/100 | Lessons: ${d.lessonsRate}%`}
+        title={t("analyticsPage.qualityAlignment")}
+        subtitle={t("analyticsPage.qualityAlignmentSub", { qi: d.qualityIndex, lessons: d.lessonsRate })}
         icon={<Target className="w-4 h-4 text-success" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Quality Index Trend */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Decision Quality Trend (6 Monate)</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.qualityTrend6m")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               <div className="h-56">
@@ -742,17 +743,17 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     <XAxis dataKey="month" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} unit="" />
                     <Tooltip content={<CustomTooltip />} />
-                    <Line type="monotone" dataKey="Quality Index" stroke={COLORS.primary} strokeWidth={2.5} dot={{ r: 3, fill: COLORS.primary }} />
-                    <Line type="monotone" dataKey="Ablehnungsrate" stroke={COLORS.destructive} strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                    <Line type="monotone" dataKey={t("analyticsPage.qualityIndex")} stroke={COLORS.primary} strokeWidth={2.5} dot={{ r: 3, fill: COLORS.primary }} />
+                    <Line type="monotone" dataKey={t("analyticsPage.rejectionRate")} stroke={COLORS.destructive} strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="flex items-center justify-center gap-5 mt-2">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.primary }} />Quality Index
+                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.primary }} />{t("analyticsPage.qualityIndex")}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.destructive }} />Ablehnungsrate
+                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS.destructive }} />{t("analyticsPage.rejectionRate")}
                 </div>
               </div>
             </CardContent>
@@ -761,19 +762,19 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           {/* Strategic Goal Alignment */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Strategische Zielabdeckung</CardTitle>
+              <CardTitle className="text-sm font-medium">{t("analyticsPage.strategicGoalCoverage")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.goalAlignment.length > 0 ? (
                 <div className="space-y-3">
                   {d.goalAlignment.map((goal: any) => {
                     const healthBg = goal.health === "critical" ? "bg-destructive/15 text-destructive" : goal.health === "at_risk" ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
-                    const healthLabel = goal.health === "critical" ? "Kritisch" : goal.health === "at_risk" ? "Gefährdet" : "Stabil";
+                    const healthLabel = goal.health === "critical" ? t("analyticsPage.healthCritical") : goal.health === "at_risk" ? t("analyticsPage.healthAtRisk") : t("analyticsPage.healthStable");
                     return (
                       <div key={goal.id} className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs font-medium truncate">{goal.title}</p>
-                          <p className="text-[10px] text-muted-foreground">{goal.linkedCount} Entscheidungen</p>
+                          <p className="text-[10px] text-muted-foreground">{goal.linkedCount} {t("analyticsPage.decisions")}</p>
                         </div>
                         <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}>{healthLabel}</Badge>
                       </div>
@@ -782,10 +783,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-xs text-muted-foreground mb-2">Keine strategischen Ziele angelegt.</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t("analyticsPage.noGoalsCreated")}</p>
                   <Link to="/strategy">
                     <Button size="sm" variant="outline" className="text-xs gap-1.5">
-                      <Target className="w-3 h-3" /> Ziele erstellen
+                      <Target className="w-3 h-3" /> {t("analyticsPage.createGoals")}
                     </Button>
                   </Link>
                 </div>
@@ -794,16 +795,16 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
               {/* Learning signal */}
               <div className="border-t border-border mt-4 pt-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Lessons Learned Abdeckung</span>
+                  <span className="text-muted-foreground">{t("analyticsPage.lessonsLearnedCoverage")}</span>
                   <span className={`font-bold ${d.lessonsRate >= 50 ? "text-success" : d.lessonsRate >= 20 ? "text-warning" : "text-destructive"}`}>{d.lessonsRate}%</span>
                 </div>
                 <Progress value={d.lessonsRate} className="mt-1.5 h-1.5" />
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {d.lessonsRate < 30
-                    ? "Empfehlung: Post-Implementation Reviews für mehr Lernen."
+                    ? t("analyticsPage.lessonsLow")
                     : d.lessonsRate < 60
-                      ? "Gute Basis – Reviews weiter ausbauen."
-                      : "Exzellente Learning-Kultur."}
+                      ? t("analyticsPage.lessonsMedium")
+                      : t("analyticsPage.lessonsHigh")}
                 </p>
               </div>
             </CardContent>

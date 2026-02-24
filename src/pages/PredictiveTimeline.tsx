@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, ChevronUp, BarChart3 } from "lucide-react";
@@ -7,7 +8,7 @@ import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import AiInsightPanel from "@/components/shared/AiInsightPanel";
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useDecisions, useFilteredDependencies } from "@/hooks/useDecisions";
 
@@ -29,6 +30,8 @@ interface TimelineDecision {
 }
 
 const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const [sortBy, setSortBy] = useState<"predicted" | "priority" | "overdue">("predicted");
 
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
@@ -57,7 +60,6 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
       const key = `${category}_${priority}`;
       const arr = avgByKey[key];
       if (arr && arr.length >= 2) return arr.reduce((a, b) => a + b, 0) / arr.length;
-      // Fallback: category only
       const catArr = Object.entries(avgByKey)
         .filter(([k]) => k.startsWith(category))
         .flatMap(([, v]) => v);
@@ -65,7 +67,6 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
       return globalAvg;
     };
 
-    // Blocked decision IDs
     const blockedIds = new Set((deps).map(d => d.target_decision_id));
 
     const open = allDecisions.filter(d => !["implemented", "rejected"].includes(d.status));
@@ -73,18 +74,16 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
       const daysOpen = differenceInDays(now, new Date(d.created_at));
       const expectedTotal = getAvgDays(d.category, d.priority);
 
-      // Adjustments
       let adjustedTotal = expectedTotal;
-      if (d.status === "draft") adjustedTotal *= 1.3; // drafts take longer
-      if (d.status === "approved") adjustedTotal *= 0.7; // approved = near done
-      if (blockedIds.has(d.id)) adjustedTotal *= 1.5; // blocked = delayed
-      if ((d.escalation_level || 0) > 0) adjustedTotal *= 0.85; // escalated = pressure
-      if ((d.ai_risk_score || 0) > 60) adjustedTotal *= 1.2; // high risk = slower
+      if (d.status === "draft") adjustedTotal *= 1.3;
+      if (d.status === "approved") adjustedTotal *= 0.7;
+      if (blockedIds.has(d.id)) adjustedTotal *= 1.5;
+      if ((d.escalation_level || 0) > 0) adjustedTotal *= 0.85;
+      if ((d.ai_risk_score || 0) > 60) adjustedTotal *= 1.2;
 
       const predictedDaysLeft = Math.max(1, Math.round(adjustedTotal - daysOpen));
       const predictedEnd = addDays(now, predictedDaysLeft);
 
-      // Confidence based on data quality
       const key = `${d.category}_${d.priority}`;
       const sampleSize = avgByKey[key]?.length || 0;
       let confidence = Math.min(95, 40 + sampleSize * 10);
@@ -92,14 +91,13 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
       if ((d.ai_risk_score || 0) > 60) confidence -= 10;
       confidence = Math.max(20, confidence);
 
-      // Warnings
       let warning: string | null = null;
       if (d.due_date && new Date(d.due_date) < predictedEnd) {
-        warning = `Voraussichtlich ${differenceInDays(predictedEnd, new Date(d.due_date))} Tage nach Deadline`;
+        warning = t("predictive.warnPastDeadline", { days: differenceInDays(predictedEnd, new Date(d.due_date)) });
       } else if (blockedIds.has(d.id)) {
-        warning = "Durch Abhängigkeit blockiert";
+        warning = t("predictive.warnBlocked");
       } else if (daysOpen > expectedTotal * 1.5) {
-        warning = "Deutlich über Durchschnitt";
+        warning = t("predictive.warnAboveAverage");
       }
 
       return {
@@ -111,7 +109,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
     });
 
     return timeline;
-  }, [loading, allDecisions, deps]);
+  }, [loading, allDecisions, deps, t]);
 
   const sorted = useMemo(() => {
     const copy = [...decisions];
@@ -125,7 +123,6 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
     return copy;
   }, [decisions, sortBy]);
 
-  // Gantt range
   const ganttRange = useMemo(() => {
     if (decisions.length === 0) return { start: new Date(), end: addDays(new Date(), 30), totalDays: 30 };
     const starts = decisions.map(d => new Date(d.created_at));
@@ -141,34 +138,28 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
     const duration = d.daysOpen + d.predictedDaysLeft;
     const left = (startOffset / ganttRange.totalDays) * 100;
     const width = Math.max((duration / ganttRange.totalDays) * 100, 2);
-    const elapsed = (d.daysOpen / ganttRange.totalDays) * 100;
     return { left: `${left}%`, width: `${width}%`, elapsed: `${(d.daysOpen / duration) * 100}%` };
   };
 
   const priorityColor = (p: string) =>
     p === "critical" ? "bg-destructive" : p === "high" ? "bg-warning" : p === "medium" ? "bg-primary" : "bg-muted-foreground";
-  const priorityBadge = (p: string) =>
-    p === "critical" ? "bg-destructive/20 text-destructive" : p === "high" ? "bg-warning/20 text-warning" : p === "medium" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground";
 
-  // Stats
   const avgPredicted = decisions.length ? Math.round(decisions.reduce((s, d) => s + d.predictedDaysLeft, 0) / decisions.length) : 0;
   const atRisk = decisions.filter(d => d.warning).length;
   const avgConfidence = decisions.length ? Math.round(decisions.reduce((s, d) => s + d.confidence, 0) / decisions.length) : 0;
 
-  // Generate date markers for the Gantt header
   const dateMarkers = useMemo(() => {
     const markers: { label: string; position: number }[] = [];
     const step = Math.max(Math.floor(ganttRange.totalDays / 6), 1);
     for (let i = 0; i <= ganttRange.totalDays; i += step) {
       markers.push({
-        label: format(addDays(ganttRange.start, i), "dd.MM", { locale: de }),
+        label: format(addDays(ganttRange.start, i), "dd.MM", { locale: dateFnsLocale }),
         position: (i / ganttRange.totalDays) * 100,
       });
     }
     return markers;
-  }, [ganttRange]);
+  }, [ganttRange, dateFnsLocale]);
 
-  // Today marker
   const todayPosition = useMemo(() => {
     const days = differenceInDays(new Date(), ganttRange.start);
     return (days / ganttRange.totalDays) * 100;
@@ -178,14 +169,13 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
   return (
     <Wrap>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Prognose</p>
-            <h1 className="text-xl font-semibold tracking-tight">Predictive Timeline</h1>
-            <p className="text-sm text-muted-foreground mt-1">KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("predictive.label")}</p>
+            <h1 className="text-xl font-semibold tracking-tight">{t("predictive.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("predictive.subtitle")}</p>
           </div>
-          <PageHelpButton title="Predictive Timeline" description="KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten." />
+          <PageHelpButton title={t("predictive.title")} description={t("predictive.helpDesc")} />
         </div>
 
         {loading ? (
@@ -193,45 +183,43 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
         ) : decisions.length === 0 ? (
           <EmptyAnalysisState
             icon={Calendar}
-            title="Keine offenen Entscheidungen"
-            description="Die Timeline zeigt Prognosen für offene Entscheidungen. Erstelle eine neue Entscheidung, um die Vorhersage zu starten."
-            hint="Historische Daten verbessern die Prognose-Genauigkeit"
+            title={t("predictive.noOpenDecisions")}
+            description={t("predictive.noOpenDecisionsDesc")}
+            hint={t("predictive.noOpenDecisionsHint")}
           />
         ) : (
           <>
-            {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] text-muted-foreground mb-1">Offene Entscheidungen</p>
+                <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.openDecisions")}</p>
                 <p className="text-xl font-bold tabular-nums">{decisions.length}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] text-muted-foreground mb-1">Ø Tage bis Abschluss</p>
+                <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgDaysToCompletion")}</p>
                 <p className="text-xl font-bold tabular-nums">{avgPredicted}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3 text-warning" /> Gefährdet
+                  <AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}
                 </p>
                 <p className="text-xl font-bold tabular-nums text-warning">{atRisk}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] text-muted-foreground mb-1">Ø Konfidenz</p>
+                <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
                 <p className="text-xl font-bold tabular-nums">{avgConfidence}%</p>
               </div>
             </div>
 
             <CollapsibleSection
-              title="Gantt-Prognose"
-              subtitle="Timeline aller offenen Entscheidungen"
+              title={t("predictive.ganttForecast")}
+              subtitle={t("predictive.ganttSubtitle")}
               icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />}
             >
-            {/* Sort Controls */}
             <div className="flex gap-2 mb-4">
               {([
-                { key: "predicted", label: "Nach Prognose" },
-                { key: "priority", label: "Nach Priorität" },
-                { key: "overdue", label: "Gefährdete zuerst" },
+                { key: "predicted", label: t("predictive.sortByPrediction") },
+                { key: "priority", label: t("predictive.sortByPriority") },
+                { key: "overdue", label: t("predictive.sortByOverdue") },
               ] as const).map(s => (
                 <button
                   key={s.key}
@@ -245,9 +233,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               ))}
             </div>
 
-            {/* Gantt Chart */}
             <div className="rounded-lg border border-border bg-muted/10 overflow-hidden">
-              {/* Date Header */}
               <div className="relative h-8 border-b border-border bg-muted/30 px-4">
                 {dateMarkers.map((m, i) => (
                   <span
@@ -260,42 +246,34 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 ))}
               </div>
 
-              {/* Rows */}
               <div className="divide-y divide-border/50">
                 {sorted.map((d) => {
                   const bar = getBarStyle(d);
                   return (
                     <div key={d.id} className="flex items-center h-12 hover:bg-muted/20 transition-colors group">
-                      {/* Label */}
                       <div className="w-[200px] shrink-0 px-3 flex items-center gap-2 min-w-0">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${priorityColor(d.priority)}`} />
                         <span className="text-xs truncate">{d.title}</span>
                       </div>
-                      {/* Bar area */}
                       <div className="flex-1 relative h-full px-1">
-                        {/* Today line */}
                         <div
                           className="absolute top-0 bottom-0 w-px bg-primary/40 z-10"
                           style={{ left: `${todayPosition}%` }}
                         />
-                        {/* Bar */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div
                               className="absolute top-2 bottom-2 rounded-md overflow-hidden cursor-default"
                               style={{ left: bar.left, width: bar.width }}
                             >
-                              {/* Elapsed portion */}
                               <div
                                 className={`absolute inset-y-0 left-0 ${priorityColor(d.priority)} opacity-80`}
                                 style={{ width: bar.elapsed }}
                               />
-                              {/* Predicted portion */}
                               <div
                                 className={`absolute inset-y-0 right-0 ${priorityColor(d.priority)} opacity-30`}
                                 style={{ width: `${100 - parseFloat(bar.elapsed)}%` }}
                               />
-                              {/* Warning stripe */}
                               {d.warning && (
                                 <div className="absolute right-0 top-0 bottom-0 w-1 bg-warning" />
                               )}
@@ -305,9 +283,9 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                             <div className="space-y-1">
                               <p className="font-medium text-xs">{d.title}</p>
                               <p className="text-[10px] text-muted-foreground">
-                                {d.daysOpen}d offen · Prognose: +{d.predictedDaysLeft}d · bis {format(d.predictedEnd, "dd.MM.yyyy")}
+                                {t("predictive.daysOpen", { days: d.daysOpen })} · {t("predictive.forecast", { days: d.predictedDaysLeft })} · {t("predictive.until", { date: format(d.predictedEnd, "dd.MM.yyyy") })}
                               </p>
-                              <p className="text-[10px]">Konfidenz: {d.confidence}%</p>
+                              <p className="text-[10px]">{t("predictive.confidence", { pct: d.confidence })}</p>
                               {d.warning && (
                                 <p className="text-[10px] text-warning flex items-center gap-1">
                                   <AlertTriangle className="w-3 h-3" /> {d.warning}
@@ -317,7 +295,6 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                           </TooltipContent>
                         </Tooltip>
                       </div>
-                      {/* Predicted date */}
                       <div className="w-24 shrink-0 text-right pr-3">
                         <p className="text-[10px] text-muted-foreground">{format(d.predictedEnd, "dd.MM.yy")}</p>
                         <p className="text-[10px] text-muted-foreground/60">{d.confidence}%</p>
@@ -327,22 +304,20 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 })}
                 {sorted.length === 0 && (
                   <div className="text-center py-12 text-sm text-muted-foreground">
-                    Keine offenen Entscheidungen vorhanden.
+                    {t("predictive.noOpenRows")}
                   </div>
                 )}
               </div>
 
-              {/* Legend */}
               <div className="flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
-                <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-80 rounded" /> Vergangen</span>
-                <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-30 rounded" /> Prognose</span>
-                <span className="flex items-center gap-1"><div className="w-px h-3 bg-primary/40" /> Heute</span>
-                <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> Warnung</span>
+                <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-80 rounded" /> {t("predictive.legendElapsed")}</span>
+                <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-30 rounded" /> {t("predictive.legendForecast")}</span>
+                <span className="flex items-center gap-1"><div className="w-px h-3 bg-primary/40" /> {t("predictive.legendToday")}</span>
+                <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> {t("predictive.legendWarning")}</span>
               </div>
             </div>
             </CollapsibleSection>
 
-            {/* AI Analysis */}
             <AiInsightPanel
               type="pattern"
               context={{
