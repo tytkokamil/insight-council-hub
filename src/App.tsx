@@ -132,6 +132,7 @@ const App = () => (
               <Route path="/health" element={<P><HealthHeatmap /></P>} />
               <Route path="/dna" element={<P><DecisionDNA /></P>} />
               <Route path="/engine" element={<P><EscalationEngine /></P>} />
+              <Route path="/governance" element={<P><EscalationEngine /></P>} />
               <Route path="/benchmarking" element={<P><DecisionBenchmarking /></P>} />
               <Route path="/scenarios" element={<P><ScenarioEngine /></P>} />
               <Route path="/executive" element={<P><ExecutiveHub /></P>} />

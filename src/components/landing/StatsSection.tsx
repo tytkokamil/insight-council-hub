@@ -2,10 +2,10 @@ import { motion, animate } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 const metrics = [
-  { value: 32, suffix: "%", label: "Kürzere Zyklen" },
-  { value: 18, suffix: "%", label: "Weniger Eskalationen" },
-  { value: 3.2, suffix: "x", label: "Schnellere Freigaben" },
-  { value: 43, suffix: "%", label: "Weniger Verzögerungskosten" },
+  { value: 4.2, suffix: "M€", label: "CoD vermieden" },
+  { value: 98, suffix: "%", label: "SLA-Bestehensquote" },
+  { value: 40, suffix: "%", label: "Schnellere Entscheidungen" },
+  { value: 2585, suffix: "%", label: "ROI im ersten Monat" },
 ];
 
 const AnimatedNumber = ({ value, suffix }: { value: number; suffix: string }) => {

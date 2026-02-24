@@ -59,7 +59,7 @@ const HeroSection = () => {
               transition={{ delay: 0.2, duration: 0.8, ease }}
               className="block"
             >
-              Governance für jede
+              Entscheidungen kosten
             </motion.span>
             <motion.span
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
@@ -67,10 +67,10 @@ const HeroSection = () => {
               transition={{ delay: 0.35, duration: 0.8, ease }}
               className="block"
             >
-              Entscheidung die{" "}
+              Zeit und Geld —{" "}
               <span className="relative">
                 <span className="relative z-10 bg-gradient-to-r from-primary via-accent-violet to-accent-teal bg-clip-text text-transparent">
-                  zählt.
+                  endlich sichtbar.
                 </span>
               </span>
             </motion.span>
