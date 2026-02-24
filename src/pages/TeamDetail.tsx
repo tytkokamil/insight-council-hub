@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isTeamAdmin, setIsTeamAdmin] = useState(false);
@@ -39,13 +41,11 @@ const TeamDetail = () => {
   useEffect(() => {
     const checkAdmin = async () => {
       if (!teamId || !user) return;
-      // Check org-level admin
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
       if (roleData?.role === "org_owner" || roleData?.role === "org_admin") {
         setIsTeamAdmin(true);
         return;
       }
-      // Check team-level admin/lead
       const { data: memberData } = await supabase
         .from("team_members")
         .select("role")
@@ -69,9 +69,9 @@ const TeamDetail = () => {
     return (
       <AppLayout>
         <div className="text-center py-20">
-          <p className="text-sm text-muted-foreground">Team nicht gefunden</p>
+          <p className="text-sm text-muted-foreground">{t("teamDetail.notFound")}</p>
           <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/teams")}>
-            Zurück zu Teams
+            {t("teamDetail.backToTeams")}
           </Button>
         </div>
       </AppLayout>
@@ -81,14 +81,13 @@ const TeamDetail = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate("/teams")}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-1">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em]">Team</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em]">{t("teamDetail.team")}</p>
               <TeamHealthIndicator teamId={team.id} />
             </div>
             <h1 className="font-display text-xl font-bold">{team.name}</h1>
@@ -98,25 +97,24 @@ const TeamDetail = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="command">
           <TabsList>
             <TabsTrigger value="command" className="gap-1.5">
               <BarChart3 className="w-3.5 h-3.5" />
-              Command Center
+              {t("teamDetail.commandCenter")}
             </TabsTrigger>
             <TabsTrigger value="overview" className="gap-1.5">
               <Users className="w-3.5 h-3.5" />
-              Mitglieder
+              {t("teamDetail.members")}
             </TabsTrigger>
             <TabsTrigger value="chat" className="gap-1.5">
               <MessageCircle className="w-3.5 h-3.5" />
-              Chat
+              {t("teamDetail.chat")}
             </TabsTrigger>
             {isTeamAdmin && (
               <TabsTrigger value="settings" className="gap-1.5">
                 <Settings className="w-3.5 h-3.5" />
-                Einstellungen
+                {t("teamDetail.settings")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -135,14 +133,13 @@ const TeamDetail = () => {
             </div>
           </TabsContent>
 
-
           {isTeamAdmin && (
             <TabsContent value="settings" className="mt-6">
               <div className="space-y-8">
                 <div>
-                  <h2 className="text-sm font-semibold mb-1">Smart Defaults</h2>
+                  <h2 className="text-sm font-semibold mb-1">{t("teamDetail.smartDefaults")}</h2>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Voreinstellungen für neue Entscheidungen in diesem Team.
+                    {t("teamDetail.smartDefaultsDesc")}
                   </p>
                   <TeamDefaultsConfig teamId={team.id} />
                 </div>
@@ -150,9 +147,9 @@ const TeamDetail = () => {
                 <hr className="border-border" />
 
                 <div>
-                  <h2 className="text-sm font-semibold mb-1">SLA-Konfiguration</h2>
+                  <h2 className="text-sm font-semibold mb-1">{t("teamDetail.slaConfig")}</h2>
                   <p className="text-xs text-muted-foreground mb-4">
-                    Definiere Eskalations-Schwellwerte und Reassignment-Regeln für dieses Team.
+                    {t("teamDetail.slaConfigDesc")}
                   </p>
                   <SlaConfigPanel />
                 </div>

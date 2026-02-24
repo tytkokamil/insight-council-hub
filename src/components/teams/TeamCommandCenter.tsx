@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import {
   Zap, CheckSquare, Brain, Shield, CircleAlert, Lightbulb, Plus,
 } from "lucide-react";
 import { differenceInDays, differenceInCalendarDays, format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -23,6 +24,8 @@ const PRIORITY_MULTIPLIER: Record<string, number> = { critical: 4, high: 2.5, me
 
 const TeamCommandCenter = ({ teamId }: Props) => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const [decisions, setDecisions] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
@@ -92,10 +95,10 @@ const TeamCommandCenter = ({ teamId }: Props) => {
   // Team health
   const { healthLevel, healthLabel, healthColor, healthBg } = useMemo(() => {
     const score = overdueDecisions.length * 3 + escalatedDecisions.length * 4 + blockedTasks.length * 2;
-    if (score === 0) return { healthLevel: "stable", healthLabel: "Stable", healthColor: "text-success", healthBg: "bg-success" };
-    if (score <= 6) return { healthLevel: "warning", healthLabel: "Warning", healthColor: "text-warning", healthBg: "bg-warning" };
-    return { healthLevel: "critical", healthLabel: "Critical", healthColor: "text-destructive", healthBg: "bg-destructive" };
-  }, [overdueDecisions, escalatedDecisions, blockedTasks]);
+    if (score === 0) return { healthLevel: "stable", healthLabel: t("teamCmd.stable"), healthColor: "text-success", healthBg: "bg-success" };
+    if (score <= 6) return { healthLevel: "warning", healthLabel: t("teamCmd.warning"), healthColor: "text-warning", healthBg: "bg-warning" };
+    return { healthLevel: "critical", healthLabel: t("teamCmd.critical"), healthColor: "text-destructive", healthBg: "bg-destructive" };
+  }, [overdueDecisions, escalatedDecisions, blockedTasks, t]);
 
   // Velocity (last 30 days)
   const velocity = useMemo(() => {
@@ -108,9 +111,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
   return (
     <div className="space-y-6">
 
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 1: Team Health Overview
-         ═══════════════════════════════════════════════════════ */}
+      {/* SECTION 1: Team Health Overview */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className={cn(
           "px-5 py-4 flex items-center justify-between",
@@ -120,55 +121,30 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           <div className="flex items-center gap-3">
             <div className={cn("w-3 h-3 rounded-full", healthBg, healthLevel !== "stable" && "animate-pulse")} />
             <div>
-              <p className="text-sm font-semibold">Team Health: <span className={healthColor}>{healthLabel}</span></p>
+              <p className="text-sm font-semibold">{t("teamCmd.teamHealth")}: <span className={healthColor}>{healthLabel}</span></p>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                {healthLevel === "stable" && "Keine Eskalationen · Alle SLAs eingehalten · Kein blockiertes Element"}
-                {healthLevel === "warning" && `${overdueDecisions.length} überfällig · ${blockedTasks.length} blockiert`}
-                {healthLevel === "critical" && `${escalatedDecisions.length} eskaliert · ${overdueDecisions.length} überfällig · Sofortige Aufmerksamkeit erforderlich`}
+                {healthLevel === "stable" && t("teamCmd.stableDesc")}
+                {healthLevel === "warning" && t("teamCmd.warningDesc", { overdue: overdueDecisions.length, blocked: blockedTasks.length })}
+                {healthLevel === "critical" && t("teamCmd.criticalDesc", { escalated: escalatedDecisions.length, overdue: overdueDecisions.length })}
               </p>
             </div>
           </div>
           {totalDelayCost > 0 && (
             <div className="flex items-center gap-1.5 text-sm">
               <DollarSign className="w-4 h-4 text-destructive" />
-              <span className="font-bold text-destructive">{totalDelayCost.toLocaleString("de-DE")}€</span>
-              <span className="text-xs text-muted-foreground">Verzögerungsrisiko</span>
+              <span className="font-bold text-destructive">{totalDelayCost.toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}€</span>
+              <span className="text-xs text-muted-foreground">{t("teamCmd.delayRisk")}</span>
             </div>
           )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 border-t border-border divide-x divide-border">
           {[
-            {
-              label: "SLA Compliance",
-              value: `${slaCompliance}%`,
-              color: slaCompliance === 100 ? "text-success" : slaCompliance >= 80 ? "text-warning" : "text-destructive",
-              icon: Shield,
-            },
-            {
-              label: "Eskalationen",
-              value: escalatedDecisions.length,
-              color: escalatedDecisions.length > 0 ? "text-destructive" : "text-muted-foreground",
-              icon: Zap,
-            },
-            {
-              label: "Offene Entsch.",
-              value: openDecisions.length,
-              color: "text-primary",
-              icon: Clock,
-            },
-            {
-              label: "Velocity (30d)",
-              value: velocity,
-              color: "text-success",
-              icon: TrendingUp,
-            },
-            {
-              label: "Offene Risiken",
-              value: risks.length,
-              color: risks.length > 0 ? "text-warning" : "text-muted-foreground",
-              icon: ShieldAlert,
-            },
+            { label: t("teamCmd.slaCompliance"), value: `${slaCompliance}%`, color: slaCompliance === 100 ? "text-success" : slaCompliance >= 80 ? "text-warning" : "text-destructive", icon: Shield },
+            { label: t("teamCmd.escalations"), value: escalatedDecisions.length, color: escalatedDecisions.length > 0 ? "text-destructive" : "text-muted-foreground", icon: Zap },
+            { label: t("teamCmd.openDecisions"), value: openDecisions.length, color: "text-primary", icon: Clock },
+            { label: t("teamCmd.velocity30d"), value: velocity, color: "text-success", icon: TrendingUp },
+            { label: t("teamCmd.openRisks"), value: risks.length, color: risks.length > 0 ? "text-warning" : "text-muted-foreground", icon: ShieldAlert },
           ].map((kpi) => (
             <div key={kpi.label} className="px-4 py-3 text-center">
               <kpi.icon className={cn("w-4 h-4 mx-auto mb-1", kpi.color)} />
@@ -179,26 +155,24 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 2: Aktive Entscheidungen
-         ═══════════════════════════════════════════════════════ */}
+      {/* SECTION 2: Active Decisions */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-5 py-3 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <Flame className="w-4 h-4 text-primary" />
-            Aktive Entscheidungen
+            {t("teamCmd.activeDecisions")}
             <Badge variant="secondary" className="text-[10px]">{openDecisions.length}</Badge>
           </h3>
           <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/decisions")}>
-            Alle anzeigen <ArrowRight className="w-3 h-3" />
+            {t("teamCmd.showAll")} <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
         <div className="divide-y divide-border">
           {openDecisions.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <CheckCircle className="w-8 h-8 text-success mx-auto mb-2 opacity-50" />
-              <p className="text-sm font-medium text-muted-foreground">Keine aktiven Entscheidungen</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Das Team hat derzeit keine offenen Entscheidungsprozesse.</p>
+              <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noActiveDecisions")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("teamCmd.noActiveDecisionsDesc")}</p>
             </div>
           ) : (
             openDecisions.slice(0, 6).map((d) => {
@@ -223,18 +197,18 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                       <span className="text-sm font-medium truncate">{d.title}</span>
                       {isEscalated && (
                         <Badge variant="destructive" className="text-[9px] shrink-0">
-                          <Zap className="w-2.5 h-2.5 mr-0.5" />Eskaliert
+                          <Zap className="w-2.5 h-2.5 mr-0.5" />{t("teamCmd.escalated")}
                         </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <Badge variant="outline" className="text-[9px] capitalize">{d.status}</Badge>
+                      <Badge variant="outline" className="text-[9px] capitalize">{t(`status.${d.status}`)}</Badge>
                       <Badge variant="outline" className={cn(
                         "text-[9px]",
                         d.priority === "critical" && "border-destructive/40 text-destructive",
                         d.priority === "high" && "border-warning/40 text-warning",
-                      )}>{d.priority}</Badge>
-                      <span className="capitalize">{d.category}</span>
+                      )}>{t(`priority.${d.priority}`)}</Badge>
+                      <span>{t(`category.${d.category}`)}</span>
                     </div>
                   </div>
 
@@ -247,7 +221,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                             d.ai_risk_score >= 70 ? "text-destructive" : d.ai_risk_score >= 40 ? "text-warning" : "text-success"
                           )}>{d.ai_risk_score}%</span>
                         </TooltipTrigger>
-                        <TooltipContent className="text-xs">Risiko-Score</TooltipContent>
+                        <TooltipContent className="text-xs">{t("teamCmd.riskScore")}</TooltipContent>
                       </Tooltip>
                     )}
                     {delayCost > 0 && (
@@ -261,7 +235,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                         isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"
                       )}>
                         {isOverdue && "⚠ "}
-                        {format(new Date(d.due_date), "dd.MM.", { locale: de })}
+                        {format(new Date(d.due_date), "dd.MM.", { locale: dateFnsLocale })}
                       </span>
                     )}
                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -273,65 +247,61 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          SECTION 3: Execution Status (Tasks)
-         ═══════════════════════════════════════════════════════ */}
+      {/* SECTION 3: Execution Status (Tasks) */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-5 py-3 border-b border-border flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-primary" />
-            Execution Status
+            {t("teamCmd.executionStatus")}
           </h3>
           <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/tasks")}>
-            Alle Aufgaben <ArrowRight className="w-3 h-3" />
+            {t("teamCmd.allTasks")} <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
 
-        {/* Task KPI row */}
         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border border-b border-border">
           <div className="px-4 py-3 text-center">
             <p className="text-xl font-bold text-primary">{openTasks.length}</p>
-            <p className="text-[10px] text-muted-foreground">Offene Aufgaben</p>
+            <p className="text-[10px] text-muted-foreground">{t("teamCmd.openTasks")}</p>
           </div>
           <div className="px-4 py-3 text-center">
             <p className={cn("text-xl font-bold", overdueTasks.length > 0 ? "text-destructive" : "text-muted-foreground")}>
               {overdueTasks.length}
             </p>
-            <p className="text-[10px] text-muted-foreground">Überfällig</p>
+            <p className="text-[10px] text-muted-foreground">{t("teamCmd.overdue")}</p>
           </div>
           <div className="px-4 py-3 text-center">
             <p className={cn("text-xl font-bold", blockedTasks.length > 0 ? "text-destructive" : "text-muted-foreground")}>
               {blockedTasks.length}
             </p>
-            <p className="text-[10px] text-muted-foreground">Blockiert</p>
+            <p className="text-[10px] text-muted-foreground">{t("teamCmd.blocked")}</p>
           </div>
           <div className="px-4 py-3 text-center">
             <p className="text-xl font-bold text-success">
               {tasks.filter(t => t.status === "done").length}
             </p>
-            <p className="text-[10px] text-muted-foreground">Erledigt</p>
+            <p className="text-[10px] text-muted-foreground">{t("teamCmd.done")}</p>
           </div>
         </div>
 
-        {/* Blocked tasks that impact decisions */}
         {blockedTasks.length > 0 ? (
           <div className="px-5 py-3">
             <p className="text-[10px] font-semibold text-destructive uppercase tracking-wider mb-2 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3" />
-              Blockierte Aufgaben
+              {t("teamCmd.blockedTasks")}
             </p>
             <div className="space-y-1.5">
-              {blockedTasks.slice(0, 4).map((t) => (
+              {blockedTasks.slice(0, 4).map((tk) => (
                 <div
-                  key={t.id}
+                  key={tk.id}
                   className="flex items-center gap-2 p-2 rounded-lg bg-destructive/5 border border-destructive/10 cursor-pointer hover:bg-destructive/10 transition-colors"
-                  onClick={() => navigate(`/tasks/${t.id}`)}
+                  onClick={() => navigate(`/tasks/${tk.id}`)}
                 >
                   <CircleAlert className="w-3.5 h-3.5 text-destructive shrink-0" />
-                  <span className="text-xs font-medium flex-1 truncate">{t.title}</span>
-                  {t.due_date && (
+                  <span className="text-xs font-medium flex-1 truncate">{tk.title}</span>
+                  {tk.due_date && (
                     <span className="text-[10px] text-destructive">
-                      {format(new Date(t.due_date), "dd.MM.", { locale: de })}
+                      {format(new Date(tk.due_date), "dd.MM.", { locale: dateFnsLocale })}
                     </span>
                   )}
                 </div>
@@ -342,19 +312,19 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           <div className="px-5 py-3">
             <p className="text-[10px] font-semibold text-warning uppercase tracking-wider mb-2 flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Überfällige Aufgaben
+              {t("teamCmd.overdueTasks")}
             </p>
             <div className="space-y-1.5">
-              {overdueTasks.slice(0, 4).map((t) => (
+              {overdueTasks.slice(0, 4).map((tk) => (
                 <div
-                  key={t.id}
+                  key={tk.id}
                   className="flex items-center gap-2 p-2 rounded-lg bg-warning/5 border border-warning/10 cursor-pointer hover:bg-warning/10 transition-colors"
-                  onClick={() => navigate(`/tasks/${t.id}`)}
+                  onClick={() => navigate(`/tasks/${tk.id}`)}
                 >
                   <Clock className="w-3.5 h-3.5 text-warning shrink-0" />
-                  <span className="text-xs font-medium flex-1 truncate">{t.title}</span>
+                  <span className="text-xs font-medium flex-1 truncate">{tk.title}</span>
                   <span className="text-[10px] text-warning">
-                    {format(new Date(t.due_date!), "dd.MM.", { locale: de })}
+                    {format(new Date(tk.due_date!), "dd.MM.", { locale: dateFnsLocale })}
                   </span>
                 </div>
               ))}
@@ -363,38 +333,34 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         ) : (
           <div className="px-5 py-6 text-center">
             <CheckCircle className="w-6 h-6 text-success mx-auto mb-1.5 opacity-50" />
-            <p className="text-xs text-muted-foreground">Keine blockierten oder überfälligen Aufgaben. Execution läuft planmäßig.</p>
+            <p className="text-xs text-muted-foreground">{t("teamCmd.executionOnTrack")}</p>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* ═══════════════════════════════════════════════════════
-            SECTION 4: Strategische Ziele
-           ═══════════════════════════════════════════════════════ */}
+        {/* SECTION 4: Strategic Goals */}
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Target className="w-4 h-4 text-primary" />
-              Strategische Ziele
+              {t("teamCmd.strategicGoals")}
               <Badge variant="secondary" className="text-[10px]">{goals.length}</Badge>
             </h3>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/strategy")}>
-              <Plus className="w-3 h-3" /> Ziel hinzufügen
+              <Plus className="w-3 h-3" /> {t("teamCmd.addGoal")}
             </Button>
           </div>
 
           {goals.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-medium text-muted-foreground">Kein strategisches Ziel zugeordnet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Teams mit klaren Zielen treffen 40% schnellere Entscheidungen.
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noGoals")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noGoalsHint")}</p>
               <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
                 <Plus className="w-3 h-3" />
-                Erstes Ziel definieren
+                {t("teamCmd.defineFirstGoal")}
               </Button>
             </div>
           ) : (
@@ -413,7 +379,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                     <Progress value={Math.min(progress, 100)} className="h-1.5" />
                     {g.due_date && (
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        Fällig: {format(new Date(g.due_date), "dd.MM.yyyy", { locale: de })}
+                        {t("teamCmd.dueDateLabel")}: {format(new Date(g.due_date), "dd.MM.yyyy", { locale: dateFnsLocale })}
                       </p>
                     )}
                   </div>
@@ -423,14 +389,12 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           )}
         </div>
 
-        {/* ═══════════════════════════════════════════════════════
-            SECTION 5: Learnings & Trends
-           ═══════════════════════════════════════════════════════ */}
+        {/* SECTION 5: Learnings & Trends */}
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
-              Learnings & Erkenntnisse
+              {t("teamCmd.learnings")}
               <Badge variant="secondary" className="text-[10px]">{lessons.length}</Badge>
             </h3>
           </div>
@@ -438,24 +402,20 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           {lessons.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <Lightbulb className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-medium text-muted-foreground">Noch keine Learnings erfasst</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Learnings entstehen automatisch, wenn Entscheidungen abgeschlossen werden.
-              </p>
+              <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noLearnings")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noLearningsHint")}</p>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {/* Trend insight */}
               {lessons.length >= 2 && (
                 <div className="px-5 py-3 bg-primary/5 flex items-start gap-2">
                   <Brain className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Trend-Erkenntnis</p>
+                    <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">{t("teamCmd.trendInsight")}</p>
                     <p className="text-xs text-foreground mt-0.5">
-                      {lessons.length} Learnings in den letzten Entscheidungen erfasst. 
                       {lessons.some(l => l.what_went_wrong) 
-                        ? " Wiederkehrende Risiko-Muster erkannt – Prozessanpassung empfohlen."
-                        : " Überwiegend positive Ergebnisse – aktuelle Strategie beibehalten."
+                        ? t("teamCmd.trendNegative", { count: lessons.length })
+                        : t("teamCmd.trendPositive", { count: lessons.length })
                       }
                     </p>
                   </div>
@@ -466,15 +426,15 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                 <div key={l.id} className="px-5 py-3">
                   <p className="text-xs font-medium line-clamp-2">{l.key_takeaway}</p>
                   <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                    <span>{format(new Date(l.created_at), "dd.MM.yyyy", { locale: de })}</span>
+                    <span>{format(new Date(l.created_at), "dd.MM.yyyy", { locale: dateFnsLocale })}</span>
                     {l.what_went_well && (
                       <span className="flex items-center gap-0.5 text-success">
-                        <CheckCircle className="w-2.5 h-2.5" /> Erfolg
+                        <CheckCircle className="w-2.5 h-2.5" /> {t("teamCmd.success")}
                       </span>
                     )}
                     {l.what_went_wrong && (
                       <span className="flex items-center gap-0.5 text-destructive">
-                        <AlertTriangle className="w-2.5 h-2.5" /> Risiko
+                        <AlertTriangle className="w-2.5 h-2.5" /> {t("teamCmd.risk")}
                       </span>
                     )}
                   </div>
@@ -485,19 +445,17 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          Open Risks (visible if any)
-         ═══════════════════════════════════════════════════════ */}
+      {/* Open Risks */}
       {risks.length > 0 && (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-5 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-destructive" />
-              Offene Risiken
+              {t("teamCmd.openRisksSection")}
               <Badge variant="destructive" className="text-[10px]">{risks.length}</Badge>
             </h3>
             <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/risk-register")}>
-              Risk Register <ArrowRight className="w-3 h-3" />
+              {t("teamCmd.riskRegister")} <ArrowRight className="w-3 h-3" />
             </Button>
           </div>
           <div className="divide-y divide-border">
@@ -527,7 +485,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           <div className="px-5 py-3 border-b border-border">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4 text-warning" />
-              Offene Reviews
+              {t("teamCmd.openReviews")}
               <Badge variant="secondary" className="text-[10px]">{reviews.length}</Badge>
             </h3>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -25,24 +26,9 @@ interface Props {
   teamId: string;
 }
 
-const CATEGORIES = [
-  { value: "strategic", label: "Strategisch" },
-  { value: "budget", label: "Budget" },
-  { value: "hr", label: "Personal" },
-  { value: "technical", label: "Technisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "marketing", label: "Marketing" },
-];
-
-const PRIORITIES = [
-  { value: "low", label: "Niedrig" },
-  { value: "medium", label: "Mittel" },
-  { value: "high", label: "Hoch" },
-  { value: "critical", label: "Kritisch" },
-];
-
 const TeamImportTab = ({ teamId }: Props) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [phase, setPhase] = useState<"upload" | "analyzing" | "preview" | "importing">("upload");
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState("");
@@ -51,6 +37,22 @@ const TeamImportTab = ({ teamId }: Props) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
+
+  const CATEGORIES = [
+    { value: "strategic", label: t("category.strategic") },
+    { value: "budget", label: t("category.budget") },
+    { value: "hr", label: t("category.hr") },
+    { value: "technical", label: t("category.technical") },
+    { value: "operational", label: t("category.operational") },
+    { value: "marketing", label: t("category.marketing") },
+  ];
+
+  const PRIORITIES = [
+    { value: "low", label: t("priority.low") },
+    { value: "medium", label: t("priority.medium") },
+    { value: "high", label: t("priority.high") },
+    { value: "critical", label: t("priority.critical") },
+  ];
 
   const parsePdf = async (file: File): Promise<string> => {
     const pdfjsLib = await import("pdfjs-dist");
@@ -91,13 +93,13 @@ const TeamImportTab = ({ teamId }: Props) => {
     try {
       return await file.text();
     } catch {
-      throw new Error("Dateiformat wird nicht unterstützt. Bitte PDF, CSV, Excel oder Text verwenden.");
+      throw new Error(t("teamImport.formatUnsupported"));
     }
   };
 
   const handleFile = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Datei zu groß (max. 10 MB)");
+      toast.error(t("teamImport.fileTooLarge"));
       return;
     }
 
@@ -110,7 +112,7 @@ const TeamImportTab = ({ teamId }: Props) => {
       setProgress(40);
 
       if (!content.trim()) {
-        throw new Error("Datei ist leer");
+        throw new Error(t("teamImport.fileEmpty"));
       }
 
       setProgress(60);
@@ -138,7 +140,7 @@ const TeamImportTab = ({ teamId }: Props) => {
       setProgress(100);
       setPhase("preview");
     } catch (err: any) {
-      toast.error(err.message || "Analyse fehlgeschlagen");
+      toast.error(err.message || t("teamImport.analysisFailed"));
       setPhase("upload");
     }
   };
@@ -202,7 +204,7 @@ const TeamImportTab = ({ teamId }: Props) => {
     if (!user) return;
     const selected = decisions.filter((d) => d.selected);
     if (selected.length === 0) {
-      toast.error("Keine Entscheidungen ausgewählt");
+      toast.error(t("teamImport.noSelected"));
       return;
     }
 
@@ -226,9 +228,8 @@ const TeamImportTab = ({ teamId }: Props) => {
       if (error) throw error;
 
       setProgress(100);
-      toast.success(`${selected.length} Entscheidungen importiert`);
+      toast.success(t("teamImport.importSuccess", { count: selected.length }));
 
-      // Reset
       setTimeout(() => {
         setPhase("upload");
         setDecisions([]);
@@ -236,7 +237,7 @@ const TeamImportTab = ({ teamId }: Props) => {
         setFileName("");
       }, 1500);
     } catch (err: any) {
-      toast.error(err.message || "Import fehlgeschlagen");
+      toast.error(err.message || t("teamImport.importFailed"));
       setPhase("preview");
     }
   };
@@ -272,10 +273,8 @@ const TeamImportTab = ({ teamId }: Props) => {
                 <Upload className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold mb-1">Datei hochladen</p>
-                <p className="text-xs text-muted-foreground">
-                  PDF, CSV, Excel oder Textdatei hierher ziehen oder klicken
-                </p>
+                <p className="text-sm font-semibold mb-1">{t("teamImport.uploadFile")}</p>
+                <p className="text-xs text-muted-foreground">{t("teamImport.uploadDesc")}</p>
               </div>
               <div className="flex gap-3 mt-2">
                 {[
@@ -293,34 +292,30 @@ const TeamImportTab = ({ teamId }: Props) => {
             </div>
           </div>
 
-          {/* Template download */}
           <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/10">
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-5 h-5 text-primary" />
               <div>
-                <p className="text-sm font-medium">CSV-Template</p>
-                <p className="text-[10px] text-muted-foreground">
-                  Vorgefertigtes Template mit allen Spalten
-                </p>
+                <p className="text-sm font-medium">{t("teamImport.csvTemplate")}</p>
+                <p className="text-[10px] text-muted-foreground">{t("teamImport.csvTemplateDesc")}</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-1.5">
               <Download className="w-3.5 h-3.5" />
-              Herunterladen
+              {t("teamImport.download")}
             </Button>
           </div>
 
-          {/* How it works */}
           <div className="rounded-lg border border-border p-4">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
-              So funktioniert der KI-Import
+              {t("teamImport.howItWorks")}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { step: "1", title: "Hochladen", desc: "Datei mit Entscheidungen hochladen" },
-                { step: "2", title: "KI analysiert", desc: "Automatische Erkennung von Entscheidungen" },
-                { step: "3", title: "Bestätigen", desc: "Prüfen, anpassen und importieren" },
+                { step: "1", title: t("teamImport.step1"), desc: t("teamImport.step1Desc") },
+                { step: "2", title: t("teamImport.step2"), desc: t("teamImport.step2Desc") },
+                { step: "3", title: t("teamImport.step3"), desc: t("teamImport.step3Desc") },
               ].map((s) => (
                 <div key={s.step} className="text-center">
                   <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-2 text-xs font-bold text-primary">
@@ -339,10 +334,8 @@ const TeamImportTab = ({ teamId }: Props) => {
       {phase === "analyzing" && (
         <div className="text-center py-16">
           <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-sm font-semibold mb-2">KI analysiert «{fileName}»</p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Entscheidungen werden automatisch erkannt und strukturiert...
-          </p>
+          <p className="text-sm font-semibold mb-2">{t("teamImport.analyzing", { file: fileName })}</p>
+          <p className="text-xs text-muted-foreground mb-4">{t("teamImport.analyzingDesc")}</p>
           <Progress value={progress} className="max-w-xs mx-auto" />
         </div>
       )}
@@ -350,18 +343,16 @@ const TeamImportTab = ({ teamId }: Props) => {
       {/* Preview Phase */}
       {phase === "preview" && (
         <>
-          {/* Summary */}
           {summary && (
             <div className="flex items-start gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
               <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium mb-1">KI-Zusammenfassung</p>
+                <p className="text-sm font-medium mb-1">{t("teamImport.aiSummary")}</p>
                 <p className="text-xs text-muted-foreground">{summary}</p>
               </div>
             </div>
           )}
 
-          {/* Stats bar */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Badge variant="outline" className="gap-1">
@@ -369,21 +360,20 @@ const TeamImportTab = ({ teamId }: Props) => {
                 {fileName}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                {selectedCount} von {decisions.length} ausgewählt
+                {t("teamImport.selectedOf", { selected: selectedCount, total: decisions.length })}
               </span>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => { setPhase("upload"); setDecisions([]); }}>
-                Abbrechen
+                {t("teamImport.cancel")}
               </Button>
               <Button size="sm" onClick={importDecisions} disabled={selectedCount === 0} className="gap-1.5">
                 <Plus className="w-3.5 h-3.5" />
-                {selectedCount} importieren
+                {t("teamImport.importCount", { count: selectedCount })}
               </Button>
             </div>
           </div>
 
-          {/* Decision list */}
           <div className="space-y-3">
             {decisions.map((d, i) => (
               <div
@@ -458,12 +448,10 @@ const TeamImportTab = ({ teamId }: Props) => {
           {decisions.length === 0 && (
             <div className="text-center py-12">
               <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-3" />
-              <p className="text-sm font-medium">Keine Entscheidungen erkannt</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Versuche eine andere Datei oder das CSV-Template
-              </p>
+              <p className="text-sm font-medium">{t("teamImport.noDecisions")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("teamImport.noDecisionsHint")}</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => setPhase("upload")}>
-                Zurück
+                {t("teamDetail.back")}
               </Button>
             </div>
           )}
@@ -476,15 +464,15 @@ const TeamImportTab = ({ teamId }: Props) => {
           {progress < 100 ? (
             <>
               <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
-              <p className="text-sm font-semibold">Importiere {selectedCount} Entscheidungen...</p>
+              <p className="text-sm font-semibold">{t("teamImport.importing")} {selectedCount}...</p>
             </>
           ) : (
             <>
               <div className="w-14 h-14 rounded-full bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-4">
                 <Check className="w-7 h-7 text-success" />
               </div>
-              <p className="text-sm font-semibold">Import abgeschlossen!</p>
-              <p className="text-xs text-muted-foreground mt-1">{selectedCount} Entscheidungen wurden erstellt</p>
+              <p className="text-sm font-semibold">{t("teamDetail.importComplete")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("teamDetail.decisionsCreated", { count: selectedCount })}</p>
             </>
           )}
           <Progress value={progress} className="max-w-xs mx-auto mt-4" />
