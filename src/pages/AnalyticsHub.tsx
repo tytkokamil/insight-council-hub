@@ -1,4 +1,5 @@
-import { lazy, Suspense, useState, useMemo } from "react";
+import { lazy, Suspense, useState } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
@@ -6,8 +7,7 @@ import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, TrendingUp, PieChart, Users, FileDown, Loader2 } from "lucide-react";
-import { useDecisions, useTeams } from "@/hooks/useDecisions";
-import { useTeamContext } from "@/hooks/useTeamContext";
+import { useDecisions } from "@/hooks/useDecisions";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +18,7 @@ const MIN_DECISIONS_FOR_ANALYTICS = 5;
 export type AnalyticsTimeRange = "7" | "30" | "90" | "all";
 
 const AnalyticsHub = () => {
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState<AnalyticsTimeRange>("30");
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
@@ -29,9 +30,9 @@ const AnalyticsHub = () => {
     try {
       const data = await fetchBoardReportData();
       generateBoardReport(data);
-      toast({ title: "Exportiert", description: "Executive Snapshot als PDF." });
+      toast({ title: t("analytics.exported"), description: t("analytics.exportedDesc") });
     } catch {
-      toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" });
+      toast({ title: t("settings.error"), description: t("analytics.exportError"), variant: "destructive" });
     }
     setExporting(false);
   };
@@ -39,10 +40,10 @@ const AnalyticsHub = () => {
   return (
     <AppLayout>
       <PageHeader
-        title="Analytics Hub"
-        subtitle="Performance & Governance über alle Entscheidungen"
+        title={t("analytics.hubTitle")}
+        subtitle={t("analytics.hubSubtitle")}
         role="intelligence"
-        help={{ title: "Analytics Hub", description: "Executive Control Center: KPIs, Bottlenecks, Risiko, Governance und Decision Quality auf einen Blick." }}
+        help={{ title: t("analytics.hubTitle"), description: t("analytics.hubHelp") }}
         secondaryActions={
           hasEnoughData ? (
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v as AnalyticsTimeRange)}>
@@ -50,10 +51,10 @@ const AnalyticsHub = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">Letzte 7 Tage</SelectItem>
-                <SelectItem value="30">Letzte 30 Tage</SelectItem>
-                <SelectItem value="90">Letzte 90 Tage</SelectItem>
-                <SelectItem value="all">Gesamt</SelectItem>
+                <SelectItem value="7">{t("analytics.last7")}</SelectItem>
+                <SelectItem value="30">{t("analytics.last30")}</SelectItem>
+                <SelectItem value="90">{t("analytics.last90")}</SelectItem>
+                <SelectItem value="all">{t("analytics.all")}</SelectItem>
               </SelectContent>
             </Select>
           ) : undefined
@@ -62,7 +63,7 @@ const AnalyticsHub = () => {
           hasEnoughData ? (
             <Button size="sm" variant="outline" disabled={exporting} onClick={handleExport} className="gap-2">
               {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              Executive Snapshot
+              {t("analytics.executiveSnapshot")}
             </Button>
           ) : undefined
         }
@@ -71,16 +72,16 @@ const AnalyticsHub = () => {
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState
           icon={BarChart3}
-          title="Noch nicht genug Daten"
-          description={`Analytics werden ab ${MIN_DECISIONS_FOR_ANALYTICS} Entscheidungen aussagekräftig. Du hast aktuell ${decisions.length}.`}
-          ctaLabel="Entscheidung erstellen"
+          title={t("analytics.notEnoughData")}
+          description={t("analytics.notEnoughDataDesc", { min: MIN_DECISIONS_FOR_ANALYTICS, current: decisions.length })}
+          ctaLabel={t("analytics.createDecision")}
           ctaRoute="/decisions"
-          motivation="Teams mit datengetriebener Entscheidungsanalyse verbessern ihre Zykluszeit um durchschnittlich 31% innerhalb von 3 Monaten."
-          hint="Erstelle weitere Entscheidungen, um Trends und Muster zu erkennen."
+          motivation={t("analytics.motivation")}
+          hint={t("analytics.hint")}
           features={[
-            { icon: TrendingUp, label: "Trends", desc: "Status-Verteilung und Velocity über Zeit" },
-            { icon: PieChart, label: "Verteilung", desc: "Kategorien, Prioritäten und Teams" },
-            { icon: Users, label: "Team-Vergleich", desc: "Performance-Metriken pro Team" },
+            { icon: TrendingUp, label: t("analytics.trends"), desc: t("analytics.trendsDesc") },
+            { icon: PieChart, label: t("analytics.distribution"), desc: t("analytics.distributionDesc") },
+            { icon: Users, label: t("analytics.teamComparison"), desc: t("analytics.teamComparisonDesc") },
           ]}
         />
       ) : (

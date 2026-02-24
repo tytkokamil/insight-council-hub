@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   TrendingUp, Clock, CheckCircle2, AlertTriangle, FileText,
@@ -62,6 +63,7 @@ function median(arr: number[]): number {
 }
 
 const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRange?: AnalyticsTimeRange }) => {
+  const { t } = useTranslation();
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allTasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [] } = useTeams();
@@ -365,23 +367,23 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const empty = (
       <EmptyAnalysisState
         icon={BarChart3}
-        title="Noch keine Analyse-Daten"
-        description="Erstelle Entscheidungen, um das Executive Control Center zu aktivieren."
-        hint="Daten werden automatisch analysiert, sobald Entscheidungen vorhanden sind"
+        title={t("analytics.noAnalysisData")}
+        description={t("analytics.noAnalysisDataDesc")}
+        hint={t("analytics.noAnalysisDataHint")}
       />
     );
     return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
   const kpis = [
-    { label: "Aktive Entscheidungen", value: d.active.length, icon: FileText },
-    { label: "Kritisch", value: d.critical.length, icon: AlertTriangle, color: d.critical.length > 0 ? "text-destructive" : undefined },
-    { label: "Median Time-to-Decision", value: d.medianDuration > 0 ? `${d.medianDuration}d` : "—", icon: Clock },
-    { label: "SLA Compliance", value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success" },
-    { label: "Overdue Rate", value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined },
-    { label: "Cost of Delay", value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
-    { label: "Quality Index", value: d.qualityIndex, icon: GaugeCircle, color: d.qualityIndex >= 75 ? "text-success" : d.qualityIndex >= 50 ? "text-warning" : "text-destructive" },
-    { label: "Implementation Rate", value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive" },
+    { label: t("analytics.activeDecisions"), value: d.active.length, icon: FileText },
+    { label: t("analytics.critical"), value: d.critical.length, icon: AlertTriangle, color: d.critical.length > 0 ? "text-destructive" : undefined },
+    { label: t("analytics.medianTTD"), value: d.medianDuration > 0 ? `${d.medianDuration}d` : "—", icon: Clock },
+    { label: t("analytics.slaCompliance"), value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success" },
+    { label: t("analytics.overdueRate"), value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined },
+    { label: t("analytics.costOfDelay"), value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
+    { label: t("analytics.qualityIndex"), value: d.qualityIndex, icon: GaugeCircle, color: d.qualityIndex >= 75 ? "text-success" : d.qualityIndex >= 50 ? "text-warning" : "text-destructive" },
+    { label: t("analytics.implementationRate"), value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive" },
   ];
 
   const content = (
@@ -406,8 +408,8 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
         <Card className="border-l-4 border-l-warning">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-4 h-4 text-warning" />
-              <span className="text-sm font-semibold">Was hat sich verändert?</span>
+               <Lightbulb className="w-4 h-4 text-warning" />
+               <span className="text-sm font-semibold">{t("analytics.whatChanged")}</span>
             </div>
             <div className="space-y-1.5">
               {d.insights.map((insight, i) => (
@@ -422,10 +424,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       )}
 
       {/* SECTION 3: Flow & Trends */}
-      <CollapsibleSection
-        title="Decision Throughput"
-        subtitle="Erstellt vs. Umgesetzt vs. Backlog"
-        icon={<TrendingUp className="w-4 h-4 text-primary" />}
+       <CollapsibleSection
+         title={t("analytics.throughput")}
+         subtitle={t("analytics.throughputSub")}
+         icon={<TrendingUp className="w-4 h-4 text-primary" />}
       >
         <Card>
           <CardContent className="pt-6 pb-4 px-4">
@@ -454,11 +456,11 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
               </ResponsiveContainer>
             </div>
             <div className="flex items-center justify-center gap-5 mt-3">
-              {[
-                { label: "Erstellt", color: COLORS.primary },
-                { label: "Umgesetzt", color: COLORS.success },
-                { label: "Abgelehnt", color: COLORS.destructive },
-                { label: "Backlog", color: COLORS.muted },
+               {[
+                 { label: t("analytics.created"), color: COLORS.primary },
+                 { label: t("analytics.implemented"), color: COLORS.success },
+                 { label: t("analytics.rejected"), color: COLORS.destructive },
+                 { label: t("analytics.backlog"), color: COLORS.muted },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
@@ -471,16 +473,16 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       </CollapsibleSection>
 
       {/* SECTION 4: Bottleneck Intelligence */}
-      <CollapsibleSection
-        title="Bottleneck Intelligence"
-        subtitle="Wo stauen sich Entscheidungen?"
-        icon={<Activity className="w-4 h-4 text-warning" />}
+       <CollapsibleSection
+         title={t("analytics.bottleneck")}
+         subtitle={t("analytics.bottleneckSub")}
+         icon={<Activity className="w-4 h-4 text-warning" />}
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Where Time is Lost */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Median Tage nach Status-Phase</CardTitle>
+             <CardHeader className="pb-2">
+               <CardTitle className="text-sm font-medium">{t("analytics.medianDaysByPhase")}</CardTitle>
             </CardHeader>
             <CardContent className="pb-4">
               {d.statusPhaseData.length > 0 ? (
@@ -495,7 +497,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                             <span className="font-medium text-foreground">{item.name}</span>
                             {isBottleneck && <Badge variant="destructive" className="text-[9px] px-1 py-0">Bottleneck</Badge>}
                           </div>
-                          <span className="text-muted-foreground tabular-nums">{item.median} Tage <span className="text-[10px]">({item.count})</span></span>
+                          <span className="text-muted-foreground tabular-nums">{item.median} {t("analytics.days")} <span className="text-[10px]">({item.count})</span></span>
                         </div>
                         <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
                           <div
