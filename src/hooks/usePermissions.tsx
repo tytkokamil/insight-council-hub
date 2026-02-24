@@ -226,11 +226,15 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     if (!user) { setLoading(false); return; }
 
     const [roleRes, profileRes] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", user.id).single(),
+      supabase.from("user_roles").select("role").eq("user_id", user.id),
       supabase.from("profiles").select("decision_count, progressive_override, org_id").eq("user_id", user.id).single(),
     ]);
 
-    const userRole = (roleRes.data?.role as OrgRoleKey) || "org_member";
+    // Pick highest role if multiple exist
+    const roles = (roleRes.data || []).map(r => r.role as OrgRoleKey);
+    const userRole = roles.length > 0
+      ? roles.reduce((best, r) => ROLE_HIERARCHY.indexOf(r) > ROLE_HIERARCHY.indexOf(best) ? r : best, roles[0])
+      : "org_member" as OrgRoleKey;
     setRole(userRole);
 
     if (profileRes.data) {
