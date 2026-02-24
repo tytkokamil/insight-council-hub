@@ -279,8 +279,8 @@ const SidebarNav = memo(({
           system: "bg-muted-foreground/30",
         };
 
-        // Progressive disclosure: Intelligence requires 1+ decisions (doc ENDSTAND p.4)
-        const PROGRESSIVE_THRESHOLD = 1;
+        // Progressive disclosure: Intelligence requires 25+ decisions (Stage 3)
+        const PROGRESSIVE_THRESHOLD = 25;
         if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && !collapsed) {
           const remaining = PROGRESSIVE_THRESHOLD - decisionCount;
           return (
@@ -291,7 +291,7 @@ const SidebarNav = memo(({
               <div className="px-2 py-2 rounded-md text-[12px] text-muted-foreground/50">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Brain className="w-3.5 h-3.5 shrink-0 opacity-40" />
-                  <span className="text-[11px] font-medium">Intelligence in {remaining} Entscheidungen verfügbar</span>
+                  <span className="text-[11px] font-medium">{t("nav.intelligenceUnlock", { count: remaining, defaultValue: `Intelligence in ${remaining} Entscheidungen verfügbar` })}</span>
                 </div>
                 <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                   <div
