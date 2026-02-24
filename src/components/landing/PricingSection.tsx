@@ -7,6 +7,7 @@ import PricingValue from "./pricing/PricingValue";
 import PricingFAQ from "./pricing/PricingFAQ";
 import PricingCTA from "./pricing/PricingCTA";
 import PricingROICalculator from "./pricing/PricingROICalculator";
+import PricingAddons from "./pricing/PricingAddons";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -82,6 +83,9 @@ const PricingSection = () => {
             <PricingCard key={plan.name} plan={plan} annual={annual} index={i} />
           ))}
         </div>
+
+        {/* Add-ons */}
+        <PricingAddons />
 
         {/* Trust */}
         <PricingTrust />
