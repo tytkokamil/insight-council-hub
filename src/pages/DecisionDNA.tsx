@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ interface Trait { id: string; label: string; description: string; score: number;
 interface CategoryProfile { category: string; label: string; avgDays: number; total: number; implementRate: number; escalationRate: number; }
 
 const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const [traits, setTraits] = useState<Trait[]>([]);
   const [categoryProfiles, setCategoryProfiles] = useState<CategoryProfile[]>([]);
   const [overallArchetype, setOverallArchetype] = useState("");
@@ -65,47 +67,47 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
     const predAccuracy = withOutcome.length > 0 ? Math.round(withOutcome.reduce((s, d) => s + (100 - Math.abs((d.ai_impact_score || 0) - (d.actual_impact_score || 0))), 0) / withOutcome.length) : null;
 
     const computedTraits: Trait[] = [
-      { id: "risk_appetite", label: isRiskAverse ? "Risikoavers" : riskAppetite > 70 ? "Risikofreudig" : "Risiko-Balanciert", description: "Umgang mit Hochrisiko-Entscheidungen", score: riskAppetite, sentiment: riskAppetite > 30 && riskAppetite < 80 ? "positive" : "neutral", icon: ShieldAlert, insight: isRiskAverse ? `Nur ${riskAppetite}% der Hochrisiko-Entscheidungen werden umgesetzt.` : `${riskAppetite}% Umsetzung bei Hochrisiko.` },
-      { id: "velocity", label: velocityScore > 70 ? "Schnell-Entscheider" : velocityScore > 40 ? "Moderate Geschwindigkeit" : "Langsam-Entscheider", description: "Geschwindigkeit von Draft bis Implementierung", score: velocityScore, sentiment: velocityScore > 50 ? "positive" : "negative", icon: Zap, insight: `Ø ${Math.round(avgDuration)} Tage.` },
-      { id: "escalation", label: escalationRate > 30 ? "Eskalations-lastig" : escalationRate > 15 ? "Moderate Eskalation" : "Selbstlösend", description: "Eskalationshäufigkeit", score: 100 - escalationRate, sentiment: escalationRate < 20 ? "positive" : escalationRate < 40 ? "neutral" : "negative", icon: AlertTriangle, insight: `${escalationRate}% aller Entscheidungen werden eskaliert.` },
-      { id: "followthrough", label: implRate > 60 ? "Hohe Umsetzungskraft" : implRate > 35 ? "Mittlere Umsetzung" : "Umsetzungsschwach", description: "Implementierungsrate", score: implRate, sentiment: implRate > 50 ? "positive" : implRate > 30 ? "neutral" : "negative", icon: CheckCircle2, insight: `${implRate}% Umsetzungsrate.` },
-      { id: "deadline_discipline", label: overdueRate < 15 ? "Deadline-Disziplin" : overdueRate < 35 ? "Deadline-Herausforderungen" : "Chronisch überfällig", description: "Deadline-Einhaltung", score: 100 - overdueRate, sentiment: overdueRate < 20 ? "positive" : "negative", icon: Clock, insight: `${overdueRate}% überfällig.` },
-      { id: "cross_team", label: crossTeamScore > 40 ? "Starke Vernetzung" : crossTeamScore > 15 ? "Moderate Vernetzung" : "Silo-Organisation", description: "Cross-Team Vernetzung", score: crossTeamScore, sentiment: crossTeamScore > 20 ? "positive" : "negative", icon: GitBranch, insight: `${crossTeamScore}% cross-team Abhängigkeiten.` },
-      { id: "review_culture", label: reviewCoverage > 60 ? "Starke Review-Kultur" : reviewCoverage > 30 ? "Partielle Reviews" : "Schwache Review-Kultur", description: "Review-Abdeckung", score: reviewCoverage, sentiment: reviewCoverage > 50 ? "positive" : reviewCoverage > 25 ? "neutral" : "negative", icon: Users, insight: `${reviewCoverage}% mit Review.` },
+      { id: "risk_appetite", label: isRiskAverse ? t("decisionDna.riskAverse") : riskAppetite > 70 ? t("decisionDna.riskSeeking") : t("decisionDna.riskBalanced"), description: t("decisionDna.riskDesc"), score: riskAppetite, sentiment: riskAppetite > 30 && riskAppetite < 80 ? "positive" : "neutral", icon: ShieldAlert, insight: isRiskAverse ? t("decisionDna.riskInsightLow", { pct: riskAppetite }) : t("decisionDna.riskInsightHigh", { pct: riskAppetite }) },
+      { id: "velocity", label: velocityScore > 70 ? t("decisionDna.fastDecider") : velocityScore > 40 ? t("decisionDna.moderateSpeed") : t("decisionDna.slowDecider"), description: t("decisionDna.velocityDesc"), score: velocityScore, sentiment: velocityScore > 50 ? "positive" : "negative", icon: Zap, insight: t("decisionDna.velocityInsight", { days: Math.round(avgDuration) }) },
+      { id: "escalation", label: escalationRate > 30 ? t("decisionDna.escalationHeavy") : escalationRate > 15 ? t("decisionDna.escalationModerate") : t("decisionDna.selfResolving"), description: t("decisionDna.escalationDesc"), score: 100 - escalationRate, sentiment: escalationRate < 20 ? "positive" : escalationRate < 40 ? "neutral" : "negative", icon: AlertTriangle, insight: t("decisionDna.escalationInsight", { pct: escalationRate }) },
+      { id: "followthrough", label: implRate > 60 ? t("decisionDna.highFollowThrough") : implRate > 35 ? t("decisionDna.medFollowThrough") : t("decisionDna.lowFollowThrough"), description: t("decisionDna.followThroughDesc"), score: implRate, sentiment: implRate > 50 ? "positive" : implRate > 30 ? "neutral" : "negative", icon: CheckCircle2, insight: t("decisionDna.followThroughInsight", { pct: implRate }) },
+      { id: "deadline_discipline", label: overdueRate < 15 ? t("decisionDna.deadlineDiscipline") : overdueRate < 35 ? t("decisionDna.deadlineChallenges") : t("decisionDna.chronicallyOverdue"), description: t("decisionDna.deadlineDesc"), score: 100 - overdueRate, sentiment: overdueRate < 20 ? "positive" : "negative", icon: Clock, insight: t("decisionDna.deadlineInsight", { pct: overdueRate }) },
+      { id: "cross_team", label: crossTeamScore > 40 ? t("decisionDna.strongNetworking") : crossTeamScore > 15 ? t("decisionDna.moderateNetworking") : t("decisionDna.siloOrg"), description: t("decisionDna.networkDesc"), score: crossTeamScore, sentiment: crossTeamScore > 20 ? "positive" : "negative", icon: GitBranch, insight: t("decisionDna.networkInsight", { pct: crossTeamScore }) },
+      { id: "review_culture", label: reviewCoverage > 60 ? t("decisionDna.strongReview") : reviewCoverage > 30 ? t("decisionDna.partialReview") : t("decisionDna.weakReview"), description: t("decisionDna.reviewDesc"), score: reviewCoverage, sentiment: reviewCoverage > 50 ? "positive" : reviewCoverage > 25 ? "neutral" : "negative", icon: Users, insight: t("decisionDna.reviewInsight", { pct: reviewCoverage }) },
     ];
-    if (predAccuracy !== null) computedTraits.push({ id: "prediction_accuracy", label: predAccuracy > 75 ? "Präzise Prognosen" : "Moderate Vorhersagequalität", description: "KI vs. tatsächliche Ergebnisse", score: predAccuracy, sentiment: predAccuracy > 60 ? "positive" : "neutral", icon: BarChart3, insight: `${predAccuracy}% Genauigkeit.` });
+    if (predAccuracy !== null) computedTraits.push({ id: "prediction_accuracy", label: predAccuracy > 75 ? t("decisionDna.preciseForecasts") : t("decisionDna.moderateForecasts"), description: t("decisionDna.forecastDesc"), score: predAccuracy, sentiment: predAccuracy > 60 ? "positive" : "neutral", icon: BarChart3, insight: t("decisionDna.forecastInsight", { pct: predAccuracy }) });
 
     // Task Execution Trait
-    const doneTasks = tasks.filter(t => t.status === "done");
-    const openTasks = tasks.filter(t => t.status !== "done");
+    const doneTasks = tasks.filter(tk => tk.status === "done");
+    const openTasks = tasks.filter(tk => tk.status !== "done");
     const taskRate = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 50;
-    const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date!).getTime() < now && t.status !== "done");
+    const overdueTasks = openTasks.filter(tk => tk.due_date && new Date(tk.due_date!).getTime() < now && tk.status !== "done");
     const taskOverdueRate = openTasks.length > 0 ? Math.round((overdueTasks.length / openTasks.length) * 100) : 0;
     const taskScore = Math.round(taskRate * 0.6 + (100 - taskOverdueRate) * 0.4);
-    computedTraits.push({ id: "task_execution", label: taskScore > 70 ? "Starke Task-Execution" : taskScore > 45 ? "Moderate Task-Execution" : "Schwache Task-Execution", description: "Aufgaben-Abschluss & Termintreue", score: taskScore, sentiment: taskScore > 60 ? "positive" : taskScore > 40 ? "neutral" : "negative", icon: ListChecks, insight: `${taskRate}% Abschlussrate, ${overdueTasks.length} überfällig.` });
+    computedTraits.push({ id: "task_execution", label: taskScore > 70 ? t("decisionDna.strongTaskExec") : taskScore > 45 ? t("decisionDna.modTaskExec") : t("decisionDna.weakTaskExec"), description: t("decisionDna.taskExecDesc"), score: taskScore, sentiment: taskScore > 60 ? "positive" : taskScore > 40 ? "neutral" : "negative", icon: ListChecks, insight: t("decisionDna.taskExecInsight", { completionRate: taskRate, overdue: overdueTasks.length }) });
 
     setTraits(computedTraits);
 
     const categories = ["strategic", "budget", "hr", "technical", "operational", "marketing"];
-    const catLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing" };
+    const catLabelKeys: Record<string, string> = { strategic: "decisionDna.catStrategic", budget: "decisionDna.catBudget", hr: "decisionDna.catHr", technical: "decisionDna.catTechnical", operational: "decisionDna.catOperational", marketing: "decisionDna.catMarketing" };
     const profiles: CategoryProfile[] = categories.map(cat => {
       const catDecs = decisions.filter(d => d.category === cat); const catImpl = catDecs.filter(d => d.status === "implemented");
       const catDurations = catImpl.filter(d => d.implemented_at).map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
       const catEsc = catDecs.filter(d => (d.escalation_level || 0) > 0).length;
-      return { category: cat, label: catLabels[cat] || cat, avgDays: catDurations.length > 0 ? Math.round(catDurations.reduce((a, b) => a + b, 0) / catDurations.length) : 0, total: catDecs.length, implementRate: catDecs.length > 0 ? Math.round((catImpl.length / catDecs.length) * 100) : 0, escalationRate: catDecs.length > 0 ? Math.round((catEsc / catDecs.length) * 100) : 0 };
+      return { category: cat, label: t(catLabelKeys[cat] || cat), avgDays: catDurations.length > 0 ? Math.round(catDurations.reduce((a, b) => a + b, 0) / catDurations.length) : 0, total: catDecs.length, implementRate: catDecs.length > 0 ? Math.round((catImpl.length / catDecs.length) * 100) : 0, escalationRate: catDecs.length > 0 ? Math.round((catEsc / catDecs.length) * 100) : 0 };
     }).filter(p => p.total > 0).sort((a, b) => b.total - a.total);
     setCategoryProfiles(profiles);
 
-    const negTraits = computedTraits.filter(t => t.sentiment === "negative");
-    const posTraits = computedTraits.filter(t => t.sentiment === "positive");
-    if (posTraits.length >= 6) { setOverallArchetype("High-Performance Organisation"); setArchetypeDescription("Schnelle Entscheidungen, starke Umsetzung, gute Vernetzung und hoher Task-Durchsatz."); }
-    else if (isRiskAverse && velocityScore < 50) { setOverallArchetype("Konservativ-Analytisch"); setArchetypeDescription("Gründlich aber langsam."); }
-    else if (escalationRate > 30 && overdueRate > 30) { setOverallArchetype("Unter Druck"); setArchetypeDescription("Hohe Eskalation und überfällige Entscheidungen."); }
-    else if (crossTeamScore < 15 && reviewCoverage < 30) { setOverallArchetype("Silo-getrieben"); setArchetypeDescription("Teams arbeiten isoliert."); }
-    else if (velocityScore > 70 && implRate > 60 && taskScore > 60) { setOverallArchetype("Agil & Umsetzungsstark"); setArchetypeDescription("Schnell mit hoher Umsetzungsrate und solidem Task-Durchsatz."); }
-    else if (taskScore < 40 && implRate > 50) { setOverallArchetype("Entscheidungsstark, Umsetzungsschwach"); setArchetypeDescription("Gute Entscheidungsrate, aber schwache Aufgaben-Execution."); }
-    else { setOverallArchetype("In Entwicklung"); setArchetypeDescription("Gemischte Muster – Fokus auf Schwachstellen."); }
-  }, [loading, decisions, reviews, deps, teams, tasks]);
+    const negTraits = computedTraits.filter(tr => tr.sentiment === "negative");
+    const posTraits = computedTraits.filter(tr => tr.sentiment === "positive");
+    if (posTraits.length >= 6) { setOverallArchetype(t("decisionDna.highPerformance")); setArchetypeDescription(t("decisionDna.highPerformanceDesc")); }
+    else if (isRiskAverse && velocityScore < 50) { setOverallArchetype(t("decisionDna.conservative")); setArchetypeDescription(t("decisionDna.conservativeDesc")); }
+    else if (escalationRate > 30 && overdueRate > 30) { setOverallArchetype(t("decisionDna.underPressure")); setArchetypeDescription(t("decisionDna.underPressureDesc")); }
+    else if (crossTeamScore < 15 && reviewCoverage < 30) { setOverallArchetype(t("decisionDna.siloDriven")); setArchetypeDescription(t("decisionDna.siloDrivenDesc")); }
+    else if (velocityScore > 70 && implRate > 60 && taskScore > 60) { setOverallArchetype(t("decisionDna.agile")); setArchetypeDescription(t("decisionDna.agileDesc")); }
+    else if (taskScore < 40 && implRate > 50) { setOverallArchetype(t("decisionDna.decisionStrongExecWeak")); setArchetypeDescription(t("decisionDna.decisionStrongExecWeakDesc")); }
+    else { setOverallArchetype(t("decisionDna.developing")); setArchetypeDescription(t("decisionDna.developingDesc")); }
+  }, [loading, decisions, reviews, deps, teams, tasks, t]);
 
   const sentimentColor = (s: string) => s === "positive" ? "text-success" : s === "negative" ? "text-destructive" : "text-warning";
   const sentimentBg = (s: string) => s === "positive" ? "bg-success/15 border-success/25" : s === "negative" ? "bg-destructive/15 border-destructive/25" : "bg-warning/15 border-warning/25";
@@ -117,8 +119,8 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
   if (traits.length === 0) {
     return (
       <Wrap>
-        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p><h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1></div>
-        <EmptyAnalysisState icon={Dna} title="Noch keine DNA-Daten" description="Erstelle Entscheidungen für die DNA-Analyse." hint="Mindestens eine Entscheidung benötigt" />
+        <div className="mb-6"><p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("decisionDna.label")}</p><h1 className="text-xl font-semibold tracking-tight">{t("decisionDna.title")}</h1></div>
+        <EmptyAnalysisState icon={Dna} title={t("decisionDna.noData")} description={t("decisionDna.noDataDesc")} hint={t("decisionDna.noDataHint")} />
       </Wrap>
     );
   }
@@ -127,32 +129,30 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
     <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Diagnostik</p>
-          <h1 className="text-xl font-semibold tracking-tight">Decision DNA</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("decisionDna.label")}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("decisionDna.title")}</h1>
         </div>
-        <PageHelpButton title="Decision DNA" description="Tiefenanalyse deiner Entscheidungsmuster mit konkreten Handlungsempfehlungen." />
+        <PageHelpButton title={t("decisionDna.title")} description={t("decisionDna.help")} />
       </div>
 
-      {/* Archetype – always visible */}
       <Card className="mb-8">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center"><Dna className="w-6 h-6 text-foreground" /></div>
             <div>
-              <p className="text-xs text-muted-foreground">Organisations-Archetyp</p>
+              <p className="text-xs text-muted-foreground">{t("decisionDna.archetype")}</p>
               <h2 className="text-2xl font-semibold tracking-tight">{overallArchetype}</h2>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">{archetypeDescription}</p>
           <div className="flex items-center gap-4 mt-3 text-xs">
-            <span className="flex items-center gap-1 text-success"><TrendingUp className="w-3 h-3" />{traits.filter(t => t.sentiment === "positive").length} Stärken</span>
-            <span className="flex items-center gap-1 text-destructive"><TrendingDown className="w-3 h-3" />{traits.filter(t => t.sentiment === "negative").length} Schwächen</span>
+            <span className="flex items-center gap-1 text-success"><TrendingUp className="w-3 h-3" />{traits.filter(tr => tr.sentiment === "positive").length} {t("decisionDna.strengths")}</span>
+            <span className="flex items-center gap-1 text-destructive"><TrendingDown className="w-3 h-3" />{traits.filter(tr => tr.sentiment === "negative").length} {t("decisionDna.weaknesses")}</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* DNA Traits – collapsible */}
-      <CollapsibleSection title="Organisations-Merkmale" subtitle={`${traits.length} Dimensionen analysiert`} icon={<Dna className="w-4 h-4 text-muted-foreground" />} defaultOpen={true} className="mb-8">
+      <CollapsibleSection title={t("decisionDna.traitsTitle")} subtitle={t("decisionDna.traitsSub", { count: traits.length })} icon={<Dna className="w-4 h-4 text-muted-foreground" />} defaultOpen={true} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {traits.map((trait) => (
             <Card key={trait.id} className={`border ${sentimentBg(trait.sentiment)}`}>
@@ -175,8 +175,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
         </div>
       </CollapsibleSection>
 
-      {/* Category Speed Profile – collapsible, default closed */}
-      <CollapsibleSection title="Geschwindigkeitsprofil nach Kategorie" icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-8">
+      <CollapsibleSection title={t("decisionDna.speedProfile")} icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-8">
         <Card>
           <CardContent className="p-5">
             <div className="space-y-3">
@@ -187,9 +186,9 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
                     <span className="text-sm font-medium w-24 shrink-0">{cat.label}</span>
                     <div className="flex-1 h-6 rounded-lg bg-muted/30 overflow-hidden relative">
                       <div className={`h-full rounded-lg ${cat.avgDays > 20 ? "bg-destructive/60" : cat.avgDays > 10 ? "bg-warning/50" : "bg-success/40"}`} style={{ width: `${(cat.avgDays / maxDays) * 100}%` }} />
-                      <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">Ø {cat.avgDays}d • {cat.implementRate}% umgesetzt • {cat.total} total</span>
+                      <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">Ø {cat.avgDays}d • {cat.implementRate}% {t("decisionDna.implemented")} • {cat.total} {t("decisionDna.total")}</span>
                     </div>
-                    {cat.escalationRate > 25 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">{cat.escalationRate}% eskaliert</span>}
+                    {cat.escalationRate > 25 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">{cat.escalationRate}% {t("decisionDna.escalated")}</span>}
                   </div>
                 );
               })}
@@ -198,36 +197,34 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
         </Card>
       </CollapsibleSection>
 
-      {/* AI Deep Analysis */}
       <AiInsightPanel
         type="dna"
         context={{
           archetype: overallArchetype,
           archetypeDescription,
-          traits: traits.map(t => ({ label: t.label, score: t.score, sentiment: t.sentiment, insight: t.insight })),
+          traits: traits.map(tr => ({ label: tr.label, score: tr.score, sentiment: tr.sentiment, insight: tr.insight })),
           categoryProfiles,
-          strengths: traits.filter(t => t.sentiment === "positive").length,
-          weaknesses: traits.filter(t => t.sentiment === "negative").length,
+          strengths: traits.filter(tr => tr.sentiment === "positive").length,
+          weaknesses: traits.filter(tr => tr.sentiment === "negative").length,
         }}
         className="mb-8"
       />
 
-      {/* Recommendations – collapsible, default closed */}
-      <CollapsibleSection title="Empfehlungen" subtitle="Basierend auf Schwachstellen" icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
+      <CollapsibleSection title={t("decisionDna.recommendations")} subtitle={t("decisionDna.recommendationsSub")} icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
         <div className="space-y-2">
-          {traits.filter(t => t.sentiment === "negative").map((trait) => (
+          {traits.filter(tr => tr.sentiment === "negative").map((trait) => (
             <Card key={trait.id}>
               <CardContent className="p-4 flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">{trait.label} verbessern</p>
+                  <p className="text-sm font-medium">{trait.label} {t("decisionDna.improve")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{trait.insight}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
-          {traits.filter(t => t.sentiment === "negative").length === 0 && (
-            <Card><CardContent className="p-4 text-center text-sm text-success"><CheckCircle2 className="w-5 h-5 mx-auto mb-1" />Keine kritischen Schwächen identifiziert.</CardContent></Card>
+          {traits.filter(tr => tr.sentiment === "negative").length === 0 && (
+            <Card><CardContent className="p-4 text-center text-sm text-success"><CheckCircle2 className="w-5 h-5 mx-auto mb-1" />{t("decisionDna.noWeaknesses")}</CardContent></Card>
           )}
         </div>
       </CollapsibleSection>
