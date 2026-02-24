@@ -1,14 +1,17 @@
 {
   "nav": {
     "core": "CORE",
-    "insights": "INSIGHTS",
+    "teams": "TEAMS",
+    "teamsNav": "Teams",
     "governance": "GOVERNANCE",
+    "intelligence": "INTELLIGENCE",
     "system": "SYSTEM",
+    "insights": "INSIGHTS",
     "dashboard": "Dashboard",
     "decisions": "Decisions",
     "tasks": "Tasks",
     "calendar": "Calendar",
-    "teams": "Teams",
+    "search": "Search",
     "meeting": "Decision Room",
     "analyticsHub": "Analytics Hub",
     "processHub": "Process Hub",
@@ -19,6 +22,7 @@
     "auditTrail": "Audit Trail",
     "knowledgeBase": "Knowledge Base",
     "templates": "Templates",
+    "strategy": "Strategy",
     "archive": "Archive",
     "settings": "Settings",
     "users": "Users",
@@ -35,7 +39,8 @@
     "decisionDna": "Decision DNA",
     "benchmarking": "Benchmarking",
     "healthHeatmap": "Health Heatmap",
-    "predictiveTimeline": "Predictive Timeline"
+    "predictiveTimeline": "Predictive Timeline",
+    "scenarios": "Scenarios"
   },
   "auth": {
     "signIn": "Sign In",
