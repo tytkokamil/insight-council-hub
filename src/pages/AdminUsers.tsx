@@ -30,7 +30,10 @@ interface UserWithRole {
 const roleBadgeVariant: Record<OrgRole, string> = {
   org_owner: "bg-destructive/10 text-destructive border-destructive/20",
   org_admin: "bg-primary/10 text-primary border-primary/20",
+  org_executive: "bg-accent/50 text-accent-foreground border-accent/30",
   org_member: "bg-muted text-muted-foreground border-border",
+  org_reviewer: "bg-chart-4/10 text-chart-4 border-chart-4/20",
+  org_viewer: "bg-muted/50 text-muted-foreground/70 border-border/50",
 };
 
 const AdminUsers = () => {
@@ -49,7 +52,10 @@ const AdminUsers = () => {
   const roleLabels: Record<OrgRole, string> = {
     org_owner: t("admin.roleOrgOwner"),
     org_admin: t("admin.roleOrgAdmin"),
+    org_executive: t("admin.roleOrgExecutive", "Executive"),
     org_member: t("admin.roleOrgMember"),
+    org_reviewer: t("admin.roleOrgReviewer", "Reviewer"),
+    org_viewer: t("admin.roleOrgViewer", "Viewer"),
   };
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -188,7 +194,10 @@ const AdminUsers = () => {
                             <SelectContent>
                               <SelectItem value="org_owner">{t("admin.roleOrgOwner")}</SelectItem>
                               <SelectItem value="org_admin">{t("admin.roleOrgAdmin")}</SelectItem>
+                              <SelectItem value="org_executive">{t("admin.roleOrgExecutive", "Executive")}</SelectItem>
                               <SelectItem value="org_member">{t("admin.roleOrgMember")}</SelectItem>
+                              <SelectItem value="org_reviewer">{t("admin.roleOrgReviewer", "Reviewer")}</SelectItem>
+                              <SelectItem value="org_viewer">{t("admin.roleOrgViewer", "Viewer")}</SelectItem>
                             </SelectContent>
                           </Select>
                         )}

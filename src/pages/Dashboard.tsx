@@ -24,6 +24,7 @@ import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { useTasks } from "@/hooks/useTasks";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTranslatedLabels } from "@/lib/labels";
 import PageHeader from "@/components/shared/PageHeader";
@@ -46,7 +47,7 @@ import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
 
-type DashboardMode = "operational" | "executive";
+type DashboardMode = "operational" | "executive" | "admin";
 
 const Dashboard = () => {
   const { t, i18n } = useTranslation();
@@ -63,12 +64,15 @@ const Dashboard = () => {
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
   const { mode, setMode, shouldShowAdvanced, decisionCount, implementedCount } = useGuidedMode();
+  const { role: userRole, can, isExecutive: isExecRole, isAdmin: isAdminRole } = usePermissions();
 
   const [dismissedAdvancedHint, setDismissedAdvancedHint] = useState(() => localStorage.getItem("advanced-hint-dismissed") === "true");
   const [seedingDemo, setSeedingDemo] = useState(false);
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(() =>
-    (localStorage.getItem("dashboard-mode") as DashboardMode) || "operational"
-  );
+  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(() => {
+    const stored = localStorage.getItem("dashboard-mode") as DashboardMode;
+    if (stored) return stored;
+    return isExecRole ? "executive" : "operational";
+  });
   const [showDeepDive, setShowDeepDive] = useState(false);
 
   const toggleDashboardMode = useCallback((m: DashboardMode) => {

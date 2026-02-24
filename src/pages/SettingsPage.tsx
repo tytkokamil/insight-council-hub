@@ -32,7 +32,7 @@ const AI_PROVIDERS = [
 
 type SettingsTab = "general" | "notifications" | "ai" | "security" | "admin";
 
-const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_member: "Mitglied" };
+const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_member: "Mitglied", org_reviewer: "Reviewer", org_viewer: "Betrachter" };
 
 const SettingsPage = () => {
   const { user } = useAuth();
@@ -320,6 +320,11 @@ const SettingsPage = () => {
                   <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
                 </div>
               </section>
+
+              <hr className="border-border" />
+
+              {/* Progressive Override */}
+              <ProgressiveOverrideToggle user={user} />
 
               <hr className="border-border" />
 
@@ -848,6 +853,32 @@ const SettingsPage = () => {
         </motion.div>
       </div>
     </AppLayout>
+  );
+};
+
+const ProgressiveOverrideToggle = ({ user }: { user: any }) => {
+  const { t } = useTranslation();
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    if (user) supabase.from("profiles").select("progressive_override").eq("user_id", user.id).single().then(({ data }) => setChecked(data?.progressive_override ?? false));
+  }, [user]);
+  return (
+    <section>
+      <h2 className="text-sm font-medium mb-4">{t("settings.progressiveOverride", "Feature-Freischaltung")}</h2>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Zap className="w-4 h-4 text-muted-foreground" />
+          <div>
+            <p className="text-sm">{t("settings.showAllFeatures", "Alle Features sofort anzeigen")}</p>
+            <p className="text-xs text-muted-foreground">{t("settings.showAllFeaturesDesc", "Überspringt die schrittweise Freischaltung basierend auf Entscheidungsanzahl.")}</p>
+          </div>
+        </div>
+        <Switch checked={checked} onCheckedChange={async (val) => {
+          setChecked(val);
+          if (user) await supabase.from("profiles").update({ progressive_override: val }).eq("user_id", user.id);
+        }} />
+      </div>
+    </section>
   );
 };
 
