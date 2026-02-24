@@ -37,6 +37,8 @@
     "intelligenceRecommended": "Recommended after {{count}} more decisions",
     "unlockIntelligence": "Unlock Intelligence",
     "intelligenceReady": "Ready — unlock now!",
+    "hideIntelligence": "Hide",
+    "hideIntelligenceHint": "Recommended from {{count}} decisions",
     "advancedAnalytics": "Advanced Analytics",
     "decisionGraph": "Decision Graph",
     "decisionRadar": "Decision Radar",
