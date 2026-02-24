@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { decisionTemplates, type DecisionTemplate } from "@/lib/decisionTemplates";
 import { toast } from "sonner";
+import i18n from "@/i18n";
 
 export interface DbTemplate {
   id: string;
@@ -25,7 +26,6 @@ export interface DbTemplate {
   updated_at: string;
 }
 
-/** Convert a local DecisionTemplate to the DB insert shape */
 function toDbRow(t: DecisionTemplate, userId: string): Record<string, unknown> {
   return {
     name: t.name,
@@ -46,7 +46,6 @@ function toDbRow(t: DecisionTemplate, userId: string): Record<string, unknown> {
   };
 }
 
-/** Convert a DB row back to the DecisionTemplate interface used in the UI */
 export function toDecisionTemplate(row: DbTemplate): DecisionTemplate {
   return {
     name: row.name,
@@ -64,6 +63,8 @@ export function toDecisionTemplate(row: DbTemplate): DecisionTemplate {
   };
 }
 
+const t = (key: string, opts?: any): string => i18n.t(key, opts) as string;
+
 export function useTemplates() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -75,43 +76,38 @@ export function useTemplates() {
         .from("decision_templates")
         .select("*")
         .order("name");
-
       if (error) throw error;
       return data as DbTemplate[];
     },
   });
 
-  /** Seed default system templates if none exist */
   const seedDefaults = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not authenticated");
-      const rows = decisionTemplates.map(t => toDbRow(t, user.id));
+      const rows = decisionTemplates.map(tpl => toDbRow(tpl, user.id));
       const { error } = await supabase.from("decision_templates").insert(rows as any);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["decision_templates"] });
-      toast.success("System-Templates wurden initialisiert");
+      toast.success(t("useTemplates.seedSuccess"));
     },
     onError: (err: Error) => {
-      toast.error("Fehler beim Seed: " + err.message);
+      toast.error(t("useTemplates.seedError", { error: err.message }));
     },
   });
 
   const updateTemplate = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<DbTemplate> }) => {
-      const { error } = await supabase
-        .from("decision_templates")
-        .update(patch)
-        .eq("id", id);
+      const { error } = await supabase.from("decision_templates").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["decision_templates"] });
-      toast.success("Template gespeichert");
+      toast.success(t("useTemplates.saved"));
     },
     onError: (err: Error) => {
-      toast.error("Fehler beim Speichern: " + err.message);
+      toast.error(t("useTemplates.saveError", { error: err.message }));
     },
   });
 
@@ -122,10 +118,10 @@ export function useTemplates() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["decision_templates"] });
-      toast.success("Template erstellt");
+      toast.success(t("useTemplates.created"));
     },
     onError: (err: Error) => {
-      toast.error("Fehler beim Erstellen: " + err.message);
+      toast.error(t("useTemplates.createError", { error: err.message }));
     },
   });
 
@@ -136,10 +132,10 @@ export function useTemplates() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["decision_templates"] });
-      toast.success("Template gelöscht");
+      toast.success(t("useTemplates.deleted"));
     },
     onError: (err: Error) => {
-      toast.error("Fehler beim Löschen: " + err.message);
+      toast.error(t("useTemplates.deleteError", { error: err.message }));
     },
   });
 

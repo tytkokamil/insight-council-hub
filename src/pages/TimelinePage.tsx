@@ -4,8 +4,8 @@ import { useDecisions, useReviews, useNotifications, useProfiles, buildProfileMa
 import { useTasks } from "@/hooks/useTasks";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { format, isToday, isYesterday, parseISO, startOfDay } from "date-fns";
-import { de } from "date-fns/locale";
+import { format, isToday, isYesterday, parseISO, startOfDay, addDays } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 import { motion } from "framer-motion";
 import {
   FileText, ListTodo, AlertTriangle, Shield, CheckCircle2,
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageHelpButton from "@/components/shared/PageHelpButton";
+import { useTranslation } from "react-i18next";
 
 // ── Event types ──
 
@@ -40,17 +41,6 @@ interface TimelineEvent {
   userId?: string;
   meta?: Record<string, string>;
 }
-
-const typeConfig: Record<TimelineEventType, { icon: React.ElementType; color: string; label: string }> = {
-  decision_created:     { icon: FileText,       color: "text-foreground bg-muted border-border",       label: "Entscheidung erstellt" },
-  decision_status:      { icon: ArrowUpCircle,  color: "text-warning bg-warning/10 border-warning/20",    label: "Status geändert" },
-  decision_implemented: { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20", label: "Umgesetzt" },
-  task_created:         { icon: ListTodo,        color: "text-muted-foreground bg-muted border-border", label: "Aufgabe erstellt" },
-  task_completed:       { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20",    label: "Aufgabe erledigt" },
-  review_submitted:     { icon: Eye,            color: "text-foreground bg-muted border-border",       label: "Review" },
-  escalation:           { icon: AlertTriangle,  color: "text-destructive bg-destructive/10 border-destructive/20",          label: "Eskalation" },
-  audit_change:         { icon: Shield,         color: "text-warning bg-warning/10 border-warning/20", label: "Änderung" },
-};
 
 // ── Hooks ──
 
@@ -77,6 +67,7 @@ function buildEvents(
   reviews: any[],
   notifications: any[],
   auditLogs: any[],
+  t: (key: string, opts?: any) => string,
 ): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
@@ -95,7 +86,7 @@ function buildEvents(
       events.push({
         id: `dec-impl-${d.id}`,
         type: "decision_implemented",
-        title: `${d.title} umgesetzt`,
+        title: `${d.title} ${t("timeline.implSuffix")}`,
         timestamp: d.implemented_at,
         entityId: d.id,
         userId: d.created_by,
@@ -103,25 +94,25 @@ function buildEvents(
     }
   });
 
-  tasks.forEach(t => {
+  tasks.forEach(tk => {
     events.push({
-      id: `task-created-${t.id}`,
+      id: `task-created-${tk.id}`,
       type: "task_created",
-      title: t.title,
-      description: t.description?.slice(0, 120) || undefined,
-      timestamp: t.created_at,
-      entityId: t.id,
-      userId: t.created_by,
-      meta: { priority: t.priority, status: t.status },
+      title: tk.title,
+      description: tk.description?.slice(0, 120) || undefined,
+      timestamp: tk.created_at,
+      entityId: tk.id,
+      userId: tk.created_by,
+      meta: { priority: tk.priority, status: tk.status },
     });
-    if (t.completed_at) {
+    if (tk.completed_at) {
       events.push({
-        id: `task-done-${t.id}`,
+        id: `task-done-${tk.id}`,
         type: "task_completed",
-        title: `${t.title} erledigt`,
-        timestamp: t.completed_at,
-        entityId: t.id,
-        userId: t.assignee_id || t.created_by,
+        title: `${tk.title} ${t("timeline.doneSuffix")}`,
+        timestamp: tk.completed_at,
+        entityId: tk.id,
+        userId: tk.assignee_id || tk.created_by,
       });
     }
   });
@@ -131,7 +122,7 @@ function buildEvents(
       events.push({
         id: `review-${r.id}`,
         type: "review_submitted",
-        title: `Review abgeschlossen`,
+        title: t("timeline.reviewDone"),
         description: r.feedback?.slice(0, 120) || undefined,
         timestamp: r.reviewed_at,
         entityId: r.decision_id,
@@ -161,8 +152,8 @@ function buildEvents(
         id: `audit-${a.id}`,
         type: a.action === "status_change" ? "decision_status" : "audit_change",
         title: a.field_name
-          ? `${a.field_name} geändert`
-          : "Status geändert",
+          ? t("timeline.fieldChanged", { field: a.field_name })
+          : t("timeline.eventStatusChanged"),
         description: a.old_value && a.new_value
           ? `${a.old_value} → ${a.new_value}`
           : a.new_value || undefined,
@@ -177,13 +168,6 @@ function buildEvents(
   return events;
 }
 
-function formatDayLabel(dateStr: string): string {
-  const d = parseISO(dateStr);
-  if (isToday(d)) return "Heute";
-  if (isYesterday(d)) return "Gestern";
-  return format(d, "EEEE, d. MMMM yyyy", { locale: de });
-}
-
 function groupByDay(events: TimelineEvent[]): [string, TimelineEvent[]][] {
   const map = new Map<string, TimelineEvent[]>();
   events.forEach(e => {
@@ -196,8 +180,8 @@ function groupByDay(events: TimelineEvent[]): [string, TimelineEvent[]][] {
 
 // ── Components ──
 
-function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap: Record<string, string> }) {
-  const cfg = typeConfig[event.type];
+function TimelineItem({ event, profileMap, typeLabels, dateFnsLocale }: { event: TimelineEvent; profileMap: Record<string, string>; typeLabels: Record<string, { icon: React.ElementType; color: string; label: string }>; dateFnsLocale: any }) {
+  const cfg = typeLabels[event.type];
   const Icon = cfg.icon;
   const userName = event.userId ? profileMap[event.userId] : undefined;
 
@@ -207,15 +191,12 @@ function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap:
       animate={{ opacity: 1, x: 0 }}
       className="relative flex gap-4 pb-6 last:pb-0"
     >
-      {/* Vertical line */}
       <div className="flex flex-col items-center">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center border shrink-0 ${cfg.color}`}>
           <Icon className="w-3.5 h-3.5" />
         </div>
         <div className="w-px flex-1 bg-border/40 mt-1" />
       </div>
-
-      {/* Content */}
       <div className="flex-1 min-w-0 pt-0.5">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium text-foreground truncate">{event.title}</span>
@@ -234,7 +215,7 @@ function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap:
         <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
-            {format(parseISO(event.timestamp), "HH:mm", { locale: de })}
+            {format(parseISO(event.timestamp), "HH:mm", { locale: dateFnsLocale })}
           </span>
           {userName && <span>{userName}</span>}
         </div>
@@ -246,6 +227,27 @@ function TimelineItem({ event, profileMap }: { event: TimelineEvent; profileMap:
 // ── Main Page ──
 
 export default function Timeline() {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  const typeLabels: Record<TimelineEventType, { icon: React.ElementType; color: string; label: string }> = {
+    decision_created:     { icon: FileText,       color: "text-foreground bg-muted border-border",       label: t("timeline.eventDecisionCreated") },
+    decision_status:      { icon: ArrowUpCircle,  color: "text-warning bg-warning/10 border-warning/20",    label: t("timeline.eventStatusChanged") },
+    decision_implemented: { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20", label: t("timeline.eventImplemented") },
+    task_created:         { icon: ListTodo,        color: "text-muted-foreground bg-muted border-border", label: t("timeline.eventTaskCreated") },
+    task_completed:       { icon: CheckCircle2,   color: "text-success bg-success/10 border-success/20",    label: t("timeline.eventTaskCompleted") },
+    review_submitted:     { icon: Eye,            color: "text-foreground bg-muted border-border",       label: t("timeline.eventReview") },
+    escalation:           { icon: AlertTriangle,  color: "text-destructive bg-destructive/10 border-destructive/20",          label: t("timeline.eventEscalation") },
+    audit_change:         { icon: Shield,         color: "text-warning bg-warning/10 border-warning/20", label: t("timeline.eventChange") },
+  };
+
+  const formatDayLabel = (dateStr: string): string => {
+    const d = parseISO(dateStr);
+    if (isToday(d)) return t("timeline.today");
+    if (isYesterday(d)) return t("timeline.yesterday");
+    return format(d, "EEEE, d. MMMM yyyy", { locale: dateFnsLocale });
+  };
+
   const { data: decisions = [], isLoading: loadDec } = useDecisions();
   const { data: tasks = [], isLoading: loadTask } = useTasks();
   const { data: reviews = [], isLoading: loadRev } = useReviews();
@@ -260,8 +262,8 @@ export default function Timeline() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const allEvents = useMemo(
-    () => buildEvents(decisions, tasks, reviews, notifications, auditLogs),
-    [decisions, tasks, reviews, notifications, auditLogs],
+    () => buildEvents(decisions, tasks, reviews, notifications, auditLogs, t),
+    [decisions, tasks, reviews, notifications, auditLogs, t],
   );
 
   const filtered = useMemo(() => {
@@ -279,7 +281,6 @@ export default function Timeline() {
 
   const grouped = useMemo(() => groupByDay(filtered), [filtered]);
 
-  // Stats
   const stats = useMemo(() => ({
     total: allEvents.length,
     decisions: allEvents.filter(e => e.type.startsWith("decision_")).length,
@@ -290,22 +291,20 @@ export default function Timeline() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Chronologie</p>
-            <h1 className="text-xl font-bold">Decision Timeline</h1>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("timeline.chronology")}</p>
+            <h1 className="text-xl font-bold">{t("timeline.title")}</h1>
           </div>
-          <PageHelpButton title="Decision Timeline" description="Chronologische Ansicht aller Entscheidungs-, Task-, Review- und Eskalations-Events" />
+          <PageHelpButton title={t("timeline.title")} description={t("timeline.helpDesc")} />
         </div>
 
-        {/* Stats Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Gesamt-Events", value: stats.total, icon: TrendingUp },
-            { label: "Entscheidungen", value: stats.decisions, icon: FileText },
-            { label: "Aufgaben", value: stats.tasks, icon: ListTodo },
-            { label: "Eskalationen", value: stats.escalations, icon: AlertTriangle },
+            { label: t("timeline.totalEvents"), value: stats.total, icon: TrendingUp },
+            { label: t("timeline.decisions"), value: stats.decisions, icon: FileText },
+            { label: t("timeline.tasks"), value: stats.tasks, icon: ListTodo },
+            { label: t("timeline.escalations"), value: stats.escalations, icon: AlertTriangle },
           ].map(s => (
             <div key={s.label} className="p-3 rounded-lg border border-border bg-card">
               <div className="flex items-center justify-between">
@@ -317,12 +316,11 @@ export default function Timeline() {
           ))}
         </div>
 
-        {/* Filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Events durchsuchen..."
+              placeholder={t("timeline.searchPlaceholder")}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="pl-9 h-9 text-sm"
@@ -331,18 +329,18 @@ export default function Timeline() {
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="w-[180px] h-9 text-sm">
               <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Alle Events" />
+              <SelectValue placeholder={t("timeline.allEvents")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Events</SelectItem>
-              <SelectItem value="decision_created">Entscheidungen erstellt</SelectItem>
-              <SelectItem value="decision_implemented">Umgesetzt</SelectItem>
-              <SelectItem value="decision_status">Status-Änderungen</SelectItem>
-              <SelectItem value="task_created">Aufgaben erstellt</SelectItem>
-              <SelectItem value="task_completed">Aufgaben erledigt</SelectItem>
-              <SelectItem value="review_submitted">Reviews</SelectItem>
-              <SelectItem value="escalation">Eskalationen</SelectItem>
-              <SelectItem value="audit_change">Audit-Änderungen</SelectItem>
+              <SelectItem value="all">{t("timeline.allEvents")}</SelectItem>
+              <SelectItem value="decision_created">{t("timeline.decisionCreated")}</SelectItem>
+              <SelectItem value="decision_implemented">{t("timeline.implemented")}</SelectItem>
+              <SelectItem value="decision_status">{t("timeline.statusChanges")}</SelectItem>
+              <SelectItem value="task_created">{t("timeline.taskCreated")}</SelectItem>
+              <SelectItem value="task_completed">{t("timeline.taskCompleted")}</SelectItem>
+              <SelectItem value="review_submitted">{t("timeline.reviews")}</SelectItem>
+              <SelectItem value="escalation">{t("timeline.escalations")}</SelectItem>
+              <SelectItem value="audit_change">{t("timeline.auditChanges")}</SelectItem>
             </SelectContent>
           </Select>
           {(search || typeFilter !== "all") && (
@@ -350,12 +348,11 @@ export default function Timeline() {
               onClick={() => { setSearch(""); setTypeFilter("all"); }}
               className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
-              <XCircle className="w-3.5 h-3.5" /> Zurücksetzen
+              <XCircle className="w-3.5 h-3.5" /> {t("timeline.reset")}
             </button>
           )}
         </div>
 
-        {/* Timeline */}
         {isLoading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -374,12 +371,12 @@ export default function Timeline() {
               <Clock className="w-8 h-8 text-primary opacity-60" />
             </div>
             <h3 className="font-display text-lg font-semibold mb-2">
-              {search || typeFilter !== "all" ? "Keine Events gefunden" : "Noch keine Aktivitäten"}
+              {search || typeFilter !== "all" ? t("timeline.noEventsFound") : t("timeline.noActivity")}
             </h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
               {search || typeFilter !== "all"
-                ? "Versuche andere Filter oder Suchbegriffe."
-                : "Die Timeline zeigt chronologisch alle Aktivitäten — erstellte Entscheidungen, Statusänderungen, Reviews, abgeschlossene Aufgaben und Eskalationen."}
+                ? t("timeline.tryOtherFilters")
+                : t("timeline.timelineDesc")}
             </p>
           </div>
         ) : (
@@ -395,7 +392,7 @@ export default function Timeline() {
                 </div>
                 <div className="pl-1">
                   {events.map(event => (
-                    <TimelineItem key={event.id} event={event} profileMap={profileMap} />
+                    <TimelineItem key={event.id} event={event} profileMap={profileMap} typeLabels={typeLabels} dateFnsLocale={dateFnsLocale} />
                   ))}
                 </div>
               </div>

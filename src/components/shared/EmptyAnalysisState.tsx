@@ -3,6 +3,7 @@ import { LucideIcon, Plus, ArrowRight, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 interface FeatureHint {
   icon: LucideIcon;
@@ -24,7 +25,6 @@ interface EmptyAnalysisStateProps {
   ctaRoute?: string;
   onCtaClick?: () => void;
   hint?: string;
-  /** Motivational stat shown above the CTA, e.g. "Organisationen mit klarer Ziel-Verknüpfung treffen 34% schnellere Entscheidungen." */
   motivation?: string;
   features?: FeatureHint[];
   quickActions?: QuickAction[];
@@ -34,7 +34,7 @@ const EmptyAnalysisState = ({
   icon: Icon,
   title,
   description,
-  ctaLabel = "Entscheidung erstellen",
+  ctaLabel,
   ctaRoute = "/decisions",
   onCtaClick,
   hint,
@@ -42,13 +42,12 @@ const EmptyAnalysisState = ({
   features,
   quickActions,
 }: EmptyAnalysisStateProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const resolvedCtaLabel = ctaLabel || t("emptyState.defaultCta");
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
       <Card>
         <CardContent className="p-12 text-center">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
@@ -58,21 +57,17 @@ const EmptyAnalysisState = ({
           <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">{description}</p>
 
           {motivation && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/10 mb-6 max-w-md mx-auto"
-            >
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/10 mb-6 max-w-md mx-auto">
               <TrendingUp className="w-4 h-4 text-primary shrink-0" />
               <p className="text-xs text-foreground/80 text-left leading-relaxed">{motivation}</p>
             </motion.div>
           )}
-          
+
           <div className={motivation ? "" : "mt-2"}>
             <Button onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
               <Plus className="w-4 h-4" />
-              {ctaLabel}
+              {resolvedCtaLabel}
             </Button>
           </div>
 
