@@ -261,8 +261,8 @@ const SidebarNav = memo(({
           system: "bg-muted-foreground/30",
         };
 
-        // Progressive disclosure: Intelligence requires 15+ decisions
-        const PROGRESSIVE_THRESHOLD = 15;
+        // Progressive disclosure: Intelligence requires 1+ decisions (doc ENDSTAND p.4)
+        const PROGRESSIVE_THRESHOLD = 1;
         if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && !collapsed) {
           const remaining = PROGRESSIVE_THRESHOLD - decisionCount;
           return (
