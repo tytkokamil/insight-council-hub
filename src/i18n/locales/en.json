@@ -67,10 +67,15 @@
     "accountLocked": "Too many failed attempts. Please wait {{seconds}} seconds.",
     "attemptsRemaining": "attempts remaining",
     "lockedTimer": "Account locked – wait {{minutes}}:{{seconds}} minutes",
-    "locked": "Locked"
+    "locked": "Locked",
+    "or": "or",
+    "signInWithGoogle": "Sign in with Google",
+    "googleLoginFailed": "Google sign-in failed"
   },
   "settings": {
     "title": "Settings",
+    "pageTitle": "System & Governance",
+    "pageSubtitle": "Control center for profile, security, AI governance and enterprise configuration.",
     "subtitle": "Manage your account and system configuration.",
     "general": "General",
     "notifications": "Notifications",
@@ -137,7 +142,14 @@
     "selectImage": "Please select an image file.",
     "maxFileSize": "Max. 2 MB.",
     "uploadFailed": "Upload failed.",
-    "noApiKeyNeeded": "No API key needed"
+    "noApiKeyNeeded": "No API key needed",
+    "workspace": "Workspace",
+    "wsPlan": "Plan",
+    "wsUsers": "Users",
+    "wsDecisions": "Decisions",
+    "wsTeams": "Teams",
+    "wsDataLocation": "Data Location",
+    "wsRole": "Role"
   },
   "common": {
     "skipToContent": "Skip to content",

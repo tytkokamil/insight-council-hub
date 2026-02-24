@@ -209,8 +209,8 @@ const SettingsPage = () => {
     <AppLayout>
       <div className="max-w-3xl">
         <div className="mb-6">
-          <h1 className="text-lg font-semibold tracking-tight">System & Governance</h1>
-          <p className="text-sm text-muted-foreground mt-1">Kontrollzentrum für Profil, Sicherheit, KI-Governance und Enterprise-Konfiguration.</p>
+          <h1 className="text-lg font-semibold tracking-tight">{t("settings.pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
         </div>
 
         <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
@@ -282,15 +282,15 @@ const SettingsPage = () => {
 
               {/* Workspace Info */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Workspace</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.workspace")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
-                    { label: "Plan", value: "Pro", icon: Zap },
-                    { label: "Nutzer", value: adminStats?.totalUsers || "–", icon: Users },
-                    { label: "Entscheidungen", value: adminStats?.totalDecisions || "–", icon: Activity },
-                    { label: "Teams", value: teamMemberships.length, icon: Building2 },
-                    { label: "Datenstandort", value: "EU", icon: Server },
-                    { label: "Rolle", value: roleLabels[userRole], icon: Shield },
+                    { label: t("settings.wsPlan"), value: "Pro", icon: Zap },
+                    { label: t("settings.wsUsers"), value: adminStats?.totalUsers || "–", icon: Users },
+                    { label: t("settings.wsDecisions"), value: adminStats?.totalDecisions || "–", icon: Activity },
+                    { label: t("settings.wsTeams"), value: teamMemberships.length, icon: Building2 },
+                    { label: t("settings.wsDataLocation"), value: "EU", icon: Server },
+                    { label: t("settings.wsRole"), value: roleLabels[userRole], icon: Shield },
                   ].map((item, i) => (
                     <div key={i} className="p-3 rounded-lg border border-border bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
