@@ -43,6 +43,7 @@ interface NavGroupDef {
   labelKey: string;
   items: (NavItem | NavSubGroup)[];
   defaultCollapsed?: boolean;
+  progressive?: boolean; // requires threshold of decisions
 }
 
 const navGroupsDef: NavGroupDef[] = [
@@ -53,6 +54,12 @@ const navGroupsDef: NavGroupDef[] = [
       { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
       { icon: ListTodo, label: "nav.tasks", path: "/tasks", featureKey: "tasks" },
       { icon: Calendar, label: "nav.calendar", path: "/calendar", featureKey: "calendar" },
+      { icon: SearchIcon, label: "nav.search", path: "/search" },
+    ],
+  },
+  {
+    labelKey: "teams",
+    items: [
       { icon: Users, label: "nav.teams", path: "/teams", featureKey: "teams" },
       { icon: Video, label: "nav.meeting", path: "/meeting" },
     ],
@@ -60,7 +67,6 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "governance",
     items: [
-      { icon: Briefcase, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
       { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
       { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks" },
       { icon: Zap, label: "nav.automations", path: "/automations" },
@@ -68,19 +74,22 @@ const navGroupsDef: NavGroupDef[] = [
     ],
   },
   {
-    labelKey: "insights",
+    labelKey: "intelligence",
+    progressive: true, // requires 15+ decisions
     items: [
+      { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
       { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
       { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks" },
+      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge" },
       {
         icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics",
         children: [
           { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
-          { icon: Radar, label: "nav.decisionRadar", path: "/radar" },
           { icon: Dna, label: "nav.decisionDna", path: "/dna" },
           { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
           { icon: Activity, label: "nav.healthHeatmap", path: "/health-heatmap" },
           { icon: Clock, label: "nav.predictiveTimeline", path: "/predictive-timeline" },
+          { icon: FlaskConical, label: "nav.scenarios", path: "/scenarios" },
         ],
       } as NavSubGroup,
     ],
@@ -88,8 +97,8 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "system",
     items: [
-      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge" },
       { icon: Settings2, label: "nav.templates", path: "/template-editor" },
+      { icon: Target, label: "nav.strategy", path: "/strategy" },
       { icon: Archive, label: "nav.archive", path: "/archive" },
       { icon: Settings, label: "nav.settings", path: "/settings" },
       { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
@@ -200,7 +209,7 @@ const SubGroupItem = ({
 const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
 }: SidebarNavProps) => {
-  const { mode, setMode, shouldShowAdvanced } = useGuidedMode();
+  const { mode, setMode, shouldShowAdvanced, decisionCount } = useGuidedMode();
   const { t } = useTranslation();
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -239,16 +248,46 @@ const SidebarNav = memo(({
         // Color coding per section
         const groupAccent: Record<string, string> = {
           core: "",
+          teams: "text-accent-blue/70",
           governance: "text-accent-rose/70",
-          insights: "text-accent-teal/70",
+          intelligence: "text-accent-teal/70",
           system: "text-muted-foreground/40",
         };
         const groupDot: Record<string, string> = {
           core: "bg-foreground/20",
+          teams: "bg-accent-blue/50",
           governance: "bg-accent-rose/50",
-          insights: "bg-accent-teal/50",
+          intelligence: "bg-accent-teal/50",
           system: "bg-muted-foreground/30",
         };
+
+        // Progressive disclosure: Intelligence requires 15+ decisions
+        const PROGRESSIVE_THRESHOLD = 15;
+        if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && !collapsed) {
+          const remaining = PROGRESSIVE_THRESHOLD - decisionCount;
+          return (
+            <div key={group.labelKey}>
+              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
+                {groupLabel}
+              </p>
+              <div className="px-2 py-2 rounded-md text-[12px] text-muted-foreground/50">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Brain className="w-3.5 h-3.5 shrink-0 opacity-40" />
+                  <span className="text-[11px] font-medium">Intelligence in {remaining} Entscheidungen verfügbar</span>
+                </div>
+                <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent-teal rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (decisionCount / PROGRESSIVE_THRESHOLD) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+        if (group.progressive && decisionCount < PROGRESSIVE_THRESHOLD && collapsed) {
+          return null;
+        }
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
