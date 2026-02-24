@@ -5,17 +5,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import WidgetSkeleton from "./WidgetSkeleton";
-
-const CONFIDENCE_LEVELS = [
-  { min: 0, max: 5000, label: "Hoch", color: "text-success" },
-  { min: 5000, max: 20000, label: "Mittel", color: "text-warning" },
-  { min: 20000, max: Infinity, label: "Niedrig", color: "text-destructive" },
-] as const;
-
-const getConfidence = (cost: number) =>
-  CONFIDENCE_LEVELS.find(c => cost >= c.min && cost < c.max) ?? CONFIDENCE_LEVELS[2];
+import { useTranslation } from "react-i18next";
 
 const DecisionCostWidget = () => {
+  const { t } = useTranslation();
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
   const [showCalc, setShowCalc] = useState(false);
@@ -26,7 +19,7 @@ const DecisionCostWidget = () => {
   if (decLoading || teamLoading) return <WidgetSkeleton rows={3} showScore />;
 
   const teamRateMap: Record<string, number> = {};
-  teams.forEach(t => { if (t.hourly_rate) teamRateMap[t.id] = t.hourly_rate; });
+  teams.forEach(ti => { if (ti.hourly_rate) teamRateMap[ti.id] = ti.hourly_rate; });
 
   const rate = customRate ?? 75;
   const persons = customPersons ?? 2;
@@ -46,7 +39,13 @@ const DecisionCostWidget = () => {
   });
 
   const topCosts = costs.sort((a, b) => b.cost - a.cost).slice(0, 3);
-  const confidence = getConfidence(totalCost);
+
+  const CONFIDENCE_LEVELS = [
+    { min: 0, max: 5000, label: t("widgets.confidenceHigh"), color: "text-success" },
+    { min: 5000, max: 20000, label: t("widgets.confidenceMedium"), color: "text-warning" },
+    { min: 20000, max: Infinity, label: t("widgets.confidenceLow"), color: "text-destructive" },
+  ] as const;
+  const confidence = CONFIDENCE_LEVELS.find(c => totalCost >= c.min && totalCost < c.max) ?? CONFIDENCE_LEVELS[2];
 
   const formatCost = (cost: number) => {
     if (cost >= 1000) return `${(cost / 1000).toFixed(1)}k€`;
@@ -61,17 +60,17 @@ const DecisionCostWidget = () => {
             <DollarSign className="w-4 h-4 text-destructive" />
           </div>
           <div className="flex items-center gap-1.5">
-            <CardTitle className="text-sm">Verzögerungskosten</CardTitle>
+            <CardTitle className="text-sm">{t("widgets.delayCost")}</CardTitle>
             <ScoreMethodology
-              title="Verzögerungskosten"
-              description="Geschätzte Opportunitätskosten durch offene Entscheidungen (Draft/Review) basierend auf Personalkosten."
+              title={t("widgets.delayCost")}
+              description={t("widgets.delayCostDesc")}
               items={[
-                { label: "Formel", formula: `Tage offen × ${persons} Personen × ${hours}h/Tag × ${rate}€/h` },
-                { label: "Tage offen", formula: "Heute − Erstellungsdatum der Entscheidung" },
-                { label: "Team-Rate", formula: "Verwendet Team-Stundensatz falls verfügbar" },
-                { label: "Confidence", formula: `${confidence.label} – basiert auf Gesamtkostenhöhe` },
+                { label: t("widgets.formulaLabel"), formula: `${t("widgets.daysOpenLabel")} × ${persons} ${t("widgets.persons")} × ${hours}${t("widgets.hoursPerDay")} × ${rate}${t("widgets.perHour")}` },
+                { label: t("widgets.daysOpenLabel"), formula: t("widgets.daysOpenFormula") },
+                { label: t("widgets.teamRateLabel"), formula: t("widgets.teamRateFormula") },
+                { label: t("widgets.confidenceLabel"), formula: `${confidence.label}` },
               ]}
-              source="Editierbare Inputs unter 'Berechnung anzeigen'"
+              source={t("widgets.editableInputs")}
             />
           </div>
         </div>
@@ -80,58 +79,42 @@ const DecisionCostWidget = () => {
         <div className="flex items-end gap-2 mb-1">
           <span className="font-display text-3xl font-bold text-destructive">{formatCost(totalCost)}</span>
           <span className={`text-[10px] font-medium mb-1 ${confidence.color}`}>
-            Confidence: {confidence.label}
+            {t("widgets.confidenceLabel")}: {confidence.label}
           </span>
         </div>
         <p className="text-xs text-muted-foreground mb-3">
-          {openDecisions.length} offene Entscheidungen verursachen Kosten
+          {t("widgets.openDecisionsCost", { count: openDecisions.length })}
         </p>
 
-        {/* Toggle calculation details */}
         <button
           onClick={() => setShowCalc(!showCalc)}
           className="flex items-center gap-1 text-[11px] text-primary hover:underline mb-3"
         >
           {showCalc ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          Berechnung {showCalc ? "ausblenden" : "anzeigen"}
+          {showCalc ? t("widgets.hideCalc") : t("widgets.showCalc")}
         </button>
 
         {showCalc && (
           <div className="p-3 rounded-lg bg-muted/30 border border-border mb-3 space-y-2">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Parameter anpassen</p>
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t("widgets.adjustParams")}</p>
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-[10px] text-muted-foreground block mb-0.5">€/Stunde</label>
-                <input
-                  type="number"
-                  value={customRate ?? 75}
-                  onChange={e => setCustomRate(Number(e.target.value) || null)}
-                  className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none"
-                />
+                <label className="text-[10px] text-muted-foreground block mb-0.5">{t("widgets.perHour")}</label>
+                <input type="number" value={customRate ?? 75} onChange={e => setCustomRate(Number(e.target.value) || null)} className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground block mb-0.5">Personen</label>
-                <input
-                  type="number"
-                  value={customPersons ?? 2}
-                  onChange={e => setCustomPersons(Number(e.target.value) || null)}
-                  className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none"
-                />
+                <label className="text-[10px] text-muted-foreground block mb-0.5">{t("widgets.persons")}</label>
+                <input type="number" value={customPersons ?? 2} onChange={e => setCustomPersons(Number(e.target.value) || null)} className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none" />
               </div>
               <div>
-                <label className="text-[10px] text-muted-foreground block mb-0.5">h/Tag</label>
-                <input
-                  type="number"
-                  value={customHours ?? 2}
-                  onChange={e => setCustomHours(Number(e.target.value) || null)}
-                  className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none"
-                />
+                <label className="text-[10px] text-muted-foreground block mb-0.5">{t("widgets.hoursPerDay")}</label>
+                <input type="number" value={customHours ?? 2} onChange={e => setCustomHours(Number(e.target.value) || null)} className="w-full h-7 px-2 text-xs rounded border border-input bg-background focus:border-primary focus:outline-none" />
               </div>
             </div>
             <div className="flex items-center gap-1 pt-1">
               <Info className="w-3 h-3 text-muted-foreground shrink-0" />
               <p className="text-[10px] text-muted-foreground">
-                Formel: Tage × {persons} Pers. × {hours}h × {rate}€ = Kosten/Entscheidung
+                {t("widgets.formulaDesc", { persons, hours, rate })}
               </p>
             </div>
           </div>
@@ -153,10 +136,10 @@ const DecisionCostWidget = () => {
                 <PopoverContent className="w-56 p-3" side="left">
                   <p className="text-xs font-semibold mb-2">{c.title}</p>
                   <div className="space-y-1 text-[11px] text-muted-foreground">
-                    <div className="flex justify-between"><span>Tage offen</span><span className="font-medium text-foreground">{c.days}d</span></div>
-                    <div className="flex justify-between"><span>Stundensatz</span><span className="font-medium text-foreground">{c.baseRate}€</span></div>
-                    <div className="flex justify-between"><span>Personen × h/Tag</span><span className="font-medium text-foreground">{persons} × {hours}h</span></div>
-                    <div className="flex justify-between border-t border-border pt-1 mt-1"><span className="font-medium">Gesamt</span><span className="font-bold text-destructive">{formatCost(c.cost)}</span></div>
+                    <div className="flex justify-between"><span>{t("widgets.daysOpenLabel")}</span><span className="font-medium text-foreground">{c.days}d</span></div>
+                    <div className="flex justify-between"><span>{t("widgets.perHour")}</span><span className="font-medium text-foreground">{c.baseRate}€</span></div>
+                    <div className="flex justify-between"><span>{t("widgets.persons")} × {t("widgets.hoursPerDay")}</span><span className="font-medium text-foreground">{persons} × {hours}h</span></div>
+                    <div className="flex justify-between border-t border-border pt-1 mt-1"><span className="font-medium">Total</span><span className="font-bold text-destructive">{formatCost(c.cost)}</span></div>
                   </div>
                 </PopoverContent>
               </Popover>

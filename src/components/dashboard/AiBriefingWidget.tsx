@@ -9,9 +9,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 const AiBriefingWidget = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard-briefing"],
@@ -21,9 +23,8 @@ const AiBriefingWidget = () => {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    staleTime: 5 * 60 * 1000,
     retry: 1,
-    meta: { errorMessage: "Briefing konnte nicht geladen werden" },
   });
 
   const briefing = data?.briefing;
@@ -46,9 +47,9 @@ const AiBriefingWidget = () => {
     return (
       <div className="border border-border rounded-lg p-5 text-center">
         <Sparkles className="w-5 h-5 text-muted-foreground/40 mx-auto mb-2" />
-        <p className="text-xs text-muted-foreground">KI-Briefing nicht verfügbar</p>
+        <p className="text-xs text-muted-foreground">{t("widgets.aiBriefingUnavailable")}</p>
         <Button variant="ghost" size="sm" className="mt-2 text-xs h-7 gap-1" onClick={() => refetch()}>
-          <RefreshCw className="w-3 h-3" /> Erneut versuchen
+          <RefreshCw className="w-3 h-3" /> {t("widgets.aiBriefingRetry")}
         </Button>
       </div>
     );
@@ -59,12 +60,12 @@ const AiBriefingWidget = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">KI Daily Brief</h3>
+          <h3 className="text-sm font-semibold">{t("widgets.aiBriefing")}</h3>
           {momentum != null && (
             <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
               momentum > 70 ? "bg-success/10 text-success" : momentum > 40 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"
             }`}>
-              Momentum {momentum}
+              {t("briefing.momentum")} {momentum}
             </span>
           )}
         </div>
@@ -73,15 +74,13 @@ const AiBriefingWidget = () => {
             <RefreshCw className={`w-3 h-3 ${isRefetching ? "animate-spin" : ""}`} />
           </Button>
           <Button variant="ghost" size="sm" className="text-xs h-6 gap-1" onClick={() => navigate("/briefing")}>
-            Details <ArrowRight className="w-3 h-3" />
+            {t("widgets.details")} <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
       </div>
 
-      {/* Headline */}
       <p className="text-sm font-medium">{briefing.headline}</p>
 
-      {/* Urgent actions (max 2) */}
       {briefing.urgent_actions?.length > 0 && (
         <div className="space-y-1">
           {briefing.urgent_actions.slice(0, 2).map((a: string, i: number) => (
@@ -93,7 +92,6 @@ const AiBriefingWidget = () => {
         </div>
       )}
 
-      {/* Recommendation */}
       {briefing.recommendation && (
         <div className="flex items-start gap-1.5 p-2 rounded-md bg-primary/5 text-xs">
           <Zap className="w-3 h-3 text-primary mt-0.5 shrink-0" />

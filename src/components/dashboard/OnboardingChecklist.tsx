@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "react-i18next";
 
 interface ChecklistStep {
   id: string;
@@ -27,6 +28,7 @@ interface OnboardingChecklistProps {
 
 const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: OnboardingChecklistProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(() =>
     localStorage.getItem("onboarding-checklist-dismissed") === "true"
   );
@@ -36,46 +38,45 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
     {
       id: "team",
       icon: Users,
-      title: "Team erstellen",
-      description: "Lade Kollegen ein und definiere Rollen",
-      actionLabel: "Team erstellen",
+      title: t("widgets.createTeam"),
+      description: t("widgets.createTeamDesc"),
+      actionLabel: t("widgets.createTeam"),
       actionPath: "/teams",
       checkFn: () => hasTeam,
     },
     {
       id: "decision",
       icon: FileText,
-      title: "Erste Entscheidung anlegen",
-      description: "Erstelle eine strukturierte Entscheidung mit Template",
-      actionLabel: "Entscheidung erstellen",
+      title: t("widgets.firstDecision"),
+      description: t("widgets.firstDecisionDesc"),
+      actionLabel: t("widgets.firstDecision"),
       actionPath: "/decisions",
       checkFn: () => hasDecision,
     },
     {
       id: "review",
       icon: Eye,
-      title: "Review-Prozess starten",
-      description: "Füge Reviewer hinzu und starte den Freigabeprozess",
-      actionLabel: "Review starten",
+      title: t("widgets.startReviewProcess"),
+      description: t("widgets.startReviewProcessDesc"),
+      actionLabel: t("widgets.startReview"),
       actionPath: "/decisions",
       checkFn: () => hasReview,
     },
     {
       id: "template",
       icon: LayoutTemplate,
-      title: "Template erkunden",
-      description: "Entdecke vorgefertigte Templates für verschiedene Szenarien",
-      actionLabel: "Templates ansehen",
+      title: t("widgets.exploreTemplates"),
+      description: t("widgets.exploreTemplatesDesc"),
+      actionLabel: t("widgets.viewTemplates"),
       actionPath: "/templates",
       checkFn: () => hasTemplate,
     },
-  ], [hasTeam, hasDecision, hasReview, hasTemplate]);
+  ], [hasTeam, hasDecision, hasReview, hasTemplate, t]);
 
   const completedCount = steps.filter(s => s.checkFn()).length;
   const progress = (completedCount / steps.length) * 100;
   const allComplete = completedCount === steps.length;
 
-  // Auto-dismiss after all complete
   useEffect(() => {
     if (allComplete && !dismissed) {
       const timer = setTimeout(() => setDismissed(true), 3000);
@@ -97,16 +98,15 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
       exit={{ opacity: 0, y: -8 }}
       className="border border-primary/20 bg-primary/[0.02] rounded-lg overflow-hidden"
     >
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <Sparkles className="w-4 h-4 text-primary" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold">Erste Schritte</h3>
+            <h3 className="text-sm font-semibold">{t("widgets.firstSteps")}</h3>
             <p className="text-xs text-muted-foreground">
-              {allComplete ? "Alles erledigt – viel Erfolg!" : `${completedCount} von ${steps.length} abgeschlossen`}
+              {allComplete ? t("widgets.allDone") : t("widgets.completedOf", { completed: completedCount, total: steps.length })}
             </p>
           </div>
         </div>
@@ -123,14 +123,13 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
           <button
             onClick={handleDismiss}
             className="w-7 h-7 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="Checklist ausblenden"
+            aria-label={t("widgets.hideChecklist")}
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* Steps */}
       <AnimatePresence>
         {expanded && (
           <motion.div

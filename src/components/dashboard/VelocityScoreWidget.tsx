@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions } from "@/hooks/useDecisions";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import WidgetSkeleton from "./WidgetSkeleton";
+import { useTranslation } from "react-i18next";
 
 const VelocityScoreWidget = () => {
+  const { t } = useTranslation();
   const { data: allDecisions = [], isLoading } = useDecisions();
 
   const { avgDays, categoryBreakdown, trend } = useMemo(() => {
@@ -35,22 +37,22 @@ const VelocityScoreWidget = () => {
     const thirtyDaysAgo = now - 30 * 86400000;
     const sixtyDaysAgo = now - 60 * 86400000;
     const recent = durations.filter(d => new Date(d.created_at).getTime() > thirtyDaysAgo);
-    const older = durations.filter(d => { const t = new Date(d.created_at).getTime(); return t > sixtyDaysAgo && t <= thirtyDaysAgo; });
-    let t: "up" | "down" | "flat" = "flat";
+    const older = durations.filter(d => { const ti = new Date(d.created_at).getTime(); return ti > sixtyDaysAgo && ti <= thirtyDaysAgo; });
+    let tr: "up" | "down" | "flat" = "flat";
     if (recent.length > 0 && older.length > 0) {
       const recentAvg = recent.reduce((s, d) => s + d.days, 0) / recent.length;
       const olderAvg = older.reduce((s, d) => s + d.days, 0) / older.length;
-      t = recentAvg < olderAvg - 0.5 ? "up" : recentAvg > olderAvg + 0.5 ? "down" : "flat";
+      tr = recentAvg < olderAvg - 0.5 ? "up" : recentAvg > olderAvg + 0.5 ? "down" : "flat";
     }
 
-    return { avgDays: avg, categoryBreakdown: breakdown, trend: t };
+    return { avgDays: avg, categoryBreakdown: breakdown, trend: tr };
   }, [allDecisions]);
 
   if (isLoading) return <WidgetSkeleton rows={4} showScore />;
 
   const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const trendColor = trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";
-  const trendLabel = trend === "up" ? "Schneller als letzten Monat" : trend === "down" ? "Langsamer als letzten Monat" : "Stabil";
+  const trendLabel = trend === "up" ? t("widgets.fasterThanLastMonth") : trend === "down" ? t("widgets.slowerThanLastMonth") : t("widgets.stable");
 
   return (
     <Card>
@@ -63,13 +65,13 @@ const VelocityScoreWidget = () => {
             <CardTitle className="text-sm">Decision Velocity</CardTitle>
             <ScoreMethodology
               title="Decision Velocity"
-              description="Durchschnittliche Zeit von Erstellung bis Umsetzung, aufgeschlüsselt nach Kategorie."
+              description={t("widgets.velocityDesc")}
               items={[
-                { label: "Ø Tage", formula: "Σ(implemented_at − created_at) / Anzahl implementierter Entscheidungen" },
-                { label: "Trend", formula: "Vergleich Ø Velocity letzte 30 Tage vs. vorherige 30 Tage (±0.5d Toleranz)" },
-                { label: "Kategorie-Breakdown", formula: "Gleiche Formel, gruppiert nach Entscheidungskategorie" },
+                { label: t("widgets.daysAvg"), formula: t("widgets.velocityAvgDays") },
+                { label: "Trend", formula: t("widgets.velocityTrend") },
+                { label: "Breakdown", formula: t("widgets.velocityCatBreakdown") },
               ]}
-              source="Berechnung auf Basis implementierter Entscheidungen"
+              source={t("widgets.velocitySource")}
             />
           </div>
         </div>
@@ -79,7 +81,7 @@ const VelocityScoreWidget = () => {
           <>
             <div className="flex items-end gap-2 mb-2">
               <span className="font-display text-3xl font-bold">{avgDays}</span>
-              <span className="text-sm text-muted-foreground mb-1">Tage Ø</span>
+              <span className="text-sm text-muted-foreground mb-1">{t("widgets.daysAvg")}</span>
             </div>
             <div className={`flex items-center gap-1 text-xs ${trendColor} mb-4`}>
               <TrendIcon className="w-3.5 h-3.5" />
@@ -97,7 +99,7 @@ const VelocityScoreWidget = () => {
             )}
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">Noch keine implementierten Entscheidungen.</p>
+          <p className="text-xs text-muted-foreground">{t("widgets.noImplemented")}</p>
         )}
       </CardContent>
     </Card>
