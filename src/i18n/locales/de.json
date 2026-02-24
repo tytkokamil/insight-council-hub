@@ -336,6 +336,8 @@
     "vsLastWeek": "vs. Vorwoche",
     "sameAsLastWeek": "Wie Vorwoche",
     "moreActivity": "Mehr Aktivität",
-    "lessActivity": "Weniger Aktivität"
+    "lessActivity": "Weniger Aktivität",
+    "showDetails": "Detaillierte Analysen anzeigen",
+    "hideDetails": "Detaillierte Analysen ausblenden"
   }
 }

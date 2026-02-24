@@ -416,7 +416,7 @@ const Dashboard = () => {
                 className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
               >
                 {showDeepDive ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                <span>Detaillierte Analysen {showDeepDive ? "ausblenden" : "anzeigen"}</span>
+                <span>{showDeepDive ? t("dashboard.hideDetails") : t("dashboard.showDetails")}</span>
                 <span className="text-[10px] text-muted-foreground/50 ml-1">DQI · Trends · Radar · Cost of Delay · Risk Portfolio</span>
               </button>
 
