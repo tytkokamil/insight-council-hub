@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { toast as sonnerToast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Notification {
   id: string;
@@ -38,14 +39,6 @@ const typeColor: Record<string, string> = {
 
 type FilterType = "all" | "mentions" | "reviews" | "escalations" | "system";
 
-const filters: { key: FilterType; label: string; icon: typeof Bell }[] = [
-  { key: "all", label: "Alle", icon: Bell },
-  { key: "mentions", label: "Mentions", icon: AtSign },
-  { key: "reviews", label: "Reviews", icon: FileText },
-  { key: "escalations", label: "Eskalationen", icon: Zap },
-  { key: "system", label: "System", icon: Settings },
-];
-
 const filterMatch = (type: string, filter: FilterType): boolean => {
   if (filter === "all") return true;
   if (filter === "mentions") return type === "mention";
@@ -60,34 +53,45 @@ interface GroupedNotifications {
   items: Notification[];
 }
 
-const groupByDate = (notifications: Notification[]): GroupedNotifications[] => {
-  const groups: GroupedNotifications[] = [];
-  const today: Notification[] = [];
-  const yesterday: Notification[] = [];
-  const thisWeek: Notification[] = [];
-  const older: Notification[] = [];
-
-  notifications.forEach((n) => {
-    const d = new Date(n.created_at);
-    if (isToday(d)) today.push(n);
-    else if (isYesterday(d)) yesterday.push(n);
-    else if (isThisWeek(d)) thisWeek.push(n);
-    else older.push(n);
-  });
-
-  if (today.length > 0) groups.push({ label: "Heute", items: today });
-  if (yesterday.length > 0) groups.push({ label: "Gestern", items: yesterday });
-  if (thisWeek.length > 0) groups.push({ label: "Diese Woche", items: thisWeek });
-  if (older.length > 0) groups.push({ label: "Älter", items: older });
-
-  return groups;
-};
-
 const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const navigateRef = useRef(navigate)
+  const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  const filters: { key: FilterType; label: string; icon: typeof Bell }[] = [
+    { key: "all", label: t("notif.all"), icon: Bell },
+    { key: "mentions", label: t("notif.mentions"), icon: AtSign },
+    { key: "reviews", label: t("notif.reviews"), icon: FileText },
+    { key: "escalations", label: t("notif.escalations"), icon: Zap },
+    { key: "system", label: t("notif.system"), icon: Settings },
+  ];
+
+  const groupByDate = (notifications: Notification[]): GroupedNotifications[] => {
+    const groups: GroupedNotifications[] = [];
+    const today: Notification[] = [];
+    const yesterday: Notification[] = [];
+    const thisWeek: Notification[] = [];
+    const older: Notification[] = [];
+
+    notifications.forEach((n) => {
+      const d = new Date(n.created_at);
+      if (isToday(d)) today.push(n);
+      else if (isYesterday(d)) yesterday.push(n);
+      else if (isThisWeek(d)) thisWeek.push(n);
+      else older.push(n);
+    });
+
+    if (today.length > 0) groups.push({ label: t("notif.today"), items: today });
+    if (yesterday.length > 0) groups.push({ label: t("notif.yesterday"), items: yesterday });
+    if (thisWeek.length > 0) groups.push({ label: t("notif.thisWeek"), items: thisWeek });
+    if (older.length > 0) groups.push({ label: t("notif.older"), items: older });
+
+    return groups;
+  };
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
@@ -100,7 +104,7 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
     [notifications, activeFilter]
   );
 
-  const grouped = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications]);
+  const grouped = useMemo(() => groupByDate(filteredNotifications), [filteredNotifications, t]);
 
   useEffect(() => {
     if (!user) return;
@@ -124,14 +128,12 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
           if (payload.eventType === "INSERT") {
             const newNotif = payload.new as Notification;
             setNotifications((prev) => [newNotif, ...prev].slice(0, 50));
-            // Show in-app toast
-            const Icon = typeIcon[newNotif.type] || Bell;
             sonnerToast(newNotif.title, {
               description: newNotif.message || undefined,
               duration: 6000,
               action: newNotif.decision_id
                 ? {
-                    label: "Anzeigen",
+                    label: t("notif.show"),
                     onClick: () => navigateRef.current(`/decisions/${newNotif.decision_id}`),
                   }
                 : undefined,
@@ -180,14 +182,14 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
   };
 
   return (
-    <div ref={ref} className="relative px-2" role="region" aria-label="Benachrichtigungen">
+    <div ref={ref} className="relative px-2" role="region" aria-label={t("notif.title")}>
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        aria-label={`Benachrichtigungen${unreadCount > 0 ? `, ${unreadCount} ungelesen` : ""}`}
+        aria-label={`${t("notif.title")}${unreadCount > 0 ? `, ${unreadCount} unread` : ""}`}
         className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 text-muted-foreground hover:bg-muted/50 hover:text-foreground relative"
-        title={collapsed ? `Benachrichtigungen (${unreadCount})` : undefined}
+        title={collapsed ? `${t("notif.title")} (${unreadCount})` : undefined}
       >
         <div className="relative shrink-0">
           <Bell className="w-4 h-4" />
@@ -200,7 +202,7 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
         <AnimatePresence>
           {!collapsed && (
             <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="whitespace-nowrap flex-1 text-left">
-              Benachrichtigungen
+              {t("notif.title")}
             </motion.span>
           )}
         </AnimatePresence>
@@ -214,22 +216,21 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.15 }}
             role="dialog"
-            aria-label="Benachrichtigungen"
+            aria-label={t("notif.title")}
             className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border bg-card shadow-xl overflow-hidden flex flex-col"
             style={{ left: collapsed ? 64 : 248 }}
           >
-            {/* Header */}
             <div className="px-4 py-3 border-b border-border bg-card">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">Benachrichtigungen</h3>
+                <h3 className="text-sm font-semibold">{t("notif.title")}</h3>
                 <div className="flex items-center gap-1">
                   {unreadCount > 0 && (
-                    <button onClick={markAllAsRead} className="text-xs text-primary hover:underline flex items-center gap-1" title="Alle als gelesen markieren">
+                    <button onClick={markAllAsRead} className="text-xs text-primary hover:underline flex items-center gap-1" title={t("notif.markAllRead")}>
                       <CheckCheck className="w-3.5 h-3.5" />
-                      Alle gelesen
+                      {t("notif.markAllRead")}
                     </button>
                   )}
-                  <button onClick={() => { setOpen(false); navigate("/settings"); }} className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground" title="Einstellungen">
+                  <button onClick={() => { setOpen(false); navigate("/settings"); }} className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground" title={t("notif.settings")}>
                     <Settings className="w-3.5 h-3.5" />
                   </button>
                   <button onClick={() => setOpen(false)} className="w-6 h-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground">
@@ -237,8 +238,6 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
                   </button>
                 </div>
               </div>
-
-              {/* Filter Toggles */}
               <div className="flex gap-1 overflow-x-auto">
                 {filters.map((f) => {
                   const count = f.key === "all" ? notifications.length : notifications.filter((n) => filterMatch(n.type, f.key)).length;
@@ -261,14 +260,13 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
               </div>
             </div>
 
-            {/* List */}
             <div className="overflow-y-auto flex-1">
               {filteredNotifications.length === 0 ? (
                 <div className="py-10 text-center text-muted-foreground">
                   <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">Keine Benachrichtigungen</p>
+                  <p className="text-sm">{t("notif.noNotifications")}</p>
                   <p className="text-xs text-muted-foreground/60 mt-1">
-                    {activeFilter !== "all" ? "Wechsle den Filter oder erstelle Inhalte." : "Du bist auf dem neuesten Stand."}
+                    {activeFilter !== "all" ? t("notif.changeFilter") : t("notif.upToDate")}
                   </p>
                 </div>
               ) : (
@@ -285,7 +283,7 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
                           key={n.id}
                           role="button"
                           tabIndex={0}
-                          aria-label={`${n.title}${!n.read ? " (ungelesen)" : ""}`}
+                          aria-label={`${n.title}${!n.read ? " (unread)" : ""}`}
                           className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                             !n.read ? "bg-primary/5" : ""
                           }`}
@@ -304,7 +302,7 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
                             )}
                             <div className="flex items-center gap-2 mt-1">
                               <p className="text-[10px] text-muted-foreground/60">
-                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: de })}
+                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: dateFnsLocale })}
                               </p>
                               <span className="text-[9px] text-muted-foreground/40 uppercase">{n.type}</span>
                             </div>

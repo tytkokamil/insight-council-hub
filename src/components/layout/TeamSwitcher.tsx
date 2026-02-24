@@ -3,6 +3,7 @@ import { Building2, ChevronDown, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { useTranslation } from "react-i18next";
 
 interface Team {
   id: string;
@@ -12,6 +13,7 @@ interface Team {
 const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
   const { user } = useAuth();
   const { selectedTeamId, setSelectedTeamId } = useTeamContext();
+  const { t } = useTranslation();
   const [teams, setTeams] = useState<Team[]>([]);
   const [open, setOpen] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -97,8 +99,8 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
     return () => { supabase.removeChannel(channel); };
   }, [teams, fetchUnreadCounts]);
 
-  const selectedTeam = teams.find((t) => t.id === selectedTeamId);
-  const label = selectedTeam ? selectedTeam.name : "Persönlich";
+  const selectedTeam = teams.find((tm) => tm.id === selectedTeamId);
+  const label = selectedTeam ? selectedTeam.name : t("teamSwitcher.personal");
   const totalUnread = Object.values(unreadCounts).reduce((a, b) => a + b, 0);
 
   if (teamsLoaded.current && teams.length === 0 && !isAdmin) return null;
@@ -150,7 +152,7 @@ const TeamSwitcher = memo(({ collapsed }: { collapsed: boolean }) => {
               }`}
             >
               <User className="w-3.5 h-3.5 opacity-60" />
-              Persönlich
+              {t("teamSwitcher.personal")}
             </button>
             {teams.length > 0 && (
               <div className="border-t border-border/30 my-0.5" />

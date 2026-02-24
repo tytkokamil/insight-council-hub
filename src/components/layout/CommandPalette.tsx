@@ -18,39 +18,7 @@ import {
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { useTeamContext } from "@/hooks/useTeamContext";
-
-const pages = [
-  { label: "Executive", path: "/executive", icon: Target },
-  { label: "Dashboard", path: "/dashboard", icon: BarChart3 },
-  { label: "Entscheidungen", path: "/decisions", icon: FileText },
-  { label: "Briefing", path: "/briefing", icon: Sun },
-  { label: "Graph", path: "/graph", icon: GitBranch },
-  { label: "Bottlenecks", path: "/bottlenecks", icon: Radar },
-  { label: "Kosten", path: "/costs", icon: DollarSign },
-  { label: "Friction", path: "/friction", icon: Flame },
-  { label: "Health", path: "/health", icon: Activity },
-  { label: "Analytics", path: "/analytics", icon: TrendingUp },
-  { label: "DNA", path: "/dna", icon: Dna },
-  { label: "Engine", path: "/engine", icon: Zap },
-  { label: "Benchmark", path: "/benchmarking", icon: Trophy },
-  { label: "Szenarien", path: "/scenarios", icon: FlaskConical },
-  { label: "Timeline", path: "/timeline", icon: Calendar },
-  { label: "Strategie", path: "/strategy", icon: Crosshair },
-  { label: "War Room", path: "/warroom", icon: Shield },
-  { label: "Patterns", path: "/patterns", icon: Brain },
-  { label: "Teams", path: "/teams", icon: Users },
-  { label: "Kalender", path: "/calendar", icon: Calendar },
-  { label: "Aufgaben", path: "/tasks", icon: ListTodo },
-  { label: "Einstellungen", path: "/settings", icon: Settings },
-  { label: "Admin", path: "/admin/users", icon: Shield },
-];
-
-const quickActions = [
-  { label: "Neue Entscheidung erstellen", path: "/decisions?new=true", icon: Plus, shortcut: "N" },
-  { label: "Neue Aufgabe erstellen", path: "/tasks?new=true", icon: ListTodo, shortcut: "T" },
-  { label: "Escalation Center öffnen", path: "/engine", icon: Zap },
-  { label: "Analytics öffnen", path: "/analytics", icon: TrendingUp },
-];
+import { useTranslation } from "react-i18next";
 
 const CommandPalette = () => {
   const [open, setOpen] = useState(false);
@@ -59,8 +27,35 @@ const CommandPalette = () => {
   const { data: tasks = [] } = useTasks();
   const { data: teams = [] } = useTeams();
   const { selectedTeamId, setSelectedTeamId } = useTeamContext();
+  const { t } = useTranslation();
 
-  // Track recent navigations
+  const pages = useMemo(() => [
+    { label: "Executive", path: "/executive", icon: Target },
+    { label: t("nav.dashboard"), path: "/dashboard", icon: BarChart3 },
+    { label: t("nav.decisions"), path: "/decisions", icon: FileText },
+    { label: "Briefing", path: "/briefing", icon: Sun },
+    { label: "Graph", path: "/graph", icon: GitBranch },
+    { label: "Bottlenecks", path: "/bottlenecks", icon: Radar },
+    { label: t("nav.analyticsHub"), path: "/analytics", icon: TrendingUp },
+    { label: "DNA", path: "/dna", icon: Dna },
+    { label: t("nav.escalationCenter"), path: "/engine", icon: Zap },
+    { label: t("nav.benchmarking"), path: "/benchmarking", icon: Trophy },
+    { label: t("nav.scenarios"), path: "/scenarios", icon: FlaskConical },
+    { label: t("nav.strategy"), path: "/strategy", icon: Crosshair },
+    { label: t("nav.teamsNav"), path: "/teams", icon: Users },
+    { label: t("nav.calendar"), path: "/calendar", icon: Calendar },
+    { label: t("nav.tasks"), path: "/tasks", icon: ListTodo },
+    { label: t("nav.settings"), path: "/settings", icon: Settings },
+    { label: t("nav.users"), path: "/admin/users", icon: Shield },
+  ], [t]);
+
+  const quickActions = useMemo(() => [
+    { label: t("cmd.newDecision"), path: "/decisions?new=true", icon: Plus, shortcut: "N" },
+    { label: t("cmd.newTask"), path: "/tasks?new=true", icon: ListTodo, shortcut: "T" },
+    { label: t("cmd.openEscalation"), path: "/engine", icon: Zap },
+    { label: t("cmd.openAnalytics"), path: "/analytics", icon: TrendingUp },
+  ], [t]);
+
   const [recentPaths, setRecentPaths] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("cmd-recent") || "[]");
@@ -80,7 +75,6 @@ const CommandPalette = () => {
 
   const go = (path: string) => {
     setOpen(false);
-    // Track recent
     const updated = [path, ...recentPaths.filter(p => p !== path)].slice(0, 5);
     setRecentPaths(updated);
     localStorage.setItem("cmd-recent", JSON.stringify(updated));
@@ -92,16 +86,15 @@ const CommandPalette = () => {
       .map(p => pages.find(pg => pg.path === p))
       .filter(Boolean)
       .slice(0, 5) as typeof pages;
-  }, [recentPaths]);
+  }, [recentPaths, pages]);
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Suche nach Seiten, Entscheidungen, Aufgaben oder Teams..." />
+      <CommandInput placeholder={t("cmd.placeholder")} />
       <CommandList>
-        <CommandEmpty>Keine Ergebnisse gefunden.</CommandEmpty>
+        <CommandEmpty>{t("cmd.noResults")}</CommandEmpty>
 
-        {/* Quick Actions */}
-        <CommandGroup heading="Schnellaktionen">
+        <CommandGroup heading={t("cmd.quickActions")}>
           {quickActions.map((a) => (
             <CommandItem key={a.label} onSelect={() => go(a.path)} className="gap-2.5">
               <a.icon className="w-4 h-4 text-primary shrink-0" />
@@ -115,11 +108,10 @@ const CommandPalette = () => {
           ))}
         </CommandGroup>
 
-        {/* Recent */}
         {recentPages.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Zuletzt besucht">
+            <CommandGroup heading={t("cmd.recentlyVisited")}>
               {recentPages.map((p) => (
                 <CommandItem key={`recent-${p.path}`} onSelect={() => go(p.path)} className="gap-2.5">
                   <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -130,28 +122,27 @@ const CommandPalette = () => {
           </>
         )}
 
-        {/* Team Switch */}
         {teams.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Team wechseln">
+            <CommandGroup heading={t("cmd.switchTeam")}>
               <CommandItem
                 onSelect={() => { setSelectedTeamId(null); setOpen(false); }}
                 className="gap-2.5"
               >
                 <Users className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span>Persönlich</span>
-                {!selectedTeamId && <span className="text-[10px] text-primary ml-auto">aktiv</span>}
+                <span>{t("cmd.personal")}</span>
+                {!selectedTeamId && <span className="text-[10px] text-primary ml-auto">{t("cmd.active")}</span>}
               </CommandItem>
-              {teams.map((t) => (
+              {teams.map((tm) => (
                 <CommandItem
-                  key={t.id}
-                  onSelect={() => { setSelectedTeamId(t.id); setOpen(false); }}
+                  key={tm.id}
+                  onSelect={() => { setSelectedTeamId(tm.id); setOpen(false); }}
                   className="gap-2.5"
                 >
                   <Users className="w-4 h-4 text-muted-foreground shrink-0" />
-                  <span>{t.name}</span>
-                  {selectedTeamId === t.id && <span className="text-[10px] text-primary ml-auto">aktiv</span>}
+                  <span>{tm.name}</span>
+                  {selectedTeamId === tm.id && <span className="text-[10px] text-primary ml-auto">{t("cmd.active")}</span>}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -160,8 +151,7 @@ const CommandPalette = () => {
 
         <CommandSeparator />
 
-        {/* Pages */}
-        <CommandGroup heading="Seiten">
+        <CommandGroup heading={t("cmd.pages")}>
           {pages.map((p) => (
             <CommandItem key={p.path} onSelect={() => go(p.path)} className="gap-2.5">
               <p.icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -170,11 +160,10 @@ const CommandPalette = () => {
           ))}
         </CommandGroup>
 
-        {/* Decisions */}
         {decisions.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Entscheidungen">
+            <CommandGroup heading={t("cmd.decisions")}>
               {decisions.slice(0, 15).map((d) => (
                 <CommandItem
                   key={d.id}
@@ -193,23 +182,22 @@ const CommandPalette = () => {
           </>
         )}
 
-        {/* Tasks */}
         {tasks.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Aufgaben">
-              {tasks.filter(t => t.status !== "done").slice(0, 10).map((t) => (
+            <CommandGroup heading={t("cmd.tasks")}>
+              {tasks.filter(t => t.status !== "done").slice(0, 10).map((tk) => (
                 <CommandItem
-                  key={t.id}
-                  value={`task ${t.title} ${t.status}`}
+                  key={tk.id}
+                  value={`task ${tk.title} ${tk.status}`}
                   onSelect={() => go("/tasks")}
                   className="gap-2.5"
                 >
                   <ListTodo className="w-4 h-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <span className="truncate">{t.title}</span>
+                    <span className="truncate">{tk.title}</span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground uppercase">{t.status}</span>
+                  <span className="text-[10px] text-muted-foreground uppercase">{tk.status}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

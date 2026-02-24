@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   open: boolean;
@@ -12,6 +13,7 @@ interface Props {
 
 const CreateTeamDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +34,6 @@ const CreateTeamDialog = ({ open, onOpenChange, onCreated }: Props) => {
     if (err) {
       setError(err.message);
     } else if (data) {
-      // Add creator as team member
       await supabase.from("team_members").insert({ team_id: data.id, user_id: user.id });
       setName("");
       setDescription("");
@@ -48,21 +49,21 @@ const CreateTeamDialog = ({ open, onOpenChange, onCreated }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card border-border max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Neues Team</DialogTitle>
+          <DialogTitle className="font-display text-xl">{t("team.newTeam")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Teamname *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="z.B. Produktteam" className={inputClass} required />
+            <label className="text-sm text-muted-foreground mb-1 block">{t("team.teamName")} *</label>
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("team.teamNamePlaceholder")} className={inputClass} required />
           </div>
           <div>
-            <label className="text-sm text-muted-foreground mb-1 block">Beschreibung</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Worum geht es in diesem Team?" className={`${inputClass} h-20 resize-none py-2`} />
+            <label className="text-sm text-muted-foreground mb-1 block">{t("team.description")}</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("team.descriptionPlaceholder")} className={`${inputClass} h-20 resize-none py-2`} />
           </div>
           {error && <p className="text-destructive text-sm">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="glass" onClick={() => onOpenChange(false)}>Abbrechen</Button>
-            <Button type="submit" variant="hero" disabled={loading || !name.trim()}>{loading ? "Erstellen..." : "Erstellen"}</Button>
+            <Button type="button" variant="glass" onClick={() => onOpenChange(false)}>{t("team.cancel")}</Button>
+            <Button type="submit" variant="hero" disabled={loading || !name.trim()}>{loading ? t("team.creating") : t("team.create")}</Button>
           </div>
         </form>
       </DialogContent>

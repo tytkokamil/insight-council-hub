@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserPlus, Trash2, User, Mail, Clock, Check, MessageCircle, Shield, Eye, UserCog } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import TeamChat from "./TeamChat";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   team: any;
@@ -17,11 +18,11 @@ interface Props {
   onUpdated: () => void;
 }
 
-const TEAM_ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  lead: "Lead",
-  member: "Mitglied",
-  viewer: "Betrachter",
+const TEAM_ROLE_KEYS: Record<string, string> = {
+  admin: "team.roleAdmin",
+  lead: "team.roleLead",
+  member: "team.roleMember",
+  viewer: "team.roleViewer",
 };
 
 const TEAM_ROLE_STYLES: Record<string, string> = {
@@ -40,6 +41,7 @@ const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
 
 const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [members, setMembers] = useState<any[]>([]);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -88,16 +90,16 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
 
       if (error) throw error;
       if (data?.error) {
-        toast({ title: "Hinweis", description: data.error, variant: "destructive" });
+        toast({ title: t("team.notice"), description: data.error, variant: "destructive" });
       } else {
-        toast({ title: "Einladung gesendet", description: data?.message || `Einladung an ${inviteEmail} gesendet` });
+        toast({ title: t("team.inviteSent"), description: data?.message || t("team.inviteDefault", { email: inviteEmail }) });
         setInviteEmail("");
         await fetchMembers();
         await fetchInvites();
         onUpdated();
       }
     } catch (err: any) {
-      toast({ title: "Fehler", description: err.message, variant: "destructive" });
+      toast({ title: t("team.error"), description: err.message, variant: "destructive" });
     }
     setInviting(false);
   };
@@ -121,9 +123,9 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
       .update({ role: newRole as any })
       .eq("id", memberId);
     if (error) {
-      toast({ title: "Fehler", description: "Rollenänderung fehlgeschlagen", variant: "destructive" });
+      toast({ title: t("team.error"), description: t("team.roleChangeFailed"), variant: "destructive" });
     } else {
-      toast({ title: "Rolle geändert", description: `Rolle → ${TEAM_ROLE_LABELS[newRole]}` });
+      toast({ title: t("team.roleChanged"), description: t("team.roleChangeTo", { role: t(TEAM_ROLE_KEYS[newRole]) }) });
       await fetchMembers();
       onUpdated();
     }
@@ -138,16 +140,16 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
       <DialogContent className="glass-card border-border max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">{team.name}</DialogTitle>
-          <p className="text-sm text-muted-foreground">{team.description || "Keine Beschreibung"}</p>
+          <p className="text-sm text-muted-foreground">{team.description || t("team.noDescription")}</p>
         </DialogHeader>
 
         <Tabs defaultValue="members" className="mt-2">
           <TabsList className="w-full">
             <TabsTrigger value="members" className="flex-1 gap-1.5">
-              <User className="w-3.5 h-3.5" /> Mitglieder
+              <User className="w-3.5 h-3.5" /> {t("team.members")}
             </TabsTrigger>
             <TabsTrigger value="chat" className="flex-1 gap-1.5">
-              <MessageCircle className="w-3.5 h-3.5" /> Chat
+              <MessageCircle className="w-3.5 h-3.5" /> {t("team.chat")}
             </TabsTrigger>
           </TabsList>
 
@@ -158,14 +160,14 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                 <form onSubmit={sendInvite} className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Per E-Mail einladen
+                    {t("team.inviteByEmail")}
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="email@beispiel.de"
+                      placeholder={t("team.emailPlaceholder")}
                       className={inputClass}
                       required
                     />
@@ -181,7 +183,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                 <div className="space-y-2">
                   <h3 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-3.5 h-3.5" />
-                    Ausstehende Einladungen ({pendingInvites.length})
+                    {t("team.pendingInvites")} ({pendingInvites.length})
                   </h3>
                   {pendingInvites.map((inv) => (
                     <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border">
@@ -201,7 +203,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
               <div className="space-y-2 border-t border-border pt-3">
                 <h3 className="text-sm font-medium flex items-center gap-2">
                   <Check className="w-3.5 h-3.5" />
-                  Mitglieder ({members.length})
+                  {t("team.membersCount", { count: members.length })}
                 </h3>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {members.map((m) => {
@@ -209,10 +211,10 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                     return (
                       <div key={m.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 group">
                         <User className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm flex-1">{m.profiles?.full_name || "Unbekannt"}</span>
+                        <span className="text-sm flex-1">{m.profiles?.full_name || t("team.unknown")}</span>
 
                         {m.user_id === user?.id && (
-                          <Badge variant="outline" className="text-[10px]">Du</Badge>
+                          <Badge variant="outline" className="text-[10px]">{t("team.you")}</Badge>
                         )}
 
                         {/* Role select for leads, badge for others */}
@@ -223,16 +225,16 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="lead">Lead</SelectItem>
-                              <SelectItem value="member">Mitglied</SelectItem>
-                              <SelectItem value="viewer">Betrachter</SelectItem>
+                              <SelectItem value="admin">{t("team.roleAdmin")}</SelectItem>
+                              <SelectItem value="lead">{t("team.roleLead")}</SelectItem>
+                              <SelectItem value="member">{t("team.roleMember")}</SelectItem>
+                              <SelectItem value="viewer">{t("team.roleViewer")}</SelectItem>
                             </SelectContent>
                           </Select>
                         ) : (
                           <Badge variant="outline" className={`text-[10px] ${TEAM_ROLE_STYLES[m.role]}`}>
                             <RoleIcon className="w-3 h-3 mr-1" />
-                            {TEAM_ROLE_LABELS[m.role] || m.role}
+                            {t(TEAM_ROLE_KEYS[m.role]) || m.role}
                           </Badge>
                         )}
 
