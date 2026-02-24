@@ -243,7 +243,13 @@
     "interfaceLanguage": "Interface-Sprache",
     "interfaceLanguageDesc": "Steuert die Sprache der Benutzeroberfläche",
     "exportLanguage": "Export & Report-Sprache",
-    "exportLanguageDesc": "Sprache für PDF-Reports und Board Packs"
+    "exportLanguageDesc": "Sprache für PDF-Reports und Board Packs",
+    "activeSessions": "Aktive Sitzungen",
+    "activeSessionsDesc": "Verwalte deine aktiven Browser-Sitzungen. Widerrufe verdächtige Sitzungen.",
+    "noSessions": "Keine aktiven Sitzungen gefunden.",
+    "currentSession": "Aktuell",
+    "lastActive": "Zuletzt aktiv",
+    "sessionRevoked": "Sitzung widerrufen"
   },
   "common": {
     "skipToContent": "Zum Inhalt springen",
@@ -4521,7 +4527,14 @@
     "emailActivatedDesc": "E-Mail-Verifizierung erfolgreich eingerichtet.",
     "emailDeactivated": "E-Mail-OTP deaktiviert",
     "loading": "Lade 2FA-Einstellungen…",
-    "copied": "Kopiert!"
+    "copied": "Kopiert!",
+    "backupCodes": "Backup-Codes",
+    "backupCodesDesc": "Einmal-Codes für den Notfall, falls du keinen Zugriff auf dein Gerät hast.",
+    "backupCodesGenerated": "Backup-Codes generiert",
+    "backupCodesWarning": "Bewahre diese Codes sicher auf. Sie werden nur einmal angezeigt.",
+    "regenerate": "Neu generieren",
+    "generate": "Generieren",
+    "copyAll": "Alle kopieren"
   },
   "emptyState": {
     "defaultCta": "Entscheidung erstellen"

@@ -20,6 +20,9 @@ const MfaSettingsPanel = () => {
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [emailOtpEnabled, setEmailOtpEnabled] = useState(false);
   const [preferredMethod, setPreferredMethod] = useState<MfaMethod>("none");
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
+  const [generatingCodes, setGeneratingCodes] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [enrolling, setEnrolling] = useState(false);
@@ -44,6 +47,7 @@ const MfaSettingsPanel = () => {
       setTotpEnabled(data.totp_enabled);
       setEmailOtpEnabled(data.email_otp_enabled);
       setPreferredMethod(data.preferred_method as MfaMethod);
+      setBackupCodes((data.backup_codes as string[]) || []);
     }
     const { data: factors } = await supabase.auth.mfa.listFactors();
     if (factors?.totp && factors.totp.length > 0) {
@@ -129,6 +133,19 @@ const MfaSettingsPanel = () => {
     toast({ title: t("mfa.emailDeactivated") });
   };
 
+  const generateBackupCodes = async () => {
+    if (!user) return;
+    setGeneratingCodes(true);
+    const codes = Array.from({ length: 8 }, () =>
+      Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase()
+    );
+    await supabase.from("mfa_settings").upsert({ user_id: user.id, backup_codes: codes }, { onConflict: "user_id" });
+    setBackupCodes(codes);
+    setShowBackupCodes(true);
+    setGeneratingCodes(false);
+    toast({ title: t("mfa.backupCodesGenerated") });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-4">
@@ -208,6 +225,50 @@ const MfaSettingsPanel = () => {
           <Shield className="w-3 h-3" />
           {t("mfa.bothMethodsHint")}
         </p>
+      )}
+
+      {/* Backup Codes */}
+      {(totpEnabled || emailOtpEnabled) && (
+        <div className="p-4 rounded-lg border border-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{t("mfa.backupCodes")}</p>
+                <p className="text-xs text-muted-foreground">{t("mfa.backupCodesDesc")}</p>
+              </div>
+            </div>
+            <Button size="sm" variant="outline" onClick={generateBackupCodes} disabled={generatingCodes}>
+              {generatingCodes ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+              {backupCodes.length > 0 ? t("mfa.regenerate") : t("mfa.generate")}
+            </Button>
+          </div>
+          {showBackupCodes && backupCodes.length > 0 && (
+            <div className="mt-3 p-3 rounded-md bg-muted">
+              <div className="grid grid-cols-2 gap-1.5">
+                {backupCodes.map((code, i) => (
+                  <code key={i} className="text-xs font-mono">{code}</code>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-xs gap-1"
+                  onClick={() => {
+                    navigator.clipboard.writeText(backupCodes.join("\n"));
+                    toast({ title: t("mfa.copied") });
+                  }}
+                >
+                  <Copy className="w-3 h-3" /> {t("mfa.copyAll")}
+                </Button>
+                <p className="text-[10px] text-warning">{t("mfa.backupCodesWarning")}</p>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* TOTP Enrollment Dialog */}
