@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
   Background,
@@ -17,6 +18,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { AlertTriangle, DollarSign, GitBranch, Info } from "lucide-react";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
+import { useTranslatedLabels } from "@/lib/labels";
 
 const statusColors: Record<string, string> = {
   draft: "#6b7280",
@@ -49,34 +51,27 @@ const DecisionNode = ({ data }: { data: any }) => {
       }}
     >
       <div className="flex items-center gap-2 mb-1.5">
-        <div
-          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          style={{ background: borderColor }}
-        />
+        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: borderColor }} />
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-          {data.status === "draft" ? "Entwurf" : data.status === "review" ? "Review" : data.status === "approved" ? "Genehmigt" : data.status === "implemented" ? "Umgesetzt" : data.status === "rejected" ? "Abgelehnt" : data.status}
+          {data.statusLabel}
         </span>
-        {isBlocked && (
-          <AlertTriangle className="w-3 h-3 text-destructive ml-auto" />
-        )}
+        {isBlocked && <AlertTriangle className="w-3 h-3 text-destructive ml-auto" />}
       </div>
-      <p className="text-sm font-semibold text-foreground leading-tight mb-2 line-clamp-2">
-        {data.label}
-      </p>
+      <p className="text-sm font-semibold text-foreground leading-tight mb-2 line-clamp-2">{data.label}</p>
       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-        <span className="capitalize">{data.priority === "critical" ? "Kritisch" : data.priority === "high" ? "Hoch" : data.priority === "medium" ? "Mittel" : "Niedrig"}</span>
-        <span className="capitalize">{data.category === "strategic" ? "Strategisch" : data.category === "budget" ? "Budget" : data.category === "hr" ? "Personal" : data.category === "technical" ? "Technisch" : data.category === "operational" ? "Operativ" : data.category === "marketing" ? "Marketing" : data.category}</span>
+        <span className="capitalize">{data.priorityLabel}</span>
+        <span className="capitalize">{data.categoryLabel}</span>
       </div>
       {data.delayCost > 0 && (
         <div className="mt-2 flex items-center gap-1 text-[10px] text-warning font-medium">
           <DollarSign className="w-3 h-3" />
-          {data.delayCost.toLocaleString("de-DE")} € Verzögerung
+          {data.delayCostFormatted}
         </div>
       )}
       {data.cascadeCount > 0 && (
         <div className="mt-1 flex items-center gap-1 text-[10px] text-destructive font-medium">
           <GitBranch className="w-3 h-3" />
-          {data.cascadeCount} Folgeentscheidung{data.cascadeCount > 1 ? "en" : ""} betroffen
+          {data.cascadeLabel}
         </div>
       )}
     </div>
@@ -92,6 +87,8 @@ const edgeTypeStyles: Record<string, any> = {
 };
 
 const DecisionGraph = () => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selectedNode, setSelectedNode] = useState<any>(null);
@@ -101,14 +98,19 @@ const DecisionGraph = () => {
   const { data: allDeps = [], isLoading: depLoading } = useDependencies();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
 
-  // Filter deps to only those relevant to current decisions
   const decIds = useMemo(() => new Set(decisions.map(d => d.id)), [decisions]);
   const deps = useMemo(() => allDeps.filter(d => decIds.has(d.source_decision_id) || decIds.has(d.target_decision_id)), [allDeps, decIds]);
+
+  const edgeLabelMap: Record<string, string> = useMemo(() => ({
+    blocks: t("graph.blocks"),
+    requires: t("graph.requires"),
+    influences: t("graph.influences"),
+  }), [t]);
 
   useEffect(() => {
     if (decLoading || depLoading || teamLoading || decisions.length === 0) return;
 
-    const teamRateMap = Object.fromEntries(teams.map((t) => [t.id, t.hourly_rate || 75]));
+    const teamRateMap = Object.fromEntries(teams.map((tm) => [tm.id, tm.hourly_rate || 75]));
 
     const adjForward: Record<string, string[]> = {};
     deps.forEach((d) => {
@@ -125,10 +127,7 @@ const DecisionGraph = () => {
         const current = queue.shift()!;
         const children = adjForward[current] || [];
         for (const child of children) {
-          if (!visited.has(child) && child !== id) {
-            visited.add(child);
-            queue.push(child);
-          }
+          if (!visited.has(child) && child !== id) { visited.add(child); queue.push(child); }
         }
       }
       return { count: visited.size, ids: Array.from(visited) };
@@ -146,6 +145,7 @@ const DecisionGraph = () => {
     const graphNodes: Node[] = decisions.map((dec, i) => {
       const cascade = getCascade(dec.id);
       const pos = positioned[dec.id] || { x: (i % 5) * 280, y: Math.floor(i / 5) * 200 };
+      const delayCost = getDelayCost(dec);
       return {
         id: dec.id,
         type: "decision",
@@ -155,10 +155,15 @@ const DecisionGraph = () => {
           status: dec.status,
           priority: dec.priority,
           category: dec.category,
-          delayCost: getDelayCost(dec),
+          delayCost,
+          delayCostFormatted: t("graph.delayCost", { cost: delayCost.toLocaleString("de-DE") }),
           cascadeCount: cascade.count,
           cascadeIds: cascade.ids,
+          cascadeLabel: t("graph.cascadeAffected", { count: cascade.count }),
           isBlocked: blockedBy.has(dec.id),
+          statusLabel: tl.statusLabels[dec.status] || dec.status,
+          priorityLabel: tl.priorityLabels[dec.priority] || dec.priority,
+          categoryLabel: tl.categoryLabels[dec.category] || dec.category,
           decision: dec,
         },
         sourcePosition: Position.Right,
@@ -172,18 +177,15 @@ const DecisionGraph = () => {
       target: dep.target_decision_id,
       type: "default",
       animated: dep.dependency_type === "blocks",
-      label: dep.dependency_type === "blocks" ? "blockiert" : dep.dependency_type === "requires" ? "benötigt" : "beeinflusst",
+      label: edgeLabelMap[dep.dependency_type] || dep.dependency_type,
       labelStyle: { fontSize: 10, fill: "#9ca3af" },
       style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308",
-      },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308" },
     }));
 
     setNodes(graphNodes);
     setEdges(graphEdges);
-  }, [decLoading, depLoading, teamLoading, decisions, deps, teams]);
+  }, [decLoading, depLoading, teamLoading, decisions, deps, teams, t, tl, edgeLabelMap]);
 
   const onNodeClick = useCallback((_: any, node: Node) => {
     const nodeData = node.data as any;
@@ -194,29 +196,30 @@ const DecisionGraph = () => {
         const days = Math.max(1, Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000));
         return sum + days * 2 * 2 * 75;
       }, 0);
-      setCascadeInfo({
-        count: nodeData.cascadeCount as number,
-        cost: totalCost + ((nodeData.delayCost as number) || 0),
-        chain: cascadeDecisions.map((d) => d.title),
-      });
+      setCascadeInfo({ count: nodeData.cascadeCount as number, cost: totalCost + ((nodeData.delayCost as number) || 0), chain: cascadeDecisions.map((d) => d.title) });
     } else {
       setCascadeInfo(null);
     }
   }, [decisions]);
 
+  const statusLegend = useMemo(() => [
+    ["draft", tl.statusLabels["draft"]],
+    ["review", tl.statusLabels["review"]],
+    ["approved", tl.statusLabels["approved"]],
+    ["implemented", tl.statusLabels["implemented"]],
+    ["rejected", tl.statusLabels["rejected"]],
+  ], [tl]);
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Netzwerk</p>
-          <h1 className="font-display text-xl font-bold">Decision Graph</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("graph.network")}</p>
+          <h1 className="font-display text-xl font-bold">{t("graph.title")}</h1>
         </div>
         <div className="flex items-center gap-4 text-xs">
-          <PageHelpButton title="Decision Graph" description="Visualisiert Abhängigkeiten zwischen Entscheidungen. Öffne eine Entscheidung und wechsle zum Tab 'Abhängigkeiten', um Verknüpfungen (blockiert, beeinflusst, benötigt) zu erstellen. Klicke auf einen Knoten für die Kaskaden-Analyse." />
-          {([
-            ["draft", "Entwurf"], ["review", "Review"], ["approved", "Genehmigt"],
-            ["implemented", "Umgesetzt"], ["rejected", "Abgelehnt"],
-          ] as const).map(([status, label]) => (
+          <PageHelpButton title={t("graph.title")} description={t("graph.helpDesc")} />
+          {statusLegend.map(([status, label]) => (
             <div key={status} className="flex items-center gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full" style={{ background: statusColors[status] }} />
               <span className="text-muted-foreground">{label}</span>
@@ -232,15 +235,13 @@ const DecisionGraph = () => {
               <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
                 <GitBranch className="w-8 h-8 text-primary opacity-60" />
               </div>
-              <h3 className="font-display text-xl font-semibold mb-2">Entscheidungsnetzwerk</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Erstelle Entscheidungen und verknüpfe sie, um Abhängigkeiten, kritische Pfade und Kaskadeneffekte visuell zu erkennen.
-              </p>
+              <h3 className="font-display text-xl font-semibold mb-2">{t("graph.emptyTitle")}</h3>
+              <p className="text-sm text-muted-foreground mb-6">{t("graph.emptyDesc")}</p>
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { icon: GitBranch, label: "Abhängigkeiten", desc: "Verknüpfungen sehen" },
-                  { icon: AlertTriangle, label: "Kritische Pfade", desc: "Engpässe erkennen" },
-                  { icon: DollarSign, label: "Kaskadenkosten", desc: "Impact analysieren" },
+                  { icon: GitBranch, label: t("graph.dependencies"), desc: t("graph.seeDeps") },
+                  { icon: AlertTriangle, label: t("graph.criticalPaths"), desc: t("graph.findBottlenecks") },
+                  { icon: DollarSign, label: t("graph.cascadeCosts"), desc: t("graph.analyzeImpact") },
                 ].map((f, i) => (
                   <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border">
                     <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
@@ -253,110 +254,85 @@ const DecisionGraph = () => {
           </div>
         ) : (
           <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onNodeClick={onNodeClick}
-            nodeTypes={nodeTypes}
-            fitView
-            minZoom={0.3}
-            maxZoom={2}
+            nodes={nodes} edges={edges}
+            onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+            onNodeClick={onNodeClick} nodeTypes={nodeTypes}
+            fitView minZoom={0.3} maxZoom={2}
             proOptions={{ hideAttribution: true }}
           >
             <Background color="hsl(var(--border))" gap={24} size={1} />
-            <Controls
-              className="!bg-card !border-border !rounded-lg !shadow-lg"
-              style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any}
-            />
-            <MiniMap
-              className="!bg-card/80 !border-border !rounded-lg"
-              nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"}
-              maskColor="hsl(var(--background) / 0.8)"
-            />
+            <Controls className="!bg-card !border-border !rounded-lg !shadow-lg" style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any} />
+            <MiniMap className="!bg-card/80 !border-border !rounded-lg" nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"} maskColor="hsl(var(--background) / 0.8)" />
 
-            {/* Cascade Info Panel */}
             {selectedNode && (
               <Panel position="top-right">
                 <div className="rounded-lg border border-border bg-card p-4 max-w-xs space-y-3 shadow-lg">
                   <h3 className="font-display font-semibold text-sm">{selectedNode.label}</h3>
                   <div className="flex items-center gap-2 text-xs">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ background: statusColors[selectedNode.status] }}
-                    />
-                    <span>{selectedNode.status === "draft" ? "Entwurf" : selectedNode.status === "review" ? "Review" : selectedNode.status === "approved" ? "Genehmigt" : selectedNode.status === "implemented" ? "Umgesetzt" : "Abgelehnt"}</span>
+                    <div className="w-2 h-2 rounded-full" style={{ background: statusColors[selectedNode.status] }} />
+                    <span>{selectedNode.statusLabel}</span>
                     <span className="text-muted-foreground">•</span>
-                    <span>{selectedNode.priority === "critical" ? "Kritisch" : selectedNode.priority === "high" ? "Hoch" : selectedNode.priority === "medium" ? "Mittel" : "Niedrig"}</span>
+                    <span>{selectedNode.priorityLabel}</span>
                   </div>
-
                   {selectedNode.delayCost > 0 && (
                     <div className="flex items-center gap-2 text-warning text-xs font-medium p-2 rounded-lg bg-warning/10">
                       <DollarSign className="w-3.5 h-3.5" />
-                      {selectedNode.delayCost.toLocaleString("de-DE")} € direkte Verzögerungskosten
+                      {t("graph.directDelayCost", { cost: selectedNode.delayCost.toLocaleString("de-DE") })}
                     </div>
                   )}
-
                   {cascadeInfo && (
                     <div className="space-y-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
                       <div className="flex items-center gap-2 text-destructive text-xs font-semibold">
                         <AlertTriangle className="w-3.5 h-3.5" />
-                        Kaskaden-Analyse
+                        {t("graph.cascadeAnalysis")}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Diese Verzögerung beeinflusst{" "}
-                        <span className="text-destructive font-bold">{cascadeInfo.count} Folgeentscheidungen</span>
+                        {t("graph.cascadeInfluence")}{" "}
+                        <span className="text-destructive font-bold">{t("graph.cascadeFollowUp", { count: cascadeInfo.count })}</span>
                       </p>
                       <p className="text-xs font-medium text-destructive">
-                        Gesamtkosten der Kette: {cascadeInfo.cost.toLocaleString("de-DE")} €
+                        {t("graph.chainCost", { cost: cascadeInfo.cost.toLocaleString("de-DE") })}
                       </p>
                       <div className="space-y-1 mt-1">
                         {cascadeInfo.chain.slice(0, 5).map((title, i) => (
-                          <p key={i} className="text-[10px] text-muted-foreground truncate">
-                            → {title}
-                          </p>
+                          <p key={i} className="text-[10px] text-muted-foreground truncate">→ {title}</p>
                         ))}
                         {cascadeInfo.chain.length > 5 && (
-                          <p className="text-[10px] text-muted-foreground">
-                            ... und {cascadeInfo.chain.length - 5} weitere
-                          </p>
+                          <p className="text-[10px] text-muted-foreground">{t("graph.andMore", { count: cascadeInfo.chain.length - 5 })}</p>
                         )}
                       </div>
                     </div>
                   )}
-
                   {selectedNode.isBlocked && (
                     <div className="flex items-center gap-2 text-destructive text-xs p-2 rounded-lg bg-destructive/10">
                       <AlertTriangle className="w-3.5 h-3.5" />
-                      Blockiert durch andere Entscheidung
+                      {t("graph.blockedBy")}
                     </div>
                   )}
-
                   {!cascadeInfo && !selectedNode.isBlocked && selectedNode.delayCost === 0 && (
                     <div className="flex items-center gap-2 text-success text-xs p-2 rounded-lg bg-success/10">
                       <Info className="w-3.5 h-3.5" />
-                      Keine Abhängigkeiten oder Risiken
+                      {t("graph.noDepsOrRisks")}
                     </div>
                   )}
                 </div>
               </Panel>
             )}
 
-            {/* Legend */}
             <Panel position="bottom-left">
               <div className="rounded-lg border border-border bg-card p-3 space-y-2 text-[10px] shadow-lg">
-                <p className="font-semibold text-xs mb-1">Verbindungstypen</p>
+                <p className="font-semibold text-xs mb-1">{t("graph.connectionTypes")}</p>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-0.5 bg-destructive rounded" />
-                  <span className="text-muted-foreground">Blockiert (animiert)</span>
+                  <span className="text-muted-foreground">{t("graph.blocksAnimated")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-0.5 bg-warning rounded" style={{ borderTop: "1px dashed" }} />
-                  <span className="text-muted-foreground">Beeinflusst</span>
+                  <span className="text-muted-foreground">{t("graph.influencesLabel")}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-0.5 bg-primary rounded" />
-                  <span className="text-muted-foreground">Benötigt</span>
+                  <span className="text-muted-foreground">{t("graph.requiresLabel")}</span>
                 </div>
               </div>
             </Panel>
@@ -372,94 +348,61 @@ function layoutNodes(decisions: any[], deps: any[]): Record<string, { x: number;
   const positions: Record<string, { x: number; y: number }> = {};
   if (decisions.length === 0) return positions;
 
-  // If no dependencies, use a grid layout
   if (deps.length === 0) {
     const cols = Math.ceil(Math.sqrt(decisions.length));
     const xGap = 300;
     const yGap = 200;
     decisions.forEach((d, i) => {
-      positions[d.id] = {
-        x: (i % cols) * xGap,
-        y: Math.floor(i / cols) * yGap,
-      };
+      positions[d.id] = { x: (i % cols) * xGap, y: Math.floor(i / cols) * yGap };
     });
     return positions;
   }
 
-  // Build incoming edge counts
   const incoming: Record<string, number> = {};
   const outgoing: Record<string, string[]> = {};
   const connectedIds = new Set<string>();
 
-  decisions.forEach((d) => {
-    incoming[d.id] = 0;
-    outgoing[d.id] = [];
-  });
+  decisions.forEach((d) => { incoming[d.id] = 0; outgoing[d.id] = []; });
   deps.forEach((dep) => {
-    if (incoming[dep.target_decision_id] !== undefined) {
-      incoming[dep.target_decision_id]++;
-    }
-    if (outgoing[dep.source_decision_id]) {
-      outgoing[dep.source_decision_id].push(dep.target_decision_id);
-    }
+    if (incoming[dep.target_decision_id] !== undefined) incoming[dep.target_decision_id]++;
+    if (outgoing[dep.source_decision_id]) outgoing[dep.source_decision_id].push(dep.target_decision_id);
     connectedIds.add(dep.source_decision_id);
     connectedIds.add(dep.target_decision_id);
   });
 
-  // Separate connected vs isolated nodes
-  const connected = decisions.filter(d => connectedIds.has(d.id));
-  const isolated = decisions.filter(d => !connectedIds.has(d.id));
-
-  // Topological layering for connected nodes
   const layers: string[][] = [];
   const assigned = new Set<string>();
-  let remaining = connected.map((d) => d.id);
-
-  while (remaining.length > 0) {
-    const layer = remaining.filter(
-      (id) =>
-        !assigned.has(id) &&
-        deps
-          .filter((d) => d.target_decision_id === id)
-          .every((d) => assigned.has(d.source_decision_id))
-    );
-
-    if (layer.length === 0) {
-      layers.push(remaining.filter((id) => !assigned.has(id)));
-      break;
-    }
-
-    layers.push(layer);
-    layer.forEach((id) => assigned.add(id));
-    remaining = remaining.filter((id) => !assigned.has(id));
+  const queue = decisions.filter(d => incoming[d.id] === 0 && connectedIds.has(d.id)).map(d => d.id);
+  if (queue.length === 0) {
+    const maxId = Object.entries(incoming).reduce((a, b) => a[1] <= b[1] ? a : b)[0];
+    queue.push(maxId);
   }
 
-  // Position connected layers
-  const xGap = 320;
-  const yGap = 160;
+  while (queue.length > 0) {
+    const layer = [...queue];
+    layers.push(layer);
+    layer.forEach(id => assigned.add(id));
+    queue.length = 0;
+    for (const id of layer) {
+      for (const child of (outgoing[id] || [])) {
+        if (!assigned.has(child) && !queue.includes(child)) queue.push(child);
+      }
+    }
+  }
 
+  const xGap = 320;
+  const yGap = 180;
   layers.forEach((layer, li) => {
-    const yOffset = -(layer.length - 1) * yGap / 2;
-    layer.forEach((id, ni) => {
-      positions[id] = {
-        x: li * xGap,
-        y: yOffset + ni * yGap,
-      };
-    });
+    const yStart = -(layer.length - 1) * yGap / 2;
+    layer.forEach((id, ni) => { positions[id] = { x: li * xGap, y: yStart + ni * yGap }; });
   });
 
-  // Position isolated nodes in a grid below the graph
-  if (isolated.length > 0) {
-    const maxLayerY = Math.max(0, ...Object.values(positions).map(p => p.y));
-    const gridStartY = maxLayerY + yGap * 2;
-    const cols = Math.min(4, Math.ceil(Math.sqrt(isolated.length)));
-    isolated.forEach((d, i) => {
-      positions[d.id] = {
-        x: (i % cols) * 280,
-        y: gridStartY + Math.floor(i / cols) * 180,
-      };
-    });
-  }
+  const unassigned = decisions.filter(d => !assigned.has(d.id));
+  const lastX = (layers.length) * xGap;
+  const cols = Math.max(3, Math.ceil(Math.sqrt(unassigned.length)));
+  unassigned.forEach((d, i) => {
+    positions[d.id] = { x: lastX + (i % cols) * 280, y: Math.floor(i / cols) * yGap };
+  });
 
   return positions;
 }
