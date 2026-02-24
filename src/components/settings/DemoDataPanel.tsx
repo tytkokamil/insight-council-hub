@@ -19,9 +19,10 @@ const DemoDataPanel = () => {
     if (!user) return;
     setLoadingDemo(true);
     try {
-      const { data, error } = await supabase.functions.invoke("seed-demo-data");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const res = await supabase.functions.invoke("seed-demo-data");
+      console.log("[DemoData] seed response:", JSON.stringify(res));
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
       toast.success(t("shared.demoSuccess"));
       qc.invalidateQueries();
     } catch (e: any) {
@@ -34,9 +35,10 @@ const DemoDataPanel = () => {
     if (!user) return;
     setLoadingReset(true);
     try {
-      const { data, error } = await supabase.functions.invoke("reset-user-data");
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      const res = await supabase.functions.invoke("reset-user-data");
+      console.log("[DemoData] reset response:", JSON.stringify(res));
+      if (res.error) throw res.error;
+      if (res.data?.error) throw new Error(res.data.error);
 
       // Clear local progressive state
       localStorage.removeItem("intelligence-unlocked");
