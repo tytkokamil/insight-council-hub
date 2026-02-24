@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +15,7 @@ const priorityMultiplier: Record<string, number> = { critical: 4, high: 2.5, med
 const categoryMultiplier: Record<string, number> = { strategic: 3, budget: 2.5, hr: 1.8, technical: 1.5, marketing: 1.3, operational: 1 };
 
 const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const [sortBy, setSortBy] = useState<"urgency" | "daily" | "total">("urgency");
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
@@ -49,37 +51,34 @@ const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
     <Wrap>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kostenanalyse</p>
-          <h1 className="text-xl font-semibold tracking-tight">Opportunity Cost Radar</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("opportunityCost.label")}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t("opportunityCost.title")}</h1>
         </div>
-        <PageHelpButton title="Opportunity Cost Radar" description="Berechnet tägliche Verzögerungskosten offener Entscheidungen." />
+        <PageHelpButton title={t("opportunityCost.title")} description={t("opportunityCost.helpDesc")} />
       </div>
 
-      {/* Summary – always visible */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card><CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-2"><Flame className="w-4 h-4 text-destructive" /><span className="text-xs text-muted-foreground">Tägliche Verluste</span></div>
+          <div className="flex items-center gap-2 mb-2"><Flame className="w-4 h-4 text-destructive" /><span className="text-xs text-muted-foreground">{t("opportunityCost.dailyLosses")}</span></div>
           <p className="text-3xl font-bold tabular-nums text-destructive">{totalDailyCost.toLocaleString("de-DE")} €</p>
-          <p className="text-[10px] text-muted-foreground mt-1">pro Tag durch offene Entscheidungen</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.dailyLossesDesc")}</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-warning" /><span className="text-xs text-muted-foreground">Kumulierte Kosten</span></div>
+          <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-warning" /><span className="text-xs text-muted-foreground">{t("opportunityCost.accumulatedCosts")}</span></div>
           <p className="text-3xl font-bold tabular-nums text-warning">{totalAccumulated.toLocaleString("de-DE")} €</p>
-          <p className="text-[10px] text-muted-foreground mt-1">bisher aufgelaufen</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.accumulatedCostsDesc")}</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
-          <div className="flex items-center gap-2 mb-2"><Timer className="w-4 h-4 text-primary" /><span className="text-xs text-muted-foreground">Offene Entscheidungen</span></div>
+          <div className="flex items-center gap-2 mb-2"><Timer className="w-4 h-4 text-primary" /><span className="text-xs text-muted-foreground">{t("opportunityCost.openDecisions")}</span></div>
           <p className="text-3xl font-bold tabular-nums">{entries.length}</p>
-          <p className="text-[10px] text-muted-foreground mt-1">davon {entries.filter(e => e.isOverdue).length} überfällig</p>
+          <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.ofWhichOverdue", { count: entries.filter(e => e.isOverdue).length })}</p>
         </CardContent></Card>
       </div>
 
-      {/* Cost Ranking – collapsible */}
-      <CollapsibleSection title="Kosten-Ranking" subtitle={`${entries.length} offene Entscheidungen`} icon={<DollarSign className="w-4 h-4 text-destructive" />} defaultOpen={true}>
-        {/* Sort controls */}
+      <CollapsibleSection title={t("opportunityCost.costRanking")} subtitle={t("opportunityCost.costRankingSub", { count: entries.length })} icon={<DollarSign className="w-4 h-4 text-destructive" />} defaultOpen={true}>
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs text-muted-foreground">Sortieren:</span>
-          {([{ key: "urgency", label: "Dringlichkeit" }, { key: "daily", label: "€/Tag" }, { key: "total", label: "Kumuliert" }] as const).map(s => (
+          <span className="text-xs text-muted-foreground">{t("opportunityCost.sortLabel")}</span>
+          {([{ key: "urgency", label: t("opportunityCost.sortUrgency") }, { key: "daily", label: t("opportunityCost.sortDaily") }, { key: "total", label: t("opportunityCost.sortAccumulated") }] as const).map(s => (
             <button key={s.key} onClick={() => setSortBy(s.key)} className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${sortBy === s.key ? "bg-foreground/10 text-foreground font-medium" : "text-muted-foreground hover:bg-muted/30"}`}>{s.label}</button>
           ))}
         </div>
@@ -93,13 +92,13 @@ const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-sm font-semibold truncate">{entry.title}</p>
-                      {entry.isOverdue && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">ÜBERFÄLLIG</span>}
+                      {entry.isOverdue && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">{t("opportunityCost.overdue")}</span>}
                     </div>
                     <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                       <span className={`capitalize font-medium ${priorityColor[entry.priority]}`}>● {entry.priority}</span>
                       <span className="capitalize">{entry.category}</span>
                       {entry.teamName && <span>{entry.teamName}</span>}
-                      <span><Clock className="w-3 h-3 inline mr-0.5" />{entry.daysOpen}d offen</span>
+                      <span><Clock className="w-3 h-3 inline mr-0.5" />{t("opportunityCost.daysOpen", { days: entry.daysOpen })}</span>
                     </div>
                   </div>
                   <div className="w-32 shrink-0 hidden md:block">
@@ -109,11 +108,11 @@ const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                   <div className="text-right shrink-0 w-24">
                     <p className={`text-sm font-bold ${entry.dailyCost > 1000 ? "text-destructive" : entry.dailyCost > 500 ? "text-warning" : "text-muted-foreground"}`}>{entry.dailyCost.toLocaleString("de-DE")} €</p>
-                    <p className="text-[10px] text-muted-foreground">pro Tag</p>
+                    <p className="text-[10px] text-muted-foreground">{t("opportunityCost.perDay")}</p>
                   </div>
                   <div className="text-right shrink-0 w-28 hidden lg:block">
                     <p className="text-sm font-medium">{entry.totalCost.toLocaleString("de-DE")} €</p>
-                    <p className="text-[10px] text-muted-foreground">kumuliert</p>
+                    <p className="text-[10px] text-muted-foreground">{t("opportunityCost.accumulated")}</p>
                   </div>
                 </div>
               </CardContent>
@@ -122,11 +121,10 @@ const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
         </div>
 
         {entries.length === 0 && (
-          <EmptyAnalysisState icon={DollarSign} title="Keine offenen Kosten" description="Alle Entscheidungen sind abgeschlossen." hint="Offene Entscheidungen generieren automatisch Opportunity-Costs" />
+          <EmptyAnalysisState icon={DollarSign} title={t("opportunityCost.noCosts")} description={t("opportunityCost.noCostsDesc")} hint={t("opportunityCost.noCostsHint")} />
         )}
       </CollapsibleSection>
 
-      {/* AI Analysis */}
       {entries.length > 0 && (
         <AiInsightPanel
           type="bottleneck"
