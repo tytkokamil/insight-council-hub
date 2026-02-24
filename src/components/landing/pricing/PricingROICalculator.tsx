@@ -137,7 +137,7 @@ const PricingROICalculator = () => {
               €{roi.annualSavings.toLocaleString("de-DE")}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {roi.roiMultiple}× ROI bei €{roi.annualCost.toLocaleString("de-DE")} Jahreskosten
+              {roi.roiMultiple}× ROI · {teamSize <= 10 ? "Starter" : teamSize <= 50 ? "Professional" : "Enterprise"}-Plan (€{roi.monthlyCost}/Mo)
             </p>
           </motion.div>
 

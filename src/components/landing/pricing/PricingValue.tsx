@@ -12,7 +12,7 @@ const PricingValue = () => (
     className="mt-20 max-w-4xl mx-auto text-center"
   >
     <h3 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-      Warum sich DecisionOS <span className="gradient-text">rechnet</span>
+      Warum sich Decision Platform <span className="gradient-text">rechnet</span>
     </h3>
     <p className="text-muted-foreground text-sm mb-10 max-w-xl mx-auto">
       Teams mit klarer Decision Governance:
