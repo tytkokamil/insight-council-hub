@@ -27,17 +27,20 @@ import {
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
-const STATUS_CONFIG = {
-  backlog: { label: "Backlog", icon: Archive, color: "text-muted-foreground/60" },
-  open: { label: "Offen", icon: Circle, color: "text-muted-foreground" },
-  in_progress: { label: "In Arbeit", icon: Clock, color: "text-warning" },
-  blocked: { label: "Blockiert", icon: Ban, color: "text-destructive" },
-  done: { label: "Erledigt", icon: CheckCircle2, color: "text-success" },
-} as const;
+const useStatusConfig = () => {
+  const { t } = useTranslation();
+  return {
+    backlog: { label: t("tasksPage.statusBacklog"), icon: Archive, color: "text-muted-foreground/60" },
+    open: { label: t("tasksPage.statusOpen"), icon: Circle, color: "text-muted-foreground" },
+    in_progress: { label: t("tasksPage.statusInProgress"), icon: Clock, color: "text-warning" },
+    blocked: { label: t("tasksPage.statusBlocked"), icon: Ban, color: "text-destructive" },
+    done: { label: t("tasksPage.statusDone"), icon: CheckCircle2, color: "text-success" },
+  } as const;
+};
 
 const statusStyles: Record<string, string> = {
   backlog: "bg-muted/50 text-muted-foreground/60",
@@ -47,54 +50,12 @@ const statusStyles: Record<string, string> = {
   done: "bg-success/20 text-success",
 };
 
-const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
-  critical: { color: "bg-destructive/20 text-destructive", label: "Kritisch" },
-  high: { color: "bg-warning/20 text-warning", label: "Hoch" },
-  medium: { color: "bg-primary/20 text-primary", label: "Mittel" },
-  low: { color: "bg-muted text-muted-foreground", label: "Niedrig" },
-};
-
 const priorityStyles: Record<string, string> = {
   low: "text-muted-foreground",
   medium: "text-primary",
   high: "text-warning",
   critical: "text-destructive",
 };
-
-const CATEGORY_LABELS: Record<string, string> = {
-  general: "Allgemein",
-  strategic: "Strategisch",
-  operational: "Operativ",
-  technical: "Technisch",
-  hr: "Personal",
-  marketing: "Marketing",
-  budget: "Budget",
-};
-
-const STATUS_OPTIONS = [
-  { value: "backlog", label: "Backlog" },
-  { value: "open", label: "Offen" },
-  { value: "in_progress", label: "In Arbeit" },
-  { value: "blocked", label: "Blockiert" },
-  { value: "done", label: "Erledigt" },
-];
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Niedrig" },
-  { value: "medium", label: "Mittel" },
-  { value: "high", label: "Hoch" },
-  { value: "critical", label: "Kritisch" },
-];
-
-const CATEGORY_OPTIONS = [
-  { value: "general", label: "Allgemein" },
-  { value: "strategic", label: "Strategisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "technical", label: "Technisch" },
-  { value: "hr", label: "Personal" },
-  { value: "marketing", label: "Marketing" },
-  { value: "budget", label: "Budget" },
-];
 
 const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
@@ -108,7 +69,7 @@ const emptyForm = {
 };
 
 const Tasks = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
@@ -116,6 +77,38 @@ const Tasks = () => {
   const { data: profiles = [] } = useProfiles();
   const invalidate = useInvalidateTasks();
   const profileMap = buildProfileMap(profiles);
+  const STATUS_CONFIG = useStatusConfig();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
+    critical: { color: "bg-destructive/20 text-destructive", label: t("tasksPage.priorityCritical") },
+    high: { color: "bg-warning/20 text-warning", label: t("tasksPage.priorityHigh") },
+    medium: { color: "bg-primary/20 text-primary", label: t("tasksPage.priorityMedium") },
+    low: { color: "bg-muted text-muted-foreground", label: t("tasksPage.priorityLow") },
+  };
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    general: t("tasksPage.catGeneral"), strategic: t("tasksPage.catStrategic"),
+    operational: t("tasksPage.catOperational"), technical: t("tasksPage.catTechnical"),
+    hr: t("tasksPage.catHr"), marketing: t("tasksPage.catMarketing"), budget: t("tasksPage.catBudget"),
+  };
+
+  const STATUS_OPTIONS = [
+    { value: "backlog", label: t("tasksPage.statusBacklog") },
+    { value: "open", label: t("tasksPage.statusOpen") },
+    { value: "in_progress", label: t("tasksPage.statusInProgress") },
+    { value: "blocked", label: t("tasksPage.statusBlocked") },
+    { value: "done", label: t("tasksPage.statusDone") },
+  ];
+
+  const PRIORITY_OPTIONS = [
+    { value: "low", label: t("tasksPage.priorityLow") },
+    { value: "medium", label: t("tasksPage.priorityMedium") },
+    { value: "high", label: t("tasksPage.priorityHigh") },
+    { value: "critical", label: t("tasksPage.priorityCritical") },
+  ];
+
+  const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS).map(([k, v]) => ({ value: k, label: v }));
 
   const [showCreate, setShowCreate] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null);
@@ -125,8 +118,6 @@ const Tasks = () => {
   const [showImport, setShowImport] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Filters (matching Decisions pattern)
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [filterPriority, setFilterPriority] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
@@ -138,80 +129,39 @@ const Tasks = () => {
     setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
   };
 
-  const clearAllFilters = () => {
-    setFilterStatus([]);
-    setFilterPriority([]);
-    setFilterCategory([]);
-  };
+  const clearAllFilters = () => { setFilterStatus([]); setFilterPriority([]); setFilterCategory([]); };
 
   const filteredTasks = useMemo(() => {
     let result = tasks;
-
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(t =>
-        t.title.toLowerCase().includes(q) ||
-        t.description?.toLowerCase().includes(q)
-      );
+      result = result.filter(t => t.title.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q));
     }
-
     if (filterStatus.length > 0) result = result.filter(t => filterStatus.includes(t.status));
     if (filterPriority.length > 0) result = result.filter(t => filterPriority.includes(t.priority));
     if (filterCategory.length > 0) result = result.filter(t => filterCategory.includes(t.category));
-
     return [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [tasks, searchQuery, filterStatus, filterPriority, filterCategory]);
 
-  const openCreate = () => {
-    setForm(emptyForm);
-    setShowCreate(true);
-  };
+  const openCreate = () => { setForm(emptyForm); setShowCreate(true); };
 
   const openEdit = (t: Task) => {
-    setForm({
-      title: t.title,
-      description: t.description || "",
-      priority: t.priority,
-      category: t.category,
-      due_date: t.due_date || "",
-      assignee_id: t.assignee_id || "",
-    });
+    setForm({ title: t.title, description: t.description || "", priority: t.priority, category: t.category, due_date: t.due_date || "", assignee_id: t.assignee_id || "" });
     setEditTask(t);
   };
 
   const handleSave = async () => {
     if (!form.title.trim() || !user) return;
     setSaving(true);
-
     if (editTask) {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
-          title: form.title.trim(),
-          description: form.description.trim() || null,
-          priority: form.priority as Task["priority"],
-          category: form.category as Task["category"],
-          due_date: form.due_date || null,
-          assignee_id: form.assignee_id || null,
-        })
-        .eq("id", editTask.id);
+      const { error } = await supabase.from("tasks").update({ title: form.title.trim(), description: form.description.trim() || null, priority: form.priority as Task["priority"], category: form.category as Task["category"], due_date: form.due_date || null, assignee_id: form.assignee_id || null }).eq("id", editTask.id);
       if (error) toast.error(t("tasks.updateError"));
       else { toast.success(t("tasks.updated")); setEditTask(null); }
     } else {
-      const { error } = await supabase.from("tasks").insert([{
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        priority: form.priority as Task["priority"],
-        category: form.category as Task["category"],
-        due_date: form.due_date || null,
-        assignee_id: form.assignee_id || null,
-        created_by: user.id,
-        team_id: selectedTeamId || null,
-      }]);
+      const { error } = await supabase.from("tasks").insert([{ title: form.title.trim(), description: form.description.trim() || null, priority: form.priority as Task["priority"], category: form.category as Task["category"], due_date: form.due_date || null, assignee_id: form.assignee_id || null, created_by: user.id, team_id: selectedTeamId || null }]);
       if (error) toast.error(t("tasks.createError"));
       else { toast.success(t("tasks.created")); setShowCreate(false); }
     }
-
     setSaving(false);
     invalidate();
   };
@@ -252,7 +202,6 @@ const Tasks = () => {
 
   return (
     <AppLayout>
-      {/* Header */}
       <PageHeader
         title={t("tasks.title")}
         subtitle={t("tasks.subtitle")}
@@ -315,33 +264,25 @@ const Tasks = () => {
         </motion.div>
       ) : (
         <>
-          {/* Search & Filter bar – matching Decisions page */}
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder={t("tasks.searchPlaceholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-              />
+              <input type="text" placeholder={t("tasks.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
             </div>
             <Popover open={filterOpen} onOpenChange={setFilterOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2 relative">
                   <Filter className="w-4 h-4" />
-                  Filter
+                  {t("tasksPage.filterLabel")}
                   {activeFilterCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                      {activeFilterCount}
-                    </span>
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">{activeFilterCount}</span>
                   )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-72 p-3" align="end">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-semibold">Filter</span>
+                  <span className="text-sm font-semibold">{t("tasksPage.filterLabel")}</span>
                   {activeFilterCount > 0 && (
                     <button onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1">
                       <X className="w-3 h-3" /> {t("tasks.resetFilters")}
@@ -350,7 +291,7 @@ const Tasks = () => {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Status</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("tasksPage.filterStatus")}</p>
                     <div className="flex flex-wrap gap-1">
                       {STATUS_OPTIONS.map(o => (
                         <button key={o.value} onClick={() => toggleFilter(filterStatus, o.value, setFilterStatus)}
@@ -361,7 +302,7 @@ const Tasks = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Priorität</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("tasksPage.filterPriority")}</p>
                     <div className="flex flex-wrap gap-1">
                       {PRIORITY_OPTIONS.map(o => (
                         <button key={o.value} onClick={() => toggleFilter(filterPriority, o.value, setFilterPriority)}
@@ -372,7 +313,7 @@ const Tasks = () => {
                     </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Kategorie</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("tasksPage.filterCategory")}</p>
                     <div className="flex flex-wrap gap-1">
                       {CATEGORY_OPTIONS.map(o => (
                         <button key={o.value} onClick={() => toggleFilter(filterCategory, o.value, setFilterCategory)}
@@ -386,23 +327,17 @@ const Tasks = () => {
               </PopoverContent>
             </Popover>
             <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)} className="border border-border rounded-lg">
-              <ToggleGroupItem value="list" className="px-2 py-1 h-9" aria-label="Listenansicht">
+              <ToggleGroupItem value="list" className="px-2 py-1 h-9" aria-label={t("tasksPage.listView")}>
                 <List className="w-4 h-4" />
               </ToggleGroupItem>
-              <ToggleGroupItem value="kanban" className="px-2 py-1 h-9" aria-label="Kanban-Ansicht">
+              <ToggleGroupItem value="kanban" className="px-2 py-1 h-9" aria-label={t("tasksPage.kanbanView")}>
                 <LayoutGrid className="w-4 h-4" />
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
 
           {viewMode === "kanban" ? (
-            <TaskKanbanBoard
-              tasks={filteredTasks}
-              profileMap={profileMap}
-              onStatusChange={changeStatus}
-              onEdit={openEdit}
-              onDelete={setDeleteTask}
-            />
+            <TaskKanbanBoard tasks={filteredTasks} profileMap={profileMap} onStatusChange={changeStatus} onEdit={openEdit} onDelete={setDeleteTask} />
           ) : (
             <Card className="overflow-hidden">
               <table className="w-full">
@@ -436,7 +371,7 @@ const Tasks = () => {
                                 changeStatus(task, cycle[task.status] || "open");
                               }}
                               className={sc.color}
-                              title="Status wechseln"
+                              title={t("tasksPage.statusToggle")}
                             >
                               <StatusIcon className="w-4 h-4" />
                             </button>
@@ -463,7 +398,7 @@ const Tasks = () => {
                           </td>
                           <td className="p-3">
                             <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                              {task.due_date ? format(new Date(task.due_date), "dd.MM.yy", { locale: de }) : "—"}
+                              {task.due_date ? format(new Date(task.due_date), "dd.MM.yy", { locale: dateFnsLocale }) : "—"}
                               {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
                             </span>
                           </td>
@@ -496,7 +431,6 @@ const Tasks = () => {
         </>
       )}
 
-      {/* Create/Edit Dialog */}
       <Dialog open={showCreate || !!editTask} onOpenChange={(o) => { if (!o) { setShowCreate(false); setEditTask(null); } }}>
         <DialogContent>
           <DialogHeader>
@@ -504,51 +438,46 @@ const Tasks = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Titel *</Label>
-              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Was muss erledigt werden?" />
+              <Label>{t("tasksPage.titleLabel")}</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("tasksPage.titlePlaceholder")} />
             </div>
             <div>
-              <Label>Beschreibung</Label>
-              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} placeholder="Details..." />
+              <Label>{t("tasksPage.descriptionLabel")}</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} placeholder={t("tasksPage.descriptionPlaceholder")} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Priorität</Label>
+                <Label>{t("tasksPage.priorityLabel")}</Label>
                 <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">Niedrig</SelectItem>
-                    <SelectItem value="medium">Mittel</SelectItem>
-                    <SelectItem value="high">Hoch</SelectItem>
-                    <SelectItem value="critical">Kritisch</SelectItem>
+                    {PRIORITY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Kategorie</Label>
+                <Label>{t("tasksPage.categoryLabel")}</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
+                    {CATEGORY_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Fälligkeitsdatum</Label>
+                <Label>{t("tasksPage.dueLabel")}</Label>
                 <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
               </div>
               <div>
-                <Label>Zuständig</Label>
+                <Label>{t("tasksPage.assigneeLabel")}</Label>
                 <Select value={form.assignee_id || "__none__"} onValueChange={(v) => setForm({ ...form, assignee_id: v === "__none__" ? "" : v })}>
-                  <SelectTrigger><SelectValue placeholder="Niemand" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("tasksPage.assigneeNone")} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="__none__">Niemand</SelectItem>
+                    <SelectItem value="__none__">{t("tasksPage.assigneeNone")}</SelectItem>
                     {profiles.map(p => (
-                      <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || "Unbekannt"}</SelectItem>
+                      <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || t("tasksPage.assigneeUnknown")}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -558,13 +487,12 @@ const Tasks = () => {
           <DialogFooter>
              <Button variant="outline" onClick={() => { setShowCreate(false); setEditTask(null); }}>{t("common.cancel")}</Button>
              <Button onClick={handleSave} disabled={!form.title.trim() || saving}>
-               {saving ? t("settings.saving") : editTask ? t("settings.save") : t("settings.save")}
+               {saving ? t("settings.saving") : t("settings.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
       <Dialog open={!!deleteTask} onOpenChange={(o) => !o && setDeleteTask(null)}>
         <DialogContent>
           <DialogHeader>

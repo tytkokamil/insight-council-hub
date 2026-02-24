@@ -3,12 +3,13 @@ import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import {
   Shield, AlertTriangle, Clock, TrendingUp, Users, Zap,
   ChevronRight, Activity, Target, Flame, ArrowUpRight, Lock,
 } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { useDecisions, useFilteredDependencies, useFilteredNotifications } from "@/hooks/useDecisions";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
@@ -37,9 +38,11 @@ interface SystemicRisk {
 }
 
 const WarRoom = () => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
 
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allDeps = [], isLoading: loadingDeps } = useFilteredDependencies();
@@ -56,6 +59,19 @@ const WarRoom = () => {
 
   const escalationNotifications = useMemo(() =>
     allNotifications.filter(n => n.type === "escalation"), [allNotifications]);
+
+  const priorityMap: Record<string, string> = {
+    critical: t("warRoom.priorityCritical"), high: t("warRoom.priorityHigh"),
+    medium: t("warRoom.priorityMedium"), low: t("warRoom.priorityLow"),
+  };
+  const categoryMap: Record<string, string> = {
+    strategic: t("warRoom.catStrategic"), budget: t("warRoom.catBudget"),
+    hr: t("warRoom.catHr"), technical: t("warRoom.catTechnical"),
+    operational: t("warRoom.catOperational"), marketing: t("warRoom.catMarketing"),
+  };
+  const statusMap: Record<string, string> = {
+    draft: t("warRoom.statusDraft"), review: t("warRoom.statusReview"), approved: t("warRoom.statusApproved"),
+  };
 
   const { criticals, risks, stats } = useMemo(() => {
     if (!isAdmin || allDecisions.length === 0) {
@@ -75,37 +91,29 @@ const WarRoom = () => {
     const avgDays = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
 
     const computedStats = {
-      total: allDecisions.length,
-      open: open.length,
-      avgDays,
-      implementedThisMonth: implemented.length,
-      rejectedThisMonth: rejected.length,
+      total: allDecisions.length, open: open.length, avgDays,
+      implementedThisMonth: implemented.length, rejectedThisMonth: rejected.length,
       escalations: escalationNotifications.filter(n => new Date(n.created_at) >= thisMonth).length,
     };
 
-    // Critical decisions
     const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
     const scored = open.map(d => {
       const daysOpen = differenceInDays(now, new Date(d.created_at));
       const overdue = d.due_date ? new Date(d.due_date) < now : false;
       const riskWeight = (d.ai_risk_score || 0) / 20;
       const urgencyScore =
-        (priorityWeight[d.priority] || 1) * 25 +
-        (overdue ? 30 : 0) +
-        Math.min(daysOpen, 30) * 1.5 +
-        riskWeight * 10 +
-        (d.escalation_level || 0) * 15;
+        (priorityWeight[d.priority] || 1) * 25 + (overdue ? 30 : 0) +
+        Math.min(daysOpen, 30) * 1.5 + riskWeight * 10 + (d.escalation_level || 0) * 15;
       return { ...d, daysOpen, overdue, urgencyScore } as CriticalDecision;
     });
     scored.sort((a, b) => b.urgencyScore - a.urgencyScore);
 
-    // Systemic risks
     const detectedRisks: SystemicRisk[] = [];
     const stale = open.filter(d => differenceInDays(now, new Date(d.created_at)) > 14 && ["draft", "review"].includes(d.status));
     if (stale.length > 0) {
       detectedRisks.push({
         type: "stale", severity: stale.length > 3 ? "critical" : stale.length > 1 ? "high" : "medium",
-        title: "Stagnierende Entscheidungen", detail: `${stale.length} Entscheidungen seit >14 Tagen ohne Fortschritt`, metric: `${stale.length} blockiert`,
+        title: t("warRoom.riskStale"), detail: t("warRoom.riskStaleDetail", { count: stale.length }), metric: t("warRoom.riskStaleMetric", { count: stale.length }),
       });
     }
 
@@ -113,7 +121,7 @@ const WarRoom = () => {
     if (recentEscalations > 2) {
       detectedRisks.push({
         type: "escalation", severity: recentEscalations > 5 ? "critical" : "high",
-        title: "Eskalationswelle", detail: `${recentEscalations} Eskalationen in den letzten 7 Tagen`, metric: `${recentEscalations} diese Woche`,
+        title: t("warRoom.riskEscalation"), detail: t("warRoom.riskEscalationDetail", { count: recentEscalations }), metric: t("warRoom.riskEscalationMetric", { count: recentEscalations }),
       });
     }
 
@@ -122,7 +130,7 @@ const WarRoom = () => {
     if (blockedOpen.length > 1) {
       detectedRisks.push({
         type: "bottleneck", severity: blockedOpen.length > 3 ? "critical" : "high",
-        title: "Abhängigkeits-Engpass", detail: `${blockedOpen.length} offene Entscheidungen werden durch Abhängigkeiten blockiert`, metric: `${blockedOpen.length} blockiert`,
+        title: t("warRoom.riskBottleneck"), detail: t("warRoom.riskBottleneckDetail", { count: blockedOpen.length }), metric: t("warRoom.riskBottleneckMetric", { count: blockedOpen.length }),
       });
     }
 
@@ -131,19 +139,19 @@ const WarRoom = () => {
     if (rejRate > 30 && recentTotal >= 3) {
       detectedRisks.push({
         type: "quality", severity: rejRate > 50 ? "critical" : "high",
-        title: "Hohe Ablehnungsrate", detail: `${Math.round(rejRate)}% der Entscheidungen diesen Monat wurden abgelehnt`, metric: `${Math.round(rejRate)}%`,
+        title: t("warRoom.riskQuality"), detail: t("warRoom.riskQualityDetail", { rate: Math.round(rejRate) }), metric: `${Math.round(rejRate)}%`,
       });
     }
 
     if (detectedRisks.length === 0) {
       detectedRisks.push({
         type: "quality", severity: "medium",
-        title: "Keine kritischen Risiken", detail: "Das System läuft stabil. Weiter beobachten.", metric: "✓ OK",
+        title: t("warRoom.noRisks"), detail: t("warRoom.noRisksDetail"), metric: t("warRoom.noRisksMetric"),
       });
     }
 
     return { criticals: scored.slice(0, 5), risks: detectedRisks, stats: computedStats };
-  }, [allDecisions, allDeps, escalationNotifications, isAdmin]);
+  }, [allDecisions, allDeps, escalationNotifications, isAdmin, t]);
 
   const severityColor = (s: string) =>
     s === "critical" ? "border-destructive bg-destructive/10" : s === "high" ? "border-warning bg-warning/10" : "border-border bg-muted/30";
@@ -155,14 +163,13 @@ const WarRoom = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Kommandozentrale</p>
-            <h1 className="font-display text-xl font-bold">War Room</h1>
-            <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: de })} Uhr</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("warRoom.commandCenter")}</p>
+            <h1 className="font-display text-xl font-bold">{t("warRoom.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: dateFnsLocale })} {t("warRoom.timeLabel")}</p>
           </div>
-          <PageHelpButton title="War Room" description="Echtzeit-Lagebild für kritische Situationen. Zeigt aktive Eskalationen, blockierte Entscheidungen und Handlungsbedarf auf einen Blick. Ideal für Status-Meetings." />
+          <PageHelpButton title={t("warRoom.helpTitle")} description={t("warRoom.helpDesc")} />
         </div>
 
         {loading ? (
@@ -170,22 +177,19 @@ const WarRoom = () => {
         ) : isAdmin === false ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-40" />
-            <h2 className="text-lg font-semibold mb-2">Zugang beschränkt</h2>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Das Executive War Room ist nur für Administratoren zugänglich. Kontaktiere deinen Admin, um Zugang zu erhalten.
-            </p>
+            <h2 className="text-lg font-semibold mb-2">{t("warRoom.accessRestricted")}</h2>
+            <p className="text-sm text-muted-foreground max-w-md">{t("warRoom.accessRestrictedDesc")}</p>
           </div>
         ) : (
           <>
-            {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
-                { label: "Gesamt", value: stats.total, icon: Target, color: "text-primary" },
-                { label: "Offen", value: stats.open, icon: Clock, color: "text-warning" },
-                { label: "Ø Tage offen", value: stats.avgDays, icon: TrendingUp, color: "text-muted-foreground" },
-                { label: "Umgesetzt (Monat)", value: stats.implementedThisMonth, icon: Zap, color: "text-success" },
-                { label: "Abgelehnt (Monat)", value: stats.rejectedThisMonth, icon: AlertTriangle, color: "text-destructive" },
-                { label: "Eskalationen (Monat)", value: stats.escalations, icon: Flame, color: "text-destructive" },
+                { label: t("warRoom.total"), value: stats.total, icon: Target, color: "text-primary" },
+                { label: t("warRoom.open"), value: stats.open, icon: Clock, color: "text-warning" },
+                { label: t("warRoom.avgDaysOpen"), value: stats.avgDays, icon: TrendingUp, color: "text-muted-foreground" },
+                { label: t("warRoom.implementedMonth"), value: stats.implementedThisMonth, icon: Zap, color: "text-success" },
+                { label: t("warRoom.rejectedMonth"), value: stats.rejectedThisMonth, icon: AlertTriangle, color: "text-destructive" },
+                { label: t("warRoom.escalationsMonth"), value: stats.escalations, icon: Flame, color: "text-destructive" },
               ].map((s) => (
                 <div key={s.label} className="p-3 rounded-lg bg-muted/30 border border-border">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -198,10 +202,9 @@ const WarRoom = () => {
             </div>
 
             <div className="grid lg:grid-cols-5 gap-6">
-              {/* Top 5 Critical Decisions */}
               <div className="lg:col-span-3 space-y-3">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-destructive" /> Top 5 Kritische Entscheidungen
+                  <Flame className="w-4 h-4 text-destructive" /> {t("warRoom.topCritical")}
                 </h2>
                 <div className="space-y-2">
                   {criticals.map((d, i) => (
@@ -211,46 +214,41 @@ const WarRoom = () => {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge(d.priority)}`}>
-                              {d.priority === "critical" ? "Kritisch" : d.priority === "high" ? "Hoch" : d.priority === "medium" ? "Mittel" : "Niedrig"}
+                              {priorityMap[d.priority] || d.priority}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              {d.category === "strategic" ? "Strategisch" : d.category === "budget" ? "Budget" : d.category === "hr" ? "Personal" : d.category === "technical" ? "Technisch" : d.category === "operational" ? "Operativ" : "Marketing"}
+                              {categoryMap[d.category] || d.category}
                             </span>
                             {d.overdue && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">
-                                ÜBERFÄLLIG
-                              </span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">{t("warRoom.overdue")}</span>
                             )}
                           </div>
                           <p className="text-sm font-medium truncate">{d.title}</p>
                           <div className="flex items-center gap-4 mt-1.5 text-[10px] text-muted-foreground">
-                            <span>{d.daysOpen} Tage offen</span>
-                            {d.ai_risk_score != null && <span>Risiko: {d.ai_risk_score}%</span>}
+                            <span>{t("warRoom.daysOpen", { count: d.daysOpen })}</span>
+                            {d.ai_risk_score != null && <span>{t("warRoom.risk", { score: d.ai_risk_score })}</span>}
                             {d.escalation_level != null && d.escalation_level > 0 && (
-                              <span className="text-destructive">Eskalation Lv.{d.escalation_level}</span>
+                              <span className="text-destructive">{t("warRoom.escalationLevel", { level: d.escalation_level })}</span>
                             )}
-                            <span>{d.status === "draft" ? "Entwurf" : d.status === "review" ? "Review" : d.status === "approved" ? "Genehmigt" : d.status}</span>
+                            <span>{statusMap[d.status] || d.status}</span>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-lg font-bold font-display text-foreground">{Math.round(d.urgencyScore)}</p>
-                          <p className="text-[10px] text-muted-foreground">Urgency</p>
+                          <p className="text-[10px] text-muted-foreground">{t("warRoom.urgency")}</p>
                         </div>
                       </div>
                     </div>
                   ))}
                   {criticals.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground text-sm">
-                      Keine offenen Entscheidungen – alles erledigt! 🎉
-                    </div>
+                    <div className="text-center py-8 text-muted-foreground text-sm">{t("warRoom.noCritical")}</div>
                   )}
                 </div>
               </div>
 
-              {/* Systemic Risks */}
               <div className="lg:col-span-2 space-y-3">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-warning" /> Systemische Risiken
+                  <AlertTriangle className="w-4 h-4 text-warning" /> {t("warRoom.systemicRisks")}
                 </h2>
                 <div className="space-y-2">
                   {risks.map((r, i) => (
@@ -272,15 +270,14 @@ const WarRoom = () => {
                   ))}
                 </div>
 
-                {/* Quick Pulse */}
                 <div className="p-4 rounded-lg bg-muted/30 border border-border">
                   <h3 className="text-xs font-semibold flex items-center gap-1.5 mb-3">
-                    <Activity className="w-3.5 h-3.5 text-primary" /> System-Puls
+                    <Activity className="w-3.5 h-3.5 text-primary" /> {t("warRoom.systemPulse")}
                   </h3>
                   <div className="space-y-2">
                     {[
-                      { label: "Entscheidungslast", value: stats.open, max: Math.max(stats.total, 1), color: stats.open > 10 ? "bg-destructive" : stats.open > 5 ? "bg-warning" : "bg-success" },
-                      { label: "Umsetzungsrate", value: stats.implementedThisMonth, max: Math.max(stats.implementedThisMonth + stats.rejectedThisMonth + stats.open, 1), color: "bg-primary" },
+                      { label: t("warRoom.decisionLoad"), value: stats.open, max: Math.max(stats.total, 1), color: stats.open > 10 ? "bg-destructive" : stats.open > 5 ? "bg-warning" : "bg-success" },
+                      { label: t("warRoom.implementationRate"), value: stats.implementedThisMonth, max: Math.max(stats.implementedThisMonth + stats.rejectedThisMonth + stats.open, 1), color: "bg-primary" },
                     ].map((bar) => (
                       <div key={bar.label}>
                         <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
