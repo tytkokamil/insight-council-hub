@@ -35,6 +35,8 @@
     "teaserInsights": "Trends, bottlenecks & executive reports",
     "teaserGovernance": "Governance, risks & compliance",
     "intelligenceRecommended": "Recommended after {{count}} more decisions",
+    "unlockIntelligence": "Unlock Intelligence",
+    "intelligenceReady": "Ready — unlock now!",
     "advancedAnalytics": "Advanced Analytics",
     "decisionGraph": "Decision Graph",
     "decisionRadar": "Decision Radar",
