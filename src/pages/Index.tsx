@@ -4,7 +4,7 @@ import HeroSection from "@/components/landing/HeroSection";
 import StatsSection from "@/components/landing/StatsSection";
 import ProblemSection from "@/components/landing/ProblemSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
-import BenefitsSection from "@/components/landing/BenefitsSection";
+
 import FeaturesSection from "@/components/landing/FeaturesSection";
 import UseCasesSection from "@/components/landing/UseCasesSection";
 import AIShowcaseSection from "@/components/landing/AIShowcaseSection";
@@ -24,17 +24,17 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main>
-          <HeroSection />
-          <StatsSection />
-          <ProblemSection />
-          <HowItWorksSection />
-          <BenefitsSection />
-          <FeaturesSection />
-          <UseCasesSection />
-          <AIShowcaseSection />
-          <TestimonialsSection />
-          <PricingSection />
-          <CTASection />
+          {/* Section order per ENDSTAND doc page 17 */}
+          <HeroSection />          {/* 2: Hero */}
+          <StatsSection />         {/* 3: Social Proof Bar */}
+          <ProblemSection />       {/* 4: Pain Section */}
+          <HowItWorksSection />    {/* 5: How It Works */}
+          <FeaturesSection />      {/* 6: Core Features */}
+          <UseCasesSection />      {/* 7: Use Cases */}
+          <AIShowcaseSection />    {/* 8: KI-Showcase */}
+          <TestimonialsSection />  {/* 9: Testimonials */}
+          <PricingSection />       {/* 10: Pricing */}
+          <CTASection />           {/* 11: Final CTA */}
         </main>
         <Footer />
       </div>
