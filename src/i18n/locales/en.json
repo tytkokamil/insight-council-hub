@@ -243,7 +243,13 @@
     "interfaceLanguage": "Interface Language",
     "interfaceLanguageDesc": "Controls the language of the user interface",
     "exportLanguage": "Export & Report Language",
-    "exportLanguageDesc": "Language for PDF reports and board packs"
+    "exportLanguageDesc": "Language for PDF reports and board packs",
+    "activeSessions": "Active Sessions",
+    "activeSessionsDesc": "Manage your active browser sessions. Revoke suspicious sessions.",
+    "noSessions": "No active sessions found.",
+    "currentSession": "Current",
+    "lastActive": "Last active",
+    "sessionRevoked": "Session revoked"
   },
   "common": {
     "skipToContent": "Skip to content",
@@ -4521,7 +4527,14 @@
     "emailActivatedDesc": "Email verification successfully set up.",
     "emailDeactivated": "Email OTP deactivated",
     "loading": "Loading 2FA settings…",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "backupCodes": "Backup Codes",
+    "backupCodesDesc": "One-time codes for emergencies when you can't access your device.",
+    "backupCodesGenerated": "Backup codes generated",
+    "backupCodesWarning": "Store these codes securely. They are only shown once.",
+    "regenerate": "Regenerate",
+    "generate": "Generate",
+    "copyAll": "Copy all"
   },
   "emptyState": {
     "defaultCta": "Create decision"

@@ -17,6 +17,7 @@ import {
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
+import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -634,6 +635,13 @@ const SettingsPage = () => {
                     ))}
                   </div>
                 </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Active Sessions */}
+              <section>
+                <ActiveSessionsPanel />
               </section>
 
               <hr className="border-border" />

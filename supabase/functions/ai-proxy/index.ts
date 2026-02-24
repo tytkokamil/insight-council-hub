@@ -260,16 +260,41 @@ export async function callAI(
   return { data, response: null };
 }
 
+// Simple in-memory rate limiter
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 30; // requests per window
+const RATE_WINDOW_MS = 60_000; // 1 minute
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= RATE_LIMIT;
+}
+
 // This function can also be called directly for testing
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const userId = extractUserIdFromAuth(req);
+
+    // Server-side rate limiting
+    if (userId && !checkRateLimit(userId)) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit erreicht. Bitte warte eine Minute." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages, tools, tool_choice } = await req.json();
     const { data, response: errorResponse } = await callAI(req, messages, tools, tool_choice);
 
     if (errorResponse) {
-      // Add CORS headers
       const headers = new Headers(errorResponse.headers);
       Object.entries(corsHeaders).forEach(([k, v]) => headers.set(k, v));
       return new Response(errorResponse.body, { status: errorResponse.status, headers });

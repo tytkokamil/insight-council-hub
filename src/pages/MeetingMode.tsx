@@ -97,6 +97,24 @@ const MeetingMode = () => {
 
   const handleVote = async (decision: any, vote: "approve" | "reject" | "neutral") => {
     setVotes(prev => ({ ...prev, [decision.id]: vote }));
+
+    // Persist vote to decision_votes table
+    if (user) {
+      const { error } = await supabase.from("decision_votes").upsert({
+        decision_id: decision.id,
+        user_id: user.id,
+        vote,
+      }, { onConflict: "decision_id,user_id" });
+      if (error) {
+        // fallback: simple insert
+        await supabase.from("decision_votes").insert({
+          decision_id: decision.id,
+          user_id: user.id,
+          vote,
+        });
+      }
+    }
+
     if (vote === "approve" || vote === "reject") {
       const newStatus = vote === "approve" ? "approved" : "rejected";
       await supabase.from("decisions").update({ status: newStatus }).eq("id", decision.id);
