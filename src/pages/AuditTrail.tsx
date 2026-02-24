@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import PageHeader from "@/components/shared/PageHeader";
+import { useTranslation } from "react-i18next";
 import {
   History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles,
   Pencil, Plus, AlertTriangle, RotateCcw, Archive, Share2, Zap, Users, Target,
@@ -56,14 +57,14 @@ const actionConfig: Record<string, { label: string; icon: typeof Plus; color: st
   [EventTypes.COMMENT_CREATED]: { label: eventLabels[EventTypes.COMMENT_CREATED], icon: MessageSquare, color: "text-muted-foreground", source: "manual" },
   [EventTypes.GOAL_LINKED]: { label: eventLabels[EventTypes.GOAL_LINKED], icon: Target, color: "text-primary", source: "manual" },
   [EventTypes.GOAL_UNLINKED]: { label: eventLabels[EventTypes.GOAL_UNLINKED], icon: Target, color: "text-muted-foreground", source: "manual" },
-  created: { label: "Erstellt", icon: Plus, color: "text-primary", source: "manual" },
-  status_changed: { label: "Status geändert", icon: CheckCircle, color: "text-accent-foreground", source: "manual" },
-  review_approved: { label: "Genehmigt", icon: CheckCircle, color: "text-success", source: "manual" },
-  review_rejected: { label: "Abgelehnt", icon: XCircle, color: "text-destructive", source: "manual" },
-  ai_analysis: { label: "KI-Analyse", icon: Sparkles, color: "text-primary", source: "automation" },
-  field_updated: { label: "Aktualisiert", icon: Pencil, color: "text-muted-foreground", source: "manual" },
-  decision_edited: { label: "Bearbeitet", icon: Pencil, color: "text-primary", source: "manual" },
-  escalation: { label: "Eskaliert", icon: AlertTriangle, color: "text-destructive", source: "automation" },
+  created: { label: eventLabels[EventTypes.DECISION_CREATED] || "Created", icon: Plus, color: "text-primary", source: "manual" },
+  status_changed: { label: eventLabels[EventTypes.DECISION_STATUS_CHANGED] || "Status changed", icon: CheckCircle, color: "text-accent-foreground", source: "manual" },
+  review_approved: { label: eventLabels[EventTypes.REVIEW_APPROVED] || "Approved", icon: CheckCircle, color: "text-success", source: "manual" },
+  review_rejected: { label: eventLabels[EventTypes.REVIEW_REJECTED] || "Rejected", icon: XCircle, color: "text-destructive", source: "manual" },
+  ai_analysis: { label: "AI Analysis", icon: Sparkles, color: "text-primary", source: "automation" },
+  field_updated: { label: eventLabels[EventTypes.DECISION_UPDATED] || "Updated", icon: Pencil, color: "text-muted-foreground", source: "manual" },
+  decision_edited: { label: eventLabels[EventTypes.DECISION_UPDATED] || "Edited", icon: Pencil, color: "text-primary", source: "manual" },
+  escalation: { label: eventLabels[EventTypes.ESCALATION_TRIGGERED] || "Escalated", icon: AlertTriangle, color: "text-destructive", source: "automation" },
 };
 
 const isAutomation = (action: string) => actionConfig[action]?.source === "automation" || action.includes("automation") || action.includes("escalation");
@@ -76,6 +77,7 @@ const isCompliance = (log: AuditLog) => isEscalation(log.action) || isSlaViolati
 // ── Main Component ─────────────────────────────────────────────────────
 
 const AuditTrail = () => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,6 +86,7 @@ const AuditTrail = () => {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [complianceMode, setComplianceMode] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const locale = i18n.language === "de" ? "de-DE" : "en-US";
 
   useEffect(() => {
     if (!user) return;
@@ -100,8 +103,6 @@ const AuditTrail = () => {
     fetchLogs();
   }, [user]);
 
-  // ── Computed KPIs (30 days) ──
-
   const last30DaysCutoff = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - 30); return d; }, []);
 
   const kpis = useMemo(() => {
@@ -116,11 +117,8 @@ const AuditTrail = () => {
     };
   }, [logs, last30DaysCutoff]);
 
-  // ── Governance Flags ──
-
   const governanceFlags = useMemo(() => {
     const flags: { title: string; detail: string; severity: "warning" | "error" }[] = [];
-    // Frequent status flips per decision
     const decisionStatusChanges: Record<string, number> = {};
     const last7d = new Date(); last7d.setDate(last7d.getDate() - 7);
     logs.filter(l => new Date(l.created_at) > last7d && isStatusFlip(l)).forEach(l => {
@@ -128,65 +126,51 @@ const AuditTrail = () => {
     });
     Object.entries(decisionStatusChanges).forEach(([dId, count]) => {
       if (count >= 4) {
-        const title = logs.find(l => l.decision_id === dId)?.decisions?.title || "Entscheidung";
-        flags.push({ title: `${title}: ${count} Status-Wechsel in 7 Tagen`, detail: "Häufige Status-Wechsel deuten auf Instabilität hin.", severity: "warning" });
+        const title = logs.find(l => l.decision_id === dId)?.decisions?.title || t("auditTrail.decision");
+        flags.push({ title: t("auditTrail.statusFlipsWarning", { title, count }), detail: t("auditTrail.statusFlipsDetail"), severity: "warning" });
       }
     });
-    // Overrides
     if (kpis.overrides > 0) {
-      flags.push({ title: `${kpis.overrides} manuelle Overrides (30T)`, detail: "Genehmigte Entscheidungen wurden auf Draft/Review zurückgesetzt.", severity: "error" });
+      flags.push({ title: t("auditTrail.overridesWarning", { count: kpis.overrides }), detail: t("auditTrail.overridesDetail"), severity: "error" });
     }
-    // Multiple escalations
     if (kpis.escalations >= 5) {
-      flags.push({ title: `${kpis.escalations} Eskalationen in 30 Tagen`, detail: "Hohe Eskalationsrate deutet auf strukturelle Governance-Probleme hin.", severity: "warning" });
+      flags.push({ title: t("auditTrail.escalationsWarning", { count: kpis.escalations }), detail: t("auditTrail.escalationsDetail"), severity: "warning" });
     }
     return flags;
-  }, [logs, kpis]);
-
-  // ── Change Statistics ──
+  }, [logs, kpis, t]);
 
   const stats = useMemo(() => {
     const recent = logs.filter(l => new Date(l.created_at) > last30DaysCutoff);
-    // Changes per user
     const perUser: Record<string, { name: string; count: number }> = {};
     recent.forEach(l => {
-      const name = l.profiles?.full_name || "System";
+      const name = l.profiles?.full_name || t("auditTrail.system");
       if (!perUser[l.user_id]) perUser[l.user_id] = { name, count: 0 };
       perUser[l.user_id].count++;
     });
     const topUsers = Object.values(perUser).sort((a, b) => b.count - a.count).slice(0, 5);
-    // Changes per decision
     const perDecision: Record<string, { title: string; count: number }> = {};
     recent.forEach(l => {
-      const title = l.decisions?.title || "Unbekannt";
+      const title = l.decisions?.title || "—";
       if (!perDecision[l.decision_id]) perDecision[l.decision_id] = { title, count: 0 };
       perDecision[l.decision_id].count++;
     });
     const topDecisions = Object.values(perDecision).sort((a, b) => b.count - a.count).slice(0, 5);
     const avgPerDecision = Object.keys(perDecision).length > 0 ? (recent.length / Object.keys(perDecision).length).toFixed(1) : "0";
     return { topUsers, topDecisions, avgPerDecision };
-  }, [logs, last30DaysCutoff]);
-
-  // ── Audit Stability Score ──
+  }, [logs, last30DaysCutoff, t]);
 
   const stabilityScore = useMemo(() => {
     let score = 100;
-    // Rework rate (overrides)
     score -= kpis.overrides * 8;
-    // Status flips per decision > 3
     const recent = logs.filter(l => new Date(l.created_at) > last30DaysCutoff && isStatusFlip(l));
     const perDec: Record<string, number> = {};
     recent.forEach(l => { perDec[l.decision_id] = (perDec[l.decision_id] || 0) + 1; });
     const highFlips = Object.values(perDec).filter(v => v > 3).length;
     score -= highFlips * 5;
-    // Escalation frequency
     score -= Math.min(kpis.escalations * 2, 20);
-    // SLA violations
     score -= kpis.slaViolations * 6;
     return Math.max(0, Math.min(100, Math.round(score)));
   }, [kpis, logs, last30DaysCutoff]);
-
-  // ── Filtering ──
 
   const filtered = useMemo(() => {
     return logs.filter(log => {
@@ -203,31 +187,30 @@ const AuditTrail = () => {
     });
   }, [logs, search, actionFilter, sourceFilter, complianceMode]);
 
-  // Group by date
   const grouped = useMemo(() => {
     const groups: Record<string, AuditLog[]> = {};
     filtered.forEach(log => {
-      const date = new Date(log.created_at).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+      const date = new Date(log.created_at).toLocaleDateString(locale, { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
       if (!groups[date]) groups[date] = [];
       groups[date].push(log);
     });
     return groups;
-  }, [filtered]);
+  }, [filtered, locale]);
 
   const uniqueActions = useMemo(() => Array.from(new Set(logs.map(l => l.action))), [logs]);
 
   const exportAuditLog = () => {
     const csv = [
-      "Zeitpunkt,Benutzer,Aktion,Entscheidung,Feld,Alter Wert,Neuer Wert,Quelle",
+      [t("auditTrail.csvTimestamp"), t("auditTrail.csvUser"), t("auditTrail.csvAction"), t("auditTrail.csvDecision"), t("auditTrail.csvField"), t("auditTrail.csvOldValue"), t("auditTrail.csvNewValue"), t("auditTrail.csvSource")].join(","),
       ...filtered.map(l => [
         new Date(l.created_at).toISOString(),
-        l.profiles?.full_name || "System",
+        l.profiles?.full_name || t("auditTrail.system"),
         actionConfig[l.action]?.label || l.action,
         l.decisions?.title || "",
         l.field_name || "",
         l.old_value || "",
         l.new_value || "",
-        isAutomation(l.action) ? "Automation" : "Manuell",
+        isAutomation(l.action) ? t("auditTrail.automation") : t("auditTrail.manual"),
       ].map(v => `"${v}"`).join(","))
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
@@ -240,26 +223,25 @@ const AuditTrail = () => {
     <AppLayout>
       <div className="space-y-6">
         <PageHeader
-          title="Audit Trail"
-          subtitle="Revisionssichere Governance-Transparenz – Immutable Log"
+          title={t("auditTrail.title")}
+          subtitle={t("auditTrail.subtitle")}
           role="governance"
-          help={{ title: "Audit Trail", description: "Lückenlose, nicht löschbare Änderungshistorie aller Entscheidungen. Filtere nach Quelle, Typ oder Compliance-Relevanz." }}
+          help={{ title: t("auditTrail.title"), description: t("auditTrail.helpDesc") }}
           secondaryActions={
             <Button variant="outline" size="sm" className="gap-1.5" onClick={exportAuditLog}>
-              <Download className="w-3.5 h-3.5" /> Export CSV
+              <Download className="w-3.5 h-3.5" /> {t("auditTrail.exportCsv")}
             </Button>
           }
         />
 
-        {/* ── 1. Governance Snapshot ──────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: "Änderungen (30T)", value: kpis.total, icon: <Activity className="w-4 h-4 text-primary" /> },
-            { label: "Status-Änderungen", value: kpis.statusChanges, icon: <CheckCircle className="w-4 h-4 text-accent-foreground" /> },
-            { label: "Eskalationen", value: kpis.escalations, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: kpis.escalations >= 5 },
-            { label: "SLA-Verstöße", value: kpis.slaViolations, icon: <Clock className="w-4 h-4 text-warning" />, highlight: kpis.slaViolations > 0 },
-            { label: "Regel-Auslösungen", value: kpis.automationRuns, icon: <Zap className="w-4 h-4 text-primary" /> },
-            { label: "Manuelle Overrides", value: kpis.overrides, icon: <Shield className="w-4 h-4 text-destructive" />, highlight: kpis.overrides > 0 },
+            { label: t("auditTrail.changes30d"), value: kpis.total, icon: <Activity className="w-4 h-4 text-primary" /> },
+            { label: t("auditTrail.statusChanges"), value: kpis.statusChanges, icon: <CheckCircle className="w-4 h-4 text-accent-foreground" /> },
+            { label: t("auditTrail.escalations"), value: kpis.escalations, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: kpis.escalations >= 5 },
+            { label: t("auditTrail.slaViolations"), value: kpis.slaViolations, icon: <Clock className="w-4 h-4 text-warning" />, highlight: kpis.slaViolations > 0 },
+            { label: t("auditTrail.ruleExecutions"), value: kpis.automationRuns, icon: <Zap className="w-4 h-4 text-primary" /> },
+            { label: t("auditTrail.manualOverrides"), value: kpis.overrides, icon: <Shield className="w-4 h-4 text-destructive" />, highlight: kpis.overrides > 0 },
           ].map((kpi, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Card className={kpi.highlight ? "border-destructive/30 bg-destructive/5" : ""}>
@@ -275,19 +257,17 @@ const AuditTrail = () => {
           ))}
         </div>
 
-        {/* ── 10. Governance Integrity Score + 7. Stats ──────────── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Stability Score */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Gauge className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Audit Stability Score</h3>
+                <h3 className="text-sm font-semibold">{t("auditTrail.stabilityScore")}</h3>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
                     <TooltipContent className="max-w-xs text-xs">
-                      <p>Basiert auf: Rework-Rate, Status-Flips, Eskalationshäufigkeit, SLA-Verstöße, Override-Rate</p>
+                      <p>{t("auditTrail.stabilityTooltip")}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -302,22 +282,21 @@ const AuditTrail = () => {
                 </div>
               </div>
               <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
-                <p>Overrides: -{kpis.overrides * 8}p</p>
-                <p>Eskalationen: -{Math.min(kpis.escalations * 2, 20)}p</p>
-                <p>SLA-Verstöße: -{kpis.slaViolations * 6}p</p>
+                <p>{t("auditTrail.overridesImpact", { points: kpis.overrides * 8 })}</p>
+                <p>{t("auditTrail.escalationsImpact", { points: Math.min(kpis.escalations * 2, 20) })}</p>
+                <p>{t("auditTrail.slaImpact", { points: kpis.slaViolations * 6 })}</p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Top Users */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Meiste Änderungen (Benutzer)</h3>
+                <h3 className="text-sm font-semibold">{t("auditTrail.topUsers")}</h3>
               </div>
               <div className="space-y-2">
-                {stats.topUsers.length === 0 ? <p className="text-xs text-muted-foreground">Keine Daten</p> :
+                {stats.topUsers.length === 0 ? <p className="text-xs text-muted-foreground">{t("auditTrail.noData")}</p> :
                   stats.topUsers.map((u, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className="truncate">{u.name}</span>
@@ -326,19 +305,18 @@ const AuditTrail = () => {
                   ))
                 }
               </div>
-              <p className="text-[10px] text-muted-foreground mt-2">Ø {stats.avgPerDecision} Änderungen pro Entscheidung</p>
+              <p className="text-[10px] text-muted-foreground mt-2">{t("auditTrail.avgPerDecision", { avg: stats.avgPerDecision })}</p>
             </CardContent>
           </Card>
 
-          {/* Top Decisions */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <BarChart3 className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Meiste Änderungen (Entscheidung)</h3>
+                <h3 className="text-sm font-semibold">{t("auditTrail.topDecisions")}</h3>
               </div>
               <div className="space-y-2">
-                {stats.topDecisions.length === 0 ? <p className="text-xs text-muted-foreground">Keine Daten</p> :
+                {stats.topDecisions.length === 0 ? <p className="text-xs text-muted-foreground">{t("auditTrail.noData")}</p> :
                   stats.topDecisions.map((d, i) => (
                     <div key={i} className="flex items-center justify-between text-xs">
                       <span className="truncate">{d.title}</span>
@@ -351,13 +329,12 @@ const AuditTrail = () => {
           </Card>
         </div>
 
-        {/* ── 4. Governance Flags ──────────────────────────────────── */}
         {governanceFlags.length > 0 && (
           <Card className="border-warning/30 bg-warning/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-4 h-4 text-warning" />
-                <h3 className="text-sm font-semibold">Governance-Warnungen</h3>
+                <h3 className="text-sm font-semibold">{t("auditTrail.govWarnings")}</h3>
                 <Badge variant="outline" className="text-[10px] text-warning border-warning/30">{governanceFlags.length}</Badge>
               </div>
               <div className="space-y-2">
@@ -375,46 +352,42 @@ const AuditTrail = () => {
           </Card>
         )}
 
-        {/* ── 5. Filters ───────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input type="text" placeholder="Entscheidung, Nutzer oder Feld suchen..." value={search} onChange={e => setSearch(e.target.value)}
+            <input type="text" placeholder={t("auditTrail.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)}
               className="w-full h-9 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
           </div>
           <Select value={actionFilter} onValueChange={setActionFilter}>
-            <SelectTrigger className="w-[180px] h-9"><Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder="Alle Aktionen" /></SelectTrigger>
+            <SelectTrigger className="w-[180px] h-9"><Filter className="w-3.5 h-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder={t("auditTrail.allActions")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Aktionen</SelectItem>
+              <SelectItem value="all">{t("auditTrail.allActions")}</SelectItem>
               {uniqueActions.map(a => <SelectItem key={a} value={a}>{actionConfig[a]?.label || a}</SelectItem>)}
             </SelectContent>
           </Select>
           <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Alle Quellen" /></SelectTrigger>
+            <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder={t("auditTrail.allSources")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Quellen</SelectItem>
-              <SelectItem value="manual">Manuell</SelectItem>
-              <SelectItem value="automation">Automation</SelectItem>
+              <SelectItem value="all">{t("auditTrail.allSources")}</SelectItem>
+              <SelectItem value="manual">{t("auditTrail.manual")}</SelectItem>
+              <SelectItem value="automation">{t("auditTrail.automation")}</SelectItem>
             </SelectContent>
           </Select>
-          {/* 6. Compliance Mode */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background">
             <Shield className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium">Compliance</span>
+            <span className="text-xs font-medium">{t("auditTrail.compliance")}</span>
             <Switch checked={complianceMode} onCheckedChange={setComplianceMode} />
           </div>
           <Badge variant="outline" className="h-9 px-3 flex items-center gap-1.5 shrink-0">
-            <FileText className="w-3.5 h-3.5" />{filtered.length} Einträge
+            <FileText className="w-3.5 h-3.5" />{t("auditTrail.entries", { count: filtered.length })}
           </Badge>
         </div>
 
-        {/* ── 9. Immutable Log Notice ──────────────────────────────── */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border text-[11px] text-muted-foreground">
           <Shield className="w-3.5 h-3.5 shrink-0" />
-          <span>Immutable Log – Einträge können nicht gelöscht oder verändert werden. Alle Aktionen sind revisionssicher protokolliert mit Zeitstempel und User-ID.</span>
+          <span>{t("auditTrail.immutableNotice")}</span>
         </div>
 
-        {/* ── 2. Timeline ──────────────────────────────────────────── */}
         {loading ? (
           <div className="space-y-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -427,12 +400,10 @@ const AuditTrail = () => {
               <History className="w-8 h-8 text-primary opacity-60" />
             </div>
             <h3 className="font-display text-lg font-semibold mb-2">
-              {search || actionFilter !== "all" || complianceMode ? "Keine Einträge gefunden" : "Noch keine Audit-Einträge"}
+              {search || actionFilter !== "all" || complianceMode ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
             </h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {search || actionFilter !== "all" || complianceMode
-                ? "Versuche andere Filter oder Suchbegriffe."
-                : "Alle Änderungen an Entscheidungen werden hier automatisch protokolliert."}
+              {search || actionFilter !== "all" || complianceMode ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
             </p>
           </div>
         ) : (
@@ -451,7 +422,7 @@ const AuditTrail = () => {
                     {entries.map(log => {
                       const config = actionConfig[log.action] || { label: log.action, icon: FileText, color: "text-muted-foreground" };
                       const Icon = config.icon;
-                      const time = new Date(log.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                      const time = new Date(log.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
                       const automated = isAutomation(log.action);
                       const override = isOverride(log);
 
@@ -466,11 +437,10 @@ const AuditTrail = () => {
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <UserAvatar avatarUrl={log.profiles?.avatar_url || null} fullName={log.profiles?.full_name} size="sm" />
-                                  <span className="text-sm font-medium">{automated ? "Governance Engine" : log.profiles?.full_name || "System"}</span>
+                                  <span className="text-sm font-medium">{automated ? t("auditTrail.governanceEngine") : log.profiles?.full_name || t("auditTrail.system")}</span>
                                   <Badge variant="outline" className={`text-[10px] ${config.color} border-current/20`}>{config.label}</Badge>
-                                  {/* Source badge */}
                                   <Badge variant={automated ? "default" : "outline"} className={`text-[10px] ${automated ? "bg-primary/10 text-primary border-primary/20" : ""}`}>
-                                    {automated ? "⚡ Automation" : "✋ Manuell"}
+                                    {automated ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}
                                   </Badge>
                                   {override && <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Override</Badge>}
                                 </div>
@@ -485,7 +455,7 @@ const AuditTrail = () => {
 
                               {log.field_name && (
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  Feld: <span className="font-medium text-foreground">{log.field_name}</span>
+                                  {t("auditTrail.field")}: <span className="font-medium text-foreground">{log.field_name}</span>
                                 </p>
                               )}
 
@@ -497,10 +467,9 @@ const AuditTrail = () => {
                                 </div>
                               )}
 
-                              {/* Automation source detail */}
                               {automated && (
                                 <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                                  <Zap className="w-2.5 h-2.5" /> Ausgelöst durch Automatisierungsregel
+                                  <Zap className="w-2.5 h-2.5" /> {t("auditTrail.triggeredByRule")}
                                 </p>
                               )}
                             </div>
@@ -516,77 +485,74 @@ const AuditTrail = () => {
         )}
       </div>
 
-      {/* ── 3. Detail / Diff Dialog ──────────────────────────────── */}
       <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="w-5 h-5" />
-              Audit-Detail
+              {t("auditTrail.auditDetail")}
             </DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-4 mt-2">
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Zeitpunkt</p>
-                  <p className="font-medium">{new Date(selectedLog.created_at).toLocaleString("de-DE")}</p>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.timestamp")}</p>
+                  <p className="font-medium">{new Date(selectedLog.created_at).toLocaleString(locale)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Benutzer</p>
-                  <p className="font-medium">{isAutomation(selectedLog.action) ? "Governance Engine" : selectedLog.profiles?.full_name || "System"}</p>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.user")}</p>
+                  <p className="font-medium">{isAutomation(selectedLog.action) ? t("auditTrail.governanceEngine") : selectedLog.profiles?.full_name || t("auditTrail.system")}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Aktion</p>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.action")}</p>
                   <p className="font-medium">{actionConfig[selectedLog.action]?.label || selectedLog.action}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-0.5">Quelle</p>
-                  <Badge variant="outline" className="text-[10px]">{isAutomation(selectedLog.action) ? "⚡ Automation" : "✋ Manuell"}</Badge>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.source")}</p>
+                  <Badge variant="outline" className="text-[10px]">{isAutomation(selectedLog.action) ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}</Badge>
                 </div>
               </div>
 
               {selectedLog.decisions?.title && (
                 <div className="text-xs">
-                  <p className="text-muted-foreground mb-0.5">Entscheidung</p>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.decision")}</p>
                   <p className="font-medium">{selectedLog.decisions.title}</p>
                 </div>
               )}
 
               {selectedLog.field_name && (
                 <div className="text-xs">
-                  <p className="text-muted-foreground mb-0.5">Geändertes Feld</p>
+                  <p className="text-muted-foreground mb-0.5">{t("auditTrail.changedField")}</p>
                   <p className="font-medium">{selectedLog.field_name}</p>
                 </div>
               )}
 
-              {/* Diff View */}
               {(selectedLog.old_value || selectedLog.new_value) && (
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
-                    Vorher / Nachher
+                    {t("auditTrail.beforeAfter")}
                   </div>
                   <div className="grid grid-cols-2 divide-x divide-border">
                     <div className="p-3">
-                      <p className="text-[10px] text-muted-foreground mb-1">Vorher</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">{t("auditTrail.before")}</p>
                       <p className="text-xs font-mono break-all bg-destructive/5 text-destructive rounded p-2">{selectedLog.old_value || "—"}</p>
                     </div>
                     <div className="p-3">
-                      <p className="text-[10px] text-muted-foreground mb-1">Nachher</p>
+                      <p className="text-[10px] text-muted-foreground mb-1">{t("auditTrail.after")}</p>
                       <p className="text-xs font-mono break-all bg-primary/5 text-primary rounded p-2">{selectedLog.new_value || "—"}</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Metadata */}
               <div className="rounded-lg border border-border p-3 bg-muted/20 text-[10px] text-muted-foreground space-y-1">
                 <p>Log-ID: <span className="font-mono">{selectedLog.id}</span></p>
                 <p>Decision-ID: <span className="font-mono">{selectedLog.decision_id}</span></p>
                 <p>User-ID: <span className="font-mono">{selectedLog.user_id}</span></p>
                 <div className="flex items-center gap-1 mt-2">
                   <Shield className="w-3 h-3" />
-                  <span>Immutable – Dieser Eintrag kann nicht verändert oder gelöscht werden.</span>
+                  <span>{t("auditTrail.immutableEntry")}</span>
                 </div>
               </div>
             </div>

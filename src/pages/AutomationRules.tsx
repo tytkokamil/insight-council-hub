@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -22,115 +23,16 @@ import { motion, AnimatePresence } from "framer-motion";
 // ── Types ──────────────────────────────────────────────────────────────
 
 interface AutomationRule {
-  id: string;
-  name: string;
-  description: string | null;
-  trigger_event: string;
-  condition_field: string;
-  condition_operator: string;
-  condition_value: string;
-  action_type: string;
-  action_value: string;
-  enabled: boolean;
-  team_id: string | null;
-  created_by: string;
-  created_at: string;
+  id: string; name: string; description: string | null;
+  trigger_event: string; condition_field: string; condition_operator: string;
+  condition_value: string; action_type: string; action_value: string;
+  enabled: boolean; team_id: string | null; created_by: string; created_at: string;
 }
 
 interface RuleLog {
-  id: string;
-  rule_id: string;
-  decision_id: string;
-  action_taken: string;
-  details: string | null;
-  executed_at: string;
+  id: string; rule_id: string; decision_id: string;
+  action_taken: string; details: string | null; executed_at: string;
 }
-
-// ── Constants ──────────────────────────────────────────────────────────
-
-const TRIGGER_LABELS: Record<string, string> = {
-  decision_created: "Entscheidung erstellt",
-  status_changed: "Status geändert",
-  priority_changed: "Priorität geändert",
-  risk_score_changed: "Risk Score geändert",
-};
-
-const FIELD_LABELS: Record<string, string> = {
-  priority: "Priorität",
-  category: "Kategorie",
-  status: "Status",
-  ai_risk_score: "Risk Score",
-};
-
-const OPERATOR_LABELS: Record<string, string> = {
-  equals: "ist gleich",
-  not_equals: "ist nicht",
-  contains: "enthält",
-  greater_than: "größer als",
-  less_than: "kleiner als",
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  set_sla_days: "SLA setzen (Tage)",
-  escalate: "Eskalieren",
-  change_priority: "Priorität ändern",
-  change_status: "Status ändern",
-  send_notification: "Benachrichtigung senden",
-};
-
-const FIELD_VALUES: Record<string, { value: string; label: string }[]> = {
-  priority: [
-    { value: "low", label: "Niedrig" },
-    { value: "medium", label: "Mittel" },
-    { value: "high", label: "Hoch" },
-    { value: "critical", label: "Kritisch" },
-  ],
-  category: [
-    { value: "strategic", label: "Strategisch" },
-    { value: "budget", label: "Budget" },
-    { value: "hr", label: "Personal" },
-    { value: "technical", label: "Technisch" },
-    { value: "operational", label: "Operativ" },
-    { value: "marketing", label: "Marketing" },
-  ],
-  status: [
-    { value: "draft", label: "Entwurf" },
-    { value: "proposed", label: "Vorgeschlagen" },
-    { value: "review", label: "In Review" },
-    { value: "approved", label: "Genehmigt" },
-    { value: "implemented", label: "Umgesetzt" },
-    { value: "rejected", label: "Abgelehnt" },
-  ],
-  ai_risk_score: [
-    { value: "30", label: "30 (Niedrig)" },
-    { value: "50", label: "50 (Mittel)" },
-    { value: "60", label: "60 (Hoch)" },
-    { value: "80", label: "80 (Kritisch)" },
-  ],
-};
-
-const ACTION_VALUE_OPTIONS: Record<string, { value: string; label: string }[]> = {
-  change_priority: FIELD_VALUES.priority,
-  change_status: FIELD_VALUES.status,
-};
-
-const RULE_CATEGORIES: Record<string, { label: string; icon: typeof Shield; color: string }> = {
-  sla: { label: "SLA Regeln", icon: Clock, color: "text-blue-500" },
-  escalation: { label: "Eskalationsregeln", icon: AlertTriangle, color: "text-destructive" },
-  notification: { label: "Benachrichtigungen", icon: Users, color: "text-warning" },
-  risk: { label: "Risk-Trigger", icon: Shield, color: "text-destructive" },
-  ownership: { label: "Ownership-Regeln", icon: Target, color: "text-primary" },
-  compliance: { label: "Compliance-Regeln", icon: FileText, color: "text-accent-foreground" },
-};
-
-const PRESET_RULES = [
-  { name: "High Priority → 3 Tage SLA", description: "Setzt automatisch ein 3-Tage-SLA wenn Priorität auf Hoch gesetzt wird", trigger_event: "priority_changed", condition_field: "priority", condition_operator: "equals", condition_value: "high", action_type: "set_sla_days", action_value: "3", category: "sla" },
-  { name: "Critical → Sofort eskalieren", description: "Eskaliert automatisch wenn eine kritische Entscheidung erstellt wird", trigger_event: "decision_created", condition_field: "priority", condition_operator: "equals", condition_value: "critical", action_type: "escalate", action_value: "1", category: "escalation" },
-  { name: "Budget → CFO-Benachrichtigung", description: "Benachrichtigt bei jeder neuen Budget-Entscheidung", trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "budget", action_type: "send_notification", action_value: "Neue Budget-Entscheidung erfordert Überprüfung", category: "notification" },
-  { name: "Strategisch → 5 Tage SLA", description: "Strategische Entscheidungen erhalten automatisch ein 5-Tage-SLA", trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "strategic", action_type: "set_sla_days", action_value: "5", category: "sla" },
-  { name: "High Risk → Eskalation", description: "Eskaliert automatisch wenn Risk Score über 60 steigt", trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "60", action_type: "escalate", action_value: "1", category: "risk" },
-  { name: "Risk > 80 → Kritische Priorität", description: "Setzt Priorität auf Kritisch wenn Risk Score über 80 steigt", trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "80", action_type: "change_priority", action_value: "critical", category: "risk" },
-];
 
 // ── Helper: classify rule into category ──
 function classifyRule(rule: AutomationRule): string {
@@ -145,6 +47,7 @@ function classifyRule(rule: AutomationRule): string {
 // ── Main Component ─────────────────────────────────────────────────────
 
 const AutomationRules = () => {
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [logs, setLogs] = useState<RuleLog[]>([]);
@@ -155,7 +58,6 @@ const AutomationRules = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [logFilter, setLogFilter] = useState<string>("all");
 
-  // Form state
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formTrigger, setFormTrigger] = useState("decision_created");
@@ -167,112 +69,138 @@ const AutomationRules = () => {
   const [formTeamId, setFormTeamId] = useState<string>("global");
   const [saving, setSaving] = useState(false);
 
-  // ── Data fetching ──
+  // ── i18n label maps ──
+  const TRIGGER_LABELS: Record<string, string> = {
+    decision_created: t("automationRules.triggerDecisionCreated"),
+    status_changed: t("automationRules.triggerStatusChanged"),
+    priority_changed: t("automationRules.triggerPriorityChanged"),
+    risk_score_changed: t("automationRules.triggerRiskScoreChanged"),
+  };
+  const FIELD_LABELS: Record<string, string> = {
+    priority: t("automationRules.fieldPriority"), category: t("automationRules.fieldCategory"),
+    status: t("automationRules.fieldStatus"), ai_risk_score: t("automationRules.fieldRiskScore"),
+  };
+  const OPERATOR_LABELS: Record<string, string> = {
+    equals: t("automationRules.opEquals"), not_equals: t("automationRules.opNotEquals"),
+    contains: t("automationRules.opContains"), greater_than: t("automationRules.opGreaterThan"),
+    less_than: t("automationRules.opLessThan"),
+  };
+  const ACTION_LABELS: Record<string, string> = {
+    set_sla_days: t("automationRules.actionSetSla"), escalate: t("automationRules.actionEscalate"),
+    change_priority: t("automationRules.actionChangePriority"), change_status: t("automationRules.actionChangeStatus"),
+    send_notification: t("automationRules.actionSendNotification"),
+  };
+  const FIELD_VALUES: Record<string, { value: string; label: string }[]> = {
+    priority: [
+      { value: "low", label: t("automationRules.low") }, { value: "medium", label: t("automationRules.medium") },
+      { value: "high", label: t("automationRules.high") }, { value: "critical", label: t("tasksPage.priorityCritical") },
+    ],
+    category: [
+      { value: "strategic", label: t("warRoom.catStrategic") }, { value: "budget", label: t("warRoom.catBudget") },
+      { value: "hr", label: t("warRoom.catHr") }, { value: "technical", label: t("warRoom.catTechnical") },
+      { value: "operational", label: t("warRoom.catOperational") }, { value: "marketing", label: t("warRoom.catMarketing") },
+    ],
+    status: [
+      { value: "draft", label: t("automationRules.statusDraft") }, { value: "proposed", label: t("automationRules.statusProposed") },
+      { value: "review", label: t("automationRules.statusReview") }, { value: "approved", label: t("automationRules.statusApproved") },
+      { value: "implemented", label: t("automationRules.statusImplemented") }, { value: "rejected", label: t("automationRules.statusRejected") },
+    ],
+    ai_risk_score: [
+      { value: "30", label: t("automationRules.riskLow") }, { value: "50", label: t("automationRules.riskMedium") },
+      { value: "60", label: t("automationRules.riskHigh") }, { value: "80", label: t("automationRules.riskCritical") },
+    ],
+  };
+  const ACTION_VALUE_OPTIONS: Record<string, { value: string; label: string }[]> = {
+    change_priority: FIELD_VALUES.priority, change_status: FIELD_VALUES.status,
+  };
+  const RULE_CATEGORIES: Record<string, { label: string; icon: typeof Shield; color: string }> = {
+    sla: { label: t("automationRules.catSla"), icon: Clock, color: "text-blue-500" },
+    escalation: { label: t("automationRules.catEscalation"), icon: AlertTriangle, color: "text-destructive" },
+    notification: { label: t("automationRules.catNotification"), icon: Users, color: "text-warning" },
+    risk: { label: t("automationRules.catRisk"), icon: Shield, color: "text-destructive" },
+    ownership: { label: t("automationRules.catOwnership"), icon: Target, color: "text-primary" },
+    compliance: { label: t("automationRules.catCompliance"), icon: FileText, color: "text-accent-foreground" },
+  };
+  const PRESET_RULES = [
+    { name: t("automationRules.presetHighSla"), description: t("automationRules.presetHighSlaDesc"), trigger_event: "priority_changed", condition_field: "priority", condition_operator: "equals", condition_value: "high", action_type: "set_sla_days", action_value: "3", category: "sla" },
+    { name: t("automationRules.presetCriticalEsc"), description: t("automationRules.presetCriticalEscDesc"), trigger_event: "decision_created", condition_field: "priority", condition_operator: "equals", condition_value: "critical", action_type: "escalate", action_value: "1", category: "escalation" },
+    { name: t("automationRules.presetBudgetCfo"), description: t("automationRules.presetBudgetCfoDesc"), trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "budget", action_type: "send_notification", action_value: t("automationRules.presetBudgetCfoDesc"), category: "notification" },
+    { name: t("automationRules.presetStrategicSla"), description: t("automationRules.presetStrategicSlaDesc"), trigger_event: "decision_created", condition_field: "category", condition_operator: "equals", condition_value: "strategic", action_type: "set_sla_days", action_value: "5", category: "sla" },
+    { name: t("automationRules.presetHighRisk"), description: t("automationRules.presetHighRiskDesc"), trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "60", action_type: "escalate", action_value: "1", category: "risk" },
+    { name: t("automationRules.presetRisk80"), description: t("automationRules.presetRisk80Desc"), trigger_event: "risk_score_changed", condition_field: "ai_risk_score", condition_operator: "greater_than", condition_value: "80", action_type: "change_priority", action_value: "critical", category: "risk" },
+  ];
 
+  // ── Data fetching ──
   const fetchRules = async () => {
     const { data } = await supabase.from("automation_rules").select("*").order("created_at", { ascending: false });
     if (data) setRules(data as AutomationRule[]);
     setLoading(false);
   };
-
   const fetchTeams = async () => {
     const { data } = await supabase.from("teams").select("id, name").order("name");
     if (data) setTeams(data);
   };
-
   const fetchLogs = async () => {
     const { data } = await supabase.from("automation_rule_logs").select("*").order("executed_at", { ascending: false }).limit(100);
     if (data) setLogs(data as RuleLog[]);
   };
 
-  useEffect(() => {
-    fetchRules();
-    fetchTeams();
-    fetchLogs();
-  }, []);
+  useEffect(() => { fetchRules(); fetchTeams(); fetchLogs(); }, []);
 
   // ── Computed values ──
-
   const engineActive = rules.some(r => r.enabled);
   const activeRuleCount = rules.filter(r => r.enabled).length;
-  const last7DaysLogs = useMemo(() => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 7);
-    return logs.filter(l => new Date(l.executed_at) > cutoff);
-  }, [logs]);
-  const last30DaysLogs = useMemo(() => {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-    return logs.filter(l => new Date(l.executed_at) > cutoff);
-  }, [logs]);
+  const last7DaysLogs = useMemo(() => { const c = new Date(); c.setDate(c.getDate() - 7); return logs.filter(l => new Date(l.executed_at) > c); }, [logs]);
+  const last30DaysLogs = useMemo(() => { const c = new Date(); c.setDate(c.getDate() - 30); return logs.filter(l => new Date(l.executed_at) > c); }, [logs]);
 
   const autoEscalations = last7DaysLogs.filter(l => l.action_taken === "escalate").length;
   const autoSlaSet = last7DaysLogs.filter(l => l.action_taken === "set_sla_days").length;
   const autoNotifications = last7DaysLogs.filter(l => l.action_taken === "send_notification").length;
   const autoStatusChanges = last7DaysLogs.filter(l => l.action_taken === "change_status" || l.action_taken === "change_priority").length;
 
-  // Automation Health Score (0-100)
   const automationScore = useMemo(() => {
     let score = 0;
-    // Rule coverage (max 30)
     const categories = new Set(rules.filter(r => r.enabled).map(classifyRule));
     score += Math.min(categories.size * 5, 30);
-    // Active rules (max 20)
     score += Math.min(activeRuleCount * 2.5, 20);
-    // Execution frequency (max 25)
     score += Math.min(last30DaysLogs.length * 0.5, 25);
-    // No conflicts bonus (max 15) — simplified
     score += 15;
-    // Engine active (10)
     if (engineActive) score += 10;
     return Math.round(Math.min(score, 100));
   }, [rules, activeRuleCount, last30DaysLogs, engineActive]);
 
-  // Conflict detection
   const conflicts = useMemo(() => {
     const detected: { ruleA: string; ruleB: string; type: string }[] = [];
     const enabledRules = rules.filter(r => r.enabled);
     for (let i = 0; i < enabledRules.length; i++) {
       for (let j = i + 1; j < enabledRules.length; j++) {
         const a = enabledRules[i], b = enabledRules[j];
-        // Same trigger + same condition but different actions
         if (a.trigger_event === b.trigger_event && a.condition_field === b.condition_field && a.condition_value === b.condition_value) {
           if (a.action_type === b.action_type && a.action_value !== b.action_value) {
-            detected.push({ ruleA: a.name, ruleB: b.name, type: "Überschreibt Wert" });
+            detected.push({ ruleA: a.name, ruleB: b.name, type: t("automationRules.conflictOverwrite") });
           }
           if (a.action_type === "set_sla_days" && b.action_type === "set_sla_days") {
-            detected.push({ ruleA: a.name, ruleB: b.name, type: "Doppeltes SLA" });
+            detected.push({ ruleA: a.name, ruleB: b.name, type: t("automationRules.conflictDualSla") });
           }
         }
       }
     }
     return detected;
-  }, [rules]);
+  }, [rules, t]);
 
-  // Grouped rules by category
   const groupedRules = useMemo(() => {
     const groups: Record<string, AutomationRule[]> = {};
-    rules.forEach(r => {
-      const cat = classifyRule(r);
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(r);
-    });
+    rules.forEach(r => { const cat = classifyRule(r); if (!groups[cat]) groups[cat] = []; groups[cat].push(r); });
     return groups;
   }, [rules]);
 
-  // Governance level
   const governanceLevel = useMemo(() => {
     if (last30DaysLogs.length === 0) return 0;
-    // Rough: automated actions vs total (simulate manual = decisions without auto)
     return Math.min(Math.round((last30DaysLogs.length / Math.max(last30DaysLogs.length + 5, 1)) * 100), 95);
   }, [last30DaysLogs]);
 
   // ── Handlers ──
-
-  const resetForm = () => {
-    setFormName(""); setFormDescription(""); setFormTrigger("decision_created"); setFormField("priority");
-    setFormOperator("equals"); setFormValue(""); setFormActionType("set_sla_days"); setFormActionValue(""); setFormTeamId("global");
-  };
+  const resetForm = () => { setFormName(""); setFormDescription(""); setFormTrigger("decision_created"); setFormField("priority"); setFormOperator("equals"); setFormValue(""); setFormActionType("set_sla_days"); setFormActionValue(""); setFormTeamId("global"); };
 
   const applyPreset = (preset: typeof PRESET_RULES[0]) => {
     setFormName(preset.name); setFormDescription(preset.description); setFormTrigger(preset.trigger_event);
@@ -290,29 +218,28 @@ const AutomationRules = () => {
       team_id: formTeamId === "global" ? null : formTeamId, created_by: user.id,
     });
     setSaving(false);
-    if (error) { toast.error("Regel konnte nicht erstellt werden"); }
-    else { toast.success("Automation Rule erstellt"); setShowCreate(false); resetForm(); fetchRules(); }
+    if (error) { toast.error(t("automationRules.ruleCreateError")); }
+    else { toast.success(t("automationRules.ruleCreated")); setShowCreate(false); resetForm(); fetchRules(); }
   };
 
   const toggleRule = async (id: string, enabled: boolean) => {
     await supabase.from("automation_rules").update({ enabled }).eq("id", id);
     setRules(prev => prev.map(r => r.id === id ? { ...r, enabled } : r));
-    toast.success(enabled ? "Regel aktiviert" : "Regel deaktiviert");
+    toast.success(enabled ? t("automationRules.ruleActivated") : t("automationRules.ruleDeactivated"));
   };
 
   const deleteRule = async (id: string) => {
     await supabase.from("automation_rules").delete().eq("id", id);
     setRules(prev => prev.filter(r => r.id !== id));
-    toast.success("Regel gelöscht");
+    toast.success(t("automationRules.ruleDeleted"));
   };
 
-  const getTeamName = (teamId: string | null) => !teamId ? "Global" : teams.find(t => t.id === teamId)?.name || "Unbekannt";
+  const getTeamName = (teamId: string | null) => !teamId ? "Global" : teams.find(tm => tm.id === teamId)?.name || "—";
   const getValueLabel = (field: string, value: string) => FIELD_VALUES[field]?.find(o => o.value === value)?.label || value;
   const getRuleLogCount = (ruleId: string) => last30DaysLogs.filter(l => l.rule_id === ruleId).length;
 
   const inputClass = "w-full h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm";
 
-  // Simulated impact per rule (Cost of Delay prevented)
   const getRuleImpact = (rule: AutomationRule) => {
     const execCount = getRuleLogCount(rule.id);
     if (rule.action_type === "set_sla_days") return { slaPreventions: Math.ceil(execCount * 0.6), costSaved: execCount * 1400 };
@@ -320,52 +247,46 @@ const AutomationRules = () => {
     return { slaPreventions: 0, costSaved: execCount * 800 };
   };
 
-  const filteredLogs = useMemo(() => {
-    if (logFilter === "all") return logs;
-    return logs.filter(l => l.action_taken === logFilter);
-  }, [logs, logFilter]);
-
+  const filteredLogs = useMemo(() => logFilter === "all" ? logs : logs.filter(l => l.action_taken === logFilter), [logs, logFilter]);
   const displayedRules = selectedCategory ? (groupedRules[selectedCategory] || []) : rules;
 
   return (
     <AppLayout>
       <PageHeader
-        title="Automation Rules"
-        subtitle="Governance-Automatisierung – Regeln, Impact & Compliance"
+        title={t("automationRules.title")}
+        subtitle={t("automationRules.subtitle")}
         role="governance"
-        help={{ title: "Automation Rules", description: "Erstelle Regeln, die automatisch Aktionen ausführen wenn bestimmte Bedingungen eintreten." }}
+        help={{ title: t("automationRules.title"), description: t("automationRules.helpDesc") }}
         primaryAction={
           <Button size="sm" className="gap-1.5" onClick={() => { resetForm(); setShowCreate(true); }}>
-            <Plus className="w-3.5 h-3.5" /> Neue Regel
+            <Plus className="w-3.5 h-3.5" /> {t("automationRules.newRule")}
           </Button>
         }
       />
 
-      {/* ── 1. Automation Snapshot ──────────────────────────────── */}
       <div className="mb-6">
-        {/* Engine Status Banner */}
         {!engineActive && rules.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-center gap-3">
             <XCircle className="w-5 h-5 text-destructive shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-destructive">Governance Engine INAKTIV</p>
-              <p className="text-xs text-muted-foreground">Alle Regeln sind deaktiviert. Governance läuft manuell.</p>
+              <p className="text-sm font-semibold text-destructive">{t("automationRules.engineInactive")}</p>
+              <p className="text-xs text-muted-foreground">{t("automationRules.engineInactiveDesc")}</p>
             </div>
             <Button size="sm" variant="destructive" className="ml-auto" onClick={() => rules.forEach(r => toggleRule(r.id, true))}>
-              Alle aktivieren
+              {t("automationRules.activateAll")}
             </Button>
           </motion.div>
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           {[
-            { label: "Engine Status", value: engineActive ? "Aktiv" : "Inaktiv", icon: engineActive ? <Activity className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />, highlight: !engineActive },
-            { label: "Aktive Regeln", value: activeRuleCount.toString(), icon: <Zap className="w-4 h-4 text-primary" /> },
-            { label: "Ausgelöst (7T)", value: last7DaysLogs.length.toString(), icon: <Play className="w-4 h-4 text-primary" /> },
-            { label: "Auto-Eskalationen", value: autoEscalations.toString(), icon: <AlertTriangle className="w-4 h-4 text-destructive" /> },
-            { label: "SLA gesetzt", value: autoSlaSet.toString(), icon: <Clock className="w-4 h-4 text-blue-500" /> },
-            { label: "Benachrichtigungen", value: autoNotifications.toString(), icon: <Users className="w-4 h-4 text-warning" /> },
-            { label: "Status-Änderungen", value: autoStatusChanges.toString(), icon: <RefreshCw className="w-4 h-4 text-accent-foreground" /> },
+            { label: t("automationRules.engineStatus"), value: engineActive ? t("automationRules.active") : t("automationRules.inactive"), icon: engineActive ? <Activity className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />, highlight: !engineActive },
+            { label: t("automationRules.activeRules"), value: activeRuleCount.toString(), icon: <Zap className="w-4 h-4 text-primary" /> },
+            { label: t("automationRules.triggered7d"), value: last7DaysLogs.length.toString(), icon: <Play className="w-4 h-4 text-primary" /> },
+            { label: t("automationRules.autoEscalations"), value: autoEscalations.toString(), icon: <AlertTriangle className="w-4 h-4 text-destructive" /> },
+            { label: t("automationRules.slaSet"), value: autoSlaSet.toString(), icon: <Clock className="w-4 h-4 text-blue-500" /> },
+            { label: t("automationRules.notifications"), value: autoNotifications.toString(), icon: <Users className="w-4 h-4 text-warning" /> },
+            { label: t("automationRules.statusChanges"), value: autoStatusChanges.toString(), icon: <RefreshCw className="w-4 h-4 text-accent-foreground" /> },
           ].map((kpi, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Card className={`${kpi.highlight ? "border-destructive/40 bg-destructive/5" : ""}`}>
@@ -382,19 +303,16 @@ const AutomationRules = () => {
         </div>
       </div>
 
-      {/* ── 10. Automation Health Score + Governance Level ──────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Gauge className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold">Automation Health Score</h3>
+              <h3 className="text-sm font-semibold">{t("automationRules.healthScore")}</h3>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
-                  <TooltipContent className="max-w-xs text-xs">
-                    <p>Basiert auf: Regel-Abdeckung (30%), Aktive Regeln (20%), Ausführungshäufigkeit (25%), Konflikte (15%), Engine-Status (10%)</p>
-                  </TooltipContent>
+                  <TooltipContent className="max-w-xs text-xs"><p>{t("automationRules.healthTooltip")}</p></TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -402,67 +320,54 @@ const AutomationRules = () => {
               <div className="text-4xl font-bold">{automationScore}</div>
               <div className="flex-1">
                 <div className="h-3 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${automationScore}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className={`h-full rounded-full ${automationScore >= 75 ? "bg-success" : automationScore >= 50 ? "bg-warning" : "bg-destructive"}`}
-                  />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${automationScore}%` }} transition={{ duration: 1, ease: "easeOut" }}
+                    className={`h-full rounded-full ${automationScore >= 75 ? "bg-success" : automationScore >= 50 ? "bg-warning" : "bg-destructive"}`} />
                 </div>
                 <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                  <span>Niedrig</span>
-                  <span>Mittel</span>
-                  <span>Hoch</span>
+                  <span>{t("automationRules.low")}</span><span>{t("automationRules.medium")}</span><span>{t("automationRules.high")}</span>
                 </div>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <span>Kategorien abgedeckt: {new Set(rules.filter(r => r.enabled).map(classifyRule)).size}/6</span>
-              <span>Ausführungen (30T): {last30DaysLogs.length}</span>
+              <span>{t("automationRules.categoriesCovered", { count: new Set(rules.filter(r => r.enabled).map(classifyRule)).size })}</span>
+              <span>{t("automationRules.executions30d", { count: last30DaysLogs.length })}</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* 8. Governance Level */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold">Manual vs. Automated Governance</h3>
+              <h3 className="text-sm font-semibold">{t("automationRules.manualVsAuto")}</h3>
             </div>
             <div className="flex items-end gap-4">
               <div className="text-4xl font-bold text-primary">{governanceLevel}%</div>
               <div className="flex-1">
                 <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${governanceLevel}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className="h-full bg-primary rounded-l-full"
-                  />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${governanceLevel}%` }} transition={{ duration: 1, ease: "easeOut" }} className="h-full bg-primary rounded-l-full" />
                   <div className="h-full bg-muted-foreground/20 flex-1 rounded-r-full" />
                 </div>
                 <div className="flex justify-between text-[10px] mt-1">
-                  <span className="text-primary font-medium">Automatisiert</span>
-                  <span className="text-muted-foreground">Manuell</span>
+                  <span className="text-primary font-medium">{t("automationRules.automated")}</span>
+                  <span className="text-muted-foreground">{t("automationRules.manualLabel")}</span>
                 </div>
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Ziel: 80% automatisiert. {governanceLevel < 80 ? `Noch ${80 - governanceLevel}% zu automatisieren.` : "✓ Ziel erreicht."}
+              {t("automationRules.goalTarget")} {governanceLevel < 80 ? t("automationRules.goalRemaining", { pct: 80 - governanceLevel }) : t("automationRules.goalReached")}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* ── 6. Conflict Detection ──────────────────────────────── */}
       {conflicts.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
           <Card className="border-warning/40 bg-warning/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-4 h-4 text-warning" />
-                <h3 className="text-sm font-semibold">Regel-Konflikte erkannt</h3>
+                <h3 className="text-sm font-semibold">{t("automationRules.conflictsDetected")}</h3>
                 <Badge variant="outline" className="text-[10px] text-warning border-warning/30">{conflicts.length}</Badge>
               </div>
               <div className="space-y-2">
@@ -479,37 +384,23 @@ const AutomationRules = () => {
         </motion.div>
       )}
 
-      {/* ── Tabs: Regeln / Log / Vorlagen ──────────────────────── */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="rules" className="gap-1.5"><Zap className="w-3.5 h-3.5" /> Regeln ({rules.length})</TabsTrigger>
-          <TabsTrigger value="log" className="gap-1.5"><History className="w-3.5 h-3.5" /> Log ({logs.length})</TabsTrigger>
-          <TabsTrigger value="templates" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> Vorlagen</TabsTrigger>
+          <TabsTrigger value="rules" className="gap-1.5"><Zap className="w-3.5 h-3.5" /> {t("automationRules.tabRules", { count: rules.length })}</TabsTrigger>
+          <TabsTrigger value="log" className="gap-1.5"><History className="w-3.5 h-3.5" /> {t("automationRules.tabLog", { count: logs.length })}</TabsTrigger>
+          <TabsTrigger value="templates" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> {t("automationRules.tabTemplates")}</TabsTrigger>
         </TabsList>
 
-        {/* ── TAB: Regeln ──────────────────────────────────────── */}
         <TabsContent value="rules">
-          {/* 2. Category Filter Bar */}
           <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              variant={!selectedCategory ? "default" : "outline"}
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => setSelectedCategory(null)}
-            >
-              Alle ({rules.length})
+            <Button variant={!selectedCategory ? "default" : "outline"} size="sm" className="text-xs h-7" onClick={() => setSelectedCategory(null)}>
+              {t("automationRules.allRules", { count: rules.length })}
             </Button>
             {Object.entries(RULE_CATEGORIES).map(([key, cat]) => {
               const count = groupedRules[key]?.length || 0;
               const Icon = cat.icon;
               return (
-                <Button
-                  key={key}
-                  variant={selectedCategory === key ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs h-7 gap-1"
-                  onClick={() => setSelectedCategory(selectedCategory === key ? null : key)}
-                >
+                <Button key={key} variant={selectedCategory === key ? "default" : "outline"} size="sm" className="text-xs h-7 gap-1" onClick={() => setSelectedCategory(selectedCategory === key ? null : key)}>
                   <Icon className={`w-3 h-3 ${selectedCategory !== key ? cat.color : ""}`} />
                   {cat.label} ({count})
                 </Button>
@@ -518,10 +409,10 @@ const AutomationRules = () => {
           </div>
 
           {loading ? (
-            <div className="text-sm text-muted-foreground text-center py-10">Regeln laden...</div>
+            <div className="text-sm text-muted-foreground text-center py-10">{t("automationRules.loadingRules")}</div>
           ) : displayedRules.length === 0 ? (
             <div className="text-sm text-muted-foreground text-center py-10">
-              {selectedCategory ? "Keine Regeln in dieser Kategorie." : "Noch keine Regeln erstellt. Nutze die Vorlagen zum Starten."}
+              {selectedCategory ? t("automationRules.noRulesInCat") : t("automationRules.noRulesYet")}
             </div>
           ) : (
             <div className="space-y-3">
@@ -538,24 +429,20 @@ const AutomationRules = () => {
                       <Card className={`transition-all ${!rule.enabled ? "opacity-50" : ""}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
-                            <div className="pt-0.5">
-                              <Switch checked={rule.enabled} onCheckedChange={(v) => toggleRule(rule.id, v)} />
-                            </div>
+                            <div className="pt-0.5"><Switch checked={rule.enabled} onCheckedChange={(v) => toggleRule(rule.id, v)} /></div>
                             <div className="flex-1 min-w-0">
-                              {/* Header */}
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <CatIcon className={`w-3.5 h-3.5 ${catInfo.color} shrink-0`} />
                                 <h3 className="text-sm font-semibold truncate">{rule.name}</h3>
                                 <Badge variant="outline" className="text-[10px] shrink-0">{catInfo.label}</Badge>
                                 <Badge variant="outline" className="text-[10px] shrink-0">{getTeamName(rule.team_id)}</Badge>
-                                {rule.enabled && <Badge className="text-[10px] bg-success/10 text-success border-success/20 shrink-0">Aktiv</Badge>}
+                                {rule.enabled && <Badge className="text-[10px] bg-success/10 text-success border-success/20 shrink-0">{t("automationRules.active")}</Badge>}
                               </div>
                               {rule.description && <p className="text-xs text-muted-foreground mb-2">{rule.description}</p>}
 
-                              {/* Trigger → Action Flow */}
                               <div className="flex flex-wrap items-center gap-1.5 text-[11px] mb-3">
                                 <Badge variant="secondary" className="text-[10px] gap-1"><Play className="w-2.5 h-2.5" />{TRIGGER_LABELS[rule.trigger_event] || rule.trigger_event}</Badge>
-                                <span className="text-muted-foreground">wenn</span>
+                                <span className="text-muted-foreground">{t("automationRules.when")}</span>
                                 <Badge variant="outline" className="text-[10px]">{FIELD_LABELS[rule.condition_field] || rule.condition_field}</Badge>
                                 <span className="text-muted-foreground">{OPERATOR_LABELS[rule.condition_operator]}</span>
                                 <Badge variant="outline" className="text-[10px] font-mono">{getValueLabel(rule.condition_field, rule.condition_value)}</Badge>
@@ -565,28 +452,25 @@ const AutomationRules = () => {
                                 </Badge>
                               </div>
 
-                              {/* 4. Impact Stats */}
                               <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
-                                <span className="flex items-center gap-1"><Activity className="w-3 h-3" />{execCount}× ausgelöst (30T)</span>
+                                <span className="flex items-center gap-1"><Activity className="w-3 h-3" />{t("automationRules.triggeredCount", { count: execCount })}</span>
                                 {impact.slaPreventions > 0 && (
-                                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-success" />{impact.slaPreventions} SLA-Verletzungen verhindert</span>
+                                  <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-success" />{t("automationRules.slaPreventions", { count: impact.slaPreventions })}</span>
                                 )}
                                 {impact.costSaved > 0 && (
                                   <span className="flex items-center gap-1 font-medium text-success">
-                                    <TrendingUp className="w-3 h-3" />€{impact.costSaved.toLocaleString("de-DE")} Cost of Delay reduziert
+                                    <TrendingUp className="w-3 h-3" />{t("automationRules.costSaved", { amount: impact.costSaved.toLocaleString(i18n.language === "de" ? "de-DE" : "en-US") })}
                                   </span>
                                 )}
                               </div>
 
-                              {/* Deactivation simulation */}
                               {rule.enabled && execCount > 0 && (
                                 <div className="mt-2 p-2 rounded bg-muted/30 border border-border text-[10px] text-muted-foreground flex items-center gap-2">
                                   <Eye className="w-3 h-3 shrink-0" />
-                                  <span>Simulation bei Deaktivierung: <span className="font-medium text-destructive">{impact.slaPreventions} SLA-Verletzungen</span> wären in den letzten 30 Tagen entstanden.</span>
+                                  <span>{t("automationRules.deactivationSim", { count: impact.slaPreventions })}</span>
                                 </div>
                               )}
                             </div>
-
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive shrink-0" onClick={() => deleteRule(rule.id)}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -601,16 +485,15 @@ const AutomationRules = () => {
           )}
         </TabsContent>
 
-        {/* ── TAB: Log ─────────────────────────────────────────── */}
         <TabsContent value="log">
           <div className="flex flex-wrap gap-2 mb-4">
             {[
-              { key: "all", label: "Alle" },
-              { key: "escalate", label: "Eskalationen" },
-              { key: "set_sla_days", label: "SLA" },
-              { key: "send_notification", label: "Benachrichtigungen" },
-              { key: "change_status", label: "Status" },
-              { key: "change_priority", label: "Priorität" },
+              { key: "all", label: t("automationRules.logAll") },
+              { key: "escalate", label: t("automationRules.logEscalations") },
+              { key: "set_sla_days", label: t("automationRules.logSla") },
+              { key: "send_notification", label: t("automationRules.logNotifications") },
+              { key: "change_status", label: t("automationRules.logStatus") },
+              { key: "change_priority", label: t("automationRules.logPriority") },
             ].map(f => (
               <Button key={f.key} variant={logFilter === f.key ? "default" : "outline"} size="sm" className="text-xs h-7" onClick={() => setLogFilter(f.key)}>
                 {f.label}
@@ -618,32 +501,31 @@ const AutomationRules = () => {
             ))}
           </div>
 
-          {/* Log Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <Card><CardContent className="p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">Gesamt (30T)</p>
+              <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logTotal30d")}</p>
               <p className="text-xl font-bold">{last30DaysLogs.length}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">Ø Reaktionszeit</p>
+              <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logAvgReaction")}</p>
               <p className="text-xl font-bold">2.4h</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">SLA verhindert</p>
+              <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logSlaPrevented")}</p>
               <p className="text-xl font-bold text-success">{Math.ceil(last30DaysLogs.filter(l => l.action_taken === "set_sla_days").length * 0.6)}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase">Economic Impact</p>
-              <p className="text-xl font-bold text-success">€{(last30DaysLogs.length * 1200).toLocaleString("de-DE")}</p>
+              <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logEconomicImpact")}</p>
+              <p className="text-xl font-bold text-success">€{(last30DaysLogs.length * 1200).toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}</p>
             </CardContent></Card>
           </div>
 
           <div className="space-y-2">
             {filteredLogs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Noch keine Ausführungen</p>
+              <p className="text-sm text-muted-foreground text-center py-6">{t("automationRules.noExecutions")}</p>
             ) : (
               filteredLogs.slice(0, 50).map(log => {
-                const ruleName = rules.find(r => r.id === log.rule_id)?.name || "Unbekannte Regel";
+                const ruleName = rules.find(r => r.id === log.rule_id)?.name || t("automationRules.unknownRule");
                 return (
                   <motion.div key={log.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     <div className="p-3 rounded-lg bg-muted/20 border border-border">
@@ -651,7 +533,7 @@ const AutomationRules = () => {
                         <CheckCircle2 className="w-3 h-3 text-success shrink-0" />
                         <span className="text-xs font-medium">{ruleName}</span>
                         <Badge variant="outline" className="text-[10px]">{ACTION_LABELS[log.action_taken] || log.action_taken}</Badge>
-                        <span className="text-[10px] text-muted-foreground ml-auto">{new Date(log.executed_at).toLocaleString("de-DE")}</span>
+                        <span className="text-[10px] text-muted-foreground ml-auto">{new Date(log.executed_at).toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}</span>
                       </div>
                       {log.details && <p className="text-xs text-muted-foreground">{log.details}</p>}
                     </div>
@@ -662,7 +544,6 @@ const AutomationRules = () => {
           </div>
         </TabsContent>
 
-        {/* ── TAB: Vorlagen ────────────────────────────────────── */}
         <TabsContent value="templates">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {PRESET_RULES.map((preset, i) => (
@@ -692,30 +573,29 @@ const AutomationRules = () => {
         </TabsContent>
       </Tabs>
 
-      {/* ── 9. Safety & Compliance Layer ───────────────────────── */}
       {rules.length > 0 && (
         <div className="mt-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Shield className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold">Safety & Compliance</h3>
+                <h3 className="text-sm font-semibold">{t("automationRules.safetyCompliance")}</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <p className="text-muted-foreground mb-1">Regeln mit Audit Trail</p>
+                  <p className="text-muted-foreground mb-1">{t("automationRules.rulesWithAudit")}</p>
                   <p className="text-lg font-bold">{rules.length}/{rules.length}</p>
-                  <p className="text-[10px] text-muted-foreground">Alle Änderungen protokolliert</p>
+                  <p className="text-[10px] text-muted-foreground">{t("automationRules.allChangesLogged")}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1">Konflikte</p>
+                  <p className="text-muted-foreground mb-1">{t("automationRules.conflicts")}</p>
                   <p className={`text-lg font-bold ${conflicts.length > 0 ? "text-warning" : "text-success"}`}>{conflicts.length}</p>
-                  <p className="text-[10px] text-muted-foreground">{conflicts.length === 0 ? "Keine Konflikte erkannt" : "Überprüfung empfohlen"}</p>
+                  <p className="text-[10px] text-muted-foreground">{conflicts.length === 0 ? t("automationRules.noConflicts") : t("automationRules.reviewRecommended")}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground mb-1">Engine-Integrität</p>
-                  <p className="text-lg font-bold text-success">✓ Stabil</p>
-                  <p className="text-[10px] text-muted-foreground">Letzte Prüfung: heute</p>
+                  <p className="text-muted-foreground mb-1">{t("automationRules.engineIntegrity")}</p>
+                  <p className="text-lg font-bold text-success">{t("automationRules.stable")}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("automationRules.lastCheck")}</p>
                 </div>
               </div>
             </CardContent>
@@ -723,47 +603,45 @@ const AutomationRules = () => {
         </div>
       )}
 
-      {/* ── Create Dialog (5. Advanced Rule Builder) ──────────── */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings2 className="w-5 h-5" />
-              Neue Automation Rule
+              {t("automationRules.createTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Name</label>
-              <input value={formName} onChange={e => setFormName(e.target.value)} className={inputClass} placeholder="z.B. High Priority → 3 Tage SLA" />
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("automationRules.nameLabel")}</label>
+              <input value={formName} onChange={e => setFormName(e.target.value)} className={inputClass} placeholder={t("automationRules.namePlaceholder")} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Beschreibung (optional)</label>
-              <input value={formDescription} onChange={e => setFormDescription(e.target.value)} className={inputClass} placeholder="Was macht diese Regel?" />
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("automationRules.descLabel")}</label>
+              <input value={formDescription} onChange={e => setFormDescription(e.target.value)} className={inputClass} placeholder={t("automationRules.descPlaceholder")} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Auslöser</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("automationRules.triggerLabel")}</label>
                 <Select value={formTrigger} onValueChange={setFormTrigger}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>{Object.entries(TRIGGER_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Geltungsbereich</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("automationRules.scopeLabel")}</label>
                 <Select value={formTeamId} onValueChange={setFormTeamId}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="global">Global (alle Teams)</SelectItem>
-                    {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    <SelectItem value="global">{t("automationRules.scopeGlobal")}</SelectItem>
+                    {teams.map(tm => <SelectItem key={tm.id} value={tm.id}>{tm.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* WENN Block */}
             <div className="rounded-lg border border-border p-3 bg-muted/20">
-              <p className="text-xs font-semibold mb-2">WENN</p>
+              <p className="text-xs font-semibold mb-2">{t("automationRules.whenBlock")}</p>
               <div className="grid grid-cols-3 gap-2">
                 <Select value={formField} onValueChange={(v) => { setFormField(v); setFormValue(""); }}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
@@ -775,18 +653,17 @@ const AutomationRules = () => {
                 </Select>
                 {FIELD_VALUES[formField] ? (
                   <Select value={formValue} onValueChange={setFormValue}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Wert..." /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue placeholder={t("automationRules.valuePlaceholder")} /></SelectTrigger>
                     <SelectContent>{FIELD_VALUES[formField].map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
                 ) : (
-                  <input value={formValue} onChange={e => setFormValue(e.target.value)} className={inputClass} placeholder="Wert" />
+                  <input value={formValue} onChange={e => setFormValue(e.target.value)} className={inputClass} placeholder={t("automationRules.valuePlaceholder")} />
                 )}
               </div>
             </div>
 
-            {/* DANN Block */}
             <div className="rounded-lg border border-primary/20 p-3 bg-primary/5">
-              <p className="text-xs font-semibold mb-2 text-primary">DANN</p>
+              <p className="text-xs font-semibold mb-2 text-primary">{t("automationRules.thenBlock")}</p>
               <div className="grid grid-cols-2 gap-2">
                 <Select value={formActionType} onValueChange={(v) => { setFormActionType(v); setFormActionValue(""); }}>
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
@@ -794,24 +671,20 @@ const AutomationRules = () => {
                 </Select>
                 {ACTION_VALUE_OPTIONS[formActionType] ? (
                   <Select value={formActionValue} onValueChange={setFormActionValue}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Wert..." /></SelectTrigger>
+                    <SelectTrigger className="h-9"><SelectValue placeholder={t("automationRules.valuePlaceholder")} /></SelectTrigger>
                     <SelectContent>{ACTION_VALUE_OPTIONS[formActionType].map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
                 ) : (
-                  <input
-                    value={formActionValue}
-                    onChange={e => setFormActionValue(e.target.value)}
-                    className={inputClass}
-                    placeholder={formActionType === "set_sla_days" ? "Anzahl Tage" : formActionType === "send_notification" ? "Nachricht..." : "Wert"}
-                    type={formActionType === "set_sla_days" ? "number" : "text"}
-                  />
+                  <input value={formActionValue} onChange={e => setFormActionValue(e.target.value)} className={inputClass}
+                    placeholder={formActionType === "set_sla_days" ? t("automationRules.slaPlaceholder") : formActionType === "send_notification" ? t("automationRules.notificationPlaceholder") : t("automationRules.valuePlaceholder")}
+                    type={formActionType === "set_sla_days" ? "number" : "text"} />
                 )}
               </div>
             </div>
 
             <Button onClick={handleCreate} disabled={saving || !formName.trim() || !formValue || !formActionValue} className="w-full gap-2">
               <Zap className="w-4 h-4" />
-              {saving ? "Erstellen..." : "Regel erstellen"}
+              {saving ? t("automationRules.creating") : t("automationRules.createRule")}
             </Button>
           </div>
         </DialogContent>
