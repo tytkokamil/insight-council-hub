@@ -94,9 +94,11 @@ const HeroSection = () => {
             transition={{ delay: 0.8, duration: 0.6, ease }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
-            <Button size="xl" className="rounded-full group shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/15 transition-all">
-              Kostenlos starten
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            <Button size="xl" className="rounded-full group shadow-lg shadow-primary/10 hover:shadow-xl hover:shadow-primary/15 transition-all" asChild>
+              <a href="/auth">
+                Kostenlos starten
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
             </Button>
             <Button variant="outline" size="xl" className="rounded-full border-border/60 hover:bg-muted/30" onClick={() => setShowTour(true)}>
               <Play className="w-4 h-4" />
