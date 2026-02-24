@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
+import DecisionsPageSkeleton from "@/components/decisions/DecisionsPageSkeleton";
 import { Plus, Download, FileText, FileUp } from "lucide-react";
 import { useTranslatedLabels } from "@/lib/labels";
 import { useTranslation } from "react-i18next";
@@ -34,7 +35,7 @@ const Decisions = () => {
   const PRIORITY_OPTIONS = Object.entries(tl.priorityLabels).map(([value, label]) => ({ value, label }));
   const CATEGORY_OPTIONS = Object.entries(tl.categoryLabels).map(([value, label]) => ({ value, label }));
 
-  const { data: decisions = [] } = useDecisions();
+  const { data: decisions = [], isLoading: decisionsLoading } = useDecisions();
   const { data: teams = [] } = useTeams();
   const { data: profiles = [] } = useProfiles();
   const { data: allDeps = [] } = useDependencies();
@@ -179,6 +180,10 @@ const Decisions = () => {
     assignee_name: d.assignee_id ? profileMap[d.assignee_id] : undefined,
     creator_name: profileMap[d.created_by],
   }));
+
+  if (decisionsLoading) {
+    return <AppLayout><DecisionsPageSkeleton /></AppLayout>;
+  }
 
   return (
     <AppLayout>

@@ -78,6 +78,11 @@ const SidebarFooter = memo(({
             </>
           )}
         </div>
+        {!collapsed && (
+          <p className="text-[9px] text-muted-foreground/30 text-center mt-0.5 select-none">
+            {t("shared.buildInfo")} {new Date().toISOString().slice(0, 10)}
+          </p>
+        )}
       </div>
     </>
   );

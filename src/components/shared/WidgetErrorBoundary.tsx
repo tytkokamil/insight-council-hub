@@ -2,12 +2,11 @@ import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import i18n from "@/i18n";
 
 interface Props {
   children: ReactNode;
-  /** Optional label shown in the fallback UI */
   label?: string;
-  /** Compact mode for inline widgets vs full-page sections */
   compact?: boolean;
 }
 
@@ -38,6 +37,9 @@ class WidgetErrorBoundary extends Component<Props, State> {
     if (!this.state.hasError) return this.props.children;
 
     const { label, compact } = this.props;
+    const t = (key: string, opts?: Record<string, string>) => i18n.t(key, opts);
+    const failedMsg = t("shared.widgetLoadFailed", { label: label || "Widget" });
+    const retryMsg = t("shared.widgetRetry");
 
     if (compact) {
       return (
@@ -47,12 +49,12 @@ class WidgetErrorBoundary extends Component<Props, State> {
               <AlertTriangle className="w-4 h-4 text-destructive" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">{label || "Widget"} konnte nicht geladen werden</p>
+              <p className="text-sm font-medium">{failedMsg}</p>
               <p className="text-xs text-muted-foreground truncate">{this.state.error?.message}</p>
             </div>
             <Button variant="ghost" size="sm" onClick={this.handleRetry} className="shrink-0 gap-1.5">
               <RefreshCw className="w-3.5 h-3.5" />
-              Retry
+              {retryMsg}
             </Button>
           </CardContent>
         </Card>
@@ -66,12 +68,12 @@ class WidgetErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-5 h-5 text-destructive" />
           </div>
           <div>
-            <p className="text-sm font-semibold">{label || "Bereich"} konnte nicht geladen werden</p>
+            <p className="text-sm font-semibold">{failedMsg}</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-md">{this.state.error?.message}</p>
           </div>
           <Button variant="outline" size="sm" onClick={this.handleRetry} className="gap-1.5 mt-1">
             <RefreshCw className="w-3.5 h-3.5" />
-            Erneut versuchen
+            {retryMsg}
           </Button>
         </CardContent>
       </Card>
