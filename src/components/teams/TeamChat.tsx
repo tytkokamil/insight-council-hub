@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Send, FileText, Trash2, Paperclip, File, X, Download, Link2, AtSign } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +55,8 @@ const RenderMentionContent = ({ content, isOwn }: { content: string; isOwn: bool
 
 const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const [messages, setMessages] = useState<TeamMessage[]>([]);
   const [profiles, setProfiles] = useState<Record<string, { name: string; avatar: string | null }>>({});
   const [decisions, setDecisions] = useState<Record<string, string>>({});
@@ -75,7 +78,6 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   const linkMenuRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
 
-  // Detect /link command in input
   const linkMatch = newMessage.match(/\/link\s*(.*)/i);
   const isLinkMode = !!linkMatch;
 
@@ -97,7 +99,6 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     return entries.filter(([, title]) => title.toLowerCase().includes(lower));
   }, [decisions, linkFilter]);
 
-  // Mention autocomplete
   const profilesList = useMemo(() => Object.entries(profiles).map(([id, p]) => ({ user_id: id, full_name: p.name, avatar: p.avatar })), [profiles]);
 
   const filteredMentionProfiles = useMemo(() => {
@@ -129,7 +130,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     setLinkedDecisionId(id);
     setNewMessage(newMessage.replace(/\/link\s*.*/i, "").trimEnd());
     setShowLinkMenu(false);
-    toast.success(`Entscheidung verknüpft: ${title}`);
+    toast.success(t("teamChat.decisionLinked", { title }));
     inputRef.current?.focus();
   };
 
@@ -164,7 +165,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("Datei zu groß (max. 10 MB)");
+      toast.error(t("teamChat.fileTooLarge"));
       return;
     }
     setSelectedFile(file);
@@ -189,7 +190,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const { data } = await supabase.from("profiles").select("user_id, full_name, avatar_url");
     if (data) {
       const map: Record<string, { name: string; avatar: string | null }> = {};
-      data.forEach((p) => { map[p.user_id] = { name: p.full_name || "Unbekannt", avatar: p.avatar_url }; });
+      data.forEach((p) => { map[p.user_id] = { name: p.full_name || t("team.unknown"), avatar: p.avatar_url }; });
       setProfiles(map);
     }
   };
@@ -258,7 +259,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("Datei zu groß (max. 10 MB)");
+      toast.error(t("teamChat.fileTooLarge"));
       return;
     }
     setSelectedFile(file);
@@ -283,7 +284,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     const path = `${user.id}/${teamId}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("chat-attachments").upload(path, file);
     if (error) {
-      toast.error("Datei-Upload fehlgeschlagen");
+      toast.error(t("teamChat.uploadFailed"));
       return null;
     }
     const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(path);
@@ -303,7 +304,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
       }
     }
 
-    const content = newMessage.trim() || (fileData ? fileData.name : (linkedDecisionId ? `📋 ${decisions[linkedDecisionId] || "Entscheidung"}` : ""));
+    const content = newMessage.trim() || (fileData ? fileData.name : (linkedDecisionId ? `📋 ${decisions[linkedDecisionId] || t("teamChat.decision")}` : ""));
 
     await supabase.from("team_messages").insert({
       team_id: teamId,
@@ -345,7 +346,6 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Mention menu takes priority
     if (mentionQuery !== null && filteredMentionProfiles.length > 0) {
       if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex(i => Math.min(i + 1, filteredMentionProfiles.length - 1)); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex(i => Math.max(i - 1, 0)); return; }
@@ -364,7 +364,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
     }
   };
 
-  const getProfileName = (userId: string) => profiles[userId]?.name || "Unbekannt";
+  const getProfileName = (userId: string) => profiles[userId]?.name || t("team.unknown");
 
   const isImage = (type: string | null) => type?.startsWith("image/");
 
@@ -375,7 +375,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="block mt-1.5">
           <img
             src={msg.file_url}
-            alt={msg.file_name || "Bild"}
+            alt={msg.file_name || t("teamChat.image")}
             className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border"
           />
         </a>
@@ -389,7 +389,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition-colors max-w-[240px]"
       >
         <File className="w-4 h-4 text-primary shrink-0" />
-        <span className="text-xs truncate">{msg.file_name || "Datei"}</span>
+        <span className="text-xs truncate">{msg.file_name || t("teamChat.file")}</span>
         <Download className="w-3.5 h-3.5 text-muted-foreground shrink-0 ml-auto" />
       </a>
     );
@@ -408,7 +408,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         <div className="absolute inset-0 z-50 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center backdrop-blur-sm">
           <div className="text-center">
             <Paperclip className="w-8 h-8 text-primary mx-auto mb-2" />
-            <p className="text-sm font-medium text-primary">Datei hier ablegen</p>
+            <p className="text-sm font-medium text-primary">{t("teamChat.dropFile")}</p>
           </div>
         </div>
       )}
@@ -417,8 +417,8 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         {messages.length === 0 ? (
           <div className="flex-1 flex items-center justify-center h-full">
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Noch keine Nachrichten in {teamName}.</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Starte die Konversation!</p>
+              <p className="text-sm text-muted-foreground">{t("teamChat.noMessages", { team: teamName })}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("teamChat.startConversation")}</p>
             </div>
           </div>
         ) : (
@@ -431,7 +431,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-[11px] font-medium">{getProfileName(msg.user_id)}</span>
                     <span className="text-[10px] text-muted-foreground">
-                      {format(new Date(msg.created_at), "HH:mm", { locale: de })}
+                      {format(new Date(msg.created_at), "HH:mm", { locale: dateFnsLocale })}
                     </span>
                     {isOwn && (
                       <button
@@ -468,7 +468,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
         <div className="px-4 py-2 border-t border-border bg-primary/5 flex items-center gap-2">
           <Link2 className="w-4 h-4 text-primary shrink-0" />
           <span className="text-xs font-medium text-primary truncate flex-1">
-            {decisions[linkedDecisionId] || "Entscheidung"}
+            {decisions[linkedDecisionId] || t("teamChat.decision")}
           </span>
           <button onClick={clearLinkedDecision} className="text-muted-foreground hover:text-destructive">
             <X className="w-4 h-4" />
@@ -480,7 +480,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
       {selectedFile && (
         <div className="px-4 py-2 border-t border-border bg-muted/30 flex items-center gap-2">
           {filePreview ? (
-            <img src={filePreview} alt="Vorschau" className="w-10 h-10 rounded object-cover" />
+            <img src={filePreview} alt={t("teamChat.preview")} className="w-10 h-10 rounded object-cover" />
           ) : (
             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
               <File className="w-5 h-5 text-muted-foreground" />
@@ -495,7 +495,6 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
 
       {/* Input */}
       <div className="border-t border-border px-4 py-3 relative">
-        {/* /link autocomplete menu */}
         {showLinkMenu && (
           <div
             ref={linkMenuRef}
@@ -503,7 +502,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
           >
             {filteredDecisions.length === 0 ? (
               <div className="px-3 py-2 text-xs text-muted-foreground">
-                Keine Entscheidungen gefunden
+                {t("teamChat.noDecisionsFound")}
               </div>
             ) : (
               filteredDecisions.map(([id, title], i) => (
@@ -520,7 +519,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
               ))
             )}
             <div className="px-3 py-1.5 border-t border-border text-[10px] text-muted-foreground">
-              ↑↓ navigieren · Enter auswählen · Esc abbrechen
+              {t("teamChat.navHint")}
             </div>
           </div>
         )}
@@ -537,14 +536,13 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
             size="icon"
             className="h-10 w-10 shrink-0"
             onClick={() => fileInputRef.current?.click()}
-            title="Datei anhängen"
+            title={t("teamChat.attachFile")}
           >
             <Paperclip className="w-4 h-4" />
           </Button>
-          {/* Mention autocomplete dropdown */}
           {mentionQuery !== null && filteredMentionProfiles.length > 0 && (
             <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50">
-              <p className="text-[10px] text-muted-foreground px-3 pt-2 pb-1 font-semibold uppercase tracking-wider">Personen erwähnen</p>
+              <p className="text-[10px] text-muted-foreground px-3 pt-2 pb-1 font-semibold uppercase tracking-wider">{t("teamChat.mentionPeople")}</p>
               {filteredMentionProfiles.map((p, i) => (
                 <button
                   key={p.user_id}
@@ -569,7 +567,7 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
             value={newMessage}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Nachricht schreiben... @ erwähnen · /link verknüpfen"
+            placeholder={t("teamChat.placeholder")}
             className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
           <Button

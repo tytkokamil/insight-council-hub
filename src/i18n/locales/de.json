@@ -2072,5 +2072,22 @@
   },
   "teamSwitcher": {
     "personal": "Persönlich"
+  },
+  "teamDetail": {
+    "team": "Team",
+    "notFound": "Team nicht gefunden",
+    "backToTeams": "Zurück zu Teams",
+    "commandCenter": "Command Center",
+    "members": "Mitglieder",
+    "chat": "Chat",
+    "settings": "Einstellungen",
+    "smartDefaults": "Smart Defaults",
+    "smartDefaultsDesc": "Voreinstellungen für neue Entscheidungen in diesem Team.",
+    "slaConfig": "SLA-Konfiguration",
+    "slaConfigDesc": "Definiere Eskalations-Schwellwerte und Reassignment-Regeln für dieses Team.",
+    "importComplete": "Import abgeschlossen!",
+    "decisionsCreated": "{{count}} Entscheidungen wurden erstellt",
+    "importingCount": "Importiere {{count}} Entscheidungen...",
+    "back": "Zurück"
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,6 @@ interface Props {
   teamId: string;
   teamName: string;
 }
-
-const TEAM_ROLE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  lead: "Lead",
-  member: "Mitglied",
-  viewer: "Betrachter",
-};
 
 const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
   admin: Shield,
@@ -36,11 +30,19 @@ const TEAM_ROLE_STYLES: Record<string, string> = {
 
 const TeamOverviewTab = ({ teamId, teamName }: Props) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [members, setMembers] = useState<any[]>([]);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [decisionCount, setDecisionCount] = useState(0);
+
+  const TEAM_ROLE_LABELS: Record<string, string> = {
+    admin: t("team.roleAdmin"),
+    lead: t("team.roleLead"),
+    member: t("team.roleMember"),
+    viewer: t("team.roleViewer"),
+  };
 
   const fetchMembers = async () => {
     const { data } = await supabase
@@ -99,7 +101,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
       if (data?.error) {
         toast.error(data.error);
       } else {
-        toast.success(data?.message || `Einladung an ${inviteEmail} gesendet`);
+        toast.success(data?.message || t("team.inviteDefault", { email: inviteEmail }));
         setInviteEmail("");
         await fetchMembers();
         await fetchInvites();
@@ -113,13 +115,13 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
   const removeMember = async (memberId: string) => {
     await supabase.from("team_members").delete().eq("id", memberId);
     await fetchMembers();
-    toast.success("Mitglied entfernt");
+    toast.success(t("team.memberRemoved"));
   };
 
   const cancelInvite = async (inviteId: string) => {
     await supabase.from("team_invitations").delete().eq("id", inviteId);
     await fetchInvites();
-    toast.success("Einladung zurückgezogen");
+    toast.success(t("team.inviteCancelled"));
   };
 
   const changeRole = async (memberId: string, newRole: string) => {
@@ -128,9 +130,9 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
       .update({ role: newRole as any })
       .eq("id", memberId);
     if (error) {
-      toast.error("Rollenänderung fehlgeschlagen");
+      toast.error(t("team.roleChangeFailed"));
     } else {
-      toast.success(`Rolle → ${TEAM_ROLE_LABELS[newRole]}`);
+      toast.success(t("team.roleChangeTo", { role: TEAM_ROLE_LABELS[newRole] }));
       await fetchMembers();
     }
   };
@@ -142,23 +144,23 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
           <Users className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{members.length}</p>
-          <p className="text-[10px] text-muted-foreground">Mitglieder</p>
+          <p className="text-[10px] text-muted-foreground">{t("team.members")}</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
           <Clock className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{pendingInvites.length}</p>
-          <p className="text-[10px] text-muted-foreground">Ausstehend</p>
+          <p className="text-[10px] text-muted-foreground">{t("team.pending")}</p>
         </div>
         <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
           <Check className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{decisionCount}</p>
-          <p className="text-[10px] text-muted-foreground">Entscheidungen</p>
+          <p className="text-[10px] text-muted-foreground">{t("team.decisions")}</p>
         </div>
       </div>
 
       {/* Role Legend */}
       <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-        <span className="font-semibold">Rollen:</span>
+        <span className="font-semibold">{t("team.roles")}:</span>
         {Object.entries(TEAM_ROLE_LABELS).map(([key, label]) => {
           const Icon = TEAM_ROLE_ICONS[key];
           return (
@@ -174,20 +176,20 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
         <div className="rounded-lg border border-border p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
             <Mail className="w-4 h-4 text-muted-foreground" />
-            Per E-Mail einladen
+            {t("team.inviteByEmail")}
           </h3>
           <form onSubmit={sendInvite} className="flex gap-2">
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder="email@beispiel.de"
+              placeholder={t("team.emailPlaceholder")}
               className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
               required
             />
             <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5">
               <UserPlus className="w-3.5 h-3.5" />
-              {inviting ? "..." : "Einladen"}
+              {inviting ? "..." : t("team.invite")}
             </Button>
           </form>
         </div>
@@ -198,7 +200,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
         <div className="rounded-lg border border-dashed border-border p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-muted-foreground">
             <Clock className="w-4 h-4" />
-            Ausstehende Einladungen ({pendingInvites.length})
+            {t("team.pendingInvites")} ({pendingInvites.length})
           </h3>
           <div className="space-y-2">
             {pendingInvites.map((inv) => (
@@ -220,7 +222,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
       <div className="rounded-lg border border-border p-4">
         <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
           <Check className="w-4 h-4 text-muted-foreground" />
-          Mitglieder ({members.length})
+          {t("team.membersCount", { count: members.length })}
         </h3>
         <div className="space-y-2">
           {members.map((m) => {
@@ -232,13 +234,12 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
                   fullName={m.profiles?.full_name}
                   size="sm"
                 />
-                <span className="text-sm flex-1 font-medium">{m.profiles?.full_name || "Unbekannt"}</span>
+                <span className="text-sm flex-1 font-medium">{m.profiles?.full_name || t("team.unknown")}</span>
 
                 {m.user_id === user?.id && (
-                  <Badge variant="outline" className="text-[10px]">Du</Badge>
+                  <Badge variant="outline" className="text-[10px]">{t("team.you")}</Badge>
                 )}
 
-                {/* Role badge or select */}
                 {isLeadOrAdmin && m.user_id !== user?.id ? (
                   <Select value={m.role} onValueChange={(val) => changeRole(m.id, val)}>
                     <SelectTrigger className={`w-[120px] h-7 text-[10px] font-semibold border ${TEAM_ROLE_STYLES[m.role]}`}>
@@ -246,10 +247,10 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="lead">Lead</SelectItem>
-                      <SelectItem value="member">Mitglied</SelectItem>
-                      <SelectItem value="viewer">Betrachter</SelectItem>
+                      <SelectItem value="admin">{t("team.roleAdmin")}</SelectItem>
+                      <SelectItem value="lead">{t("team.roleLead")}</SelectItem>
+                      <SelectItem value="member">{t("team.roleMember")}</SelectItem>
+                      <SelectItem value="viewer">{t("team.roleViewer")}</SelectItem>
                     </SelectContent>
                   </Select>
                 ) : (
