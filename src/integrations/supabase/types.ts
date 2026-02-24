@@ -1621,6 +1621,44 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          org_id: string | null
+          permission: string
+          role: Database["public"]["Enums"]["org_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string | null
+          permission: string
+          role: Database["public"]["Enums"]["org_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string | null
+          permission?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_views: {
         Row: {
           created_at: string
@@ -2217,6 +2255,10 @@ export type Database = {
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_min_role: {
         Args: { _min_role: string; _user_id: string }
+        Returns: boolean
+      }
+      has_permission: {
+        Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
       has_role: {
