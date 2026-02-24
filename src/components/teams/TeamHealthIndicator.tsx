@@ -34,8 +34,8 @@ const TeamHealthIndicator = ({ teamId }: Props) => {
 
   const { color, bg, label } = useMemo(() => {
     const score = overdueCount * 3 + openReviews * 1 + blockedTasks * 2;
-    if (score === 0) return { color: "text-emerald-500", bg: "bg-emerald-500", label: t("teamCmd.healthy") };
-    if (score <= 5) return { color: "text-amber-500", bg: "bg-amber-500", label: t("teamCmd.moderateRisk") };
+    if (score === 0) return { color: "text-chart-2", bg: "bg-chart-2", label: t("teamCmd.healthy") };
+    if (score <= 5) return { color: "text-warning", bg: "bg-warning", label: t("teamCmd.moderateRisk") };
     return { color: "text-destructive", bg: "bg-destructive", label: t("teamCmd.underPressure") };
   }, [overdueCount, openReviews, blockedTasks, t]);
 

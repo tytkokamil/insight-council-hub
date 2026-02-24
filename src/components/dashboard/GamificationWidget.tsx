@@ -76,11 +76,11 @@ const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
     const total = decisions.length;
 
     const achievements: Achievement[] = [
-      { id: "first-decision", icon: Zap, label: t("widgets.firstDecisionAch"), description: t("widgets.firstDecisionAchDesc"), earned: total >= 1, color: "text-yellow-500" },
-      { id: "team-player", icon: Trophy, label: t("widgets.teamPlayer"), description: t("widgets.teamPlayerDesc"), earned: teams.length >= 1, color: "text-blue-500" },
-      { id: "decision-maker", icon: Target, label: t("widgets.decisionMaker"), description: t("widgets.decisionMakerDesc"), earned: implemented >= 10, color: "text-emerald-500" },
-      { id: "streak-master", icon: Flame, label: t("widgets.streakMaster"), description: t("widgets.streakMasterDesc"), earned: streakDays >= 30, color: "text-orange-500" },
-      { id: "velocity-star", icon: Star, label: t("widgets.speedStar"), description: t("widgets.speedStarDesc"), earned: avgVelocity > 0 && avgVelocity < 5, color: "text-purple-500" },
+      { id: "first-decision", icon: Zap, label: t("widgets.firstDecisionAch"), description: t("widgets.firstDecisionAchDesc"), earned: total >= 1, color: "text-warning" },
+      { id: "team-player", icon: Trophy, label: t("widgets.teamPlayer"), description: t("widgets.teamPlayerDesc"), earned: teams.length >= 1, color: "text-primary" },
+      { id: "decision-maker", icon: Target, label: t("widgets.decisionMaker"), description: t("widgets.decisionMakerDesc"), earned: implemented >= 10, color: "text-chart-2" },
+      { id: "streak-master", icon: Flame, label: t("widgets.streakMaster"), description: t("widgets.streakMasterDesc"), earned: streakDays >= 30, color: "text-accent-foreground" },
+      { id: "velocity-star", icon: Star, label: t("widgets.speedStar"), description: t("widgets.speedStarDesc"), earned: avgVelocity > 0 && avgVelocity < 5, color: "text-chart-5" },
     ];
 
     return { streakDays, avgVelocity, thisWeekCompleted, achievements, earnedCount: achievements.filter(a => a.earned).length, totalPoints: implemented * 10 + thisWeekCompleted * 5 + streakDays };
@@ -106,16 +106,16 @@ const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <Flame className="w-4 h-4 text-orange-500" />
+          <Flame className="w-4 h-4 text-accent-foreground" />
           {t("widgets.performance")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <div className="text-center p-3 rounded-lg bg-orange-500/5 border border-orange-500/10">
+          <div className="text-center p-3 rounded-lg bg-accent/50 border border-accent">
             <div className="flex items-center justify-center gap-1 mb-1">
-              <Flame className="w-4 h-4 text-orange-500" />
-              <span className="text-2xl font-bold text-orange-500">{stats.streakDays}</span>
+              <Flame className="w-4 h-4 text-accent-foreground" />
+              <span className="text-2xl font-bold text-accent-foreground">{stats.streakDays}</span>
             </div>
             <p className="text-[10px] text-muted-foreground leading-tight">{t("widgets.daysNoSla")}</p>
           </div>
