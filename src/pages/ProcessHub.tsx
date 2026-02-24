@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -29,6 +30,7 @@ const statusLabels: Record<string, string> = { draft: "Draft", proposed: "Propos
 const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
 
 const ProcessHub = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: tasks = [], isLoading: taskLoading } = useTasks();
@@ -327,19 +329,19 @@ const ProcessHub = () => {
   if (decisions.length < 5) {
     return (
       <AppLayout>
-        <PageHeader title="Process Intelligence" subtitle="Engpässe, Reibung und Governance analysieren" role="intelligence" />
+        <PageHeader title={t("process.title")} subtitle={t("process.subtitle")} role="intelligence" />
         <EmptyAnalysisState
           icon={Radar}
-          title="Mehr Daten benötigt"
-          description={`Prozess-Analysen werden ab 5 Entscheidungen sinnvoll. Aktuell: ${decisions.length}.`}
-          ctaLabel="Entscheidungen erstellen"
+          title={t("process.emptyTitle")}
+          description={t("process.emptyDesc", { current: decisions.length })}
+          ctaLabel={t("process.createDecisions")}
           ctaRoute="/decisions"
-          motivation="Organisationen, die ihre Prozess-Engpässe kennen, lösen Blockaden 52% schneller."
-          hint="Nutze das System aktiv, um Engpässe und Muster zu erkennen."
+          motivation={t("process.emptyMotivation")}
+          hint={t("process.emptyHint")}
           features={[
-            { icon: AlertTriangle, label: "Bottlenecks", desc: "Wo Entscheidungen stecken bleiben" },
-            { icon: Flame, label: "Friction", desc: "Reibungspunkte zwischen Stakeholdern" },
-            { icon: Shield, label: "SLA", desc: "Governance & Compliance" },
+            { icon: AlertTriangle, label: t("process.bottlenecks"), desc: t("process.bottlenecksDesc") },
+            { icon: Flame, label: t("process.friction"), desc: t("process.frictionDesc") },
+            { icon: Shield, label: t("process.sla"), desc: t("process.slaDesc") },
           ]}
         />
       </AppLayout>
@@ -348,16 +350,16 @@ const ProcessHub = () => {
 
   const healthColor = processHealthScore >= 70 ? "text-success" : processHealthScore >= 45 ? "text-warning" : "text-destructive";
   const healthBg = processHealthScore >= 70 ? "bg-success/10 border-success/20" : processHealthScore >= 45 ? "bg-warning/10 border-warning/20" : "bg-destructive/10 border-destructive/20";
-  const healthLabel = processHealthScore >= 70 ? "Stabil" : processHealthScore >= 45 ? "Beobachten" : "Strukturelles Problem";
+  const healthLabel = processHealthScore >= 70 ? t("process.healthStable") : processHealthScore >= 45 ? t("process.healthWatch") : t("process.healthCritical");
   const riskIcon = (r: "ok" | "watch" | "critical") => r === "critical" ? "🔴" : r === "watch" ? "🟡" : "🟢";
 
   return (
     <AppLayout>
       <PageHeader
-        title="Process Intelligence"
-        subtitle="Engpässe, Reibung und Governance – Letzte 30 Tage"
+        title={t("process.title")}
+        subtitle={t("process.subtitleFull")}
         role="intelligence"
-        help={{ title: "Process Intelligence", description: "Systemische Analyse von Engpässen, SLA-Compliance, Stakeholder-Reibung und Team-Interaktionen mit priorisierten Maßnahmen." }}
+        help={{ title: t("process.title"), description: t("process.help") }}
       />
 
       {/* ═══════════════════════════════════════ */}
@@ -369,7 +371,7 @@ const ProcessHub = () => {
           <CardContent className="p-5">
             <div className="flex items-center gap-2 mb-3">
               <Activity className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-semibold">Process Health – Letzte 30 Tage</h3>
+              <h3 className="text-sm font-semibold">{t("process.processHealth")}</h3>
             </div>
             <ul className="space-y-1.5">
               {snapshotLines.map((line, i) => (
@@ -384,7 +386,7 @@ const ProcessHub = () => {
         {/* Health Score Gauge */}
         <Card className={`border ${healthBg} min-w-[180px]`}>
           <CardContent className="p-5 flex flex-col items-center justify-center text-center">
-            <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">Process Health</p>
+            <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-medium">{t("process.healthLabel")}</p>
             <p className={`text-4xl font-bold tabular-nums ${healthColor}`}>{processHealthScore}</p>
             <p className={`text-xs font-medium mt-1 ${healthColor}`}>{healthLabel}</p>
           </CardContent>
@@ -394,10 +396,10 @@ const ProcessHub = () => {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: Shield, label: "SLA-Verletzungen", value: slaViolations.thisWeek, suffix: " diese Woche", color: slaViolations.thisWeek > 0 ? "text-destructive" : "text-success" },
-          { icon: AlertTriangle, label: "Frühwarnung", value: slaViolations.predictedNext5d, suffix: " in 5 Tagen", color: slaViolations.predictedNext5d > 0 ? "text-warning" : "text-success" },
-          { icon: User, label: "Reviewer über Kapazität", value: personCapacity.filter(p => p.capacityUtil > 100).length, color: "text-foreground" },
-          { icon: Flame, label: "Kategorien mit Reibung", value: frictionMetrics.filter(f => f.rejectionRate > 15 || f.reworkRate > 10).length, color: "text-warning" },
+          { icon: Shield, label: t("process.slaViolations"), value: slaViolations.thisWeek, suffix: t("process.thisWeek"), color: slaViolations.thisWeek > 0 ? "text-destructive" : "text-success" },
+          { icon: AlertTriangle, label: t("process.earlyWarning"), value: slaViolations.predictedNext5d, suffix: t("process.in5Days"), color: slaViolations.predictedNext5d > 0 ? "text-warning" : "text-success" },
+          { icon: User, label: t("process.reviewerOverCapacity"), value: personCapacity.filter(p => p.capacityUtil > 100).length, color: "text-foreground" },
+          { icon: Flame, label: t("process.categoriesWithFriction"), value: frictionMetrics.filter(f => f.rejectionRate > 15 || f.reworkRate > 10).length, color: "text-warning" },
         ].map(card => (
           <Card key={card.label}>
             <CardContent className="p-4">
@@ -415,8 +417,8 @@ const ProcessHub = () => {
       {/* 2) BOTTLENECK INTELLIGENCE */}
       {/* ═══════════════════════════════════════ */}
       <CollapsibleSection
-        title="Bottleneck Intelligence"
-        subtitle="Systemische Engpässe nach Status & Review-Step"
+        title={t("process.bottleneckIntelligence")}
+        subtitle={t("process.bottleneckSubtitle")}
         icon={<Radar className="w-4 h-4 text-destructive" />}
         defaultOpen={true}
         className="mb-6"
@@ -424,17 +426,17 @@ const ProcessHub = () => {
         <Card>
           <CardContent className="p-5">
             {statusBottlenecks.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Keine Engpässe erkannt ✓</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("process.noBottlenecks")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">Status</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Ø Dauer</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">vs. Erwartung</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Anzahl</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">SLA Risiko</th>
+                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t("process.thStatus")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thAvgDuration")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thVsExpected")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thCount")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thSlaRisk")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -461,7 +463,7 @@ const ProcessHub = () => {
         {/* Person Capacity */}
         {personCapacity.length > 0 && (
           <div className="mt-4">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Review Load vs Capacity</h4>
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{t("process.reviewLoad")}</h4>
             <div className="space-y-2">
               {personCapacity.map(p => (
                 <Card key={p.userId}>
@@ -496,8 +498,8 @@ const ProcessHub = () => {
       {/* 3) FRICTION MAP */}
       {/* ═══════════════════════════════════════ */}
       <CollapsibleSection
-        title="Friction Map"
-        subtitle="Rework, Ablehnungen & Stakeholder-Konflikte"
+        title={t("process.frictionMap")}
+        subtitle={t("process.frictionSubtitle")}
         icon={<Flame className="w-4 h-4 text-warning" />}
         defaultOpen={true}
         className="mb-6"
@@ -505,17 +507,17 @@ const ProcessHub = () => {
         <Card>
           <CardContent className="p-5">
             {frictionMetrics.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Keine Reibungsdaten verfügbar</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("process.noFriction")}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">Kategorie</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Rework-Rate</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Ablehnungen</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Stakeholder-Konflikte</th>
-                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">Anzahl</th>
+                      <th className="text-left py-2 px-3 text-muted-foreground font-medium">{t("process.thCategory")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thReworkRate")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thRejections")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thStakeholderConflicts")}</th>
+                      <th className="text-center py-2 px-3 text-muted-foreground font-medium">{t("process.thCount")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -546,7 +548,7 @@ const ProcessHub = () => {
       {/* 4) SLA & GOVERNANCE HEATMAP */}
       {/* ═══════════════════════════════════════ */}
       <CollapsibleSection
-        title="SLA & Governance"
+        title={t("process.slaGovernance")}
         subtitle={`${slaViolations.total} Verletzungen gesamt · Top: ${slaViolations.topCategory}`}
         icon={<Shield className="w-4 h-4 text-destructive" />}
         defaultOpen={slaViolations.thisWeek > 0}
@@ -555,21 +557,21 @@ const ProcessHub = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-destructive/20">
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">Verletzungen diese Woche</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("process.violationsThisWeek")}</p>
               <p className="text-2xl font-bold tabular-nums text-destructive">{slaViolations.thisWeek}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">Häufigste Ursache</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("process.mostFrequentCause")}</p>
               <p className="text-sm font-semibold">{slaViolations.topCategory}</p>
             </CardContent>
           </Card>
           <Card className={slaViolations.predictedNext5d > 0 ? "border-warning/20" : ""}>
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">Frühwarnung (5 Tage)</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("process.earlyWarning5d")}</p>
               <p className={`text-2xl font-bold tabular-nums ${slaViolations.predictedNext5d > 0 ? "text-warning" : "text-success"}`}>{slaViolations.predictedNext5d}</p>
-              <p className="text-[10px] text-muted-foreground">voraussichtliche Verletzungen</p>
+              <p className="text-[10px] text-muted-foreground">{t("process.expectedViolations")}</p>
             </CardContent>
           </Card>
         </div>
@@ -580,28 +582,28 @@ const ProcessHub = () => {
       {/* ═══════════════════════════════════════ */}
       {teamInteractions.length > 0 && (
         <CollapsibleSection
-          title="Team-Interaktionen"
-          subtitle="Übergabezeiten zwischen Teams"
+          title={t("process.teamInteractions")}
+          subtitle={t("process.teamInteractionsSub")}
           icon={<Users className="w-4 h-4 text-muted-foreground" />}
           defaultOpen={false}
           className="mb-6"
         >
           <Card>
             <CardContent className="p-5 space-y-2">
-              {teamInteractions.map(t => {
-                const isSlow = t.handoffTime > t.orgAvgHandoff * 1.5;
+              {teamInteractions.map(ti => {
+                const isSlow = ti.handoffTime > ti.orgAvgHandoff * 1.5;
                 return (
-                  <div key={`${t.teamA}-${t.teamB}`} className={`flex items-center gap-4 p-3 rounded-lg border ${isSlow ? "border-warning/30 bg-warning/5" : "border-border"}`}>
+                  <div key={`${ti.teamA}-${ti.teamB}`} className={`flex items-center gap-4 p-3 rounded-lg border ${isSlow ? "border-warning/30 bg-warning/5" : "border-border"}`}>
                     <div className="flex items-center gap-2 flex-1">
-                      <span className="text-sm font-semibold">{t.teamAName}</span>
+                      <span className="text-sm font-semibold">{ti.teamAName}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-sm font-semibold">{t.teamBName}</span>
+                      <span className="text-sm font-semibold">{ti.teamBName}</span>
                     </div>
                     <div className="text-right text-xs">
                       <p className={`font-medium tabular-nums ${isSlow ? "text-warning" : "text-muted-foreground"}`}>
-                        Ø {t.handoffTime}d <span className="text-muted-foreground">(Org Ø = {t.orgAvgHandoff}d)</span>
+                        Ø {ti.handoffTime}d <span className="text-muted-foreground">(Org Ø = {ti.orgAvgHandoff}d)</span>
                       </p>
-                      <p className="text-muted-foreground">{t.sharedCount} gemeinsame Entsch.</p>
+                      <p className="text-muted-foreground">{ti.sharedCount} {t("process.sharedDecisions")}</p>
                     </div>
                   </div>
                 );
@@ -631,8 +633,8 @@ const ProcessHub = () => {
       {/* 7) TOP MAßNAHMEN */}
       {/* ═══════════════════════════════════════ */}
       <CollapsibleSection
-        title="Top Maßnahmen"
-        subtitle="Priorisiert nach Impact"
+        title={t("process.topActions")}
+        subtitle={t("process.topActionsSub")}
         icon={<Lightbulb className="w-4 h-4 text-primary" />}
         defaultOpen={true}
       >
@@ -671,7 +673,7 @@ const ProcessHub = () => {
                       </span>
                       {rec.route && (
                         <span className="text-[10px] text-primary flex items-center gap-1">
-                          <ArrowRight className="w-3 h-3" /> Öffnen
+                          <ArrowRight className="w-3 h-3" /> {t("process.open")}
                         </span>
                       )}
                     </div>

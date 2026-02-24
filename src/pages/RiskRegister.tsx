@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,6 +66,7 @@ const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
 const RiskRegister = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: risks = [], isLoading } = useRisks();
   const { data: decLinks = [] } = useRiskDecisionLinks();
@@ -211,13 +213,13 @@ const RiskRegister = () => {
     try {
       if (editRisk) {
         await updateRisk.mutateAsync({ id: editRisk.id, title: form.title, description: form.description || null, likelihood: form.likelihood, impact: form.impact, status: form.status, mitigation_plan: form.mitigation_plan || null, team_id: form.team_id || null });
-        toast({ title: "Risiko aktualisiert" });
+        toast({ title: t("risk.riskUpdated") });
       } else {
         await createRisk.mutateAsync({ title: form.title, description: form.description || null, likelihood: form.likelihood, impact: form.impact, status: form.status, mitigation_plan: form.mitigation_plan || null, team_id: form.team_id || null, owner_id: user!.id, created_by: user!.id });
-        toast({ title: "Risiko erstellt" });
+        toast({ title: t("risk.riskCreated") });
       }
       setShowCreate(false); setEditRisk(null); resetForm();
-    } catch { toast({ title: "Fehler beim Speichern", variant: "destructive" }); }
+    } catch { toast({ title: t("risk.saveError"), variant: "destructive" }); }
   };
 
   const openEdit = (r: Risk) => {
@@ -229,29 +231,29 @@ const RiskRegister = () => {
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <PageHeader
-          title="Risk Register"
-          subtitle="Enterprise-Risikosteuerung: Bewertung, Verknüpfung, Mitigation & Economic Exposure"
+          title={t("risk.title")}
+          subtitle={t("risk.subtitle")}
           role="governance"
-          help={{ title: "Risk Register", description: "Erfasse Risiken, bewerte ihre Eintrittswahrscheinlichkeit und Auswirkung, und verknüpfe sie mit Entscheidungen und Aufgaben." }}
+          help={{ title: t("risk.title"), description: t("risk.help") }}
           primaryAction={
             <Button size="sm" onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-1.5">
-              <Plus className="w-4 h-4" /> Neues Risiko
+              <Plus className="w-4 h-4" /> {t("risk.newRisk")}
             </Button>
           }
         />
 
         {/* ═══ 1. EXECUTIVE SNAPSHOT ═══ */}
         <div>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Risk Exposure — 30 Tage</h2>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("risk.riskExposure30d")}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
-              { label: "Aktive Risiken", value: snapshot.active, icon: AlertTriangle, color: "text-foreground" },
-              { label: "Kritisch (≥16)", value: snapshot.critical, icon: Target, color: snapshot.critical > 0 ? "text-destructive" : "text-success" },
-              { label: "Ø Risk Score", value: snapshot.avgScore, icon: Gauge, color: snapshot.avgScore >= 12 ? "text-destructive" : snapshot.avgScore >= 8 ? "text-warning" : "text-success" },
-              { label: "Economic Exposure", value: formatCost(snapshot.totalExposure), icon: DollarSign, color: "text-destructive", isCurrency: true },
-              { label: "Mit Eskalation", value: snapshot.withEscalation, icon: TrendingUp, color: snapshot.withEscalation > 0 ? "text-warning" : "text-muted-foreground" },
-              { label: "Ohne Owner", value: snapshot.unowned, icon: Users, color: snapshot.unowned > 0 ? "text-destructive" : "text-success", isWarning: snapshot.unowned > 0 },
-              { label: "Ohne Mitigation", value: snapshot.noMitigation, icon: Shield, color: snapshot.noMitigation > 0 ? "text-warning" : "text-success" },
+              { label: t("risk.activeRisks"), value: snapshot.active, icon: AlertTriangle, color: "text-foreground" },
+              { label: t("risk.critical16"), value: snapshot.critical, icon: Target, color: snapshot.critical > 0 ? "text-destructive" : "text-success" },
+              { label: t("risk.avgRiskScore"), value: snapshot.avgScore, icon: Gauge, color: snapshot.avgScore >= 12 ? "text-destructive" : snapshot.avgScore >= 8 ? "text-warning" : "text-success" },
+              { label: t("risk.economicExposure"), value: formatCost(snapshot.totalExposure), icon: DollarSign, color: "text-destructive", isCurrency: true },
+              { label: t("risk.withEscalation"), value: snapshot.withEscalation, icon: TrendingUp, color: snapshot.withEscalation > 0 ? "text-warning" : "text-muted-foreground" },
+              { label: t("risk.noOwner"), value: snapshot.unowned, icon: Users, color: snapshot.unowned > 0 ? "text-destructive" : "text-success", isWarning: snapshot.unowned > 0 },
+              { label: t("risk.noMitigation"), value: snapshot.noMitigation, icon: Shield, color: snapshot.noMitigation > 0 ? "text-warning" : "text-success" },
             ].map((kpi: any) => (
               <Card key={kpi.label} className={kpi.isWarning ? "border-destructive/30" : ""}>
                 <CardContent className="p-3">

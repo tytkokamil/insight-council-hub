@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
@@ -22,6 +23,7 @@ const DecisionBenchmarking = lazy(() => import("./DecisionBenchmarking"));
 const MIN_DECISIONS = 15;
 
 const ExecutiveHub = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("dashboard");
   const [exporting, setExporting] = useState(false);
   const { data: decisions = [], isLoading } = useDecisions();
@@ -33,9 +35,9 @@ const ExecutiveHub = () => {
     try {
       const data = await fetchBoardReportData();
       generateBoardReport(data);
-      toast.success("Board Pack PDF exportiert");
+      toast.success(t("executive.exportSuccess"));
     } catch {
-      toast.error("Export fehlgeschlagen");
+      toast.error(t("executive.exportError"));
     } finally {
       setExporting(false);
     }
@@ -45,10 +47,10 @@ const ExecutiveHub = () => {
     <AppLayout>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <PageHeader
-          title="Executive Hub"
-          subtitle="C-Level Cockpit mit Briefing, Prognosen und Szenarien"
+          title={t("executive.title")}
+          subtitle={t("executive.subtitle")}
           role="intelligence"
-          help={{ title: "Executive Hub", description: "C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien." }}
+          help={{ title: t("executive.title"), description: t("executive.help") }}
         />
         {hasEnoughData && (
           <Button
@@ -59,7 +61,7 @@ const ExecutiveHub = () => {
             disabled={exporting}
           >
             <FileDown className="w-3.5 h-3.5" />
-            {exporting ? "Exportiere…" : "Board Pack PDF"}
+            {exporting ? t("executive.exporting") : t("executive.boardPackPdf")}
           </Button>
         )}
       </div>
@@ -67,41 +69,41 @@ const ExecutiveHub = () => {
       {!isLoading && !hasEnoughData ? (
         <EmptyAnalysisState
           icon={Briefcase}
-          title="Executive Insights ab 15 Entscheidungen"
-          description={`Für aussagekräftige C-Level-Analysen brauchst du mindestens 15 Entscheidungen (aktuell ${decisions.length}) und 3 implementierte (aktuell ${implemented}).`}
-          ctaLabel="Entscheidungen erstellen"
+          title={t("executive.emptyTitle")}
+          description={t("executive.emptyDesc", { current: decisions.length, implemented })}
+          ctaLabel={t("executive.createDecisions")}
           ctaRoute="/decisions"
-          motivation="Unternehmen mit systematischer Entscheidungsanalyse treffen 40% bessere strategische Entscheidungen und reduzieren Fehlentscheidungen um 28%."
-          hint="Treibe Entscheidungen bis zur Implementierung, um Prognosen und ROI-Daten zu erhalten."
+          motivation={t("executive.emptyMotivation")}
+          hint={t("executive.emptyHint")}
           features={[
-            { icon: Sun, label: "KI-Briefing", desc: "Tägliche Zusammenfassung für die Führungsebene" },
-            { icon: DollarSign, label: "Impact-Analyse", desc: "Opportunitätskosten und ROI" },
-            { icon: FlaskConical, label: "Szenarien", desc: "What-If-Simulationen für strategische Planung" },
+            { icon: Sun, label: t("executive.aiBriefing"), desc: t("executive.aiBriefingDesc") },
+            { icon: DollarSign, label: t("executive.impactAnalysis"), desc: t("executive.impactAnalysisDesc") },
+            { icon: FlaskConical, label: t("executive.tabScenarios"), desc: t("executive.scenariosDesc") },
           ]}
         />
       ) : (
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6 flex-wrap h-auto gap-1">
             <TabsTrigger value="dashboard" className="gap-1.5 text-xs">
-              <Target className="w-3.5 h-3.5" /> Dashboard
+              <Target className="w-3.5 h-3.5" /> {t("executive.tabDashboard")}
             </TabsTrigger>
             <TabsTrigger value="briefing" className="gap-1.5 text-xs">
-              <Sun className="w-3.5 h-3.5" /> Briefing
+              <Sun className="w-3.5 h-3.5" /> {t("executive.tabBriefing")}
             </TabsTrigger>
             <TabsTrigger value="timeline" className="gap-1.5 text-xs">
-              <CalendarDays className="w-3.5 h-3.5" /> Timeline
+              <CalendarDays className="w-3.5 h-3.5" /> {t("executive.tabTimeline")}
             </TabsTrigger>
             <TabsTrigger value="costs" className="gap-1.5 text-xs">
-              <DollarSign className="w-3.5 h-3.5" /> Impact
+              <DollarSign className="w-3.5 h-3.5" /> {t("executive.tabImpact")}
             </TabsTrigger>
             <TabsTrigger value="scenarios" className="gap-1.5 text-xs">
-              <FlaskConical className="w-3.5 h-3.5" /> Szenarien
+              <FlaskConical className="w-3.5 h-3.5" /> {t("executive.tabScenarios")}
             </TabsTrigger>
             <TabsTrigger value="dna" className="gap-1.5 text-xs">
-              <Dna className="w-3.5 h-3.5" /> DNA
+              <Dna className="w-3.5 h-3.5" /> {t("executive.tabDna")}
             </TabsTrigger>
             <TabsTrigger value="benchmarking" className="gap-1.5 text-xs">
-              <Trophy className="w-3.5 h-3.5" /> Benchmark
+              <Trophy className="w-3.5 h-3.5" /> {t("executive.tabBenchmark")}
             </TabsTrigger>
           </TabsList>
 
