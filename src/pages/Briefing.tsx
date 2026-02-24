@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Sun, Loader2, AlertTriangle, CheckCircle2, Zap, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
 
 const Briefing = ({ embedded }: { embedded?: boolean }) => {
+  const { t, i18n } = useTranslation();
   const [briefing, setBriefing] = useState<any>(null);
   const [costSummary, setCostSummary] = useState<any>(null);
   const [momentum, setMomentum] = useState<number | null>(null);
@@ -29,7 +31,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
       setMomentumBreakdown(data.momentum_breakdown);
       setStats(data.stats);
     } catch (e: any) {
-      toast({ title: "Fehler", description: e.message, variant: "destructive" });
+      toast({ title: t("briefing.error"), description: e.message, variant: "destructive" });
     }
     setLoading(false);
     setRefreshing(false);
@@ -40,7 +42,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k€` : `${cost}€`;
   const momentumColor = (s: number) => s > 70 ? "text-success" : s > 40 ? "text-warning" : "text-destructive";
 
-  const today = new Date().toLocaleDateString("de-DE", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString(i18n.language === "de" ? "de-DE" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   if (loading) {
@@ -49,7 +51,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
-            <p className="text-sm text-muted-foreground">Generiere dein Morning Briefing...</p>
+            <p className="text-sm text-muted-foreground">{t("briefing.loading")}</p>
           </div>
         </div>
       </Wrap>
@@ -63,13 +65,13 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sun className="w-5 h-5 text-warning" />
-              <h1 className="font-display text-xl font-bold">Morning Brief</h1>
+              <h1 className="font-display text-xl font-bold">{t("briefing.title")}</h1>
             </div>
             <p className="text-muted-foreground text-sm">{today}</p>
           </div>
           <Button variant="outline" size="sm" onClick={() => fetchBriefing(true)} disabled={refreshing} className="gap-1">
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            Aktualisieren
+            {t("briefing.refresh")}
           </Button>
         </div>
 
@@ -77,25 +79,25 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
         <div className="grid grid-cols-4 gap-3 mb-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card><CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground">Momentum</p>
+              <p className="text-xs text-muted-foreground">{t("briefing.momentum")}</p>
               <p className={`text-2xl font-bold font-display ${momentum !== null ? momentumColor(momentum) : ""}`}>{momentum ?? "—"}</p>
             </CardContent></Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card><CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground">Verzögerungskosten</p>
+              <p className="text-xs text-muted-foreground">{t("briefing.delayCost")}</p>
               <p className="text-2xl font-bold font-display text-destructive">{costSummary ? formatCost(costSummary.total_delay_cost) : "—"}</p>
             </CardContent></Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <Card><CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground">Überfällig</p>
+              <p className="text-xs text-muted-foreground">{t("briefing.overdue")}</p>
               <p className="text-2xl font-bold font-display text-warning">{stats?.overdue ?? "—"}</p>
             </CardContent></Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Card><CardContent className="p-4 text-center">
-              <p className="text-xs text-muted-foreground">Ø Velocity</p>
+              <p className="text-xs text-muted-foreground">{t("briefing.avgVelocity")}</p>
               <p className="text-2xl font-bold font-display text-primary">{stats?.avg_velocity ?? "—"}d</p>
             </CardContent></Card>
           </motion.div>
@@ -114,7 +116,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
               <Card className="border-destructive/30"><CardContent className="p-5">
                 <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-destructive" /> Dringende Aktionen
+                  <AlertTriangle className="w-4 h-4 text-destructive" /> {t("briefing.urgentActions")}
                 </h3>
                 <div className="space-y-2">
                   {briefing.urgent_actions?.map((a: string, i: number) => (
@@ -132,7 +134,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
                 <Card><CardContent className="p-5">
                   <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <CheckCircle2 className="w-4 h-4 text-success" /> Positive Entwicklungen
+                    <CheckCircle2 className="w-4 h-4 text-success" /> {t("briefing.positives")}
                   </h3>
                   <div className="space-y-2">
                     {briefing.wins?.map((w: string, i: number) => (
@@ -148,7 +150,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
                 <Card><CardContent className="p-5">
                   <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <AlertTriangle className="w-4 h-4 text-warning" /> Risiken im Blick
+                    <AlertTriangle className="w-4 h-4 text-warning" /> {t("briefing.risksInView")}
                   </h3>
                   <div className="space-y-2">
                     {briefing.risks?.map((r: string, i: number) => (
@@ -165,7 +167,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
               <Card className="bg-primary/5 border-primary/20"><CardContent className="p-5">
                 <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
-                  <Zap className="w-4 h-4 text-primary" /> Empfehlung für heute
+                  <Zap className="w-4 h-4 text-primary" /> {t("briefing.recommendation")}
                 </h3>
                 <p className="text-sm">{briefing.recommendation}</p>
               </CardContent></Card>
@@ -175,13 +177,13 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
             {costSummary?.top_costs?.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}>
                 <Card><CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-3">💰 Teuerste Verzögerungen</h3>
+                  <h3 className="text-sm font-semibold mb-3">💰 {t("briefing.topDelayCosts")}</h3>
                   <div className="space-y-2">
                     {costSummary.top_costs.map((c: any, i: number) => (
                       <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{c.title}</p>
-                          <p className="text-xs text-muted-foreground">{c.days} Tage offen • {c.priority}</p>
+                          <p className="text-xs text-muted-foreground">{c.days} {t("briefing.daysOpen")} • {c.priority}</p>
                         </div>
                         <span className="text-sm font-bold text-destructive shrink-0 ml-2">{formatCost(c.cost)}</span>
                       </div>
@@ -195,7 +197,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
           <Card>
             <CardContent className="p-8 text-center text-muted-foreground">
               <Sun className="w-10 h-10 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Noch keine Daten für das Briefing vorhanden.</p>
+              <p className="text-sm">{t("briefing.noData")}</p>
             </CardContent>
           </Card>
         )}
