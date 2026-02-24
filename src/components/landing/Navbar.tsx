@@ -94,11 +94,11 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="pt-4 mt-3 border-t border-border/30 space-y-2">
-                <Link to="/login">
-                  <Button variant="ghost" className="w-full rounded-lg">Anmelden</Button>
+                <Link to="/auth">
+                  <Button variant="ghost" className="w-full rounded-lg">Login</Button>
                 </Link>
-                <Link to="/dashboard">
-                  <Button className="w-full rounded-full">Kostenlos testen</Button>
+                <Link to="/auth">
+                  <Button className="w-full rounded-full">Kostenlos starten</Button>
                 </Link>
               </div>
             </div>
