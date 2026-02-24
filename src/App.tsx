@@ -140,6 +140,7 @@ const App = () => (
               <Route path="/admin/users" element={<P><AdminUsers /></P>} />
               <Route path="/audit" element={<P><AuditTrail /></P>} />
               <Route path="/pilot" element={<P><PilotSettings /></P>} />
+              <Route path="/feature-management" element={<P><PilotSettings /></P>} />
               <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
               <Route path="/patterns" element={<P><PatternEngine /></P>} />
               <Route path="/templates" element={<P><TemplateEditor /></P>} />
