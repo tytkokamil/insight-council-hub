@@ -10,6 +10,7 @@ import {
 import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
+import type { OrgRoleKey } from "@/hooks/usePermissions";
 
 interface NavItem {
   icon: React.ElementType;
@@ -17,6 +18,7 @@ interface NavItem {
   path: string;
   featureKey?: string;
   adminOnly?: boolean;
+  minRole?: OrgRoleKey;
 }
 
 interface NavSubGroup {
@@ -67,22 +69,22 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "governance",
     items: [
-      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
-      { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks" },
-      { icon: Zap, label: "nav.automations", path: "/automations" },
-      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
+      { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
+      { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
+      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_admin" },
     ],
   },
   {
     labelKey: "intelligence",
     progressive: true, // requires 15+ decisions
     items: [
-      { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
-      { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
-      { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks" },
-      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge" },
+      { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive", minRole: "org_executive" },
+      { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics", minRole: "org_executive" },
+      { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks", minRole: "org_executive" },
+      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
       {
-        icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics",
+        icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics", minRole: "org_executive",
         children: [
           { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
           { icon: Dna, label: "nav.decisionDna", path: "/dna" },
@@ -97,8 +99,8 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "system",
     items: [
-      { icon: Settings2, label: "nav.templates", path: "/template-editor" },
-      { icon: Target, label: "nav.strategy", path: "/strategy" },
+      { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
+      { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
       { icon: Archive, label: "nav.archive", path: "/archive" },
       { icon: Settings, label: "nav.settings", path: "/settings" },
       { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
@@ -114,11 +116,21 @@ interface SidebarNavProps {
   pathname: string;
   onNavigate?: () => void;
   onPrefetch?: (path: string) => void;
+  userRole?: OrgRoleKey;
+}
+
+const ROLE_HIERARCHY: OrgRoleKey[] = [
+  "org_viewer", "org_reviewer", "org_member", "org_executive", "org_admin", "org_owner",
+];
+
+function meetsMinRole(current: OrgRoleKey, min?: OrgRoleKey): boolean {
+  if (!min) return true;
+  return ROLE_HIERARCHY.indexOf(current) >= ROLE_HIERARCHY.indexOf(min);
 }
 
 /* ── Sub-group (collapsible) ── */
 const SubGroupItem = ({
-  subGroup, collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
+  subGroup, collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: {
   subGroup: NavSubGroup;
   collapsed: boolean;
@@ -127,16 +139,22 @@ const SubGroupItem = ({
   pathname: string;
   onNavigate?: () => void;
   onPrefetch?: (path: string) => void;
+  userRole?: OrgRoleKey;
 }) => {
   const { t } = useTranslation();
+
   const visibleChildren = subGroup.children.filter(child => {
     if (child.adminOnly && !isAdmin) return false;
     if (child.featureKey && !isFeatureEnabled(child.featureKey)) return false;
+    if (child.minRole && !meetsMinRole(userRole, child.minRole)) return false;
     return true;
   });
 
   const hasActiveChild = visibleChildren.some(c => pathname === c.path);
   const [open, setOpen] = useState(hasActiveChild);
+
+  // Check subgroup-level minRole
+  if ((subGroup as any).minRole && !meetsMinRole(userRole, (subGroup as any).minRole)) return null;
 
   if (visibleChildren.length === 0) return null;
 
@@ -207,7 +225,7 @@ const SubGroupItem = ({
 
 /* ── Main nav ── */
 const SidebarNav = memo(({
-  collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch,
+  collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: SidebarNavProps) => {
   const { mode, setMode, shouldShowAdvanced, decisionCount } = useGuidedMode();
   const { t } = useTranslation();
@@ -293,15 +311,18 @@ const SidebarNav = memo(({
         const visibleItems = group.items.filter(item => {
           if (isSubGroup(item)) {
             if (item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
+            if ((item as any).minRole && !meetsMinRole(userRole, (item as any).minRole)) return false;
             return item.children.some(c => {
               if (c.adminOnly && !isAdmin) return false;
               if (c.featureKey && !isFeatureEnabled(c.featureKey)) return false;
+              if (c.minRole && !meetsMinRole(userRole, c.minRole)) return false;
               if (mode === "basic" && !BASIC_MODE_PATHS.has(c.path)) return false;
               return true;
             });
           }
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
+          if ("minRole" in item && item.minRole && !meetsMinRole(userRole, item.minRole)) return false;
           if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
             lockedItems.push(item as NavItem);
             return false;
@@ -374,6 +395,7 @@ const SidebarNav = memo(({
                         pathname={pathname}
                         onNavigate={onNavigate}
                         onPrefetch={onPrefetch}
+                        userRole={userRole}
                       />
                     );
                   }

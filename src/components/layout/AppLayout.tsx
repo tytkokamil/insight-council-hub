@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
@@ -32,6 +33,7 @@ const SidebarContent = ({
   onSignOut,
   onNavigate,
   onPrefetch,
+  userRole,
 }: {
   collapsed: boolean;
   isAdmin: boolean;
@@ -45,11 +47,12 @@ const SidebarContent = ({
   onSignOut: () => void;
   onNavigate?: () => void;
   onPrefetch?: (path: string) => void;
+  userRole?: import("@/hooks/usePermissions").OrgRoleKey;
 }) => (
   <>
     <SidebarHeader collapsed={collapsed} theme={theme} toggleTheme={toggleTheme} onCollapse={onCollapse} onNavigate={onNavigate} />
     <TeamSwitcher collapsed={collapsed} />
-    <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch} />
+    <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch} userRole={userRole} />
     <SidebarFooter collapsed={collapsed} user={user} avatarUrl={avatarUrl} onSignOut={onSignOut} />
   </>
 );
@@ -63,7 +66,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const { isEnabled } = useFeatureFlags();
   const isMobile = useIsMobile();
   const prefetch = usePrefetchOnHover();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { role: userRole, isAdmin } = usePermissions();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -86,10 +89,6 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      supabase.from("user_roles").select("role").eq("user_id", user.id).then(({ data }) => {
-        const role = data?.[0]?.role;
-        setIsAdmin(role === "org_owner" || role === "org_admin");
-      });
       supabase.from("profiles").select("avatar_url").eq("user_id", user.id).single().then(({ data }) => {
         setAvatarUrl(data?.avatar_url || null);
       });
@@ -110,6 +109,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
     theme,
     toggleTheme,
     onSignOut: handleSignOut,
+    userRole,
   };
 
   return (

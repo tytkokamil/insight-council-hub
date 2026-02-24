@@ -1398,29 +1398,38 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          decision_count: number | null
           full_name: string | null
           id: string
           org_id: string | null
+          progressive_override: boolean | null
           updated_at: string
           user_id: string
+          view_mode: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          decision_count?: number | null
           full_name?: string | null
           id?: string
           org_id?: string | null
+          progressive_override?: boolean | null
           updated_at?: string
           user_id: string
+          view_mode?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          decision_count?: number | null
           full_name?: string | null
           id?: string
           org_id?: string | null
+          progressive_override?: boolean | null
           updated_at?: string
           user_id?: string
+          view_mode?: string | null
         }
         Relationships: [
           {
@@ -2204,7 +2213,12 @@ export type Database = {
         Args: { _team_id?: string; _user_id: string }
         Returns: Json
       }
+      get_org_role: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      has_min_role: {
+        Args: { _min_role: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["org_role"]
@@ -2280,7 +2294,13 @@ export type Database = {
         | "stakeholder.position_changed"
         | "goal.linked"
         | "goal.unlinked"
-      org_role: "org_owner" | "org_admin" | "org_member"
+      org_role:
+        | "org_owner"
+        | "org_admin"
+        | "org_member"
+        | "org_executive"
+        | "org_reviewer"
+        | "org_viewer"
       outcome_type: "successful" | "partial" | "failed"
       share_permission: "read" | "comment" | "edit"
       task_category:
@@ -2477,7 +2497,14 @@ export const Constants = {
         "goal.linked",
         "goal.unlinked",
       ],
-      org_role: ["org_owner", "org_admin", "org_member"],
+      org_role: [
+        "org_owner",
+        "org_admin",
+        "org_member",
+        "org_executive",
+        "org_reviewer",
+        "org_viewer",
+      ],
       outcome_type: ["successful", "partial", "failed"],
       share_permission: ["read", "comment", "edit"],
       task_category: [
