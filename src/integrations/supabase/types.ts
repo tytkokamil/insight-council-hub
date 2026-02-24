@@ -23,6 +23,7 @@ export type Database = {
           id: string
           new_value: string | null
           old_value: string | null
+          org_id: string | null
           user_id: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           id?: string
           new_value?: string | null
           old_value?: string | null
+          org_id?: string | null
           user_id: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           id?: string
           new_value?: string | null
           old_value?: string | null
+          org_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -51,6 +54,13 @@ export type Database = {
             columns: ["decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -117,6 +127,7 @@ export type Database = {
           enabled: boolean
           id: string
           name: string
+          org_id: string | null
           team_id: string | null
           trigger_event: string
           updated_at: string
@@ -133,6 +144,7 @@ export type Database = {
           enabled?: boolean
           id?: string
           name: string
+          org_id?: string | null
           team_id?: string | null
           trigger_event: string
           updated_at?: string
@@ -149,11 +161,19 @@ export type Database = {
           enabled?: boolean
           id?: string
           name?: string
+          org_id?: string | null
           team_id?: string | null
           trigger_event?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "automation_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "automation_rules_team_id_fkey"
             columns: ["team_id"]
@@ -542,6 +562,7 @@ export type Database = {
           id: string
           is_system: boolean
           name: string
+          org_id: string | null
           priority: string
           required_fields: Json
           slug: string
@@ -562,6 +583,7 @@ export type Database = {
           id?: string
           is_system?: boolean
           name: string
+          org_id?: string | null
           priority?: string
           required_fields?: Json
           slug: string
@@ -582,6 +604,7 @@ export type Database = {
           id?: string
           is_system?: boolean
           name?: string
+          org_id?: string | null
           priority?: string
           required_fields?: Json
           slug?: string
@@ -589,7 +612,15 @@ export type Database = {
           version?: number
           when_to_use?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "decision_templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       decision_versions: {
         Row: {
@@ -661,6 +692,7 @@ export type Database = {
       decisions: {
         Row: {
           actual_impact_score: number | null
+          ai_analysis_cache: Json | null
           ai_impact_score: number | null
           ai_options: Json | null
           ai_risk_factors: string[] | null
@@ -672,16 +704,19 @@ export type Database = {
           category: Database["public"]["Enums"]["decision_category"]
           confidential: boolean
           context: string | null
+          cost_per_day: number | null
           created_at: string
           created_by: string
           deleted_at: string | null
           description: string | null
           due_date: string | null
           escalation_level: number | null
+          health_score: number | null
           id: string
           implemented_at: string | null
           last_escalated_at: string | null
           options: Json | null
+          org_id: string | null
           outcome: string | null
           outcome_notes: string | null
           outcome_type: Database["public"]["Enums"]["outcome_type"] | null
@@ -698,6 +733,7 @@ export type Database = {
         }
         Insert: {
           actual_impact_score?: number | null
+          ai_analysis_cache?: Json | null
           ai_impact_score?: number | null
           ai_options?: Json | null
           ai_risk_factors?: string[] | null
@@ -709,16 +745,19 @@ export type Database = {
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
           context?: string | null
+          cost_per_day?: number | null
           created_at?: string
           created_by: string
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           escalation_level?: number | null
+          health_score?: number | null
           id?: string
           implemented_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
+          org_id?: string | null
           outcome?: string | null
           outcome_notes?: string | null
           outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
@@ -735,6 +774,7 @@ export type Database = {
         }
         Update: {
           actual_impact_score?: number | null
+          ai_analysis_cache?: Json | null
           ai_impact_score?: number | null
           ai_options?: Json | null
           ai_risk_factors?: string[] | null
@@ -746,16 +786,19 @@ export type Database = {
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
           context?: string | null
+          cost_per_day?: number | null
           created_at?: string
           created_by?: string
           deleted_at?: string | null
           description?: string | null
           due_date?: string | null
           escalation_level?: number | null
+          health_score?: number | null
           id?: string
           implemented_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
+          org_id?: string | null
           outcome?: string | null
           outcome_notes?: string | null
           outcome_type?: Database["public"]["Enums"]["outcome_type"] | null
@@ -771,6 +814,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "decisions_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "decisions_superseded_by_fkey"
             columns: ["superseded_by"]
@@ -1059,6 +1109,7 @@ export type Database = {
           decision_id: string | null
           id: string
           message: string | null
+          org_id: string | null
           read: boolean
           title: string
           type: string
@@ -1069,6 +1120,7 @@ export type Database = {
           decision_id?: string | null
           id?: string
           message?: string | null
+          org_id?: string | null
           read?: boolean
           title: string
           type?: string
@@ -1079,6 +1131,7 @@ export type Database = {
           decision_id?: string | null
           id?: string
           message?: string | null
+          org_id?: string | null
           read?: boolean
           title?: string
           type?: string
@@ -1090,6 +1143,13 @@ export type Database = {
             columns: ["decision_id"]
             isOneToOne: false
             referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1141,12 +1201,43 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          plan: string
+          settings: Json
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          plan?: string
+          settings?: Json
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          plan?: string
+          settings?: Json
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          org_id: string | null
           updated_at: string
           user_id: string
         }
@@ -1155,6 +1246,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          org_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1163,10 +1255,19 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          org_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_delegations: {
         Row: {
@@ -1291,6 +1392,7 @@ export type Database = {
           impact: number
           likelihood: number
           mitigation_plan: string | null
+          org_id: string | null
           owner_id: string | null
           risk_score: number | null
           status: string
@@ -1306,6 +1408,7 @@ export type Database = {
           impact?: number
           likelihood?: number
           mitigation_plan?: string | null
+          org_id?: string | null
           owner_id?: string | null
           risk_score?: number | null
           status?: string
@@ -1321,6 +1424,7 @@ export type Database = {
           impact?: number
           likelihood?: number
           mitigation_plan?: string | null
+          org_id?: string | null
           owner_id?: string | null
           risk_score?: number | null
           status?: string
@@ -1329,6 +1433,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "risks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "risks_team_id_fkey"
             columns: ["team_id"]
@@ -1460,6 +1571,7 @@ export type Database = {
           due_date: string | null
           goal_type: string
           id: string
+          org_id: string | null
           owner_id: string | null
           quarter: string | null
           status: string
@@ -1478,6 +1590,7 @@ export type Database = {
           due_date?: string | null
           goal_type?: string
           id?: string
+          org_id?: string | null
           owner_id?: string | null
           quarter?: string | null
           status?: string
@@ -1496,6 +1609,7 @@ export type Database = {
           due_date?: string | null
           goal_type?: string
           id?: string
+          org_id?: string | null
           owner_id?: string | null
           quarter?: string | null
           status?: string
@@ -1507,6 +1621,13 @@ export type Database = {
           year?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "strategic_goals_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "strategic_goals_team_id_fkey"
             columns: ["team_id"]
@@ -1548,6 +1669,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          org_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           status: Database["public"]["Enums"]["task_status"]
           team_id: string | null
@@ -1564,6 +1686,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          org_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
           team_id?: string | null
@@ -1580,6 +1703,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          org_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           status?: Database["public"]["Enums"]["task_status"]
           team_id?: string | null
@@ -1587,6 +1711,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_team_id_fkey"
             columns: ["team_id"]
@@ -1795,6 +1926,7 @@ export type Database = {
           hourly_rate: number | null
           id: string
           name: string
+          org_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1804,6 +1936,7 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           name: string
+          org_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1813,9 +1946,18 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           name?: string
+          org_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "teams_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_ai_settings: {
         Row: {
@@ -1875,6 +2017,7 @@ export type Database = {
         Args: { _team_id?: string; _user_id: string }
         Returns: Json
       }
+      get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["org_role"]
@@ -1916,6 +2059,9 @@ export type Database = {
         | "archived"
         | "cancelled"
         | "superseded"
+        | "open"
+        | "in_review"
+        | "implementing"
       event_type:
         | "decision.created"
         | "decision.updated"
@@ -2108,6 +2254,9 @@ export const Constants = {
         "archived",
         "cancelled",
         "superseded",
+        "open",
+        "in_review",
+        "implementing",
       ],
       event_type: [
         "decision.created",
