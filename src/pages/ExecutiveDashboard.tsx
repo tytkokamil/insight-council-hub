@@ -28,6 +28,7 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
@@ -45,6 +46,7 @@ const TrendBadge = ({ value, suffix = "", invert = false }: { value: number; suf
 };
 
 const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -90,16 +92,11 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
     const highRisk = decisions.filter(d => (d.ai_risk_score ?? 0) > 60);
     const openDecisions = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
 
-    // Median time-to-decision
     const implDurations = implemented.filter(d => d.implemented_at).map(d =>
       (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000
     ).sort((a, b) => a - b);
-    const medianTTD = implDurations.length > 0
-      ? Math.round(implDurations[Math.floor(implDurations.length / 2)])
-      : 0;
-    const avgVelocity = implDurations.length > 0 ? Math.round(implDurations.reduce((a, b) => a + b, 0) / implDurations.length) : 0;
+    const medianTTD = implDurations.length > 0 ? Math.round(implDurations[Math.floor(implDurations.length / 2)]) : 0;
 
-    // Cost of delay
     const totalOpportunityCost = openDecisions.reduce((sum, d) => {
       const team = teams.find((t: any) => t.id === d.team_id);
       const rate = team?.hourly_rate || 75;
@@ -107,12 +104,10 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
       return sum + Math.round(rate * (daysOpen / 7) * 8 * (d.priority === "critical" ? 4 : d.priority === "high" ? 2.5 : 1.5));
     }, 0);
 
-    // Implementation rate & overdue rate
     const implRate = (implemented.length / total) * 100;
     const overdueRate = openDecisions.length > 0 ? (overdue.length / openDecisions.length) * 100 : 0;
     const escRate = (escalated.length / total) * 100;
 
-    // SLA compliance
     const withDueDate = decisions.filter(d => d.due_date);
     const slaCompliant = withDueDate.filter(d => {
       if (d.status === "implemented" && d.implemented_at) return new Date(d.implemented_at) <= new Date(d.due_date!);
@@ -121,7 +116,6 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
     });
     const slaCompliance = withDueDate.length > 0 ? Math.round((slaCompliant.length / withDueDate.length) * 100) : 100;
 
-    // Governance / Health Score
     const doneTasks = tasks.filter(t => t.status === "done");
     const openTasks = tasks.filter(t => t.status !== "done");
     const overdueTasks = openTasks.filter(t => t.due_date && new Date(t.due_date) < now);
@@ -129,22 +123,19 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
     const taskHealth = tasks.length > 0 ? (taskCompletionRate * 0.5 + (100 - (overdueTasks.length / Math.max(1, openTasks.length)) * 100) * 0.5) : 50;
     const healthScore = Math.round(Math.max(0, Math.min(100, (implRate * 0.3) + ((100 - (overdue.length / total * 100)) * 0.2) + ((100 - escRate) * 0.15) + (approved.length / total * 100 * 0.1) + (taskHealth * 0.25))));
 
-    // Decision Quality Index
     const successful = implemented.filter(d => d.outcome_type === "successful").length;
     const partial = implemented.filter(d => d.outcome_type === "partial").length;
     const rated = implemented.filter(d => d.outcome_type).length;
     const qualityIndex = rated > 0 ? Math.round(((successful + partial * 0.5) / rated) * 100) : 50;
 
-    // Radar data
     const radarData = [
-      { metric: "Risiko", value: Math.round(100 - (highRisk.length / total * 100)), explanation: "Anteil Entscheidungen ohne hohes Risiko" },
-      { metric: "Verzögerung", value: Math.round(100 - (overdue.length / total * 100)), explanation: "Termintreue – niedrige Überfälligkeitsrate" },
-      { metric: "Eskalation", value: Math.round(100 - escRate), explanation: "Entscheidungen ohne Eskalation" },
-      { metric: "Alignment", value: Math.round(Math.min(100, (reviews.length / total) * 100)), explanation: "Review-Abdeckung als Alignment-Indikator" },
-      { metric: "Durchsatz", value: Math.round(implRate), explanation: "Umsetzungsrate aller Entscheidungen" },
+      { metric: t("executiveDash.radarRisk"), value: Math.round(100 - (highRisk.length / total * 100)), explanation: t("executiveDash.radarRiskExpl") },
+      { metric: t("executiveDash.radarDelay"), value: Math.round(100 - (overdue.length / total * 100)), explanation: t("executiveDash.radarDelayExpl") },
+      { metric: t("executiveDash.radarEscalation"), value: Math.round(100 - escRate), explanation: t("executiveDash.radarEscalationExpl") },
+      { metric: t("executiveDash.radarAlignment"), value: Math.round(Math.min(100, (reviews.length / total) * 100)), explanation: t("executiveDash.radarAlignmentExpl") },
+      { metric: t("executiveDash.radarThroughput"), value: Math.round(implRate), explanation: t("executiveDash.radarThroughputExpl") },
     ];
 
-    // Critical Decisions – sorted by economic impact × risk × delay
     const criticalDecisions = [...openDecisions]
       .map(d => {
         const daysOpen = Math.floor((Date.now() - new Date(d.created_at).getTime()) / 86400000);
@@ -163,14 +154,11 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
       .sort((a, b) => b.urgency - a.urgency)
       .slice(0, 10);
 
-    // Top 3 cost drivers
     const topCostDrivers = [...criticalDecisions].sort((a, b) => b.costImpact - a.costImpact).slice(0, 3);
 
-    // SLA early warnings (due within 5 days)
     const fiveDaysFromNow = new Date(Date.now() + 5 * 86400000);
     const slaWarnings = openDecisions.filter(d => d.due_date && new Date(d.due_date) > now && new Date(d.due_date) <= fiveDaysFromNow);
 
-    // Pending reviews
     const pendingReviews = reviews.filter(r => !r.reviewed_at);
     const reviewMedianWait = (() => {
       const waits = pendingReviews.map(r => (Date.now() - new Date(r.created_at).getTime()) / 86400000).sort((a, b) => a - b);
@@ -181,47 +169,38 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
       total, implemented, overdue, escalated, critical, highRisk,
       openDecisions, totalOpportunityCost, implRate, overdueRate, escRate,
       healthScore, qualityIndex, radarData, criticalDecisions, topCostDrivers,
-      medianTTD, avgVelocity, slaCompliance, slaWarnings,
+      medianTTD, slaCompliance, slaWarnings,
       pendingReviews, reviewMedianWait, taskCompletionRate,
       doneTasks, overdueTasks: tasks.filter(t => t.status !== "done" && t.due_date && new Date(t.due_date) < now),
     };
-  }, [loadingDec, decisions, tasks, teams, reviews, deps, risks]);
+  }, [loadingDec, decisions, tasks, teams, reviews, deps, risks, t]);
 
   const generateBrief = async () => {
     if (!metrics) return;
     setBriefLoading(true);
     try {
-      const { data } = await supabase.functions.invoke("ceo-briefing", {
-        body: { user_id: user?.id },
-      });
-      if (data?.content?.bullets) {
-        setAiBrief(data.content.bullets);
-      } else if (data?.content?.summary) {
-        setAiBrief([data.content.summary]);
-      } else {
-        setAiBrief(generateFallbackBrief());
-      }
-    } catch {
-      setAiBrief(generateFallbackBrief());
-    }
+      const { data } = await supabase.functions.invoke("ceo-briefing", { body: { user_id: user?.id } });
+      if (data?.content?.bullets) setAiBrief(data.content.bullets);
+      else if (data?.content?.summary) setAiBrief([data.content.summary]);
+      else setAiBrief(generateFallbackBrief());
+    } catch { setAiBrief(generateFallbackBrief()); }
     setBriefLoading(false);
   };
 
   const generateFallbackBrief = () => {
     if (!metrics) return [];
     const bullets: string[] = [];
-    if (metrics.critical.length > 0) bullets.push(`Kritische Entscheidungen: ${metrics.critical.length} aktiv – Priorisierung empfohlen.`);
-    if (metrics.escalated.length > 0) bullets.push(`${metrics.escalated.length} aktive Eskalationen – SLA-Verletzungen prüfen.`);
-    bullets.push(`Ø Entscheidungsdauer (Median): ${metrics.medianTTD} Tage.`);
-    bullets.push(`Geschätzte Verzögerungskosten: €${metrics.totalOpportunityCost.toLocaleString()}.`);
-    if (metrics.overdueRate > 20) bullets.push(`Überfälligkeitsrate bei ${Math.round(metrics.overdueRate)}% – Eskalationsprozess empfohlen.`);
-    bullets.push(`Umsetzungsrate: ${Math.round(metrics.implRate)}%.`);
-    if (metrics.topCostDrivers.length > 0) bullets.push(`Top Cost Driver: ${metrics.topCostDrivers[0].title} (€${metrics.topCostDrivers[0].costImpact.toLocaleString()}).`);
-    bullets.push(`Governance Score: ${metrics.healthScore}/100.`);
+    if (metrics.critical.length > 0) bullets.push(t("executiveDash.fallbackCritical", { count: metrics.critical.length }));
+    if (metrics.escalated.length > 0) bullets.push(t("executiveDash.fallbackEscalations", { count: metrics.escalated.length }));
+    bullets.push(t("executiveDash.fallbackMedianTTD", { days: metrics.medianTTD }));
+    bullets.push(t("executiveDash.fallbackDelayCost", { cost: metrics.totalOpportunityCost.toLocaleString() }));
+    if (metrics.overdueRate > 20) bullets.push(t("executiveDash.fallbackOverdueRate", { rate: Math.round(metrics.overdueRate) }));
+    bullets.push(t("executiveDash.fallbackImplRate", { rate: Math.round(metrics.implRate) }));
+    if (metrics.topCostDrivers.length > 0) bullets.push(t("executiveDash.fallbackTopCostDriver", { title: metrics.topCostDrivers[0].title, cost: metrics.topCostDrivers[0].costImpact.toLocaleString() }));
+    bullets.push(t("executiveDash.fallbackGovScore", { score: metrics.healthScore }));
     return bullets;
   };
 
-  // Team performance data
   const teamPerformanceData = useMemo(() => {
     if (teams.length === 0) return [];
     return teams.map((team: any) => {
@@ -263,17 +242,17 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
 
   if (loadingDec) {
-    return <Wrap><div className="flex items-center justify-center h-64 text-muted-foreground">Lade Executive Dashboard…</div></Wrap>;
+    return <Wrap><div className="flex items-center justify-center h-64 text-muted-foreground">{t("executiveDash.loading")}</div></Wrap>;
   }
 
   if (!metrics) {
     return (
       <Wrap>
         <div className="mb-8">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Führungsebene</p>
-          <h1 className="text-xl font-bold">Executive Dashboard</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("executiveDash.subtitle")}</p>
+          <h1 className="text-xl font-bold">{t("executiveDash.pageTitle")}</h1>
         </div>
-        <EmptyAnalysisState icon={Target} title="Noch keine Executive-Daten" description="Erstelle Entscheidungen für KPIs und Analysen." hint="Metriken werden automatisch berechnet" />
+        <EmptyAnalysisState icon={Target} title={t("executiveDash.noDataTitle")} description={t("executiveDash.noDataDesc")} hint={t("executiveDash.noDataHint")} />
       </Wrap>
     );
   }
@@ -287,15 +266,15 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Strategische Analyse</p>
-            <h1 className="text-xl font-bold">Executive Dashboard</h1>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("executiveDash.strategicAnalysis")}</p>
+            <h1 className="text-xl font-bold">{t("executiveDash.pageTitle")}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <PageHelpButton title="Executive Dashboard" description="Management-Cockpit: KPI Snapshot, Risk Radar, kritische Entscheidungen, Economic Impact und KI-Briefing." />
+            <PageHelpButton title={t("executiveDash.pageTitle")} description={t("executiveDash.helpDesc")} />
             <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
               setExporting(true);
-              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "Exportiert", description: "Board Report als PDF." }); }
-              catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
+              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.exported"), description: t("executiveDash.boardReportDesc") }); }
+              catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
               setExporting(false);
             }} className="gap-2">
               {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
@@ -306,20 +285,12 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
               try {
                 const data = await fetchBoardReportData();
                 const profileMap: Record<string, string> = {};
-                data.profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || "Unbekannt"; });
-                const decExport = data.decisions.map((d: any) => ({
-                  ...d,
-                  team_name: data.teams.find((t: any) => t.id === d.team_id)?.name,
-                  assignee_name: profileMap[d.assignee_id] || "—",
-                  creator_name: profileMap[d.created_by] || "—",
-                }));
-                const taskExport = data.tasks.map((t: any) => ({
-                  ...t,
-                  assignee_name: profileMap[t.assignee_id] || "—",
-                }));
+                data.profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || t("taskDetail.unknown"); });
+                const decExport = data.decisions.map((d: any) => ({ ...d, team_name: data.teams.find((t: any) => t.id === d.team_id)?.name, assignee_name: profileMap[d.assignee_id] || "—", creator_name: profileMap[d.created_by] || "—" }));
+                const taskExport = data.tasks.map((t: any) => ({ ...t, assignee_name: profileMap[t.assignee_id] || "—" }));
                 exportFullReportExcel(decExport, taskExport);
-                toast({ title: "Exportiert", description: "Excel-Report heruntergeladen." });
-              } catch { toast({ title: "Fehler", description: "Export fehlgeschlagen.", variant: "destructive" }); }
+                toast({ title: t("executiveDash.exported"), description: t("executiveDash.excelReportDesc") });
+              } catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
               setExporting(false);
             }} className="gap-2">
               <FileDown className="w-3.5 h-3.5" />
@@ -332,18 +303,18 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Gauge className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Executive Snapshot</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.execSnapshot")}</h2>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3 stagger-children">
             {[
-              { label: "Offene Entscheidungen", value: metrics.openDecisions.length, icon: BarChart3, trend: 0 },
-              { label: "Kritisch", value: metrics.highRisk.length + metrics.critical.length, icon: AlertTriangle, color: (metrics.highRisk.length + metrics.critical.length) > 0 ? "text-destructive" : undefined, trend: 0 },
-              { label: "Eskalationen aktiv", value: metrics.escalated.length, icon: Siren, color: metrics.escalated.length > 0 ? "text-warning" : undefined, trend: 0 },
-              { label: "Cost of Delay", value: `€${metrics.totalOpportunityCost.toLocaleString()}`, icon: DollarSign, color: "text-destructive", trend: 0 },
-              { label: "Ø Time-to-Decision", value: `${metrics.medianTTD}d`, icon: Clock, trend: 0 },
-              { label: "Completion Rate", value: `${Math.round(metrics.implRate)}%`, icon: CheckCircle2, color: "text-success", trend: 0 },
-              { label: "SLA Compliance", value: `${metrics.slaCompliance}%`, icon: Shield, color: metrics.slaCompliance >= 80 ? "text-success" : metrics.slaCompliance >= 60 ? "text-warning" : "text-destructive", trend: 0 },
-              { label: "Governance Score", value: metrics.healthScore, icon: Gauge, color: scoreColor, trend: 0 },
+              { label: t("executiveDash.openDecisions"), value: metrics.openDecisions.length, icon: BarChart3 },
+              { label: t("executiveDash.critical"), value: metrics.highRisk.length + metrics.critical.length, icon: AlertTriangle, color: (metrics.highRisk.length + metrics.critical.length) > 0 ? "text-destructive" : undefined },
+              { label: t("executiveDash.activeEscalations"), value: metrics.escalated.length, icon: Siren, color: metrics.escalated.length > 0 ? "text-warning" : undefined },
+              { label: t("executiveDash.costOfDelay"), value: `€${metrics.totalOpportunityCost.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
+              { label: t("executiveDash.avgTTD"), value: `${metrics.medianTTD}d`, icon: Clock },
+              { label: t("executiveDash.completionRate"), value: `${Math.round(metrics.implRate)}%`, icon: CheckCircle2, color: "text-success" },
+              { label: t("executiveDash.slaCompliance"), value: `${metrics.slaCompliance}%`, icon: Shield, color: metrics.slaCompliance >= 80 ? "text-success" : metrics.slaCompliance >= 60 ? "text-warning" : "text-destructive" },
+              { label: t("executiveDash.govScore"), value: metrics.healthScore, icon: Gauge, color: scoreColor },
             ].map((kpi, i) => (
               <Card key={i} className="group cursor-default">
                 <CardContent className="p-3.5">
@@ -362,10 +333,9 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Activity className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Risk Radar & Health Score</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.riskRadar")}</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Radar */}
             <Card className="lg:col-span-2">
               <CardContent className="p-6">
                 <div className="h-[300px]">
@@ -391,21 +361,20 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
               </CardContent>
             </Card>
 
-            {/* Health Score */}
             <Card>
               <CardContent className="p-6 flex flex-col h-full">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">Health Score</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("executiveDash.healthScore")}</h3>
                 <div className="flex flex-col items-center gap-3 flex-1 justify-center">
                   <div className={`w-24 h-24 rounded-full flex items-center justify-center ${scoreBg}`}>
                     <span className={`text-4xl font-bold number-highlight ${scoreColor}`}>{metrics.healthScore}</span>
                   </div>
                   <Progress value={metrics.healthScore} className="w-full h-2" />
                   <p className="text-[10px] text-muted-foreground">
-                    {metrics.healthScore >= 75 ? "🟢 Stabil" : metrics.healthScore >= 50 ? "🟡 Beobachten" : "🔴 Strukturelles Problem"}
+                    {metrics.healthScore >= 75 ? t("executiveDash.healthStable") : metrics.healthScore >= 50 ? t("executiveDash.healthWatch") : t("executiveDash.healthCritical")}
                   </p>
                 </div>
                 <div className="w-full space-y-1.5 text-xs mt-4 pt-4 border-t border-border">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Treiber</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("executiveDash.drivers")}</p>
                   {metrics.radarData.map(r => (
                     <div key={r.metric} className="flex justify-between">
                       <span className="text-muted-foreground">{r.metric}</span>
@@ -422,26 +391,26 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-destructive" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kritische Entscheidungen</h2>
-            <span className="text-[10px] text-muted-foreground">sortiert nach Economic Impact × Risk × Delay</span>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.criticalDecisions")}</h2>
+            <span className="text-[10px] text-muted-foreground">{t("executiveDash.criticalSortedBy")}</span>
           </div>
           <Card>
             <CardContent className="p-0">
               {metrics.criticalDecisions.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">✅ Keine kritischen Entscheidungen</div>
+                <div className="text-center py-8 text-sm text-muted-foreground">{t("executiveDash.noCritical")}</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Titel</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Risk %</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Delay %</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Cost Impact</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Eskalation</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Im Review</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Priorität</th>
-                        <th className="text-right py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Aktion</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thTitle")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thRisk")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thDelay")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thCost")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thEscalation")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thInReview")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thPriority")}</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thAction")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -452,7 +421,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
                                 <span className="font-medium truncate max-w-[220px]">{d.title}</span>
-                                {d.isOverdue && <Badge variant="destructive" className="text-[9px] px-1.5 py-0">Überfällig</Badge>}
+                                {d.isOverdue && <Badge variant="destructive" className="text-[9px] px-1.5 py-0">{t("executiveDash.overdue")}</Badge>}
                               </div>
                             </td>
                             <td className="text-center py-3 px-2">
@@ -466,7 +435,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                             </td>
                             <td className="text-center py-3 px-2">
                               {d.escalationLevel > 0 ? (
-                                <Badge variant="destructive" className="text-[9px]">Stufe {d.escalationLevel}</Badge>
+                                <Badge variant="destructive" className="text-[9px]">{t("executiveDash.level", { level: d.escalationLevel })}</Badge>
                               ) : (
                                 <span className="text-muted-foreground text-xs">–</span>
                               )}
@@ -501,15 +470,14 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <DollarSign className="w-4 h-4 text-destructive" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wirtschaftliches Risiko</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.economicRisk")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Top Cost Drivers */}
             <Card>
               <CardContent className="p-5">
-                <p className="text-xs font-medium text-muted-foreground mb-3">Top 3 Cost Drivers</p>
+                <p className="text-xs font-medium text-muted-foreground mb-3">{t("executiveDash.topCostDrivers")}</p>
                 {metrics.topCostDrivers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Keine offenen Entscheidungen mit Kostenwirkung.</p>
+                  <p className="text-sm text-muted-foreground">{t("executiveDash.noCostDrivers")}</p>
                 ) : (
                   <div className="space-y-3">
                     {metrics.topCostDrivers.map((d, i) => (
@@ -518,7 +486,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                           <span className="text-lg font-bold text-muted-foreground number-highlight">{i + 1}.</span>
                           <div>
                             <p className="text-sm font-medium truncate max-w-[200px]">{d.title}</p>
-                            <p className="text-[10px] text-muted-foreground">{d.daysOpen} Tage offen · {d.priority}</p>
+                            <p className="text-[10px] text-muted-foreground">{t("executiveDash.daysOpen", { days: d.daysOpen, priority: d.priority })}</p>
                           </div>
                         </div>
                         <span className="text-sm font-bold text-destructive number-highlight">€{d.costImpact.toLocaleString()}</span>
@@ -529,17 +497,16 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
               </CardContent>
             </Card>
 
-            {/* Cost Summary */}
             <Card>
               <CardContent className="p-5 flex flex-col justify-between h-full">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-3">Gesamt Cost of Delay</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-3">{t("executiveDash.totalCostOfDelay")}</p>
                   <p className="text-3xl font-bold text-destructive number-highlight">€{metrics.totalOpportunityCost.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Über {metrics.openDecisions.length} offene Entscheidungen</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("executiveDash.overDecisions", { count: metrics.openDecisions.length })}</p>
                 </div>
                 <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-medium text-foreground">Vermeidbare Kosten</span> bei 20% schnellerer Review-Zeit:
+                    <span className="font-medium text-foreground">{t("executiveDash.avoidableCosts")}</span> {t("executiveDash.avoidableDesc")}
                   </p>
                   <p className="text-sm font-bold text-success mt-1 number-highlight">
                     ≈ €{Math.round(metrics.totalOpportunityCost * 0.2).toLocaleString()}
@@ -548,11 +515,11 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button className="flex items-center gap-1 text-[10px] text-muted-foreground mt-3 hover:text-foreground transition-colors">
-                      <Info className="w-3 h-3" /> Berechnungsmethodik
+                      <Info className="w-3 h-3" /> {t("executiveDash.calcMethod")}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="text-xs max-w-60">
-                    Berechnung: Tage offen × Stundensatz × 8h/Woche × Prioritäts-Multiplikator (Critical 4×, High 2.5×, Medium/Low 1.5×).
+                    {t("executiveDash.calcTooltip")}
                   </TooltipContent>
                 </Tooltip>
               </CardContent>
@@ -564,39 +531,31 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Shield className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Eskalation & SLA Control</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.escalationSla")}</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground mb-1">Aktive Eskalationen</p>
-                <p className={`text-2xl font-bold number-highlight ${metrics.escalated.length > 0 ? "text-destructive" : "text-success"}`}>{metrics.escalated.length}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground mb-1">SLA-Verletzungen</p>
-                <p className={`text-2xl font-bold number-highlight ${metrics.overdue.length > 0 ? "text-warning" : "text-success"}`}>{metrics.overdue.length}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground mb-1">Frühwarnungen (5 Tage)</p>
-                <p className={`text-2xl font-bold number-highlight ${metrics.slaWarnings.length > 0 ? "text-warning" : "text-success"}`}>{metrics.slaWarnings.length}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-[10px] text-muted-foreground mb-1">Offene Reviews</p>
-                <p className="text-2xl font-bold number-highlight">{metrics.pendingReviews.length}</p>
-                <p className="text-[9px] text-muted-foreground">Ø Wartezeit: {metrics.reviewMedianWait}d</p>
-              </CardContent>
-            </Card>
+            <Card><CardContent className="p-4">
+              <p className="text-[10px] text-muted-foreground mb-1">{t("executiveDash.activeEsc")}</p>
+              <p className={`text-2xl font-bold number-highlight ${metrics.escalated.length > 0 ? "text-destructive" : "text-success"}`}>{metrics.escalated.length}</p>
+            </CardContent></Card>
+            <Card><CardContent className="p-4">
+              <p className="text-[10px] text-muted-foreground mb-1">{t("executiveDash.slaViolations")}</p>
+              <p className={`text-2xl font-bold number-highlight ${metrics.overdue.length > 0 ? "text-warning" : "text-success"}`}>{metrics.overdue.length}</p>
+            </CardContent></Card>
+            <Card><CardContent className="p-4">
+              <p className="text-[10px] text-muted-foreground mb-1">{t("executiveDash.earlyWarnings")}</p>
+              <p className={`text-2xl font-bold number-highlight ${metrics.slaWarnings.length > 0 ? "text-warning" : "text-success"}`}>{metrics.slaWarnings.length}</p>
+            </CardContent></Card>
+            <Card><CardContent className="p-4">
+              <p className="text-[10px] text-muted-foreground mb-1">{t("executiveDash.openReviews")}</p>
+              <p className="text-2xl font-bold number-highlight">{metrics.pendingReviews.length}</p>
+              <p className="text-[9px] text-muted-foreground">{t("executiveDash.avgWait", { days: metrics.reviewMedianWait })}</p>
+            </CardContent></Card>
           </div>
           {metrics.escalated.length > 0 && (
             <div className="mt-3">
               <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => navigate("/war-room")}>
-                <Siren className="w-3 h-3" /> War Room öffnen
+                <Siren className="w-3 h-3" /> {t("executiveDash.openWarRoom")}
               </Button>
             </div>
           )}
@@ -606,13 +565,13 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Zap className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">AI Executive Brief</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.aiBrief")}</h2>
           </div>
           <Card>
             <CardContent className="p-6">
               {aiBrief ? (
                 <div className="space-y-4">
-                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Executive Brief – Letzte 30 Tage</p>
+                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t("executiveDash.briefLast30")}</p>
                   <ul className="space-y-2">
                     {aiBrief.map((bullet, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm">
@@ -624,23 +583,23 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                   <div className="flex items-center gap-2 pt-3 border-t border-border">
                     <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={async () => {
                       setExporting(true);
-                      try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: "PDF exportiert" }); }
-                      catch { toast({ title: "Fehler", variant: "destructive" }); }
+                      try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.pdfExported") }); }
+                      catch { toast({ title: t("executiveDash.error"), variant: "destructive" }); }
                       setExporting(false);
                     }}>
-                      <FileDown className="w-3 h-3" />Vollständiges Briefing exportieren
+                      <FileDown className="w-3 h-3" />{t("executiveDash.exportBriefing")}
                     </Button>
-                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast({ title: "Gesendet", description: "Briefing wurde an das Team gesendet." })}>
-                      <Send className="w-3 h-3" />An Team senden
+                    <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => toast({ title: t("executiveDash.sent"), description: t("executiveDash.sentDesc") })}>
+                      <Send className="w-3 h-3" />{t("executiveDash.sendToTeam")}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">KI-generierte Zusammenfassung mit Risiken, Trends und Empfehlungen.</p>
+                  <p className="text-sm text-muted-foreground mb-3">{t("executiveDash.briefDesc")}</p>
                   <Button onClick={generateBrief} disabled={briefLoading} className="gap-2">
                     {briefLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                    {briefLoading ? "Generiere..." : "Executive Brief generieren"}
+                    {briefLoading ? t("executiveDash.generating") : t("executiveDash.generateBrief")}
                   </Button>
                 </div>
               )}
@@ -653,7 +612,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Users className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Team Performance</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.teamPerformance")}</h2>
             </div>
             <Card>
               <CardContent className="p-0">
@@ -661,37 +620,25 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Team</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Risk</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">SLA</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Ø Dauer</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Eskalation</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Impact</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">Umsetzung</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thTeam")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thRisk")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thSla")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thDuration")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thEscalation")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thImpact")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thImpl")}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {teamPerformanceData.map(team => (
                         <tr key={team.name} className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors">
                           <td className="py-3 px-4 font-medium">{team.shortName}</td>
-                          <td className="text-center py-3 px-2">
-                            <span className={`font-medium number-highlight ${team.riskScore > 2 ? "text-destructive" : team.riskScore > 0 ? "text-warning" : "text-success"}`}>{team.riskScore}</span>
-                          </td>
-                          <td className="text-center py-3 px-2">
-                            <span className={`font-medium number-highlight ${team.slaCompliance >= 80 ? "text-success" : team.slaCompliance >= 60 ? "text-warning" : "text-destructive"}`}>{team.slaCompliance}%</span>
-                          </td>
-                          <td className="text-center py-3 px-2">
-                            <span className="number-highlight">{team.avgDecisionTime}d</span>
-                          </td>
-                          <td className="text-center py-3 px-2">
-                            <span className={`font-medium number-highlight ${team.escalationRate > 20 ? "text-destructive" : team.escalationRate > 10 ? "text-warning" : "text-muted-foreground"}`}>{team.escalationRate}%</span>
-                          </td>
-                          <td className="text-center py-3 px-2">
-                            <span className="font-medium number-highlight">€{team.economicImpact.toLocaleString()}</span>
-                          </td>
-                          <td className="text-center py-3 px-2">
-                            <span className={`font-medium number-highlight ${team.implRate >= 50 ? "text-success" : team.implRate >= 25 ? "text-warning" : "text-destructive"}`}>{team.implRate}%</span>
-                          </td>
+                          <td className="text-center py-3 px-2"><span className={`font-medium number-highlight ${team.riskScore > 2 ? "text-destructive" : team.riskScore > 0 ? "text-warning" : "text-success"}`}>{team.riskScore}</span></td>
+                          <td className="text-center py-3 px-2"><span className={`font-medium number-highlight ${team.slaCompliance >= 80 ? "text-success" : team.slaCompliance >= 60 ? "text-warning" : "text-destructive"}`}>{team.slaCompliance}%</span></td>
+                          <td className="text-center py-3 px-2"><span className="number-highlight">{team.avgDecisionTime}d</span></td>
+                          <td className="text-center py-3 px-2"><span className={`font-medium number-highlight ${team.escalationRate > 20 ? "text-destructive" : team.escalationRate > 10 ? "text-warning" : "text-muted-foreground"}`}>{team.escalationRate}%</span></td>
+                          <td className="text-center py-3 px-2"><span className="font-medium number-highlight">€{team.economicImpact.toLocaleString()}</span></td>
+                          <td className="text-center py-3 px-2"><span className={`font-medium number-highlight ${team.implRate >= 50 ? "text-success" : team.implRate >= 25 ? "text-warning" : "text-destructive"}`}>{team.implRate}%</span></td>
                         </tr>
                       ))}
                     </tbody>
@@ -702,66 +649,30 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
           </div>
         )}
 
-        {/* ── 8. EMPFOHLENE MAßNAHMEN ── */}
+        {/* ── 8. RECOMMENDED ACTIONS ── */}
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empfohlene Maßnahmen</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("executiveDash.recommendedActions")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {(() => {
               const actions: { title: string; impact: string; saving: string; route: string; btnLabel: string; icon: typeof Settings }[] = [];
 
               if (metrics.pendingReviews.length > 3 || metrics.reviewMedianWait > 5) {
-                actions.push({
-                  title: "Review-Kapazität erhöhen",
-                  impact: "Hoch",
-                  saving: `≈ €${Math.round(metrics.totalOpportunityCost * 0.15).toLocaleString()} Einsparung`,
-                  route: "/settings",
-                  btnLabel: "SLA öffnen",
-                  icon: Settings,
-                });
+                actions.push({ title: t("executiveDash.actReviewCapacity"), impact: t("executiveDash.impactHigh"), saving: t("executiveDash.actReviewSaving", { amount: Math.round(metrics.totalOpportunityCost * 0.15).toLocaleString() }), route: "/settings", btnLabel: t("executiveDash.actReviewBtn"), icon: Settings });
               }
               if (metrics.escalated.length > 2) {
-                actions.push({
-                  title: "Eskalationsregel für Critical verkürzen",
-                  impact: "Hoch",
-                  saving: `${metrics.escalated.length} aktive Eskalationen reduzieren`,
-                  route: "/escalation-engine",
-                  btnLabel: "Eskalation anpassen",
-                  icon: Siren,
-                });
+                actions.push({ title: t("executiveDash.actEscRule"), impact: t("executiveDash.impactHigh"), saving: t("executiveDash.actEscSaving", { count: metrics.escalated.length }), route: "/escalation-engine", btnLabel: t("executiveDash.actEscBtn"), icon: Siren });
               }
               if (metrics.overdueRate > 15) {
-                actions.push({
-                  title: "SLA-Timer für überfällige Entscheidungen aktivieren",
-                  impact: "Mittel",
-                  saving: `${metrics.overdue.length} überfällige Entscheidungen adressieren`,
-                  route: "/settings",
-                  btnLabel: "SLA konfigurieren",
-                  icon: Shield,
-                });
-              }
-              // Always show at least 3
-              if (actions.length < 3) {
-                actions.push({
-                  title: "Kritische Entscheidungen im Decision Room behandeln",
-                  impact: "Hoch",
-                  saving: "Strukturierte Priorisierung",
-                  route: "/meeting",
-                  btnLabel: "Decision Room",
-                  icon: Target,
-                });
+                actions.push({ title: t("executiveDash.actSlaTimer"), impact: t("executiveDash.impactMedium"), saving: t("executiveDash.actSlaSaving", { count: metrics.overdue.length }), route: "/settings", btnLabel: t("executiveDash.actSlaBtn"), icon: Shield });
               }
               if (actions.length < 3) {
-                actions.push({
-                  title: "Templates für Budget-Entscheidungen verpflichten",
-                  impact: "Mittel",
-                  saving: "Ablehnungsrate senken",
-                  route: "/templates",
-                  btnLabel: "Template bearbeiten",
-                  icon: BookOpen,
-                });
+                actions.push({ title: t("executiveDash.actDecisionRoom"), impact: t("executiveDash.impactHigh"), saving: t("executiveDash.actDecisionRoomSaving"), route: "/meeting", btnLabel: t("executiveDash.actDecisionRoomBtn"), icon: Target });
+              }
+              if (actions.length < 3) {
+                actions.push({ title: t("executiveDash.actTemplate"), impact: t("executiveDash.impactMedium"), saving: t("executiveDash.actTemplateSaving"), route: "/templates", btnLabel: t("executiveDash.actTemplateBtn"), icon: BookOpen });
               }
 
               return actions.slice(0, 3).map((action, i) => (
@@ -769,7 +680,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                   <CardContent className="p-4 flex flex-col h-full justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline" className={`text-[9px] ${action.impact === "Hoch" ? "border-destructive text-destructive" : "border-warning text-warning"}`}>{action.impact}</Badge>
+                        <Badge variant="outline" className={`text-[9px] ${action.impact === t("executiveDash.impactHigh") ? "border-destructive text-destructive" : "border-warning text-warning"}`}>{action.impact}</Badge>
                       </div>
                       <p className="text-sm font-medium mb-1">{action.title}</p>
                       <p className="text-[10px] text-muted-foreground">{action.saving}</p>
