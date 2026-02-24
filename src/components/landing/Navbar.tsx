@@ -6,10 +6,10 @@ import { Link } from "react-router-dom";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 const navItems = [
-  { label: "Vorteile", href: "#features" },
-  { label: "Use Cases", href: "#use-cases" },
-  { label: "Kunden", href: "#testimonials" },
+  { label: "Produkt", href: "#features" },
   { label: "Preise", href: "#pricing" },
+  { label: "Use Cases", href: "#use-cases" },
+  { label: "Über uns", href: "#testimonials" },
 ];
 
 const Navbar = () => {
@@ -55,14 +55,14 @@ const Navbar = () => {
               </div>
 
               <div className="hidden md:flex items-center gap-2">
-                <Link to="/login">
+                <Link to="/auth">
                   <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground/70 hover:text-foreground text-[13px]">
-                    Anmelden
+                    Login
                   </Button>
                 </Link>
-                <Link to="/dashboard">
+                <Link to="/auth">
                   <Button size="sm" className="rounded-full text-[13px] px-5">
-                    Kostenlos testen
+                    Kostenlos starten
                   </Button>
                 </Link>
               </div>
