@@ -17,7 +17,7 @@ const tourSteps = [
   { title: "KI-gestützte Analyse", subtitle: "Intelligente Einblicke", description: "Unsere KI analysiert Risiken, Abhängigkeiten und Erfolgswahrscheinlichkeiten für jede Entscheidung automatisch.", icon: Brain, preview: { type: "ai" as const } },
   { title: "Team-Kollaboration", subtitle: "Gemeinsam entscheiden", description: "Stakeholder-Alignment, Review-Workflows und Diskussionen — alles an einem Ort für transparente Entscheidungen.", icon: Users, preview: { type: "team" as const } },
   { title: "Decision Graph", subtitle: "Abhängigkeiten visualisieren", description: "Verstehe komplexe Abhängigkeiten zwischen Entscheidungen und identifiziere Bottlenecks bevor sie entstehen.", icon: GitBranch, preview: { type: "graph" as const } },
-  { title: "Bereit loszulegen?", subtitle: "Starte jetzt kostenlos", description: "14 Tage kostenlos testen. Keine Kreditkarte nötig. Dein Team wird es dir danken.", icon: Zap, preview: { type: "cta" as const } },
+  { title: "Bereit loszulegen?", subtitle: "Starte jetzt kostenlos", description: "Kostenlos starten — keine Kreditkarte nötig. In 5 Minuten eingerichtet.", icon: Zap, preview: { type: "cta" as const } },
 ];
 
 const DashboardPreview = () => (
@@ -158,7 +158,7 @@ const CtaPreview = () => (
     </motion.div>
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="text-center space-y-1">
       <div className="text-sm font-semibold">Bereit für bessere Entscheidungen?</div>
-      <div className="text-xs text-muted-foreground">14 Tage kostenlos · Keine Kreditkarte</div>
+      <div className="text-xs text-muted-foreground">Free-Plan verfügbar · Keine Kreditkarte</div>
     </motion.div>
     {["Unbegrenzte Entscheidungen", "KI-Analyse inklusive", "Team-Kollaboration"].map((f, i) => (
       <motion.div key={f} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + i * 0.1 }} className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -36,9 +36,11 @@ const CTASection = () => (
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          <Button variant="outline" size="xl" className="rounded-full border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
-            Demo vereinbaren
-          </Button>
+          <a href="mailto:demo@decivio.com">
+            <Button variant="outline" size="xl" className="rounded-full border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
+              Demo vereinbaren
+            </Button>
+          </a>
         </div>
 
         <p className="mt-8 text-[12px] text-primary-foreground/40">
