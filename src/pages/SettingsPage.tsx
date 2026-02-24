@@ -15,6 +15,7 @@ import {
   MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info
 } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
+import RolePermissionsPanel from "@/components/settings/RolePermissionsPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
@@ -846,7 +847,15 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground mb-3">
                   {t("settings.yourRole")} <Badge variant="outline" className="ml-1 text-[10px] font-normal">{roleLabels[userRole]}</Badge>
                 </p>
-                <p className="text-xs text-muted-foreground">{t("settings.roleManagement")}</p>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Custom Role Permissions */}
+              <section>
+                <h2 className="text-sm font-medium mb-2">{t("settings.rolePermsTitle", "Rollen-Berechtigungen")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
+                <RolePermissionsPanel />
               </section>
             </div>
           )}

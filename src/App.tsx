@@ -8,6 +8,7 @@ import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
 import { GuidedModeProvider } from "@/hooks/useGuidedMode";
+import { PermissionsProvider } from "@/hooks/usePermissions";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import { lazy, Suspense } from "react";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
@@ -103,6 +104,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <FeatureFlagsProvider>
+            <PermissionsProvider>
             <GuidedModeProvider>
             <TeamProvider>
             <Routes>
@@ -159,6 +161,7 @@ const App = () => (
             </Routes>
             </TeamProvider>
             </GuidedModeProvider>
+            </PermissionsProvider>
             </FeatureFlagsProvider>
           </AuthProvider>
           <OfflineIndicator />
