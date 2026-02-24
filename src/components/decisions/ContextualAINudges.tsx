@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { AlertTriangle, Users, TrendingUp, Lightbulb, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   category: string;
@@ -26,81 +27,46 @@ const typeStyles = {
 };
 
 const ContextualAINudges = ({
-  category,
-  priority,
-  title,
-  description,
-  hasStakeholders,
-  riskScore,
-  similarDecisions = [],
+  category, priority, title, description, hasStakeholders, riskScore, similarDecisions = [],
 }: Props) => {
+  const { t } = useTranslation();
+
   const nudges = useMemo(() => {
     const result: Nudge[] = [];
 
-    // High priority without stakeholders
     if ((priority === "critical" || priority === "high") && !hasStakeholders) {
       result.push({
         id: "missing-stakeholders",
         icon: Users,
-        message: `${priority === "critical" ? "Kritische" : "Wichtige"} Entscheidungen ohne Stakeholder-Buy-in scheitern 3× häufiger. Reviewers hinzufügen empfohlen.`,
+        message: priority === "critical" ? t("nudges.missingStakeholdersCritical") : t("nudges.missingStakeholdersHigh"),
         type: "warning",
       });
     }
 
-    // Strategic without description
     if (category === "strategic" && (!description || description.length < 20)) {
-      result.push({
-        id: "missing-context",
-        icon: Lightbulb,
-        message: "Strategische Entscheidungen brauchen Kontext. Beschreibe Ziel, Alternativen und erwarteten Impact.",
-        type: "tip",
-      });
+      result.push({ id: "missing-context", icon: Lightbulb, message: t("nudges.missingContext"), type: "tip" });
     }
 
-    // High risk score
     if (riskScore && riskScore > 60) {
-      result.push({
-        id: "high-risk",
-        icon: Shield,
-        message: `Risiko-Score ${riskScore}% — Review durch Führungsebene empfohlen, bevor die Entscheidung genehmigt wird.`,
-        type: "warning",
-      });
+      result.push({ id: "high-risk", icon: Shield, message: t("nudges.highRisk", { score: riskScore }), type: "warning" });
     }
 
-    // Similar decisions failed
     const failedSimilar = similarDecisions.filter(d => d.status === "rejected");
     if (failedSimilar.length > 0) {
-      result.push({
-        id: "similar-failed",
-        icon: AlertTriangle,
-        message: `${failedSimilar.length} ähnliche Entscheidung(en) wurden abgelehnt. Prüfe die Lessons Learned bevor du fortfährst.`,
-        type: "warning",
-      });
+      result.push({ id: "similar-failed", icon: AlertTriangle, message: t("nudges.similarFailed", { count: failedSimilar.length }), type: "warning" });
     }
 
-    // Similar decisions successful
     const successSimilar = similarDecisions.filter(d => d.status === "implemented");
     if (successSimilar.length >= 2 && failedSimilar.length === 0) {
-      result.push({
-        id: "similar-success",
-        icon: TrendingUp,
-        message: `${successSimilar.length} ähnliche Entscheidungen waren erfolgreich — gutes Muster erkannt.`,
-        type: "insight",
-      });
+      result.push({ id: "similar-success", icon: TrendingUp, message: t("nudges.similarSuccess", { count: successSimilar.length }), type: "insight" });
     }
 
-    // Budget decisions without due date reminder
     if (category === "budget" && priority !== "low") {
-      result.push({
-        id: "budget-timeline",
-        icon: Lightbulb,
-        message: "Budget-Entscheidungen profitieren von klaren Fristen — stelle sicher, dass eine Deadline gesetzt ist.",
-        type: "tip",
-      });
+      result.push({ id: "budget-timeline", icon: Lightbulb, message: t("nudges.budgetTimeline"), type: "tip" });
     }
 
-    return result.slice(0, 3); // Max 3 nudges
-  }, [category, priority, title, description, hasStakeholders, riskScore, similarDecisions]);
+    return result.slice(0, 3);
+  }, [category, priority, title, description, hasStakeholders, riskScore, similarDecisions, t]);
 
   if (nudges.length === 0) return null;
 
