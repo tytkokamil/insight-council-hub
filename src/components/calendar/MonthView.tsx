@@ -1,8 +1,8 @@
 import { memo, DragEvent, useMemo } from "react";
-import { format, isSameMonth, isToday, differenceInCalendarDays } from "date-fns";
+import { format, isSameMonth, isToday, differenceInCalendarDays, addDays, startOfWeek } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, DollarSign } from "lucide-react";
-import { WEEKDAYS } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
@@ -68,7 +68,13 @@ const MonthView = memo(({
   monthDays, currentDate, decisionsByDate, tasksByDate = {},
   dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
 }: MonthViewProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  const weekdayHeaders = useMemo(() => {
+    const monday = startOfWeek(new Date(), { weekStartsOn: 1 });
+    return Array.from({ length: 7 }, (_, i) => format(addDays(monday, i), "EEEEEE", { locale: dateFnsLocale }));
+  }, [dateFnsLocale]);
 
   const weekMomentums = useMemo(() => {
     const result: Record<number, "green" | "yellow" | "red" | null> = {};
@@ -89,7 +95,7 @@ const MonthView = memo(({
     <div className="border border-border rounded-xl overflow-hidden bg-card">
       <div className="grid grid-cols-[28px_repeat(7,1fr)] border-b border-border">
         <div className="px-1 py-2.5" />
-        {WEEKDAYS.map((day) => (
+        {weekdayHeaders.map((day) => (
           <div key={day} className="px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {day}
           </div>
