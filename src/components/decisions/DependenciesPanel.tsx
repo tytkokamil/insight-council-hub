@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeams } from "@/hooks/useDecisions";
 import { GitBranch, Plus, Trash2, ArrowRight, CheckSquare, Lightbulb, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   decisionId: string;
@@ -12,9 +13,10 @@ interface Props {
 type EntityType = "decision" | "task";
 
 const DependenciesPanel = ({ decisionId }: Props) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: teams = [] } = useTeams();
-  const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
+  const teamMap = Object.fromEntries(teams.map(tm => [tm.id, tm.name]));
   const [dependencies, setDependencies] = useState<any[]>([]);
   const [dependents, setDependents] = useState<any[]>([]);
   const [allDecisions, setAllDecisions] = useState<any[]>([]);
@@ -25,19 +27,17 @@ const DependenciesPanel = ({ decisionId }: Props) => {
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
-    // Outgoing: this decision is source
     const { data: depsOut } = await supabase
       .from("decision_dependencies")
       .select("*, target_decision:decisions!decision_dependencies_target_decision_id_fkey(id, title, status, team_id)")
       .eq("source_decision_id", decisionId);
 
-    // Also fetch task targets for outgoing deps
     const outgoing = depsOut || [];
     const taskTargetIds = outgoing.filter(d => d.target_task_id).map(d => d.target_task_id);
     let taskTargets: Record<string, any> = {};
     if (taskTargetIds.length > 0) {
       const { data: tasks } = await supabase.from("tasks").select("id, title, status").in("id", taskTargetIds);
-      tasks?.forEach(t => { taskTargets[t.id] = t; });
+      tasks?.forEach(tsk => { taskTargets[tsk.id] = tsk; });
     }
     const enrichedOut = outgoing.map(d => ({
       ...d,
@@ -45,7 +45,6 @@ const DependenciesPanel = ({ decisionId }: Props) => {
       target_type: d.target_decision_id ? "decision" : "task",
     }));
 
-    // Incoming: this decision is target
     const { data: depsIn } = await supabase
       .from("decision_dependencies")
       .select("*, source_decision:decisions!decision_dependencies_source_decision_id_fkey(id, title, status, team_id)")
@@ -56,7 +55,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     let taskSources: Record<string, any> = {};
     if (taskSourceIds.length > 0) {
       const { data: tasks } = await supabase.from("tasks").select("id, title, status").in("id", taskSourceIds);
-      tasks?.forEach(t => { taskSources[t.id] = t; });
+      tasks?.forEach(tsk => { taskSources[tsk.id] = tsk; });
     }
     const enrichedIn = incoming.map(d => ({
       ...d,
@@ -64,7 +63,6 @@ const DependenciesPanel = ({ decisionId }: Props) => {
       source_type: d.source_decision_id ? "decision" : "task",
     }));
 
-    // Also fetch dependencies where tasks point TO this decision
     const { data: taskDepsIn } = await supabase
       .from("decision_dependencies")
       .select("*")
@@ -75,13 +73,12 @@ const DependenciesPanel = ({ decisionId }: Props) => {
       const ids = taskDepsIn.filter(d => d.source_task_id).map(d => d.source_task_id);
       if (ids.length > 0) {
         const { data: tasks } = await supabase.from("tasks").select("id, title, status").in("id", ids);
-        tasks?.forEach(t => { taskSources[t.id] = t; });
+        tasks?.forEach(tsk => { taskSources[tsk.id] = tsk; });
       }
       taskDepsIn.forEach(d => {
         if (!enrichedIn.find(e => e.id === d.id)) {
           enrichedIn.push({
-            ...d,
-            source_decision: null,
+            ...d, source_decision: null,
             source: d.source_task_id ? taskSources[d.source_task_id] : null,
             source_type: "task",
           });
@@ -92,7 +89,6 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     setDependencies(enrichedOut);
     setDependents(enrichedIn);
 
-    // Fetch available decisions and tasks
     const [decs, tasks] = await Promise.all([
       supabase.from("decisions").select("id, title").neq("id", decisionId),
       supabase.from("tasks").select("id, title").eq("status", "open").order("created_at", { ascending: false }),
@@ -101,23 +97,14 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     setAllTasks(tasks.data || []);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [decisionId]);
+  useEffect(() => { fetchData(); }, [decisionId]);
 
   const addDependency = async () => {
     if (!selectedEntity || !user) return;
     setLoading(true);
-    const insert: any = {
-      dependency_type: depType,
-      created_by: user.id,
-      source_decision_id: decisionId,
-    };
-    if (entityType === "decision") {
-      insert.target_decision_id = selectedEntity;
-    } else {
-      insert.target_task_id = selectedEntity;
-    }
+    const insert: any = { dependency_type: depType, created_by: user.id, source_decision_id: decisionId };
+    if (entityType === "decision") { insert.target_decision_id = selectedEntity; }
+    else { insert.target_task_id = selectedEntity; }
     await supabase.from("decision_dependencies").insert(insert);
     setSelectedEntity("");
     await fetchData();
@@ -135,7 +122,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
   ]);
   const available = entityType === "decision"
     ? allDecisions.filter(d => !existingTargetIds.has(d.id))
-    : allTasks.filter(t => !existingTargetIds.has(t.id));
+    : allTasks.filter(tsk => !existingTargetIds.has(tsk.id));
 
   const statusDot = (status: string) => {
     const colors: Record<string, string> = {
@@ -147,7 +134,9 @@ const DependenciesPanel = ({ decisionId }: Props) => {
   };
 
   const typeLabel: Record<string, string> = {
-    blocks: "blockiert", influences: "beeinflusst", requires: "benötigt",
+    blocks: t("dependencies.typeBlocks"),
+    influences: t("dependencies.typeInfluences"),
+    requires: t("dependencies.typeRequires"),
   };
 
   const entityIcon = (type: string) =>
@@ -157,39 +146,27 @@ const DependenciesPanel = ({ decisionId }: Props) => {
 
   return (
     <div className="space-y-4">
-      {/* Add dependency */}
       <div className="space-y-2">
         <label className="text-sm font-medium flex items-center gap-2">
           <GitBranch className="w-4 h-4" />
-          Verknüpfung hinzufügen
+          {t("dependencies.addLink")}
         </label>
         <div className="flex gap-2 flex-wrap">
-          <select
-            value={entityType}
-            onChange={(e) => { setEntityType(e.target.value as EntityType); setSelectedEntity(""); }}
-            className="h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm w-28"
-          >
-            <option value="task">Aufgabe</option>
-            <option value="decision">Entscheidung</option>
+          <select value={entityType} onChange={(e) => { setEntityType(e.target.value as EntityType); setSelectedEntity(""); }}
+            className="h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm w-28">
+            <option value="task">{t("dependencies.task")}</option>
+            <option value="decision">{t("dependencies.decision")}</option>
           </select>
-          <select
-            value={depType}
-            onChange={(e) => setDepType(e.target.value as any)}
-            className="h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm w-32"
-          >
-            <option value="requires">Benötigt</option>
-            <option value="blocks">Blockiert</option>
-            <option value="influences">Beeinflusst</option>
+          <select value={depType} onChange={(e) => setDepType(e.target.value as any)}
+            className="h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm w-32">
+            <option value="requires">{t("dependencies.requires")}</option>
+            <option value="blocks">{t("dependencies.blocks")}</option>
+            <option value="influences">{t("dependencies.influences")}</option>
           </select>
-          <select
-            value={selectedEntity}
-            onChange={(e) => setSelectedEntity(e.target.value)}
-            className="flex-1 min-w-[160px] h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm"
-          >
-            <option value="">{entityType === "task" ? "Aufgabe" : "Entscheidung"} wählen...</option>
-            {available.map((d) => (
-              <option key={d.id} value={d.id}>{d.title}</option>
-            ))}
+          <select value={selectedEntity} onChange={(e) => setSelectedEntity(e.target.value)}
+            className="flex-1 min-w-[160px] h-9 px-2 rounded-lg bg-muted/50 border border-border text-sm">
+            <option value="">{entityType === "task" ? t("dependencies.selectTask") : t("dependencies.selectDecision")}</option>
+            {available.map((d) => (<option key={d.id} value={d.id}>{d.title}</option>))}
           </select>
           <Button size="sm" onClick={addDependency} disabled={!selectedEntity || loading}>
             <Plus className="w-4 h-4" />
@@ -197,11 +174,10 @@ const DependenciesPanel = ({ decisionId }: Props) => {
         </div>
       </div>
 
-      {/* Outgoing */}
       {dependencies.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">
-            Diese Entscheidung beeinflusst ({dependencies.length})
+            {t("dependencies.outgoing", { count: dependencies.length })}
           </h4>
           {dependencies.map((dep) => (
             <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/20 border border-border/50">
@@ -226,11 +202,10 @@ const DependenciesPanel = ({ decisionId }: Props) => {
         </div>
       )}
 
-      {/* Incoming */}
       {dependents.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">
-            Abhängig von ({dependents.length})
+            {t("dependencies.incoming", { count: dependents.length })}
           </h4>
           {dependents.map((dep) => (
             <div key={dep.id} className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/20 border border-border/50">
@@ -255,8 +230,8 @@ const DependenciesPanel = ({ decisionId }: Props) => {
       {dependencies.length === 0 && dependents.length === 0 && (
         <div className="text-center py-6 text-muted-foreground">
           <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-40" />
-          <p className="text-sm">Keine Verknüpfungen definiert</p>
-          <p className="text-xs">Verknüpfe diese Entscheidung mit Aufgaben oder anderen Entscheidungen.</p>
+          <p className="text-sm">{t("dependencies.noLinks")}</p>
+          <p className="text-xs">{t("dependencies.noLinksHint")}</p>
         </div>
       )}
     </div>
