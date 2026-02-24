@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decivio — Sauberes RBAC System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #333; line-height: 1.6; }
+
+  .cover {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2E75B6 100%);
+    color: white; padding: 70px 40px; text-align: center;
+  }
+  .cover h1 { font-size: 52px; letter-spacing: 5px; margin-bottom: 10px; }
+  .cover .sub { font-size: 22px; opacity: 0.85; margin-bottom: 6px; }
+  .cover .tag { font-size: 15px; opacity: 0.6; font-style: italic; margin-bottom: 40px; }
+  .cover-pills { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+  .pill { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 8px 20px; font-size: 14px; }
+
+  .toc { background: white; max-width: 960px; margin: 32px auto; border-radius: 12px; padding: 32px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .toc h3 { color: #1E3A5F; margin-bottom: 16px; font-size: 18px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .toc-item { font-size: 14px; color: #2E75B6; padding: 4px 0; }
+  .toc-item span { color: #999; margin-right: 8px; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 0 20px 60px; }
+  .section { background: white; border-radius: 12px; padding: 40px; margin-bottom: 28px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .section-num { display: inline-block; background: #1E3A5F; color: white; border-radius: 50%; width: 32px; height: 32px; text-align: center; line-height: 32px; font-size: 15px; font-weight: 700; margin-right: 10px; }
+  h2 { font-size: 26px; color: #1E3A5F; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 3px solid #2E75B6; display: flex; align-items: center; }
+  h3 { font-size: 18px; color: #1E3A5F; margin: 28px 0 12px; }
+  h4 { font-size: 15px; color: #2E75B6; margin: 16px 0 8px; font-weight: 700; }
+  p { color: #555; margin-bottom: 12px; font-size: 15px; }
+
+  .box { border-radius: 8px; padding: 18px 22px; margin: 14px 0; }
+  .box-blue { background: #EBF5FB; border-left: 4px solid #2E75B6; }
+  .box-green { background: #f0fdf4; border-left: 4px solid #1A6B3C; }
+  .box-red { background: #fdf0f0; border-left: 4px solid #c0392b; }
+  .box-orange { background: #FFF8F0; border-left: 4px solid #C75B00; }
+  .box-gray { background: #f8f9fa; border-left: 4px solid #999; }
+  .box-title { font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+  .box-blue .box-title { color: #1E3A5F; }
+  .box-green .box-title { color: #1A6B3C; }
+  .box-red .box-title { color: #c0392b; }
+  .box-orange .box-title { color: #C75B00; }
+  .box-gray .box-title { color: #555; }
+
+  /* Role Cards */
+  .role-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0; }
+  .role-card { border-radius: 10px; padding: 20px; border: 2px solid; }
+  .role-owner { background: #fef9f0; border-color: #f39c12; }
+  .role-admin { background: #EBF5FB; border-color: #2E75B6; }
+  .role-executive { background: #f5f0fa; border-color: #8e44ad; }
+  .role-member { background: #f0fdf4; border-color: #1A6B3C; }
+  .role-reviewer { background: #f0f8ff; border-color: #3498db; }
+  .role-viewer { background: #f8f9fa; border-color: #95a5a6; }
+  .role-card h4 { font-size: 16px; margin-bottom: 4px; margin-top: 0; }
+  .role-owner h4 { color: #e67e22; }
+  .role-admin h4 { color: #1E3A5F; }
+  .role-executive h4 { color: #8e44ad; }
+  .role-member h4 { color: #1A6B3C; }
+  .role-reviewer h4 { color: #3498db; }
+  .role-viewer h4 { color: #7f8c8d; }
+  .role-card .role-user { font-size: 12px; color: #888; margin-bottom: 10px; font-style: italic; }
+  .role-card ul { padding-left: 16px; }
+  .role-card li { font-size: 12px; color: #555; margin-bottom: 3px; }
+  .role-card .role-tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
+  .tag-owner { background: #fdebd0; color: #e67e22; }
+  .tag-admin { background: #d6eaf8; color: #1E3A5F; }
+  .tag-exec { background: #e8daef; color: #8e44ad; }
+  .tag-member { background: #d4efdf; color: #1A6B3C; }
+  .tag-reviewer { background: #d6eaf8; color: #3498db; }
+  .tag-viewer { background: #eaecee; color: #7f8c8d; }
+
+  /* Permission Matrix */
+  .matrix-wrap { overflow-x: auto; margin: 20px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
+  thead tr { background: #1E3A5F; color: white; }
+  thead th { padding: 10px 12px; text-align: center; font-size: 12px; white-space: nowrap; }
+  thead th:first-child { text-align: left; }
+  tbody tr:nth-child(even) { background: #f5f7fa; }
+  tbody tr:nth-child(odd) { background: white; }
+  tbody td { padding: 8px 12px; color: #444; border-bottom: 1px solid #e0e0e0; text-align: center; font-size: 13px; }
+  tbody td:first-child { text-align: left; font-weight: 500; color: #1E3A5F; }
+  .section-row td { background: #d6e4f0 !important; font-weight: 700; color: #1E3A5F !important; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .check { color: #1A6B3C; font-size: 16px; }
+  .cross { color: #ccc; font-size: 16px; }
+  .partial { color: #C75B00; font-size: 13px; font-weight: 600; }
+
+  /* DB Tables */
+  .db-table { background: #1e2d3d; color: #a8d8ea; font-family: 'Courier New', monospace; font-size: 13px; border-radius: 8px; padding: 20px; margin: 14px 0; line-height: 2; }
+  .db-comment { color: #5a8a7a; }
+  .db-type { color: #f0c674; }
+  .db-string { color: #98e4a0; }
+  .db-key { color: #e06c75; }
+
+  /* Flow */
+  .flow { display: flex; gap: 0; margin: 20px 0; align-items: stretch; flex-wrap: wrap; }
+  .flow-step { flex: 1; min-width: 150px; }
+  .flow-box { background: #EBF5FB; border: 2px solid #2E75B6; border-radius: 8px; padding: 14px; text-align: center; font-size: 13px; color: #1E3A5F; font-weight: 600; margin: 0 4px; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .flow-arrow { display: flex; align-items: center; color: #2E75B6; font-size: 20px; padding: 0 2px; }
+
+  /* Two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+  /* Steps */
+  .steps { margin: 20px 0; }
+  .step { display: flex; gap: 14px; margin-bottom: 12px; }
+  .step-num { background: #2E75B6; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; margin-top: 3px; }
+  .step-content { flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px 16px; }
+  .step-content strong { display: block; color: #1E3A5F; font-size: 14px; margin-bottom: 4px; }
+  .step-content p { color: #555; font-size: 13px; margin: 0; }
+
+  /* Timeline */
+  .timeline { margin: 20px 0; }
+  .timeline-item { display: flex; gap: 16px; margin-bottom: 16px; }
+  .timeline-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .dot-now { background: #1A6B3C; }
+  .dot-soon { background: #2E75B6; }
+  .dot-later { background: #8e44ad; }
+  .timeline-line { width: 2px; background: #ddd; margin: 0 6px; }
+  .timeline-content strong { font-size: 14px; color: #1E3A5F; display: block; margin-bottom: 4px; }
+  .timeline-content p { font-size: 13px; color: #555; margin: 0; }
+
+  /* Priority table */
+  .prio-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 16px 0; }
+  .prio-table th { background: #1E3A5F; color: white; padding: 10px 14px; text-align: left; }
+  .prio-table td { padding: 9px 14px; border-bottom: 1px solid #e0e0e0; }
+  .prio-table tr:nth-child(even) td { background: #f5f7fa; }
+  .effort-low { color: #1A6B3C; font-weight: 600; }
+  .effort-med { color: #C75B00; font-weight: 600; }
+  .effort-high { color: #c0392b; font-weight: 600; }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+  .badge-now { background: #d4edda; color: #1A6B3C; }
+  .badge-later { background: #d6e4f0; color: #1E3A5F; }
+
+  .footer { text-align: center; color: #aaa; font-size: 13px; padding: 40px 20px; }
+
+  @media (max-width: 700px) {
+    .role-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .toc-grid { grid-template-columns: 1fr; }
+    .cover h1 { font-size: 36px; }
+  }
+  @media (max-width: 500px) {
+    .role-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>DECIVIO</h1>
+  <div class="sub">Sauberes RBAC — Role-Based Access Control</div>
+  <div class="tag">Vollständige Beschreibung des langfristig richtigen Rechtesystems</div>
+  <div class="cover-pills">
+    <div class="pill">6 Rollen</div>
+    <div class="pill">2 Dimensionen</div>
+    <div class="pill">Supabase RLS</div>
+    <div class="pill">Enterprise-ready</div>
+    <div class="pill">SSO-kompatibel</div>
+  </div>
+</div>
+
+<div class="toc">
+  <h3>Inhalt</h3>
+  <div class="toc-grid">
+    <div class="toc-item"><span>1</span> Das Grundprinzip</div>
+    <div class="toc-item"><span>2</span> Die 6 Rollen</div>
+    <div class="toc-item"><span>3</span> Permission Matrix</div>
+    <div class="toc-item"><span>4</span> Datenbankstruktur</div>
+    <div class="toc-item"><span>5</span> RLS-Policies</div>
+    <div class="toc-item"><span>6</span> Frontend-Logik</div>
+    <div class="toc-item"><span>7</span> Rollen + Plan kombiniert</div>
+    <div class="toc-item"><span>8</span> Progressive Disclosure Integration</div>
+    <div class="toc-item"><span>9</span> Implementierungsplan</div>
+    <div class="toc-item"><span>10</span> Was jetzt, was später</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- 1. GRUNDPRINZIP -->
+  <div class="section">
+    <h2><span class="section-num">1</span> Das Grundprinzip</h2>
+    <p>Ein sauberes RBAC trennt zwei Dimensionen die heute in Decivio vermischt werden. Diese Trennung ist der Kern von allem.</p>
+
+    <div class="two-col">
+      <div class="box box-blue">
+        <div class="box-title">Dimension 1 — Rollen (WER darf WAS tun)</div>
+        <p>Steuert Aktionen: Darf dieser Nutzer eine Entscheidung erstellen? Darf er ein Review abgeben? Darf er Nutzer einladen?</p>
+        <p style="margin:0;"><strong>Gespeichert in:</strong> <code>org_members.role</code></p>
+      </div>
+      <div class="box box-orange">
+        <div class="box-title">Dimension 2 — Plan (WELCHE Features sind verfügbar)</div>
+        <p>Steuert Features: Ist der Risk Register für diese Organisation freigeschaltet? Ist der Executive Hub buchbar?</p>
+        <p style="margin:0;"><strong>Gespeichert in:</strong> <code>organizations.plan</code></p>
+      </div>
+    </div>
+
+    <div class="box box-green">
+      <div class="box-title">Die goldene Regel</div>
+      <p style="margin:0;">Rollen und Plan sind unabhängig. Ein Viewer auf Enterprise-Plan sieht mehr Features als ein Viewer auf Starter — aber er kann trotzdem nichts bearbeiten. Ein Owner auf Starter-Plan kann alles verwalten — hat aber weniger Features zur Verfügung.</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-step"><div class="flow-box">Nutzer macht Aktion</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box">Rollen-Check: Darf er das?</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box">Plan-Check: Ist Feature verfügbar?</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><div class="flow-box">Beide ✅ → Erlaubt</div></div>
+    </div>
+  </div>
+
+  <!-- 2. DIE 6 ROLLEN -->
+  <div class="section">
+    <h2><span class="section-num">2</span> Die 6 Rollen</h2>
+    <p>Jede Rolle hat eine klare Definition, einen typischen Nutzer und abgegrenzte Rechte.</p>
+
+    <div class="role-grid">
+      <div class="role-card role-owner">
+        <div class="role-tag tag-owner">OWNER</div>
+        <h4>👑 Owner</h4>
+        <div class="role-user">Gründer, IT-Verantwortlicher, Org-Admin</div>
+        <ul>
+          <li>Alles was Admin kann</li>
+          <li>Billing verwalten</li>
+          <li>Plan upgraden / downgraden</li>
+          <li>Org löschen oder umbenennen</li>
+          <li>Andere Owner ernennen</li>
+          <li>Kann nicht entfernt werden außer durch anderen Owner</li>
+        </ul>
+      </div>
+
+      <div class="role-card role-admin">
+        <div class="role-tag tag-admin">ADMIN</div>
+        <h4>⚙️ Admin</h4>
+        <div class="role-user">Abteilungsleiter, Operations Manager</div>
+        <ul>
+          <li>Nutzer einladen und Rollen vergeben</li>
+          <li>Templates erstellen und bearbeiten</li>
+          <li>SLA-Regeln konfigurieren</li>
+          <li>Automationen verwalten</li>
+          <li>Alle Entscheidungen sehen und bearbeiten</li>
+          <li>Audit Trail einsehen</li>
+          <li>Teams erstellen und verwalten</li>
+        </ul>
+      </div>
+
+      <div class="role-card role-executive">
+        <div class="role-tag tag-exec">EXECUTIVE</div>
+        <h4>📊 Executive</h4>
+        <div class="role-user">CFO, CEO, COO, Vorstand</div>
+        <ul>
+          <li>Alle Entscheidungen lesen (org-weit)</li>
+          <li>Executive Hub und Board Report</li>
+          <li>Risk Register lesen</li>
+          <li>Analytics und Insights</li>
+          <li>CEO Briefing</li>
+          <li>Keine Entscheidungen erstellen</li>
+          <li>Kein User-Management</li>
+        </ul>
+      </div>
+
+      <div class="role-card role-member">
+        <div class="role-tag tag-member">MEMBER</div>
+        <h4>🎯 Member</h4>
+        <div class="role-user">Projektleiter, Teamleiter, normaler Nutzer</div>
+        <ul>
+          <li>Entscheidungen im eigenen Team erstellen</li>
+          <li>Reviews abgeben</li>
+          <li>Tasks erstellen und verwalten</li>
+          <li>Eigene Entscheidungen bearbeiten</li>
+          <li>Risiken erfassen (im eigenen Team)</li>
+          <li>Templates nutzen (nicht erstellen)</li>
+          <li>Nur eigenes Team sehen</li>
+        </ul>
+      </div>
+
+      <div class="role-card role-reviewer">
+        <div class="role-tag tag-reviewer">REVIEWER</div>
+        <h4>🔍 Reviewer</h4>
+        <div class="role-user">Externe Berater, Compliance, Legal</div>
+        <ul>
+          <li>Zugewiesene Entscheidungen lesen</li>
+          <li>Reviews abgeben (Approve / Reject)</li>
+          <li>Kommentare schreiben</li>
+          <li>Keine eigenen Entscheidungen erstellen</li>
+          <li>Kein Zugriff auf Analytics</li>
+          <li>Kein Zugriff auf Risk Register</li>
+          <li>Sieht nur explizit zugewiesene Items</li>
+        </ul>
+      </div>
+
+      <div class="role-card role-viewer">
+        <div class="role-tag tag-viewer">VIEWER</div>
+        <h4>👁️ Viewer</h4>
+        <div class="role-user">Aufsichtsrat, externe Stakeholder</div>
+        <ul>
+          <li>Nur lesen — gar keine Aktionen</li>
+          <li>Entscheidungen des eigenen Teams lesen</li>
+          <li>Kein Analytics-Zugriff</li>
+          <li>Kein Risk Register</li>
+          <li>Kein Audit Trail</li>
+          <li>Kein Kommentieren</li>
+          <li>Kein Schreiben irgendwo</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box box-gray">
+      <div class="box-title">Wichtige Regel: Rollen sind org-weit</div>
+      <p style="margin:0;">Ein Nutzer hat eine Rolle für die gesamte Organisation. Team-spezifische Einschränkungen werden über <code>team_members</code> Tabelle zusätzlich geregelt — aber die Basis-Rechte kommen immer aus der Org-Rolle. Ein Member sieht standardmäßig nur sein Team — nicht weil er kein Admin ist, sondern weil RLS das steuert.</p>
+    </div>
+  </div>
+
+  <!-- 3. PERMISSION MATRIX -->
+  <div class="section">
+    <h2><span class="section-num">3</span> Permission Matrix</h2>
+    <p>Vollständige Übersicht welche Rolle was darf. ✅ = erlaubt, ✗ = nicht erlaubt, 〰 = eingeschränkt.</p>
+
+    <div class="matrix-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Aktion / Feature</th>
+            <th>👑 Owner</th>
+            <th>⚙️ Admin</th>
+            <th>📊 Executive</th>
+            <th>🎯 Member</th>
+            <th>🔍 Reviewer</th>
+            <th>👁️ Viewer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="7">ENTSCHEIDUNGEN</td></tr>
+          <tr><td>Entscheidungen lesen (eigenes Team)</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="partial">〰 nur zugewiesene</td><td class="check">✅</td></tr>
+          <tr><td>Entscheidungen lesen (alle Teams)</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Entscheidung erstellen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Eigene Entscheidung bearbeiten</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Fremde Entscheidung bearbeiten</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Entscheidung löschen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="partial">〰 nur eigene</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Status ändern</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="partial">〰 eigene</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Vertrauliche Entscheidungen sehen</td><td class="check">✅</td><td class="check">✅</td><td class="partial">〰 explizit geteilt</td><td class="partial">〰 explizit geteilt</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+
+          <tr class="section-row"><td colspan="7">REVIEWS & KOMMENTARE</td></tr>
+          <tr><td>Review abgeben</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td></tr>
+          <tr><td>Reviewer zuweisen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="partial">〰 eigene Entsch.</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Kommentare schreiben</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td></tr>
+          <tr><td>Kommentare lesen</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td></tr>
+
+          <tr class="section-row"><td colspan="7">TASKS & RISIKEN</td></tr>
+          <tr><td>Tasks erstellen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Tasks bearbeiten</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="partial">〰 eigene/zugewiesene</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Risiken erfassen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Risk Register lesen</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="partial">〰 eigenes Team</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+
+          <tr class="section-row"><td colspan="7">ANALYTICS & INTELLIGENCE</td></tr>
+          <tr><td>Analytics Hub</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Executive Hub / Board Report</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Decision Graph / DNA</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Process Hub</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+
+          <tr class="section-row"><td colspan="7">GOVERNANCE & SYSTEM</td></tr>
+          <tr><td>Templates erstellen / bearbeiten</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Templates nutzen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>SLA-Regeln konfigurieren</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Automationen verwalten</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Audit Trail einsehen</td><td class="check">✅</td><td class="check">✅</td><td class="partial">〰 lesen</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+
+          <tr class="section-row"><td colspan="7">USER MANAGEMENT & ORG</td></tr>
+          <tr><td>Nutzer einladen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Rollen vergeben (bis Admin)</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Owner ernennen</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Billing verwalten</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Plan ändern</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+          <tr><td>Org-Einstellungen</td><td class="check">✅</td><td class="check">✅</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4. DATENBANKSTRUKTUR -->
+  <div class="section">
+    <h2><span class="section-num">4</span> Datenbankstruktur</h2>
+    <p>Drei neue / geänderte Tabellen. Der Rest der bestehenden 40+ Tabellen bleibt unverändert.</p>
+
+    <h3>4.1 — org_members (neue zentrale Tabelle)</h3>
+    <p>Ersetzt die bisherige team_members-Logik für Org-weite Rollen. Team-Mitgliedschaft bleibt separat.</p>
+    <div class="db-table">
+<span class="db-comment">-- Zentrale Rollen-Tabelle pro Organisation</span>
+CREATE TABLE org_members (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  role        <span class="db-type">TEXT</span> NOT NULL DEFAULT <span class="db-string">'member'</span>,
+              <span class="db-comment">-- 'owner' | 'admin' | 'executive' | 'member' | 'reviewer' | 'viewer'</span>
+  invited_by  UUID REFERENCES profiles(id),
+  joined_at   <span class="db-type">TIMESTAMPTZ</span> DEFAULT now(),
+  created_at  <span class="db-type">TIMESTAMPTZ</span> DEFAULT now(),
+
+  UNIQUE(org_id, user_id),
+  CHECK (role IN (<span class="db-string">'owner'</span>, <span class="db-string">'admin'</span>, <span class="db-string">'executive'</span>, <span class="db-string">'member'</span>, <span class="db-string">'reviewer'</span>, <span class="db-string">'viewer'</span>))
+);
+    </div>
+
+    <h3>4.2 — profiles (2 neue Felder)</h3>
+    <div class="db-table">
+<span class="db-comment">-- Bestehende profiles Tabelle erweitern</span>
+ALTER TABLE profiles ADD COLUMN
+  view_mode   <span class="db-type">TEXT</span> DEFAULT <span class="db-string">'default'</span>;
+              <span class="db-comment">-- Steuert Dashboard-Ansicht: 'default' | 'executive' | 'admin'</span>
+              <span class="db-comment">-- Wird beim ersten Login aus org_members.role abgeleitet</span>
+
+ALTER TABLE profiles ADD COLUMN
+  decision_count  <span class="db-type">INTEGER</span> DEFAULT 0;
+              <span class="db-comment">-- Für Progressive Disclosure — wird bei jeder neuen Entscheidung hochgezählt</span>
+    </div>
+
+    <h3>4.3 — role_permissions (optional, für maximale Flexibilität)</h3>
+    <p>Nur nötig wenn Enterprise-Kunden Custom-Rollen brauchen. Für den Start nicht nötig — Permissions sind hardcoded im Code.</p>
+    <div class="db-table">
+<span class="db-comment">-- Nur für Phase 2 / Enterprise Custom Roles</span>
+CREATE TABLE role_permissions (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id      UUID REFERENCES organizations(id),
+              <span class="db-comment">-- null = globale Default-Permission</span>
+  role        <span class="db-type">TEXT</span> NOT NULL,
+  permission  <span class="db-type">TEXT</span> NOT NULL,
+              <span class="db-comment">-- z.B. 'decisions.create', 'risk.read', 'analytics.view'</span>
+  enabled     <span class="db-type">BOOLEAN</span> DEFAULT true,
+  UNIQUE(org_id, role, permission)
+);
+    </div>
+
+    <h3>4.4 — Hilfs-Funktion (wichtig für RLS)</h3>
+    <div class="db-table">
+<span class="db-comment">-- Funktion die die Rolle des aktuellen Nutzers zurückgibt</span>
+CREATE OR REPLACE FUNCTION get_user_role(p_org_id UUID)
+RETURNS TEXT AS $$
+  SELECT role FROM org_members
+  WHERE user_id = auth.uid() AND org_id = p_org_id
+  LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+<span class="db-comment">-- Funktion die prüft ob Nutzer mindestens eine bestimmte Rolle hat</span>
+CREATE OR REPLACE FUNCTION has_role(p_org_id UUID, p_min_role TEXT)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM org_members
+    WHERE user_id = auth.uid()
+      AND org_id = p_org_id
+      AND role = ANY(
+        CASE p_min_role
+          WHEN <span class="db-string">'viewer'</span>   THEN ARRAY[<span class="db-string">'viewer'</span>,<span class="db-string">'reviewer'</span>,<span class="db-string">'member'</span>,<span class="db-string">'executive'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'owner'</span>]
+          WHEN <span class="db-string">'member'</span>   THEN ARRAY[<span class="db-string">'member'</span>,<span class="db-string">'executive'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'owner'</span>]
+          WHEN <span class="db-string">'executive'</span> THEN ARRAY[<span class="db-string">'executive'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'owner'</span>]
+          WHEN <span class="db-string">'admin'</span>     THEN ARRAY[<span class="db-string">'admin'</span>,<span class="db-string">'owner'</span>]
+          WHEN <span class="db-string">'owner'</span>     THEN ARRAY[<span class="db-string">'owner'</span>]
+        END
+      )
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+    </div>
+  </div>
+
+  <!-- 5. RLS -->
+  <div class="section">
+    <h2><span class="section-num">5</span> RLS-Policies (Supabase)</h2>
+    <p>Row-Level Security stellt sicher dass die Rechte nicht nur im Frontend sondern direkt in der Datenbank durchgesetzt werden. Kein Frontend-Bypass möglich.</p>
+
+    <h3>Decisions — Beispiel RLS</h3>
+    <div class="db-table">
+<span class="db-comment">-- Lesen: Eigenes Team ODER Admin/Executive/Owner</span>
+CREATE POLICY decisions_select ON decisions FOR SELECT
+USING (
+  team_id IN (
+    SELECT team_id FROM team_members WHERE user_id = auth.uid()
+  )
+  OR has_role(org_id, <span class="db-string">'executive'</span>)
+  OR (confidential = false AND has_role(org_id, <span class="db-string">'viewer'</span>))
+);
+
+<span class="db-comment">-- Erstellen: Nur Member, Admin, Owner</span>
+CREATE POLICY decisions_insert ON decisions FOR INSERT
+WITH CHECK (
+  has_role(org_id, <span class="db-string">'member'</span>)
+  AND team_id IN (
+    SELECT team_id FROM team_members WHERE user_id = auth.uid()
+  )
+);
+
+<span class="db-comment">-- Bearbeiten: Eigene Entscheidung (Member) ODER Admin/Owner</span>
+CREATE POLICY decisions_update ON decisions FOR UPDATE
+USING (
+  (owner_id = auth.uid() AND has_role(org_id, <span class="db-string">'member'</span>))
+  OR has_role(org_id, <span class="db-string">'admin'</span>)
+);
+    </div>
+
+    <h3>Analytics — nur für Executive+</h3>
+    <div class="db-table">
+<span class="db-comment">-- Briefings: Nur Executive, Admin, Owner</span>
+CREATE POLICY briefings_select ON briefings FOR SELECT
+USING (
+  has_role(org_id, <span class="db-string">'executive'</span>)
+  OR user_id = auth.uid()
+);
+
+<span class="db-comment">-- Risks: Lesen für Member (eigenes Team), Executive/Admin/Owner (alle)</span>
+CREATE POLICY risks_select ON risks FOR SELECT
+USING (
+  (has_role(org_id, <span class="db-string">'member'</span>) AND team_id IN (
+    SELECT team_id FROM team_members WHERE user_id = auth.uid()
+  ))
+  OR has_role(org_id, <span class="db-string">'executive'</span>)
+);
+    </div>
+  </div>
+
+  <!-- 6. FRONTEND -->
+  <div class="section">
+    <h2><span class="section-num">6</span> Frontend-Logik</h2>
+    <p>Ein zentraler Hook der alles steuert. Alle Komponenten fragen nur diesen Hook — nie direkt die Datenbank.</p>
+
+    <h3>usePermissions Hook (neu)</h3>
+    <div class="db-table">
+<span class="db-comment">// hooks/usePermissions.ts</span>
+const usePermissions = () => {
+  const { profile } = useAuth();
+  const { orgMember } = useOrgMember();
+
+  const role = orgMember?.role ?? <span class="db-string">'viewer'</span>;
+
+  const can = {
+    <span class="db-comment">// Entscheidungen</span>
+    createDecision:  [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'member'</span>].includes(role),
+    editAnyDecision: [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>].includes(role),
+    deleteDecision:  [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>].includes(role),
+
+    <span class="db-comment">// Reviews</span>
+    submitReview:    [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'member'</span>,<span class="db-string">'reviewer'</span>].includes(role),
+    assignReviewer:  [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'member'</span>].includes(role),
+
+    <span class="db-comment">// Analytics</span>
+    viewAnalytics:   [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'executive'</span>].includes(role),
+    viewExecutiveHub:[<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>,<span class="db-string">'executive'</span>].includes(role),
+
+    <span class="db-comment">// Administration</span>
+    manageUsers:     [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>].includes(role),
+    manageTemplates: [<span class="db-string">'owner'</span>,<span class="db-string">'admin'</span>].includes(role),
+    manageBilling:   role === <span class="db-string">'owner'</span>,
+  };
+
+  return { role, can };
+};
+    </div>
+
+    <h3>Nutzung in Komponenten</h3>
+    <div class="db-table">
+<span class="db-comment">// Beispiel: Sidebar</span>
+const { can } = usePermissions();
+const { features } = useFeatureFlags(); <span class="db-comment">// Plan-basiert</span>
+
+<span class="db-comment">// Nur zeigen wenn Rolle UND Plan es erlauben</span>
+{can.viewAnalytics && features.analyticsHub && (
+  &lt;SidebarLink to="/analytics" label="Analytics Hub" /&gt;
+)}
+
+<span class="db-comment">// Beispiel: Button</span>
+{can.createDecision && (
+  &lt;Button onClick={openNewDecisionDialog}&gt;
+    Neue Entscheidung
+  &lt;/Button&gt;
+)}
+    </div>
+
+    <h3>Dashboard-View basierend auf Rolle</h3>
+    <div class="db-table">
+<span class="db-comment">// Dashboard.tsx</span>
+const { role } = usePermissions();
+const { decision_count } = useProfile();
+
+<span class="db-comment">// Neuer Nutzer — noch kein Daten</span>
+if (decision_count < 10) return &lt;OnboardingDashboard /&gt;;
+
+<span class="db-comment">// Executive bekommt andere Standard-Widgets</span>
+if (role === <span class="db-string">'executive'</span>) return &lt;ExecutiveDashboard /&gt;;
+
+<span class="db-comment">// Admin bekommt Governance-fokussiertes Dashboard</span>
+if (role === <span class="db-string">'admin'</span>) return &lt;AdminDashboard /&gt;;
+
+<span class="db-comment">// Standard — Member und alle anderen</span>
+return &lt;FullDashboard /&gt;;
+    </div>
+  </div>
+
+  <!-- 7. ROLLEN + PLAN -->
+  <div class="section">
+    <h2><span class="section-num">7</span> Rollen + Plan kombiniert</h2>
+    <p>Beide Dimensionen wirken zusammen — aber bleiben sauber getrennt.</p>
+
+    <div class="matrix-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Mindest-Rolle</th>
+            <th>Mindest-Plan</th>
+            <th>Logik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Dashboard (Basis)</td><td>Viewer</td><td>Starter</td><td>Immer verfügbar</td></tr>
+          <tr><td>Entscheidungen erstellen</td><td>Member</td><td>Starter</td><td>Rolle reicht</td></tr>
+          <tr><td>Risk Register lesen</td><td>Executive</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Risk Register bearbeiten</td><td>Member</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Analytics Hub</td><td>Executive</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Executive Hub</td><td>Executive</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Board Report PDF</td><td>Executive</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Decision Graph</td><td>Admin</td><td>Enterprise</td><td>Beide nötig</td></tr>
+          <tr><td>Automationen</td><td>Admin</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Templates erstellen</td><td>Admin</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>Audit Trail</td><td>Admin</td><td>Professional</td><td>Beide nötig</td></tr>
+          <tr><td>User-Management</td><td>Admin</td><td>Starter</td><td>Rolle reicht</td></tr>
+          <tr><td>Billing</td><td>Owner</td><td>Alle</td><td>Nur Owner</td></tr>
+          <tr><td>SSO konfigurieren</td><td>Owner</td><td>Enterprise</td><td>Beide nötig</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box box-blue">
+      <div class="box-title">Logik im Code</div>
+      <p style="margin:0; font-family: 'Courier New'; font-size: 13px;">
+        const canAccess = can.viewAnalytics &amp;&amp; features.analyticsHub;<br>
+        <span style="color:#888;">// Rolle UND Plan müssen beide true sein</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- 8. PROGRESSIVE DISCLOSURE -->
+  <div class="section">
+    <h2><span class="section-num">8</span> Progressive Disclosure Integration</h2>
+    <p>RBAC und Progressive Disclosure arbeiten zusammen — aber bleiben getrennte Systeme.</p>
+
+    <div class="box box-green">
+      <div class="box-title">Die Kombinationslogik</div>
+      <p>Ein Feature ist sichtbar wenn DREI Bedingungen erfüllt sind:</p>
+      <p><strong>1. Rolle erlaubt es</strong> — has_role('executive') z.B.</p>
+      <p><strong>2. Plan enthält es</strong> — features.analyticsHub = true</p>
+      <p style="margin:0;"><strong>3. Progressive Disclosure freigegeben</strong> — decision_count >= 10 ODER override = true</p>
+    </div>
+
+    <div class="db-table">
+<span class="db-comment">// Vollständige Sichtbarkeits-Logik</span>
+const isVisible = (feature: string) => {
+  const { can } = usePermissions();
+  const { features } = useFeatureFlags();
+  const { decision_count, progressive_override } = useProfile();
+
+  <span class="db-comment">// Override — alles sofort zeigen (für Demo / Power User)</span>
+  if (progressive_override) {
+    return can[feature] && features[feature];
+  }
+
+  <span class="db-comment">// Stufe 1 Features — immer sofort</span>
+  const stage1 = [<span class="db-string">'dashboard'</span>, <span class="db-string">'decisions'</span>, <span class="db-string">'tasks'</span>, <span class="db-string">'calendar'</span>];
+  if (stage1.includes(feature)) return can[feature];
+
+  <span class="db-comment">// Stufe 2 Features — nach 10 Entscheidungen</span>
+  const stage2 = [<span class="db-string">'riskRegister'</span>, <span class="db-string">'templates'</span>, <span class="db-string">'auditTrail'</span>, <span class="db-string">'automations'</span>];
+  if (stage2.includes(feature)) {
+    return can[feature] && features[feature] && decision_count >= 10;
+  }
+
+  <span class="db-comment">// Stufe 3 Features — nach 25 Entscheidungen</span>
+  return can[feature] && features[feature] && decision_count >= 25;
+};
+    </div>
+  </div>
+
+  <!-- 9. IMPLEMENTIERUNG -->
+  <div class="section">
+    <h2><span class="section-num">9</span> Implementierungsplan</h2>
+
+    <table class="prio-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Aufgabe</th>
+          <th>Aufwand</th>
+          <th>Phase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1</strong></td>
+          <td>org_members Tabelle + RLS anlegen</td>
+          <td class="effort-low">1–2h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>2</strong></td>
+          <td>has_role() und get_user_role() Funktionen</td>
+          <td class="effort-low">1h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>3</strong></td>
+          <td>usePermissions Hook im Frontend</td>
+          <td class="effort-low">2h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>4</strong></td>
+          <td>Sidebar: can + features kombiniert</td>
+          <td class="effort-low">2–3h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>5</strong></td>
+          <td>OnboardingRoleSelection Screen</td>
+          <td class="effort-med">2–3h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>6</strong></td>
+          <td>Dashboard: 3 Views (Member / Executive / Admin)</td>
+          <td class="effort-med">3–4h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>7</strong></td>
+          <td>Admin-Bereich: Rollen vergeben UI</td>
+          <td class="effort-med">2–3h</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>8</strong></td>
+          <td>Progressive Override Toggle in Settings</td>
+          <td class="effort-low">30min</td>
+          <td><span class="badge badge-now">Jetzt</span></td>
+        </tr>
+        <tr>
+          <td><strong>9</strong></td>
+          <td>RLS auf allen bestehenden Tabellen aktualisieren</td>
+          <td class="effort-high">4–6h</td>
+          <td><span class="badge badge-later">Phase 2</span></td>
+        </tr>
+        <tr>
+          <td><strong>10</strong></td>
+          <td>role_permissions Tabelle (Custom Roles)</td>
+          <td class="effort-high">6–8h</td>
+          <td><span class="badge badge-later">Phase 2</span></td>
+        </tr>
+        <tr>
+          <td><strong>11</strong></td>
+          <td>SSO Integration (SAML/OIDC)</td>
+          <td class="effort-high">2–3 Wochen</td>
+          <td><span class="badge badge-later">Enterprise</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="box box-green">
+      <div class="box-title">Gesamtaufwand Phase 1 (Punkte 1–8)</div>
+      <p style="margin:0;">Ca. <strong>15–20 Stunden</strong> in Lovable. Danach hast du ein sauberes, langfristig skalierbares RBAC das alle Enterprise-Fragen beantworten kann.</p>
+    </div>
+  </div>
+
+  <!-- 10. JETZT VS SPÄTER -->
+  <div class="section">
+    <h2><span class="section-num">10</span> Was jetzt, was später</h2>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div>
+          <div class="timeline-dot dot-now" style="margin-bottom:8px;"></div>
+          <div class="timeline-line" style="height:60px; margin-left:6px;"></div>
+        </div>
+        <div class="timeline-content">
+          <strong>🟢 Jetzt — Phase 1 (15–20h)</strong>
+          <p>org_members Tabelle, has_role() Funktion, usePermissions Hook, 3 Dashboard-Views, Onboarding-Rollen-Screen, Admin-Rollen-UI, Progressive Override. Damit kannst du die ersten 50 Kunden problemlos bedienen.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div>
+          <div class="timeline-dot dot-soon" style="margin-bottom:8px;"></div>
+          <div class="timeline-line" style="height:60px; margin-left:6px;"></div>
+        </div>
+        <div class="timeline-content">
+          <strong>🔵 Nach ersten 10 Kunden — Phase 2</strong>
+          <p>Alle RLS-Policies auf neues System umstellen, role_permissions für Custom Roles, granulares Logging wer was wann gesehen hat. Kosten: 10–15 weitere Stunden.</p>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div>
+          <div class="timeline-dot dot-later"></div>
+        </div>
+        <div class="timeline-content">
+          <strong>🟣 Enterprise-Deals — Phase 3</strong>
+          <p>SSO (SAML/OIDC), Active Directory Integration, Custom Roles per Organisation, granulare Permission-Overrides, Compliance-Reporting wer Zugriff auf was hat. Das baust du wenn ein konkreter Enterprise-Kunde €499+/Monat zahlt.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="box box-blue">
+      <div class="box-title">Das Wichtigste</div>
+      <p style="margin:0;">Die Datenstruktur die du heute mit <code>org_members.role</code> anlegst ist kompatibel mit allen drei Phasen. Du machst jetzt keine Entscheidung die du später bereust — du legst das Fundament auf dem alles aufbaut.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  DECIVIO — Sauberes RBAC System &nbsp;•&nbsp; Februar 2026
+</div>
+
+</body>
+</html>
