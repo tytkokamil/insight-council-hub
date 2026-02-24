@@ -186,7 +186,7 @@ const Decisions = () => {
         title={t("decisions.title")}
         subtitle={t("decisions.countShown", { total: decisions.length, shown: filtered.length })}
         role="execution"
-        help={{ title: t("decisions.title"), description: "Zentrale Arbeitsfläche für alle Entscheidungen. Nutze Filter, Quick-Chips und Suche, um gezielt zu finden. Jede Entscheidung durchläuft: Entwurf → Review → Genehmigt → Umgesetzt." }}
+        help={{ title: t("decisions.title"), description: t("decisions.helpDesc", "Zentrale Arbeitsfläche für alle Entscheidungen.") }}
         secondaryActions={
           <>
             {decisions.length > 0 && (
