@@ -2178,7 +2178,13 @@
     "importComplete": "Import complete!",
     "decisionsCreated": "{{count}} decisions created",
     "importingCount": "Importing {{count}} decisions...",
-    "back": "Back"
+    "back": "Back",
+    "deleteTeam": "Delete Team",
+    "deleteTeamDesc": "The team and all associated data (members, invitations, messages) will be permanently deleted.",
+    "deleteTeamConfirm": "Are you sure you want to permanently delete the team \"{{name}}\"?",
+    "deleteTeamSuccess": "Team has been deleted",
+    "deleteTeamError": "Error deleting team",
+    "dangerZone": "Danger Zone"
   },
   "shared": {
     "cookieTitle": "Cookie Settings",

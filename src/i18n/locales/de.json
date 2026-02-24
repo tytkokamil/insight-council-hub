@@ -2178,7 +2178,13 @@
     "importComplete": "Import abgeschlossen!",
     "decisionsCreated": "{{count}} Entscheidungen wurden erstellt",
     "importingCount": "Importiere {{count}} Entscheidungen...",
-    "back": "Zurück"
+    "back": "Zurück",
+    "deleteTeam": "Team löschen",
+    "deleteTeamDesc": "Das Team und alle zugehörigen Daten (Mitglieder, Einladungen, Nachrichten) werden unwiderruflich gelöscht.",
+    "deleteTeamConfirm": "Bist du sicher, dass du das Team \"{{name}}\" unwiderruflich löschen möchtest?",
+    "deleteTeamSuccess": "Team wurde gelöscht",
+    "deleteTeamError": "Fehler beim Löschen des Teams",
+    "dangerZone": "Gefahrenzone"
   },
   "shared": {
     "cookieTitle": "Cookie-Einstellungen",
