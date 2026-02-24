@@ -63,8 +63,29 @@ const PrivacyPolicy = () => (
           </section>
 
           <section>
-            <h2 className="text-foreground text-lg font-semibold">8. Sicherheit</h2>
-            <p>Wir setzen TLS-Verschlüsselung, Row-Level Security, Multi-Faktor-Authentifizierung und regelmäßige Sicherheitsaudits ein, um Ihre Daten zu schützen.</p>
+            <h2 className="text-foreground text-lg font-semibold">8. KI-gestützte Verarbeitung</h2>
+            <p>Unsere Plattform nutzt KI-Modelle zur Risikoanalyse, Entscheidungsunterstützung und automatisierten Briefings. Die KI-Verarbeitung erfolgt auf Basis von Art. 6 Abs. 1 lit. b DSGVO. Ihre Entscheidungsdaten werden ausschließlich für Ihre Organisation verarbeitet und nicht zum Training von KI-Modellen verwendet. Sie können den KI-Umfang in den Einstellungen konfigurieren.</p>
+          </section>
+
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">9. Hosting & Datenresidenz</h2>
+            <p>Alle Daten werden in der EU gehostet (Rechenzentrum Frankfurt am Main, Deutschland). Es findet keine Datenübertragung in Drittländer statt, sofern nicht ausdrücklich in der Auftragsverarbeitungsvereinbarung geregelt. Verschlüsselung: AES-256 at rest, TLS 1.3 in transit.</p>
+          </section>
+
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">10. Auftragsverarbeiter</h2>
+            <p>Folgende Auftragsverarbeiter werden eingesetzt:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Supabase Inc.</strong> — Datenbank & Authentifizierung (EU-Region)</li>
+              <li><strong>Vercel Inc.</strong> — Hosting & CDN (EU Edge)</li>
+              <li><strong>Resend</strong> — Transaktionale E-Mails</li>
+            </ul>
+            <p>Alle Auftragsverarbeiter unterliegen Art. 28 DSGVO-konformen Vereinbarungen.</p>
+          </section>
+
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">11. Sicherheit</h2>
+            <p>Wir setzen TLS-Verschlüsselung, Row-Level Security, Multi-Faktor-Authentifizierung und regelmäßige Sicherheitsaudits ein, um Ihre Daten zu schützen. Enterprise-Kunden erhalten zusätzlich Security Reviews und Penetrationstests.</p>
           </section>
         </div>
       </div>
