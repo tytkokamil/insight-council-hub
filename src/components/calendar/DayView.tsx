@@ -3,7 +3,6 @@ import { format, isToday, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { Sunrise, Sun, CloudSun, Moon, AlertTriangle, DollarSign, Zap, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WEEKDAYS_LONG } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
@@ -57,7 +56,7 @@ const DayView = memo(({
   const dayTasks = tasksByDate[dateKey] ?? [];
   const today = isToday(day);
   const isDropTarget = dragOverDate === dateKey;
-  const dayOfWeek = (day.getDay() + 6) % 7;
+  
 
   const slotted = useMemo(() => distributeBySlot(dayDecisions), [dayDecisions]);
   const slottedTasks = useMemo(() => distributeBySlot(dayTasks), [dayTasks]);
@@ -80,7 +79,7 @@ const DayView = memo(({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {WEEKDAYS_LONG[dayOfWeek]}
+              {format(day, "EEEE", { locale: dateFnsLocale })}
             </p>
             <p className={cn("text-2xl font-bold mt-0.5", today ? "text-primary" : "text-foreground")}>
               {format(day, "d. MMMM yyyy", { locale: dateFnsLocale })}

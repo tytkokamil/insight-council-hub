@@ -3,7 +3,6 @@ import { format, isToday, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, DollarSign } from "lucide-react";
-import { WEEKDAYS_LONG } from "./CalendarConstants";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
@@ -49,7 +48,7 @@ const WeekView = memo(({
           return (
             <div key={idx} className={cn("px-3 py-3 text-center border-r border-border last:border-r-0", today && "bg-primary/5")}>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                {WEEKDAYS_LONG[idx]}
+                {format(day, "EEEE", { locale: dateFnsLocale })}
               </p>
               <div className="flex items-center justify-center gap-1 mt-0.5">
                 <p className={cn("text-lg font-bold", today ? "text-primary" : "text-foreground")}>{format(day, "d")}</p>

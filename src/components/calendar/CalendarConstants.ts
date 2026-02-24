@@ -15,7 +15,5 @@ export const statusDot: Record<string, string> = {
   archived: "bg-muted-foreground/40",
 };
 
-export const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-export const WEEKDAYS_LONG = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
 
 export type ViewMode = "month" | "week" | "day";
