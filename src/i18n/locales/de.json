@@ -67,10 +67,15 @@
     "accountLocked": "Zu viele Fehlversuche. Bitte warte {{seconds}} Sekunden.",
     "attemptsRemaining": "Versuche übrig",
     "lockedTimer": "Account gesperrt – noch {{minutes}}:{{seconds}} Minuten warten",
-    "locked": "Gesperrt"
+    "locked": "Gesperrt",
+    "or": "oder",
+    "signInWithGoogle": "Mit Google anmelden",
+    "googleLoginFailed": "Google Login fehlgeschlagen"
   },
   "settings": {
     "title": "Einstellungen",
+    "pageTitle": "System & Governance",
+    "pageSubtitle": "Kontrollzentrum für Profil, Sicherheit, KI-Governance und Enterprise-Konfiguration.",
     "subtitle": "Verwalte dein Konto und Systemkonfiguration.",
     "general": "Allgemein",
     "notifications": "Benachrichtigungen",
@@ -137,7 +142,14 @@
     "selectImage": "Bitte Bilddatei wählen.",
     "maxFileSize": "Max. 2 MB.",
     "uploadFailed": "Upload fehlgeschlagen.",
-    "noApiKeyNeeded": "Kein API-Key nötig"
+    "noApiKeyNeeded": "Kein API-Key nötig",
+    "workspace": "Workspace",
+    "wsPlan": "Plan",
+    "wsUsers": "Nutzer",
+    "wsDecisions": "Entscheidungen",
+    "wsTeams": "Teams",
+    "wsDataLocation": "Datenstandort",
+    "wsRole": "Rolle"
   },
   "common": {
     "skipToContent": "Zum Inhalt springen",
