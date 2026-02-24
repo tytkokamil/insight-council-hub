@@ -1,8 +1,8 @@
 import { memo, DragEvent } from "react";
 import { CalendarOff } from "lucide-react";
-import { cn } from "@/lib/utils";
 import DecisionPill from "./DecisionPill";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from "react-i18next";
 
 interface UnscheduledSidebarProps {
   decisions: any[];
@@ -14,41 +14,27 @@ interface UnscheduledSidebarProps {
 }
 
 const UnscheduledSidebar = memo(({
-  decisions,
-  draggingId,
-  onDragStart,
-  onDragEnd,
-  onDecisionClick,
-  profileMap,
+  decisions, draggingId, onDragStart, onDragEnd, onDecisionClick, profileMap,
 }: UnscheduledSidebarProps) => {
+  const { t } = useTranslation();
   if (decisions.length === 0) return null;
 
   return (
     <div className="border border-border rounded-xl bg-card overflow-hidden">
       <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
         <CalendarOff className="w-3.5 h-3.5 text-muted-foreground" />
-        <span className="text-xs font-semibold text-muted-foreground">Ohne Deadline</span>
-        <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
-          {decisions.length}
-        </span>
+        <span className="text-xs font-semibold text-muted-foreground">{t("cal.noDeadline")}</span>
+        <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">{decisions.length}</span>
       </div>
       <ScrollArea className="max-h-[300px]">
         <div className="p-2 space-y-1">
           {decisions.map((decision) => (
-            <DecisionPill
-              key={decision.id}
-              decision={decision}
-              draggingId={draggingId}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              onClick={onDecisionClick}
-              profileMap={profileMap}
-            />
+            <DecisionPill key={decision.id} decision={decision} draggingId={draggingId} onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onDecisionClick} profileMap={profileMap} />
           ))}
         </div>
       </ScrollArea>
       <div className="px-3 py-1.5 border-t border-border">
-        <p className="text-[10px] text-muted-foreground italic">Auf ein Datum ziehen, um Deadline zuzuweisen</p>
+        <p className="text-[10px] text-muted-foreground italic">{t("cal.dragToAssign")}</p>
       </div>
     </div>
   );

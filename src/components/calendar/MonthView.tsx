@@ -7,6 +7,7 @@ import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 interface MonthViewProps {
   monthDays: Date[];
@@ -51,7 +52,6 @@ function getDayDelayCost(decisions: any[]): number {
   return cost;
 }
 
-// Calculate week momentum (green/yellow/red)
 function getWeekMomentum(weekDecisions: any[]): "green" | "yellow" | "red" | null {
   if (weekDecisions.length === 0) return null;
   const escalated = weekDecisions.filter((d) => (d.escalation_level ?? 0) >= 1).length;
@@ -65,21 +65,11 @@ function getWeekMomentum(weekDecisions: any[]): "green" | "yellow" | "red" | nul
 }
 
 const MonthView = memo(({
-  monthDays,
-  currentDate,
-  decisionsByDate,
-  tasksByDate = {},
-  dragOverDate,
-  draggingId,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDecisionClick,
-  profileMap,
+  monthDays, currentDate, decisionsByDate, tasksByDate = {},
+  dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
 }: MonthViewProps) => {
-  // Calculate weekly momentum indicators
+  const { t } = useTranslation();
+
   const weekMomentums = useMemo(() => {
     const result: Record<number, "green" | "yellow" | "red" | null> = {};
     const weeks = Math.ceil(monthDays.length / 7);
@@ -98,7 +88,7 @@ const MonthView = memo(({
   return (
     <div className="border border-border rounded-xl overflow-hidden bg-card">
       <div className="grid grid-cols-[28px_repeat(7,1fr)] border-b border-border">
-        <div className="px-1 py-2.5" /> {/* momentum column header */}
+        <div className="px-1 py-2.5" />
         {WEEKDAYS.map((day) => (
           <div key={day} className="px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {day}
@@ -114,20 +104,17 @@ const MonthView = memo(({
           const inMonth = isSameMonth(day, currentDate);
           const today = isToday(day);
           const isDropTarget = dragOverDate === dateKey;
-
           const riskLevel = getDayRiskLevel(dayDecisions);
           const delayCost = getDayDelayCost(dayDecisions);
           const hasSLAViolation = dayDecisions.some(
             (d) => (d.escalation_level ?? 0) >= 2 || (d.due_date && new Date(d.due_date) < new Date() && !["implemented", "rejected", "archived"].includes(d.status))
           );
-
           const weekIdx = Math.floor(idx / 7);
           const isFirstInWeek = idx % 7 === 0;
           const momentum = weekMomentums[weekIdx];
 
           return (
             <>
-              {/* Week momentum indicator */}
               {isFirstInWeek && (
                 <div className="row-span-1 flex items-center justify-center border-b border-r border-border">
                   {momentum && (
@@ -141,9 +128,9 @@ const MonthView = memo(({
                         )} />
                       </TooltipTrigger>
                       <TooltipContent side="left" className="text-xs">
-                        {momentum === "green" && "Gute Woche – keine kritischen Engpässe"}
-                        {momentum === "yellow" && "Hohe Belastung – kritische Entscheidungen"}
-                        {momentum === "red" && "Kritische Woche – Eskalationen & Überfälligkeiten"}
+                        {momentum === "green" && t("cal.weekGood")}
+                        {momentum === "yellow" && t("cal.weekHigh")}
+                        {momentum === "red" && t("cal.weekCritical")}
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -177,7 +164,7 @@ const MonthView = memo(({
                         <TooltipTrigger>
                           <AlertTriangle className="w-3 h-3 text-destructive animate-pulse" />
                         </TooltipTrigger>
-                        <TooltipContent className="text-xs">SLA-Verletzung aktiv</TooltipContent>
+                        <TooltipContent className="text-xs">{t("cal.slaViolation")}</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -191,7 +178,7 @@ const MonthView = memo(({
                           </span>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">
-                          Verzögerungskosten: {delayCost.toLocaleString("de-DE")}€
+                          {t("cal.delayCost", { cost: delayCost.toLocaleString() })}
                         </TooltipContent>
                       </Tooltip>
                     )}
@@ -202,22 +189,14 @@ const MonthView = memo(({
                 </div>
                 <div className="space-y-0.5">
                   {dayDecisions.slice(0, 3).map((decision) => (
-                    <DecisionPill
-                      key={decision.id}
-                      decision={decision}
-                      draggingId={draggingId}
-                      onDragStart={onDragStart}
-                      onDragEnd={onDragEnd}
-                      onClick={onDecisionClick}
-                      profileMap={profileMap}
-                    />
+                    <DecisionPill key={decision.id} decision={decision} draggingId={draggingId} onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onDecisionClick} profileMap={profileMap} />
                   ))}
                   {dayTasks.slice(0, Math.max(0, 3 - dayDecisions.length)).map((task) => (
                     <TaskPill key={task.id} task={task} profileMap={profileMap} />
                   ))}
                   {totalItems > 3 && (
                     <span className="text-[10px] text-muted-foreground pl-1.5">
-                      +{totalItems - 3} weitere
+                      {t("cal.more", { count: totalItems - 3 })}
                     </span>
                   )}
                 </div>
