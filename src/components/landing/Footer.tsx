@@ -36,6 +36,8 @@ const Footer = () => {
               ].map(l => (
                 <li key={l.label}><a href={l.href} className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{l.label}</a></li>
               ))}
+              <li><Link to="/changelog" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">Changelog</Link></li>
+              <li><Link to="/roadmap" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">Roadmap</Link></li>
             </ul>
           </div>
 
