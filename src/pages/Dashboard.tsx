@@ -89,6 +89,33 @@ const Dashboard = () => {
 
   // Onboarding tour
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [autoSeeded, setAutoSeeded] = useState(false);
+  
+  // Auto-seed demo data on first visit (opt-out: user can skip)
+  useEffect(() => {
+    if (isLoading || autoSeeded || seedingDemo) return;
+    if (allDecisions.length > 0 || tasks.length > 0) return;
+    const skipped = localStorage.getItem("demo-seed-skipped");
+    const seeded = localStorage.getItem("demo-seed-completed");
+    if (skipped || seeded) return;
+    
+    // Auto-seed
+    setAutoSeeded(true);
+    setSeedingDemo(true);
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("seed-demo-data");
+        if (error) throw error;
+        if (data?.error) { setSeedingDemo(false); return; }
+        localStorage.setItem("demo-seed-completed", "true");
+        toast.success(t("dashboard.demoSuccess"));
+        setTimeout(() => { refetchDec(); refetchTasks(); window.location.reload(); }, 1200);
+      } catch {
+        setSeedingDemo(false);
+      }
+    })();
+  }, [isLoading, allDecisions.length, tasks.length, autoSeeded, seedingDemo]);
+
   useEffect(() => {
     const seen = localStorage.getItem("onboarding-completed");
     if (!seen && !isLoading && allDecisions.length === 0 && tasks.length === 0) {
@@ -196,6 +223,29 @@ const Dashboard = () => {
         toast.error(t("dashboard.demoError"));
         setSeedingDemo(false);
       }
+    };
+
+    // If auto-seeding is in progress, show loading state
+    if (seedingDemo) {
+      return (
+        <AppLayout>
+          <div className="flex flex-col items-center justify-center min-h-[70vh]">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-lg">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
+                <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight mb-2">{t("dashboard.welcome", { name: firstName })}</h1>
+              <p className="text-muted-foreground mb-4">{t("dashboard.creating")}</p>
+              <p className="text-xs text-muted-foreground/50">55 Entscheidungen · 3 Teams · 20 Tasks · 6 Risiken</p>
+            </motion.div>
+          </div>
+        </AppLayout>
+      );
+    }
+
+    const handleSkipDemo = () => {
+      localStorage.setItem("demo-seed-skipped", "true");
+      window.location.reload();
     };
 
     return (
