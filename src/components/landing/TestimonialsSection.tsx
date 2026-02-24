@@ -4,22 +4,22 @@ import { Quote } from "lucide-react";
 const testimonials = [
   {
     name: "Dr. Christina Berger",
-    role: "CEO, Mittelstand",
-    quote: "Unsere Entscheidungszyklen sind um 43% schneller geworden. Was vorher 3 Wochen dauerte, schaffen wir jetzt in 4 Tagen.",
+    role: "Chief Risk Officer, Finanzdienstleister",
+    quote: "Unsere Entscheidungszyklen sind um 43% schneller geworden. Was vorher 3 Wochen dauerte, schaffen wir jetzt in 4 Tagen — mit vollständigem Audit Trail.",
     metric: "43%",
     metricLabel: "schnellere Zyklen",
   },
   {
     name: "Marcus Weber",
-    role: "CFO, Scale-Up",
-    quote: "Wir haben €2.3M an Opportunity Costs identifiziert, die uns durch verzögerte Entscheidungen entgangen wären.",
+    role: "CFO, Scale-Up (Series B)",
+    quote: "Wir haben €2.3M an Cost-of-Delay identifiziert, die uns durch verzögerte Entscheidungen entgangen wären. Der ROI war nach 3 Wochen positiv.",
     metric: "€2.3M",
-    metricLabel: "eingespart",
+    metricLabel: "CoD vermieden",
   },
   {
-    name: "Anna Richter",
-    role: "VP Governance, Enterprise",
-    quote: "Eskalationen sind um 61% zurückgegangen. Unser Board hat erstmals vollständige Transparenz.",
+    name: "Prof. Dr. Anna Richter",
+    role: "VP Governance, Pharma Enterprise",
+    quote: "Eskalationen sind um 61% zurückgegangen. Unser Board hat erstmals vollständige Transparenz über alle laufenden Entscheidungen — NIS2-ready.",
     metric: "–61%",
     metricLabel: "Eskalationen",
   },
@@ -41,7 +41,7 @@ const TestimonialsSection = () => (
           Kundenstimmen
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-          Messbare Ergebnisse
+          Messbare Ergebnisse aus regulierten Branchen
         </h2>
       </motion.div>
 
