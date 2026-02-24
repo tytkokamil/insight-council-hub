@@ -21,6 +21,7 @@ const DemoDataPanel = () => {
     try {
       const { data, error } = await supabase.functions.invoke("seed-demo-data");
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success(t("shared.demoSuccess"));
       qc.invalidateQueries();
     } catch (e: any) {
@@ -33,59 +34,9 @@ const DemoDataPanel = () => {
     if (!user) return;
     setLoadingReset(true);
     try {
-      // Delete user data in dependency order
-      const uid = user.id;
-      
-      // Delete dependencies, reviews, comments, votes etc. linked to user's decisions
-      const { data: userDecisions } = await supabase.from("decisions").select("id").eq("created_by", uid);
-      const decIds = (userDecisions || []).map(d => d.id);
-      
-      if (decIds.length > 0) {
-        await supabase.from("decision_dependencies").delete().or(`source_decision_id.in.(${decIds.join(",")}),target_decision_id.in.(${decIds.join(",")})`);
-        await supabase.from("decision_reviews").delete().in("decision_id", decIds);
-        await supabase.from("comments").delete().in("decision_id", decIds);
-        await supabase.from("decision_votes").delete().in("decision_id", decIds);
-        await supabase.from("decision_shares").delete().in("decision_id", decIds);
-        await supabase.from("audit_logs").delete().in("decision_id", decIds);
-        await supabase.from("decision_tags").delete().in("decision_id", decIds);
-        await supabase.from("decision_versions").delete().in("decision_id", decIds);
-        await supabase.from("stakeholder_positions").delete().in("decision_id", decIds);
-        await supabase.from("decision_goal_links").delete().in("decision_id", decIds);
-        await supabase.from("lessons_learned").delete().in("decision_id", decIds);
-        await supabase.from("decision_scenarios").delete().in("decision_id", decIds);
-        await supabase.from("risk_decision_links").delete().in("decision_id", decIds);
-        await supabase.from("decision_watchlist").delete().in("decision_id", decIds);
-      }
-
-      // Delete tasks
-      const { data: userTasks } = await supabase.from("tasks").select("id").eq("created_by", uid);
-      const taskIds = (userTasks || []).map(t => t.id);
-      if (taskIds.length > 0) {
-        await supabase.from("risk_task_links").delete().in("task_id", taskIds);
-        await supabase.from("decision_dependencies").delete().or(`source_task_id.in.(${taskIds.join(",")}),target_task_id.in.(${taskIds.join(",")})`);
-      }
-      await supabase.from("tasks").delete().eq("created_by", uid);
-      
-      // Delete decisions
-      await supabase.from("decisions").delete().eq("created_by", uid);
-      
-      // Delete risks
-      await supabase.from("risks").delete().eq("created_by", uid);
-      
-      // Delete teams (cascade via team_members)
-      const { data: userTeams } = await supabase.from("teams").select("id").eq("created_by", uid);
-      const teamIds = (userTeams || []).map(t => t.id);
-      if (teamIds.length > 0) {
-        await supabase.from("team_messages").delete().in("team_id", teamIds);
-        await supabase.from("team_chat_reads").delete().in("team_id", teamIds);
-        await supabase.from("team_invitations").delete().in("team_id", teamIds);
-        await supabase.from("team_members").delete().in("team_id", teamIds);
-        await supabase.from("automation_rules").delete().in("team_id", teamIds);
-        await supabase.from("teams").delete().in("id", teamIds);
-      }
-
-      // Reset profile counter
-      await supabase.from("profiles").update({ decision_count: 0 }).eq("user_id", uid);
+      const { data, error } = await supabase.functions.invoke("reset-user-data");
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       // Clear local progressive state
       localStorage.removeItem("intelligence-unlocked");

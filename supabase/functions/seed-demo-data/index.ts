@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -22,9 +22,48 @@ Deno.serve(async (req) => {
 
     const userId = user.id;
 
+    // If user already has data, clean it first so demo can be re-loaded
     const { count } = await supabase.from("decisions").select("id", { count: "exact", head: true }).eq("created_by", userId);
     if ((count || 0) > 0) {
-      return new Response(JSON.stringify({ error: "Du hast bereits Entscheidungen. Demo-Daten sind nur für neue Accounts." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Delete existing user data before seeding
+      const { data: existingDecs } = await supabase.from("decisions").select("id").eq("created_by", userId);
+      const decIds = (existingDecs || []).map((d: any) => d.id);
+      if (decIds.length > 0) {
+        await supabase.from("decision_dependencies").delete().or(`source_decision_id.in.(${decIds.join(",")}),target_decision_id.in.(${decIds.join(",")})`);
+        await supabase.from("decision_reviews").delete().in("decision_id", decIds);
+        await supabase.from("comments").delete().in("decision_id", decIds);
+        await supabase.from("decision_votes").delete().in("decision_id", decIds);
+        await supabase.from("decision_shares").delete().in("decision_id", decIds);
+        await supabase.from("audit_logs").delete().in("decision_id", decIds);
+        await supabase.from("decision_tags").delete().in("decision_id", decIds);
+        await supabase.from("decision_versions").delete().in("decision_id", decIds);
+        await supabase.from("stakeholder_positions").delete().in("decision_id", decIds);
+        await supabase.from("decision_goal_links").delete().in("decision_id", decIds);
+        await supabase.from("lessons_learned").delete().in("decision_id", decIds);
+        await supabase.from("decision_scenarios").delete().in("decision_id", decIds);
+        await supabase.from("risk_decision_links").delete().in("decision_id", decIds);
+        await supabase.from("decision_watchlist").delete().in("decision_id", decIds);
+      }
+      const { data: existingTasks } = await supabase.from("tasks").select("id").eq("created_by", userId);
+      const taskIds = (existingTasks || []).map((t: any) => t.id);
+      if (taskIds.length > 0) {
+        await supabase.from("risk_task_links").delete().in("task_id", taskIds);
+        await supabase.from("decision_dependencies").delete().or(`source_task_id.in.(${taskIds.join(",")}),target_task_id.in.(${taskIds.join(",")})`);
+      }
+      await supabase.from("tasks").delete().eq("created_by", userId);
+      await supabase.from("decisions").delete().eq("created_by", userId);
+      await supabase.from("risks").delete().eq("created_by", userId);
+      await supabase.from("strategic_goals").delete().eq("created_by", userId);
+      const { data: existingTeams } = await supabase.from("teams").select("id").eq("created_by", userId);
+      const teamIds = (existingTeams || []).map((t: any) => t.id);
+      if (teamIds.length > 0) {
+        await supabase.from("team_messages").delete().in("team_id", teamIds);
+        await supabase.from("team_chat_reads").delete().in("team_id", teamIds);
+        await supabase.from("team_invitations").delete().in("team_id", teamIds);
+        await supabase.from("team_members").delete().in("team_id", teamIds);
+        await supabase.from("automation_rules").delete().in("team_id", teamIds);
+        await supabase.from("teams").delete().in("id", teamIds);
+      }
     }
 
     const now = new Date();
