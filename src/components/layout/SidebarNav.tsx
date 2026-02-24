@@ -292,14 +292,16 @@ const SidebarNav = memo(({
               if (c.adminOnly && !isAdmin) return false;
               if (c.featureKey && !isFeatureEnabled(c.featureKey)) return false;
               if (c.minRole && !meetsMinRole(userRole, c.minRole)) return false;
-              if (mode === "basic" && !BASIC_MODE_PATHS.has(c.path)) return false;
+              // Progressive groups are always visible regardless of mode
+              if (!group.progressive && mode === "basic" && !BASIC_MODE_PATHS.has(c.path)) return false;
               return true;
             });
           }
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
           if ("minRole" in item && item.minRole && !meetsMinRole(userRole, item.minRole)) return false;
-          if (mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
+          // Progressive groups are always visible regardless of mode
+          if (!group.progressive && mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
             lockedItems.push(item as NavItem);
             return false;
           }
