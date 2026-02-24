@@ -10,6 +10,7 @@ import { useTeams } from "@/hooks/useDecisions";
 import { Share2, Users, Check, Eye, MessageSquare, Pencil, Clock, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { EventTypes } from "@/lib/eventTaxonomy";
+import { useTranslation } from "react-i18next";
 
 type SharePermission = "read" | "comment" | "edit";
 
@@ -29,31 +30,31 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const PERMISSION_CONFIG: Record<SharePermission, { label: string; icon: typeof Eye; description: string }> = {
-  read: { label: "Lesen", icon: Eye, description: "Kann die Entscheidung einsehen" },
-  comment: { label: "Kommentieren", icon: MessageSquare, description: "Kann einsehen und kommentieren" },
-  edit: { label: "Bearbeiten", icon: Pencil, description: "Kann einsehen, kommentieren und bearbeiten" },
-};
-
-const DURATION_OPTIONS = [
-  { value: "none", label: "Unbegrenzt" },
-  { value: "7", label: "7 Tage" },
-  { value: "30", label: "30 Tage" },
-  { value: "90", label: "90 Tage" },
-  { value: "custom", label: "Benutzerdefiniert" },
-];
-
 const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }: Props) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { data: teams = [] } = useTeams();
   const [shares, setShares] = useState<ShareRecord[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // New share form state
   const [selectedTeamId, setSelectedTeamId] = useState("");
   const [permission, setPermission] = useState<SharePermission>("read");
   const [duration, setDuration] = useState("none");
   const [customDate, setCustomDate] = useState("");
+
+  const PERMISSION_CONFIG: Record<SharePermission, { label: string; icon: typeof Eye; description: string }> = {
+    read: { label: t("decisions.share.read"), icon: Eye, description: t("decisions.share.readDesc") },
+    comment: { label: t("decisions.share.comment"), icon: MessageSquare, description: t("decisions.share.commentDesc") },
+    edit: { label: t("decisions.share.editPerm"), icon: Pencil, description: t("decisions.share.editDesc") },
+  };
+
+  const DURATION_OPTIONS = [
+    { value: "none", label: t("decisions.share.unlimited") },
+    { value: "7", label: t("decisions.share.days7") },
+    { value: "30", label: t("decisions.share.days30") },
+    { value: "90", label: t("decisions.share.days90") },
+    { value: "custom", label: t("decisions.share.custom") },
+  ];
 
   const fetchShares = async () => {
     const { data } = await supabase
@@ -74,7 +75,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
   }, [open, decisionId]);
 
   const availableTeams = teams.filter(
-    t => t.id !== decisionTeamId && !shares.some(s => s.team_id === t.id)
+    tm => tm.id !== decisionTeamId && !shares.some(s => s.team_id === tm.id)
   );
 
   const getExpiresAt = (): string | null => {
@@ -99,18 +100,17 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
     } as any);
 
     if (error) {
-      toast.error("Fehler beim Teilen");
+      toast.error(t("decisions.share.shareError"));
     } else {
-      // Audit
-      const teamName = teams.find(t => t.id === selectedTeamId)?.name || selectedTeamId;
+      const teamName = teams.find(tm => tm.id === selectedTeamId)?.name || selectedTeamId;
       await supabase.from("audit_logs").insert({
         decision_id: decisionId,
         user_id: user.id,
         action: EventTypes.DECISION_SHARED,
         field_name: "sharing",
-        new_value: `${teamName} (${PERMISSION_CONFIG[permission].label}${expires_at ? ", befristet" : ""})`,
+        new_value: `${teamName} (${PERMISSION_CONFIG[permission].label}${expires_at ? `, ${t("decisions.share.limited")}` : ""})`,
       });
-      toast.success("Entscheidung geteilt");
+      toast.success(t("decisions.share.shared"));
       setSelectedTeamId("");
       setPermission("read");
       setDuration("none");
@@ -127,7 +127,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
       .update({ permission: newPermission } as any)
       .eq("id", shareId);
     if (!error) {
-      const teamName = teams.find(t => t.id === share?.team_id)?.name || "";
+      const teamName = teams.find(tm => tm.id === share?.team_id)?.name || "";
       await supabase.from("audit_logs").insert({
         decision_id: decisionId,
         user_id: user.id,
@@ -136,7 +136,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
         old_value: share?.permission,
         new_value: `${teamName}: ${newPermission}`,
       });
-      toast.success("Berechtigung aktualisiert");
+      toast.success(t("decisions.share.permissionUpdated"));
       await fetchShares();
     }
   };
@@ -149,7 +149,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
       .delete()
       .eq("id", shareId);
     if (!error) {
-      const teamName = teams.find(t => t.id === share?.team_id)?.name || "";
+      const teamName = teams.find(tm => tm.id === share?.team_id)?.name || "";
       await supabase.from("audit_logs").insert({
         decision_id: decisionId,
         user_id: user.id,
@@ -158,7 +158,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
         old_value: `${teamName} (${share?.permission})`,
         new_value: null,
       });
-      toast.success("Freigabe entfernt");
+      toast.success(t("decisions.share.shareRemoved"));
       await fetchShares();
     }
   };
@@ -174,16 +174,15 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="w-5 h-5" />
-            Mit Teams teilen
+            {t("decisions.share.title")}
           </DialogTitle>
         </DialogHeader>
 
-        {/* Existing shares */}
         {shares.length > 0 && (
           <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Aktive Freigaben</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("decisions.share.activeShares")}</p>
             {shares.map(share => {
-              const team = teams.find(t => t.id === share.team_id);
+              const team = teams.find(tm => tm.id === share.team_id);
               const expired = isExpired(share.expires_at);
               const PermIcon = PERMISSION_CONFIG[share.permission]?.icon || Eye;
               return (
@@ -195,12 +194,12 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
                 >
                   <Users className="w-4 h-4 text-muted-foreground shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{team?.name || "Unbekanntes Team"}</p>
+                    <p className="text-sm font-medium truncate">{team?.name || t("decisions.share.unknownTeam")}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       {share.expires_at && (
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          {expired ? "Abgelaufen" : `Bis ${new Date(share.expires_at).toLocaleDateString("de-DE")}`}
+                          {expired ? t("decisions.share.expired") : t("decisions.share.until", { date: new Date(share.expires_at).toLocaleDateString("de-DE") })}
                         </span>
                       )}
                     </div>
@@ -240,25 +239,24 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
           </div>
         )}
 
-        {/* New share form */}
         {availableTeams.length > 0 && (
           <div className="space-y-3 pt-3 border-t border-border">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Neues Team hinzufügen</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("decisions.share.addTeam")}</p>
 
             <Select value={selectedTeamId} onValueChange={setSelectedTeamId}>
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Team auswählen…" />
+                <SelectValue placeholder={t("decisions.share.selectTeam")} />
               </SelectTrigger>
               <SelectContent>
-                {availableTeams.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                {availableTeams.map(tm => (
+                  <SelectItem key={tm.id} value={tm.id}>{tm.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Berechtigung</label>
+                <label className="text-xs text-muted-foreground mb-1 block">{t("decisions.share.permission")}</label>
                 <Select value={permission} onValueChange={(v) => setPermission(v as SharePermission)}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />
@@ -276,7 +274,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
                 </Select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Dauer</label>
+                <label className="text-xs text-muted-foreground mb-1 block">{t("decisions.share.duration")}</label>
                 <Select value={duration} onValueChange={setDuration}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue />
@@ -292,7 +290,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
 
             {duration === "custom" && (
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Ablaufdatum</label>
+                <label className="text-xs text-muted-foreground mb-1 block">{t("decisions.share.expiryDate")}</label>
                 <Input
                   type="date"
                   value={customDate}
@@ -303,15 +301,14 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
               </div>
             )}
 
-            {/* Permission description */}
             <p className="text-xs text-muted-foreground">
               {PERMISSION_CONFIG[permission].description}
               {duration !== "none" && (
                 <span>
                   {" · "}
                   {duration === "custom"
-                    ? (customDate ? `Bis ${new Date(customDate).toLocaleDateString("de-DE")}` : "Datum auswählen")
-                    : `${duration} Tage`}
+                    ? (customDate ? t("decisions.share.until", { date: new Date(customDate).toLocaleDateString("de-DE") }) : t("decisions.share.selectDate"))
+                    : `${duration} ${t("decisions.share.days7").replace("7 ", "").replace("7", "")}`}
                 </span>
               )}
             </p>
@@ -322,22 +319,24 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
               className="w-full gap-2"
             >
               <Share2 className="w-4 h-4" />
-              {loading ? "Wird geteilt…" : "Teilen"}
+              {loading ? t("decisions.share.sharing") : t("decisions.share.shareBtn")}
             </Button>
           </div>
         )}
 
         {availableTeams.length === 0 && shares.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Keine weiteren Teams verfügbar.
+            {t("decisions.share.noTeams")}
           </p>
         )}
 
         {shares.length > 0 && (
           <p className="text-xs text-muted-foreground">
-            Geteilt mit {shares.filter(s => !isExpired(s.expires_at)).length} Team{shares.filter(s => !isExpired(s.expires_at)).length !== 1 ? "s" : ""}
+            {shares.filter(s => !isExpired(s.expires_at)).length === 1
+              ? t("decisions.share.sharedWithOne")
+              : t("decisions.share.sharedWith", { count: shares.filter(s => !isExpired(s.expires_at)).length })}
             {shares.some(s => isExpired(s.expires_at)) && (
-              <span className="text-destructive"> · {shares.filter(s => isExpired(s.expires_at)).length} abgelaufen</span>
+              <span className="text-destructive"> · {t("decisions.share.expiredCount", { count: shares.filter(s => isExpired(s.expires_at)).length })}</span>
             )}
           </p>
         )}
