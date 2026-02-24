@@ -38,13 +38,13 @@ import {
   LineChart, Line, Legend,
 } from "recharts";
 
-const statusLabels: Record<string, string> = {
-  open: "Offen",
-  mitigating: "In Mitigation",
-  mitigated: "Mitigiert",
-  accepted: "Akzeptiert",
-  closed: "Geschlossen",
-};
+const useRiskStatusLabels = (t: any): Record<string, string> => ({
+  open: t("risk.statusOpen"),
+  mitigating: t("risk.statusMitigating"),
+  mitigated: t("risk.statusMitigated"),
+  accepted: t("risk.statusAccepted"),
+  closed: t("risk.statusClosed"),
+});
 
 const statusColors: Record<string, string> = {
   open: "bg-destructive/10 text-destructive",
@@ -67,6 +67,7 @@ const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(va
 
 const RiskRegister = () => {
   const { t } = useTranslation();
+  const statusLabels = useRiskStatusLabels(t);
   const { user } = useAuth();
   const { data: risks = [], isLoading } = useRisks();
   const { data: decLinks = [] } = useRiskDecisionLinks();
@@ -166,10 +167,10 @@ const RiskRegister = () => {
     const d90 = active.filter(r => { const d = differenceInDays(now, new Date(r.created_at)); return d > 60 && d <= 90; }).length;
     const d90plus = active.filter(r => differenceInDays(now, new Date(r.created_at)) > 90).length;
     return [
-      { label: "< 30 Tage", count: d30, color: "bg-success" },
-      { label: "30–60 Tage", count: d60, color: "bg-primary" },
-      { label: "60–90 Tage", count: d90, color: "bg-warning" },
-      { label: "> 90 Tage", count: d90plus, color: "bg-destructive" },
+      { label: t("risk.agingDays30"), count: d30, color: "bg-success" },
+      { label: t("risk.agingDays60"), count: d60, color: "bg-primary" },
+      { label: t("risk.agingDays90"), count: d90, color: "bg-warning" },
+      { label: t("risk.agingDays90plus"), count: d90plus, color: "bg-destructive" },
     ];
   }, [risks, now]);
 
@@ -184,7 +185,7 @@ const RiskRegister = () => {
         const t = new Date(r.updated_at).getTime();
         return t >= weekStart && t < weekEnd;
       }).length;
-      return { week: `W${i + 1}`, Neu: created, Geschlossen: closed };
+      return { week: `W${i + 1}`, [t("risk.trendNew")]: created, [t("risk.trendClosed")]: closed };
     });
   }, [risks, now]);
 
@@ -275,16 +276,16 @@ const RiskRegister = () => {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold">Risk Heatmap</CardTitle>
+                  <CardTitle className="text-sm font-semibold">{t("risk.heatmap")}</CardTitle>
                   <div className="flex items-center gap-1">
                     {(["count", "score", "economic"] as const).map(v => (
                       <Button key={v} size="sm" variant={heatmapView === v ? "default" : "ghost"} className="h-6 text-[10px] px-2" onClick={() => setHeatmapView(v)}>
-                        {v === "count" ? "Anzahl" : v === "score" ? "Score" : "€"}
+                        {v === "count" ? t("risk.heatmapCount") : v === "score" ? t("risk.heatmapScore") : "€"}
                       </Button>
                     ))}
                     {heatmapFilter && (
                       <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive" onClick={() => setHeatmapFilter(null)}>
-                        <X className="w-3 h-3 mr-0.5" /> Filter
+                        <X className="w-3 h-3 mr-0.5" /> {t("risk.heatmapClearFilter")}
                       </Button>
                     )}
                   </div>
@@ -294,7 +295,7 @@ const RiskRegister = () => {
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center justify-center">
                     <span className="text-[10px] text-muted-foreground font-medium" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                      Wahrscheinlichkeit →
+                      {t("risk.likelihood")} →
                     </span>
                   </div>
                   <div className="flex-1">
@@ -326,7 +327,7 @@ const RiskRegister = () => {
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-[220px]">
                                 <p className="text-xs font-semibold">W:{likelihood} × A:{impact} = {score}</p>
-                                <p className="text-[10px] text-muted-foreground">{count} Risiken • {formatCost(cellExposure)} Exposure</p>
+                                <p className="text-[10px] text-muted-foreground">{t("risk.risksCount", { count })} • {formatCost(cellExposure)} {t("risk.exposure")}</p>
                                 {cellRisks.slice(0, 3).map(r => (
                                   <p key={r.id} className="text-[10px] truncate mt-0.5">• {r.title}</p>
                                 ))}
@@ -336,7 +337,7 @@ const RiskRegister = () => {
                         })
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-medium text-center mt-2">Auswirkung →</p>
+                    <p className="text-[10px] text-muted-foreground font-medium text-center mt-2">{t("risk.impact")} →</p>
                   </div>
                 </div>
               </CardContent>
@@ -348,15 +349,13 @@ const RiskRegister = () => {
             <Card>
               <CardContent className="p-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Target className="w-3.5 h-3.5 text-destructive" /> Top Risk Drivers (Entscheidungen)
+                  <Target className="w-3.5 h-3.5 text-destructive" /> {t("risk.topDrivers")}
                 </h3>
                 {riskDrivers.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">Keine Risiko-Entscheidungs-Verknüpfungen vorhanden.</p>
+                  <p className="text-xs text-muted-foreground text-center py-4">{t("risk.noDriverLinks")}</p>
                 ) : (
                   <>
-                    <p className="text-[10px] text-muted-foreground mb-3">
-                      Diese {riskDrivers.length} Entscheidungen tragen <strong className="text-foreground">{topDriversPercent}%</strong> des Gesamt-Risikos.
-                    </p>
+                    <p className="text-[10px] text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: t("risk.driversContribute", { count: riskDrivers.length, pct: topDriversPercent }) }} />
                     <div className="space-y-2">
                       {riskDrivers.map((d, i) => (
                         <Link key={d.id} to={`/decisions/${d.id}`} className="block">
@@ -366,8 +365,8 @@ const RiskRegister = () => {
                               <span className="text-[10px] font-mono text-destructive shrink-0">{formatCost(d.totalExposure)}</span>
                             </div>
                             <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                              <span>Score: {d.totalScore}</span>
-                              <span>{d.riskCount} Risiken</span>
+                              <span>{t("risk.colScore")}: {d.totalScore}</span>
+                              <span>{t("risk.risksCount", { count: d.riskCount })}</span>
                             </div>
                           </div>
                         </Link>
@@ -379,15 +378,13 @@ const RiskRegister = () => {
                 {/* Scenario Simulation */}
                 <div className="mt-4 pt-3 border-t border-border/50">
                   <h4 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-                    <BarChart3 className="w-3 h-3" /> Szenario-Simulation
+                    <BarChart3 className="w-3 h-3" /> {t("risk.scenarioSim")}
                   </h4>
                   <div className="p-2.5 rounded-lg bg-muted/20 border border-border/50 space-y-1.5">
-                    <p className="text-[11px] text-muted-foreground">
-                      Wenn kritische Risiken um <strong className="text-foreground">1 Likelihood-Stufe</strong> reduziert werden:
-                    </p>
+                    <p className="text-[11px] text-muted-foreground">{t("risk.scenarioDesc")}</p>
                     <p className="text-sm font-semibold text-success">Exposure -{formatCost(scenarioReduction)}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      Neues Gesamt: {formatCost(Math.max(0, snapshot.totalExposure - scenarioReduction))}
+                      {t("risk.scenarioNewTotal", { value: formatCost(Math.max(0, snapshot.totalExposure - scenarioReduction)) })}
                     </p>
                   </div>
                 </div>
@@ -400,34 +397,34 @@ const RiskRegister = () => {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Risiko suchen…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t("risk.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="all">{t("risk.allStatuses")}</SelectItem>
               {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
-          <span className="text-xs text-muted-foreground">{filtered.length} Risiken</span>
+          <span className="text-xs text-muted-foreground">{t("risk.risksCount", { count: filtered.length })}</span>
         </div>
 
         {/* ═══ 3. RISK INVENTORY TABLE ═══ */}
         {isLoading ? (
-          <p className="text-muted-foreground text-sm text-center py-8">Lade Risiken…</p>
+          <p className="text-muted-foreground text-sm text-center py-8">{t("risk.loading")}</p>
         ) : risks.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-border bg-card p-12 text-center">
             <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-5">
               <Shield className="w-8 h-8 text-destructive opacity-60" />
             </div>
-            <h3 className="font-display text-xl font-semibold mb-2">Noch keine Risiken erfasst</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">Erfasse Risiken, bewerte sie mit der Heatmap und verknüpfe sie mit Entscheidungen und Aufgaben.</p>
-            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-2"><Plus className="w-4 h-4" /> Erstes Risiko erstellen</Button>
+            <h3 className="font-display text-xl font-semibold mb-2">{t("risk.emptyTitle")}</h3>
+            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">{t("risk.emptyDesc")}</p>
+            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-2"><Plus className="w-4 h-4" /> {t("risk.createFirst")}</Button>
           </motion.div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm font-medium">Keine Risiken gefunden</p>
+            <p className="text-sm font-medium">{t("risk.noResults")}</p>
           </div>
         ) : (
           <Card>
@@ -435,16 +432,16 @@ const RiskRegister = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead><tr className="border-b bg-muted/30">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-xs">Titel</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">Score</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">W</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">A</th>
-                    <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs">Exposure</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">Status</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">Mitigation</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">Links</th>
-                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">Alter</th>
-                    <th className="text-right py-3 px-4 font-medium text-muted-foreground text-xs">Aktionen</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground text-xs">{t("risk.colTitle")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colScore")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colW")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colA")}</th>
+                    <th className="text-right py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colExposure")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colStatus")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colMitigation")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colLinks")}</th>
+                    <th className="text-center py-3 px-2 font-medium text-muted-foreground text-xs">{t("risk.colAge")}</th>
+                    <th className="text-right py-3 px-4 font-medium text-muted-foreground text-xs">{t("risk.colActions")}</th>
                   </tr></thead>
                   <tbody>
                     {filtered.map(risk => {
@@ -461,7 +458,7 @@ const RiskRegister = () => {
                             <div className="flex items-center gap-2">
                               {noOwner && (
                                 <Tooltip><TooltipTrigger><AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" /></TooltipTrigger>
-                                  <TooltipContent className="text-xs">Kein Owner zugewiesen!</TooltipContent>
+                                  <TooltipContent className="text-xs">{t("risk.noOwnerTooltip")}</TooltipContent>
                                 </Tooltip>
                               )}
                               <div className="min-w-0">
@@ -483,9 +480,9 @@ const RiskRegister = () => {
                           </td>
                           <td className="text-center py-3 px-2">
                             {hasMitigation ? (
-                              <Badge variant="outline" className="text-[10px] bg-success/10 text-success">Plan</Badge>
+                              <Badge variant="outline" className="text-[10px] bg-success/10 text-success">{t("risk.plan")}</Badge>
                             ) : risk.risk_score >= 9 ? (
-                              <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">Fehlt</Badge>
+                              <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning">{t("risk.missing")}</Badge>
                             ) : (
                               <span className="text-[10px] text-muted-foreground">—</span>
                             )}
@@ -498,9 +495,9 @@ const RiskRegister = () => {
                           </td>
                           <td className="text-right py-3 px-4">
                             <div className="flex items-center justify-end gap-0.5">
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLinkingRisk(risk)} title="Verknüpfen"><Link2 className="w-3 h-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLinkingRisk(risk)} title={t("risk.linkTooltip")}><Link2 className="w-3 h-3" /></Button>
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(risk)}><Pencil className="w-3 h-3" /></Button>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={async () => { await deleteRisk.mutateAsync(risk.id); toast({ title: "Risiko gelöscht" }); }}><Trash2 className="w-3 h-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={async () => { await deleteRisk.mutateAsync(risk.id); toast({ title: t("risk.deleted") }); }}><Trash2 className="w-3 h-3" /></Button>
                             </div>
                           </td>
                         </tr>
@@ -520,7 +517,7 @@ const RiskRegister = () => {
             <Card>
               <CardContent className="p-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" /> Risk Aging
+                  <Clock className="w-3.5 h-3.5" /> {t("risk.aging")}
                 </h3>
                 <div className="space-y-2">
                   {riskAging.map(a => (
@@ -534,7 +531,7 @@ const RiskRegister = () => {
                   ))}
                   {riskAging[3].count > 0 && (
                     <p className="text-[10px] text-destructive mt-1 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> {riskAging[3].count} Risiken seit &gt;90 Tagen offen — Governance-Signal!
+                      <AlertTriangle className="w-3 h-3" /> {t("risk.agingSignal", { count: riskAging[3].count })}
                     </p>
                   )}
                 </div>
@@ -545,13 +542,13 @@ const RiskRegister = () => {
             <Card>
               <CardContent className="p-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" /> Mitigation Coverage
+                  <Shield className="w-3.5 h-3.5" /> {t("risk.mitigationCoverage")}
                 </h3>
                 <div className="space-y-3">
                   {[
-                    { label: "Mit Mitigationsplan", value: mitigationStats.withPlan, total: mitigationStats.total, color: "bg-success" },
-                    { label: "Mit verknüpften Tasks", value: mitigationStats.withTasks, total: mitigationStats.total, color: "bg-primary" },
-                    { label: "In aktiver Mitigation", value: mitigationStats.inMitigation, total: mitigationStats.total, color: "bg-warning" },
+                    { label: t("risk.withMitigationPlan"), value: mitigationStats.withPlan, total: mitigationStats.total, color: "bg-success" },
+                    { label: t("risk.withLinkedTasks"), value: mitigationStats.withTasks, total: mitigationStats.total, color: "bg-primary" },
+                    { label: t("risk.inActiveMitigation"), value: mitigationStats.inMitigation, total: mitigationStats.total, color: "bg-warning" },
                   ].map(m => (
                     <div key={m.label}>
                       <div className="flex items-center justify-between text-[11px] mb-1">
@@ -566,7 +563,7 @@ const RiskRegister = () => {
                   {mitigationStats.withPlan < mitigationStats.total && (
                     <p className="text-[10px] text-muted-foreground flex items-start gap-1 mt-2">
                       <Lightbulb className="w-3 h-3 shrink-0 mt-0.5 text-primary" />
-                      {mitigationStats.total - mitigationStats.withPlan} Risiken ohne Mitigationsplan — Maßnahmen dokumentieren!
+                      {t("risk.mitigationHint", { count: mitigationStats.total - mitigationStats.withPlan })}
                     </p>
                   )}
                 </div>
@@ -577,7 +574,7 @@ const RiskRegister = () => {
             <Card>
               <CardContent className="p-4">
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Activity className="w-3.5 h-3.5" /> Risk Trend (8 Wochen)
+                  <Activity className="w-3.5 h-3.5" /> {t("risk.trendTitle")}
                 </h3>
                 <div className="h-[150px]">
                   <ResponsiveContainer width="100%" height="100%">
@@ -586,8 +583,8 @@ const RiskRegister = () => {
                       <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                       <RechartsTooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="Neu" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
-                      <Bar dataKey="Geschlossen" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey={t("risk.trendNew")} fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+                      <Bar dataKey={t("risk.trendClosed")} fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -599,31 +596,31 @@ const RiskRegister = () => {
         {/* ═══ CREATE/EDIT DIALOG ═══ */}
         <Dialog open={showCreate} onOpenChange={o => { if (!o) { setShowCreate(false); setEditRisk(null); } }}>
           <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>{editRisk ? "Risiko bearbeiten" : "Neues Risiko"}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editRisk ? t("risk.editTitle") : t("risk.newTitle")}</DialogTitle></DialogHeader>
             <div className="space-y-4">
-              <div><Label>Titel *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Risikobeschreibung…" /></div>
-              <div><Label>Beschreibung</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} /></div>
+              <div><Label>{t("risk.labelTitle")} *</Label><Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder={t("risk.riskPlaceholder")} /></div>
+              <div><Label>{t("risk.labelDescription")}</Label><Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={2} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Wahrscheinlichkeit ({form.likelihood})</Label><Slider min={1} max={5} step={1} value={[form.likelihood]} onValueChange={v => setForm(f => ({ ...f, likelihood: v[0] }))} className="mt-2" /></div>
-                <div><Label>Auswirkung ({form.impact})</Label><Slider min={1} max={5} step={1} value={[form.impact]} onValueChange={v => setForm(f => ({ ...f, impact: v[0] }))} className="mt-2" /></div>
+                <div><Label>{t("risk.labelLikelihood", { value: form.likelihood })}</Label><Slider min={1} max={5} step={1} value={[form.likelihood]} onValueChange={v => setForm(f => ({ ...f, likelihood: v[0] }))} className="mt-2" /></div>
+                <div><Label>{t("risk.labelImpact", { value: form.impact })}</Label><Slider min={1} max={5} step={1} value={[form.impact]} onValueChange={v => setForm(f => ({ ...f, impact: v[0] }))} className="mt-2" /></div>
               </div>
               <div className="text-center">
                 <span className={`text-lg font-bold ${scoreColor(form.likelihood * form.impact)}`}>Risk Score: {form.likelihood * form.impact}</span>
                 <span className="text-xs text-muted-foreground ml-2">Exposure: {formatCost(IMPACT_MULTIPLIER[form.impact] ? Math.round(IMPACT_MULTIPLIER[form.impact] * (form.likelihood / 5)) : 0)}</span>
               </div>
-              <div><Label>Mitigationsplan</Label><Textarea value={form.mitigation_plan} onChange={e => setForm(f => ({ ...f, mitigation_plan: e.target.value }))} rows={2} /></div>
+              <div><Label>{t("risk.labelMitigationPlan")}</Label><Textarea value={form.mitigation_plan} onChange={e => setForm(f => ({ ...f, mitigation_plan: e.target.value }))} rows={2} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><Label>Status</Label>
+                <div><Label>{t("risk.labelStatus")}</Label>
                   <Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>{Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div><Label>Team</Label>
+                <div><Label>{t("risk.labelTeam")}</Label>
                   <Select value={form.team_id || "none"} onValueChange={v => setForm(f => ({ ...f, team_id: v === "none" ? "" : v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Kein Team</SelectItem>
+                      <SelectItem value="none">{t("risk.noTeam")}</SelectItem>
                       {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -631,8 +628,8 @@ const RiskRegister = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setShowCreate(false); setEditRisk(null); }}>Abbrechen</Button>
-              <Button onClick={handleSave} disabled={!form.title.trim()}>{editRisk ? "Speichern" : "Erstellen"}</Button>
+              <Button variant="outline" onClick={() => { setShowCreate(false); setEditRisk(null); }}>{t("risk.cancel")}</Button>
+              <Button onClick={handleSave} disabled={!form.title.trim()}>{editRisk ? t("risk.save") : t("risk.create")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -640,7 +637,7 @@ const RiskRegister = () => {
         {/* ═══ LINKING DIALOG ═══ */}
         <Dialog open={!!linkingRisk} onOpenChange={o => { if (!o) setLinkingRisk(null); }}>
           <DialogContent className="max-w-md max-h-[70vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Verknüpfungen: {linkingRisk?.title}</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{t("risk.linkDialogTitle", { title: linkingRisk?.title })}</DialogTitle></DialogHeader>
             {linkingRisk && (
               <LinkingPanel
                 risk={linkingRisk} decisions={decisions} tasks={tasks}
@@ -674,6 +671,7 @@ const LinkingPanel = ({
   onLinkTask: (id: string) => Promise<void>;
   onUnlinkTask: (id: string) => Promise<void>;
 }) => {
+  const { t } = useTranslation();
   const linkedDecIds = new Set(decLinks.map(l => l.decision_id));
   const linkedTaskIds = new Set(taskLinks.map(l => l.task_id));
   const unlinkedDecs = decisions.filter(d => !linkedDecIds.has(d.id));
@@ -682,8 +680,8 @@ const LinkingPanel = ({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Verknüpfte Entscheidungen</p>
-        {decLinks.length === 0 ? <p className="text-xs text-muted-foreground">Keine</p> : (
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("risk.linkedDecisions")}</p>
+        {decLinks.length === 0 ? <p className="text-xs text-muted-foreground">{t("risk.none")}</p> : (
           <div className="space-y-1">{decLinks.map(l => (
             <div key={l.id} className="flex items-center justify-between p-2 rounded bg-muted/30">
               <span className="text-xs flex items-center gap-1.5"><FileText className="w-3 h-3" /> {decisions.find(d => d.id === l.decision_id)?.title || "—"}</span>
@@ -693,14 +691,14 @@ const LinkingPanel = ({
         )}
         {unlinkedDecs.length > 0 && (
           <Select onValueChange={v => onLinkDec(v)}>
-            <SelectTrigger className="mt-2 text-xs h-8"><SelectValue placeholder="Entscheidung hinzufügen…" /></SelectTrigger>
+            <SelectTrigger className="mt-2 text-xs h-8"><SelectValue placeholder={t("risk.addDecision")} /></SelectTrigger>
             <SelectContent>{unlinkedDecs.map(d => <SelectItem key={d.id} value={d.id} className="text-xs">{d.title}</SelectItem>)}</SelectContent>
           </Select>
         )}
       </div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Mitigation-Aufgaben</p>
-        {taskLinks.length === 0 ? <p className="text-xs text-muted-foreground">Keine</p> : (
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{t("risk.mitigationTasks")}</p>
+        {taskLinks.length === 0 ? <p className="text-xs text-muted-foreground">{t("risk.none")}</p> : (
           <div className="space-y-1">{taskLinks.map(l => (
             <div key={l.id} className="flex items-center justify-between p-2 rounded bg-muted/30">
               <span className="text-xs flex items-center gap-1.5"><ListTodo className="w-3 h-3" /> {tasks.find(t => t.id === l.task_id)?.title || "—"}</span>
@@ -710,7 +708,7 @@ const LinkingPanel = ({
         )}
         {unlinkedTasks.length > 0 && (
           <Select onValueChange={v => onLinkTask(v)}>
-            <SelectTrigger className="mt-2 text-xs h-8"><SelectValue placeholder="Aufgabe hinzufügen…" /></SelectTrigger>
+            <SelectTrigger className="mt-2 text-xs h-8"><SelectValue placeholder={t("risk.addTask")} /></SelectTrigger>
             <SelectContent>{unlinkedTasks.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.title}</SelectItem>)}</SelectContent>
           </Select>
         )}
