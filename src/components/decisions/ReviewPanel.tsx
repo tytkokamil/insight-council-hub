@@ -4,15 +4,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Plus, User, UserCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [reviews, setReviews] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState("");
   const [feedback, setFeedback] = useState("");
   const [loading, setLoading] = useState(false);
-  const [delegationsForMe, setDelegationsForMe] = useState<string[]>([]); // user IDs I'm delegating for
+  const [delegationsForMe, setDelegationsForMe] = useState<string[]>([]);
 
   const fetchReviews = async () => {
     const { data } = await supabase
@@ -30,7 +32,6 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
 
   const fetchDelegations = async () => {
     if (!user) return;
-    // Find active delegations where I'm the delegate
     const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("review_delegations")
@@ -70,7 +71,6 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
       reviewed_at: new Date().toISOString(),
     }).eq("id", reviewId);
 
-    // Log audit with standardized event
     const { EventTypes } = await import("@/lib/eventTaxonomy");
     await supabase.from("audit_logs").insert({
       decision_id: decision.id,
@@ -94,24 +94,29 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     rejected: "text-destructive",
   };
 
-  // Check if current user can act on a review (direct or via delegation)
   const canActOnReview = (r: any) => {
     if (r.status !== "review") return false;
     if (r.reviewer_id === user?.id) return true;
-    // Check if I'm a delegate for the reviewer
     return delegationsForMe.includes(r.reviewer_id);
   };
 
   const getDelegatorName = (reviewerId: string) => {
     const profile = profiles.find(p => p.user_id === reviewerId);
-    return profile?.full_name || "Unbekannt";
+    return profile?.full_name || t("reviewPanel.unknown");
+  };
+
+  const statusLabel = (s: string) => {
+    if (s === "review") return t("reviewPanel.pending");
+    if (s === "approved") return t("reviewPanel.approved");
+    if (s === "rejected") return t("reviewPanel.rejected");
+    return s;
   };
 
   return (
     <div className="space-y-4 mt-4">
       <div className="space-y-2">
         {reviews.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Noch keine Reviewer zugewiesen.</p>
+          <p className="text-sm text-muted-foreground text-center py-4">{t("reviewPanel.noReviewers")}</p>
         ) : reviews.map((r, i) => {
           const canAct = canActOnReview(r);
           const isDelegated = canAct && r.reviewer_id !== user?.id;
@@ -122,24 +127,24 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
               </div>
               <User className="w-4 h-4 text-muted-foreground" />
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium">{r.profiles?.full_name || "Unbekannt"}</span>
+                <span className="text-sm font-medium">{r.profiles?.full_name || t("reviewPanel.unknown")}</span>
                 {isDelegated && (
                   <span className="flex items-center gap-1 text-[10px] text-primary mt-0.5">
-                    <UserCheck className="w-3 h-3" /> Du vertrittst {getDelegatorName(r.reviewer_id)}
+                    <UserCheck className="w-3 h-3" /> {t("reviewPanel.delegating", { name: getDelegatorName(r.reviewer_id) })}
                   </span>
                 )}
               </div>
               <span className={`text-xs font-medium capitalize ${statusColors[r.status] || ""}`}>
-                {r.status === "review" ? "Ausstehend" : r.status === "approved" ? "Genehmigt" : r.status === "rejected" ? "Abgelehnt" : r.status}
+                {statusLabel(r.status)}
               </span>
               {r.feedback && <span className="text-xs text-muted-foreground truncate max-w-32">"{r.feedback}"</span>}
               {canAct && (
                 <div className="flex gap-1">
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success" onClick={() => handleReview(r.id, "approved")} disabled={loading}>
-                    <CheckCircle2 className="w-3 h-3" /> Genehmigen
+                    <CheckCircle2 className="w-3 h-3" /> {t("reviewPanel.approve")}
                   </Button>
                   <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive" onClick={() => handleReview(r.id, "rejected")} disabled={loading}>
-                    <XCircle className="w-3 h-3" /> Ablehnen
+                    <XCircle className="w-3 h-3" /> {t("reviewPanel.reject")}
                   </Button>
                 </div>
               )}
@@ -152,7 +157,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
         <textarea
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
-          placeholder="Optionales Feedback..."
+          placeholder={t("reviewPanel.feedbackPlaceholder")}
           className="w-full h-16 px-3 py-2 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm resize-none"
         />
       )}
@@ -164,7 +169,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
             onChange={(e) => setSelectedReviewer(e.target.value)}
             className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border text-sm"
           >
-            <option value="">Reviewer auswählen...</option>
+            <option value="">{t("reviewPanel.selectReviewer")}</option>
             {profiles
               .filter((p) => !reviews.some((r) => r.reviewer_id === p.user_id))
               .map((p) => (
@@ -172,7 +177,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
               ))}
           </select>
           <Button size="sm" onClick={addReviewer} disabled={!selectedReviewer || loading}>
-            <Plus className="w-4 h-4" /> Hinzufügen
+            <Plus className="w-4 h-4" /> {t("reviewPanel.add")}
           </Button>
         </div>
       )}

@@ -3,21 +3,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Target, TrendingUp, CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 type OutcomeType = "successful" | "partial" | "failed" | null;
 
-const OUTCOME_OPTIONS: { value: OutcomeType; label: string; emoji: string; color: string }[] = [
-  { value: "successful", label: "Erfolgreich", emoji: "✅", color: "border-success/40 bg-success/10 text-success" },
-  { value: "partial", label: "Teilweise", emoji: "⚠️", color: "border-warning/40 bg-warning/10 text-warning" },
-  { value: "failed", label: "Gescheitert", emoji: "❌", color: "border-destructive/40 bg-destructive/10 text-destructive" },
-];
-
 const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
+  const { t } = useTranslation();
   const [outcomeNotes, setOutcomeNotes] = useState(decision.outcome_notes || "");
   const [actualImpact, setActualImpact] = useState<number>(decision.actual_impact_score ?? 0);
   const [outcomeType, setOutcomeType] = useState<OutcomeType>(decision.outcome_type || null);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+
+  const OUTCOME_OPTIONS: { value: OutcomeType; label: string; emoji: string; color: string }[] = [
+    { value: "successful", label: t("impactTracker.successful"), emoji: "✅", color: "border-success/40 bg-success/10 text-success" },
+    { value: "partial", label: t("impactTracker.partial"), emoji: "⚠️", color: "border-warning/40 bg-warning/10 text-warning" },
+    { value: "failed", label: t("impactTracker.failed"), emoji: "❌", color: "border-destructive/40 bg-destructive/10 text-destructive" },
+  ];
 
   const isImplemented = decision.status === "implemented";
   const predictedImpact = decision.ai_impact_score || 0;
@@ -38,9 +40,9 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
       } as any).eq("id", decision.id);
       if (error) throw error;
       onUpdated();
-      toast({ title: "Outcome gespeichert" });
+      toast({ title: t("impactTracker.saved") });
     } catch (e: any) {
-      toast({ title: "Fehler", description: e.message, variant: "destructive" });
+      toast({ title: t("aiAnalysis.error"), description: e.message, variant: "destructive" });
     }
     setSaving(false);
   };
@@ -51,8 +53,8 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
     return (
       <div className="text-center py-8 text-muted-foreground mt-4">
         <Target className="w-10 h-10 mx-auto mb-2 opacity-30" />
-        <p className="text-sm">Impact-Tracking ist verfügbar sobald die Entscheidung implementiert wurde.</p>
-        <p className="text-xs mt-1">Aktueller Status: <span className="capitalize font-medium">{decision.status}</span></p>
+        <p className="text-sm">{t("impactTracker.notImplemented")}</p>
+        <p className="text-xs mt-1">{t("impactTracker.currentStatus")} <span className="capitalize font-medium">{decision.status}</span></p>
       </div>
     );
   }
@@ -61,32 +63,29 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
     <div className="space-y-4 mt-4">
       <div className="flex items-center gap-2">
         <Target className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold">Impact Tracker — Vorhersage vs. Realität</h3>
+        <h3 className="text-sm font-semibold">{t("impactTracker.title")}</h3>
       </div>
 
-      {/* Comparison Cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 rounded-lg bg-muted/30 text-center">
-          <p className="text-xs text-muted-foreground mb-1">KI-Vorhersage</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.aiPrediction")}</p>
           <p className="text-xl font-bold font-display text-primary">{predictedImpact}%</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/30 text-center">
-          <p className="text-xs text-muted-foreground mb-1">Tatsächlicher Impact</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.actualImpact")}</p>
           <p className="text-xl font-bold font-display text-foreground">{decision.actual_impact_score ?? "—"}</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/30 text-center">
-          <p className="text-xs text-muted-foreground mb-1">Genauigkeit</p>
+          <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.accuracy")}</p>
           <p className={`text-xl font-bold font-display ${accuracy !== null ? (accuracy > 80 ? "text-success" : accuracy > 60 ? "text-warning" : "text-destructive") : "text-muted-foreground"}`}>
             {accuracy !== null ? `${accuracy}%` : "—"}
           </p>
         </div>
       </div>
 
-      {/* Outcome Form */}
       <div className="space-y-3 pt-2 border-t border-border">
-        {/* Outcome Type Selection */}
         <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">Ergebnis-Bewertung</label>
+          <label className="text-xs text-muted-foreground mb-1.5 block">{t("impactTracker.outcomeLabel")}</label>
           <div className="flex gap-2">
             {OUTCOME_OPTIONS.map(opt => (
               <button
@@ -103,30 +102,30 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
           </div>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Tatsächlicher Impact-Score (0-100)</label>
+          <label className="text-xs text-muted-foreground mb-1 block">{t("impactTracker.impactScoreLabel")}</label>
           <input
             type="range" min={0} max={100} value={actualImpact}
             onChange={(e) => setActualImpact(Number(e.target.value))}
             className="w-full accent-primary"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Niedrig</span>
+            <span>{t("impactTracker.low")}</span>
             <span className="font-bold text-foreground">{actualImpact}%</span>
-            <span>Hoch</span>
+            <span>{t("impactTracker.high")}</span>
           </div>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Outcome-Dokumentation</label>
+          <label className="text-xs text-muted-foreground mb-1 block">{t("impactTracker.outcomeDocLabel")}</label>
           <textarea
             value={outcomeNotes}
             onChange={(e) => setOutcomeNotes(e.target.value)}
-            placeholder="Was war das tatsächliche Ergebnis dieser Entscheidung? Was hat funktioniert, was nicht?"
+            placeholder={t("impactTracker.outcomePlaceholder")}
             className={`${inputClass} h-24 resize-none`}
           />
         </div>
         <Button size="sm" onClick={saveOutcome} disabled={saving} className="gap-1">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-          {saving ? "Speichere..." : "Outcome speichern"}
+          {saving ? t("impactTracker.saving") : t("impactTracker.save")}
         </Button>
       </div>
     </div>

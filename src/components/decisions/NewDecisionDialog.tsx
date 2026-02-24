@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { Crown } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useTranslatedLabels } from "@/lib/labels";
 
 interface Props {
   open: boolean;
@@ -31,21 +33,14 @@ interface Props {
 const categories = ["strategic", "budget", "hr", "technical", "operational", "marketing"] as const;
 const priorities = ["low", "medium", "high", "critical"] as const;
 
-const categoryLabels: Record<string, string> = {
-  strategic: "Strategisch", budget: "Budget", hr: "Personal",
-  technical: "Technisch", operational: "Operativ", marketing: "Marketing",
-};
-
-const priorityLabels: Record<string, string> = {
-  low: "Niedrig", medium: "Mittel", high: "Hoch", critical: "Kritisch",
-};
-
 const categoryIcons: Record<string, string> = {
   strategic: "🎯", budget: "💰", hr: "👥",
   technical: "⚙️", operational: "📋", marketing: "📣",
 };
 
 const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const { templates: dbTemplates } = useTemplates();
@@ -184,10 +179,10 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       if (score > bestScore) {
         bestScore = score;
         const reasons: string[] = [];
-        if (successRate > 0.6) reasons.push(`${Math.round(successRate * 100)}% Erfolgsrate`);
-        if (stats.avgDays > 0) reasons.push(`Ø ${Math.round(stats.avgDays)} Tage bis Umsetzung`);
-        if (teamId && stats.teamMatch > 0) reasons.push(`${stats.teamMatch}× in diesem Team genutzt`);
-        if (rejectionPenalty < 0.1) reasons.push("Niedrige Ablehnungsrate");
+        if (successRate > 0.6) reasons.push(t("newDecision.successRate", { pct: Math.round(successRate * 100) }));
+        if (stats.avgDays > 0) reasons.push(t("newDecision.avgDays", { days: Math.round(stats.avgDays) }));
+        if (teamId && stats.teamMatch > 0) reasons.push(t("newDecision.teamUsed", { count: stats.teamMatch }));
+        if (rejectionPenalty < 0.1) reasons.push(t("newDecision.lowRejection"));
         bestTemplate = { ...stats, score, reasons };
       }
     }
@@ -348,9 +343,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
     // Append pinned lessons to context
     if (pinnedLessons.length > 0) {
-      contextParts.push(`\n---\n**📌 Angeheftete Learnings (${pinnedLessons.length}):**`);
+      contextParts.push(`\n---\n${t("newDecision.pinnedLessons", { count: pinnedLessons.length })}`);
       pinnedLessons.forEach((l, i) => {
-        contextParts.push(`${i + 1}. _"${l.key_takeaway}"_ (aus: ${l.decision?.title ?? "Entscheidung"})`);
+        contextParts.push(`${i + 1}. _"${l.key_takeaway}"_ (${t("newDecision.fromDecision", { title: l.decision?.title ?? "Decision" })})`);
         if (l.recommendations) contextParts.push(`   → ${l.recommendations}`);
       });
     }
@@ -453,7 +448,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
           {field.label} <span className="text-destructive">*</span>
           {isConditional && (
             <Badge variant="outline" className="text-[9px] ml-1 px-1 py-0 border-warning/40 text-warning">
-              <Zap className="w-2.5 h-2.5 mr-0.5" />bedingt
+              <Zap className="w-2.5 h-2.5 mr-0.5" />{t("newDecision.conditional")}
             </Badge>
           )}
         </label>
@@ -470,7 +465,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             onChange={(e) => setExtraFields(prev => ({ ...prev, [field.key]: e.target.value }))}
             className={`${baseClass} h-10`}
           >
-            <option value="" className="bg-card">Bitte wählen...</option>
+            <option value="" className="bg-card">{t("newDecision.selectPlaceholder")}</option>
             {field.options.map(o => (
               <option key={o.value} value={o.value} className="bg-card">{o.label}</option>
             ))}
@@ -494,7 +489,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const renderTemplateStep = () => (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Wähle ein Template für strukturierte Governance oder starte frei.
+        {t("newDecision.templateIntro")}
       </p>
 
       {/* AI Template Recommendation */}
@@ -502,9 +497,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 space-y-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">KI-Empfehlung</span>
+            <span className="text-sm font-semibold text-primary">{t("newDecision.aiRecommendation")}</span>
             <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
-              basierend auf {templateRecommendation.stats.total} Entscheidungen
+              {t("newDecision.basedOn", { count: templateRecommendation.stats.total })}
             </Badge>
           </div>
           <div className="flex items-center justify-between gap-2">
@@ -521,70 +516,67 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               </div>
             </div>
             <Button size="sm" variant="default" className="shrink-0 gap-1.5" onClick={() => applyTemplate(templateRecommendation.template)}>
-              <Sparkles className="w-3.5 h-3.5" /> Übernehmen
+              <Sparkles className="w-3.5 h-3.5" /> {t("newDecision.apply")}
             </Button>
           </div>
         </div>
       )}
 
       <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-        {availableTemplates.map((t) => {
-          const isExpanded = expandedTemplate === t.category;
-          const isRecommended = templateRecommendation?.template.category === t.category;
+        {availableTemplates.map((tpl) => {
+          const isExpanded = expandedTemplate === tpl.category;
+          const isRecommended = templateRecommendation?.template.category === tpl.category;
           return (
             <div
-              key={t.category}
+              key={tpl.category}
               className={`rounded-lg border bg-card overflow-hidden transition-all hover:border-primary/40 ${isRecommended ? "border-primary/30 ring-1 ring-primary/10" : "border-border"}`}
             >
-              {/* Card header – always visible */}
               <button
                 type="button"
-                onClick={() => setExpandedTemplate(isExpanded ? null : t.category)}
+                onClick={() => setExpandedTemplate(isExpanded ? null : tpl.category)}
                 className="w-full text-left p-3 flex items-start gap-3"
               >
-                <span className="text-xl mt-0.5">{categoryIcons[t.category] || "📄"}</span>
+                <span className="text-xl mt-0.5">{categoryIcons[tpl.category] || "📄"}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-semibold">{t.name}</span>
+                    <span className="text-sm font-semibold">{tpl.name}</span>
                     {isRecommended && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge className="text-[9px] gap-0.5 bg-primary/10 text-primary border-primary/30 hover:bg-primary/20">
-                            <Sparkles className="w-2.5 h-2.5" /> Empfohlen
+                            <Sparkles className="w-2.5 h-2.5" /> {t("newDecision.recommended")}
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent side="top" className="text-xs max-w-48">
-                          Basierend auf historischen Erfolgsraten und Team-Nutzung
+                          {t("newDecision.recommendedTooltip")}
                         </TooltipContent>
                       </Tooltip>
                     )}
-                    <Badge variant="outline" className="text-[10px] capitalize">{priorityLabels[t.priority]}</Badge>
+                    <Badge variant="outline" className="text-[10px] capitalize">{tl.priorityLabels[tpl.priority]}</Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-1">{tpl.description}</p>
                   <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{t.requiredFields.length} Pflichtfelder</span>
-                    <span className="flex items-center gap-1"><CheckSquare className="w-3 h-3" />{t.approvalSteps.length} Approval-Stufen</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{t.defaultDurationDays} Tage</span>
-                    {t.conditionalRules && t.conditionalRules.length > 0 && (
-                      <span className="flex items-center gap-1 text-warning"><Zap className="w-3 h-3" />{t.conditionalRules.length} Regeln</span>
+                    <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{tpl.requiredFields.length} {t("newDecision.requiredFieldsLabel")}</span>
+                    <span className="flex items-center gap-1"><CheckSquare className="w-3 h-3" />{tpl.approvalSteps.length} {t("newDecision.approvalSteps")}</span>
+                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{t("newDecision.days", { n: tpl.defaultDurationDays })}</span>
+                    {tpl.conditionalRules && tpl.conditionalRules.length > 0 && (
+                      <span className="flex items-center gap-1 text-warning"><Zap className="w-3 h-3" />{t("newDecision.rules", { n: tpl.conditionalRules.length })}</span>
                     )}
                   </div>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Expanded preview */}
               {isExpanded && (
                 <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
-                  {t.whenToUse && (
-                    <p className="text-xs text-primary/80 italic">💡 {t.whenToUse}</p>
+                  {tpl.whenToUse && (
+                    <p className="text-xs text-primary/80 italic">💡 {tpl.whenToUse}</p>
                   )}
 
-                  {/* Required fields preview */}
                   <div>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Pflichtfelder</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("newDecision.requiredFieldsLabel")}</p>
                     <div className="flex flex-wrap gap-1">
-                      {t.requiredFields.map(f => (
+                      {tpl.requiredFields.map(f => (
                         <span key={f.key} className="px-1.5 py-0.5 rounded text-[10px] bg-muted text-muted-foreground border border-border">
                           {f.label}
                         </span>
@@ -592,27 +584,25 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
                     </div>
                   </div>
 
-                  {/* Approval steps preview */}
                   <div>
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Freigabe-Stufen</p>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("newDecision.approvalSteps")}</p>
                     <div className="flex items-center gap-1.5">
-                      {t.approvalSteps.map((s, i) => (
+                      {tpl.approvalSteps.map((s, i) => (
                         <span key={i} className="flex items-center gap-1">
                           <span className={`px-1.5 py-0.5 rounded text-[10px] border ${s.required ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}>
                             {s.label}
                           </span>
-                          {i < t.approvalSteps.length - 1 && <span className="text-muted-foreground text-[10px]">→</span>}
+                          {i < tpl.approvalSteps.length - 1 && <span className="text-muted-foreground text-[10px]">→</span>}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  {/* Conditional rules preview */}
-                  {t.conditionalRules && t.conditionalRules.length > 0 && (
+                  {tpl.conditionalRules && tpl.conditionalRules.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Bedingte Regeln</p>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("newDecision.conditionalRules")}</p>
                       <div className="space-y-1">
-                        {t.conditionalRules.map((r, i) => (
+                        {tpl.conditionalRules.map((r, i) => (
                           <p key={i} className="text-[10px] text-warning/80 flex items-start gap-1">
                             <Zap className="w-3 h-3 shrink-0 mt-0.5" />
                             {r.governanceHint || `Wenn ${r.when} ${r.operator} ${Array.isArray(r.value) ? r.value.join("/") : r.value}`}
@@ -622,15 +612,14 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
                     </div>
                   )}
 
-                  {/* Governance note */}
-                  {t.governanceNotes && (
+                  {tpl.governanceNotes && (
                     <p className="text-[10px] text-muted-foreground italic border-l-2 border-primary/30 pl-2">
-                      {t.governanceNotes}
+                      {tpl.governanceNotes}
                     </p>
                   )}
 
-                  <Button size="sm" className="w-full gap-2" onClick={() => applyTemplate(t)}>
-                    <FileText className="w-3.5 h-3.5" /> Template verwenden
+                  <Button size="sm" className="w-full gap-2" onClick={() => applyTemplate(tpl)}>
+                    <FileText className="w-3.5 h-3.5" /> {t("newDecision.useTemplate")}
                   </Button>
                 </div>
               )}
@@ -639,7 +628,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         })}
       </div>
       <button onClick={startWithoutTemplate} className="text-xs text-primary hover:underline w-full text-center py-1">
-        Ohne Vorlage fortfahren →
+        {t("newDecision.withoutTemplate")}
       </button>
     </div>
   );
@@ -654,7 +643,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            {step === "template" ? "Entscheidungs-Template wählen" : "Neue Entscheidung"}
+            {step === "template" ? t("newDecision.chooseTemplate") : t("newDecision.newDecision")}
             {selectedTemplate && step === "form" && (
               <Badge variant="outline" className="text-[10px]">{categoryIcons[selectedTemplate.category]} {selectedTemplate.name}</Badge>
             )}
@@ -664,39 +653,39 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         {step === "template" ? renderTemplateStep() : (
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Titel *</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Entscheidungstitel..." className={inputClass} required />
+              <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.titleLabel")}</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("newDecision.titlePlaceholder")} className={inputClass} required />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Beschreibung</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Details zur Entscheidung..." className={`${inputClass} h-24 resize-none py-2`} />
+              <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.descriptionLabel")}</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("newDecision.descriptionPlaceholder")} className={`${inputClass} h-24 resize-none py-2`} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Kategorie</label>
+                <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.categoryLabel")}</label>
                 <select value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputClass}>
-                  {categories.map((c) => (<option key={c} value={c} className="bg-card">{categoryLabels[c]}</option>))}
+                  {categories.map((c) => (<option key={c} value={c} className="bg-card">{tl.categoryLabels[c]}</option>))}
                 </select>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Priorität</label>
+                <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.priorityLabel")}</label>
                 <select value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
-                  {priorities.map((p) => (<option key={p} value={p} className="bg-card">{priorityLabels[p]}</option>))}
+                  {priorities.map((p) => (<option key={p} value={p} className="bg-card">{tl.priorityLabels[p]}</option>))}
                 </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
+                <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.dueDateLabel")}</label>
                 <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">
-                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> Team</span>
+                  <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {t("newDecision.teamLabel")}</span>
                 </label>
                 <select value={teamId} onChange={(e) => handleTeamChange(e.target.value)} className={inputClass}>
-                  <option value="" className="bg-card">Kein Team (öffentlich)</option>
-                  {teams.map((t) => (<option key={t.id} value={t.id} className="bg-card">{t.name}</option>))}
+                  <option value="" className="bg-card">{t("newDecision.noTeam")}</option>
+                  {teams.map((tm) => (<option key={tm.id} value={tm.id} className="bg-card">{tm.name}</option>))}
                 </select>
               </div>
             </div>
@@ -704,17 +693,17 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             {/* Owner selector */}
             <div>
               <label className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
-                <Crown className="w-3.5 h-3.5 text-warning" /> Owner (Accountable)
+                <Crown className="w-3.5 h-3.5 text-warning" /> {t("newDecision.ownerLabel")}
               </label>
               <select value={ownerId} onChange={(e) => setOwnerId(e.target.value)} className={inputClass}>
-                <option value="" className="bg-card">Ich selbst (Standard)</option>
+                <option value="" className="bg-card">{t("newDecision.ownerDefault")}</option>
                 {profilesList.map(p => (
                   <option key={p.user_id} value={p.user_id} className="bg-card">
                     {p.full_name || p.user_id.slice(0, 8)}
                   </option>
                 ))}
               </select>
-              <p className="text-[10px] text-muted-foreground mt-1">Owner ist verantwortlich für Status, Freigabe und Teilen.</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{t("newDecision.ownerHint")}</p>
             </div>
 
             {/* Review-Flow Selector */}
@@ -729,8 +718,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               <div className="space-y-3 pt-3 border-t border-border">
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-primary" />
-                  <span className="text-sm font-medium">Pflichtfelder – {categoryLabels[selectedTemplate.category]}</span>
-                  <Badge variant="outline" className="text-[10px]">{allRequiredFields.length} Felder</Badge>
+                  <span className="text-sm font-medium">{t("newDecision.requiredFieldsTitle", { category: tl.categoryLabels[selectedTemplate.category] })}</span>
+                  <Badge variant="outline" className="text-[10px]">{t("newDecision.fieldsCount", { count: allRequiredFields.length })}</Badge>
                 </div>
                 {selectedTemplate.requiredFields.map(field => renderExtraField(field, false))}
               </div>
@@ -741,8 +730,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               <div className="space-y-3 pt-3 border-t border-warning/30">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-warning" />
-                  <span className="text-sm font-medium text-warning">Bedingte Pflichtfelder</span>
-                  <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">{conditionalResult.extraFields.length} aktiviert</Badge>
+                  <span className="text-sm font-medium text-warning">{t("newDecision.conditionalFieldsTitle")}</span>
+                  <Badge variant="outline" className="text-[10px] border-warning/40 text-warning">{t("newDecision.conditionalActivated", { count: conditionalResult.extraFields.length })}</Badge>
                 </div>
                 {conditionalResult.extraFields.map(field => renderExtraField(field, true))}
               </div>
@@ -752,10 +741,10 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             {conditionalResult.extraApprovalSteps.length > 0 && (
               <div className="p-2.5 rounded-lg bg-warning/5 border border-warning/20 text-xs space-y-1">
                 <p className="font-medium text-warning flex items-center gap-1">
-                  <Zap className="w-3.5 h-3.5" /> Zusätzliche Freigabe-Stufen aktiviert
+                  <Zap className="w-3.5 h-3.5" /> {t("newDecision.extraApprovalTitle")}
                 </p>
                 {conditionalResult.extraApprovalSteps.map((s, i) => (
-                  <p key={i} className="text-muted-foreground pl-5">+ {s.label} {s.required ? "(Pflicht)" : "(Optional)"}</p>
+                  <p key={i} className="text-muted-foreground pl-5">+ {s.label} {s.required ? t("newDecision.required") : t("newDecision.optional")}</p>
                 ))}
               </div>
             )}
@@ -801,7 +790,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Pflichtfelder nicht ausgefüllt:</p>
+                  <p className="font-medium">{t("newDecision.validationMissing")}</p>
                   <ul className="mt-1 space-y-0.5">
                     {validationErrors.map(e => <li key={e}>• {e}</li>)}
                   </ul>
@@ -811,8 +800,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
             {error && <p className="text-destructive text-sm">{error}</p>}
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>Abbrechen</Button>
-              <Button type="submit" disabled={loading || !title.trim()}>{loading ? "Erstellen..." : "Erstellen"}</Button>
+              <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>{t("newDecision.cancel")}</Button>
+              <Button type="submit" disabled={loading || !title.trim()}>{loading ? t("newDecision.creating") : t("newDecision.create")}</Button>
             </div>
           </form>
         )}
