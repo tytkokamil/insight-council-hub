@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.seed-demo-data]
 verify_jwt = false
+
+[functions.reset-user-data]
+verify_jwt = false
