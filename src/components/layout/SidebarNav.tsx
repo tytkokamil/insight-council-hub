@@ -60,7 +60,7 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "teams",
     items: [
-      { icon: Users, label: "nav.teams", path: "/teams", featureKey: "teams" },
+      { icon: Users, label: "nav.teamsNav", path: "/teams", featureKey: "teams" },
       { icon: Video, label: "nav.meeting", path: "/meeting" },
     ],
   },
