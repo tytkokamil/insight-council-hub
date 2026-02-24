@@ -1,37 +1,41 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
+import i18n from "@/i18n";
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Entwurf",
-  proposed: "Vorschlag",
-  review: "In Review",
-  approved: "Genehmigt",
-  rejected: "Abgelehnt",
-  implemented: "Umgesetzt",
-  archived: "Archiviert",
-};
+const t = (key: string, opts?: any): string => String(i18n.t(key, opts));
+const dateLoc = () => (i18n.language === "en" ? enUS : de);
 
-const PRIORITY_LABELS: Record<string, string> = {
-  low: "Niedrig",
-  medium: "Mittel",
-  high: "Hoch",
-  critical: "Kritisch",
-};
+const statusLabels = () => ({
+  draft: t("boardReport.statusDraft"),
+  proposed: t("boardReport.statusProposed"),
+  review: t("boardReport.statusReview"),
+  approved: t("boardReport.statusApproved"),
+  rejected: t("boardReport.statusRejected"),
+  implemented: t("boardReport.statusImplemented"),
+  archived: t("boardReport.statusArchived"),
+});
 
-const CATEGORY_LABELS: Record<string, string> = {
-  strategic: "Strategisch",
-  budget: "Budget",
-  hr: "Personal",
-  technical: "Technisch",
-  operational: "Operativ",
-  marketing: "Marketing",
-};
+const priorityLabels = () => ({
+  low: t("boardReport.prioLow"),
+  medium: t("boardReport.prioMedium"),
+  high: t("boardReport.prioHigh"),
+  critical: t("boardReport.prioCritical"),
+});
+
+const categoryLabels = () => ({
+  strategic: t("boardReport.catStrategic"),
+  budget: t("boardReport.catBudget"),
+  hr: t("boardReport.catHr"),
+  technical: t("boardReport.catTechnical"),
+  operational: t("boardReport.catOperational"),
+  marketing: t("boardReport.catMarketing"),
+});
 
 const fmtDate = (d: string | null | undefined) =>
-  d ? format(new Date(d), "dd.MM.yyyy", { locale: de }) : "—";
+  d ? format(new Date(d), "dd.MM.yyyy", { locale: dateLoc() }) : "—";
 
 interface BoardReportData {
   decisions: any[];
@@ -64,14 +68,18 @@ export async function fetchBoardReportData(): Promise<BoardReportData> {
 
 export function generateBoardReport(data: BoardReportData) {
   const { decisions, teams, auditLogs, profiles, risks, tasks } = data;
+  const sl = statusLabels();
+  const pl = priorityLabels();
+  const cl = categoryLabels();
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const now = format(new Date(), "dd. MMMM yyyy, HH:mm 'Uhr'", { locale: de });
+  const now = format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: dateLoc() });
   const profileMap: Record<string, string> = {};
-  profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || "Unbekannt"; });
+  profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || t("boardReport.unknown"); });
 
   // --- HEADER ---
-  doc.setFillColor(15, 23, 42); // slate-900
+  doc.setFillColor(15, 23, 42);
   doc.rect(0, 0, pageWidth, 36, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(20);
@@ -79,17 +87,17 @@ export function generateBoardReport(data: BoardReportData) {
   doc.text("Board Report", 14, 16);
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text("Decivio — Entscheidungsbericht für den Vorstand", 14, 23);
+  doc.text(t("boardReport.headerSubtitle"), 14, 23);
   doc.setFontSize(8);
-  doc.text(`Erstellt: ${now}`, 14, 30);
-  doc.text(`${decisions.length} Entscheidungen`, pageWidth - 14, 30, { align: "right" });
+  doc.text(`${t("boardReport.created")}: ${now}`, 14, 30);
+  doc.text(t("boardReport.decisionsCount", { count: decisions.length }), pageWidth - 14, 30, { align: "right" });
 
   // --- KPI SECTION ---
   let y = 44;
   doc.setTextColor(30, 30, 30);
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Key Performance Indicators", 14, y);
+  doc.text(t("boardReport.kpiTitle"), 14, y);
   y += 8;
 
   const implemented = decisions.filter((d: any) => d.status === "implemented");
@@ -118,20 +126,20 @@ export function generateBoardReport(data: BoardReportData) {
   )));
 
   const kpis = [
-    ["Gesamt", String(decisions.length)],
-    ["Umgesetzt", `${implemented.length} (${implRate}%)`],
-    ["In Review", String(inReview.length)],
-    ["Genehmigt", String(approved.length)],
-    ["Überfällig", String(overdue.length)],
-    ["Hohes Risiko", String(highRisk.length)],
-    ["Ø Umsetzungsdauer", `${avgVelocity} Tage`],
-    ["Health Score", `${healthScore}/100`],
-    ["Opportunity Cost", `€${totalCost.toLocaleString("de-DE")}`],
+    [t("boardReport.total"), String(decisions.length)],
+    [t("boardReport.implemented"), `${implemented.length} (${implRate}%)`],
+    [t("boardReport.inReview"), String(inReview.length)],
+    [t("boardReport.approved"), String(approved.length)],
+    [t("boardReport.overdue"), String(overdue.length)],
+    [t("boardReport.highRisk"), String(highRisk.length)],
+    [t("boardReport.avgVelocity"), t("boardReport.days", { count: avgVelocity })],
+    [t("boardReport.healthScore"), `${healthScore}/100`],
+    [t("boardReport.opportunityCost"), `€${totalCost.toLocaleString(i18n.language === "en" ? "en-US" : "de-DE")}`],
   ];
 
   autoTable(doc, {
     startY: y,
-    head: [["Metrik", "Wert"]],
+    head: [[t("boardReport.metric"), t("boardReport.value")]],
     body: kpis,
     theme: "grid",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 9, fontStyle: "bold" },
@@ -145,21 +153,21 @@ export function generateBoardReport(data: BoardReportData) {
   y = (doc as any).lastAutoTable.finalY + 12;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Entscheidungsübersicht", 14, y);
+  doc.text(t("boardReport.decisionOverview"), 14, y);
   y += 4;
 
   const decRows = decisions.slice(0, 30).map((d: any) => [
     d.title.length > 35 ? d.title.slice(0, 35) + "…" : d.title,
-    STATUS_LABELS[d.status] || d.status,
-    PRIORITY_LABELS[d.priority] || d.priority,
-    CATEGORY_LABELS[d.category] || d.category,
+    (sl as any)[d.status] || d.status,
+    (pl as any)[d.priority] || d.priority,
+    (cl as any)[d.category] || d.category,
     `${d.ai_risk_score || 0}%`,
     fmtDate(d.due_date),
   ]);
 
   autoTable(doc, {
     startY: y,
-    head: [["Titel", "Status", "Priorität", "Kategorie", "Risiko", "Fällig"]],
+    head: [[t("boardReport.colTitle"), t("boardReport.colStatus"), t("boardReport.colPriority"), t("boardReport.colCategory"), t("boardReport.colRisk"), t("boardReport.colDue")]],
     body: decRows,
     theme: "striped",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -168,54 +176,47 @@ export function generateBoardReport(data: BoardReportData) {
     margin: { left: 14, right: 14 },
     styles: { cellPadding: 2.5, overflow: "linebreak" },
     didParseCell: (data: any) => {
-      // Color high risk cells
       if (data.column.index === 4 && data.section === "body") {
         const val = parseInt(data.cell.text[0]);
         if (val > 60) data.cell.styles.textColor = [220, 38, 38];
         else if (val > 40) data.cell.styles.textColor = [202, 138, 4];
       }
-      // Color critical priority
       if (data.column.index === 2 && data.section === "body") {
-        if (data.cell.text[0] === "Kritisch") data.cell.styles.textColor = [220, 38, 38];
-        if (data.cell.text[0] === "Hoch") data.cell.styles.textColor = [202, 138, 4];
+        if (data.cell.text[0] === pl.critical) data.cell.styles.textColor = [220, 38, 38];
+        if (data.cell.text[0] === pl.high) data.cell.styles.textColor = [202, 138, 4];
       }
     },
   });
 
   // --- STATUS BREAKDOWN ---
   y = (doc as any).lastAutoTable.finalY + 12;
-
-  // Check if we need a new page
-  if (y > 250) {
-    doc.addPage();
-    y = 20;
-  }
+  if (y > 250) { doc.addPage(); y = 20; }
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Status-Verteilung", 14, y);
+  doc.text(t("boardReport.statusDistribution"), 14, y);
   y += 4;
 
   const statusBreakdown = [
-    ["Entwurf", String(decisions.filter((d: any) => d.status === "draft").length)],
-    ["In Review", String(inReview.length)],
-    ["Genehmigt", String(approved.length)],
-    ["Umgesetzt", String(implemented.length)],
-    ["Abgelehnt", String(decisions.filter((d: any) => d.status === "rejected").length)],
+    [sl.draft, String(decisions.filter((d: any) => d.status === "draft").length)],
+    [sl.review, String(inReview.length)],
+    [sl.approved, String(approved.length)],
+    [sl.implemented, String(implemented.length)],
+    [sl.rejected, String(decisions.filter((d: any) => d.status === "rejected").length)],
   ];
 
-  const categoryBreakdown = Object.entries(CATEGORY_LABELS).map(([key, label]) => [
+  const catLabelsArr = Object.entries(cl).map(([key, label]) => [
     label,
     String(decisions.filter((d: any) => d.category === key).length),
   ]);
 
   autoTable(doc, {
     startY: y,
-    head: [["Status", "Anzahl", "Kategorie", "Anzahl"]],
+    head: [[t("boardReport.colStatus"), t("boardReport.count"), t("boardReport.colCategory"), t("boardReport.count")]],
     body: statusBreakdown.map((s, i) => [
       s[0], s[1],
-      categoryBreakdown[i]?.[0] || "",
-      categoryBreakdown[i]?.[1] || "",
+      catLabelsArr[i]?.[0] || "",
+      catLabelsArr[i]?.[1] || "",
     ]),
     theme: "grid",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -231,7 +232,7 @@ export function generateBoardReport(data: BoardReportData) {
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(30, 30, 30);
-  doc.text("Risiko-Register", 14, y);
+  doc.text(t("boardReport.riskRegister"), 14, y);
   y += 4;
 
   if (risks.length > 0) {
@@ -240,13 +241,13 @@ export function generateBoardReport(data: BoardReportData) {
       `${r.likelihood}/5`,
       `${r.impact}/5`,
       String(r.risk_score || r.likelihood * r.impact),
-      r.status === "open" ? "Offen" : r.status === "mitigated" ? "Mitigiert" : r.status,
+      r.status === "open" ? sl.draft.replace(/.*/, t("boardReport.riskOpen")) : r.status === "mitigated" ? t("boardReport.riskMitigated") : r.status,
       r.mitigation_plan ? (r.mitigation_plan.length > 35 ? r.mitigation_plan.slice(0, 35) + "…" : r.mitigation_plan) : "—",
     ]);
 
     autoTable(doc, {
       startY: y,
-      head: [["Risiko", "W'keit", "Impact", "Score", "Status", "Maßnahme"]],
+      head: [[t("boardReport.riskCol"), t("boardReport.riskLikelihood"), t("boardReport.riskImpact"), t("boardReport.colScore"), t("boardReport.colStatus"), t("boardReport.riskMeasure")]],
       body: riskRows,
       theme: "striped",
       headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -265,7 +266,7 @@ export function generateBoardReport(data: BoardReportData) {
   } else {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Keine Risiken erfasst.", 14, y + 6);
+    doc.text(t("boardReport.noRisks"), 14, y + 6);
     y += 12;
   }
 
@@ -275,7 +276,7 @@ export function generateBoardReport(data: BoardReportData) {
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Aufgaben-Übersicht", 14, y);
+  doc.text(t("boardReport.taskOverview"), 14, y);
   y += 4;
 
   const openTasks = tasks.filter((t: any) => t.status !== "done");
@@ -283,15 +284,15 @@ export function generateBoardReport(data: BoardReportData) {
   const overdueTasks = openTasks.filter((t: any) => t.due_date && new Date(t.due_date) < new Date());
 
   const taskSummary = [
-    ["Gesamt", String(tasks.length)],
-    ["Offen", String(openTasks.length)],
-    ["Erledigt", String(doneTasks.length)],
-    ["Überfällig", String(overdueTasks.length)],
+    [t("boardReport.total"), String(tasks.length)],
+    [t("boardReport.taskOpen"), String(openTasks.length)],
+    [t("boardReport.taskDone"), String(doneTasks.length)],
+    [t("boardReport.overdue"), String(overdueTasks.length)],
   ];
 
   autoTable(doc, {
     startY: y,
-    head: [["Metrik", "Anzahl"]],
+    head: [[t("boardReport.metric"), t("boardReport.count")]],
     body: taskSummary,
     theme: "grid",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -307,7 +308,7 @@ export function generateBoardReport(data: BoardReportData) {
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Empfehlungen", 14, y);
+  doc.text(t("boardReport.recommendations"), 14, y);
   y += 6;
 
   doc.setFontSize(9);
@@ -315,13 +316,13 @@ export function generateBoardReport(data: BoardReportData) {
   doc.setTextColor(30, 30, 30);
 
   const recommendations: string[] = [];
-  if (overdue.length > 0) recommendations.push(`⚠️ ${overdue.length} überfällige Entscheidungen priorisieren — älteste: "${overdue[0]?.title}".`);
-  if (highRisk.length > 0) recommendations.push(`🔴 ${highRisk.length} Entscheidungen mit hohem Risiko (>60%) erfordern sofortige Review.`);
-  if (overdueTasks.length > 0) recommendations.push(`📋 ${overdueTasks.length} überfällige Aufgaben blockieren möglicherweise Entscheidungen.`);
+  if (overdue.length > 0) recommendations.push(t("boardReport.recOverdue", { count: overdue.length, title: overdue[0]?.title }));
+  if (highRisk.length > 0) recommendations.push(t("boardReport.recHighRisk", { count: highRisk.length }));
+  if (overdueTasks.length > 0) recommendations.push(t("boardReport.recOverdueTasks", { count: overdueTasks.length }));
   const criticalRisks = risks.filter((r: any) => (r.risk_score || 0) >= 15);
-  if (criticalRisks.length > 0) recommendations.push(`🛡️ ${criticalRisks.length} kritische Risiken (Score ≥15) benötigen Eskalation.`);
-  if (implRate < 30) recommendations.push(`📈 Umsetzungsrate bei ${implRate}% — Prozess-Optimierung empfohlen.`);
-  if (recommendations.length === 0) recommendations.push("✅ Keine kritischen Handlungsempfehlungen — System ist gesund.");
+  if (criticalRisks.length > 0) recommendations.push(t("boardReport.recCriticalRisks", { count: criticalRisks.length }));
+  if (implRate < 30) recommendations.push(t("boardReport.recLowImplRate", { rate: implRate }));
+  if (recommendations.length === 0) recommendations.push(t("boardReport.recHealthy"));
 
   recommendations.forEach(rec => {
     if (y > 275) { doc.addPage(); y = 20; }
@@ -335,7 +336,7 @@ export function generateBoardReport(data: BoardReportData) {
 
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text("Audit Trail (letzte 20 Einträge)", 14, y);
+  doc.text(t("boardReport.auditTrailTitle"), 14, y);
   y += 4;
 
   const auditRows = auditLogs.slice(0, 20).map((log: any) => {
@@ -353,7 +354,7 @@ export function generateBoardReport(data: BoardReportData) {
   if (auditRows.length > 0) {
     autoTable(doc, {
       startY: y,
-      head: [["Datum", "Nutzer", "Aktion", "Entscheidung", "Feld"]],
+      head: [[t("boardReport.auditDate"), t("boardReport.auditUser"), t("boardReport.auditAction"), t("boardReport.auditDecision"), t("boardReport.auditField")]],
       body: auditRows,
       theme: "striped",
       headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -364,7 +365,7 @@ export function generateBoardReport(data: BoardReportData) {
   } else {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("Keine Audit-Einträge vorhanden.", 14, y + 6);
+    doc.text(t("boardReport.noAuditEntries"), 14, y + 6);
   }
 
   // --- FOOTER on each page ---
@@ -375,12 +376,12 @@ export function generateBoardReport(data: BoardReportData) {
     doc.setFont("helvetica", "normal");
     doc.setTextColor(150, 150, 150);
     const pageH = doc.internal.pageSize.getHeight();
-    doc.text("Decivio — Vertraulich", 14, pageH - 8);
-    doc.text(`Seite ${i} von ${pageCount}`, pageWidth - 14, pageH - 8, { align: "right" });
+    doc.text(t("boardReport.confidential"), 14, pageH - 8);
+    doc.text(t("boardReport.page", { current: i, total: pageCount }), pageWidth - 14, pageH - 8, { align: "right" });
     doc.line(14, pageH - 12, pageWidth - 14, pageH - 12);
   }
 
   // Save
-  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: de });
+  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: dateLoc() });
   doc.save(`Board-Report_${dateStr}.pdf`);
 }
