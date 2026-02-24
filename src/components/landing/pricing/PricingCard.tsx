@@ -37,7 +37,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
         <div className="mb-3">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground tracking-wide">
             <Sparkles className="w-3 h-3" />
-            Beliebteste Wahl
+            ★ BELIEBTESTER PLAN
           </span>
         </div>
       )}
