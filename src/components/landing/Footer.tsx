@@ -59,6 +59,9 @@ const Footer = () => {
               <li><Link to="/privacy" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{t("landing.footer.privacy")}</Link></li>
               <li><Link to="/terms" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{t("landing.footer.terms")}</Link></li>
               <li><Link to="/imprint" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{t("landing.footer.imprint")}</Link></li>
+              <li><Link to="/avv" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">AVV</Link></li>
+              <li><Link to="/ai-policy" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">KI-Richtlinie</Link></li>
+              <li><Link to="/sub-processors" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">Sub-Processors</Link></li>
             </ul>
           </div>
 
