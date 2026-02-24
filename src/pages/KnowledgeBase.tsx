@@ -20,10 +20,8 @@ import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
   ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
   Filter, ClipboardCheck, TrendingUp, TrendingDown, AlertTriangle, Shield, Gauge, Info,
-  Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw, Percent,
+  Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw,
 } from "lucide-react";
-import HeroKpi from "@/components/shared/HeroKpi";
-import PowerGrid from "@/components/shared/PowerGrid";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -431,20 +429,29 @@ const KnowledgeBase = () => {
           }
         />
 
-        {/* ═══ LAYER 1 – DOMINANCE ═══ */}
-        <HeroKpi columns={3} items={[
-          { label: "Lessons Count", value: `${lessons.length}`, icon: Lightbulb, sentiment: "neutral" },
-          { label: "Success Rate", value: `${snapshot.docRate}%`, icon: Percent, sentiment: snapshot.docRate >= 60 ? "positive" : snapshot.docRate >= 30 ? "warning" : "critical" },
-          { label: "Recurring Patterns", value: `${snapshot.recurringPatterns}`, icon: Repeat, sentiment: snapshot.recurringPatterns > 2 ? "warning" : "neutral" },
-        ]} />
-
-        {/* ═══ LAYER 2 – POWER GRID ═══ */}
-        <PowerGrid title="Knowledge Matrix" columns={4} items={[
-          { label: "Abgeschlossen (90T)", value: snapshot.completedDec },
-          { label: "Dokumentiert", value: snapshot.documented, icon: CheckCircle2 },
-          { label: "Wiederholte Fehler", value: snapshot.repeatedFailures, icon: AlertTriangle, sentiment: snapshot.repeatedFailures > 0 ? "warning" : "positive" },
-          { label: "Ø Zeit bis Learning", value: `${snapshot.avgTimeToDoc}d`, icon: Clock },
-        ]} />
+        {/* ── 1. Learning Snapshot ──────────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            { label: "Abgeschlossen (90T)", value: snapshot.completedDec, icon: <CheckCircle2 className="w-4 h-4 text-primary" /> },
+            { label: "Lessons dokumentiert", value: snapshot.documented, icon: <Lightbulb className="w-4 h-4 text-warning" /> },
+            { label: "Dokumentationsquote", value: `${snapshot.docRate}%`, icon: <BarChart3 className="w-4 h-4 text-primary" />, highlight: snapshot.docRate < 50 },
+            { label: "Wiederkehrende Muster", value: snapshot.recurringPatterns, icon: <Repeat className="w-4 h-4 text-accent-foreground" /> },
+            { label: "Wiederholte Fehler", value: snapshot.repeatedFailures, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: snapshot.repeatedFailures > 0 },
+            { label: "Ø Zeit bis Learning", value: `${snapshot.avgTimeToDoc} Tage`, icon: <Clock className="w-4 h-4 text-muted-foreground" /> },
+          ].map((kpi, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+              <Card className={kpi.highlight ? "border-warning/30 bg-warning/5" : ""}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {kpi.icon}
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                  </div>
+                  <p className={`text-xl font-bold ${kpi.highlight ? "text-warning" : ""}`}>{kpi.value}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
 
         {/* ── 7. Knowledge Quality Score + 9. Category Heatmap ───── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

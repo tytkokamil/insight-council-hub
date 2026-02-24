@@ -78,10 +78,6 @@ export default {
   			'accent-violet': 'hsl(var(--accent-violet))',
   			'accent-rose': 'hsl(var(--accent-rose))',
   			'accent-amber': 'hsl(var(--accent-amber))',
-  			'aurora-mint': 'hsl(var(--aurora-mint))',
-  			'aurora-blue': 'hsl(var(--aurora-blue))',
-  			'aurora-violet': 'hsl(var(--aurora-violet))',
-  			'aurora-rose': 'hsl(var(--aurora-rose))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -127,10 +123,6 @@ export default {
 				from: { opacity: '0', transform: 'translateY(8px)' },
 				to: { opacity: '1', transform: 'translateY(0)' }
 			},
-			'aurora-shift': {
-				'0%, 100%': { backgroundPosition: '0% 50%' },
-				'50%': { backgroundPosition: '100% 50%' },
-			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -142,7 +134,6 @@ export default {
   			'scale-in': 'scale-in 0.3s ease-out',
 			shimmer: 'shimmer 1.5s ease-in-out infinite',
 			'stagger-in': 'stagger-in 0.3s ease-out both',
-			'aurora-shift': 'aurora-shift 8s ease-in-out infinite',
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',

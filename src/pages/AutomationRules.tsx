@@ -144,8 +144,7 @@ function classifyRule(rule: AutomationRule): string {
 
 // ── Main Component ─────────────────────────────────────────────────────
 
-const AutomationRules = ({ embedded }: { embedded?: boolean }) => {
-  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
+const AutomationRules = () => {
   const { user } = useAuth();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [logs, setLogs] = useState<RuleLog[]>([]);
@@ -329,7 +328,7 @@ const AutomationRules = ({ embedded }: { embedded?: boolean }) => {
   const displayedRules = selectedCategory ? (groupedRules[selectedCategory] || []) : rules;
 
   return (
-    <Wrapper>
+    <AppLayout>
       <PageHeader
         title="Automation Rules"
         subtitle="Governance-Automatisierung – Regeln, Impact & Compliance"
@@ -817,7 +816,7 @@ const AutomationRules = ({ embedded }: { embedded?: boolean }) => {
           </div>
         </DialogContent>
       </Dialog>
-    </Wrapper>
+    </AppLayout>
   );
 };
 

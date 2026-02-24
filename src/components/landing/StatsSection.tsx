@@ -41,27 +41,25 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const StatsSection = () => (
   <section className="py-20 relative">
-    <div className="container mx-auto px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="aurora-card p-2">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/40">
-            {metrics.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.08, duration: 0.6, ease }}
-                className="text-center px-6 py-6"
-              >
-                <div className="text-4xl md:text-5xl font-bold tracking-[-0.04em] font-display text-foreground">
-                  <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-                </div>
-                <div className="text-sm text-muted-foreground mt-2">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+    <div className="absolute inset-0 bg-muted/20" />
+    
+    <div className="container mx-auto px-4 relative z-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-3xl mx-auto bg-border/30 rounded-2xl overflow-hidden border border-border/30">
+        {metrics.map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: i * 0.06, duration: 0.5, ease }}
+            className="bg-card text-center p-6"
+          >
+            <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display text-primary">
+              <AnimatedNumber value={stat.value} suffix={stat.suffix} />
+            </div>
+            <div className="text-[11px] text-muted-foreground/60 font-medium">{stat.label}</div>
+          </motion.div>
+        ))}
       </div>
     </div>
   </section>

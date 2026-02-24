@@ -6,8 +6,6 @@ import {
   MessageSquare, Shield, Activity, Clock, TrendingUp, TrendingDown, Eye, Download,
   BarChart3, Gauge, Info, ChevronDown, ChevronRight
 } from "lucide-react";
-import HeroKpi from "@/components/shared/HeroKpi";
-import PowerGrid from "@/components/shared/PowerGrid";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -253,22 +251,29 @@ const AuditTrail = () => {
           }
         />
 
-        {/* ═══ LAYER 1 – DOMINANCE ═══ */}
-        <HeroKpi columns={3} items={[
-          { label: "Audit Stability", value: `${stabilityScore}`, icon: Gauge, sentiment: stabilityScore >= 75 ? "positive" : stabilityScore >= 50 ? "warning" : "critical" },
-          { label: "Critical Changes", value: `${kpis.overrides + kpis.escalations}`, icon: AlertTriangle, sentiment: (kpis.overrides + kpis.escalations) > 0 ? "warning" : "positive" },
-          { label: "Compliance", value: kpis.slaViolations === 0 && kpis.overrides === 0 ? "Konform" : "Auffällig", sentiment: kpis.slaViolations === 0 && kpis.overrides === 0 ? "positive" : "warning" },
-        ]} />
-
-        {/* ═══ LAYER 2 – POWER GRID ═══ */}
-        <PowerGrid title="Audit Matrix" columns={3} items={[
-          { label: "Änderungen (30T)", value: kpis.total, icon: Activity },
-          { label: "Status-Änderungen", value: kpis.statusChanges, icon: CheckCircle },
-          { label: "Eskalationen", value: kpis.escalations, icon: AlertTriangle, sentiment: kpis.escalations >= 5 ? "critical" : "neutral" },
-          { label: "SLA-Verstöße", value: kpis.slaViolations, icon: Clock, sentiment: kpis.slaViolations > 0 ? "warning" : "positive" },
-          { label: "Regel-Auslösungen", value: kpis.automationRuns, icon: Zap },
-          { label: "Manuelle Overrides", value: kpis.overrides, icon: Shield, sentiment: kpis.overrides > 0 ? "critical" : "positive" },
-        ]} />
+        {/* ── 1. Governance Snapshot ──────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            { label: "Änderungen (30T)", value: kpis.total, icon: <Activity className="w-4 h-4 text-primary" /> },
+            { label: "Status-Änderungen", value: kpis.statusChanges, icon: <CheckCircle className="w-4 h-4 text-accent-foreground" /> },
+            { label: "Eskalationen", value: kpis.escalations, icon: <AlertTriangle className="w-4 h-4 text-destructive" />, highlight: kpis.escalations >= 5 },
+            { label: "SLA-Verstöße", value: kpis.slaViolations, icon: <Clock className="w-4 h-4 text-warning" />, highlight: kpis.slaViolations > 0 },
+            { label: "Regel-Auslösungen", value: kpis.automationRuns, icon: <Zap className="w-4 h-4 text-primary" /> },
+            { label: "Manuelle Overrides", value: kpis.overrides, icon: <Shield className="w-4 h-4 text-destructive" />, highlight: kpis.overrides > 0 },
+          ].map((kpi, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+              <Card className={kpi.highlight ? "border-destructive/30 bg-destructive/5" : ""}>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    {kpi.icon}
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wide">{kpi.label}</span>
+                  </div>
+                  <p className={`text-xl font-bold ${kpi.highlight ? "text-destructive" : ""}`}>{kpi.value}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
 
         {/* ── 10. Governance Integrity Score + 7. Stats ──────────── */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

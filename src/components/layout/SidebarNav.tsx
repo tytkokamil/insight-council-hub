@@ -60,15 +60,29 @@ const navGroupsDef: NavGroupDef[] = [
   {
     labelKey: "governance",
     items: [
-      { icon: Shield, label: "nav.governanceCenter", path: "/governance", featureKey: "engine" },
+      { icon: Briefcase, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
+      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine" },
+      { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks" },
+      { icon: Zap, label: "nav.automations", path: "/automations" },
+      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
     ],
   },
   {
     labelKey: "insights",
     items: [
       { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
-      { icon: Brain, label: "nav.intelligenceCenter", path: "/intelligence", featureKey: "analytics" },
-      { icon: Cpu, label: "nav.processIntelligence", path: "/process-intelligence", featureKey: "bottlenecks" },
+      { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks" },
+      {
+        icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics",
+        children: [
+          { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
+          { icon: Radar, label: "nav.decisionRadar", path: "/radar" },
+          { icon: Dna, label: "nav.decisionDna", path: "/dna" },
+          { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
+          { icon: Activity, label: "nav.healthHeatmap", path: "/health-heatmap" },
+          { icon: Clock, label: "nav.predictiveTimeline", path: "/predictive-timeline" },
+        ],
+      } as NavSubGroup,
     ],
   },
   {
@@ -76,7 +90,6 @@ const navGroupsDef: NavGroupDef[] = [
     items: [
       { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge" },
       { icon: Settings2, label: "nav.templates", path: "/template-editor" },
-      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
       { icon: Archive, label: "nav.archive", path: "/archive" },
       { icon: Settings, label: "nav.settings", path: "/settings" },
       { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },

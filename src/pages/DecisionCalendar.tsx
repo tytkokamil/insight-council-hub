@@ -12,16 +12,13 @@ import {
   subMonths,
   addWeeks,
   subWeeks,
-  differenceInDays,
 } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare, Layers, AlertTriangle, DollarSign, Shield, Timer, Target, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
-import HeroKpi from "@/components/shared/HeroKpi";
-import PowerGrid from "@/components/shared/PowerGrid";
 import { useDecisions, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import { useTasks, type Task } from "@/hooks/useTasks";
 import DecisionDetailDialog from "@/components/decisions/DecisionDetailDialog";
@@ -242,26 +239,6 @@ const DecisionCalendar = () => {
     tasksByDate,
   };
 
-    // Calendar KPIs
-    const calendarKpis = useMemo(() => {
-      const now = new Date();
-      const monthStart = startOfMonth(currentDate);
-      const monthEnd = endOfMonth(currentDate);
-      const monthDecisions = (decisions ?? []).filter(d => d.due_date && new Date(d.due_date) >= monthStart && new Date(d.due_date) <= monthEnd);
-      const highRisk = monthDecisions.filter(d => (d.ai_risk_score || 0) >= 60).length;
-      const overdue = monthDecisions.filter(d => new Date(d.due_date!) < now && !["implemented", "rejected", "archived"].includes(d.status)).length;
-      const priorityMult: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
-      let costExposure = 0;
-      monthDecisions.forEach(d => {
-        if (["implemented", "rejected", "archived"].includes(d.status)) return;
-        const daysOpen = differenceInDays(now, new Date(d.created_at));
-        costExposure += daysOpen * 2 * 75 * (priorityMult[d.priority] || 1.5);
-      });
-      const formattedCost = costExposure >= 1000 ? `€${Math.round(costExposure / 1000)}k` : `€${Math.round(costExposure)}`;
-
-      return { total: monthDecisions.length, highRisk, overdue, formattedCost, costExposure };
-    }, [decisions, currentDate]);
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -275,7 +252,7 @@ const DecisionCalendar = () => {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <PageHelpButton title="Entscheidungskalender" description="Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben." />
+            <PageHelpButton title="Entscheidungskalender" description="Sieh alle Entscheidungen mit Fälligkeitsdatum auf einen Blick. Per Drag & Drop kannst du Deadlines verschieben. Ungeplante Entscheidungen findest du in der Seitenleiste. Export als ICS-Datei möglich." />
             <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
             <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
               <Download className="w-3.5 h-3.5" />
@@ -312,14 +289,6 @@ const DecisionCalendar = () => {
             </Button>
           </div>
         </div>
-
-        {/* ═══ LAYER 1 – MONTH SUMMARY ═══ */}
-        <HeroKpi items={[
-          { label: "Entscheidungen", value: `${calendarKpis.total}`, icon: Layers, sentiment: "neutral" },
-          { label: "High Risk", value: `${calendarKpis.highRisk}`, icon: Shield, sentiment: calendarKpis.highRisk > 0 ? "critical" : "positive" },
-          { label: "Cost Exposure", value: calendarKpis.formattedCost, icon: DollarSign, sentiment: calendarKpis.costExposure > 10000 ? "warning" : "neutral" },
-          { label: "SLA Breaches", value: `${calendarKpis.overdue}`, icon: AlertTriangle, sentiment: calendarKpis.overdue > 0 ? "critical" : "positive" },
-        ]} />
 
         {/* Summary bar */}
         <CalendarSummaryBar

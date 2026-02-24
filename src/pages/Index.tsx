@@ -6,10 +6,10 @@ import ProblemSection from "@/components/landing/ProblemSection";
 import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import BenefitsSection from "@/components/landing/BenefitsSection";
 import FeaturesSection from "@/components/landing/FeaturesSection";
-import AIShowcaseSection from "@/components/landing/AIShowcaseSection";
 import UseCasesSection from "@/components/landing/UseCasesSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import PricingSection from "@/components/landing/PricingSection";
+import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 
 const Index = () => {
@@ -17,7 +17,7 @@ const Index = () => {
     <>
       <Helmet>
         <title>Decivio — Decision Governance Platform</title>
-        <meta name="description" content="Die Governance-Plattform für Entscheidungen in wachsenden Unternehmen. KI-Risikoanalyse, SLA-Tracking, Eskalation und Executive Dashboards." />
+        <meta name="description" content="Die Governance-Plattform für Entscheidungen in wachsenden Unternehmen. SLA-Tracking, Eskalation, Risk Scoring und Executive Dashboards." />
       </Helmet>
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -28,10 +28,10 @@ const Index = () => {
           <HowItWorksSection />
           <BenefitsSection />
           <FeaturesSection />
-          <AIShowcaseSection />
           <UseCasesSection />
           <TestimonialsSection />
           <PricingSection />
+          <CTASection />
         </main>
         <Footer />
       </div>

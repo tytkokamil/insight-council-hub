@@ -64,8 +64,7 @@ const IMPACT_MULTIPLIER: Record<number, number> = { 1: 500, 2: 2000, 3: 8000, 4:
 const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k €` : `${Math.round(cost)} €`;
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
-const RiskRegister = ({ embedded }: { embedded?: boolean }) => {
-  const Wrapper = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
+const RiskRegister = () => {
   const { user } = useAuth();
   const { data: risks = [], isLoading } = useRisks();
   const { data: decLinks = [] } = useRiskDecisionLinks();
@@ -227,7 +226,7 @@ const RiskRegister = ({ embedded }: { embedded?: boolean }) => {
   };
 
   return (
-    <Wrapper>
+    <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <PageHeader
           title="Risk Register"
@@ -655,7 +654,7 @@ const RiskRegister = ({ embedded }: { embedded?: boolean }) => {
           </DialogContent>
         </Dialog>
       </div>
-    </Wrapper>
+    </AppLayout>
   );
 };
 
