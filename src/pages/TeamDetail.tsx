@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, MessageCircle, Settings, BarChart3 } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Settings, BarChart3, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -14,6 +14,8 @@ import TeamHealthIndicator from "@/components/teams/TeamHealthIndicator";
 import TeamChat from "@/components/teams/TeamChat";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import TeamDefaultsConfig from "@/components/teams/TeamDefaultsConfig";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const TeamDetail = () => {
   const { teamId } = useParams<{ teamId: string }>();
@@ -23,6 +25,7 @@ const TeamDetail = () => {
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isTeamAdmin, setIsTeamAdmin] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -152,6 +155,57 @@ const TeamDetail = () => {
                     {t("teamDetail.slaConfigDesc")}
                   </p>
                   <SlaConfigPanel />
+                </div>
+
+                <hr className="border-border" />
+
+                <div className="rounded-lg border border-destructive/30 p-4">
+                  <h2 className="text-sm font-semibold text-destructive mb-1">{t("teamDetail.dangerZone")}</h2>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {t("teamDetail.deleteTeamDesc")}
+                  </p>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="gap-1.5" disabled={deleting}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t("teamDetail.deleteTeam")}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>{t("teamDetail.deleteTeam")}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {t("teamDetail.deleteTeamConfirm", { name: team.name })}
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          disabled={deleting}
+                          onClick={async () => {
+                            setDeleting(true);
+                            try {
+                              // Cascade: messages, chat reads, invitations, members, then team
+                              await supabase.from("team_messages").delete().eq("team_id", team.id);
+                              await supabase.from("team_chat_reads").delete().eq("team_id", team.id);
+                              await supabase.from("team_invitations").delete().eq("team_id", team.id);
+                              await supabase.from("team_members").delete().eq("team_id", team.id);
+                              const { error } = await supabase.from("teams").delete().eq("id", team.id);
+                              if (error) throw error;
+                              toast.success(t("teamDetail.deleteTeamSuccess"));
+                              navigate("/teams");
+                            } catch (err: any) {
+                              toast.error(t("teamDetail.deleteTeamError"));
+                              setDeleting(false);
+                            }
+                          }}
+                        >
+                          {deleting ? "..." : t("teamDetail.deleteTeam")}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </TabsContent>
