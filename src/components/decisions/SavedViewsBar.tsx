@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSavedViews, SavedViewFilters } from "@/hooks/useSavedViews";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface SavedViewsBarProps {
   entityType?: string;
@@ -13,6 +14,7 @@ interface SavedViewsBarProps {
 }
 
 const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, hasActiveFilters }: SavedViewsBarProps) => {
+  const { t } = useTranslation();
   const { views, createView, updateView, deleteView } = useSavedViews(entityType);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [showSave, setShowSave] = useState(false);
@@ -32,7 +34,7 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
       { name: saveName.trim(), filters: currentFilters, is_pinned: true },
       {
         onSuccess: () => {
-          toast.success(`View "${saveName}" gespeichert`);
+          toast.success(t("savedViews.viewSaved", { name: saveName }));
           setSaveName("");
           setShowSave(false);
         },
@@ -43,7 +45,7 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
   const handleDelete = (id: string, name: string) => {
     deleteView.mutate(id, {
       onSuccess: () => {
-        toast.success(`"${name}" gelöscht`);
+        toast.success(t("savedViews.viewDeleted", { name }));
         if (activeViewId === id) setActiveViewId(null);
       },
     });
@@ -53,20 +55,18 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
     updateView.mutate({ id, is_pinned: !currentlyPinned });
   };
 
-  // System views (not saved in DB, always available)
   const systemViews: { key: string; label: string; filters: SavedViewFilters }[] = [
-    { key: "sys_overdue", label: "⏰ Überfällig", filters: { quickChip: "overdue" } },
-    { key: "sys_review", label: "📋 Meine Reviews", filters: { quickChip: "review" } },
-    { key: "sys_highrisk", label: "⚠️ High Risk", filters: { quickChip: "highRisk" } },
-    { key: "sys_strategic", label: "🎯 Strategisch", filters: { category: ["strategic"] } },
-    { key: "sys_critical", label: "🔴 Kritisch", filters: { priority: ["critical"] } },
+    { key: "sys_overdue", label: t("savedViews.overdue"), filters: { quickChip: "overdue" } },
+    { key: "sys_review", label: t("savedViews.myReviews"), filters: { quickChip: "review" } },
+    { key: "sys_highrisk", label: t("savedViews.highRisk"), filters: { quickChip: "highRisk" } },
+    { key: "sys_strategic", label: t("savedViews.strategic"), filters: { category: ["strategic"] } },
+    { key: "sys_critical", label: t("savedViews.critical"), filters: { priority: ["critical"] } },
   ];
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <Bookmark className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
 
-      {/* System Views */}
       {systemViews.map(sv => (
         <button
           key={sv.key}
@@ -84,7 +84,6 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
         </button>
       ))}
 
-      {/* Pinned user views */}
       {pinnedViews.map(v => (
         <div key={v.id} className="group relative">
           <button
@@ -106,12 +105,11 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
         </div>
       ))}
 
-      {/* More views dropdown */}
       {unpinnedViews.length > 0 && (
         <Popover>
           <PopoverTrigger asChild>
             <button className="px-2.5 py-1 rounded-md text-[11px] font-medium border border-border/50 bg-muted/40 text-muted-foreground hover:border-primary/30 transition-all">
-              +{unpinnedViews.length} weitere
+              {t("savedViews.moreViews", { count: unpinnedViews.length })}
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-56 p-2" align="start">
@@ -137,7 +135,6 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
         </Popover>
       )}
 
-      {/* Separator + Save current */}
       {hasActiveFilters && (
         <>
           <div className="w-px h-5 bg-border mx-1" />
@@ -148,7 +145,7 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
                 value={saveName}
                 onChange={e => setSaveName(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSave()}
-                placeholder="View-Name..."
+                placeholder={t("savedViews.viewNamePlaceholder")}
                 className="h-7 w-32 px-2 rounded-md border border-input text-xs bg-background focus:border-primary focus:outline-none"
               />
               <Button size="icon" variant="ghost" className="h-6 w-6" onClick={handleSave} disabled={!saveName.trim()}>
@@ -163,13 +160,12 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
               onClick={() => setShowSave(true)}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border border-dashed border-primary/40 text-primary hover:bg-primary/5 transition-all"
             >
-              <Plus className="w-3 h-3" /> View speichern
+              <Plus className="w-3 h-3" /> {t("savedViews.saveView")}
             </button>
           )}
         </>
       )}
 
-      {/* Clear active view */}
       {activeViewId && (
         <button
           onClick={() => {
@@ -179,7 +175,7 @@ const SavedViewsBar = ({ entityType = "decisions", currentFilters, onApplyView, 
           className="px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-3 h-3 inline mr-0.5" />
-          View aufheben
+          {t("savedViews.clearView")}
         </button>
       )}
     </div>

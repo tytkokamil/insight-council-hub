@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Target, DollarSign, Shield, Users, Save, CheckCircle2, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   decision: any;
@@ -23,6 +24,7 @@ interface ScorecardData {
 }
 
 const DecisionScorecard = ({ decision, onUpdated }: Props) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
   const [data, setData] = useState<ScorecardData>({
@@ -36,17 +38,12 @@ const DecisionScorecard = ({ decision, onUpdated }: Props) => {
   const isImplemented = decision.status === "implemented";
   const isOwner = user?.id === decision.created_by || user?.id === decision.owner_id;
 
-  // Load existing scorecard from outcome_notes JSON
   useEffect(() => {
     if (decision.outcome_notes) {
       try {
         const parsed = JSON.parse(decision.outcome_notes);
-        if (parsed.scorecard) {
-          setData(parsed.scorecard);
-        }
-      } catch {
-        // Not JSON, ignore
-      }
+        if (parsed.scorecard) setData(parsed.scorecard);
+      } catch {}
     }
   }, [decision.outcome_notes]);
 
@@ -63,18 +60,14 @@ const DecisionScorecard = ({ decision, onUpdated }: Props) => {
 
     const { error } = await supabase
       .from("decisions")
-      .update({
-        outcome_notes: outcomeNotes,
-        outcome_type: outcomeType,
-        actual_impact_score: overallScore,
-      })
+      .update({ outcome_notes: outcomeNotes, outcome_type: outcomeType, actual_impact_score: overallScore })
       .eq("id", decision.id);
 
     if (!error) {
-      toast.success("Scorecard gespeichert");
+      toast.success(t("scorecard.saved"));
       onUpdated();
     } else {
-      toast.error("Fehler beim Speichern");
+      toast.error(t("scorecard.saveError"));
     }
     setSaving(false);
   };
@@ -83,34 +76,33 @@ const DecisionScorecard = ({ decision, onUpdated }: Props) => {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Target className="w-10 h-10 mx-auto mb-2 opacity-30" />
-        <p className="text-sm">Scorecard ist erst nach Implementierung verfügbar.</p>
+        <p className="text-sm">{t("scorecard.notAvailable")}</p>
       </div>
     );
   }
 
   const dimensions = [
-    { key: "goal_achieved", label: "Ziel erreicht?", icon: Target, weight: "35%", description: "Wurde das definierte Ziel der Entscheidung erreicht?" },
-    { key: "budget_adherence", label: "Budget eingehalten?", icon: DollarSign, weight: "20%", description: "Blieb die Umsetzung im geplanten Budgetrahmen?" },
-    { key: "risk_accuracy", label: "Risiko korrekt eingeschätzt?", icon: Shield, weight: "20%", description: "Stimmt die KI-Risikoeinschätzung mit der Realität überein?" },
-    { key: "stakeholder_satisfaction", label: "Stakeholder zufrieden?", icon: Users, weight: "25%", description: "Sind die betroffenen Stakeholder mit dem Ergebnis zufrieden?" },
+    { key: "goal_achieved", label: t("scorecard.goalAchieved"), icon: Target, weight: "35%", description: t("scorecard.goalDesc") },
+    { key: "budget_adherence", label: t("scorecard.budgetAdherence"), icon: DollarSign, weight: "20%", description: t("scorecard.budgetDesc") },
+    { key: "risk_accuracy", label: t("scorecard.riskAccuracy"), icon: Shield, weight: "20%", description: t("scorecard.riskDesc") },
+    { key: "stakeholder_satisfaction", label: t("scorecard.stakeholderSatisfaction"), icon: Users, weight: "25%", description: t("scorecard.stakeholderDesc") },
   ] as const;
 
   return (
     <div className="space-y-4 mt-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">Decision Scorecard</h3>
+        <h3 className="text-sm font-medium">{t("scorecard.title")}</h3>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-[10px] text-muted-foreground">Gesamtscore</p>
+            <p className="text-[10px] text-muted-foreground">{t("scorecard.overallScore")}</p>
             <p className={`text-xl font-bold ${scoreColor}`}>{overallScore}%</p>
           </div>
           <Badge variant="outline" className={`text-[10px] ${scoreColor}`}>
-            {overallScore >= 70 ? "✅ Erfolgreich" : overallScore >= 40 ? "⚠️ Teilweise" : "❌ Verfehlt"}
+            {overallScore >= 70 ? t("scorecard.successful") : overallScore >= 40 ? t("scorecard.partial") : t("scorecard.failed")}
           </Badge>
         </div>
       </div>
 
-      {/* Score bar */}
       <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
         <div
           className={`h-full rounded-full transition-all ${overallScore >= 70 ? "bg-success" : overallScore >= 40 ? "bg-warning" : "bg-destructive"}`}
@@ -145,12 +137,12 @@ const DecisionScorecard = ({ decision, onUpdated }: Props) => {
       </div>
 
       <div>
-        <label className="text-xs font-medium text-muted-foreground mb-1 block">Anmerkungen & Lessons Learned</label>
+        <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("scorecard.notesLabel")}</label>
         <Textarea
           value={data.notes}
           onChange={e => setData(prev => ({ ...prev, notes: e.target.value }))}
           rows={3}
-          placeholder="Was lief gut? Was würdest du anders machen?"
+          placeholder={t("scorecard.notesPlaceholder")}
           disabled={!isOwner}
         />
       </div>
@@ -158,28 +150,27 @@ const DecisionScorecard = ({ decision, onUpdated }: Props) => {
       {isOwner && (
         <Button onClick={handleSave} disabled={saving} className="gap-1.5">
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          Scorecard speichern
+          {t("scorecard.save")}
         </Button>
       )}
 
-      {/* AI comparison */}
       {decision.ai_risk_score != null && (
         <Card>
           <CardContent className="p-4">
-            <h4 className="text-xs font-semibold mb-2">KI-Prognose vs. Realität</h4>
+            <h4 className="text-xs font-semibold mb-2">{t("scorecard.aiComparison")}</h4>
             <div className="grid grid-cols-2 gap-4 text-center">
               <div>
-                <p className="text-[10px] text-muted-foreground mb-1">KI Risk-Score</p>
+                <p className="text-[10px] text-muted-foreground mb-1">{t("scorecard.aiRiskScore")}</p>
                 <p className="text-lg font-semibold">{decision.ai_risk_score}%</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground mb-1">Tatsächliche Risiko-Genauigkeit</p>
+                <p className="text-[10px] text-muted-foreground mb-1">{t("scorecard.actualRiskAccuracy")}</p>
                 <p className="text-lg font-semibold">{data.risk_accuracy}%</p>
               </div>
             </div>
             <div className="mt-2 text-center">
               <p className="text-[10px] text-muted-foreground">
-                Abweichung: <span className="font-semibold">{Math.abs(decision.ai_risk_score - data.risk_accuracy)}pp</span>
+                {t("scorecard.deviation")}: <span className="font-semibold">{Math.abs(decision.ai_risk_score - data.risk_accuracy)}pp</span>
               </p>
             </div>
           </CardContent>

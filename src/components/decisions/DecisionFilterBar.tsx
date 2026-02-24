@@ -117,12 +117,12 @@ const DecisionFilterBar = ({
               ))}
               {teams.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1.5">Team</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-1.5">{t("decisions.teamLabel")}</p>
                   <div className="flex flex-wrap gap-1">
-                    {teams.map(t => (
-                      <button key={t.id} onClick={() => toggleFilter(filterTeam, t.id, setFilterTeam)}
-                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterTeam.includes(t.id) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
-                        {t.name}
+                    {teams.map(tm => (
+                      <button key={tm.id} onClick={() => toggleFilter(filterTeam, tm.id, setFilterTeam)}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors ${filterTeam.includes(tm.id) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/50 text-muted-foreground border-border hover:border-primary/40"}`}>
+                        {tm.name}
                       </button>
                     ))}
                   </div>
