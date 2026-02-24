@@ -9,6 +9,7 @@ import { useRisks } from "@/hooks/useRisks";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { differenceInDays } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface CoreKpi {
   label: string;
@@ -22,6 +23,7 @@ interface CoreKpi {
 }
 
 const CoreKpiGrid = () => {
+  const { t } = useTranslation();
   const { data: allDecisions = [] } = useDecisions();
   const { data: reviews = [] } = useReviews();
   const { data: tasks = [] } = useTasks();
@@ -57,7 +59,7 @@ const CoreKpiGrid = () => {
 
     // 3. Cost of Delay
     const teamRateMap: Record<string, number> = {};
-    teams.forEach((t: any) => { if (t.hourly_rate) teamRateMap[t.id] = t.hourly_rate; });
+    teams.forEach((tm: any) => { if (tm.hourly_rate) teamRateMap[tm.id] = tm.hourly_rate; });
     let totalCost = 0;
     const openDecisions = active.filter(d => d.status === "draft" || d.status === "review");
     openDecisions.forEach(d => {
@@ -75,47 +77,47 @@ const CoreKpiGrid = () => {
 
     return [
       {
-        label: "Decision Health",
+        label: t("coreKpi.decisionHealth"),
         value: `${healthScore}`,
-        subLabel: healthScore >= 70 ? "Stark" : healthScore >= 45 ? "Moderat" : "Kritisch",
+        subLabel: healthScore >= 70 ? t("coreKpi.strong") : healthScore >= 45 ? t("coreKpi.moderate") : t("coreKpi.critical"),
         icon: Gauge,
         color: healthScore >= 70 ? "text-success" : healthScore >= 45 ? "text-warning" : "text-destructive",
         bgColor: healthScore >= 70 ? "bg-success/10" : healthScore >= 45 ? "bg-warning/10" : "bg-destructive/10",
-        tooltip: "Gesamtgesundheit eurer Entscheidungen basierend auf Eskalationen, Überfälligkeit und Outcome-Erfolg.",
-        formula: "50% × (1 − Eskalationsquote) + 50% × Erfolgsquote",
+        tooltip: t("coreKpi.healthTooltip"),
+        formula: t("coreKpi.healthFormula"),
       },
       {
-        label: "Risk Exposure",
+        label: t("coreKpi.riskExposure"),
         value: `${riskExposure}`,
-        subLabel: `${openRisks.length} Risiken · ${criticalRiskDecisions} High-Risk`,
+        subLabel: t("coreKpi.risksCount", { risks: openRisks.length, highRisk: criticalRiskDecisions }),
         icon: Shield,
         color: riskExposure === 0 ? "text-success" : riskExposure <= 3 ? "text-warning" : "text-destructive",
         bgColor: riskExposure === 0 ? "bg-success/10" : riskExposure <= 3 ? "bg-warning/10" : "bg-destructive/10",
-        tooltip: "Offene Risiken aus dem Risk Register + Entscheidungen mit AI-Risk-Score ≥ 60.",
-        formula: "Offene Risiken + Entscheidungen mit AI-Risk ≥ 60",
+        tooltip: t("coreKpi.riskTooltip"),
+        formula: t("coreKpi.riskFormula"),
       },
       {
-        label: "Cost of Delay",
+        label: t("coreKpi.costOfDelay"),
         value: formattedCost,
-        subLabel: `${openDecisions.length} offene Entscheidungen`,
+        subLabel: t("coreKpi.openDecisions", { count: openDecisions.length }),
         icon: DollarSign,
         color: totalCost < 5000 ? "text-muted-foreground" : totalCost < 20000 ? "text-warning" : "text-destructive",
         bgColor: totalCost < 5000 ? "bg-muted/50" : totalCost < 20000 ? "bg-warning/10" : "bg-destructive/10",
-        tooltip: "Geschätzte Opportunitätskosten durch offene Entscheidungen (Draft/Review).",
-        formula: "Tage offen × 2 Pers. × 2h × Stundensatz × Prioritäts-Multiplikator",
+        tooltip: t("coreKpi.costTooltip"),
+        formula: t("coreKpi.costFormula"),
       },
       {
-        label: "SLA Compliance",
+        label: t("coreKpi.slaCompliance"),
         value: `${slaCompliance}%`,
-        subLabel: `${onTrack}/${withDueDate.length} im Plan`,
+        subLabel: t("coreKpi.onTrack", { onTrack, total: withDueDate.length }),
         icon: Timer,
         color: slaCompliance >= 80 ? "text-success" : slaCompliance >= 60 ? "text-warning" : "text-destructive",
         bgColor: slaCompliance >= 80 ? "bg-success/10" : slaCompliance >= 60 ? "bg-warning/10" : "bg-destructive/10",
-        tooltip: "Anteil aktiver Entscheidungen mit Deadline, die noch im Zeitplan sind.",
-        formula: "Entscheidungen mit due_date ≥ heute / Alle mit due_date × 100",
+        tooltip: t("coreKpi.slaTooltip"),
+        formula: t("coreKpi.slaFormula"),
       },
     ];
-  }, [allDecisions, reviews, tasks, teams, risks, user, isPersonal, selectedTeamId]);
+  }, [allDecisions, reviews, tasks, teams, risks, user, isPersonal, selectedTeamId, t]);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
