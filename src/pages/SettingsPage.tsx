@@ -330,8 +330,8 @@ const SettingsPage = () => {
                     <div className="flex items-center gap-3">
                       <Globe className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm">Interface-Sprache</p>
-                        <p className="text-xs text-muted-foreground">Steuert die Sprache der Benutzeroberfläche</p>
+                        <p className="text-sm">{t("settings.interfaceLanguage")}</p>
+                        <p className="text-xs text-muted-foreground">{t("settings.interfaceLanguageDesc")}</p>
                       </div>
                     </div>
                     <div className="flex items-center rounded-md border border-border p-0.5">
@@ -347,8 +347,8 @@ const SettingsPage = () => {
                     <div className="flex items-center gap-3">
                       <FileText className="w-4 h-4 text-muted-foreground" />
                       <div>
-                        <p className="text-sm">Export & Report-Sprache</p>
-                        <p className="text-xs text-muted-foreground">Sprache für PDF-Reports und Board Packs</p>
+                        <p className="text-sm">{t("settings.exportLanguage")}</p>
+                        <p className="text-xs text-muted-foreground">{t("settings.exportLanguageDesc")}</p>
                       </div>
                     </div>
                     <div className="flex items-center rounded-md border border-border p-0.5">
@@ -378,15 +378,15 @@ const SettingsPage = () => {
           {activeTab === "notifications" && (
             <div className="space-y-6">
               <section>
-                <h2 className="text-sm font-medium mb-4">Benachrichtigungskanäle</h2>
+                <h2 className="text-sm font-medium mb-4">{t("settings.notifChannels")}</h2>
                 <div className="space-y-1">
                   {([
                     { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc") },
                     { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc") },
                     { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc") },
-                    { key: "mention_enabled" as const, label: "Erwähnungen (@Mentions)", desc: "Benachrichtigung wenn du in Kommentaren oder Chats erwähnt wirst" },
-                    { key: "deadline_enabled" as const, label: "Deadlines & Fristen", desc: "Erinnerungen vor Ablauf von Entscheidungs- und Aufgaben-Fristen" },
-                    { key: "status_change_enabled" as const, label: "Statusänderungen", desc: "Updates wenn sich der Status von Entscheidungen ändert, die dich betreffen" },
+                    { key: "mention_enabled" as const, label: t("settings.mentions"), desc: t("settings.mentionsDesc") },
+                    { key: "deadline_enabled" as const, label: t("settings.deadlines"), desc: t("settings.deadlinesDesc") },
+                    { key: "status_change_enabled" as const, label: t("settings.statusChanges"), desc: t("settings.statusChangesDesc") },
                   ]).map((item) => (
                     <div key={item.key} className="flex items-center justify-between py-3">
                       <div className="flex-1">
@@ -406,14 +406,14 @@ const SettingsPage = () => {
 
               {/* Digest Frequency */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Zusammenfassung (Digest)</h2>
-                <p className="text-xs text-muted-foreground mb-3">Wie möchtest du nicht-kritische Benachrichtigungen erhalten?</p>
+                <h2 className="text-sm font-medium mb-3">{t("settings.digestTitle")}</h2>
+                <p className="text-xs text-muted-foreground mb-3">{t("settings.digestDesc")}</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {([
-                    { value: "instant", label: "Sofort", desc: "Jede einzeln" },
-                    { value: "daily", label: "Täglich", desc: "1× pro Tag" },
-                    { value: "weekly", label: "Wöchentlich", desc: "1× pro Woche" },
-                    { value: "off", label: "Aus", desc: "Keine Digests" },
+                    { value: "instant", label: t("settings.digestInstant"), desc: t("settings.digestInstantDesc") },
+                    { value: "daily", label: t("settings.digestDaily"), desc: t("settings.digestDailyDesc") },
+                    { value: "weekly", label: t("settings.digestWeekly"), desc: t("settings.digestWeeklyDesc") },
+                    { value: "off", label: t("settings.digestOff"), desc: t("settings.digestOffDesc") },
                   ]).map((opt) => (
                     <button
                       key={opt.value}
@@ -439,13 +439,13 @@ const SettingsPage = () => {
 
               {/* Escalation Priority */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Eskalations-Priorisierung</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.escalationPriority")}</h2>
                 <div className="space-y-2">
                   {[
-                    { level: "Kritisch", behavior: "Immer sofort – In-App + Email", color: "text-destructive" },
-                    { level: "Hoch", behavior: "Email-Benachrichtigung", color: "text-warning" },
-                    { level: "Mittel", behavior: "Nur In-App", color: "text-muted-foreground" },
-                    { level: "Niedrig", behavior: "Täglicher Digest", color: "text-muted-foreground" },
+                    { level: t("settings.escCritical"), behavior: t("settings.escCriticalBehavior"), color: "text-destructive" },
+                    { level: t("settings.escHigh"), behavior: t("settings.escHighBehavior"), color: "text-warning" },
+                    { level: t("settings.escMedium"), behavior: t("settings.escMediumBehavior"), color: "text-muted-foreground" },
+                    { level: t("settings.escLow"), behavior: t("settings.escLowBehavior"), color: "text-muted-foreground" },
                   ].map((esc, i) => (
                     <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
                       <div className="flex items-center gap-2">
@@ -462,12 +462,12 @@ const SettingsPage = () => {
 
               {/* Digest Options */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Executive Digest</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.execDigest")}</h2>
                 <div className="space-y-2">
                   {[
-                    { label: "Täglicher Executive Digest", desc: "Zusammenfassung aller offenen Entscheidungen und Eskalationen", enabled: false },
-                    { label: "Wöchentlicher Governance-Report", desc: "KPIs, SLA-Compliance, Risk-Übersicht", enabled: false },
-                    { label: "Monatlicher Risk-Report", desc: "Risiko-Trends, Pattern-Analyse, Economic Impact", enabled: false },
+                    { label: t("settings.execDigestDaily"), desc: t("settings.execDigestDailyDesc"), enabled: false },
+                    { label: t("settings.execDigestWeekly"), desc: t("settings.execDigestWeeklyDesc"), enabled: false },
+                    { label: t("settings.execDigestMonthly"), desc: t("settings.execDigestMonthlyDesc"), enabled: false },
                   ].map((digest, i) => (
                     <div key={i} className="flex items-center justify-between py-2.5">
                       <div>
@@ -494,13 +494,13 @@ const SettingsPage = () => {
             <div className="space-y-6">
               {/* AI Usage Dashboard */}
               <section>
-                <h2 className="text-sm font-medium mb-3">AI Usage Overview</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.aiUsage")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
-                    { label: "Requests / Monat", value: "–", icon: Zap },
-                    { label: "Aktiver Provider", value: AI_PROVIDERS.find(p => p.id === aiProvider)?.name || "Standard", icon: Brain },
-                    { label: "Modell", value: aiModel || "Auto", icon: Activity },
-                    { label: "Data Residency", value: "EU", icon: Server },
+                    { label: t("settings.aiRequestsMonth"), value: "–", icon: Zap },
+                    { label: t("settings.aiActiveProvider"), value: AI_PROVIDERS.find(p => p.id === aiProvider)?.name || "Standard", icon: Brain },
+                    { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
+                    { label: t("settings.aiDataResidency"), value: "EU", icon: Server },
                   ].map((stat, i) => (
                     <div key={i} className="p-3 rounded-lg border border-border bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
@@ -563,14 +563,14 @@ const SettingsPage = () => {
 
               {/* AI Scope Settings */}
               <section>
-                <h2 className="text-sm font-medium mb-3">AI Governance – Scope</h2>
-                <p className="text-xs text-muted-foreground mb-3">Steuere, welche Funktionen die KI ausführen darf.</p>
+                <h2 className="text-sm font-medium mb-3">{t("settings.aiGovernanceScope")}</h2>
+                <p className="text-xs text-muted-foreground mb-3">{t("settings.aiGovernanceScopeDesc")}</p>
                 <div className="space-y-2">
                   {[
-                    { label: "Zusammenfassungen generieren", desc: "AI-Summaries für Entscheidungen", enabled: true },
-                    { label: "Risiko-Analyse", desc: "Automatische Risikobewertung und -faktoren", enabled: true },
-                    { label: "Szenario-Simulation", desc: "What-If Analysen und Prognosen", enabled: true },
-                    { label: "Co-Pilot Empfehlungen", desc: "Proaktive Handlungsvorschläge", enabled: true },
+                    { label: t("settings.aiSummaries"), desc: t("settings.aiSummariesDesc"), enabled: true },
+                    { label: t("settings.aiRiskAnalysis"), desc: t("settings.aiRiskAnalysisDesc"), enabled: true },
+                    { label: t("settings.aiScenario"), desc: t("settings.aiScenarioDesc"), enabled: true },
+                    { label: t("settings.aiCoPilot"), desc: t("settings.aiCoPilotDesc"), enabled: true },
                   ].map((scope, i) => (
                     <div key={i} className="flex items-center justify-between py-2.5">
                       <div>
@@ -590,10 +590,10 @@ const SettingsPage = () => {
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Server className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-medium">Data Residency</h3>
+                    <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    AI verarbeitet Daten ausschließlich im EU-Rechenzentrum. Keine Daten werden an Dritte weitergegeben. Alle Modell-Interaktionen sind flüchtig und werden nicht für Training verwendet.
+                    {t("settings.aiDataResidencyInfo")}
                   </p>
                 </div>
               </section>
@@ -605,7 +605,7 @@ const SettingsPage = () => {
             <div className="space-y-6">
               {/* Security Health Dashboard */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Security Health</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.securityHealth")}</h2>
                 <div className="p-4 rounded-lg border border-border bg-card">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -614,18 +614,18 @@ const SettingsPage = () => {
                       <span className="text-sm text-muted-foreground">/ 100</span>
                     </div>
                     <Badge className={`text-[10px] ${securityScore >= 80 ? "bg-success/10 text-success border-success/20" : securityScore >= 60 ? "bg-warning/10 text-warning border-warning/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
-                      {securityScore >= 80 ? "Gut" : securityScore >= 60 ? "Verbesserungsbedarf" : "Kritisch"}
+                      {securityScore >= 80 ? t("settings.secGood") : securityScore >= 60 ? t("settings.secNeedsImprovement") : t("settings.secCritical")}
                     </Badge>
                   </div>
                   <Progress value={securityScore} className="h-1.5 mb-3" />
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                     {[
-                      { label: "Passwort gesetzt", ok: true },
-                      { label: "2FA aktiviert", ok: mfaActive },
-                      { label: "SSO aktiv", ok: false },
-                      { label: "Session Timeout", ok: true },
-                      { label: "Profil vollständig", ok: !!fullName },
-                      { label: "Eskalationen aktiv", ok: notifPrefs.escalations },
+                      { label: t("settings.secPasswordSet"), ok: true },
+                      { label: t("settings.sec2faActive"), ok: mfaActive },
+                      { label: t("settings.secSsoActive"), ok: false },
+                      { label: t("settings.secSessionTimeout"), ok: true },
+                      { label: t("settings.secProfileComplete"), ok: !!fullName },
+                      { label: t("settings.secEscalationsActive"), ok: notifPrefs.escalations },
                     ].map((check, i) => (
                       <div key={i} className="flex items-center gap-1.5">
                         {check.ok ? <CheckCircle2 className="w-3 h-3 text-success" /> : <AlertTriangle className="w-3 h-3 text-warning" />}
@@ -667,26 +667,26 @@ const SettingsPage = () => {
 
               {/* Access Control */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Access Control</h2>
-                <p className="text-xs text-muted-foreground mb-3">Rollenbasierte Berechtigungen und Zugriffsrechte.</p>
+                <h2 className="text-sm font-medium mb-3">{t("settings.accessControl")}</h2>
+                <p className="text-xs text-muted-foreground mb-3">{t("settings.accessControlDesc")}</p>
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="grid grid-cols-5 gap-0 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                    <div className="p-2.5">Aktion</div>
+                    <div className="p-2.5">{t("settings.acAction")}</div>
                     <div className="p-2.5 text-center">Owner</div>
                     <div className="p-2.5 text-center">Admin</div>
                     <div className="p-2.5 text-center">Lead</div>
                     <div className="p-2.5 text-center">Member</div>
                   </div>
                   {[
-                    { action: "Entscheidungen erstellen", permissions: [true, true, true, true] },
-                    { action: "Entscheidungen löschen", permissions: [true, true, false, false] },
-                    { action: "SLA konfigurieren", permissions: [true, true, false, false] },
-                    { action: "Eskalationen ändern", permissions: [true, true, true, false] },
-                    { action: "Templates verwalten", permissions: [true, true, false, false] },
-                    { action: "Nutzer verwalten", permissions: [true, true, false, false] },
-                    { action: "Feature Flags", permissions: [true, true, false, false] },
-                    { action: "Retention Policy", permissions: [true, true, false, false] },
-                    { action: "Endgültig löschen", permissions: [true, false, false, false] },
+                    { action: t("settings.acCreateDecisions"), permissions: [true, true, true, true] },
+                    { action: t("settings.acDeleteDecisions"), permissions: [true, true, false, false] },
+                    { action: t("settings.acConfigSla"), permissions: [true, true, false, false] },
+                    { action: t("settings.acChangeEscalations"), permissions: [true, true, true, false] },
+                    { action: t("settings.acManageTemplates"), permissions: [true, true, false, false] },
+                    { action: t("settings.acManageUsers"), permissions: [true, true, false, false] },
+                    { action: t("settings.acFeatureFlags"), permissions: [true, true, false, false] },
+                    { action: t("settings.acRetention"), permissions: [true, true, false, false] },
+                    { action: t("settings.acHardDelete"), permissions: [true, false, false, false] },
                   ].map((row, i) => (
                     <div key={i} className="grid grid-cols-5 gap-0 border-t border-border items-center">
                       <div className="p-2.5 text-xs">{row.action}</div>
@@ -722,14 +722,14 @@ const SettingsPage = () => {
 
               {/* Compliance & Data Privacy */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Compliance & Datenschutz</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.compliance")}</h2>
                 <div className="space-y-2">
                   {[
-                    { label: "DSGVO-konform", status: "Aktiv", icon: ShieldCheck, color: "text-success" },
-                    { label: "Datenverarbeitung", status: "EU Only", icon: Server, color: "text-primary" },
-                    { label: "Audit-Trail", status: "Immutable", icon: Lock, color: "text-success" },
-                    { label: "Verschlüsselung", status: "AES-256", icon: KeyRound, color: "text-success" },
-                    { label: "SOC 2 Type II", status: "Konform", icon: Shield, color: "text-primary" },
+                    { label: t("settings.compGdpr"), status: t("settings.compActive"), icon: ShieldCheck, color: "text-success" },
+                    { label: t("settings.compDataProcessing"), status: t("settings.compEuOnly"), icon: Server, color: "text-primary" },
+                    { label: t("settings.compAuditTrail"), status: t("settings.compImmutable"), icon: Lock, color: "text-success" },
+                    { label: t("settings.compEncryption"), status: "AES-256", icon: KeyRound, color: "text-success" },
+                    { label: t("settings.compSoc2"), status: t("settings.compCompliant"), icon: Shield, color: "text-primary" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
                       <div className="flex items-center gap-2">
@@ -750,15 +750,15 @@ const SettingsPage = () => {
               {/* Admin Overview Dashboard */}
               {adminStats && (
                 <section>
-                  <h2 className="text-sm font-medium mb-3">Admin Overview</h2>
+                  <h2 className="text-sm font-medium mb-3">{t("settings.adminOverview")}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
-                      { label: "Aktive Nutzer", value: adminStats.totalUsers, icon: Users, color: "text-primary" },
-                      { label: "Entscheidungen gesamt", value: adminStats.totalDecisions, icon: Activity, color: "text-foreground" },
-                      { label: "Offene Eskalationen", value: adminStats.openEscalations, icon: AlertTriangle, color: adminStats.openEscalations > 0 ? "text-warning" : "text-success" },
-                      { label: "SLA-Verletzungen", value: adminStats.slaViolations, icon: Clock, color: adminStats.slaViolations > 0 ? "text-destructive" : "text-success" },
-                      { label: "Security Score", value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
-                      { label: "Teams", value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
+                      { label: t("settings.adminActiveUsers"), value: adminStats.totalUsers, icon: Users, color: "text-primary" },
+                      { label: t("settings.adminTotalDecisions"), value: adminStats.totalDecisions, icon: Activity, color: "text-foreground" },
+                      { label: t("settings.adminOpenEscalations"), value: adminStats.openEscalations, icon: AlertTriangle, color: adminStats.openEscalations > 0 ? "text-warning" : "text-success" },
+                      { label: t("settings.adminSlaViolations"), value: adminStats.slaViolations, icon: Clock, color: adminStats.slaViolations > 0 ? "text-destructive" : "text-success" },
+                      { label: t("settings.adminSecurityScore"), value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
+                      { label: t("settings.adminTeams"), value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
                     ].map((stat, i) => (
                       <div key={i} className="p-3 rounded-lg border border-border bg-card">
                         <div className="flex items-center gap-1.5 mb-1">
@@ -802,7 +802,7 @@ const SettingsPage = () => {
 
               {/* User List */}
               <section>
-                <h2 className="text-sm font-medium mb-3">Nutzerverwaltung</h2>
+                <h2 className="text-sm font-medium mb-3">{t("settings.userManagement")}</h2>
                 <div className="space-y-1">
                   {allUsers.slice(0, 10).map(u => {
                     const role = allRoles.find(r => r.user_id === u.user_id);
@@ -813,7 +813,7 @@ const SettingsPage = () => {
                             <User className="w-3.5 h-3.5 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium">{u.full_name || "Unbekannt"}</p>
+                            <p className="text-sm font-medium">{u.full_name || t("settings.unknown")}</p>
                           </div>
                         </div>
                         <Badge variant="outline" className="text-[10px]">{roleLabels[role?.role] || "Member"}</Badge>
@@ -822,7 +822,7 @@ const SettingsPage = () => {
                   })}
                 </div>
                 {allUsers.length > 10 && (
-                  <p className="text-xs text-muted-foreground mt-2">+ {allUsers.length - 10} weitere Nutzer</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t("settings.moreUsers", { count: allUsers.length - 10 })}</p>
                 )}
               </section>
 

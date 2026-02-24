@@ -7,7 +7,8 @@ import AppLayout from "@/components/layout/AppLayout";
 import { useDecisions, useProfiles, buildProfileMap, useReviews, useDependencies } from "@/hooks/useDecisions";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { statusLabels, priorityLabels } from "@/lib/labels";
+import { useTranslatedLabels } from "@/lib/labels";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import DecisionRoomHeader from "@/components/meeting/DecisionRoomHeader";
 import DecisionReviewCard from "@/components/meeting/DecisionReviewCard";
@@ -20,6 +21,8 @@ interface MeetingNote {
 }
 
 const MeetingMode = () => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const { user } = useAuth();
   const { data: allDecisions = [] } = useDecisions();
   const { data: profiles = [] } = useProfiles();
@@ -138,18 +141,18 @@ const MeetingMode = () => {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
-          <TabsTrigger value="select" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> Agenda</TabsTrigger>
-          <TabsTrigger value="review" disabled={selectedIds.size === 0} className="gap-1.5"><PlayCircle className="w-3.5 h-3.5" /> Review</TabsTrigger>
-          <TabsTrigger value="protocol" className="gap-1.5"><Shield className="w-3.5 h-3.5" /> Protokoll</TabsTrigger>
+          <TabsTrigger value="select" className="gap-1.5"><FileText className="w-3.5 h-3.5" /> {t("meeting.agenda")}</TabsTrigger>
+          <TabsTrigger value="review" disabled={selectedIds.size === 0} className="gap-1.5"><PlayCircle className="w-3.5 h-3.5" /> {t("meeting.review")}</TabsTrigger>
+          <TabsTrigger value="protocol" className="gap-1.5"><Shield className="w-3.5 h-3.5" /> {t("meeting.protocol")}</TabsTrigger>
         </TabsList>
 
         {/* AGENDA */}
         <TabsContent value="select">
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Wähle die Entscheidungen für das Decision Room ({selectedIds.size} ausgewählt)</p>
+            <p className="text-sm text-muted-foreground">{t("meeting.selectForRoom", { count: selectedIds.size })}</p>
             {reviewReady.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                <p className="text-sm">Keine offenen Entscheidungen zur Besprechung.</p>
+                <p className="text-sm">{t("meeting.noOpenDecisions")}</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -172,17 +175,17 @@ const MeetingMode = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{d.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{d.description || "Keine Beschreibung"}</p>
+                          <p className="text-xs text-muted-foreground truncate">{d.description || t("meeting.noDescription")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap pl-8 sm:pl-0 shrink-0">
-                        <Badge variant="outline" className="text-[10px]">{statusLabels[d.status]}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{tl.statusLabels[d.status]}</Badge>
                         <Badge variant={d.priority === "critical" ? "destructive" : "outline"} className="text-[10px]">
-                          {priorityLabels[d.priority]}
+                          {tl.priorityLabels[d.priority]}
                         </Badge>
                         {isEscalated && <Badge variant="destructive" className="text-[10px]">⚠️</Badge>}
                         {cost > 0 && (
-                          <span className="text-[10px] text-warning font-medium">{cost.toLocaleString("de-DE")}€/Wo</span>
+                          <span className="text-[10px] text-warning font-medium">{cost.toLocaleString("de-DE")}{t("meeting.perWeek")}</span>
                         )}
                       </div>
                     </button>
@@ -192,7 +195,7 @@ const MeetingMode = () => {
             )}
             {selectedIds.size > 0 && (
               <Button onClick={startReview} className="gap-1.5">
-                <PlayCircle className="w-4 h-4" /> Review starten ({selectedIds.size} Decisions)
+                <PlayCircle className="w-4 h-4" /> {t("meeting.startReview", { count: selectedIds.size })}
               </Button>
             )}
           </div>
