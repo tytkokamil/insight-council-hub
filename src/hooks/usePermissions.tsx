@@ -287,10 +287,11 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     // Progressive override skips stage gating
     if (progressiveOverride) return true;
 
-    // Stage gating
+    // All stages are now accessible — progressive hint is shown in sidebar instead of hard gating
     if (STAGE_1_FEATURES.has(featureKey)) return true;
     if (STAGE_2_FEATURES.has(featureKey)) return progressiveStage >= 2;
-    return progressiveStage >= 3; // Stage 3 features
+    // Stage 3 (Intelligence) — always accessible, sidebar shows recommendation hint
+    return true;
   }, [progressiveOverride, progressiveStage]);
 
   const value = useMemo<PermissionsContextType>(() => ({
