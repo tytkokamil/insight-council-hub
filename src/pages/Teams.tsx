@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Plus, Users as UsersIcon, ArrowRight, Mail, Shield, MessageSquare, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
 
 const Teams = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [teams, setTeams] = useState<any[]>([]);
@@ -38,15 +40,15 @@ const Teams = () => {
     <AppLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Verwaltung</p>
-          <h1 className="font-display text-xl font-bold">Teams</h1>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("teams.management")}</p>
+          <h1 className="font-display text-xl font-bold">{t("teams.title")}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <PageHelpButton title="Teams" description="Erstelle Teams und lade Mitglieder per E-Mail ein. Entscheidungen können Teams zugeordnet werden, um Verantwortlichkeiten klar zu definieren." />
+          <PageHelpButton title={t("teams.title")} description={t("teams.helpDesc")} />
           {canCreateTeam && (
             <Button onClick={() => setShowCreate(true)} className="gap-2">
               <Plus className="w-4 h-4" />
-              Neues Team
+              {t("teams.newTeam")}
             </Button>
           )}
         </div>
@@ -60,24 +62,22 @@ const Teams = () => {
                 <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                   <UsersIcon className="w-7 h-7 text-primary" />
                 </div>
-                <h3 className="font-display text-xl font-bold mb-2">Governance beginnt im Team</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Teams ermöglichen kollaborative Entscheidungsfindung mit klaren Rollen, SLA-Tracking und Review-Workflows.
-                </p>
+                <h3 className="font-display text-xl font-bold mb-2">{t("teams.emptyTitle")}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{t("teams.emptyDesc")}</p>
                 <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  Teams mit strukturierter Governance entscheiden 38% schneller.
+                  {t("teams.emptyStatistic")}
                 </p>
                 <Button onClick={() => setShowCreate(true)} className="gap-2 mb-6">
                   <Plus className="w-4 h-4" />
-                  Team erstellen
+                  {t("teams.createTeam")}
                 </Button>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { icon: Mail, label: "E-Mail-Einladungen", desc: "Kollegen einladen" },
-                    { icon: Shield, label: "Rollenmanagement", desc: "Lead, Member, Viewer" },
-                    { icon: MessageSquare, label: "Team-Chat", desc: "Direkte Kommunikation" },
-                    { icon: BarChart3, label: "Team-Analytik", desc: "Performance messen" },
+                    { icon: Mail, label: t("teams.emailInvites"), desc: t("teams.emailInvitesDesc") },
+                    { icon: Shield, label: t("teams.roleManagement"), desc: t("teams.roleManagementDesc") },
+                    { icon: MessageSquare, label: t("teams.teamChat"), desc: t("teams.teamChatDesc") },
+                    { icon: BarChart3, label: t("teams.teamAnalytics"), desc: t("teams.teamAnalyticsDesc") },
                   ].map((f, i) => (
                     <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border text-center">
                       <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
@@ -107,11 +107,11 @@ const Teams = () => {
                     </div>
                   </div>
                   <h3 className="font-display font-semibold mb-0.5">{team.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{team.description || "Keine Beschreibung"}</p>
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{team.description || t("teams.noDescription")}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <UsersIcon className="w-3 h-3" />
-                      {team.team_members?.[0]?.count || 0} Mitglieder
+                      {team.team_members?.[0]?.count || 0} {t("teams.members")}
                     </span>
                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
