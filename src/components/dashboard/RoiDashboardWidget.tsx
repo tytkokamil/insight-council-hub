@@ -7,8 +7,10 @@ import { differenceInDays, subDays } from "date-fns";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 const RoiDashboardWidget = () => {
+  const { t } = useTranslation();
   const { data: allDecisions = [] } = useDecisions();
   const { data: allTasks = [] } = useTasks();
   const { selectedTeamId } = useTeamContext();
@@ -94,10 +96,10 @@ const RoiDashboardWidget = () => {
   if (!roi.hasData) {
     return (
       <section>
-        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">ROI — Vorher / Nachher</h2>
+        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("roi.title")}</h2>
         <div className="border border-border rounded-lg p-8 text-center">
           <DollarSign className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Mindestens 5 Entscheidungen benötigt für ROI-Analyse.</p>
+          <p className="text-sm text-muted-foreground">{t("roi.minDecisions")}</p>
         </div>
       </section>
     );
@@ -105,42 +107,42 @@ const RoiDashboardWidget = () => {
 
   const comparisons = [
     {
-      label: "Ø Speed",
+      label: t("roi.avgSpeed"),
       icon: Clock,
       before: roi.avgTimePrev !== null ? `${roi.avgTimePrev}d` : "—",
       after: roi.avgTimeCurrent !== null ? `${roi.avgTimeCurrent}d` : "—",
       delta: roi.timeSavedPercent,
-      deltaLabel: roi.timeSaved > 0 ? `${roi.timeSaved}d schneller` : roi.timeSaved < 0 ? `${Math.abs(roi.timeSaved)}d langsamer` : "gleich",
+      deltaLabel: roi.timeSaved > 0 ? t("roi.daysFaster", { days: roi.timeSaved }) : roi.timeSaved < 0 ? t("roi.daysSlower", { days: Math.abs(roi.timeSaved) }) : t("roi.same"),
       positive: roi.timeSaved > 0,
       iconColor: "text-primary",
     },
     {
-      label: "Eskalationen",
+      label: t("roi.escalations"),
       icon: Zap,
       before: `${roi.prevEscalations}`,
       after: `${roi.currentEscalations}`,
       delta: roi.escalationReduction,
-      deltaLabel: roi.escalationReduction > 0 ? `${roi.escalationReduction}% weniger` : "keine Änderung",
+      deltaLabel: roi.escalationReduction > 0 ? t("roi.lessPercent", { pct: roi.escalationReduction }) : t("roi.noChange"),
       positive: roi.escalationReduction > 0,
       iconColor: "text-warning",
     },
     {
-      label: "Delay Costs",
+      label: t("roi.delayCosts"),
       icon: DollarSign,
       before: formatCost(roi.prevCost),
       after: formatCost(roi.currentCost),
       delta: roi.costReduction,
-      deltaLabel: roi.costReduction > 0 ? `${roi.costReduction}% reduziert` : "keine Änderung",
+      deltaLabel: roi.costReduction > 0 ? t("roi.reducedPercent", { pct: roi.costReduction }) : t("roi.noChange"),
       positive: roi.costReduction > 0,
       iconColor: "text-destructive",
     },
     {
-      label: "Erfolgsquote",
+      label: t("roi.successRate"),
       icon: CheckCircle2,
       before: `${roi.prevSuccessRate}%`,
       after: `${roi.successRate}%`,
       delta: roi.successDelta,
-      deltaLabel: roi.successDelta > 0 ? `+${roi.successDelta}pp` : roi.successDelta < 0 ? `${roi.successDelta}pp` : "gleich",
+      deltaLabel: roi.successDelta > 0 ? `+${roi.successDelta}pp` : roi.successDelta < 0 ? `${roi.successDelta}pp` : t("roi.same"),
       positive: roi.successDelta > 0,
       iconColor: "text-success",
     },
@@ -149,19 +151,17 @@ const RoiDashboardWidget = () => {
   return (
     <section>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">ROI — Vorher / Nachher</h2>
-        <Badge variant="outline" className="text-[10px] text-muted-foreground">90 Tage vs. vorherige 90 Tage</Badge>
+        <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("roi.title")}</h2>
+        <Badge variant="outline" className="text-[10px] text-muted-foreground">{t("roi.period")}</Badge>
       </div>
 
-      {/* Before/After comparison rows */}
       <div className="border border-border rounded-xl overflow-hidden mb-4">
-        {/* Header */}
         <div className="grid grid-cols-[1fr_100px_32px_100px_1fr] items-center px-4 py-2.5 bg-muted/30 border-b border-border/50">
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Metrik</span>
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-center">Vorher</span>
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t("roi.metric")}</span>
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-center">{t("roi.before")}</span>
           <span />
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-center">Nachher</span>
-          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-right">Veränderung</span>
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-center">{t("roi.after")}</span>
+          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider text-right">{t("roi.change")}</span>
         </div>
 
         {comparisons.map((row, i) => (
@@ -174,25 +174,18 @@ const RoiDashboardWidget = () => {
               i < comparisons.length - 1 ? "border-b border-border/30" : ""
             } hover:bg-muted/10 transition-colors`}
           >
-            {/* Metric label */}
             <div className="flex items-center gap-2.5">
-              <div className={`w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center`}>
+              <div className="w-7 h-7 rounded-lg bg-muted/40 flex items-center justify-center">
                 <row.icon className={`w-3.5 h-3.5 ${row.iconColor}`} />
               </div>
               <span className="text-sm font-medium">{row.label}</span>
             </div>
-
-            {/* Before value */}
             <div className="text-center">
               <span className="text-base font-semibold text-muted-foreground/70 tabular-nums">{row.before}</span>
             </div>
-
-            {/* Arrow */}
             <div className="flex justify-center">
               <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/30" />
             </div>
-
-            {/* After value */}
             <div className="text-center">
               <motion.span
                 initial={{ scale: 0.8 }}
@@ -203,8 +196,6 @@ const RoiDashboardWidget = () => {
                 {row.after}
               </motion.span>
             </div>
-
-            {/* Delta badge */}
             <div className="flex justify-end">
               <Badge
                 variant="outline"
@@ -230,7 +221,6 @@ const RoiDashboardWidget = () => {
         ))}
       </div>
 
-      {/* Savings projection */}
       {roi.potentialSavings15 > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -244,10 +234,10 @@ const RoiDashboardWidget = () => {
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold">
-                Einspar-Potenzial: <span className="text-accent-teal">{formatCost(roi.potentialSavings15)}</span>
+                {t("roi.savingsPotential")} <span className="text-accent-teal">{formatCost(roi.potentialSavings15)}</span>
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                bei 15% Geschwindigkeits-Verbesserung in den nächsten 90 Tagen
+                {t("roi.savingsDesc")}
               </p>
             </div>
           </div>

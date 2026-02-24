@@ -8,6 +8,7 @@ import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import WidgetSkeleton from "./WidgetSkeleton";
+import { useTranslation } from "react-i18next";
 
 interface MomentumBreakdown {
   velocity: number;
@@ -25,6 +26,7 @@ interface Recommendation {
 }
 
 const MomentumScoreWidget = () => {
+  const { t } = useTranslation();
   const { data: decisions = [], isLoading: loadingDecisions } = useDecisions();
   const { data: deps = [], isLoading: loadingDeps } = useDependencies();
   const { data: reviews = [], isLoading: loadingReviews } = useReviews();
@@ -50,7 +52,7 @@ const MomentumScoreWidget = () => {
     const active = decisions.filter(d => !["implemented", "rejected"].includes(d.status));
     const now = Date.now();
     const recs: Recommendation[] = [];
-    const MAX = 17; // 6 factors × 17 ≈ 100
+    const MAX = 17;
 
     const vels = implemented.filter(d => d.implemented_at).map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
     const avgVel = vels.length > 0 ? vels.reduce((s, v) => s + v, 0) / vels.length : 30;
@@ -58,7 +60,7 @@ const MomentumScoreWidget = () => {
 
     if (avgVel > 14) {
       const potentialGain = Math.min(5, Math.round((avgVel - 7) / 5));
-      recs.push({ text: `Älteste Entscheidungen beschleunigen → Velocity +${potentialGain}`, impact: potentialGain, type: "velocity" });
+      recs.push({ text: t("momentum.recAccelerate", { gain: potentialGain }), impact: potentialGain, type: "velocity" });
     }
 
     const blockedIds = new Set(deps.filter(d => d.dependency_type === "blocks").map(d => d.target_decision_id));
@@ -72,7 +74,7 @@ const MomentumScoreWidget = () => {
       const topBlocker = Object.entries(sourceCount).sort((a, b) => b[1] - a[1])[0];
       if (topBlocker) {
         const blockerDec = decisions.find(d => d.id === topBlocker[0]);
-        recs.push({ text: `"${blockerDec?.title?.slice(0, 30) || "Entscheidung"}..." lösen → ${topBlocker[1]} Blockaden aufheben`, impact: Math.min(4, topBlocker[1] * 2), type: "bottleneck" });
+        recs.push({ text: t("momentum.recResolveBlocker", { title: blockerDec?.title?.slice(0, 30) || t("momentum.recDecision"), count: topBlocker[1] }), impact: Math.min(4, topBlocker[1] * 2), type: "bottleneck" });
       }
     }
 
@@ -83,7 +85,7 @@ const MomentumScoreWidget = () => {
     const reviewEfficiency = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - Math.min(avgReviewTime, 14) / 14))));
 
     if (pendingReviews.length > 2) {
-      recs.push({ text: `${pendingReviews.length} ausstehende Reviews abschließen → Effizienz steigt`, impact: Math.min(4, pendingReviews.length), type: "review" });
+      recs.push({ text: t("momentum.recPendingReviews", { count: pendingReviews.length }), impact: Math.min(4, pendingReviews.length), type: "review" });
     }
 
     const recentEscalations = escalations.filter(e => new Date(e.created_at).getTime() > now - 30 * 86400000);
@@ -91,7 +93,7 @@ const MomentumScoreWidget = () => {
     const escalationRate = Math.max(0, Math.min(MAX, Math.round(MAX * (1 - Math.min(escalationRatio, 0.5) / 0.5))));
 
     if (recentEscalations.length > 3) {
-      recs.push({ text: `${recentEscalations.length} Eskalationen in 30 Tagen – Prozesse straffen`, impact: Math.min(4, Math.round(recentEscalations.length / 2)), type: "escalation" });
+      recs.push({ text: t("momentum.recEscalations", { count: recentEscalations.length }), impact: Math.min(4, Math.round(recentEscalations.length / 2)), type: "escalation" });
     }
 
     const withOutcome = implemented.filter(d => d.actual_impact_score != null && d.ai_impact_score);
@@ -101,10 +103,9 @@ const MomentumScoreWidget = () => {
 
     const overdueActive = active.filter(d => d.due_date && new Date(d.due_date).getTime() < now);
     if (overdueActive.length > 0) {
-      recs.push({ text: `${overdueActive.length} überfällige Entscheidungen abschließen`, impact: Math.min(5, overdueActive.length * 2), type: "quality" });
+      recs.push({ text: t("momentum.recOverdueDecisions", { count: overdueActive.length }), impact: Math.min(5, overdueActive.length * 2), type: "quality" });
     }
 
-    // Task Execution Factor
     const doneTasks = tasks.filter(t => t.status === "done");
     const openTasks = tasks.filter(t => t.status !== "done");
     const taskCompletionRate = tasks.length > 0 ? doneTasks.length / tasks.length : 0.5;
@@ -113,10 +114,10 @@ const MomentumScoreWidget = () => {
     const taskExecution = Math.max(0, Math.min(MAX, Math.round(MAX * (taskCompletionRate * 0.6 + (1 - overdueTaskRate) * 0.4))));
 
     if (overdueTasks.length > 0) {
-      recs.push({ text: `${overdueTasks.length} überfällige Aufgaben erledigen → Task-Execution steigt`, impact: Math.min(4, overdueTasks.length), type: "tasks" });
+      recs.push({ text: t("momentum.recOverdueTasks", { count: overdueTasks.length }), impact: Math.min(4, overdueTasks.length), type: "tasks" });
     }
     if (openTasks.length > 5 && taskCompletionRate < 0.4) {
-      recs.push({ text: `${openTasks.length} offene Aufgaben abarbeiten → Durchsatz erhöhen`, impact: Math.min(5, Math.round(openTasks.length / 3)), type: "tasks" });
+      recs.push({ text: t("momentum.recOpenTasks", { count: openTasks.length }), impact: Math.min(5, Math.round(openTasks.length / 3)), type: "tasks" });
     }
 
     const totalScore = velocity + bottleneckRate + reviewEfficiency + escalationRate + decisionQuality + taskExecution;
@@ -130,7 +131,7 @@ const MomentumScoreWidget = () => {
       recommendations: topRecs,
       predictedScore: Math.min(100, totalScore + totalImpact),
     };
-  }, [decisions, deps, reviews, escalations, tasks]);
+  }, [decisions, deps, reviews, escalations, tasks, t]);
 
   if (isLoading) return <WidgetSkeleton rows={6} showScore showProgress />;
 
@@ -139,12 +140,12 @@ const MomentumScoreWidget = () => {
 
   const MAX = 17;
   const components = [
-    { label: "Velocity", value: breakdown.velocity, max: MAX, icon: Zap, desc: "Entscheidungsgeschwindigkeit" },
-    { label: "Bottleneck", value: breakdown.bottleneckRate, max: MAX, icon: ShieldAlert, desc: "Blockaden-Freiheit" },
-    { label: "Review", value: breakdown.reviewEfficiency, max: MAX, icon: GitPullRequest, desc: "Review-Effizienz" },
-    { label: "Eskalation", value: breakdown.escalationRate, max: MAX, icon: HeartPulse, desc: "Eskalations-Freiheit" },
-    { label: "Qualität", value: breakdown.decisionQuality, max: MAX, icon: Target, desc: "Outcome-Genauigkeit" },
-    { label: "Tasks", value: breakdown.taskExecution, max: MAX, icon: ListChecks, desc: "Aufgaben-Durchsatz" },
+    { label: t("momentum.velocityLabel"), value: breakdown.velocity, max: MAX, icon: Zap, desc: t("momentum.velocityDesc") },
+    { label: t("momentum.bottleneckLabel"), value: breakdown.bottleneckRate, max: MAX, icon: ShieldAlert, desc: t("momentum.bottleneckDesc") },
+    { label: t("momentum.reviewLabel"), value: breakdown.reviewEfficiency, max: MAX, icon: GitPullRequest, desc: t("momentum.reviewDesc") },
+    { label: t("momentum.escalationLabel"), value: breakdown.escalationRate, max: MAX, icon: HeartPulse, desc: t("momentum.escalationDesc") },
+    { label: t("momentum.qualityLabel"), value: breakdown.decisionQuality, max: MAX, icon: Target, desc: t("momentum.qualityDesc") },
+    { label: t("momentum.tasksLabel"), value: breakdown.taskExecution, max: MAX, icon: ListChecks, desc: t("momentum.tasksDesc") },
   ];
 
   return (
@@ -156,22 +157,22 @@ const MomentumScoreWidget = () => {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-1.5">
-              <CardTitle className="text-sm">Momentum Score™</CardTitle>
+              <CardTitle className="text-sm">{t("momentum.title")}</CardTitle>
               <ScoreMethodology
-                title="Momentum Score"
-                description="Aggregierter Gesundheitsindex (0–100) aus 6 gleichgewichteten Faktoren. Jeder Faktor wird auf 0–17 normalisiert."
+                title={t("momentum.title")}
+                description={t("momentum.methodology")}
                 items={[
-                  { label: "Velocity", weight: "17 Punkte", formula: "17 × (1 − min(Ø Tage bis Umsetzung, 60) / 60)" },
-                  { label: "Bottleneck", weight: "17 Punkte", formula: "17 × (1 − Anteil blockierter aktiver Entscheidungen)" },
-                  { label: "Review", weight: "17 Punkte", formula: "17 × (1 − min(Ø Review-Dauer in Tagen, 14) / 14)" },
-                  { label: "Eskalation", weight: "17 Punkte", formula: "17 × (1 − min(Eskalationsquote 30d, 0.5) / 0.5)" },
-                  { label: "Qualität", weight: "17 Punkte", formula: "Ø(100 − |KI-Impact − Ist-Impact|) / 5 × 0.85" },
-                  { label: "Tasks", weight: "17 Punkte", formula: "17 × (Abschlussrate × 0.6 + Termintreue × 0.4)" },
+                  { label: t("momentum.velocityLabel"), weight: "17", formula: t("momentum.velocityFormula") },
+                  { label: t("momentum.bottleneckLabel"), weight: "17", formula: t("momentum.bottleneckFormula") },
+                  { label: t("momentum.reviewLabel"), weight: "17", formula: t("momentum.reviewFormula") },
+                  { label: t("momentum.escalationLabel"), weight: "17", formula: t("momentum.escalationFormula") },
+                  { label: t("momentum.qualityLabel"), weight: "17", formula: t("momentum.qualityFormula") },
+                  { label: t("momentum.tasksLabel"), weight: "17", formula: t("momentum.tasksFormula") },
                 ]}
-                source="Interne Berechnung auf Basis aller Entscheidungs- und Aufgabendaten"
+                source={t("momentum.source")}
               />
             </div>
-            <p className="text-xs text-muted-foreground">6-Faktor Organisationsgesundheit</p>
+            <p className="text-xs text-muted-foreground">{t("momentum.subtitle")}</p>
           </div>
         </div>
       </CardHeader>
@@ -184,7 +185,7 @@ const MomentumScoreWidget = () => {
               {predictedScore && predictedScore > score && (
                 <div className="flex items-center gap-1 text-success text-xs mb-1 ml-auto">
                   <ArrowUp className="w-3 h-3" />
-                  <span>→ {predictedScore} möglich</span>
+                  <span>{t("momentum.possible", { score: predictedScore })}</span>
                 </div>
               )}
             </div>
@@ -209,7 +210,7 @@ const MomentumScoreWidget = () => {
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-4 pt-3 border-t border-border space-y-2">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Lightbulb className="w-3.5 h-3.5 text-warning" />
-                  <span className="text-xs font-semibold">Prädiktive Empfehlungen</span>
+                  <span className="text-xs font-semibold">{t("momentum.predictiveRecs")}</span>
                 </div>
                 {recommendations.map((rec, i) => (
                   <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/50 text-xs">
@@ -220,18 +221,18 @@ const MomentumScoreWidget = () => {
                 ))}
                 {predictedScore && (
                   <p className="text-xs text-muted-foreground text-center mt-1">
-                    Score-Potenzial: <span className="text-success font-bold">{predictedScore}</span>
+                    {t("momentum.scorePotential")} <span className="text-success font-bold">{predictedScore}</span>
                   </p>
                 )}
               </motion.div>
             )}
 
             {!showDetails && recommendations.length > 0 && (
-              <p className="text-xs text-muted-foreground text-center mt-3">Klicken für Empfehlungen</p>
+              <p className="text-xs text-muted-foreground text-center mt-3">{t("momentum.clickForRecs")}</p>
             )}
           </>
         ) : (
-          <p className="text-xs text-muted-foreground">Berechne...</p>
+          <p className="text-xs text-muted-foreground">{t("momentum.calculating")}</p>
         )}
       </CardContent>
     </Card>
