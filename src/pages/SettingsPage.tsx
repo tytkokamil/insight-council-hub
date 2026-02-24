@@ -19,6 +19,7 @@ import RolePermissionsPanel from "@/components/settings/RolePermissionsPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
+import DemoDataPanel from "@/components/settings/DemoDataPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -857,6 +858,11 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
                 <RolePermissionsPanel />
               </section>
+
+              <hr className="border-border" />
+
+              {/* Demo Data & Reset */}
+              <DemoDataPanel />
             </div>
           )}
         </motion.div>

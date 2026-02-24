@@ -85,8 +85,19 @@ const queryClient = new QueryClient({
       retry: 1,
       refetchOnReconnect: true,
     },
+    mutations: {
+      onError: (error) => {
+        console.error("[Mutation Error]", error);
+      },
+    },
   },
 });
+
+// Global query error handler
+queryClient.getQueryCache().config.onError = (error) => {
+  console.error("[Query Error]", error);
+  // Toast is triggered from components via react-query defaults
+};
 
 const P = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute>

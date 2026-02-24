@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import TeamsPageSkeleton from "@/components/teams/TeamsPageSkeleton";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -15,7 +16,7 @@ const Teams = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [teams, setTeams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[] | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [canCreateTeam, setCanCreateTeam] = useState(false);
 
@@ -24,7 +25,7 @@ const Teams = () => {
       .from("teams")
       .select("*, team_members(count)")
       .order("created_at", { ascending: false });
-    if (data) setTeams(data);
+    setTeams(data ?? []);
   };
 
   useEffect(() => { fetchTeams(); }, []);
@@ -35,6 +36,10 @@ const Teams = () => {
       setCanCreateTeam(data?.role === "org_owner" || data?.role === "org_admin");
     });
   }, [user]);
+
+  if (teams === null) {
+    return <AppLayout><TeamsPageSkeleton /></AppLayout>;
+  }
 
   return (
     <AppLayout>
