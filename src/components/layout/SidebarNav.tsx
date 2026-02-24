@@ -312,6 +312,8 @@ const SidebarNav = memo(({
           );
         }
 
+        
+
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
@@ -370,22 +372,43 @@ const SidebarNav = memo(({
         return (
           <div key={group.labelKey}>
             {!collapsed && (
-              <button
-                onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.labelKey) : undefined}
-                className={`w-full flex items-center gap-1.5 px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/60"} ${
-                  group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${groupDot[group.labelKey] || "bg-muted-foreground/30"}`} />
-                <span className="flex-1 text-left">{groupLabel}</span>
-                {group.defaultCollapsed !== undefined && (
-                  isGroupCollapsed && !hasActiveItem ? (
-                    <ChevronRight className="w-3 h-3 opacity-40" />
-                  ) : (
-                    <ChevronDown className="w-3 h-3 opacity-40" />
-                  )
+              <div className="flex items-center gap-1 px-2 mb-1.5">
+                <button
+                  onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.labelKey) : undefined}
+                  className={`flex-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/60"} ${
+                    group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${groupDot[group.labelKey] || "bg-muted-foreground/30"}`} />
+                  <span className="flex-1 text-left">{groupLabel}</span>
+                  {group.defaultCollapsed !== undefined && (
+                    isGroupCollapsed && !hasActiveItem ? (
+                      <ChevronRight className="w-3 h-3 opacity-40" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3 opacity-40" />
+                    )
+                  )}
+                </button>
+                {group.progressive && intelligenceUnlocked && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => {
+                          localStorage.removeItem("intelligence-unlocked");
+                          setIntelligenceUnlocked(false);
+                        }}
+                        className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+                      >
+                        <Lock className="w-3 h-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-xs">
+                      <p>{t("nav.hideIntelligence")}</p>
+                      <p className="text-muted-foreground text-[10px]">{t("nav.hideIntelligenceHint", { count: 25 })}</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
-              </button>
+              </div>
             )}
             {(!isGroupCollapsed || hasActiveItem || collapsed) && (
               <div className="space-y-px">
