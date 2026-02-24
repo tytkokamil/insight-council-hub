@@ -56,6 +56,8 @@ const TermsOfService = () => (
           <section>
             <h2 className="text-foreground text-lg font-semibold">6. KI-Funktionen</h2>
             <p>Die Plattform bietet KI-gestützte Analysen und Empfehlungen. Diese dienen der Entscheidungsunterstützung und ersetzen keine menschliche Bewertung. Der Nutzer ist für alle getroffenen Entscheidungen selbst verantwortlich.</p>
+            <p>KI-generierte Inhalte — einschließlich Risikoanalysen, Empfehlungen, Briefings und Szenario-Simulationen — stellen keine Rechts-, Finanz-, Personal- oder sonstige Fachberatung dar. Die KI-Ausgaben basieren auf Mustern in den eingegebenen Daten und können fehlerhaft, unvollständig oder irreführend sein. Der Anbieter übernimmt keine Haftung für Schäden, die aus der Nutzung oder dem Vertrauen auf KI-generierte Inhalte entstehen, soweit dies gesetzlich zulässig ist.</p>
+            <p>Weitere Informationen finden Sie in unserer <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> und dem <Link to="/avv" className="text-primary hover:underline">Auftragsverarbeitungsvertrag (AVV)</Link>.</p>
           </section>
 
           <section>

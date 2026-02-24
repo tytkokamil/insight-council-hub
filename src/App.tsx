@@ -70,6 +70,9 @@ const ExecutiveHub = lazy(() => import("./pages/ExecutiveHub"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const Imprint = lazy(() => import("./pages/Imprint"));
+const DataProcessingAgreement = lazy(() => import("./pages/DataProcessingAgreement"));
+const AiDataPolicy = lazy(() => import("./pages/AiDataPolicy"));
+const SubProcessors = lazy(() => import("./pages/SubProcessors"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -114,6 +117,9 @@ const App = () => (
               <Route path="/privacy" element={<Suspense fallback={<PageLoadingFallback />}><PrivacyPolicy /></Suspense>} />
               <Route path="/terms" element={<Suspense fallback={<PageLoadingFallback />}><TermsOfService /></Suspense>} />
               <Route path="/imprint" element={<Suspense fallback={<PageLoadingFallback />}><Imprint /></Suspense>} />
+              <Route path="/avv" element={<Suspense fallback={<PageLoadingFallback />}><DataProcessingAgreement /></Suspense>} />
+              <Route path="/ai-policy" element={<Suspense fallback={<PageLoadingFallback />}><AiDataPolicy /></Suspense>} />
+              <Route path="/sub-processors" element={<Suspense fallback={<PageLoadingFallback />}><SubProcessors /></Suspense>} />
               <Route path="/reset-password" element={<Suspense fallback={<PageLoadingFallback />}><ResetPassword /></Suspense>} />
               <Route path="/dashboard" element={<P><Dashboard /></P>} />
               <Route path="/decisions" element={<P><Decisions /></P>} />

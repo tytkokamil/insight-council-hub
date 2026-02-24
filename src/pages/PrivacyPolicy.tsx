@@ -65,6 +65,7 @@ const PrivacyPolicy = () => (
           <section>
             <h2 className="text-foreground text-lg font-semibold">8. KI-gestützte Verarbeitung</h2>
             <p>Unsere Plattform nutzt KI-Modelle zur Risikoanalyse, Entscheidungsunterstützung und automatisierten Briefings. Die KI-Verarbeitung erfolgt auf Basis von Art. 6 Abs. 1 lit. b DSGVO. Ihre Entscheidungsdaten werden ausschließlich für Ihre Organisation verarbeitet und nicht zum Training von KI-Modellen verwendet. Sie können den KI-Umfang in den Einstellungen konfigurieren.</p>
+            <p>Für die KI-Verarbeitung setzen wir externe Anbieter (Google Gemini, OpenAI) ein, die als Unterauftragsverarbeiter in unserer <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> aufgeführt sind. Ausführliche Informationen zu allen KI-Features, verarbeiteten Datenkategorien und Deaktivierungsmöglichkeiten finden Sie in unserer <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link>.</p>
           </section>
 
           <section>
