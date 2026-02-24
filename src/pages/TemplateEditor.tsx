@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight,
@@ -21,37 +22,21 @@ import { useTemplates, type DbTemplate } from "@/hooks/useTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions } from "@/hooks/useDecisions";
 import { type RequiredField, type ApprovalStep } from "@/lib/decisionTemplates";
-import { categoryLabels, priorityLabels } from "@/lib/labels";
+import { useTranslatedLabels } from "@/lib/labels";
 import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
 
-/* ─── Extended field types ─── */
-const fieldTypes = [
-  { value: "text", label: "Text" },
-  { value: "textarea", label: "Textbereich" },
-  { value: "number", label: "Zahl" },
-  { value: "currency", label: "Währung (€)" },
-  { value: "percent", label: "Prozent (%)" },
-  { value: "date", label: "Datum" },
-  { value: "select", label: "Auswahl" },
-  { value: "multi_select", label: "Multi-Select" },
-  { value: "risk_matrix", label: "Risiko-Matrix" },
-  { value: "stakeholder", label: "Stakeholder-Auswahl" },
-  { value: "attachment", label: "Attachment" },
-  { value: "checkbox", label: "Checkbox" },
-];
-
 /* ─── Helpers ─── */
-function computeHealthScore(draft: DbTemplate): { score: number; checks: { label: string; ok: boolean }[] } {
+function computeHealthScore(draft: DbTemplate, t: (k: string) => string): { score: number; checks: { label: string; ok: boolean }[] } {
   const checks = [
-    { label: "Pflichtfelder definiert", ok: (draft.required_fields?.length || 0) >= 1 },
-    { label: "Risiko-Feld integriert", ok: (draft.required_fields || []).some((f: any) => f.type === "risk_matrix" || f.key?.includes("risk")) },
-    { label: "ROI-Feld integriert", ok: (draft.required_fields || []).some((f: any) => f.type === "percent" || f.type === "currency" || f.key?.includes("roi") || f.key?.includes("budget")) },
-    { label: "Freigabe-Schritte definiert", ok: (draft.approval_steps?.length || 0) >= 1 },
-    { label: "SLA-Vorgabe gesetzt", ok: draft.default_duration_days > 0 },
-    { label: "Bedingte Regeln konfiguriert", ok: (draft.conditional_rules?.length || 0) >= 1 },
-    { label: "Governance-Hinweise vorhanden", ok: !!(draft.governance_notes && draft.governance_notes.trim().length > 0) },
-    { label: "Beschreibung ausgefüllt", ok: !!(draft.description && draft.description.trim().length > 10) },
+    { label: t("templateEditor.healthCheckFields"), ok: (draft.required_fields?.length || 0) >= 1 },
+    { label: t("templateEditor.healthCheckRisk"), ok: (draft.required_fields || []).some((f: any) => f.type === "risk_matrix" || f.key?.includes("risk")) },
+    { label: t("templateEditor.healthCheckRoi"), ok: (draft.required_fields || []).some((f: any) => f.type === "percent" || f.type === "currency" || f.key?.includes("roi") || f.key?.includes("budget")) },
+    { label: t("templateEditor.healthCheckApproval"), ok: (draft.approval_steps?.length || 0) >= 1 },
+    { label: t("templateEditor.healthCheckSla"), ok: draft.default_duration_days > 0 },
+    { label: t("templateEditor.healthCheckRules"), ok: (draft.conditional_rules?.length || 0) >= 1 },
+    { label: t("templateEditor.healthCheckGov"), ok: !!(draft.governance_notes && draft.governance_notes.trim().length > 0) },
+    { label: t("templateEditor.healthCheckDesc"), ok: !!(draft.description && draft.description.trim().length > 10) },
   ];
   const passed = checks.filter(c => c.ok).length;
   const score = Math.round((passed / checks.length) * 100);
@@ -65,6 +50,8 @@ function getScoreColor(score: number) {
 }
 
 const TemplateEditor = () => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const { templates, isLoading, seedDefaults, updateTemplate, deleteTemplate, createTemplate } = useTemplates();
   const { user } = useAuth();
   const { data: decisions = [] } = useDecisions();
@@ -74,6 +61,21 @@ const TemplateEditor = () => {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     health: true, fields: true, approval: true, rules: false, governance: false, automation: false, analytics: false, versions: false,
   });
+
+  const fieldTypes = useMemo(() => [
+    { value: "text", label: t("templateEditor.fieldTypeText") },
+    { value: "textarea", label: t("templateEditor.fieldTypeTextarea") },
+    { value: "number", label: t("templateEditor.fieldTypeNumber") },
+    { value: "currency", label: t("templateEditor.fieldTypeCurrency") },
+    { value: "percent", label: t("templateEditor.fieldTypePercent") },
+    { value: "date", label: t("templateEditor.fieldTypeDate") },
+    { value: "select", label: t("templateEditor.fieldTypeSelect") },
+    { value: "multi_select", label: t("templateEditor.fieldTypeMultiSelect") },
+    { value: "risk_matrix", label: t("templateEditor.fieldTypeRiskMatrix") },
+    { value: "stakeholder", label: t("templateEditor.fieldTypeStakeholder") },
+    { value: "attachment", label: t("templateEditor.fieldTypeAttachment") },
+    { value: "checkbox", label: t("templateEditor.fieldTypeCheckbox") },
+  ], [t]);
 
   useEffect(() => {
     if (templates.length > 0 && !selectedId) setSelectedId(templates[0].id);
@@ -104,7 +106,7 @@ const TemplateEditor = () => {
     patchDraft({
       required_fields: [
         ...localDraft.required_fields,
-        { key: `field_${Date.now()}`, label: "Neues Feld", type: "text", placeholder: "", validation: "" },
+        { key: `field_${Date.now()}`, label: t("templateEditor.newFieldLabel"), type: "text", placeholder: "", validation: "" },
       ],
     });
   };
@@ -126,7 +128,7 @@ const TemplateEditor = () => {
     patchDraft({
       approval_steps: [
         ...localDraft.approval_steps,
-        { role: "reviewer", label: "Neuer Schritt", required: false, sla_days: 3, escalation_level: 1 },
+        { role: "reviewer", label: t("templateEditor.newStepLabel"), required: false, sla_days: 3, escalation_level: 1 },
       ],
     });
   };
@@ -162,7 +164,7 @@ const TemplateEditor = () => {
     if (!localDraft) return;
     const rules = [...(localDraft.conditional_rules || [])];
     const rule = { ...rules[ruleIdx] };
-    rule.addFields = [...(rule.addFields || []), { key: `cond_field_${Date.now()}`, label: "Neues Feld", type: "text", placeholder: "" }];
+    rule.addFields = [...(rule.addFields || []), { key: `cond_field_${Date.now()}`, label: t("templateEditor.newFieldLabel"), type: "text", placeholder: "" }];
     rules[ruleIdx] = rule;
     patchDraft({ conditional_rules: rules });
   };
@@ -191,7 +193,7 @@ const TemplateEditor = () => {
     if (!localDraft) return;
     const rules = [...(localDraft.conditional_rules || [])];
     const rule = { ...rules[ruleIdx] };
-    rule.addApprovalSteps = [...(rule.addApprovalSteps || []), { role: "reviewer", label: "Neuer Schritt", required: false }];
+    rule.addApprovalSteps = [...(rule.addApprovalSteps || []), { role: "reviewer", label: t("templateEditor.newStepLabel"), required: false }];
     rules[ruleIdx] = rule;
     patchDraft({ conditional_rules: rules });
   };
@@ -231,18 +233,10 @@ const TemplateEditor = () => {
     const avgDays = completionDays.length > 0 ? Math.round(completionDays.reduce((a, b) => a + b, 0) / completionDays.length) : 0;
     const overdue = templateDecisions.filter(d => d.due_date && new Date(d.due_date) < new Date() && !["implemented", "rejected", "archived"].includes(d.status));
 
-    return {
-      total,
-      implemented: implemented.length,
-      rejected: rejected.length,
-      avgDays,
-      slaViolations: overdue.length,
-      reworkRate: 0,
-      rejectionRate: total > 0 ? Math.round((rejected.length / total) * 100) : 0,
-    };
+    return { total, implemented: implemented.length, rejected: rejected.length, avgDays, slaViolations: overdue.length, reworkRate: 0, rejectionRate: total > 0 ? Math.round((rejected.length / total) * 100) : 0 };
   }, [localDraft, decisions]);
 
-  const healthData = useMemo(() => localDraft ? computeHealthScore(localDraft) : null, [localDraft]);
+  const healthData = useMemo(() => localDraft ? computeHealthScore(localDraft, t) : null, [localDraft, t]);
 
   const handleSave = () => {
     if (!localDraft) return;
@@ -250,17 +244,11 @@ const TemplateEditor = () => {
     updateTemplate.mutate({
       id: localDraft.id,
       patch: {
-        name: localDraft.name,
-        category: localDraft.category,
-        priority: localDraft.priority,
-        description: localDraft.description,
-        default_duration_days: localDraft.default_duration_days,
-        required_fields: localDraft.required_fields,
-        approval_steps: localDraft.approval_steps,
-        conditional_rules: localDraft.conditional_rules,
-        governance_notes: localDraft.governance_notes,
-        when_to_use: localDraft.when_to_use,
-        version: newVersion,
+        name: localDraft.name, category: localDraft.category, priority: localDraft.priority,
+        description: localDraft.description, default_duration_days: localDraft.default_duration_days,
+        required_fields: localDraft.required_fields, approval_steps: localDraft.approval_steps,
+        conditional_rules: localDraft.conditional_rules, governance_notes: localDraft.governance_notes,
+        when_to_use: localDraft.when_to_use, version: newVersion,
       } as any,
     });
   };
@@ -269,28 +257,12 @@ const TemplateEditor = () => {
     if (!user) return;
     const slug = `custom-${Date.now()}`;
     createTemplate.mutate({
-      name: "Neues Template",
-      slug,
-      category: "operational",
-      priority: "medium",
-      description: "",
-      default_duration_days: 7,
-      required_fields: [],
-      approval_steps: [],
-      conditional_rules: [],
-      governance_notes: null,
-      when_to_use: null,
-      icon_color: null,
-      version: 1,
-      is_system: false,
-      created_by: user.id,
+      name: t("templateEditor.newTemplate"), slug, category: "operational", priority: "medium",
+      description: "", default_duration_days: 7, required_fields: [], approval_steps: [],
+      conditional_rules: [], governance_notes: null, when_to_use: null, icon_color: null,
+      version: 1, is_system: false, created_by: user.id,
     } as any, {
-      onSuccess: () => {
-        setTimeout(() => {
-          const newest = templates[templates.length - 1];
-          if (newest) setSelectedId(newest.id);
-        }, 500);
-      },
+      onSuccess: () => { setTimeout(() => { const newest = templates[templates.length - 1]; if (newest) setSelectedId(newest.id); }, 500); },
     });
   };
 
@@ -298,33 +270,19 @@ const TemplateEditor = () => {
     if (!localDraft || !user) return;
     const slug = `${localDraft.slug}-copy-${Date.now()}`;
     createTemplate.mutate({
-      name: `${localDraft.name} (Kopie)`,
-      slug,
-      category: localDraft.category,
-      priority: localDraft.priority,
-      description: localDraft.description,
-      default_duration_days: localDraft.default_duration_days,
-      required_fields: localDraft.required_fields,
-      approval_steps: localDraft.approval_steps,
-      conditional_rules: localDraft.conditional_rules,
-      governance_notes: localDraft.governance_notes,
-      when_to_use: localDraft.when_to_use,
-      icon_color: localDraft.icon_color,
-      version: 1,
-      is_system: false,
-      created_by: user.id,
+      name: t("templateEditor.copyName", { name: localDraft.name }), slug,
+      category: localDraft.category, priority: localDraft.priority, description: localDraft.description,
+      default_duration_days: localDraft.default_duration_days, required_fields: localDraft.required_fields,
+      approval_steps: localDraft.approval_steps, conditional_rules: localDraft.conditional_rules,
+      governance_notes: localDraft.governance_notes, when_to_use: localDraft.when_to_use,
+      icon_color: localDraft.icon_color, version: 1, is_system: false, created_by: user.id,
     } as any);
   };
 
   const handleDelete = () => {
     if (!localDraft || localDraft.is_system) return;
-    if (!confirm(`Template "${localDraft.name}" wirklich löschen?`)) return;
-    deleteTemplate.mutate(localDraft.id, {
-      onSuccess: () => {
-        setSelectedId(null);
-        setLocalDraft(null);
-      },
-    });
+    if (!confirm(t("templateEditor.confirmDelete", { name: localDraft.name }))) return;
+    deleteTemplate.mutate(localDraft.id, { onSuccess: () => { setSelectedId(null); setLocalDraft(null); } });
   };
 
   const handleExportTemplate = () => {
@@ -338,30 +296,24 @@ const TemplateEditor = () => {
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
+    const a = document.createElement("a"); a.href = url;
     a.download = `template-${localDraft.slug || localDraft.name.toLowerCase().replace(/\s+/g, "-")}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Template als JSON exportiert");
+    a.click(); URL.revokeObjectURL(url);
+    toast.success(t("templateEditor.exportedJson"));
   };
 
   const handleExportAll = () => {
-    const exportData = templates.map(t => ({
-      name: t.name, category: t.category, priority: t.priority, description: t.description,
-      default_duration_days: t.default_duration_days, required_fields: t.required_fields,
-      approval_steps: t.approval_steps, conditional_rules: t.conditional_rules,
-      governance_notes: t.governance_notes, when_to_use: t.when_to_use,
-      icon_color: t.icon_color, version: t.version,
+    const exportData = templates.map(tmpl => ({
+      name: tmpl.name, category: tmpl.category, priority: tmpl.priority, description: tmpl.description,
+      default_duration_days: tmpl.default_duration_days, required_fields: tmpl.required_fields,
+      approval_steps: tmpl.approval_steps, conditional_rules: tmpl.conditional_rules,
+      governance_notes: tmpl.governance_notes, when_to_use: tmpl.when_to_use,
+      icon_color: tmpl.icon_color, version: tmpl.version,
     }));
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "templates-export.json";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`${templates.length} Templates exportiert`);
+    const a = document.createElement("a"); a.href = url; a.download = "templates-export.json"; a.click(); URL.revokeObjectURL(url);
+    toast.success(t("templateEditor.exportedAll", { count: templates.length }));
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,8 +329,7 @@ const TemplateEditor = () => {
         const slug = `import-${item.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
         await new Promise<void>((resolve, reject) => {
           createTemplate.mutate({
-            name: item.name, slug,
-            category: item.category || "operational", priority: item.priority || "medium",
+            name: item.name, slug, category: item.category || "operational", priority: item.priority || "medium",
             description: item.description || "", default_duration_days: item.default_duration_days || 7,
             required_fields: item.required_fields || [], approval_steps: item.approval_steps || [],
             conditional_rules: item.conditional_rules || [], governance_notes: item.governance_notes || null,
@@ -388,9 +339,9 @@ const TemplateEditor = () => {
         });
         count++;
       }
-      toast.success(`${count} Template(s) importiert`);
+      toast.success(t("templateEditor.importedCount", { count }));
     } catch (err: any) {
-      toast.error("Import fehlgeschlagen: " + (err.message || "Ungültige JSON-Datei"));
+      toast.error(t("templateEditor.importFailed", { error: err.message || "Invalid JSON" }));
     }
     if (importFileRef.current) importFileRef.current.value = "";
   };
@@ -409,10 +360,10 @@ const TemplateEditor = () => {
       <AppLayout>
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <FileText className="w-12 h-12 text-muted-foreground/40" />
-          <p className="text-sm text-muted-foreground">Noch keine Templates in der Datenbank.</p>
+          <p className="text-sm text-muted-foreground">{t("templateEditor.noTemplates")}</p>
           <Button onClick={() => seedDefaults.mutate()} disabled={seedDefaults.isPending} className="gap-2">
             {seedDefaults.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            System-Templates initialisieren
+            {t("templateEditor.seedDefaults")}
           </Button>
         </div>
       </AppLayout>
@@ -423,8 +374,8 @@ const TemplateEditor = () => {
     <AppLayout>
       <div className="flex items-center gap-3 mb-6">
         <Settings2 className="w-5 h-5 text-primary" />
-        <h1 className="font-display text-xl font-bold">Template Editor</h1>
-        <Badge variant="outline" className="text-[10px]">Enterprise Governance</Badge>
+        <h1 className="font-display text-xl font-bold">{t("templateEditor.title")}</h1>
+        <Badge variant="outline" className="text-[10px]">{t("templateEditor.enterpriseGovernance")}</Badge>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
@@ -435,32 +386,32 @@ const TemplateEditor = () => {
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Templates ({isLoading ? "…" : templates.length})
               </p>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCreateNew} disabled={createTemplate.isPending} title="Neues Template">
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCreateNew} disabled={createTemplate.isPending} title={t("templateEditor.newTemplate")}>
                 <Plus className="w-3.5 h-3.5" />
               </Button>
             </div>
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
             ) : (
-              templates.map(t => {
-                const h = computeHealthScore(t);
+              templates.map(tmpl => {
+                const h = computeHealthScore(tmpl, t);
                 return (
                   <button
-                    key={t.id}
-                    onClick={() => setSelectedId(t.id)}
+                    key={tmpl.id}
+                    onClick={() => setSelectedId(tmpl.id)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors ${
-                      t.id === selectedId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50"
+                      tmpl.id === selectedId ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50"
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium truncate flex-1">{t.name}</span>
+                      <span className="font-medium truncate flex-1">{tmpl.name}</span>
                       <span className={`text-[10px] font-mono font-bold ${getScoreColor(h.score)}`}>{h.score}</span>
                     </div>
                     <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
-                      <span>{categoryLabels[t.category] || t.category}</span>
+                      <span>{tl.categoryLabels[tmpl.category] || tmpl.category}</span>
                       <span>·</span>
-                      <span>v{t.version}</span>
-                      {t.is_system && <Badge variant="outline" className="text-[8px] px-1 py-0">System</Badge>}
+                      <span>v{tmpl.version}</span>
+                      {tmpl.is_system && <Badge variant="outline" className="text-[8px] px-1 py-0">System</Badge>}
                     </div>
                     <Progress value={h.score} className="h-1 mt-1.5" />
                   </button>
@@ -474,7 +425,7 @@ const TemplateEditor = () => {
                 <Upload className="w-3 h-3" /> Import
               </Button>
               <Button variant="outline" size="sm" className="flex-1 gap-1 text-xs h-7" onClick={handleExportAll} disabled={templates.length === 0}>
-                <Download className="w-3 h-3" /> Alle
+                <Download className="w-3 h-3" /> {t("templateEditor.allExport")}
               </Button>
             </div>
           </CardContent>
@@ -493,8 +444,8 @@ const TemplateEditor = () => {
                       {healthData?.score || 0}
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold">Template Health Score</h3>
-                      <p className="text-[10px] text-muted-foreground">Decision Design Quality</p>
+                      <h3 className="text-sm font-semibold">{t("templateEditor.healthScore")}</h3>
+                      <p className="text-[10px] text-muted-foreground">{t("templateEditor.designQuality")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -502,7 +453,7 @@ const TemplateEditor = () => {
                       <Download className="w-3.5 h-3.5" /> Export
                     </Button>
                     <Button variant="ghost" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1 text-xs text-muted-foreground">
-                      <Copy className="w-3.5 h-3.5" /> Duplizieren
+                      <Copy className="w-3.5 h-3.5" /> {t("templateEditor.duplicate")}
                     </Button>
                     {!localDraft.is_system && (
                       <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleteTemplate.isPending} className="gap-1 text-xs text-destructive/70 hover:text-destructive">
@@ -511,7 +462,7 @@ const TemplateEditor = () => {
                     )}
                     <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs">
                       {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      Speichern
+                      {t("templateEditor.save")}
                     </Button>
                   </div>
                 </div>
@@ -526,9 +477,7 @@ const TemplateEditor = () => {
                 {healthData && healthData.score < 60 && (
                   <div className="mt-3 p-2.5 rounded-lg bg-destructive/5 border border-destructive/20 flex items-start gap-2">
                     <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-xs text-destructive/80">
-                      Dieses Template erfüllt weniger als 60% der Governance-Anforderungen. Bitte fehlende Bereiche ergänzen.
-                    </p>
+                    <p className="text-xs text-destructive/80">{t("templateEditor.healthWarning")}</p>
                   </div>
                 )}
               </CardContent>
@@ -538,68 +487,58 @@ const TemplateEditor = () => {
             <Card>
               <CardContent className="p-5 space-y-4">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <FileText className="w-4 h-4" /> Grunddaten
+                  <FileText className="w-4 h-4" /> {t("templateEditor.basicData")}
                   {localDraft.is_system && <Badge variant="outline" className="text-[9px]">System</Badge>}
-                  {!localDraft.is_system && <Badge variant="secondary" className="text-[9px]">Benutzerdefiniert</Badge>}
+                  {!localDraft.is_system && <Badge variant="secondary" className="text-[9px]">{t("templateEditor.custom")}</Badge>}
                   <Badge variant="outline" className="text-[9px] ml-auto">v{localDraft.version}</Badge>
                 </h2>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-muted-foreground">Name</label>
+                    <label className="text-xs text-muted-foreground">{t("templateEditor.nameLabel")}</label>
                     <Input value={localDraft.name} onChange={e => patchDraft({ name: e.target.value })} className="mt-1" />
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground">Kategorie</label>
+                    <label className="text-xs text-muted-foreground">{t("templateEditor.categoryLabel")}</label>
                     <Select value={localDraft.category} onValueChange={v => patchDraft({ category: v })}>
                       <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {Object.entries(categoryLabels).map(([k, v]) => (
+                        {Object.entries(tl.categoryLabels).map(([k, v]) => (
                           <SelectItem key={k} value={k}>{v}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground">Standard-Priorität</label>
+                    <label className="text-xs text-muted-foreground">{t("templateEditor.defaultPriority")}</label>
                     <Select value={localDraft.priority} onValueChange={v => patchDraft({ priority: v })}>
                       <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {Object.entries(priorityLabels).map(([k, v]) => (
+                        {Object.entries(tl.priorityLabels).map(([k, v]) => (
                           <SelectItem key={k} value={k}>{v}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <label className="text-xs text-muted-foreground">Standard SLA (Tage)</label>
-                    <Input
-                      type="number"
-                      value={localDraft.default_duration_days}
-                      onChange={e => patchDraft({ default_duration_days: parseInt(e.target.value) || 7 })}
-                      className="mt-1"
-                    />
+                    <label className="text-xs text-muted-foreground">{t("templateEditor.defaultSla")}</label>
+                    <Input type="number" value={localDraft.default_duration_days} onChange={e => patchDraft({ default_duration_days: parseInt(e.target.value) || 7 })} className="mt-1" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Beschreibung</label>
+                  <label className="text-xs text-muted-foreground">{t("templateEditor.descLabel")}</label>
                   <Textarea value={localDraft.description} onChange={e => patchDraft({ description: e.target.value })} className="mt-1" rows={2} />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground">Verwendungshinweis</label>
-                  <Textarea
-                    value={localDraft.when_to_use || ""}
-                    onChange={e => patchDraft({ when_to_use: e.target.value } as any)}
-                    className="mt-1" rows={2}
-                    placeholder="Wann sollte dieses Template verwendet werden?"
-                  />
+                  <label className="text-xs text-muted-foreground">{t("templateEditor.usageHint")}</label>
+                  <Textarea value={localDraft.when_to_use || ""} onChange={e => patchDraft({ when_to_use: e.target.value } as any)} className="mt-1" rows={2} placeholder={t("templateEditor.usagePlaceholder")} />
                 </div>
               </CardContent>
             </Card>
 
-            {/* ── 2. Pflichtfelder (erweitert) ── */}
+            {/* ── 2. Pflichtfelder ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Pflichtfelder" sectionKey="fields" count={localDraft.required_fields.length} icon={Target} />
+                <SectionHeader label={t("templateEditor.requiredFields")} sectionKey="fields" count={localDraft.required_fields.length} icon={Target} />
                 {expandedSections.fields && (
                   <div className="space-y-3 mt-2">
                     {localDraft.required_fields.map((field: any, idx: number) => (
@@ -608,11 +547,11 @@ const TemplateEditor = () => {
                         <div className="flex-1 space-y-2">
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Label</label>
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.labelCol")}</label>
                               <Input value={field.label} onChange={e => updateField(idx, { label: e.target.value })} className="mt-0.5 h-8 text-xs" />
                             </div>
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Typ</label>
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.typeCol")}</label>
                               <Select value={field.type} onValueChange={v => updateField(idx, { type: v as any })}>
                                 <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -621,30 +560,18 @@ const TemplateEditor = () => {
                               </Select>
                             </div>
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Placeholder</label>
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.placeholderCol")}</label>
                               <Input value={field.placeholder || ""} onChange={e => updateField(idx, { placeholder: e.target.value })} className="mt-0.5 h-8 text-xs" />
                             </div>
                           </div>
-                          {/* Validation row */}
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Validierung</label>
-                              <Input
-                                value={(field as any).validation || ""}
-                                onChange={e => updateField(idx, { validation: e.target.value } as any)}
-                                className="mt-0.5 h-8 text-xs"
-                                placeholder="z.B. > 0, max:100, required"
-                              />
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.validationCol")}</label>
+                              <Input value={(field as any).validation || ""} onChange={e => updateField(idx, { validation: e.target.value } as any)} className="mt-0.5 h-8 text-xs" placeholder={t("templateEditor.validationPlaceholder")} />
                             </div>
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Optionen (kommagetrennt)</label>
-                              <Input
-                                value={(field as any).options || ""}
-                                onChange={e => updateField(idx, { options: e.target.value } as any)}
-                                className="mt-0.5 h-8 text-xs"
-                                placeholder="Für Auswahl/Multi-Select"
-                                disabled={!["select", "multi_select"].includes(field.type)}
-                              />
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.optionsCol")}</label>
+                              <Input value={(field as any).options || ""} onChange={e => updateField(idx, { options: e.target.value } as any)} className="mt-0.5 h-8 text-xs" placeholder={t("templateEditor.optionsPlaceholder")} disabled={!["select", "multi_select"].includes(field.type)} />
                             </div>
                           </div>
                         </div>
@@ -655,7 +582,7 @@ const TemplateEditor = () => {
                     ))}
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={addField}>
-                        <Plus className="w-3.5 h-3.5" /> Feld hinzufügen
+                        <Plus className="w-3.5 h-3.5" /> {t("templateEditor.addField")}
                       </Button>
                       <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => {
                         if (!localDraft) return;
@@ -667,9 +594,9 @@ const TemplateEditor = () => {
                             { key: "risk_assessment", label: "Risiko-Bewertung", type: "risk_matrix", placeholder: "Likelihood × Impact", validation: "" },
                           ],
                         });
-                        toast.success("Standard-Governance-Felder hinzugefügt");
+                        toast.success(t("templateEditor.govFieldsAdded"));
                       }}>
-                        <Shield className="w-3.5 h-3.5" /> Governance-Felder einfügen
+                        <Shield className="w-3.5 h-3.5" /> {t("templateEditor.insertGovFields")}
                       </Button>
                     </div>
                   </div>
@@ -677,22 +604,17 @@ const TemplateEditor = () => {
               </CardContent>
             </Card>
 
-            {/* ── 3. Governance-Regeln (strukturiert) ── */}
+            {/* ── 3. Governance-Regeln ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Governance-Regeln & Hinweise" sectionKey="governance" icon={Shield} />
+                <SectionHeader label={t("templateEditor.govRules")} sectionKey="governance" icon={Shield} />
                 {expandedSections.governance && (
                   <div className="space-y-3 mt-2">
-                    <Textarea
-                      value={localDraft.governance_notes || ""}
-                      onChange={e => patchDraft({ governance_notes: e.target.value })}
-                      className="text-xs" rows={3}
-                      placeholder="Strukturierte Policy-Regeln, z.B.:&#10;• Budget > 10.000 → CFO Pflicht&#10;• ROI-Feld muss ausgefüllt sein&#10;• Risiko-Bewertung ist Pflicht"
-                    />
+                    <Textarea value={localDraft.governance_notes || ""} onChange={e => patchDraft({ governance_notes: e.target.value })} className="text-xs" rows={3} placeholder={t("templateEditor.govPlaceholder")} />
                     <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
                       <p className="text-[10px] text-primary font-medium flex items-center gap-1.5">
                         <Zap className="w-3 h-3" />
-                        Diese Regeln werden über bedingte Regeln und Automationen automatisch angewendet.
+                        {t("templateEditor.govAutoHint")}
                       </p>
                     </div>
                   </div>
@@ -700,10 +622,10 @@ const TemplateEditor = () => {
               </CardContent>
             </Card>
 
-            {/* ── 4. Freigabe-Schritte (mit SLA & Eskalation) ── */}
+            {/* ── 4. Freigabe-Schritte ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Freigabe-Schritte" sectionKey="approval" count={localDraft.approval_steps.length} icon={CheckCircle2} />
+                <SectionHeader label={t("templateEditor.approvalSteps")} sectionKey="approval" count={localDraft.approval_steps.length} icon={CheckCircle2} />
                 {expandedSections.approval && (
                   <div className="space-y-3 mt-2">
                     {localDraft.approval_steps.map((step: any, idx: number) => (
@@ -712,20 +634,20 @@ const TemplateEditor = () => {
                           <span className="text-xs font-mono text-muted-foreground w-6 text-center bg-muted rounded px-1">{idx + 1}</span>
                           <div className="flex-1 grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Label</label>
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.stepLabel")}</label>
                               <Input value={step.label} onChange={e => updateStep(idx, { label: e.target.value })} className="mt-0.5 h-8 text-xs" />
                             </div>
                             <div>
-                              <label className="text-[10px] text-muted-foreground">Rolle</label>
+                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.stepRole")}</label>
                               <Select value={step.role} onValueChange={v => updateStep(idx, { role: v })}>
                                 <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="decision_maker">Entscheider</SelectItem>
-                                  <SelectItem value="reviewer">Reviewer</SelectItem>
-                                  <SelectItem value="admin">Admin/GF</SelectItem>
-                                  <SelectItem value="cfo">CFO</SelectItem>
-                                  <SelectItem value="risk_officer">Risk Officer</SelectItem>
-                                  <SelectItem value="board">Vorstand</SelectItem>
+                                  <SelectItem value="decision_maker">{t("templateEditor.roleDecisionMaker")}</SelectItem>
+                                  <SelectItem value="reviewer">{t("templateEditor.roleReviewer")}</SelectItem>
+                                  <SelectItem value="admin">{t("templateEditor.roleAdmin")}</SelectItem>
+                                  <SelectItem value="cfo">{t("templateEditor.roleCfo")}</SelectItem>
+                                  <SelectItem value="risk_officer">{t("templateEditor.roleRiskOfficer")}</SelectItem>
+                                  <SelectItem value="board">{t("templateEditor.roleBoard")}</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -736,32 +658,22 @@ const TemplateEditor = () => {
                         </div>
                         <div className="flex items-center gap-4 pl-9">
                           <div className="flex items-center gap-2">
-                            <label className="text-[10px] text-muted-foreground">SLA (Tage)</label>
-                            <Input
-                              type="number"
-                              value={step.sla_days || 3}
-                              onChange={e => updateStep(idx, { sla_days: parseInt(e.target.value) || 3 } as any)}
-                              className="h-7 w-16 text-xs"
-                            />
+                            <label className="text-[10px] text-muted-foreground">{t("templateEditor.stepSlaDays")}</label>
+                            <Input type="number" value={step.sla_days || 3} onChange={e => updateStep(idx, { sla_days: parseInt(e.target.value) || 3 } as any)} className="h-7 w-16 text-xs" />
                           </div>
                           <div className="flex items-center gap-2">
-                            <label className="text-[10px] text-muted-foreground">Eskalation Level</label>
-                            <Input
-                              type="number"
-                              value={step.escalation_level || 1}
-                              onChange={e => updateStep(idx, { escalation_level: parseInt(e.target.value) || 1 } as any)}
-                              className="h-7 w-16 text-xs"
-                            />
+                            <label className="text-[10px] text-muted-foreground">{t("templateEditor.stepEscalation")}</label>
+                            <Input type="number" value={step.escalation_level || 1} onChange={e => updateStep(idx, { escalation_level: parseInt(e.target.value) || 1 } as any)} className="h-7 w-16 text-xs" />
                           </div>
                           <div className="flex items-center gap-2">
-                            <label className="text-[10px] text-muted-foreground">Pflicht</label>
+                            <label className="text-[10px] text-muted-foreground">{t("templateEditor.stepRequired")}</label>
                             <Switch checked={step.required} onCheckedChange={v => updateStep(idx, { required: v })} />
                           </div>
                         </div>
                       </div>
                     ))}
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={addStep}>
-                      <Plus className="w-3.5 h-3.5" /> Schritt hinzufügen
+                      <Plus className="w-3.5 h-3.5" /> {t("templateEditor.addStep")}
                     </Button>
                   </div>
                 )}
@@ -771,11 +683,11 @@ const TemplateEditor = () => {
             {/* ── 5. Bedingte Regeln ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Bedingte Regeln (Conditional Logic)" sectionKey="rules" count={localDraft.conditional_rules?.length || 0} icon={AlertTriangle} />
+                <SectionHeader label={t("templateEditor.conditionalRules")} sectionKey="rules" count={localDraft.conditional_rules?.length || 0} icon={AlertTriangle} />
                 {expandedSections.rules && (
                   <div className="space-y-3 mt-2">
                     {(!localDraft.conditional_rules || localDraft.conditional_rules.length === 0) ? (
-                      <p className="text-xs text-muted-foreground">Keine bedingten Regeln konfiguriert.</p>
+                      <p className="text-xs text-muted-foreground">{t("templateEditor.noRules")}</p>
                     ) : (
                       localDraft.conditional_rules.map((rule: any, idx: number) => (
                         <div key={idx} className="p-3 rounded-lg bg-muted/20 border border-border text-xs space-y-3">
@@ -783,34 +695,34 @@ const TemplateEditor = () => {
                             <Zap className="w-3.5 h-3.5 text-amber-500 mt-1 shrink-0" />
                             <div className="flex-1 grid grid-cols-3 gap-2">
                               <div>
-                                <label className="text-[10px] text-muted-foreground">Wenn Feld</label>
+                                <label className="text-[10px] text-muted-foreground">{t("templateEditor.whenField")}</label>
                                 <Select value={rule.when} onValueChange={v => updateRule(idx, { when: v })}>
                                   <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="priority">Priorität</SelectItem>
-                                    <SelectItem value="category">Kategorie</SelectItem>
-                                    <SelectItem value="budget_impact">Budget-Auswirkung (€)</SelectItem>
-                                    <SelectItem value="stakeholder_count">Stakeholder-Anzahl</SelectItem>
-                                    <SelectItem value="risk_score">Risk Score</SelectItem>
-                                    <SelectItem value="roi_estimate">ROI-Schätzung</SelectItem>
+                                    <SelectItem value="priority">{t("templateEditor.condPriority")}</SelectItem>
+                                    <SelectItem value="category">{t("templateEditor.condCategory")}</SelectItem>
+                                    <SelectItem value="budget_impact">{t("templateEditor.condBudget")}</SelectItem>
+                                    <SelectItem value="stakeholder_count">{t("templateEditor.condStakeholders")}</SelectItem>
+                                    <SelectItem value="risk_score">{t("templateEditor.condRiskScore")}</SelectItem>
+                                    <SelectItem value="roi_estimate">{t("templateEditor.condRoi")}</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <label className="text-[10px] text-muted-foreground">Operator</label>
+                                <label className="text-[10px] text-muted-foreground">{t("templateEditor.operator")}</label>
                                 <Select value={rule.operator} onValueChange={v => updateRule(idx, { operator: v })}>
                                   <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="equals">Gleich</SelectItem>
-                                    <SelectItem value="not_equals">Nicht gleich</SelectItem>
-                                    <SelectItem value="greater_than">Größer als</SelectItem>
-                                    <SelectItem value="less_than">Kleiner als</SelectItem>
-                                    <SelectItem value="in">Enthält</SelectItem>
+                                    <SelectItem value="equals">{t("templateEditor.opEquals")}</SelectItem>
+                                    <SelectItem value="not_equals">{t("templateEditor.opNotEquals")}</SelectItem>
+                                    <SelectItem value="greater_than">{t("templateEditor.opGreaterThan")}</SelectItem>
+                                    <SelectItem value="less_than">{t("templateEditor.opLessThan")}</SelectItem>
+                                    <SelectItem value="in">{t("templateEditor.opIn")}</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                               <div>
-                                <label className="text-[10px] text-muted-foreground">Wert(e)</label>
+                                <label className="text-[10px] text-muted-foreground">{t("templateEditor.values")}</label>
                                 <Input
                                   value={Array.isArray(rule.value) ? rule.value.join(", ") : rule.value}
                                   onChange={e => {
@@ -819,7 +731,7 @@ const TemplateEditor = () => {
                                     updateRule(idx, { value: val });
                                   }}
                                   className="mt-0.5 h-8 text-xs"
-                                  placeholder={rule.operator === "in" ? "kommagetrennt" : "Wert"}
+                                  placeholder={rule.operator === "in" ? t("templateEditor.commaValues") : t("templateEditor.valuePlaceholder")}
                                 />
                               </div>
                             </div>
@@ -828,15 +740,15 @@ const TemplateEditor = () => {
                             </Button>
                           </div>
                           <div>
-                            <label className="text-[10px] text-muted-foreground">→ Governance-Hinweis bei Auslösung</label>
-                            <Input value={rule.governanceHint || ""} onChange={e => updateRule(idx, { governanceHint: e.target.value })} className="mt-0.5 h-8 text-xs" placeholder="z.B. CFO-Freigabe erforderlich" />
+                            <label className="text-[10px] text-muted-foreground">{t("templateEditor.govHintOnTrigger")}</label>
+                            <Input value={rule.governanceHint || ""} onChange={e => updateRule(idx, { governanceHint: e.target.value })} className="mt-0.5 h-8 text-xs" placeholder={t("templateEditor.govHintPlaceholder")} />
                           </div>
                           <div>
-                            <label className="text-[10px] text-muted-foreground mb-1 block">→ Zusätzliche Pflichtfelder ({rule.addFields?.length || 0})</label>
+                            <label className="text-[10px] text-muted-foreground mb-1 block">{t("templateEditor.additionalFields", { count: rule.addFields?.length || 0 })}</label>
                             <div className="space-y-1.5">
                               {(rule.addFields || []).map((f: any, fi: number) => (
                                 <div key={fi} className="flex items-center gap-2">
-                                  <Input value={f.label} onChange={e => updateRuleField(idx, fi, { label: e.target.value, key: e.target.value.toLowerCase().replace(/\s+/g, "_") })} className="h-7 text-xs flex-1" placeholder="Feldname" />
+                                  <Input value={f.label} onChange={e => updateRuleField(idx, fi, { label: e.target.value, key: e.target.value.toLowerCase().replace(/\s+/g, "_") })} className="h-7 text-xs flex-1" placeholder={t("templateEditor.fieldName")} />
                                   <Select value={f.type} onValueChange={v => updateRuleField(idx, fi, { type: v })}>
                                     <SelectTrigger className="h-7 text-xs w-[100px]"><SelectValue /></SelectTrigger>
                                     <SelectContent>
@@ -849,29 +761,29 @@ const TemplateEditor = () => {
                                 </div>
                               ))}
                               <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => addRuleField(idx)}>
-                                <Plus className="w-3 h-3" /> Feld
+                                <Plus className="w-3 h-3" /> {t("templateEditor.field")}
                               </Button>
                             </div>
                           </div>
                           <div>
-                            <label className="text-[10px] text-muted-foreground mb-1 block">→ Zusätzliche Freigabe-Schritte ({rule.addApprovalSteps?.length || 0})</label>
+                            <label className="text-[10px] text-muted-foreground mb-1 block">{t("templateEditor.additionalSteps", { count: rule.addApprovalSteps?.length || 0 })}</label>
                             <div className="space-y-1.5">
                               {(rule.addApprovalSteps || []).map((s: any, si: number) => (
                                 <div key={si} className="flex items-center gap-2">
-                                  <Input value={s.label} onChange={e => updateRuleStep(idx, si, { label: e.target.value })} className="h-7 text-xs flex-1" placeholder="Schrittname" />
+                                  <Input value={s.label} onChange={e => updateRuleStep(idx, si, { label: e.target.value })} className="h-7 text-xs flex-1" placeholder={t("templateEditor.stepName")} />
                                   <Select value={s.role} onValueChange={v => updateRuleStep(idx, si, { role: v })}>
                                     <SelectTrigger className="h-7 text-xs w-[100px]"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="decision_maker">Entscheider</SelectItem>
-                                      <SelectItem value="reviewer">Reviewer</SelectItem>
-                                      <SelectItem value="admin">Admin/GF</SelectItem>
-                                      <SelectItem value="cfo">CFO</SelectItem>
-                                      <SelectItem value="risk_officer">Risk Officer</SelectItem>
-                                      <SelectItem value="board">Vorstand</SelectItem>
+                                      <SelectItem value="decision_maker">{t("templateEditor.roleDecisionMaker")}</SelectItem>
+                                      <SelectItem value="reviewer">{t("templateEditor.roleReviewer")}</SelectItem>
+                                      <SelectItem value="admin">{t("templateEditor.roleAdmin")}</SelectItem>
+                                      <SelectItem value="cfo">{t("templateEditor.roleCfo")}</SelectItem>
+                                      <SelectItem value="risk_officer">{t("templateEditor.roleRiskOfficer")}</SelectItem>
+                                      <SelectItem value="board">{t("templateEditor.roleBoard")}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                   <div className="flex items-center gap-1">
-                                    <label className="text-[9px] text-muted-foreground">Pflicht</label>
+                                    <label className="text-[9px] text-muted-foreground">{t("templateEditor.stepRequired")}</label>
                                     <Switch checked={s.required} onCheckedChange={v => updateRuleStep(idx, si, { required: v })} className="scale-75" />
                                   </div>
                                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/60" onClick={() => removeRuleStep(idx, si)}>
@@ -880,7 +792,7 @@ const TemplateEditor = () => {
                                 </div>
                               ))}
                               <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1" onClick={() => addRuleStep(idx)}>
-                                <Plus className="w-3 h-3" /> Freigabe-Schritt
+                                <Plus className="w-3 h-3" /> {t("templateEditor.approvalStep")}
                               </Button>
                             </div>
                           </div>
@@ -888,7 +800,7 @@ const TemplateEditor = () => {
                       ))
                     )}
                     <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={addRule}>
-                      <Plus className="w-3.5 h-3.5" /> Regel hinzufügen
+                      <Plus className="w-3.5 h-3.5" /> {t("templateEditor.addRule")}
                     </Button>
                   </div>
                 )}
@@ -898,7 +810,7 @@ const TemplateEditor = () => {
             {/* ── 6. Automation-Verknüpfung ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Verknüpfte Automationen" sectionKey="automation" icon={Zap} />
+                <SectionHeader label={t("templateEditor.linkedAutomations")} sectionKey="automation" icon={Zap} />
                 {expandedSections.automation && (
                   <div className="space-y-2 mt-2">
                     {localDraft.priority === "high" || localDraft.priority === "critical" ? (
@@ -907,10 +819,10 @@ const TemplateEditor = () => {
                           <Clock className="w-4 h-4 text-amber-500" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium">SLA-Automatik</p>
-                          <p className="text-[10px] text-muted-foreground">{localDraft.priority === "critical" ? "3" : "5"} Tage SLA bei Priorität {priorityLabels[localDraft.priority]}</p>
+                          <p className="text-xs font-medium">{t("templateEditor.slaAutomatic")}</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.slaDaysAtPriority", { days: localDraft.priority === "critical" ? 3 : 5, priority: tl.priorityLabels[localDraft.priority] })}</p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] text-emerald-500">Aktiv</Badge>
+                        <Badge variant="outline" className="text-[9px] text-emerald-500">{t("mfa.active")}</Badge>
                       </div>
                     ) : null}
                     {(localDraft.conditional_rules || []).length > 0 && (
@@ -919,10 +831,10 @@ const TemplateEditor = () => {
                           <AlertTriangle className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium">Bedingte Eskalation</p>
-                          <p className="text-[10px] text-muted-foreground">{(localDraft.conditional_rules || []).length} Regel(n) konfiguriert</p>
+                          <p className="text-xs font-medium">{t("templateEditor.conditionalEscalation")}</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.rulesConfigured", { count: (localDraft.conditional_rules || []).length })}</p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] text-emerald-500">Aktiv</Badge>
+                        <Badge variant="outline" className="text-[9px] text-emerald-500">{t("mfa.active")}</Badge>
                       </div>
                     )}
                     {(localDraft.approval_steps || []).length > 0 && (
@@ -931,15 +843,13 @@ const TemplateEditor = () => {
                           <CheckCircle2 className="w-4 h-4 text-blue-500" />
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium">Auto-Benachrichtigung</p>
-                          <p className="text-[10px] text-muted-foreground">Reviewer werden bei neuem Review benachrichtigt</p>
+                          <p className="text-xs font-medium">{t("templateEditor.autoNotification")}</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.reviewerNotified")}</p>
                         </div>
-                        <Badge variant="outline" className="text-[9px] text-emerald-500">Aktiv</Badge>
+                        <Badge variant="outline" className="text-[9px] text-emerald-500">{t("mfa.active")}</Badge>
                       </div>
                     )}
-                    <p className="text-[10px] text-muted-foreground pt-1">
-                      Automationen werden in der Automation Engine verwaltet → Einstellungen / Automationen
-                    </p>
+                    <p className="text-[10px] text-muted-foreground pt-1">{t("templateEditor.automationHint")}</p>
                   </div>
                 )}
               </CardContent>
@@ -948,38 +858,38 @@ const TemplateEditor = () => {
             {/* ── 7. Template Analytics ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Template Analytics" sectionKey="analytics" icon={BarChart3} />
+                <SectionHeader label={t("templateEditor.analytics")} sectionKey="analytics" icon={BarChart3} />
                 {expandedSections.analytics && templateAnalytics && (
                   <div className="mt-2">
                     {templateAnalytics.total === 0 ? (
                       <div className="text-center py-6">
                         <BarChart3 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-xs text-muted-foreground">Noch keine Entscheidungen mit diesem Template erstellt.</p>
+                        <p className="text-xs text-muted-foreground">{t("templateEditor.noDecisionsYet")}</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">Gesamt</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.total")}</p>
                           <p className="text-lg font-bold">{templateAnalytics.total}</p>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">Ø Time-to-Decision</p>
-                          <p className="text-lg font-bold">{templateAnalytics.avgDays}<span className="text-xs font-normal text-muted-foreground ml-1">Tage</span></p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.avgTimeToDecision")}</p>
+                          <p className="text-lg font-bold">{templateAnalytics.avgDays}<span className="text-xs font-normal text-muted-foreground ml-1">{t("templateEditor.daysUnit")}</span></p>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">Ablehnungsquote</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.rejectionRate")}</p>
                           <p className={`text-lg font-bold ${templateAnalytics.rejectionRate > 30 ? "text-destructive" : ""}`}>{templateAnalytics.rejectionRate}%</p>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">Umgesetzt</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.implemented")}</p>
                           <p className="text-lg font-bold text-emerald-500">{templateAnalytics.implemented}</p>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">Abgelehnt</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.rejected")}</p>
                           <p className="text-lg font-bold text-destructive">{templateAnalytics.rejected}</p>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/20 border border-border">
-                          <p className="text-[10px] text-muted-foreground">SLA-Verstöße</p>
+                          <p className="text-[10px] text-muted-foreground">{t("templateEditor.slaViolations")}</p>
                           <p className={`text-lg font-bold ${templateAnalytics.slaViolations > 0 ? "text-amber-500" : ""}`}>{templateAnalytics.slaViolations}</p>
                         </div>
                       </div>
@@ -992,28 +902,26 @@ const TemplateEditor = () => {
             {/* ── 8. Versionierung ── */}
             <Card>
               <CardContent className="p-5">
-                <SectionHeader label="Versionsverlauf" sectionKey="versions" icon={History} />
+                <SectionHeader label={t("templateEditor.versionHistory")} sectionKey="versions" icon={History} />
                 {expandedSections.versions && (
                   <div className="space-y-2 mt-2">
                     {Array.from({ length: Math.min(localDraft.version, 5) }, (_, i) => localDraft.version - i).map(v => (
                       <div key={v} className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs ${v === localDraft.version ? "border-primary/30 bg-primary/5" : "border-border bg-muted/10"}`}>
                         <Badge variant={v === localDraft.version ? "default" : "outline"} className="text-[10px]">v{v}</Badge>
                         <span className="flex-1 text-muted-foreground">
-                          {v === localDraft.version ? "Aktuelle Version" : `Version ${v}`}
+                          {v === localDraft.version ? t("templateEditor.currentVersion") : t("templateEditor.versionLabel", { v })}
                         </span>
                         {v === localDraft.version && (
-                          <Badge variant="outline" className="text-[9px] text-emerald-500">Aktiv</Badge>
+                          <Badge variant="outline" className="text-[9px] text-emerald-500">{t("mfa.active")}</Badge>
                         )}
                         {v < localDraft.version && (
                           <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground">
-                            <History className="w-3 h-3" /> Wiederherstellen
+                            <History className="w-3 h-3" /> {t("templateEditor.restore")}
                           </Button>
                         )}
                       </div>
                     ))}
-                    <p className="text-[10px] text-muted-foreground">
-                      Jede Speicherung erstellt automatisch eine neue Version.
-                    </p>
+                    <p className="text-[10px] text-muted-foreground">{t("templateEditor.autoVersionHint")}</p>
                   </div>
                 )}
               </CardContent>

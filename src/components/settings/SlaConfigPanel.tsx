@@ -1,27 +1,11 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, CheckCircle2, Save } from "lucide-react";
-
-const categoryLabels: Record<string, string> = {
-  strategic: "Strategisch",
-  budget: "Budget",
-  hr: "Personal",
-  technical: "Technisch",
-  operational: "Operativ",
-  marketing: "Marketing",
-};
-
-const priorityLabels: Record<string, string> = {
-  critical: "Kritisch",
-  high: "Hoch",
-  medium: "Mittel",
-  low: "Niedrig",
-};
-
-const priorityOrder = ["critical", "high", "medium", "low"];
+import { useTranslatedLabels } from "@/lib/labels";
 
 interface SlaConfig {
   id: string;
@@ -33,8 +17,12 @@ interface SlaConfig {
   reassign_days: number;
 }
 
+const priorityOrder = ["critical", "high", "medium", "low"];
+
 const SlaConfigPanel = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
+  const tl = useTranslatedLabels(t);
   const [configs, setConfigs] = useState<SlaConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,11 +68,11 @@ const SlaConfigPanel = () => {
 
     setSaving(false);
     if (hasError) {
-      toast({ title: "Fehler", description: "Einige SLA-Konfigurationen konnten nicht gespeichert werden.", variant: "destructive" });
+      toast({ title: t("slaConfig.error"), description: t("slaConfig.errorDesc"), variant: "destructive" });
     } else {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-      toast({ title: "Gespeichert", description: "SLA-Konfigurationen aktualisiert." });
+      toast({ title: t("slaConfig.saved"), description: t("slaConfig.savedDesc") });
     }
   };
 
@@ -95,14 +83,14 @@ const SlaConfigPanel = () => {
   const inputClass = "w-full h-9 px-2 rounded-lg bg-background border border-input text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all";
 
   if (loading) {
-    return <div className="text-sm text-muted-foreground py-4 text-center">SLA-Konfigurationen laden...</div>;
+    return <div className="text-sm text-muted-foreground py-4 text-center">{t("slaConfig.loading")}</div>;
   }
 
   return (
     <div className="space-y-4">
       {/* Category tabs */}
       <div className="flex flex-wrap gap-1.5">
-        {Object.entries(categoryLabels).map(([key, label]) => (
+        {Object.entries(tl.categoryLabels).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setActiveCategory(key)}
@@ -120,16 +108,16 @@ const SlaConfigPanel = () => {
       {/* Config table */}
       <div className="rounded-lg border border-border overflow-hidden">
         <div className="grid grid-cols-5 gap-0 bg-muted/50 text-xs font-medium text-muted-foreground">
-          <div className="p-2.5">Priorität</div>
-          <div className="p-2.5 text-center">⚠️ Warnung (h)</div>
-          <div className="p-2.5 text-center">🔴 Dringend (h)</div>
-          <div className="p-2.5 text-center">🚨 Überfällig (h)</div>
-          <div className="p-2.5 text-center">🔄 Reassign (Tage)</div>
+          <div className="p-2.5">{t("slaConfig.priority")}</div>
+          <div className="p-2.5 text-center">{t("slaConfig.warnHours")}</div>
+          <div className="p-2.5 text-center">{t("slaConfig.urgentHours")}</div>
+          <div className="p-2.5 text-center">{t("slaConfig.overdueHours")}</div>
+          <div className="p-2.5 text-center">{t("slaConfig.reassignDays")}</div>
         </div>
         {categoryConfigs.map(config => (
           <div key={config.id} className="grid grid-cols-5 gap-0 border-t border-border items-center">
             <div className="p-2.5">
-              <span className="text-sm font-medium">{priorityLabels[config.priority]}</span>
+              <span className="text-sm font-medium">{tl.priorityLabels[config.priority] || config.priority}</span>
             </div>
             <div className="p-1.5">
               <input
@@ -171,13 +159,11 @@ const SlaConfigPanel = () => {
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        <strong>Warnung:</strong> Stunden vor Deadline für erste Warnung. <strong>Dringend:</strong> Stufe 2. <strong>Überfällig:</strong> Stufe 3 (0 = bei Deadline). <strong>Reassign:</strong> Tage Inaktivität bis zur automatischen Neuzuweisung.
-      </p>
+      <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: t("slaConfig.helpText") }} />
 
       <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
         {saved ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-        {saving ? "Speichern..." : saved ? "Gespeichert" : "SLA speichern"}
+        {saving ? t("slaConfig.saving") : saved ? t("slaConfig.savedBtn") : t("slaConfig.saveBtn")}
       </Button>
     </div>
   );

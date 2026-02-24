@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Users, Zap, CheckCircle2, AlertTriangle, FileText, Clock, TrendingUp, Shield, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,6 @@ interface TeamStats {
   overdueCount: number;
 }
 
-/** Fetch ALL decisions (not team-filtered) for comparison */
 const useAllDecisions = () =>
   useQuery({
     queryKey: ["all-decisions-compare"],
@@ -46,6 +46,7 @@ const useAllDecisions = () =>
   });
 
 const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
   const { data: allDecisions = [], isLoading: loadingDec } = useAllDecisions();
   const { data: risks = [], isLoading: loadingRisks } = useRisks();
@@ -116,11 +117,11 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
 
   const exportCSV = useCallback(() => {
     if (teamStats.length === 0) return;
-    const headers = ["Rang", "Team", "Entscheidungen", "Umgesetzt", "Completion Rate %", "Ø Velocity (Tage)", "Ø Review-Speed (h)", "Offene Reviews", "Offene Risiken", "Kritische Risiken", "Überfällig"];
-    const rows = teamStats.map((t, i) => [
-      i + 1, t.teamName, t.totalDecisions, t.implemented, t.completionRate,
-      t.avgVelocityDays, t.avgReviewHours, t.pendingReviews,
-      t.openRisks, t.criticalRisks, t.overdueCount,
+    const headers = [t("teamPerf.csvRank"), t("teamPerf.csvTeam"), t("teamPerf.csvDecisions"), t("teamPerf.csvImplemented"), t("teamPerf.csvCompletionRate"), t("teamPerf.csvVelocity"), t("teamPerf.csvReviewSpeed"), t("teamPerf.csvOpenReviews"), t("teamPerf.csvOpenRisks"), t("teamPerf.csvCriticalRisks"), t("teamPerf.csvOverdue")];
+    const rows = teamStats.map((ts, i) => [
+      i + 1, ts.teamName, ts.totalDecisions, ts.implemented, ts.completionRate,
+      ts.avgVelocityDays, ts.avgReviewHours, ts.pendingReviews,
+      ts.openRisks, ts.criticalRisks, ts.overdueCount,
     ]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
@@ -130,32 +131,32 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
     a.download = `team-performance-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [teamStats]);
+  }, [teamStats, t]);
 
   const exportPDF = useCallback(() => {
     if (teamStats.length === 0) return;
     const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
-    doc.text("Team-Performance Vergleich", 14, 18);
+    doc.text(t("teamPerf.pdfTitle"), 14, 18);
     doc.setFontSize(9);
     doc.setTextColor(120);
-    doc.text(`Erstellt am ${format(new Date(), "dd.MM.yyyy HH:mm")}`, 14, 25);
+    doc.text(t("teamPerf.pdfCreated", { date: format(new Date(), "dd.MM.yyyy HH:mm") }), 14, 25);
 
     autoTable(doc, {
       startY: 32,
-      head: [["#", "Team", "Entsch.", "Umgesetzt", "Compl. %", "Ø Velocity", "Ø Review", "Reviews offen", "Risiken", "Kritisch", "Überfällig"]],
-      body: teamStats.map((t, i) => [
-        i + 1, t.teamName, t.totalDecisions, t.implemented, `${t.completionRate}%`,
-        t.avgVelocityDays > 0 ? `${t.avgVelocityDays}d` : "–",
-        formatSpeed(t.avgReviewHours),
-        t.pendingReviews, t.openRisks, t.criticalRisks, t.overdueCount,
+      head: [["#", t("teamPerf.csvTeam"), t("teamPerf.csvDecisions"), t("teamPerf.csvImplemented"), "Compl. %", t("teamPerf.csvVelocity"), t("teamPerf.csvReviewSpeed"), t("teamPerf.csvOpenReviews"), t("teamPerf.csvOpenRisks"), t("teamPerf.csvCriticalRisks"), t("teamPerf.csvOverdue")]],
+      body: teamStats.map((ts, i) => [
+        i + 1, ts.teamName, ts.totalDecisions, ts.implemented, `${ts.completionRate}%`,
+        ts.avgVelocityDays > 0 ? `${ts.avgVelocityDays}d` : "–",
+        formatSpeed(ts.avgReviewHours),
+        ts.pendingReviews, ts.openRisks, ts.criticalRisks, ts.overdueCount,
       ]),
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: [40, 40, 40] },
     });
 
     doc.save(`team-performance-${format(new Date(), "yyyy-MM-dd")}.pdf`);
-  }, [teamStats]);
+  }, [teamStats, t]);
 
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
@@ -165,11 +166,9 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Users className="w-6 h-6 text-primary" />
-              Team-Performance Vergleich
+              {t("teamPerf.title")}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              KPIs aller Teams im direkten Vergleich
-            </p>
+            <p className="text-sm text-muted-foreground mt-1">{t("teamPerf.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
             {teamStats.length > 0 && (
@@ -180,14 +179,12 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={exportCSV}>CSV herunterladen</DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportPDF}>PDF herunterladen</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportCSV}>{t("teamPerf.csvDownload")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportPDF}>{t("teamPerf.pdfDownload")}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-            <PageHint>
-              Vergleicht Velocity, Completion Rate, offene Risiken und Review-Geschwindigkeit aller Teams.
-            </PageHint>
+            <PageHint>{t("teamPerf.hint")}</PageHint>
           </div>
         </div>
 
@@ -204,7 +201,7 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
           <Card>
             <CardContent className="py-12 text-center">
               <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Noch keine Teams vorhanden.</p>
+              <p className="text-muted-foreground">{t("teamPerf.noTeams")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -221,7 +218,6 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Completion Rate */}
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -232,42 +228,41 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
                     <Progress value={team.completionRate} className="h-1.5" />
                   </div>
 
-                  {/* KPI Grid */}
                   <div className="grid grid-cols-2 gap-3">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="bg-muted/30 rounded-lg p-2.5 space-y-0.5">
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <FileText className="w-3 h-3" /> Entscheidungen
+                            <FileText className="w-3 h-3" /> {t("teamPerf.decisions")}
                           </div>
                           <div className="flex items-baseline gap-1">
                             <span className="text-lg font-bold">{team.totalDecisions}</span>
-                            <span className="text-xs text-muted-foreground">({team.implemented} umgesetzt)</span>
+                            <span className="text-xs text-muted-foreground">({team.implemented} {t("teamPerf.implCount")})</span>
                           </div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>Gesamt: {team.totalDecisions}, Umgesetzt: {team.implemented}</TooltipContent>
+                      <TooltipContent>{t("teamPerf.totalTooltip", { total: team.totalDecisions, impl: team.implemented })}</TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="bg-muted/30 rounded-lg p-2.5 space-y-0.5">
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Zap className="w-3 h-3" /> Ø Velocity
+                            <Zap className="w-3 h-3" /> {t("teamPerf.avgVelocity")}
                           </div>
                           <div className="text-lg font-bold">
                             {team.avgVelocityDays > 0 ? `${team.avgVelocityDays}d` : "–"}
                           </div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>Durchschnittliche Tage bis zur Umsetzung</TooltipContent>
+                      <TooltipContent>{t("teamPerf.velocityTooltip")}</TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="bg-muted/30 rounded-lg p-2.5 space-y-0.5">
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <TrendingUp className="w-3 h-3" /> Ø Review-Speed
+                            <TrendingUp className="w-3 h-3" /> {t("teamPerf.avgReviewSpeed")}
                           </div>
                           <div className="text-lg font-bold">
                             {team.avgReviewHours > 0
@@ -278,45 +273,43 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
                           </div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>Durchschnittliche Review-Reaktionszeit</TooltipContent>
+                      <TooltipContent>{t("teamPerf.reviewTooltip")}</TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="bg-muted/30 rounded-lg p-2.5 space-y-0.5">
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <Clock className="w-3 h-3" /> Offene Reviews
+                            <Clock className="w-3 h-3" /> {t("teamPerf.openReviews")}
                           </div>
                           <div className="text-lg font-bold">{team.pendingReviews}</div>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>Ausstehende Reviews</TooltipContent>
+                      <TooltipContent>{t("teamPerf.pendingReviews")}</TooltipContent>
                     </Tooltip>
                   </div>
 
-                  {/* Risk & Overdue Row */}
                   <div className="flex gap-2">
                     {team.criticalRisks > 0 ? (
                       <Badge variant="destructive" className="text-[10px] gap-1">
-                        <Shield className="w-3 h-3" /> {team.criticalRisks} kritische Risiken
+                        <Shield className="w-3 h-3" /> {t("teamPerf.criticalRisks", { count: team.criticalRisks })}
                       </Badge>
                     ) : team.openRisks > 0 ? (
                       <Badge variant="secondary" className="text-[10px] gap-1">
-                        <Shield className="w-3 h-3" /> {team.openRisks} offene Risiken
+                        <Shield className="w-3 h-3" /> {t("teamPerf.openRisks", { count: team.openRisks })}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="text-[10px] gap-1 text-muted-foreground">
-                        <Shield className="w-3 h-3" /> Keine Risiken
+                        <Shield className="w-3 h-3" /> {t("teamPerf.noRisks")}
                       </Badge>
                     )}
                     {team.overdueCount > 0 && (
                       <Badge variant="destructive" className="text-[10px] gap-1">
-                        <AlertTriangle className="w-3 h-3" /> {team.overdueCount} überfällig
+                        <AlertTriangle className="w-3 h-3" /> {t("teamPerf.overdue", { count: team.overdueCount })}
                       </Badge>
                     )}
                   </div>
 
-                  {/* Volume bar */}
                   <div>
                     <div className="h-1 bg-muted rounded-full overflow-hidden">
                       <div
@@ -324,9 +317,7 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
                         style={{ width: `${(team.totalDecisions / maxDecisions) * 100}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1 text-right">
-                      Volumen relativ zum aktivsten Team
-                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{t("teamPerf.volumeRelative")}</p>
                   </div>
                 </CardContent>
               </Card>
