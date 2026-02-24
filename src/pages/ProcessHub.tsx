@@ -24,10 +24,10 @@ interface StatusBottleneck { status: string; avgDays: number; expectedDays: numb
 interface PersonCapacity { userId: string; name: string; openReviews: number; avgDelay: number; capacityUtil: number; recommendation: string; }
 interface FrictionMetric { category: string; reworkRate: number; rejectionRate: number; stakeholderConflict: number; count: number; }
 interface TeamInteraction { teamA: string; teamB: string; teamAName: string; teamBName: string; handoffTime: number; orgAvgHandoff: number; sharedCount: number; }
-interface ActionableRec { title: string; description: string; impact: "hoch" | "mittel" | "niedrig"; timeSaved: string; costSaved: string; route?: string; severity: string; }
+interface ActionableRec { title: string; description: string; impact: string; timeSaved: string; costSaved: string; route?: string; severity: string; }
 
-const statusLabels: Record<string, string> = { draft: "Draft", proposed: "Proposed", review: "Review", approved: "Approved", implemented: "Implementiert" };
-const categoryLabels: Record<string, string> = { strategic: "Strategisch", budget: "Budget", hr: "HR", technical: "Technisch", operational: "Operativ", marketing: "Marketing", general: "Allgemein" };
+const statusLabelsStatic: Record<string, string> = { draft: "Draft", proposed: "Proposed", review: "Review", approved: "Approved", implemented: "Implemented" };
+const categoryLabelsStatic: Record<string, string> = { strategic: "Strategic", budget: "Budget", hr: "HR", technical: "Technical", operational: "Operational", marketing: "Marketing", general: "General" };
 
 const ProcessHub = () => {
   const { t } = useTranslation();
@@ -94,7 +94,7 @@ const ProcessHub = () => {
       const avg = Math.round(stat.totalDays / stat.count * 10) / 10;
       const exp = expectedDays[s] || 5;
       const delta = Math.round((avg - exp) * 10) / 10;
-      sBottlenecks.push({ status: statusLabels[s] || s, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
+      sBottlenecks.push({ status: statusLabelsStatic[s] || s, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
     });
     // Add review steps
     Object.entries(reviewStepStats).forEach(([stepKey, stat]) => {
@@ -127,9 +127,9 @@ const ProcessHub = () => {
       .map(([uid, p]) => {
         const avgDelay = p.delays.length > 0 ? Math.round(p.delays.reduce((a, b) => a + b, 0) / p.delays.length) : 0;
         const capacityUtil = Math.round((p.openCount / Math.max(5, p.openCount)) * 100);
-        let recommendation = "Im Normbereich";
-        if (capacityUtil > 100) recommendation = "Review-Delegation prüfen";
-        else if (capacityUtil > 80) recommendation = "Kapazität beobachten";
+        let recommendation = t("processHub.recNormal");
+        if (capacityUtil > 100) recommendation = t("processHub.recDelegation");
+        else if (capacityUtil > 80) recommendation = t("processHub.recWatch");
         return { userId: uid, name: nameMap[uid] || uid.slice(0, 8), openReviews: p.openCount, avgDelay, capacityUtil, recommendation };
       })
       .sort((a, b) => b.openReviews - a.openReviews)
@@ -182,7 +182,7 @@ const ProcessHub = () => {
       const dueMs = new Date(d.due_date).getTime();
       return dueMs > now && dueMs < now + 5 * 86400000 && !["approved", "implemented"].includes(d.status);
     }).length;
-    setSlaViolations({ total: escalatedDecs.length, thisWeek: recentEsc.length, topCategory: topCat ? (categoryLabels[topCat[0]] || topCat[0]) : "—", predictedNext5d: predicted });
+    setSlaViolations({ total: escalatedDecs.length, thisWeek: recentEsc.length, topCategory: topCat ? (categoryLabelsStatic[topCat[0]] || topCat[0]) : "—", predictedNext5d: predicted });
 
     // SLA compliance by category for heatmap
     const slaByCat: Record<string, { total: number; violated: number; avgResponse: number[] }> = {};
@@ -236,10 +236,10 @@ const ProcessHub = () => {
     const slowPersons = pCapacity.filter(p => p.capacityUtil > 100);
     const biggestBottleneck = sBottlenecks[0];
     const lines: string[] = [];
-    lines.push(`${recentEsc.length} SLA-Verletzungen (${recentEsc.length > 1 ? "↑" : "—"})`);
-    lines.push(`${slowCats.length} Kategorie${slowCats.length !== 1 ? "n" : ""} mit hoher Reibung`);
-    lines.push(`${slowPersons.length} Reviewer über Kapazität`);
-    if (biggestBottleneck) lines.push(`${biggestBottleneck.status} = größter Engpass (+${biggestBottleneck.delta}d)`);
+    lines.push(t("processHub.slaViolationsLine", { count: recentEsc.length, trend: recentEsc.length > 1 ? "↑" : "—" }));
+    lines.push(t("processHub.frictionCatsLine", { count: slowCats.length }));
+    lines.push(t("processHub.reviewerOverLine", { count: slowPersons.length }));
+    if (biggestBottleneck) lines.push(t("processHub.bottleneckLine", { status: biggestBottleneck.status, delta: biggestBottleneck.delta }));
     // Review duration trend (simple: compare recent 30d reviews vs older)
     const recentReviews = reviews.filter(r => r.reviewed_at && new Date(r.reviewed_at).getTime() > thirtyDaysAgo);
     const olderReviews = reviews.filter(r => r.reviewed_at && new Date(r.reviewed_at).getTime() <= thirtyDaysAgo && new Date(r.reviewed_at).getTime() > thirtyDaysAgo - 30 * 86400000);
@@ -247,7 +247,7 @@ const ProcessHub = () => {
       const recentAvg = recentReviews.reduce((s, r) => s + (new Date(r.reviewed_at!).getTime() - new Date(r.created_at).getTime()) / 86400000, 0) / recentReviews.length;
       const olderAvg = olderReviews.reduce((s, r) => s + (new Date(r.reviewed_at!).getTime() - new Date(r.created_at).getTime()) / 86400000, 0) / olderReviews.length;
       const pctChange = Math.round(((recentAvg - olderAvg) / Math.max(olderAvg, 1)) * 100);
-      if (Math.abs(pctChange) > 5) lines.push(`Ø Review-Dauer ${pctChange > 0 ? "+" : ""}${pctChange}% vs Vormonat`);
+      if (Math.abs(pctChange) > 5) lines.push(t("processHub.reviewDurationTrend", { change: `${pctChange > 0 ? "+" : ""}${pctChange}` }));
     }
     setSnapshotLines(lines);
 
@@ -256,21 +256,21 @@ const ProcessHub = () => {
     // ═══════════════════════════════════════
     const recs: ActionableRec[] = [];
     if (biggestBottleneck && biggestBottleneck.delta > 2) {
-      recs.push({ title: `${biggestBottleneck.status} SLA anpassen`, description: `+${biggestBottleneck.delta}d über Erwartung. SLA-Konfiguration überprüfen.`, impact: "hoch", timeSaved: `${Math.round(biggestBottleneck.delta * biggestBottleneck.count)}d kumuliert`, costSaved: `${Math.round(biggestBottleneck.delta * biggestBottleneck.count * 150)}€`, route: "/settings", severity: "high" });
+      recs.push({ title: t("processHub.recSlaTitle", { status: biggestBottleneck.status }), description: t("processHub.recSlaDesc", { delta: biggestBottleneck.delta }), impact: t("processHub.impactHigh"), timeSaved: t("processHub.cumulatedDays", { days: Math.round(biggestBottleneck.delta * biggestBottleneck.count) }), costSaved: t("processHub.estimatedCost", { cost: Math.round(biggestBottleneck.delta * biggestBottleneck.count * 150) }), route: "/settings", severity: "high" });
     }
     if (slowCats.length > 0) {
       const worst = slowCats[0];
-      recs.push({ title: `${categoryLabels[worst.category] || worst.category}-Template optimieren`, description: `${worst.rejectionRate}% Ablehnungsrate, ${worst.reworkRate}% Rework.`, impact: "hoch", timeSaved: "~20% Review-Reduktion", costSaved: "Schätzung bei Umsetzung", route: "/templates", severity: "high" });
+      recs.push({ title: t("processHub.recTemplateTitle", { category: categoryLabelsStatic[worst.category] || worst.category }), description: t("processHub.recTemplateDesc", { rejection: worst.rejectionRate, rework: worst.reworkRate }), impact: t("processHub.impactHigh"), timeSaved: t("processHub.reviewReduction"), costSaved: t("processHub.estimateOnImpl"), route: "/templates", severity: "high" });
     }
     if (slowPersons.length > 0) {
-      recs.push({ title: "Review-Delegation aktivieren", description: `${slowPersons.length} Reviewer über Kapazität. Delegation einrichten.`, impact: "mittel", timeSaved: `${slowPersons.reduce((s, p) => s + p.avgDelay, 0)}d Delay-Reduktion`, costSaved: "Prozessbeschleunigung", route: "/settings", severity: "medium" });
+      recs.push({ title: t("processHub.recDelegationTitle"), description: t("processHub.recDelegationDesc", { count: slowPersons.length }), impact: t("processHub.impactMedium"), timeSaved: t("processHub.recDelayReduction", { days: slowPersons.reduce((s, p) => s + p.avgDelay, 0) }), costSaved: t("processHub.recProcessAcceleration"), route: "/settings", severity: "medium" });
     }
     if (predicted > 0) {
-      recs.push({ title: `${predicted} SLA-Verletzungen verhindern`, description: `${predicted} Entscheidungen drohen in 5 Tagen zu verfallen.`, impact: "hoch", timeSaved: "Sofortige Intervention", costSaved: `~${predicted * 800}€ vermeidbarer Delay`, route: "/decisions", severity: "high" });
+      recs.push({ title: t("processHub.recSlaPreventTitle", { count: predicted }), description: t("processHub.recSlaPreventDesc", { count: predicted }), impact: t("processHub.impactHigh"), timeSaved: t("processHub.recImmediateAction"), costSaved: t("processHub.recAvoidableCost", { cost: predicted * 800 }), route: "/decisions", severity: "high" });
     }
-    if (tInteractions.some(t => t.handoffTime > orgAvgHandoff * 2)) {
+    if (tInteractions.some(ti2 => ti2.handoffTime > orgAvgHandoff * 2)) {
       const worstHandoff = tInteractions[0];
-      recs.push({ title: `${worstHandoff.teamAName} ↔ ${worstHandoff.teamBName} beschleunigen`, description: `Ø ${worstHandoff.handoffTime}d Übergabe (Org Ø = ${worstHandoff.orgAvgHandoff}d).`, impact: "mittel", timeSaved: `${Math.round((worstHandoff.handoffTime - worstHandoff.orgAvgHandoff) * worstHandoff.sharedCount)}d`, costSaved: "Prozessoptimierung", severity: "medium" });
+      recs.push({ title: t("processHub.recHandoffTitle", { teamA: worstHandoff.teamAName, teamB: worstHandoff.teamBName }), description: t("processHub.recHandoffDesc", { time: worstHandoff.handoffTime, orgAvg: worstHandoff.orgAvgHandoff }), impact: t("processHub.impactMedium"), timeSaved: `${Math.round((worstHandoff.handoffTime - worstHandoff.orgAvgHandoff) * worstHandoff.sharedCount)}d`, costSaved: t("processHub.recProcessOpt"), severity: "medium" });
     }
 
     // ═══════════════════════════════════════
@@ -280,11 +280,11 @@ const ProcessHub = () => {
     const highRiskDecs = decisions.filter(d => (d.ai_risk_score ?? 0) > 60 && !["implemented", "rejected", "archived"].includes(d.status));
     if (highRiskDecs.length >= 2) {
       recs.push({
-        title: "Risk-Automation erstellen",
-        description: `${highRiskDecs.length} High-Risk-Entscheidungen ohne automatische Eskalation. Empfehlung: Automation-Regel für Risk Score > 60.`,
-        impact: "hoch",
-        timeSaved: "Automatische Eskalation",
-        costSaved: `~${highRiskDecs.length * 2100}€ Risk-Mitigation`,
+        title: t("processHub.recRiskAutoTitle"),
+        description: t("processHub.recRiskAutoDesc", { count: highRiskDecs.length }),
+        impact: t("processHub.impactHigh"),
+        timeSaved: t("processHub.recAutoEscalation"),
+        costSaved: t("processHub.recRiskMitigation", { cost: highRiskDecs.length * 2100 }),
         route: "/automation",
         severity: "high",
       });
@@ -294,11 +294,11 @@ const ProcessHub = () => {
     if (highRejectionCats.length > 0) {
       const cat = highRejectionCats[0];
       recs.push({
-        title: `${categoryLabels[cat.category] || cat.category}: Auto-Review einrichten`,
-        description: `${cat.rejectionRate}% Ablehnungsrate. Empfehlung: Automatische Review-Zuweisung bei ${categoryLabels[cat.category] || cat.category}-Entscheidungen.`,
-        impact: "hoch",
-        timeSaved: "~30% weniger Ablehnungen",
-        costSaved: "Qualitätssteigerung",
+        title: t("processHub.recAutoReviewTitle", { category: categoryLabelsStatic[cat.category] || cat.category }),
+        description: t("processHub.recAutoReviewDesc", { rate: cat.rejectionRate, category: categoryLabelsStatic[cat.category] || cat.category }),
+        impact: t("processHub.impactHigh"),
+        timeSaved: t("processHub.recReviewReduction"),
+        costSaved: t("processHub.recQuality"),
         route: "/automation",
         severity: "high",
       });
@@ -310,17 +310,17 @@ const ProcessHub = () => {
     });
     if (catsWithoutSla.length > 0) {
       recs.push({
-        title: "SLA-Automation für fehlende Deadlines",
-        description: `${catsWithoutSla.length} Kategorie(n) mit Entscheidungen ohne SLA. Automation kann automatisch Deadlines setzen.`,
-        impact: "mittel",
-        timeSaved: "Governance-Compliance",
-        costSaved: "Vermeidbare Delays",
+        title: t("processHub.recSlaAutoTitle"),
+        description: t("processHub.recSlaAutoDesc", { count: catsWithoutSla.length }),
+        impact: t("processHub.impactMedium"),
+        timeSaved: t("processHub.recGovCompliance"),
+        costSaved: t("processHub.recAvoidableDelays"),
         route: "/automation",
         severity: "medium",
       });
     }
 
-    if (recs.length === 0) recs.push({ title: "Keine kritischen Engpässe", description: "Prozesse laufen im Normbereich.", impact: "niedrig", timeSaved: "—", costSaved: "—", severity: "low" });
+    if (recs.length === 0) recs.push({ title: t("processHub.recNoCritical"), description: t("processHub.recNoCriticalDesc"), impact: t("processHub.impactLow"), timeSaved: "—", costSaved: "—", severity: "low" });
     setRecommendations(recs.slice(0, 7));
   }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
 
@@ -475,7 +475,7 @@ const ProcessHub = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{p.name}</p>
                         <p className="text-[10px] text-muted-foreground">
-                          {p.openReviews} offene Reviews · Ø {p.avgDelay}d Delay · Auslastung: {p.capacityUtil}%
+                          {p.openReviews} {t("processHub.openReviews")} · {t("processHub.delayLabel", { days: p.avgDelay })} · {t("processHub.utilLabel", { pct: p.capacityUtil })}
                         </p>
                       </div>
                       <div className="shrink-0">
@@ -523,7 +523,7 @@ const ProcessHub = () => {
                   <tbody>
                     {frictionMetrics.map(f => (
                       <tr key={f.category} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                        <td className="py-2.5 px-3 font-medium">{categoryLabels[f.category] || f.category}</td>
+                        <td className="py-2.5 px-3 font-medium">{categoryLabelsStatic[f.category] || f.category}</td>
                         <td className="text-center py-2.5 px-3">
                           <span className={`text-xs font-medium tabular-nums ${f.reworkRate > 15 ? "text-destructive" : f.reworkRate > 5 ? "text-warning" : "text-success"}`}>{f.reworkRate}%</span>
                         </td>
@@ -549,7 +549,7 @@ const ProcessHub = () => {
       {/* ═══════════════════════════════════════ */}
       <CollapsibleSection
         title={t("process.slaGovernance")}
-        subtitle={`${slaViolations.total} Verletzungen gesamt · Top: ${slaViolations.topCategory}`}
+        subtitle={t("processHub.slaSubtitle", { total: slaViolations.total, category: slaViolations.topCategory })}
         icon={<Shield className="w-4 h-4 text-destructive" />}
         defaultOpen={slaViolations.thisWeek > 0}
         className="mb-6"
@@ -601,7 +601,7 @@ const ProcessHub = () => {
                     </div>
                     <div className="text-right text-xs">
                       <p className={`font-medium tabular-nums ${isSlow ? "text-warning" : "text-muted-foreground"}`}>
-                        Ø {ti.handoffTime}d <span className="text-muted-foreground">(Org Ø = {ti.orgAvgHandoff}d)</span>
+                        {t("processHub.handoffAvg", { time: ti.handoffTime })} <span className="text-muted-foreground">({t("processHub.handoffOrgAvg", { time: ti.orgAvgHandoff })})</span>
                       </p>
                       <p className="text-muted-foreground">{ti.sharedCount} {t("process.sharedDecisions")}</p>
                     </div>
@@ -658,8 +658,8 @@ const ProcessHub = () => {
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-sm font-semibold">{rec.title}</p>
                       <span className={`text-[10px] px-1.5 py-0 rounded font-medium ${
-                        rec.impact === "hoch" ? "bg-destructive/10 text-destructive" :
-                        rec.impact === "mittel" ? "bg-warning/10 text-warning" :
+                        rec.severity === "high" ? "bg-destructive/10 text-destructive" :
+                        rec.severity === "medium" ? "bg-warning/10 text-warning" :
                         "bg-muted/30 text-muted-foreground"
                       }`}>Impact: {rec.impact}</span>
                     </div>

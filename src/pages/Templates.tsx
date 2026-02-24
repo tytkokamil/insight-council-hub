@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "react-i18next";
 
 const categoryIcons: Record<string, React.ElementType> = {
   strategic: Target,
@@ -22,28 +23,20 @@ const categoryIcons: Record<string, React.ElementType> = {
   marketing: Megaphone,
 };
 
-const priorityConfig: Record<string, { label: string; className: string }> = {
-  critical: { label: "Kritisch", className: "text-destructive border-destructive/20" },
-  high: { label: "Hoch", className: "text-warning border-warning/20" },
-  medium: { label: "Mittel", className: "text-muted-foreground border-border" },
-  low: { label: "Niedrig", className: "text-muted-foreground border-border" },
-};
-
-const roleLabels: Record<string, string> = {
-  decision_maker: "Entscheider",
-  reviewer: "Reviewer",
-  admin: "Administrator",
-  team_lead: "Team Lead",
-  team_admin: "Team Admin",
-};
-
 function TemplateCard({ template, onSelect, isSelected }: {
   template: DecisionTemplate;
   onSelect: (t: DecisionTemplate) => void;
   isSelected: boolean;
 }) {
+  const { t } = useTranslation();
   const Icon = categoryIcons[template.category] || FileText;
-  const priority = priorityConfig[template.priority] || priorityConfig.medium;
+  const priorityKey = `templates.priority${template.priority.charAt(0).toUpperCase() + template.priority.slice(1)}` as const;
+  const priorityConfig: Record<string, string> = {
+    critical: "text-destructive border-destructive/20",
+    high: "text-warning border-warning/20",
+    medium: "text-muted-foreground border-border",
+    low: "text-muted-foreground border-border",
+  };
 
   return (
     <motion.button
@@ -62,17 +55,17 @@ function TemplateCard({ template, onSelect, isSelected }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-semibold text-sm">{template.name}</h3>
-            <Badge variant="outline" className={`text-[10px] ${priority.className}`}>
-              {priority.label}
+            <Badge variant="outline" className={`text-[10px] ${priorityConfig[template.priority] || ""}`}>
+              {t(priorityKey)}
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
             {template.description}
           </p>
           <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{template.defaultDurationDays} Tage</span>
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{template.approvalSteps.length} Stufen</span>
-            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{template.requiredFields.length} Felder</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{template.defaultDurationDays} {t("templates.days")}</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3" />{template.approvalSteps.length} {t("templates.stages")}</span>
+            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{template.requiredFields.length} {t("templates.fields")}</span>
           </div>
         </div>
         <ChevronRight className={`w-4 h-4 mt-1 transition-colors ${isSelected ? "text-foreground" : "text-muted-foreground/30"}`} />
@@ -82,6 +75,15 @@ function TemplateCard({ template, onSelect, isSelected }: {
 }
 
 function ApprovalFlowVisual({ steps }: { steps: DecisionTemplate["approvalSteps"] }) {
+  const { t } = useTranslation();
+  const roleLabels: Record<string, string> = {
+    decision_maker: t("templates.roleDecisionMaker"),
+    reviewer: t("templates.roleReviewer"),
+    admin: t("templates.roleAdmin"),
+    team_lead: t("templates.roleTeamLead"),
+    team_admin: t("templates.roleTeamAdmin"),
+  };
+
   return (
     <div className="flex items-center gap-0 flex-wrap">
       {steps.map((step, i) => (
@@ -98,7 +100,7 @@ function ApprovalFlowVisual({ steps }: { steps: DecisionTemplate["approvalSteps"
             <span className="text-[9px] text-muted-foreground mt-0.5">{roleLabels[step.role] || step.role}</span>
             {step.required && (
               <span className="text-[9px] text-foreground mt-0.5 flex items-center gap-0.5">
-                <CheckCircle2 className="w-2.5 h-2.5" /> Pflicht
+                <CheckCircle2 className="w-2.5 h-2.5" /> {t("templates.required")}
               </span>
             )}
           </div>
@@ -112,8 +114,22 @@ function ApprovalFlowVisual({ steps }: { steps: DecisionTemplate["approvalSteps"
 }
 
 function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onClose: () => void }) {
+  const { t } = useTranslation();
   const Icon = categoryIcons[template.category] || FileText;
-  const priority = priorityConfig[template.priority] || priorityConfig.medium;
+  const priorityKey = `templates.priority${template.priority.charAt(0).toUpperCase() + template.priority.slice(1)}` as const;
+  const priorityConfig: Record<string, string> = {
+    critical: "text-destructive border-destructive/20",
+    high: "text-warning border-warning/20",
+    medium: "text-muted-foreground border-border",
+    low: "text-muted-foreground border-border",
+  };
+  const roleLabels: Record<string, string> = {
+    decision_maker: t("templates.roleDecisionMaker"),
+    reviewer: t("templates.roleReviewer"),
+    admin: t("templates.roleAdmin"),
+    team_lead: t("templates.roleTeamLead"),
+    team_admin: t("templates.roleTeamAdmin"),
+  };
 
   return (
     <motion.div
@@ -139,26 +155,26 @@ function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onC
           </Button>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className={`text-xs ${priority.className}`}>{priority.label}</Badge>
+          <Badge variant="outline" className={`text-xs ${priorityConfig[template.priority] || ""}`}>{t(priorityKey)}</Badge>
           <span className="text-xs text-muted-foreground flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Standard: {template.defaultDurationDays} Tage
+            <Clock className="w-3 h-3" /> {t("templates.standard")}: {template.defaultDurationDays} {t("templates.days")}
           </span>
         </div>
       </div>
 
       <Tabs defaultValue="flow" className="w-full">
         <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent px-6 h-11">
-          <TabsTrigger value="flow" className="text-xs">Approval Flow</TabsTrigger>
-          <TabsTrigger value="fields" className="text-xs">Pflichtfelder</TabsTrigger>
-          <TabsTrigger value="governance" className="text-xs">Governance</TabsTrigger>
+          <TabsTrigger value="flow" className="text-xs">{t("templates.approvalFlow")}</TabsTrigger>
+          <TabsTrigger value="fields" className="text-xs">{t("templates.requiredFields")}</TabsTrigger>
+          <TabsTrigger value="governance" className="text-xs">{t("templates.governance")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="flow" className="p-6">
-          <h3 className="text-sm font-semibold mb-1">Freigabe-Kette</h3>
-          <p className="text-xs text-muted-foreground mb-6">Jede Entscheidung dieses Typs durchläuft die folgenden Freigabe-Stufen.</p>
+          <h3 className="text-sm font-semibold mb-1">{t("templates.approvalChain")}</h3>
+          <p className="text-xs text-muted-foreground mb-6">{t("templates.approvalChainDesc")}</p>
           <ApprovalFlowVisual steps={template.approvalSteps} />
           <Separator className="my-6" />
-          <h4 className="text-xs font-semibold mb-3">Review-Workflow</h4>
+          <h4 className="text-xs font-semibold mb-3">{t("templates.reviewWorkflow")}</h4>
           <div className="space-y-2">
             {template.approvalSteps.map((step, i) => (
               <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
@@ -169,15 +185,15 @@ function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onC
                   <span className="text-sm font-medium">{step.label}</span>
                   <span className="text-xs text-muted-foreground ml-2">({roleLabels[step.role] || step.role})</span>
                 </div>
-                <Badge variant="outline" className="text-[10px]">{step.required ? "Pflicht" : "Optional"}</Badge>
+                <Badge variant="outline" className="text-[10px]">{step.required ? t("templates.required") : t("templates.optional")}</Badge>
               </div>
             ))}
           </div>
         </TabsContent>
 
         <TabsContent value="fields" className="p-6">
-          <h3 className="text-sm font-semibold mb-1">Erforderliche Felder</h3>
-          <p className="text-xs text-muted-foreground mb-4">Diese Felder müssen beim Erstellen einer Entscheidung ausgefüllt werden.</p>
+          <h3 className="text-sm font-semibold mb-1">{t("templates.requiredFieldsTitle")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("templates.requiredFieldsDesc")}</p>
           <div className="space-y-2">
             {template.requiredFields.map((field, i) => (
               <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50">
@@ -192,8 +208,8 @@ function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onC
         </TabsContent>
 
         <TabsContent value="governance" className="p-6">
-          <h3 className="text-sm font-semibold mb-1">Governance-Regeln</h3>
-          <p className="text-xs text-muted-foreground mb-4">Compliance- und Governance-Hinweise für diesen Entscheidungstyp.</p>
+          <h3 className="text-sm font-semibold mb-1">{t("templates.governanceRules")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("templates.governanceRulesDesc")}</p>
           {template.governanceNotes ? (
             <div className="p-4 rounded-lg bg-warning/5 border border-warning/20">
               <div className="flex items-start gap-3">
@@ -205,18 +221,18 @@ function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onC
             <div className="p-4 rounded-lg bg-muted/30 border border-border/50">
               <div className="flex items-start gap-3">
                 <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">Keine speziellen Governance-Regeln definiert.</p>
+                <p className="text-sm text-muted-foreground">{t("templates.noGovernanceRules")}</p>
               </div>
             </div>
           )}
           <Separator className="my-6" />
-          <h4 className="text-xs font-semibold mb-3">Zusammenfassung</h4>
+          <h4 className="text-xs font-semibold mb-3">{t("templates.summary")}</h4>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Pflicht-Approvals", value: template.approvalSteps.filter(s => s.required).length },
-              { label: "Optionale Approvals", value: template.approvalSteps.filter(s => !s.required).length },
-              { label: "Pflichtfelder", value: template.requiredFields.length },
-              { label: "Standard-Dauer", value: `${template.defaultDurationDays}d` },
+              { label: t("templates.requiredApprovals"), value: template.approvalSteps.filter(s => s.required).length },
+              { label: t("templates.optionalApprovals"), value: template.approvalSteps.filter(s => !s.required).length },
+              { label: t("templates.requiredFields"), value: template.requiredFields.length },
+              { label: t("templates.defaultDuration"), value: `${template.defaultDurationDays}d` },
             ].map(s => (
               <div key={s.label} className="p-3 rounded-lg bg-muted/30 border border-border/50">
                 <span className="text-[11px] text-muted-foreground">{s.label}</span>
@@ -231,6 +247,7 @@ function TemplateDetail({ template, onClose }: { template: DecisionTemplate; onC
 }
 
 export default function Templates() {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<DecisionTemplate | null>(null);
 
   return (
@@ -238,19 +255,19 @@ export default function Templates() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Vorlagen</p>
-            <h1 className="text-xl font-bold">Templates & Playbooks</h1>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("templates.pageLabel")}</p>
+            <h1 className="text-xl font-bold">{t("templates.pageTitle")}</h1>
           </div>
-          <PageHelpButton title="Templates & Playbooks" description="Vordefinierte Entscheidungs-Vorlagen mit Review-Flows und Approval-Chains" />
+          <PageHelpButton title={t("templates.pageTitle")} description={t("templates.helpDesc")} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2 space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {decisionTemplates.length} Templates
+              {t("templates.templateCount", { count: decisionTemplates.length })}
             </h2>
-            {decisionTemplates.map((t) => (
-              <TemplateCard key={t.category} template={t} onSelect={setSelected} isSelected={selected?.category === t.category} />
+            {decisionTemplates.map((tmpl) => (
+              <TemplateCard key={tmpl.category} template={tmpl} onSelect={setSelected} isSelected={selected?.category === tmpl.category} />
             ))}
           </div>
 
@@ -262,8 +279,8 @@ export default function Templates() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="h-full min-h-[400px] flex flex-col items-center justify-center rounded-lg border border-dashed border-border p-8">
                   <FileText className="w-12 h-12 text-muted-foreground/20 mb-4" />
-                  <p className="text-sm font-medium text-muted-foreground">Template auswählen</p>
-                  <p className="text-xs text-muted-foreground mt-1">Klicke auf ein Template, um Details zu sehen.</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("templates.selectTemplate")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("templates.selectHint")}</p>
                 </motion.div>
               )}
             </AnimatePresence>
