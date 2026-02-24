@@ -11,6 +11,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Lock, Crown } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { useTranslation } from "react-i18next";
 
 type DecisionCategory = Database["public"]["Enums"]["decision_category"];
 type DecisionPriority = Database["public"]["Enums"]["decision_priority"];
@@ -22,23 +23,8 @@ interface Props {
   onUpdated: () => void;
 }
 
-const CATEGORY_OPTIONS: { value: DecisionCategory; label: string }[] = [
-  { value: "strategic", label: "Strategisch" },
-  { value: "budget", label: "Budget" },
-  { value: "hr", label: "Personal" },
-  { value: "technical", label: "Technisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "marketing", label: "Marketing" },
-];
-
-const PRIORITY_OPTIONS: { value: DecisionPriority; label: string }[] = [
-  { value: "low", label: "Niedrig" },
-  { value: "medium", label: "Mittel" },
-  { value: "high", label: "Hoch" },
-  { value: "critical", label: "Kritisch" },
-];
-
 const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -52,7 +38,22 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [changeReason, setChangeReason] = useState("");
   const [confidential, setConfidential] = useState(false);
 
-  // Fetch profiles for owner selector
+  const CATEGORY_OPTIONS: { value: DecisionCategory; label: string }[] = [
+    { value: "strategic", label: t("decisions.edit.strategic") },
+    { value: "budget", label: t("decisions.edit.budget") },
+    { value: "hr", label: t("decisions.edit.hr") },
+    { value: "technical", label: t("decisions.edit.technical") },
+    { value: "operational", label: t("decisions.edit.operational") },
+    { value: "marketing", label: t("decisions.edit.marketing") },
+  ];
+
+  const PRIORITY_OPTIONS: { value: DecisionPriority; label: string }[] = [
+    { value: "low", label: t("decisions.edit.low") },
+    { value: "medium", label: t("decisions.edit.medium") },
+    { value: "high", label: t("decisions.edit.high") },
+    { value: "critical", label: t("decisions.edit.critical") },
+  ];
+
   const { data: profiles = [] } = useQuery({
     queryKey: ["profiles"],
     queryFn: async () => {
@@ -78,16 +79,15 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error("Titel ist erforderlich");
+      toast.error(t("decisions.edit.titleRequired"));
       return;
     }
     if (!changeReason.trim()) {
-      toast.error("Bitte gib eine Änderungsbegründung an");
+      toast.error(t("decisions.edit.reasonRequired"));
       return;
     }
     setSaving(true);
 
-    // 1. Determine next version number
     const { data: existingVersions } = await supabase
       .from("decision_versions")
       .select("version_number")
@@ -97,7 +97,6 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
 
     const nextVersion = (existingVersions?.[0]?.version_number || 0) + 1;
 
-    // 2. Snapshot current state BEFORE updating
     const snapshot = {
       title: decision.title,
       description: decision.description,
@@ -116,7 +115,6 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       created_by: user!.id,
     });
 
-    // 3. Update the decision
     const { error } = await supabase
       .from("decisions")
       .update({
@@ -132,9 +130,8 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       .eq("id", decision.id);
 
     if (error) {
-      toast.error("Fehler beim Speichern");
+      toast.error(t("decisions.edit.saveError"));
     } else {
-      // Audit log with standardized event
       const { EventTypes } = await import("@/lib/eventTaxonomy");
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
@@ -145,7 +142,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         new_value: changeReason.trim(),
       });
       qc.invalidateQueries({ queryKey: ["decision-versions", decision.id] });
-      toast.success(`Entscheidung aktualisiert (Version ${nextVersion + 1})`);
+      toast.success(t("decisions.edit.updated", { version: nextVersion + 1 }));
       onUpdated();
       onOpenChange(false);
     }
@@ -156,24 +153,24 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="glass-card border-border max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display">Entscheidung bearbeiten</DialogTitle>
+          <DialogTitle className="font-display">{t("decisions.edit.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Titel</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.titleLabel")}</label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Beschreibung</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.descriptionLabel")}</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Kontext</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.contextLabel")}</label>
             <Textarea value={context} onChange={(e) => setContext(e.target.value)} rows={2} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Kategorie</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.categoryLabel")}</label>
               <Select value={category} onValueChange={(v) => setCategory(v as DecisionCategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -184,7 +181,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Priorität</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.priorityLabel")}</label>
               <Select value={priority} onValueChange={(v) => setPriority(v as DecisionPriority)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -196,51 +193,51 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Fälligkeitsdatum</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.dueDateLabel")}</label>
             <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
-              <Crown className="w-3.5 h-3.5 text-warning" /> Owner (Accountable)
+              <Crown className="w-3.5 h-3.5 text-warning" /> {t("decisions.edit.ownerLabel")}
             </label>
             <Select value={ownerId} onValueChange={setOwnerId}>
-              <SelectTrigger><SelectValue placeholder="Owner auswählen" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder={t("decisions.edit.ownerPlaceholder")} /></SelectTrigger>
               <SelectContent>
                 {profiles.map(p => (
                   <SelectItem key={p.user_id} value={p.user_id}>{p.full_name || p.user_id.slice(0, 8)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[10px] text-muted-foreground mt-1">Owner ist verantwortlich für Status, Freigabe und Teilen.</p>
+            <p className="text-[10px] text-muted-foreground mt-1">{t("decisions.edit.ownerHint")}</p>
           </div>
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border">
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-muted-foreground" />
               <div>
-                <p className="text-xs font-medium">Vertraulich</p>
-                <p className="text-[10px] text-muted-foreground">Nur Owner, Reviewer und Org-Admins sehen diese Entscheidung</p>
+                <p className="text-xs font-medium">{t("decisions.edit.confidentialTitle")}</p>
+                <p className="text-[10px] text-muted-foreground">{t("decisions.edit.confidentialDesc")}</p>
               </div>
             </div>
             <Switch checked={confidential} onCheckedChange={setConfidential} />
           </div>
           <div className="border-t border-border pt-4">
-            <label className="text-xs font-medium text-foreground mb-1 block">Änderungsbegründung *</label>
+            <label className="text-xs font-medium text-foreground mb-1 block">{t("decisions.edit.changeReasonLabel")}</label>
             <Textarea
               value={changeReason}
               onChange={(e) => setChangeReason(e.target.value)}
               rows={2}
-              placeholder="Warum wird diese Änderung vorgenommen?"
+              placeholder={t("decisions.edit.changeReasonPlaceholder")}
               className="border-primary/30 focus:border-primary"
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Wird in der Versionshistorie dokumentiert (Governance-Pflicht).
+              {t("decisions.edit.changeReasonHint")}
             </p>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("decisions.edit.cancel")}</Button>
           <Button onClick={handleSave} disabled={saving || !changeReason.trim()}>
-            {saving ? "Speichern…" : "Speichern"}
+            {saving ? t("decisions.edit.saving") : t("decisions.edit.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

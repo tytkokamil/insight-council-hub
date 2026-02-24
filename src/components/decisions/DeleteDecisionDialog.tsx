@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { EventTypes } from "@/lib/eventTaxonomy";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   decision: any;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 const DeleteDecisionDialog = ({ decision, open, onOpenChange, onDeleted }: Props) => {
+  const { t } = useTranslation();
   const [deleting, setDeleting] = useState(false);
   const { user } = useAuth();
 
@@ -20,16 +22,14 @@ const DeleteDecisionDialog = ({ decision, open, onOpenChange, onDeleted }: Props
     if (!user) return;
     setDeleting(true);
 
-    // Soft delete: set deleted_at timestamp instead of removing the row
     const { error } = await supabase
       .from("decisions")
       .update({ deleted_at: new Date().toISOString() } as any)
       .eq("id", decision.id);
 
     if (error) {
-      toast.error("Fehler beim Löschen");
+      toast.error(t("decisions.delete.error"));
     } else {
-      // Audit log with standardized event
       await supabase.from("audit_logs").insert({
         decision_id: decision.id,
         user_id: user.id,
@@ -38,7 +38,7 @@ const DeleteDecisionDialog = ({ decision, open, onOpenChange, onDeleted }: Props
         old_value: null,
         new_value: new Date().toISOString(),
       });
-      toast.success("Entscheidung gelöscht");
+      toast.success(t("decisions.delete.success"));
       onDeleted();
       onOpenChange(false);
     }
@@ -49,15 +49,15 @@ const DeleteDecisionDialog = ({ decision, open, onOpenChange, onDeleted }: Props
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Entscheidung löschen?</AlertDialogTitle>
+          <AlertDialogTitle>{t("decisions.delete.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            „{decision?.title}" wird in den Papierkorb verschoben. Die Entscheidung kann im Archiv wiederhergestellt werden. Audit-Einträge bleiben dauerhaft erhalten.
+            {t("decisions.delete.description", { title: decision?.title })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+          <AlertDialogCancel disabled={deleting}>{t("decisions.delete.cancel")}</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-            {deleting ? "Löschen…" : "In Papierkorb verschieben"}
+            {deleting ? t("decisions.delete.deleting") : t("decisions.delete.confirm")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

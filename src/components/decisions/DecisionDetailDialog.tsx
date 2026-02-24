@@ -24,9 +24,10 @@ import ShareDecisionDialog from "./ShareDecisionDialog";
 import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle, Lock } from "lucide-react";
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-
 import { toast } from "sonner";
 import { EventTypes } from "@/lib/eventTaxonomy";
+import { useTranslation } from "react-i18next";
+import { useTranslatedLabels } from "@/lib/labels";
 
 interface Props {
   decision: any;
@@ -37,9 +38,9 @@ interface Props {
 
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
-import { statusLabels } from "@/lib/labels";
-
 const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props) => {
+  const { t } = useTranslation();
+  const tl = useTranslatedLabels(t);
   const { user } = useAuth();
   const { data: allDeps = [] } = useDependencies();
   const { data: allTasks = [] } = useTasks();
@@ -143,10 +144,10 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
         old_value: String(decision.template_version || 0),
         new_value: String(currentTpl.version),
       });
-      toast.success(`Template auf v${currentTpl.version} aktualisiert`);
+      toast.success(t("decisions.detail.templateUpgraded", { version: currentTpl.version }));
       onUpdated();
     } else {
-      toast.error("Upgrade fehlgeschlagen");
+      toast.error(t("decisions.detail.upgradeFailed"));
     }
     setUpgrading(false);
   };
@@ -154,28 +155,28 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   // Group tabs into categories for cleaner navigation
   const tabGroups = [
     {
-      label: "Kern",
+      label: t("decisions.detail.core"),
       tabs: [
-        { value: "discussion", icon: MessageSquare, label: "Diskussion" },
-        { value: "review", icon: GitPullRequest, label: "Review" },
-        { value: "ai", icon: Brain, label: "KI-Analyse" },
+        { value: "discussion", icon: MessageSquare, label: t("decisions.detail.discussion") },
+        { value: "review", icon: GitPullRequest, label: t("decisions.detail.review") },
+        { value: "ai", icon: Brain, label: t("decisions.detail.aiAnalysis") },
       ],
     },
     {
-      label: "Intelligence",
+      label: t("decisions.detail.intelligence"),
       tabs: [
-        { value: "alignment", icon: Users, label: "Alignment" },
-        { value: "whatif", icon: GitBranch, label: "What-If" },
-        { value: "dependencies", icon: Link2, label: "Graph" },
-        { value: "impact", icon: Target, label: "Impact" },
+        { value: "alignment", icon: Users, label: t("decisions.detail.alignment") },
+        { value: "whatif", icon: GitBranch, label: t("decisions.detail.whatIf") },
+        { value: "dependencies", icon: Link2, label: t("decisions.detail.graph") },
+        { value: "impact", icon: Target, label: t("decisions.detail.impact") },
       ],
     },
     {
-      label: "Strategie",
+      label: t("decisions.detail.strategy"),
       tabs: [
-        { value: "copilot", icon: Compass, label: "Co-Pilot" },
-        { value: "strategy", icon: Crosshair, label: "Strategie" },
-        { value: "audit", icon: History, label: "Historie" },
+        { value: "copilot", icon: Compass, label: t("decisions.detail.coPilot") },
+        { value: "strategy", icon: Crosshair, label: t("decisions.detail.strategyTab") },
+        { value: "audit", icon: History, label: t("decisions.detail.history") },
       ],
     },
   ];
@@ -189,7 +190,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             <div className="flex items-center gap-1 shrink-0">
               {isOwner && (
                 <>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowShare(true)} title="Mit Teams teilen">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowShare(true)} title={t("decisions.detail.shareWithTeams")}>
                     <Share2 className="w-3.5 h-3.5" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowEdit(true)}>
@@ -203,10 +204,10 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-sm text-muted-foreground flex-1">{decision.description || "Keine Beschreibung"}</p>
+            <p className="text-sm text-muted-foreground flex-1">{decision.description || t("decisions.detail.noDesc")}</p>
             {decision.confidential && (
               <Badge variant="outline" className="text-[10px] gap-1 border-destructive/30 text-destructive bg-destructive/5">
-                <Lock className="w-3 h-3" /> Vertraulich
+                <Lock className="w-3 h-3" /> {t("decisions.detail.confidential")}
               </Badge>
             )}
             {decision.outcome_type && (
@@ -215,8 +216,8 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
                 decision.outcome_type === "partial" ? "border-warning/30 text-warning bg-warning/5" :
                 "border-destructive/30 text-destructive bg-destructive/5"
               }`}>
-                {decision.outcome_type === "successful" ? "✅ Erfolgreich" :
-                 decision.outcome_type === "partial" ? "⚠️ Teilweise" : "❌ Gescheitert"}
+                {decision.outcome_type === "successful" ? t("decisions.detail.outcomeSuccess") :
+                 decision.outcome_type === "partial" ? t("decisions.detail.outcomePartial") : t("decisions.detail.outcomeFailed")}
               </Badge>
             )}
           </div>
@@ -243,17 +244,17 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
                         disabled={upgrading}
                       >
                         <AlertTriangle className="w-3 h-3" />
-                        {upgrading ? "Upgrade…" : `Auf v${currentVersion} upgraden`}
+                        {upgrading ? t("decisions.detail.upgrading") : t("decisions.detail.upgradeToV", { version: currentVersion })}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-xs max-w-56">
-                      Aktualisiert die Template-Struktur auf v{currentVersion}. Alle bestehenden Daten bleiben erhalten.
+                      {t("decisions.detail.upgradeTooltip", { version: currentVersion })}
                     </TooltipContent>
                   </Tooltip>
                 )}
                 {isOutdated && !isOwner && (
                   <Badge variant="outline" className="text-[10px] gap-1 border-warning/40 text-warning">
-                    <AlertTriangle className="w-3 h-3" /> v{currentVersion} verfügbar
+                    <AlertTriangle className="w-3 h-3" /> {t("decisions.detail.versionAvailable", { version: currentVersion })}
                   </Badge>
                 )}
               </div>
@@ -264,7 +265,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             return rc > 0 ? (
               <div className="flex items-center gap-1.5 mt-2">
                 <Badge variant="outline" className="text-[10px] gap-1 bg-destructive/10 text-destructive border-destructive/20">
-                  <Shield className="w-3 h-3" /> {rc} Risik{rc > 1 ? "en" : "o"} verknüpft
+                  <Shield className="w-3 h-3" /> {rc > 1 ? t("decisions.detail.risksLinked", { count: rc }) : t("decisions.detail.riskLinked", { count: rc })}
                 </Badge>
               </div>
             ) : null;
@@ -275,13 +276,13 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
           <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 mt-2">
             <AlertCircle className="w-4 h-4 text-warning shrink-0" />
             <p className="text-xs text-warning">
-              <span className="font-semibold">{openLinkedTasks} offene Aufgabe{openLinkedTasks > 1 ? "n" : ""}</span> verknüpft — diese müssen erledigt werden, bevor die Entscheidung abgeschlossen werden kann.
+              {t("decisions.detail.openTasksWarning", { count: openLinkedTasks })}
             </p>
           </div>
         )}
 
         <div className="flex items-center gap-2 flex-wrap mt-2">
-          <span className="text-xs text-muted-foreground">Status:</span>
+          <span className="text-xs text-muted-foreground">{t("decisions.statusLabel")}:</span>
           {statusOptions.map((s) => (
             <Button
               key={s}
@@ -291,7 +292,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
               disabled={saving || (!isOwner && s !== "approved" && s !== "rejected")}
               onClick={() => handleStatusChange(s)}
             >
-              {statusLabels[s]}
+              {tl.statusLabels[s]}
             </Button>
           ))}
         </div>
