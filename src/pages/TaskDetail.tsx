@@ -24,32 +24,29 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useDecisions, useProfiles, buildProfileMap, useDependencies } from "@/hooks/useDecisions";
 import { differenceInDays, differenceInHours, format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 /* ── Config ── */
-const STATUS_CONFIG = {
-  backlog: { label: "Backlog", icon: Archive, color: "text-muted-foreground/60", bg: "bg-muted/50" },
-  open: { label: "Offen", icon: Circle, color: "text-muted-foreground", bg: "bg-muted" },
-  in_progress: { label: "In Arbeit", icon: Clock, color: "text-warning", bg: "bg-warning/20" },
-  blocked: { label: "Blockiert", icon: Ban, color: "text-destructive", bg: "bg-destructive/20" },
-  done: { label: "Erledigt", icon: CheckCircle2, color: "text-success", bg: "bg-success/20" },
-} as const;
-
-const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
-  critical: { color: "text-destructive", label: "Kritisch" },
-  high: { color: "text-warning", label: "Hoch" },
-  medium: { color: "text-primary", label: "Mittel" },
-  low: { color: "text-muted-foreground", label: "Niedrig" },
+const statusKeys = ["backlog", "open", "in_progress", "blocked", "done"] as const;
+const statusIcons: Record<string, React.ElementType> = {
+  backlog: Archive, open: Circle, in_progress: Clock, blocked: Ban, done: CheckCircle2,
+};
+const statusColors: Record<string, { color: string; bg: string }> = {
+  backlog: { color: "text-muted-foreground/60", bg: "bg-muted/50" },
+  open: { color: "text-muted-foreground", bg: "bg-muted" },
+  in_progress: { color: "text-warning", bg: "bg-warning/20" },
+  blocked: { color: "text-destructive", bg: "bg-destructive/20" },
+  done: { color: "text-success", bg: "bg-success/20" },
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  general: "Allgemein", strategic: "Strategisch", operational: "Operativ",
-  technical: "Technisch", hr: "Personal", marketing: "Marketing", budget: "Budget",
+const priorityColors: Record<string, string> = {
+  critical: "text-destructive", high: "text-warning", medium: "text-primary", low: "text-muted-foreground",
 };
 
-const statusOptions = ["backlog", "open", "in_progress", "blocked", "done"] as const;
+const statusOptions = statusKeys;
 
 /* ── Collapsible Section ── */
 const Section = ({ title, icon: Icon, children, defaultOpen = true, badge }: {
@@ -80,7 +77,6 @@ const TaskLifecycleBar = ({ status }: { status: string }) => {
   return (
     <div className="flex items-center gap-1">
       {steps.map((s, i) => {
-        const cfg = STATUS_CONFIG[s];
         const isActive = i === activeIdx;
         const isPast = i < activeIdx;
         return (
@@ -99,6 +95,8 @@ const TaskLifecycleBar = ({ status }: { status: string }) => {
 
 /* ══════════════════════════ MAIN COMPONENT ══════════════════════════ */
 const TaskDetail = () => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -116,6 +114,13 @@ const TaskDetail = () => {
 
   const task = tasks.find(t => t.id === id);
 
+  // Translated config maps
+  const statusLabel = (s: string) => t(`taskDetail.status${s.charAt(0).toUpperCase() + s.slice(1).replace(/_([a-z])/g, (_, c) => c.toUpperCase())}`, { defaultValue: s });
+  const priorityLabel = (p: string) => t(`taskDetail.priority${p.charAt(0).toUpperCase() + p.slice(1)}`, { defaultValue: p });
+  const categoryLabel = (c: string) => t(`taskDetail.cat${c.charAt(0).toUpperCase() + c.slice(1)}`, { defaultValue: c });
+
+  const decStatusLabel = (s: string) => t(`taskDetail.statusDec${s.charAt(0).toUpperCase() + s.slice(1)}`, { defaultValue: s });
+
   useEffect(() => {
     if (task) setStatus(task.status);
   }, [task]);
@@ -132,7 +137,7 @@ const TaskDetail = () => {
     return allDecisions.find(d => d.id === decId) || null;
   }, [task, allDeps, allDecisions]);
 
-  /* Linked tasks (other tasks connected via shared decision) */
+  /* Linked tasks */
   const linkedTasks = useMemo(() => {
     if (!task) return [];
     const relatedDeps = allDeps.filter(d =>
@@ -149,15 +154,12 @@ const TaskDetail = () => {
   /* Computed metrics */
   const computed = useMemo(() => {
     if (!task) return { delayCost: 0, delayCostPerWeek: 0, daysOverdue: 0, isOverdue: false, daysOpen: 0 };
-
     const daysOpen = differenceInDays(new Date(), new Date(task.created_at));
     const mult: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
     const costPerDay = Math.round(1.5 * 75 * (mult[task.priority] || 1.5));
     const costPerWeek = costPerDay * 7;
-
     const isOverdue = !!task.due_date && new Date(task.due_date) < new Date() && task.status !== "done";
     const daysOverdue = isOverdue ? differenceInDays(new Date(), new Date(task.due_date!)) : 0;
-
     return { delayCost: daysOpen * costPerDay, delayCostPerWeek: costPerWeek, daysOverdue, isOverdue, daysOpen };
   }, [task]);
 
@@ -171,12 +173,12 @@ const TaskDetail = () => {
   const focusMessage = useMemo(() => {
     if (!task || task.status === "done") return null;
     const parts: string[] = [];
-    if (computed.isOverdue) parts.push(`Überfällig seit ${computed.daysOverdue} Tag${computed.daysOverdue !== 1 ? "en" : ""}`);
-    if (task.status === "blocked") parts.push("Aufgabe ist blockiert");
-    if (isBlockingCriticalDecision) parts.push(`Blockiert kritische Entscheidung`);
-    if (computed.delayCostPerWeek > 0 && linkedDecision) parts.push(`Verzögerungsrisiko: ${formatCost(computed.delayCostPerWeek)}/Woche`);
+    if (computed.isOverdue) parts.push(t("taskDetail.overdueSince", { days: computed.daysOverdue }));
+    if (task.status === "blocked") parts.push(t("taskDetail.taskBlocked"));
+    if (isBlockingCriticalDecision) parts.push(t("taskDetail.blocksCritical"));
+    if (computed.delayCostPerWeek > 0 && linkedDecision) parts.push(t("taskDetail.delayRiskPerWeek", { cost: formatCost(computed.delayCostPerWeek) }));
     return parts.length > 0 ? parts.join(". ") + "." : null;
-  }, [task, computed, isBlockingCriticalDecision, linkedDecision]);
+  }, [task, computed, isBlockingCriticalDecision, linkedDecision, t]);
 
   const isCritical = computed.isOverdue || task?.status === "blocked" || isBlockingCriticalDecision;
 
@@ -191,7 +193,7 @@ const TaskDetail = () => {
     if (!error) {
       setStatus(newStatus);
       invalidate();
-      toast.success(`Status → ${STATUS_CONFIG[newStatus as keyof typeof STATUS_CONFIG]?.label || newStatus}`);
+      toast.success(`Status → ${statusLabel(newStatus)}`);
     }
     setSaving(false);
   };
@@ -200,8 +202,8 @@ const TaskDetail = () => {
   const handleDelete = async () => {
     if (!task) return;
     const { error } = await supabase.from("tasks").delete().eq("id", task.id);
-    if (!error) { toast.success("Aufgabe gelöscht"); navigate("/tasks"); }
-    else toast.error("Fehler beim Löschen");
+    if (!error) { toast.success(t("taskDetail.deleted")); navigate("/tasks"); }
+    else toast.error(t("taskDetail.deleteError"));
     setShowDelete(false);
   };
 
@@ -232,8 +234,8 @@ const TaskDetail = () => {
       due_date: editForm.due_date || null,
       assignee_id: editForm.assignee_id || null,
     }).eq("id", task.id);
-    if (!error) { toast.success("Aufgabe aktualisiert"); setShowEdit(false); invalidate(); }
-    else toast.error("Fehler beim Speichern");
+    if (!error) { toast.success(t("taskDetail.updated")); setShowEdit(false); invalidate(); }
+    else toast.error(t("taskDetail.updateError"));
     setSaving(false);
   };
 
@@ -241,31 +243,28 @@ const TaskDetail = () => {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <p className="text-muted-foreground">Aufgabe nicht gefunden.</p>
+          <p className="text-muted-foreground">{t("taskDetail.notFound")}</p>
           <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/tasks")}>
-            <ArrowLeft className="w-4 h-4" /> Zurück
+            <ArrowLeft className="w-4 h-4" /> {t("taskDetail.back")}
           </Button>
         </div>
       </AppLayout>
     );
   }
 
-  const pc = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
-  const sc = STATUS_CONFIG[task.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.open;
+  const pc = { color: priorityColors[task.priority] || priorityColors.medium, label: priorityLabel(task.priority) };
+  const sc = { color: statusColors[task.status as keyof typeof statusColors]?.color || statusColors.open.color, bg: statusColors[task.status as keyof typeof statusColors]?.bg || statusColors.open.bg, label: statusLabel(task.status), icon: statusIcons[task.status] || Circle };
   const isOwner = user?.id === task.created_by;
   const isActive = task.status !== "done";
 
-  const decStatusLabels: Record<string, string> = {
-    draft: "Entwurf", proposed: "Vorgeschlagen", review: "Im Review", approved: "Genehmigt",
-    rejected: "Abgelehnt", implemented: "Umgesetzt", cancelled: "Abgebrochen",
-    superseded: "Ersetzt", archived: "Archiviert",
-  };
+  const PRIORITY_CONFIG_ENTRIES = ["critical", "high", "medium", "low"].map(k => [k, { color: priorityColors[k], label: priorityLabel(k) }] as const);
+  const CATEGORY_ENTRIES = ["general", "strategic", "operational", "technical", "hr", "marketing", "budget"].map(k => [k, categoryLabel(k)] as const);
 
   return (
     <AppLayout>
       {/* Back */}
       <Button variant="ghost" size="sm" className="gap-1.5 mb-4 -ml-2 text-muted-foreground hover:text-foreground" onClick={() => navigate("/tasks")}>
-        <ArrowLeft className="w-4 h-4" /> Aufgaben
+        <ArrowLeft className="w-4 h-4" /> {t("taskDetail.backToTasks")}
       </Button>
 
       {/* ═══════════ 1. HEADER WITH DECISION CONTEXT ═══════════ */}
@@ -286,7 +285,7 @@ const TaskDetail = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">
-                      Teil der Entscheidung
+                      {t("taskDetail.partOfDecision")}
                     </p>
                     <p className="text-sm font-semibold truncate">{linkedDecision.title}</p>
                   </div>
@@ -297,11 +296,11 @@ const TaskDetail = () => {
                           "font-medium",
                           decisionEscalated ? "text-destructive" : "text-muted-foreground"
                         )}>
-                          {decStatusLabels[linkedDecision.status] || linkedDecision.status}
+                          {decStatusLabel(linkedDecision.status)}
                           {decisionEscalated && " ⚠"}
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent><p className="text-xs">Status der verknüpften Entscheidung</p></TooltipContent>
+                      <TooltipContent><p className="text-xs">{t("taskDetail.linkedDecisionStatus")}</p></TooltipContent>
                     </Tooltip>
                     {decisionRiskScore > 0 && (
                       <Tooltip>
@@ -310,7 +309,7 @@ const TaskDetail = () => {
                             Risk: {decisionRiskScore}%
                           </span>
                         </TooltipTrigger>
-                        <TooltipContent><p className="text-xs">KI-Risikobewertung der Entscheidung</p></TooltipContent>
+                        <TooltipContent><p className="text-xs">{t("taskDetail.aiRiskAssessment")}</p></TooltipContent>
                       </Tooltip>
                     )}
                     <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
@@ -332,19 +331,19 @@ const TaskDetail = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {statusOptions.map(s => (
-                    <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
+                    <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-              <Badge variant="outline" className="text-[10px]">{CATEGORY_LABELS[task.category]}</Badge>
+              <Badge variant="outline" className="text-[10px]">{categoryLabel(task.category)}</Badge>
               <span className={`font-semibold ${pc.color}`}>{pc.label}</span>
               {task.assignee_id && (
-                <><span>·</span><span>{profileMap[task.assignee_id] || "Zugewiesen"}</span></>
+                <><span>·</span><span>{profileMap[task.assignee_id] || t("taskDetail.assigned")}</span></>
               )}
               <span>·</span>
-              <span>Erstellt {format(new Date(task.created_at), "dd. MMM yyyy", { locale: de })}</span>
+              <span>{t("taskDetail.created", { date: format(new Date(task.created_at), "dd. MMM yyyy", { locale: dateFnsLocale }) })}</span>
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -366,14 +365,14 @@ const TaskDetail = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               {statusOptions.map(s => {
-                const cfg = STATUS_CONFIG[s];
                 const isCurrentStatus = status === s;
+                const sColor = statusColors[s]?.color || "";
                 return (
                   <span key={s} className={cn(
                     "text-[10px] font-medium",
-                    isCurrentStatus ? cfg.color + " font-bold" : "text-muted-foreground/50"
+                    isCurrentStatus ? sColor + " font-bold" : "text-muted-foreground/50"
                   )}>
-                    {cfg.label}
+                    {statusLabel(s)}
                   </span>
                 );
               })}
@@ -385,10 +384,10 @@ const TaskDetail = () => {
         {/* KPI strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Priorität", value: pc.label, icon: Target, color: pc.color, bg: task.priority === "critical" ? "bg-destructive/10" : task.priority === "high" ? "bg-warning/10" : "bg-primary/10" },
-            { label: "Fällig", value: task.due_date ? (computed.isOverdue ? `${computed.daysOverdue}d überfällig` : `${differenceInDays(new Date(task.due_date), new Date())}d`) : "—", icon: Clock, color: computed.isOverdue ? "text-destructive" : "text-muted-foreground", bg: computed.isOverdue ? "bg-destructive/10" : "bg-muted/50" },
-            { label: "Offene Tage", value: `${computed.daysOpen}d`, icon: AlertTriangle, color: computed.daysOpen > 14 ? "text-warning" : "text-muted-foreground", bg: computed.daysOpen > 14 ? "bg-warning/10" : "bg-muted/50" },
-            { label: "Verzögerungsrisiko", value: linkedDecision && isActive ? formatCost(computed.delayCostPerWeek) + "/Wo" : "—", icon: DollarSign, color: computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning", bg: linkedDecision ? (computed.delayCostPerWeek > 2000 ? "bg-destructive/10" : "bg-warning/10") : "bg-muted/50" },
+            { label: t("taskDetail.priority"), value: pc.label, icon: Target, color: pc.color, bg: task.priority === "critical" ? "bg-destructive/10" : task.priority === "high" ? "bg-warning/10" : "bg-primary/10" },
+            { label: t("taskDetail.due"), value: task.due_date ? (computed.isOverdue ? t("taskDetail.dueOverdue", { days: computed.daysOverdue }) : t("taskDetail.dueIn", { days: differenceInDays(new Date(task.due_date), new Date()) })) : "—", icon: Clock, color: computed.isOverdue ? "text-destructive" : "text-muted-foreground", bg: computed.isOverdue ? "bg-destructive/10" : "bg-muted/50" },
+            { label: t("taskDetail.openDays"), value: `${computed.daysOpen}d`, icon: AlertTriangle, color: computed.daysOpen > 14 ? "text-warning" : "text-muted-foreground", bg: computed.daysOpen > 14 ? "bg-warning/10" : "bg-muted/50" },
+            { label: t("taskDetail.delayRisk"), value: linkedDecision && isActive ? formatCost(computed.delayCostPerWeek) + `/${i18n.language === "de" ? "Wo" : "wk"}` : "—", icon: DollarSign, color: computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning", bg: linkedDecision ? (computed.delayCostPerWeek > 2000 ? "bg-destructive/10" : "bg-warning/10") : "bg-muted/50" },
           ].map(kpi => (
             <Tooltip key={kpi.label}>
               <TooltipTrigger asChild>
@@ -417,22 +416,22 @@ const TaskDetail = () => {
             <AlertCircle className="w-4.5 h-4.5 text-destructive" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-destructive uppercase tracking-wider mb-1">Aktion erforderlich</p>
+            <p className="text-xs font-semibold text-destructive uppercase tracking-wider mb-1">{t("taskDetail.actionRequired")}</p>
             <p className="text-sm text-destructive font-medium">{focusMessage}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {task.priority !== "critical" && (
               <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={async () => {
                 await supabase.from("tasks").update({ priority: "critical", updated_at: new Date().toISOString() }).eq("id", task.id);
-                invalidate(); toast.success("Priorität auf Kritisch gesetzt");
+                invalidate(); toast.success(t("taskDetail.prioritySetCritical"));
               }}>
-                <ChevronUp className="w-3 h-3 mr-1" /> Priorisieren
+                <ChevronUp className="w-3 h-3 mr-1" /> {t("taskDetail.prioritize")}
               </Button>
             )}
             {linkedDecision && (
               <Button variant="outline" size="sm" className="text-xs" asChild>
                 <Link to={`/decisions/${linkedDecision.id}`}>
-                  <ExternalLink className="w-3 h-3 mr-1" /> Entscheidung öffnen
+                  <ExternalLink className="w-3 h-3 mr-1" /> {t("taskDetail.openDecision")}
                 </Link>
               </Button>
             )}
@@ -444,21 +443,19 @@ const TaskDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-24">
         {/* LEFT COLUMN (3/5) */}
         <div className="lg:col-span-3 space-y-2">
-          {/* Description */}
-          <Section title="Beschreibung" icon={FileText}>
+          <Section title={t("taskDetail.descriptionSection")} icon={FileText}>
             {task.description ? (
               <div className="prose prose-sm max-w-none text-sm text-foreground/90 whitespace-pre-wrap">
                 {task.description}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground italic">Keine Beschreibung hinterlegt.</p>
+              <p className="text-sm text-muted-foreground italic">{t("taskDetail.noDescription")}</p>
             )}
           </Section>
 
           <Separator />
 
-          {/* Dependencies / Links */}
-          <Section title="Verknüpfungen" icon={Link2} badge={
+          <Section title={t("taskDetail.linksSection")} icon={Link2} badge={
             <Badge variant="outline" className="text-[10px]">{(linkedDecision ? 1 : 0) + linkedTasks.length}</Badge>
           }>
             <div className="space-y-2">
@@ -467,62 +464,62 @@ const TaskDetail = () => {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/15 hover:bg-primary/[0.08] transition-colors">
                     <Target className="w-4 h-4 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-primary font-medium">Entscheidung</p>
+                      <p className="text-xs text-primary font-medium">{t("taskDetail.decisionLabel")}</p>
                       <p className="text-sm font-medium truncate">{linkedDecision.title}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">{decStatusLabels[linkedDecision.status]}</Badge>
+                    <Badge variant="outline" className="text-[10px]">{decStatusLabel(linkedDecision.status)}</Badge>
                   </div>
                 </Link>
               )}
               {linkedTasks.map(lt => {
-                const ltCfg = STATUS_CONFIG[lt.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.open;
+                const ltColor = statusColors[lt.status as keyof typeof statusColors] || statusColors.open;
+                const LtIcon = statusIcons[lt.status] || Circle;
                 return (
                   <Link key={lt.id} to={`/tasks/${lt.id}`} className="block">
                     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border hover:bg-muted/50 transition-colors">
-                      <ltCfg.icon className={`w-4 h-4 ${ltCfg.color} shrink-0`} />
+                      <LtIcon className={`w-4 h-4 ${ltColor.color} shrink-0`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">Abhängige Aufgabe</p>
+                        <p className="text-xs text-muted-foreground">{t("taskDetail.dependentTask")}</p>
                         <p className="text-sm font-medium truncate">{lt.title}</p>
                       </div>
-                      <Badge variant="outline" className={`text-[10px] ${ltCfg.bg} ${ltCfg.color}`}>{ltCfg.label}</Badge>
+                      <Badge variant="outline" className={`text-[10px] ${ltColor.bg} ${ltColor.color}`}>{statusLabel(lt.status)}</Badge>
                     </div>
                   </Link>
                 );
               })}
               {!linkedDecision && linkedTasks.length === 0 && (
-                <p className="text-sm text-muted-foreground italic py-2">Keine Verknüpfungen vorhanden.</p>
+                <p className="text-sm text-muted-foreground italic py-2">{t("taskDetail.noLinks")}</p>
               )}
             </div>
           </Section>
 
           <Separator />
 
-          {/* Activity */}
-          <Section title="Aktivität" icon={MessageSquare} defaultOpen={false}>
+          <Section title={t("taskDetail.activitySection")} icon={MessageSquare} defaultOpen={false}>
             <div className="space-y-2">
               {task.completed_at && (
                 <div className="flex items-start gap-3 p-3 rounded-lg bg-success/5">
                   <CheckCircle2 className="w-4 h-4 text-success mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-success">Erledigt</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(task.completed_at), "dd. MMM yyyy, HH:mm", { locale: de })}</p>
+                    <p className="text-sm font-medium text-success">{t("taskDetail.completed")}</p>
+                    <p className="text-xs text-muted-foreground">{format(new Date(task.completed_at), "dd. MMM yyyy, HH:mm", { locale: dateFnsLocale })}</p>
                   </div>
                 </div>
               )}
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                 <Clock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">Letzte Änderung</p>
-                  <p className="text-xs text-muted-foreground">{format(new Date(task.updated_at), "dd. MMM yyyy, HH:mm", { locale: de })}</p>
+                  <p className="text-sm font-medium">{t("taskDetail.lastChange")}</p>
+                  <p className="text-xs text-muted-foreground">{format(new Date(task.updated_at), "dd. MMM yyyy, HH:mm", { locale: dateFnsLocale })}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                 <PlayCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-sm font-medium">Erstellt</p>
+                  <p className="text-sm font-medium">{t("taskDetail.createdLabel")}</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(task.created_at), "dd. MMM yyyy, HH:mm", { locale: de })}
-                    {" · "}{profileMap[task.created_by] || "Unbekannt"}
+                    {format(new Date(task.created_at), "dd. MMM yyyy, HH:mm", { locale: dateFnsLocale })}
+                    {" · "}{profileMap[task.created_by] || t("taskDetail.unknown")}
                   </p>
                 </div>
               </div>
@@ -532,16 +529,15 @@ const TaskDetail = () => {
 
         {/* RIGHT COLUMN (2/5) */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Task Health Panel */}
           <Card>
             <CardContent className="p-4 space-y-3">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Task Health</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("taskDetail.taskHealth")}</h3>
               <div className="space-y-2">
                 {[
-                  { label: "Priorität", value: pc.label, color: pc.color },
+                  { label: t("taskDetail.priority"), value: pc.label, color: pc.color },
                   { label: "Status", value: sc.label, color: sc.color },
-                  { label: "Blockiert", value: task.status === "blocked" ? "Ja" : "Nein", color: task.status === "blocked" ? "text-destructive" : "text-success" },
-                  { label: "Überfällig", value: computed.isOverdue ? `${computed.daysOverdue} Tage` : "Nein", color: computed.isOverdue ? "text-destructive" : "text-success" },
+                  { label: t("taskDetail.blocked"), value: task.status === "blocked" ? t("taskDetail.yes") : t("taskDetail.no"), color: task.status === "blocked" ? "text-destructive" : "text-success" },
+                  { label: t("taskDetail.overdue"), value: computed.isOverdue ? t("taskDetail.overdueDays", { days: computed.daysOverdue }) : t("taskDetail.no"), color: computed.isOverdue ? "text-destructive" : "text-success" },
                 ].map(row => (
                   <div key={row.label} className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{row.label}</span>
@@ -552,22 +548,21 @@ const TaskDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Impact Panel */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5" /> Wirtschaftlicher Impact
+                <DollarSign className="w-3.5 h-3.5" /> {t("taskDetail.economicImpact")}
               </h3>
               {linkedDecision ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Einfluss auf Entscheidung</span>
-                    <span className="font-semibold text-primary">Hoch</span>
+                    <span className="text-muted-foreground">{t("taskDetail.influenceOnDecision")}</span>
+                    <span className="font-semibold text-primary">{t("taskDetail.high")}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Verzögerungsrisiko</span>
+                    <span className="text-muted-foreground">{t("taskDetail.delayRiskLabel")}</span>
                     <span className={cn("font-bold", computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning")}>
-                      {formatCost(computed.delayCostPerWeek)}/Woche
+                      {formatCost(computed.delayCostPerWeek)}/{i18n.language === "de" ? "Woche" : "week"}
                     </span>
                   </div>
                   {decisionRiskScore > 0 && (
@@ -578,60 +573,58 @@ const TaskDetail = () => {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground italic">Operativ – kein direkter Impact verknüpft.</p>
+                <p className="text-sm text-muted-foreground italic">{t("taskDetail.operationalNoImpact")}</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Responsibility */}
           <Card>
             <CardContent className="p-4 space-y-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5" /> Verantwortlichkeit
+                <Users className="w-3.5 h-3.5" /> {t("taskDetail.responsibility")}
               </h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Zuständig</span>
-                  <span className="font-medium">{task.assignee_id ? (profileMap[task.assignee_id] || "Zugewiesen") : "—"}</span>
+                  <span className="text-muted-foreground">{t("taskDetail.responsible")}</span>
+                  <span className="font-medium">{task.assignee_id ? (profileMap[task.assignee_id] || t("taskDetail.assigned")) : "—"}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Erstellt von</span>
-                  <span className="font-medium">{profileMap[task.created_by] || "Unbekannt"}</span>
+                  <span className="text-muted-foreground">{t("taskDetail.createdBy")}</span>
+                  <span className="font-medium">{profileMap[task.created_by] || t("taskDetail.unknown")}</span>
                 </div>
                 {task.team_id && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Team</span>
-                    <span className="font-medium">Zugewiesen</span>
+                    <span className="text-muted-foreground">{t("taskDetail.team")}</span>
+                    <span className="font-medium">{t("taskDetail.assigned")}</span>
                   </div>
                 )}
               </div>
               {!task.assignee_id && (
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20">
                   <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" />
-                  <p className="text-xs text-warning font-medium">Keine verantwortliche Person zugewiesen</p>
+                  <p className="text-xs text-warning font-medium">{t("taskDetail.noAssigneeWarning")}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Mini KI Insight */}
           {linkedDecision && isActive && (
             <Card className="border-primary/20 bg-primary/[0.02]">
               <CardContent className="p-4 space-y-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
-                  <Brain className="w-3.5 h-3.5" /> KI-Empfehlung
+                  <Brain className="w-3.5 h-3.5" /> {t("taskDetail.aiRecommendation")}
                 </h3>
                 <p className="text-sm text-foreground/80">
                   {task.status === "blocked"
-                    ? "Blockade priorisiert lösen – diese Aufgabe beeinflusst den Fortschritt einer verknüpften Entscheidung direkt."
+                    ? t("taskDetail.aiBlockedMsg")
                     : computed.isOverdue
-                    ? "Aufgabe ist überfällig und verzögert potenziell die verknüpfte Entscheidung. Sofortige Bearbeitung empfohlen."
+                    ? t("taskDetail.aiOverdueMsg")
                     : isBlockingCriticalDecision
-                    ? "Diese Aufgabe ist Teil einer kritischen Entscheidung. Bevorzugte Bearbeitung kann Verzögerungskosten reduzieren."
-                    : "Aufgabe liegt im Plan. Fortschritt regelmäßig dokumentieren, um Transparenz für Stakeholder zu gewährleisten."}
+                    ? t("taskDetail.aiCriticalMsg")
+                    : t("taskDetail.aiOnTrackMsg")}
                 </p>
                 <p className="text-[10px] text-muted-foreground">
-                  Confidence: {task.status === "blocked" || computed.isOverdue ? "Hoch" : "Mittel"}
+                  Confidence: {task.status === "blocked" || computed.isOverdue ? t("taskDetail.confidenceHigh") : t("taskDetail.confidenceMedium")}
                 </p>
               </CardContent>
             </Card>
@@ -649,21 +642,21 @@ const TaskDetail = () => {
           <div className="flex items-center gap-2">
             <Select value={status} onValueChange={handleStatusChange} disabled={saving}>
               <SelectTrigger className="w-auto h-8 text-xs gap-1.5">
-                <SelectValue placeholder="Status ändern" />
+                <SelectValue placeholder={t("taskDetail.changeStatus")} />
               </SelectTrigger>
               <SelectContent>
                 {statusOptions.map(s => (
-                  <SelectItem key={s} value={s}>{STATUS_CONFIG[s].label}</SelectItem>
+                  <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" className="text-xs gap-1.5" onClick={openEdit}>
-              <Pencil className="w-3.5 h-3.5" /> Bearbeiten
+              <Pencil className="w-3.5 h-3.5" /> {t("taskDetail.edit")}
             </Button>
             {linkedDecision && (
               <Button variant="outline" size="sm" className="text-xs gap-1.5" asChild>
                 <Link to={`/decisions/${linkedDecision.id}`}>
-                  <Link2 className="w-3.5 h-3.5" /> Entscheidung
+                  <Link2 className="w-3.5 h-3.5" /> {t("taskDetail.decisionLabel")}
                 </Link>
               </Button>
             )}
@@ -675,35 +668,35 @@ const TaskDetail = () => {
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Aufgabe bearbeiten</DialogTitle>
+            <DialogTitle>{t("taskDetail.editTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Titel</Label>
+              <Label>{t("taskDetail.title")}</Label>
               <Input value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} />
             </div>
             <div>
-              <Label>Beschreibung</Label>
+              <Label>{t("taskDetail.description")}</Label>
               <Textarea rows={4} value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Priorität</Label>
+                <Label>{t("taskDetail.priority")}</Label>
                 <Select value={editForm.priority} onValueChange={v => setEditForm(p => ({ ...p, priority: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(PRIORITY_CONFIG).map(([k, v]) => (
+                    {PRIORITY_CONFIG_ENTRIES.map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label>Kategorie</Label>
+                <Label>{t("taskDetail.category")}</Label>
                 <Select value={editForm.category} onValueChange={v => setEditForm(p => ({ ...p, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
+                    {CATEGORY_ENTRIES.map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>
@@ -711,13 +704,13 @@ const TaskDetail = () => {
               </div>
             </div>
             <div>
-              <Label>Fällig am</Label>
+              <Label>{t("taskDetail.dueDate")}</Label>
               <Input type="date" value={editForm.due_date} onChange={e => setEditForm(p => ({ ...p, due_date: e.target.value }))} />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEdit(false)}>Abbrechen</Button>
-            <Button onClick={saveEdit} disabled={saving || !editForm.title.trim()}>{saving ? "Speichern..." : "Speichern"}</Button>
+            <Button variant="outline" onClick={() => setShowEdit(false)}>{t("taskDetail.cancel")}</Button>
+            <Button onClick={saveEdit} disabled={saving || !editForm.title.trim()}>{saving ? t("taskDetail.saving") : t("taskDetail.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -726,12 +719,12 @@ const TaskDetail = () => {
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Aufgabe löschen?</DialogTitle>
+            <DialogTitle>{t("taskDetail.deleteTitle")}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Diese Aktion kann nicht rückgängig gemacht werden.</p>
+          <p className="text-sm text-muted-foreground">{t("taskDetail.deleteDesc")}</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDelete(false)}>Abbrechen</Button>
-            <Button variant="destructive" onClick={handleDelete}>Löschen</Button>
+            <Button variant="outline" onClick={() => setShowDelete(false)}>{t("taskDetail.cancel")}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t("taskDetail.delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
