@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
@@ -107,6 +108,7 @@ const emptyForm = {
 };
 
 const Tasks = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
@@ -193,8 +195,8 @@ const Tasks = () => {
           assignee_id: form.assignee_id || null,
         })
         .eq("id", editTask.id);
-      if (error) toast.error("Fehler beim Aktualisieren");
-      else { toast.success("Aufgabe aktualisiert"); setEditTask(null); }
+      if (error) toast.error(t("tasks.updateError"));
+      else { toast.success(t("tasks.updated")); setEditTask(null); }
     } else {
       const { error } = await supabase.from("tasks").insert([{
         title: form.title.trim(),
@@ -206,8 +208,8 @@ const Tasks = () => {
         created_by: user.id,
         team_id: selectedTeamId || null,
       }]);
-      if (error) toast.error("Fehler beim Erstellen");
-      else { toast.success("Aufgabe erstellt"); setShowCreate(false); }
+      if (error) toast.error(t("tasks.createError"));
+      else { toast.success(t("tasks.created")); setShowCreate(false); }
     }
 
     setSaving(false);
@@ -217,8 +219,8 @@ const Tasks = () => {
   const handleDelete = async () => {
     if (!deleteTask) return;
     const { error } = await supabase.from("tasks").delete().eq("id", deleteTask.id);
-    if (error) toast.error("Fehler beim Löschen");
-    else toast.success("Aufgabe gelöscht");
+    if (error) toast.error(t("tasks.deleteError"));
+    else toast.success(t("tasks.deleted"));
     setDeleteTask(null);
     invalidate();
   };
@@ -229,17 +231,17 @@ const Tasks = () => {
     if (newStatus === "done") updates.completed_at = new Date().toISOString();
     else updates.completed_at = null;
     const { error } = await supabase.from("tasks").update(updates).eq("id", task.id);
-    if (error) { toast.error("Statusänderung fehlgeschlagen"); return; }
+    if (error) { toast.error(t("tasks.statusChangeError")); return; }
     invalidate();
     toast.success(`Status → ${STATUS_CONFIG[newStatus as keyof typeof STATUS_CONFIG]?.label || newStatus}`, {
       action: {
-        label: "Rückgängig",
+        label: t("tasks.undo"),
         onClick: async () => {
           const undo: Record<string, any> = { status: oldStatus, updated_at: new Date().toISOString() };
           if (oldStatus === "done") undo.completed_at = task.completed_at;
           else undo.completed_at = null;
           await supabase.from("tasks").update(undo).eq("id", task.id);
-          toast.success(`Status zurückgesetzt`);
+          toast.success(t("tasks.statusReverted"));
           invalidate();
         },
       },
@@ -252,18 +254,18 @@ const Tasks = () => {
     <AppLayout>
       {/* Header */}
       <PageHeader
-        title="Aufgaben"
-        subtitle="Überblick über alle Aufgaben"
+        title={t("tasks.title")}
+        subtitle={t("tasks.subtitle")}
         role="execution"
-        help={{ title: "Aufgaben", description: "Alle Aufgaben auf einen Blick. Nutze Filter und Suche, um gezielt zu finden. Wechsle zwischen Listen- und Kanban-Ansicht." }}
+        help={{ title: t("tasks.title"), description: t("tasks.helpDesc") }}
         secondaryActions={
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
-            <FileUp className="w-4 h-4" /> Import
+            <FileUp className="w-4 h-4" /> {t("common.import")}
           </Button>
         }
         primaryAction={
           <Button size="sm" onClick={openCreate} className="gap-1.5">
-            <Plus className="w-4 h-4" /> Neue Aufgabe
+            <Plus className="w-4 h-4" /> {t("tasks.newTask")}
           </Button>
         }
       />
@@ -274,31 +276,29 @@ const Tasks = () => {
             <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
               <ListTodo className="w-7 h-7 text-primary" />
             </div>
-            <h3 className="font-display text-xl font-bold mb-2">Aufgaben strukturiert steuern</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              Verknüpfe Aufgaben mit Entscheidungen und behalte den Überblick über alle Action Items.
-            </p>
+            <h3 className="font-display text-xl font-bold mb-2">{t("tasks.emptyTitle")}</h3>
+            <p className="text-sm text-muted-foreground mb-2">{t("tasks.emptyDesc")}</p>
             <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5" />
-              Teams mit Task-Tracking setzen 27% mehr Entscheidungen erfolgreich um.
+              {t("tasks.emptyStatistic")}
             </p>
             <div className="flex items-center justify-center gap-3 mb-8">
               <Button variant="outline" onClick={async () => {
-                const { toast: t } = await import("sonner");
-                t.info("Demo-Daten werden erstellt…");
+                const { toast: t2 } = await import("sonner");
+                t2.info(t("tasks.demoCreating"));
                 const { data, error } = await supabase.functions.invoke("seed-demo-data");
-                if (error || data?.error) { t.error(data?.error || "Fehler"); return; }
-                t.success("Demo-Daten erstellt!"); window.location.reload();
-              }} className="gap-2"><Zap className="w-4 h-4" /> Beispieldaten laden</Button>
+                if (error || data?.error) { t2.error(data?.error || t("tasks.demoError")); return; }
+                t2.success(t("tasks.demoCreated")); window.location.reload();
+              }} className="gap-2"><Zap className="w-4 h-4" /> {t("tasks.loadDemo")}</Button>
               <Button onClick={openCreate} className="gap-2">
-                <Plus className="w-4 h-4" /> Erste Aufgabe erstellen
+                <Plus className="w-4 h-4" /> {t("tasks.createFirst")}
               </Button>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Zap, label: "Status-Tracking", desc: "Fortschritt im Blick" },
-                { icon: GitBranch, label: "Team-Zuordnung", desc: "Aufgaben zuweisen" },
-                { icon: Target, label: "Prioritäten", desc: "Wichtiges zuerst" },
+                { icon: Zap, label: t("tasks.statusTracking"), desc: t("tasks.statusTrackingDesc") },
+                { icon: GitBranch, label: t("tasks.teamAssignment"), desc: t("tasks.teamAssignmentDesc") },
+                { icon: Target, label: t("tasks.priorities"), desc: t("tasks.prioritiesDesc") },
               ].map((f, i) => (
                 <Card key={i} className="text-left">
                   <div className="p-4">
@@ -321,7 +321,7 @@ const Tasks = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Aufgaben durchsuchen..."
+                placeholder={t("tasks.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
@@ -344,7 +344,7 @@ const Tasks = () => {
                   <span className="text-sm font-semibold">Filter</span>
                   {activeFilterCount > 0 && (
                     <button onClick={clearAllFilters} className="text-xs text-primary hover:underline flex items-center gap-1">
-                      <X className="w-3 h-3" /> Zurücksetzen
+                      <X className="w-3 h-3" /> {t("tasks.resetFilters")}
                     </button>
                   )}
                 </div>
@@ -408,19 +408,19 @@ const Tasks = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground w-8"></th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Aufgabe</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Priorität</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Kategorie</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Zuständig</th>
-                    <th className="text-left p-3 text-xs font-medium text-muted-foreground">Fällig</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground w-8"></th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("tasks.title")}</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.priorityLabel")}</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.categoryLabel")}</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.owner")}</th>
+                     <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.due")}</th>
                     <th className="p-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredTasks.length === 0 ? (
-                    <tr><td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">Keine Ergebnisse gefunden.</td></tr>
+                    <tr><td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">{t("common.noResults")}</td></tr>
                   ) : (
                     filteredTasks.map((task) => {
                       const sc = STATUS_CONFIG[task.status];
@@ -473,14 +473,14 @@ const Tasks = () => {
                                 <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => navigate(`/tasks/${task.id}`)} className="gap-2">
-                                  <Eye className="w-3.5 h-3.5" /> Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openEdit(task)} className="gap-2">
-                                  <Pencil className="w-3.5 h-3.5" /> Bearbeiten
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setDeleteTask(task)} className="gap-2 text-destructive focus:text-destructive">
-                                  <Trash2 className="w-3.5 h-3.5" /> Löschen
+                                 <DropdownMenuItem onClick={() => navigate(`/tasks/${task.id}`)} className="gap-2">
+                                   <Eye className="w-3.5 h-3.5" /> {t("common.open")}
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => openEdit(task)} className="gap-2">
+                                   <Pencil className="w-3.5 h-3.5" /> {t("common.edit")}
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => setDeleteTask(task)} className="gap-2 text-destructive focus:text-destructive">
+                                   <Trash2 className="w-3.5 h-3.5" /> {t("common.delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -500,7 +500,7 @@ const Tasks = () => {
       <Dialog open={showCreate || !!editTask} onOpenChange={(o) => { if (!o) { setShowCreate(false); setEditTask(null); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editTask ? "Aufgabe bearbeiten" : "Neue Aufgabe"}</DialogTitle>
+            <DialogTitle>{editTask ? t("common.edit") : t("tasks.newTask")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -556,9 +556,9 @@ const Tasks = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCreate(false); setEditTask(null); }}>Abbrechen</Button>
-            <Button onClick={handleSave} disabled={!form.title.trim() || saving}>
-              {saving ? "Speichern..." : editTask ? "Aktualisieren" : "Erstellen"}
+             <Button variant="outline" onClick={() => { setShowCreate(false); setEditTask(null); }}>{t("common.cancel")}</Button>
+             <Button onClick={handleSave} disabled={!form.title.trim() || saving}>
+               {saving ? t("settings.saving") : editTask ? t("settings.save") : t("settings.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -568,14 +568,14 @@ const Tasks = () => {
       <Dialog open={!!deleteTask} onOpenChange={(o) => !o && setDeleteTask(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Aufgabe löschen?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            „{deleteTask?.title}" wird unwiderruflich gelöscht.
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTask(null)}>Abbrechen</Button>
-            <Button variant="destructive" onClick={handleDelete}>Löschen</Button>
+             <DialogTitle>{t("common.delete")}?</DialogTitle>
+           </DialogHeader>
+           <p className="text-sm text-muted-foreground">
+             „{deleteTask?.title}"
+           </p>
+           <DialogFooter>
+             <Button variant="outline" onClick={() => setDeleteTask(null)}>{t("common.cancel")}</Button>
+             <Button variant="destructive" onClick={handleDelete}>{t("common.delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
