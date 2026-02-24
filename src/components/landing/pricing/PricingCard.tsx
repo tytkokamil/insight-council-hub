@@ -60,9 +60,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
               {plan.name === "Enterprise" && "ab "}€{price}
             </motion.span>
             {price > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {plan.name === "Enterprise" ? "/ Monat" : "pro Nutzer / Monat"}
-              </span>
+              <span className="text-xs text-muted-foreground">/ Monat</span>
             )}
             {annual && plan.monthlyPrice !== null && plan.monthlyPrice > 0 && (
               <motion.span
