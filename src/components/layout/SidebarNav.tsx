@@ -5,7 +5,7 @@ import {
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
   Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
   ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
-  Archive, Search as SearchIcon, Settings2, Compass, Video, Lock,
+  Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles,
 } from "lucide-react";
 import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -229,6 +229,7 @@ const SidebarNav = memo(({
 }: SidebarNavProps) => {
   const { mode, setMode, shouldShowAdvanced, decisionCount } = useGuidedMode();
   const { t } = useTranslation();
+  const [intelligenceUnlocked, setIntelligenceUnlocked] = useState(() => localStorage.getItem("intelligence-unlocked") === "true");
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navGroupsDef.forEach(g => {
@@ -279,9 +280,38 @@ const SidebarNav = memo(({
           system: "bg-muted-foreground/30",
         };
 
-        // Progressive hint: Intelligence recommends 25+ decisions but is always accessible
-        const PROGRESSIVE_THRESHOLD = 25;
-        const showProgressiveHint = group.progressive && decisionCount < PROGRESSIVE_THRESHOLD;
+        // Progressive group: hidden until user explicitly unlocks
+        if (group.progressive && !intelligenceUnlocked) {
+          if (collapsed) return null;
+          const PROGRESSIVE_THRESHOLD = 25;
+          const remaining = Math.max(0, PROGRESSIVE_THRESHOLD - decisionCount);
+          return (
+            <div key={group.labelKey}>
+              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
+                {groupLabel}
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.setItem("intelligence-unlocked", "true");
+                  setIntelligenceUnlocked(true);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-2.5 rounded-lg text-[12px] text-muted-foreground/60 hover:text-foreground hover:bg-accent-teal/5 border border-transparent hover:border-accent-teal/20 transition-all group cursor-pointer"
+              >
+                <Brain className="w-4 h-4 shrink-0 text-accent-teal/50 group-hover:text-accent-teal" />
+                <span className="text-left flex-1">
+                  <span className="block text-[11px] font-semibold">{t("nav.unlockIntelligence")}</span>
+                  <span className="block text-[10px] opacity-60 mt-0.5">
+                    {remaining > 0
+                      ? t("nav.intelligenceRecommended", { count: remaining })
+                      : t("nav.intelligenceReady")}
+                  </span>
+                </span>
+                <Sparkles className="w-3.5 h-3.5 shrink-0 text-accent-teal/40 group-hover:text-accent-teal" />
+              </button>
+            </div>
+          );
+        }
+
         // In basic mode, collect locked items for teaser display
         const lockedItems: NavItem[] = [];
         const visibleItems = group.items.filter(item => {
@@ -292,7 +322,6 @@ const SidebarNav = memo(({
               if (c.adminOnly && !isAdmin) return false;
               if (c.featureKey && !isFeatureEnabled(c.featureKey)) return false;
               if (c.minRole && !meetsMinRole(userRole, c.minRole)) return false;
-              // Progressive groups are always visible regardless of mode
               if (!group.progressive && mode === "basic" && !BASIC_MODE_PATHS.has(c.path)) return false;
               return true;
             });
@@ -300,7 +329,6 @@ const SidebarNav = memo(({
           if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
           if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) return false;
           if ("minRole" in item && item.minRole && !meetsMinRole(userRole, item.minRole)) return false;
-          // Progressive groups are always visible regardless of mode
           if (!group.progressive && mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
             lockedItems.push(item as NavItem);
             return false;
@@ -358,20 +386,6 @@ const SidebarNav = memo(({
                   )
                 )}
               </button>
-            )}
-            {showProgressiveHint && !collapsed && (
-              <div className="px-2 py-1.5 mb-1 rounded-md">
-                <div className="flex items-center gap-2">
-                  <Brain className="w-3 h-3 shrink-0 text-accent-teal/50" />
-                  <span className="text-[10px] text-muted-foreground/50">{t("nav.intelligenceRecommended", { count: PROGRESSIVE_THRESHOLD - decisionCount })}</span>
-                </div>
-                <div className="w-full h-0.5 bg-muted rounded-full overflow-hidden mt-1">
-                  <div
-                    className="h-full bg-accent-teal/40 rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (decisionCount / PROGRESSIVE_THRESHOLD) * 100)}%` }}
-                  />
-                </div>
-              </div>
             )}
             {(!isGroupCollapsed || hasActiveItem || collapsed) && (
               <div className="space-y-px">
