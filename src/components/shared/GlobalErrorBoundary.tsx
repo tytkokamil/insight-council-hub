@@ -1,5 +1,6 @@
 import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import i18n from "@/i18n";
 
 interface Props {
   children: ReactNode;
@@ -11,10 +12,6 @@ interface State {
   errorInfo: string | null;
 }
 
-/**
- * Top-level Error Boundary that catches unhandled errors across the entire app.
- * Shows a full-screen fallback with retry and navigation options.
- */
 class GlobalErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -42,6 +39,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    const t = (key: string) => i18n.t(key);
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6" role="alert" aria-live="assertive">
         <div className="max-w-md w-full text-center space-y-6">
@@ -50,12 +49,8 @@ class GlobalErrorBoundary extends Component<Props, State> {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-xl font-bold text-foreground">
-              Etwas ist schiefgelaufen
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Ein unerwarteter Fehler ist aufgetreten. Deine Daten sind sicher – versuche es erneut oder kehre zur Startseite zurück.
-            </p>
+            <h1 className="text-xl font-bold text-foreground">{t("shared.errorTitle")}</h1>
+            <p className="text-sm text-muted-foreground">{t("shared.errorDesc")}</p>
           </div>
 
           {this.state.error && (
@@ -72,19 +67,19 @@ class GlobalErrorBoundary extends Component<Props, State> {
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <RefreshCw className="w-4 h-4" />
-              Erneut versuchen
+              {t("shared.errorRetry")}
             </button>
             <button
               onClick={this.handleGoHome}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <Home className="w-4 h-4" />
-              Startseite
+              {t("shared.errorHome")}
             </button>
           </div>
 
           <p className="text-[10px] text-muted-foreground/50">
-            Fehler-ID: {Date.now().toString(36).toUpperCase()}
+            {t("shared.errorId")}: {Date.now().toString(36).toUpperCase()}
           </p>
         </div>
       </div>

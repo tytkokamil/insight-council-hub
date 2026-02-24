@@ -3,13 +3,15 @@ import { ThumbsUp, ThumbsDown, MessageSquare, X, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface AiFeedbackButtonProps {
-  context: string; // e.g. "risk-analysis", "copilot", "intelligence-pattern"
+  context: string;
   className?: string;
 }
 
 const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) => {
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState<"helpful" | "unhelpful" | null>(null);
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
@@ -21,15 +23,14 @@ const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) =>
       setShowComment(true);
     } else {
       setSubmitted(true);
-      toast.success("Danke für dein Feedback!");
+      toast.success(t("shared.aiFeedbackThanks"));
     }
   };
 
   const submitComment = () => {
     setSubmitted(true);
     setShowComment(false);
-    toast.success("Feedback gesendet – danke!");
-    // In production: persist to DB or analytics
+    toast.success(t("shared.aiFeedbackSent"));
     console.log("[AI Feedback]", { context, feedback, comment });
   };
 
@@ -37,7 +38,7 @@ const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) =>
     return (
       <div className={`flex items-center gap-1.5 text-[10px] text-muted-foreground/60 ${className}`}>
         <MessageSquare className="w-3 h-3" />
-        <span>Feedback erhalten ✓</span>
+        <span>{t("shared.aiFeedbackReceived")}</span>
       </div>
     );
   }
@@ -45,7 +46,7 @@ const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) =>
   return (
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-        <span className="text-[10px] text-muted-foreground/60">War das hilfreich?</span>
+        <span className="text-[10px] text-muted-foreground/60">{t("shared.aiFeedbackQuestion")}</span>
         <Button
           variant="ghost"
           size="icon"
@@ -69,7 +70,7 @@ const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) =>
           <Textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
-            placeholder="Was könnte besser sein?"
+            placeholder={t("shared.aiFeedbackPlaceholder")}
             rows={2}
             className="text-xs flex-1"
           />
