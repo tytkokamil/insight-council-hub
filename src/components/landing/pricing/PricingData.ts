@@ -1,6 +1,6 @@
-import { Check, X, type LucideIcon } from "lucide-react";
+import type { TFunction } from "i18next";
 
-export const ANNUAL_DISCOUNT_MONTHS = 2; // 2 months free = 20% Rabatt
+export const ANNUAL_DISCOUNT_MONTHS = 2;
 
 export interface PlanFeature {
   label: string;
@@ -22,145 +22,133 @@ export interface Plan {
   idealFor: string;
 }
 
-export const plans: Plan[] = [
+export const getPlans = (t: TFunction): Plan[] => [
   {
-    name: "Free",
+    name: t("landing.pricing.freeName"),
     monthlyPrice: 0,
     annualPrice: 0,
-    description: "Für Einzelpersonen und erste Einblicke.",
+    description: t("landing.pricing.freeDesc"),
     features: [
-      { label: "1 Nutzer", included: true },
-      { label: "Decision Hub", included: true },
-      { label: "Einfacher Audit Trail (30 Tage)", included: true },
-      { label: "Community Support", included: true },
-      { label: "Keine KI-Funktionen", included: false },
-      { label: "SLA & Eskalationen", included: false },
-      { label: "Review-Workflows", included: false },
-      { label: "Intelligence Center", included: false },
-      { label: "Kalender mit Heat Overlay", included: false },
+      { label: t("landing.pricing.feat1user"), included: true },
+      { label: t("landing.pricing.featDecisionHub"), included: true },
+      { label: t("landing.pricing.featAudit30"), included: true },
+      { label: t("landing.pricing.featCommunity"), included: true },
+      { label: t("landing.pricing.featNoAi"), included: false },
+      { label: t("landing.pricing.featNoSla"), included: false },
+      { label: t("landing.pricing.featNoReview"), included: false },
+      { label: t("landing.pricing.featNoIntelligence"), included: false },
+      { label: t("landing.pricing.featNoCalendar"), included: false },
     ],
-    cta: "Kostenlos starten",
+    cta: t("landing.pricing.freeCta"),
     ctaLink: "/auth",
     ctaVariant: "outline",
     highlighted: false,
-    idealFor: "Ideal zum Kennenlernen der Plattform.",
+    idealFor: t("landing.pricing.freeIdeal"),
   },
   {
-    name: "Starter",
+    name: t("landing.pricing.starterName"),
     monthlyPrice: 49,
     annualPrice: 39,
-    description: "Für kleine Teams bis 10 Personen.",
+    description: t("landing.pricing.starterDesc"),
     minSeats: 3,
     features: [
-      { label: "Bis zu 10 Nutzer", included: true },
-      { label: "Vollständiger Decision Hub", included: true },
-      { label: "SLA & Eskalation (3 Regeln)", included: true },
-      { label: "5 Automation Rules", included: true },
-      { label: "KI Copilot (100 Analysen/Mo)", included: true, ai: true },
-      { label: "Analytics Hub + PDF Export", included: true },
-      { label: "Audit Trail (1 Jahr)", included: true },
-      { label: "Team-Chat", included: true },
-      { label: "E-Mail Support", included: true },
-      { label: "Intelligence Center", included: false },
-      { label: "Risk Register (5×5 Heatmap)", included: false },
+      { label: t("landing.pricing.feat10users"), included: true },
+      { label: t("landing.pricing.featFullHub"), included: true },
+      { label: t("landing.pricing.featSla3"), included: true },
+      { label: t("landing.pricing.feat5auto"), included: true },
+      { label: t("landing.pricing.featAi100"), included: true, ai: true },
+      { label: t("landing.pricing.featAnalyticsPdf"), included: true },
+      { label: t("landing.pricing.featAudit1y"), included: true },
+      { label: t("landing.pricing.featTeamChat"), included: true },
+      { label: t("landing.pricing.featEmailSupport"), included: true },
+      { label: t("landing.pricing.featNoIntelligenceCenter"), included: false },
+      { label: t("landing.pricing.featNoRisk"), included: false },
     ],
-    cta: "Starter testen",
+    cta: t("landing.pricing.starterCta"),
     ctaLink: "/auth",
     ctaVariant: "outline",
     highlighted: false,
-    idealFor: "Struktur und Kontrolle für kleine Teams.",
+    idealFor: t("landing.pricing.starterIdeal"),
   },
   {
-    name: "Professional",
+    name: t("landing.pricing.proName"),
     monthlyPrice: 149,
     annualPrice: 119,
-    description: "Für wachsende Unternehmen mit bis zu 50 Nutzern.",
+    description: t("landing.pricing.proDesc"),
     minSeats: 10,
     features: [
-      { label: "Alles aus Starter, plus:", included: true },
-      { label: "Bis zu 50 Nutzer", included: true },
-      { label: "Unbegrenzte Entscheidungen", included: true },
-      { label: "Cost-of-Delay (Custom Faktoren)", included: true },
-      { label: "Risk Register (5×5 Heatmap)", included: true },
-      { label: "Compliance Export (PDF/CSV/API)", included: true },
-      { label: "Intelligence Center", included: true, ai: true },
-      { label: "KI Copilot unbegrenzt", included: true, ai: true },
-      { label: "CEO / Daily Briefing", included: true, ai: true },
-      { label: "Scenario Engine", included: true, ai: true },
-      { label: "Decision Room (Meeting Mode)", included: true },
-      { label: "SLA Garantie (99,5% Uptime)", included: true },
-      { label: "Priority E-Mail Support", included: true },
+      { label: t("landing.pricing.featAllStarter"), included: true },
+      { label: t("landing.pricing.feat50users"), included: true },
+      { label: t("landing.pricing.featUnlimited"), included: true },
+      { label: t("landing.pricing.featCod"), included: true },
+      { label: t("landing.pricing.featRisk"), included: true },
+      { label: t("landing.pricing.featCompliance"), included: true },
+      { label: t("landing.pricing.featIntelligence"), included: true, ai: true },
+      { label: t("landing.pricing.featAiUnlimited"), included: true, ai: true },
+      { label: t("landing.pricing.featCeoBriefing"), included: true, ai: true },
+      { label: t("landing.pricing.featScenario"), included: true, ai: true },
+      { label: t("landing.pricing.featDecisionRoom"), included: true },
+      { label: t("landing.pricing.featSla995"), included: true },
+      { label: t("landing.pricing.featPrioritySupport"), included: true },
     ],
-    cta: "Professional starten",
+    cta: t("landing.pricing.proCta"),
     ctaLink: "/auth",
     ctaVariant: "hero",
     highlighted: true,
-    idealFor: "Der beliebteste Plan — volle Power für wachsende Unternehmen.",
+    idealFor: t("landing.pricing.proIdeal"),
   },
   {
-    name: "Enterprise",
+    name: t("landing.pricing.enterpriseName"),
     monthlyPrice: 499,
     annualPrice: null,
-    description: "Für Organisationen mit erweiterten Governance- und Compliance-Anforderungen.",
+    description: t("landing.pricing.enterpriseDesc"),
     features: [
-      { label: "Alles aus Professional, plus:", included: true },
-      { label: "Unbegrenzte Nutzer", included: true },
-      { label: "SSO / SAML 2.0 (Okta, Azure AD)", included: true },
-      { label: "Eigener LLM-Endpoint", included: true, ai: true },
-      { label: "Audit Trail unbegrenzt + API", included: true },
-      { label: "DSGVO Full-Layer", included: true },
-      { label: "Eigenes Branding", included: true },
-      { label: "Dedicated Customer Success", included: true },
-      { label: "Onboarding-Workshop", included: true },
-      { label: "Security Review & Pen Test", included: true },
-      { label: "SLA Garantie (99,9% Uptime)", included: true },
+      { label: t("landing.pricing.featAllPro"), included: true },
+      { label: t("landing.pricing.featUnlimitedUsers"), included: true },
+      { label: t("landing.pricing.featSso"), included: true },
+      { label: t("landing.pricing.featOwnLlm"), included: true, ai: true },
+      { label: t("landing.pricing.featAuditUnlimited"), included: true },
+      { label: t("landing.pricing.featGdprFull"), included: true },
+      { label: t("landing.pricing.featBranding"), included: true },
+      { label: t("landing.pricing.featCsm"), included: true },
+      { label: t("landing.pricing.featOnboarding"), included: true },
+      { label: t("landing.pricing.featSecReview"), included: true },
+      { label: t("landing.pricing.featSla999"), included: true },
     ],
-    cta: "Vertrieb kontaktieren",
+    cta: t("landing.pricing.enterpriseCta"),
     ctaLink: "mailto:sales@decivio.com",
     ctaVariant: "outline",
     highlighted: false,
-    idealFor: "Enterprise-Ready Governance mit individuellem Pricing.",
+    idealFor: t("landing.pricing.enterpriseIdeal"),
   },
 ];
 
-export const trustItems = [
-  "DSGVO-konform",
-  "ISO 27001 ready",
-  "SOC 2 ready",
-  "Row-Level Security",
-  "EU-Hosting (Frankfurt)",
+export const getTrustItems = (t: TFunction): string[] => [
+  t("landing.pricing.trustGdpr"),
+  t("landing.pricing.trustIso"),
+  t("landing.pricing.trustSoc2"),
+  t("landing.pricing.trustRls"),
+  t("landing.pricing.trustEu"),
 ];
 
-export const valueStats = [
-  { metric: "€4.2M", description: "Cost-of-Delay vermieden" },
-  { metric: "98%", description: "SLA-Bestehensquote" },
-  { metric: "40%", description: "schnellere Entscheidungen" },
-  { metric: "2.585%", description: "ROI im ersten Monat" },
+export const getValueStats = (t: TFunction) => [
+  { metric: "€4.2M", description: t("landing.pricing.valueCod") },
+  { metric: "98%", description: t("landing.pricing.valueSla") },
+  { metric: "40%", description: t("landing.pricing.valueFaster") },
+  { metric: "2.585%", description: t("landing.pricing.valueRoi") },
 ];
 
-export const faqItems = [
-  {
-    question: "Wie funktioniert die Abrechnung?",
-    answer: "Monatlich oder jährlich. Jährliche Zahlung gibt 20% Rabatt — das entspricht 2 Monaten gratis.",
-  },
-  {
-    question: "Brauche ich eine Kreditkarte für den Free-Plan?",
-    answer: "Nein. Der Free-Plan ist komplett ohne Kreditkarte nutzbar.",
-  },
-  {
-    question: "Können wir jederzeit upgraden?",
-    answer: "Jederzeit. Die Abrechnung wird anteilig angepasst.",
-  },
-  {
-    question: "Was passiert nach den 100 KI-Analysen im Starter?",
-    answer: "Das Kontingent erneuert sich monatlich. Optional kann der KI-Analyse Boost (€29/Mo für +500 Analysen) zugebucht werden.",
-  },
-  {
-    question: "Wie sicher sind unsere Daten?",
-    answer: "Row-Level Security, verschlüsselte Speicherung (AES-256), MFA, EU-Hosting und revisionssicherer Audit Trail — NIS2/DSGVO-konform.",
-  },
-  {
-    question: "Gibt es Add-ons?",
-    answer: "Ja — Extra Nutzer-Blöcke (€19/10 User), KI-Analyse Boost (€29/Mo), Extended Audit Trail (€19/Mo), Decision Room Pro (€39/Mo), Benchmarking (€49/Mo), Custom Branding (€29/Mo) und API-Zugang (€99/Mo).",
-  },
+export const getFaqItems = (t: TFunction) => [
+  { question: t("landing.pricing.faq1q"), answer: t("landing.pricing.faq1a") },
+  { question: t("landing.pricing.faq2q"), answer: t("landing.pricing.faq2a") },
+  { question: t("landing.pricing.faq3q"), answer: t("landing.pricing.faq3a") },
+  { question: t("landing.pricing.faq4q"), answer: t("landing.pricing.faq4a") },
+  { question: t("landing.pricing.faq5q"), answer: t("landing.pricing.faq5a") },
+  { question: t("landing.pricing.faq6q"), answer: t("landing.pricing.faq6a") },
 ];
+
+// Keep backward-compatible exports for any external consumers
+export const plans = [] as Plan[];
+export const trustItems = [] as string[];
+export const valueStats = [] as { metric: string; description: string }[];
+export const faqItems = [] as { question: string; answer: string }[];

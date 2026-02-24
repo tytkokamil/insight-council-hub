@@ -3,18 +3,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import decivioLogo from "@/assets/decivio-logo.png";
 
-const navItems = [
-  { label: "Produkt", href: "#features" },
-  { label: "Preise", href: "#pricing" },
-  { label: "Use Cases", href: "#use-cases" },
-  { label: "Über uns", href: "#testimonials" },
-];
-
 const Navbar = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const navItems = [
+    { label: t("landing.nav.product"), href: "#features" },
+    { label: t("landing.nav.pricing"), href: "#pricing" },
+    { label: t("landing.nav.useCases"), href: "#use-cases" },
+    { label: t("landing.nav.about"), href: "#testimonials" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -57,12 +59,12 @@ const Navbar = () => {
               <div className="hidden md:flex items-center gap-2">
                 <Link to="/auth">
                   <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground/70 hover:text-foreground text-[13px]">
-                    Login
+                    {t("landing.nav.login")}
                   </Button>
                 </Link>
                 <Link to="/auth">
                   <Button size="sm" className="rounded-full text-[13px] px-5">
-                    Kostenlos starten
+                    {t("landing.nav.startFree")}
                   </Button>
                 </Link>
               </div>
@@ -95,10 +97,10 @@ const Navbar = () => {
               ))}
               <div className="pt-4 mt-3 border-t border-border/30 space-y-2">
                 <Link to="/auth">
-                  <Button variant="ghost" className="w-full rounded-lg">Login</Button>
+                  <Button variant="ghost" className="w-full rounded-lg">{t("landing.nav.login")}</Button>
                 </Link>
                 <Link to="/auth">
-                  <Button className="w-full rounded-full">Kostenlos starten</Button>
+                  <Button className="w-full rounded-full">{t("landing.nav.startFree")}</Button>
                 </Link>
               </div>
             </div>
