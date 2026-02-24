@@ -1,6 +1,7 @@
 import { reviewFlowTemplates, suggestReviewFlow, type ReviewFlowTemplate } from "@/lib/reviewFlowTemplates";
 import { Zap, Shield, Crown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const flowIcons = { zap: Zap, shield: Shield, crown: Crown };
 
@@ -12,11 +13,12 @@ interface Props {
 }
 
 const ReviewFlowSelector = ({ selectedFlowId, onSelect, category, priority }: Props) => {
+  const { t } = useTranslation();
   const suggestedId = suggestReviewFlow(category, priority);
 
   return (
     <div className="space-y-2">
-      <label className="text-sm text-muted-foreground mb-1 block">Review-Flow</label>
+      <label className="text-sm text-muted-foreground mb-1 block">{t("reviewFlow.label")}</label>
       <div className="grid grid-cols-3 gap-2">
         {reviewFlowTemplates.map((flow) => {
           const Icon = flowIcons[flow.icon];
@@ -37,7 +39,7 @@ const ReviewFlowSelector = ({ selectedFlowId, onSelect, category, priority }: Pr
             >
               {isSuggested && !isSelected && (
                 <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">
-                  Empfohlen
+                  {t("reviewFlow.recommended")}
                 </span>
               )}
               {isSelected && (
@@ -48,14 +50,13 @@ const ReviewFlowSelector = ({ selectedFlowId, onSelect, category, priority }: Pr
               <Icon className={cn("w-5 h-5", flow.color)} />
               <span className="text-xs font-semibold">{flow.name}</span>
               <span className="text-[10px] text-muted-foreground leading-tight">
-                {flow.steps.filter(s => s.required).length} Pflicht-Steps
+                {t("reviewFlow.requiredSteps", { count: flow.steps.filter(s => s.required).length })}
               </span>
-              <span className="text-[10px] text-muted-foreground">~{flow.estimatedDays} Tage</span>
+              <span className="text-[10px] text-muted-foreground">{t("reviewFlow.estimatedDays", { days: flow.estimatedDays })}</span>
             </button>
           );
         })}
       </div>
-      {/* Show steps of selected flow */}
       {selectedFlowId && (
         <div className="mt-2 space-y-1">
           {reviewFlowTemplates
@@ -67,7 +68,7 @@ const ReviewFlowSelector = ({ selectedFlowId, onSelect, category, priority }: Pr
                 </div>
                 <span className="flex-1">{step.label}</span>
                 <span className={cn("text-[10px]", step.required ? "text-destructive" : "text-muted-foreground")}>
-                  {step.required ? "Pflicht" : "Optional"}
+                  {step.required ? t("reviewFlow.required") : t("reviewFlow.optional")}
                 </span>
               </div>
             ))}

@@ -7,7 +7,7 @@ import {
   Lightbulb, ThumbsUp, ThumbsDown, Pin, PinOff, ChevronDown, ChevronUp,
   BookOpen, Sparkles, Loader2, Target, RefreshCw,
 } from "lucide-react";
-import { categoryLabels } from "@/lib/labels";
+import { useTranslation } from "react-i18next";
 
 interface LessonWithDecision {
   id: string;
@@ -48,7 +48,6 @@ interface ApplyLearningPanelProps {
   onPinnedChange: (lessons: LessonWithDecision[]) => void;
 }
 
-/** Simple word-overlap similarity score (0-1) */
 const textSimilarity = (a: string, b: string): number => {
   if (!a || !b) return 0;
   const normalize = (s: string) =>
@@ -61,12 +60,9 @@ const textSimilarity = (a: string, b: string): number => {
 };
 
 const ApplyLearningPanel = ({
-  title,
-  description,
-  category,
-  pinnedLessons,
-  onPinnedChange,
+  title, description, category, pinnedLessons, onPinnedChange,
 }: ApplyLearningPanelProps) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
@@ -95,7 +91,6 @@ const ApplyLearningPanel = ({
     staleTime: 60_000,
   });
 
-  // Basic word-overlap ranked lessons (instant, no API call)
   const rankedLessons = useMemo(() => {
     if (!title.trim() && !category) return [];
     const inputText = `${title} ${description}`.trim();
@@ -115,7 +110,6 @@ const ApplyLearningPanel = ({
       .slice(0, 5);
   }, [allLessons, title, description, category]);
 
-  // AI-powered deep matching
   const fetchAiSuggestions = useCallback(async () => {
     if (!title.trim() || title.length < 5) return;
     setAiLoading(true);
@@ -129,13 +123,12 @@ const ApplyLearningPanel = ({
       if (data?.error) throw new Error(data.error);
       setAiSuggestions(data?.suggestions || []);
     } catch (e) {
-      setAiError(e instanceof Error ? e.message : "KI-Analyse fehlgeschlagen");
+      setAiError(e instanceof Error ? e.message : t("applyLearning.aiFailed"));
     } finally {
       setAiLoading(false);
     }
-  }, [title, description, category]);
+  }, [title, description, category, t]);
 
-  // Auto-expand when matches found
   useEffect(() => {
     if ((rankedLessons.length > 0 || aiSuggestions.length > 0) && title.length > 5 && pinnedLessons.length === 0) {
       setExpanded(true);
@@ -189,22 +182,22 @@ const ApplyLearningPanel = ({
       >
         <BookOpen className="w-4 h-4 text-primary" />
         <span className="text-sm font-medium flex-1">
-          Smart Knowledge
+          {t("applyLearning.smartKnowledge")}
           {pinnedLessons.length > 0 && (
             <Badge className="ml-2 text-[10px] bg-primary/10 text-primary border-primary/30">
-              {pinnedLessons.length} angeheftet
+              {t("applyLearning.pinned", { count: pinnedLessons.length })}
             </Badge>
           )}
         </span>
         {aiSuggestions.length > 0 && (
           <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
             <Sparkles className="w-2.5 h-2.5" />
-            {aiSuggestions.length} KI
+            {t("applyLearning.aiCount", { count: aiSuggestions.length })}
           </Badge>
         )}
         {topLessons.length > 0 && !aiTriggered && (
           <Badge variant="outline" className="text-[10px] gap-1">
-            {topLessons.length} ähnliche
+            {t("applyLearning.similarCount", { count: topLessons.length })}
           </Badge>
         )}
         {expanded
@@ -215,7 +208,6 @@ const ApplyLearningPanel = ({
 
       {expanded && (
         <div className="mt-2 space-y-2 max-h-80 overflow-y-auto">
-          {/* AI Deep Match Button */}
           {!aiTriggered && allLessons.length > 0 && title.length >= 5 && (
             <button
               type="button"
@@ -224,20 +216,18 @@ const ApplyLearningPanel = ({
               className="w-full p-2.5 rounded-lg border border-primary/20 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors flex items-center gap-2 text-xs"
             >
               <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="font-medium text-primary">KI-Tiefenanalyse starten</span>
-              <span className="text-muted-foreground ml-auto">Findet versteckte Zusammenhänge</span>
+              <span className="font-medium text-primary">{t("applyLearning.aiDeepAnalysis")}</span>
+              <span className="text-muted-foreground ml-auto">{t("applyLearning.aiDeepDesc")}</span>
             </button>
           )}
 
-          {/* AI Loading */}
           {aiLoading && (
             <div className="p-3 rounded-lg border border-primary/20 bg-primary/[0.03] flex items-center gap-2 text-xs">
               <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
-              <span className="text-muted-foreground">KI durchsucht Lessons Learned…</span>
+              <span className="text-muted-foreground">{t("applyLearning.aiSearching")}</span>
             </div>
           )}
 
-          {/* AI Error */}
           {aiError && (
             <div className="p-2.5 rounded-lg border border-destructive/20 bg-destructive/5 text-xs text-destructive flex items-center justify-between">
               <span>{aiError}</span>
@@ -247,8 +237,7 @@ const ApplyLearningPanel = ({
             </div>
           )}
 
-          {/* AI Suggestions */}
-          {aiSuggestions.map((s, i) => (
+          {aiSuggestions.map((s) => (
             <div
               key={s.lesson_id}
               className={`p-2.5 rounded-lg border text-xs space-y-1.5 transition-all ${
@@ -278,10 +267,8 @@ const ApplyLearningPanel = ({
                 </div>
               </div>
 
-              {/* AI Reason */}
               <p className="text-muted-foreground pl-4 italic">{s.reason}</p>
 
-              {/* Application Tip */}
               <div className="flex items-start gap-1.5 pl-4 text-primary/80">
                 <Target className="w-3 h-3 mt-0.5 shrink-0" />
                 <span>{s.application_tip}</span>
@@ -302,21 +289,20 @@ const ApplyLearningPanel = ({
 
               <div className="flex items-center gap-2 pl-4">
                 <span className="text-[10px] text-muted-foreground/60">
-                  Aus: {s.decision_title}
+                  {t("applyLearning.from")}: {s.decision_title}
                 </span>
                 {s.decision_category && (
                   <Badge variant="outline" className="text-[9px] px-1 py-0">
-                    {categoryLabels[s.decision_category] ?? s.decision_category}
+                    {t(`category.${s.decision_category}`, { defaultValue: s.decision_category })}
                   </Badge>
                 )}
               </div>
             </div>
           ))}
 
-          {/* Fallback: Basic text-match lessons (shown when AI not triggered) */}
           {!aiTriggered && (
             <>
-              {pinnedLessons.filter(p => !topLessons.some(t => t.id === p.id)).map(l => (
+              {pinnedLessons.filter(p => !topLessons.some(tl => tl.id === p.id)).map(l => (
                 <LessonCard key={`pinned-${l.id}`} lesson={l} pinned onTogglePin={() => togglePin(l)} />
               ))}
               {topLessons.map((l, i) => (
@@ -327,7 +313,7 @@ const ApplyLearningPanel = ({
 
           {topLessons.length === 0 && pinnedLessons.length === 0 && aiSuggestions.length === 0 && !aiLoading && (
             <p className="text-xs text-muted-foreground text-center py-2">
-              Keine ähnlichen Learnings gefunden. Versuche einen aussagekräftigeren Titel.
+              {t("applyLearning.noResults")}
             </p>
           )}
         </div>
@@ -337,72 +323,72 @@ const ApplyLearningPanel = ({
 };
 
 const LessonCard = ({
-  lesson,
-  pinned,
-  rank,
-  onTogglePin,
+  lesson, pinned, rank, onTogglePin,
 }: {
   lesson: LessonWithDecision;
   pinned: boolean;
   rank?: number;
   onTogglePin: () => void;
-}) => (
-  <div className={`p-2.5 rounded-lg border text-xs space-y-1.5 transition-all ${
-    pinned
-      ? "bg-primary/5 border-primary/30 ring-1 ring-primary/10"
-      : "bg-muted/30 border-border hover:border-primary/20"
-  }`}>
-    <div className="flex items-start justify-between gap-2">
-      <p className="font-medium text-foreground flex items-start gap-1.5 flex-1">
-        <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
-        <span className="line-clamp-2">{lesson.key_takeaway}</span>
-      </p>
-      <Button
-        type="button"
-        variant={pinned ? "default" : "ghost"}
-        size="icon"
-        className="h-6 w-6 shrink-0"
-        onClick={onTogglePin}
-        title={pinned ? "Lösen" : "Als Referenz anheften"}
-      >
-        {pinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
-      </Button>
-    </div>
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className={`p-2.5 rounded-lg border text-xs space-y-1.5 transition-all ${
+      pinned
+        ? "bg-primary/5 border-primary/30 ring-1 ring-primary/10"
+        : "bg-muted/30 border-border hover:border-primary/20"
+    }`}>
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-foreground flex items-start gap-1.5 flex-1">
+          <Lightbulb className="w-3 h-3 text-warning mt-0.5 shrink-0" />
+          <span className="line-clamp-2">{lesson.key_takeaway}</span>
+        </p>
+        <Button
+          type="button"
+          variant={pinned ? "default" : "ghost"}
+          size="icon"
+          className="h-6 w-6 shrink-0"
+          onClick={onTogglePin}
+          title={pinned ? t("applyLearning.unpin") : t("applyLearning.pin")}
+        >
+          {pinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+        </Button>
+      </div>
 
-    {lesson.what_went_well && (
-      <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-        <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
-        <span className="line-clamp-1">{lesson.what_went_well}</span>
-      </p>
-    )}
-    {lesson.what_went_wrong && (
-      <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
-        <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-        <span className="line-clamp-1">{lesson.what_went_wrong}</span>
-      </p>
-    )}
-    {lesson.recommendations && (
-      <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
-        <span className="line-clamp-1">→ {lesson.recommendations}</span>
-      </p>
-    )}
+      {lesson.what_went_well && (
+        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+          <ThumbsUp className="w-3 h-3 text-success mt-0.5 shrink-0" />
+          <span className="line-clamp-1">{lesson.what_went_well}</span>
+        </p>
+      )}
+      {lesson.what_went_wrong && (
+        <p className="text-muted-foreground flex items-start gap-1.5 pl-4">
+          <ThumbsDown className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+          <span className="line-clamp-1">{lesson.what_went_wrong}</span>
+        </p>
+      )}
+      {lesson.recommendations && (
+        <p className="text-primary/80 flex items-start gap-1.5 pl-4 italic">
+          <span className="line-clamp-1">→ {lesson.recommendations}</span>
+        </p>
+      )}
 
-    <div className="flex items-center gap-2 pl-4">
-      <span className="text-[10px] text-muted-foreground/60">
-        Aus: {lesson.decision?.title}
-      </span>
-      {lesson.decision?.category && (
-        <Badge variant="outline" className="text-[9px] px-1 py-0">
-          {categoryLabels[lesson.decision.category] ?? lesson.decision.category}
-        </Badge>
-      )}
-      {pinned && (
-        <Badge className="text-[9px] px-1 py-0 bg-primary/10 text-primary border-primary/30">
-          <Pin className="w-2 h-2 mr-0.5" /> Referenz
-        </Badge>
-      )}
+      <div className="flex items-center gap-2 pl-4">
+        <span className="text-[10px] text-muted-foreground/60">
+          {t("applyLearning.from")}: {lesson.decision?.title}
+        </span>
+        {lesson.decision?.category && (
+          <Badge variant="outline" className="text-[9px] px-1 py-0">
+            {t(`category.${lesson.decision.category}`, { defaultValue: lesson.decision.category })}
+          </Badge>
+        )}
+        {pinned && (
+          <Badge className="text-[9px] px-1 py-0 bg-primary/10 text-primary border-primary/30">
+            <Pin className="w-2 h-2 mr-0.5" /> {t("applyLearning.reference")}
+          </Badge>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default ApplyLearningPanel;

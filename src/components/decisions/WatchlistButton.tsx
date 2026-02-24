@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsWatched, useToggleWatchlist } from "@/hooks/useWatchlist";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   decisionId: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 const WatchlistButton = ({ decisionId, size = "icon" }: Props) => {
+  const { t } = useTranslation();
   const isWatched = useIsWatched(decisionId);
   const toggle = useToggleWatchlist();
 
@@ -18,7 +20,7 @@ const WatchlistButton = ({ decisionId, size = "icon" }: Props) => {
     toggle.mutate(
       { decisionId, isWatched },
       {
-        onSuccess: () => toast.success(isWatched ? "Von Watchlist entfernt" : "Zur Watchlist hinzugefügt"),
+        onSuccess: () => toast.success(isWatched ? t("watchlist.removed") : t("watchlist.added")),
       }
     );
   };
@@ -37,7 +39,7 @@ const WatchlistButton = ({ decisionId, size = "icon" }: Props) => {
         </Button>
       </TooltipTrigger>
       <TooltipContent side="top" className="text-xs">
-        {isWatched ? "Von Watchlist entfernen" : "Zur Watchlist hinzufügen"}
+        {isWatched ? t("watchlist.removeTooltip") : t("watchlist.addTooltip")}
       </TooltipContent>
     </Tooltip>
   );

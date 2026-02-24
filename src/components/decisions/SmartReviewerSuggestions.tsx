@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { Sparkles } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   category: string;
@@ -20,6 +21,7 @@ interface Suggestion {
 }
 
 const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }: Props) => {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +43,6 @@ const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }:
       const profileMap: Record<string, any> = {};
       profiles.forEach(p => { profileMap[p.user_id] = p; });
 
-      // Score each reviewer
       const scores = new Map<string, { categoryExp: number; totalReviews: number; completedReviews: number }>();
 
       reviews.forEach(r => {
@@ -52,7 +53,6 @@ const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }:
         s.totalReviews++;
         if (r.reviewed_at) s.completedReviews++;
 
-        // Check if review was for same category
         const dec = decisions.find(d => d.id === r.decision_id);
         if (dec && dec.category === category) s.categoryExp++;
       });
@@ -74,10 +74,10 @@ const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }:
 
         result.push({
           userId,
-          name: p?.full_name || "Unbekannt",
+          name: p?.full_name || t("smartReviewer.unknown"),
           avatarUrl: p?.avatar_url,
           score,
-          reason: reasons.join(" · ") || `${s.completedReviews} Reviews`,
+          reason: reasons.join(" · ") || t("smartReviewer.reviews", { count: s.completedReviews }),
         });
       });
 
@@ -87,7 +87,7 @@ const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }:
     };
 
     if (category) compute();
-  }, [category, excludeUserId, teamId]);
+  }, [category, excludeUserId, teamId, t]);
 
   if (loading || suggestions.length === 0) return null;
 
@@ -95,7 +95,7 @@ const SmartReviewerSuggestions = ({ category, onSelect, excludeUserId, teamId }:
     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
       <p className="text-[10px] font-semibold text-primary flex items-center gap-1.5 mb-2">
         <Sparkles className="w-3 h-3" />
-        Empfohlene Reviewer
+        {t("smartReviewer.title")}
       </p>
       <div className="space-y-1.5">
         {suggestions.map(s => (
