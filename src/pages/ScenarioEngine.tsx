@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,7 @@ type SimulationResult = {
 };
 
 const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
@@ -54,7 +56,6 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
   const [simulating, setSimulating] = useState(false);
   const [result, setResult] = useState<SimulationResult | null>(null);
 
-  // Simulation parameters
   const [delayWeeks, setDelayWeeks] = useState(4);
   const [scope, setScope] = useState<"all" | "overdue" | "critical">("overdue");
   const [selectedTeam, setSelectedTeam] = useState<string>("all");
@@ -82,7 +83,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
     setSimulating(true);
     const targets = getTargetDecisions();
     if (targets.length === 0) {
-      toast({ title: "Keine Entscheidungen", description: "Keine offenen Entscheidungen für diese Filter gefunden.", variant: "destructive" });
+      toast({ title: t("scenarioEngine.noTargets"), description: t("scenarioEngine.noTargetsDesc"), variant: "destructive" });
       setSimulating(false);
       return;
     }
@@ -97,27 +98,18 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
       const riskBase = (d.ai_risk_score ?? 30) / 100;
       const impactBase = (d.ai_impact_score ?? 50) / 100;
 
-      const costPerWeek = Math.round(rate * 8 * mult * impactBase); // 8h/week opportunity cost
+      const costPerWeek = Math.round(rate * 8 * mult * impactBase);
       const totalCost = costPerWeek * delayWeeks;
       const riskIncrease = Math.min(100, Math.round(riskBase * 100 + delayWeeks * 5 * mult));
       const cascade = getCascade(d.id);
-      const cascadeTitles = cascade.map(id => decisions.find(x => x.id === id)?.title || "Unbekannt");
+      const cascadeTitles = cascade.map(id => decisions.find(x => x.id === id)?.title || t("scenarioEngine.unknown"));
 
       let severity: DelayImpact["severity"] = "low";
       if (totalCost > 5000 || riskIncrease > 80) severity = "critical";
       else if (totalCost > 2000 || riskIncrease > 60) severity = "high";
       else if (totalCost > 800 || riskIncrease > 40) severity = "medium";
 
-      return {
-        decision: d,
-        delayWeeks,
-        costPerWeek,
-        totalCost,
-        riskIncrease,
-        cascadeCount: cascade.length,
-        cascadeDecisions: cascadeTitles,
-        severity,
-      };
+      return { decision: d, delayWeeks, costPerWeek, totalCost, riskIncrease, cascadeCount: cascade.length, cascadeDecisions: cascadeTitles, severity };
     });
 
     impacts.sort((a, b) => b.totalCost - a.totalCost);
@@ -126,14 +118,14 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
     const avgRiskIncrease = Math.round(impacts.reduce((s, i) => s + i.riskIncrease, 0) / (impacts.length || 1));
     const criticalCount = impacts.filter(i => i.severity === "critical" || i.severity === "high").length;
 
-    // Monte Carlo simulation (1000 iterations with random variance)
+    // Monte Carlo
     const monteCarloRuns = 1000;
     const costResults: number[] = [];
     const riskResults: number[] = [];
     for (let i = 0; i < monteCarloRuns; i++) {
       let runCost = 0; let runRisk = 0;
       impacts.forEach(imp => {
-        const variance = 0.5 + Math.random() * 1.0; // 50%-150% variance
+        const variance = 0.5 + Math.random() * 1.0;
         runCost += imp.totalCost * variance;
         runRisk += imp.riskIncrease * (0.7 + Math.random() * 0.6);
       });
@@ -143,10 +135,10 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
     costResults.sort((a, b) => a - b);
     riskResults.sort((a, b) => a - b);
     const monteCarlo = [
-      { percentile: "Best Case (P10)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.1)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.1)]) },
-      { percentile: "Wahrscheinlich (P50)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.5)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.5)]) },
-      { percentile: "Pessimistisch (P75)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.75)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.75)]) },
-      { percentile: "Worst Case (P95)", cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.95)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.95)]) },
+      { percentile: t("scenarioEngine.bestCaseP"), cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.1)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.1)]) },
+      { percentile: t("scenarioEngine.probableP"), cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.5)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.5)]) },
+      { percentile: t("scenarioEngine.pessimisticP"), cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.75)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.75)]) },
+      { percentile: t("scenarioEngine.worstCaseP"), cost: Math.round(costResults[Math.floor(monteCarloRuns * 0.95)]), risk: Math.round(riskResults[Math.floor(monteCarloRuns * 0.95)]) },
     ];
 
     const timelineData = Array.from({ length: delayWeeks + 1 }, (_, w) => ({
@@ -155,16 +147,15 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
       riskLevel: Math.min(100, Math.round(impacts.reduce((s, i) => s + ((i.decision.ai_risk_score ?? 30) / 100 * 100 + w * 5), 0) / (impacts.length || 1))),
     }));
 
-    // AI insights
     let aiInsights: string | null = null;
     try {
-      const top3 = impacts.slice(0, 3).map(i => `${i.decision.title} (${i.decision.priority}, Kosten: €${i.totalCost}, Kaskade: ${i.cascadeCount})`);
+      const top3 = impacts.slice(0, 3).map(i => `${i.decision.title} (${i.decision.priority}, Cost: €${i.totalCost}, Cascade: ${i.cascadeCount})`);
       const { data } = await supabase.functions.invoke("simulate-scenarios", {
         body: {
-          decision: { title: "Unternehmensweite Verzögerungsanalyse", description: `${targets.length} offene Entscheidungen werden um ${delayWeeks} Wochen verzögert. Gesamtkosten: €${totalCost}`, category: "strategic", priority: "high" },
+          decision: { title: "Company-wide delay analysis", description: `${targets.length} open decisions delayed by ${delayWeeks} weeks. Total cost: €${totalCost}`, category: "strategic", priority: "high" },
           scenarios: [
-            { title: "Aktueller Kurs", probability: 70, description: `Top-3 Risiken: ${top3.join("; ")}` },
-            { title: "Sofortiges Handeln", probability: 30, description: `Alle ${criticalCount} kritischen Entscheidungen werden sofort bearbeitet.` },
+            { title: "Current course", probability: 70, description: `Top 3 risks: ${top3.join("; ")}` },
+            { title: "Immediate action", probability: 30, description: `All ${criticalCount} critical decisions addressed immediately.` },
           ],
         },
       });
@@ -189,11 +180,11 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">Simulation</p>
-            <h1 className="text-xl font-semibold tracking-tight">Scenario Engine</h1>
-            <p className="text-sm text-muted-foreground mt-1">Simuliere unternehmensweite Auswirkungen wenn Entscheidungen verschoben werden.</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("scenarioEngine.label")}</p>
+            <h1 className="text-xl font-semibold tracking-tight">{t("scenarioEngine.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("scenarioEngine.subtitle")}</p>
           </div>
-          <PageHelpButton title="Scenario Engine" description="Simuliere, was passiert wenn Entscheidungen verschoben werden. Wähle einzelne oder alle Entscheidungen und passe die Verzögerung an, um Kaskadeneffekte und Kosten zu berechnen." />
+          <PageHelpButton title={t("scenarioEngine.title")} description={t("scenarioEngine.help")} />
         </div>
 
         {loading ? (
@@ -201,40 +192,39 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
         ) : decisions.length === 0 ? (
           <EmptyAnalysisState
             icon={FlaskConical}
-            title="Keine Entscheidungen vorhanden"
-            description="Erstelle Entscheidungen, um Delay-Szenarien und Kaskadeneffekte zu simulieren."
-            hint="Die Simulation analysiert Kosten und Risiken bei Verzögerungen"
+            title={t("scenarioEngine.noDecisions")}
+            description={t("scenarioEngine.noDecisionsDesc")}
+            hint={t("scenarioEngine.noDecisionsHint")}
           />
         ) : (
           <>
-            {/* Controls */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm">Simulationsparameter</CardTitle>
+                <CardTitle className="text-sm">{t("scenarioEngine.simParams")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Verzögerung: {delayWeeks} Wochen</label>
+                    <label className="text-sm font-medium">{t("scenarioEngine.delayWeeks", { count: delayWeeks })}</label>
                     <Slider value={[delayWeeks]} onValueChange={v => setDelayWeeks(v[0])} min={1} max={16} step={1} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Scope</label>
+                    <label className="text-sm font-medium">{t("scenarioEngine.scope")}</label>
                     <Select value={scope} onValueChange={(v: any) => setScope(v)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Alle offenen</SelectItem>
-                        <SelectItem value="overdue">Nur überfällige</SelectItem>
-                        <SelectItem value="critical">Nur kritische/hohe</SelectItem>
+                        <SelectItem value="all">{t("scenarioEngine.scopeAll")}</SelectItem>
+                        <SelectItem value="overdue">{t("scenarioEngine.scopeOverdue")}</SelectItem>
+                        <SelectItem value="critical">{t("scenarioEngine.scopeCritical")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Team</label>
+                    <label className="text-sm font-medium">{t("scenarioEngine.team")}</label>
                     <Select value={selectedTeam} onValueChange={setSelectedTeam}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Alle Teams</SelectItem>
+                        <SelectItem value="all">{t("scenarioEngine.allTeams")}</SelectItem>
                         {teams.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
@@ -242,7 +232,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                   <div className="flex items-end">
                     <Button onClick={runSimulation} disabled={simulating || targetCount === 0} className="w-full">
                       {simulating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                      Simulation starten ({targetCount})
+                      {t("scenarioEngine.runSim", { count: targetCount })}
                     </Button>
                   </div>
                 </div>
@@ -251,46 +241,44 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
 
             {result && (
               <>
-                {/* Summary KPIs */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="pt-4 text-center">
                       <DollarSign className="w-6 h-6 mx-auto text-destructive mb-1" />
                       <div className="text-2xl font-bold text-destructive">€{result.totalCost.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">Geschätzte Gesamtkosten</p>
+                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.totalCost")}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
                       <AlertTriangle className="w-6 h-6 mx-auto text-warning mb-1" />
                       <div className="text-2xl font-bold">{result.avgRiskIncrease}%</div>
-                      <p className="text-xs text-muted-foreground">Ø Risikoanstieg</p>
+                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.avgRiskIncrease")}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
                       <Zap className="w-6 h-6 mx-auto text-destructive mb-1" />
                       <div className="text-2xl font-bold">{result.criticalCount}</div>
-                      <p className="text-xs text-muted-foreground">Kritische Auswirkungen</p>
+                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.criticalImpacts")}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
                       <GitBranch className="w-6 h-6 mx-auto text-primary mb-1" />
                       <div className="text-2xl font-bold">{result.impacts.reduce((s, i) => s + i.cascadeCount, 0)}</div>
-                      <p className="text-xs text-muted-foreground">Kaskadeneffekte</p>
+                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.cascadeEffects")}</p>
                     </CardContent>
                   </Card>
                 </div>
 
-                {/* AI Insight */}
                 {result.aiInsights && (
                   <Card className="border-border bg-muted/5">
                     <CardContent className="pt-4">
                       <div className="flex items-start gap-3">
                         <FlaskConical className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-sm font-medium mb-1">KI-Empfehlung</p>
+                          <p className="text-sm font-medium mb-1">{t("scenarioEngine.aiRecommendation")}</p>
                           <p className="text-sm text-muted-foreground">{result.aiInsights}</p>
                         </div>
                       </div>
@@ -299,15 +287,15 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                 )}
 
                 <CollapsibleSection
-                  title="Detailanalyse"
-                  subtitle="Charts & Kaskadeneffekte"
+                  title={t("scenarioEngine.detailAnalysis")}
+                  subtitle={t("scenarioEngine.detailSubtitle")}
                   icon={<GitBranch className="w-4 h-4 text-muted-foreground" />}
                 >
                 <Tabs defaultValue="timeline">
                   <TabsList>
-                    <TabsTrigger value="timeline">Kosten-Timeline</TabsTrigger>
-                    <TabsTrigger value="impact">Impact-Ranking</TabsTrigger>
-                    <TabsTrigger value="cascade">Kaskadenanalyse</TabsTrigger>
+                    <TabsTrigger value="timeline">{t("scenarioEngine.tabTimeline")}</TabsTrigger>
+                    <TabsTrigger value="impact">{t("scenarioEngine.tabImpact")}</TabsTrigger>
+                    <TabsTrigger value="cascade">{t("scenarioEngine.tabCascade")}</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="timeline">
@@ -317,13 +305,13 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={result.timelineData}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                              <XAxis dataKey="week" label={{ value: "Wochen Verzögerung", position: "bottom", offset: -5 }} />
-                              <YAxis yAxisId="cost" label={{ value: "Kosten (€)", angle: -90, position: "insideLeft" }} />
-                              <YAxis yAxisId="risk" orientation="right" domain={[0, 100]} label={{ value: "Risiko %", angle: 90, position: "insideRight" }} />
+                              <XAxis dataKey="week" label={{ value: t("scenarioEngine.weeksDelay"), position: "bottom", offset: -5 }} />
+                              <YAxis yAxisId="cost" label={{ value: t("scenarioEngine.costLabel"), angle: -90, position: "insideLeft" }} />
+                              <YAxis yAxisId="risk" orientation="right" domain={[0, 100]} label={{ value: t("scenarioEngine.riskPercent"), angle: 90, position: "insideRight" }} />
                               <Tooltip formatter={(val: number, name: string) => [name.includes("Cost") || name.includes("Kosten") ? `€${val.toLocaleString()}` : `${val}%`, name]} />
                               <Legend />
-                              <Line yAxisId="cost" type="monotone" dataKey="cumulativeCost" stroke="hsl(var(--primary))" strokeWidth={2} name="Kumulative Kosten" dot={false} />
-                              <Line yAxisId="risk" type="monotone" dataKey="riskLevel" stroke="hsl(var(--destructive))" strokeWidth={2} name="Risikoniveau" dot={false} />
+                              <Line yAxisId="cost" type="monotone" dataKey="cumulativeCost" stroke="hsl(var(--primary))" strokeWidth={2} name={t("scenarioEngine.cumulativeCost")} dot={false} />
+                              <Line yAxisId="risk" type="monotone" dataKey="riskLevel" stroke="hsl(var(--destructive))" strokeWidth={2} name={t("scenarioEngine.riskLevel")} dot={false} />
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
@@ -340,8 +328,8 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                               <XAxis type="number" />
                               <YAxis dataKey="decision.title" type="category" width={150} tick={{ fontSize: 11 }} />
-                              <Tooltip formatter={(val: number) => [`€${val.toLocaleString()}`, "Kosten"]} />
-                              <Bar dataKey="totalCost" name="Gesamtkosten" radius={[0, 4, 4, 0]}>
+                              <Tooltip formatter={(val: number) => [`€${val.toLocaleString()}`, t("scenarioEngine.costTooltip")]} />
+                              <Bar dataKey="totalCost" name={t("scenarioEngine.totalCostBar")} radius={[0, 4, 4, 0]}>
                                  {result.impacts.slice(0, 10).map((entry, i) => (
                                    <Cell key={i} fill={entry.severity === "critical" ? "hsl(var(--destructive))" : entry.severity === "high" ? "hsl(var(--warning))" : entry.severity === "medium" ? "hsl(var(--muted-foreground))" : "hsl(var(--success))"} />
                                 ))}
@@ -367,8 +355,8 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                                 </div>
                                 <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
                                   <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />€{impact.totalCost.toLocaleString()}</span>
-                                  <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" />Risiko +{impact.riskIncrease}%</span>
-                                  <span className="flex items-center gap-1"><GitBranch className="w-3 h-3" />{impact.cascadeCount} abhängige</span>
+                                  <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3" />{t("scenarioEngine.riskPlus", { value: impact.riskIncrease })}</span>
+                                  <span className="flex items-center gap-1"><GitBranch className="w-3 h-3" />{impact.cascadeCount} {t("scenarioEngine.dependent")}</span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                   {impact.cascadeDecisions.slice(0, 5).map((title, i) => (
@@ -377,7 +365,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                                     </div>
                                   ))}
                                   {impact.cascadeDecisions.length > 5 && (
-                                    <span className="text-xs text-muted-foreground">+{impact.cascadeDecisions.length - 5} weitere</span>
+                                    <span className="text-xs text-muted-foreground">{t("scenarioEngine.more", { count: impact.cascadeDecisions.length - 5 })}</span>
                                   )}
                                 </div>
                               </div>
@@ -386,17 +374,16 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                         </Card>
                       ))}
                       {result.impacts.filter(i => i.cascadeCount > 0).length === 0 && (
-                        <Card><CardContent className="pt-4 text-center text-sm text-muted-foreground">Keine Kaskadeneffekte gefunden – erstellen Sie Abhängigkeiten im Decision Graph.</CardContent></Card>
+                        <Card><CardContent className="pt-4 text-center text-sm text-muted-foreground">{t("scenarioEngine.noCascade")}</CardContent></Card>
                       )}
                     </div>
                   </TabsContent>
                 </Tabs>
                 </CollapsibleSection>
 
-                {/* Monte Carlo Simulation Results */}
                 <CollapsibleSection
-                  title="Monte Carlo Simulation"
-                  subtitle="1.000 Iterationen mit Varianzanalyse"
+                  title={t("scenarioEngine.monteCarloTitle")}
+                  subtitle={t("scenarioEngine.monteCarloSub")}
                   icon={<FlaskConical className="w-4 h-4 text-primary" />}
                   defaultOpen={true}
                 >
@@ -408,7 +395,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           <p className={`text-xl font-bold tabular-nums ${i >= 3 ? "text-destructive" : i >= 2 ? "text-warning" : ""}`}>
                             €{mc.cost.toLocaleString("de-DE")}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Risiko: {mc.risk}%</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t("scenarioEngine.riskMC", { value: mc.risk })}</p>
                         </CardContent>
                       </Card>
                     ))}
@@ -421,15 +408,14 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                       <div className="bg-destructive/50 h-full" style={{ width: "25%" }} />
                     </div>
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                      <span>Best Case</span>
-                      <span>Wahrscheinlich</span>
-                      <span>Pessimistisch</span>
-                      <span>Worst Case</span>
+                      <span>{t("scenarioEngine.bestCase")}</span>
+                      <span>{t("scenarioEngine.probable")}</span>
+                      <span>{t("scenarioEngine.pessimistic")}</span>
+                      <span>{t("scenarioEngine.worstCase")}</span>
                     </div>
                   </div>
                 </CollapsibleSection>
 
-                {/* AI Deep Analysis */}
                 <AiInsightPanel
                   type="bottleneck"
                   context={{
