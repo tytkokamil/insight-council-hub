@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { useTranslation } from "react-i18next";
 
 interface ExtractedItem {
   title: string;
@@ -30,33 +31,8 @@ interface Props {
   onImported?: () => void;
 }
 
-const DECISION_CATEGORIES = [
-  { value: "strategic", label: "Strategisch" },
-  { value: "budget", label: "Budget" },
-  { value: "hr", label: "Personal" },
-  { value: "technical", label: "Technisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "marketing", label: "Marketing" },
-];
-
-const TASK_CATEGORIES = [
-  { value: "general", label: "Allgemein" },
-  { value: "strategic", label: "Strategisch" },
-  { value: "operational", label: "Operativ" },
-  { value: "technical", label: "Technisch" },
-  { value: "hr", label: "Personal" },
-  { value: "marketing", label: "Marketing" },
-  { value: "budget", label: "Budget" },
-];
-
-const PRIORITIES = [
-  { value: "low", label: "Niedrig" },
-  { value: "medium", label: "Mittel" },
-  { value: "high", label: "Hoch" },
-  { value: "critical", label: "Kritisch" },
-];
-
 const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const [phase, setPhase] = useState<"upload" | "analyzing" | "preview" | "importing">("upload");
@@ -68,22 +44,16 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
-  const categories = mode === "decisions" ? DECISION_CATEGORIES : TASK_CATEGORIES;
-  const label = mode === "decisions" ? "Entscheidungen" : "Aufgaben";
-  const labelSingular = mode === "decisions" ? "Entscheidung" : "Aufgabe";
+  const label = t(mode === "decisions" ? "import.decisions" : "import.tasks");
 
-  const reset = () => {
-    setPhase("upload");
-    setItems([]);
-    setSummary("");
-    setFileName("");
-    setProgress(0);
-  };
+  const categories = mode === "decisions"
+    ? ["strategic", "budget", "hr", "technical", "operational", "marketing"].map(v => ({ value: v, label: t(`category.${v}`) }))
+    : ["general", "strategic", "operational", "technical", "hr", "marketing", "budget"].map(v => ({ value: v, label: t(`category.${v === "general" ? "operational" : v}`) }));
 
-  const handleOpenChange = (o: boolean) => {
-    if (!o) reset();
-    onOpenChange(o);
-  };
+  const priorities = ["low", "medium", "high", "critical"].map(v => ({ value: v, label: t(`priority.${v}`) }));
+
+  const reset = () => { setPhase("upload"); setItems([]); setSummary(""); setFileName(""); setProgress(0); };
+  const handleOpenChange = (o: boolean) => { if (!o) reset(); onOpenChange(o); };
 
   const parsePdf = async (file: File): Promise<string> => {
     const pdfjsLib = await import("pdfjs-dist");
@@ -110,41 +80,34 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
       return XLSX.utils.sheet_to_csv(sheet);
     }
     if (ext === "pdf") return await parsePdf(file);
-    try { return await file.text(); } catch { throw new Error("Dateiformat nicht unterstützt."); }
+    try { return await file.text(); } catch { throw new Error(t("import.formatNotSupported")); }
   };
 
   const handleFile = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) { toast.error("Datei zu groß (max. 10 MB)"); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error(t("import.fileTooLarge")); return; }
     setFileName(file.name);
     setPhase("analyzing");
     setProgress(20);
     try {
       const content = await parseFile(file);
       setProgress(40);
-      if (!content.trim()) throw new Error("Datei ist leer");
+      if (!content.trim()) throw new Error(t("import.fileEmpty"));
       setProgress(60);
-
-      const { data, error } = await supabase.functions.invoke("extract-decisions", {
-        body: { content, fileName: file.name, mode },
-      });
+      const { data, error } = await supabase.functions.invoke("extract-decisions", { body: { content, fileName: file.name, mode } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setProgress(90);
-
       const extracted: ExtractedItem[] = (data?.decisions || []).map((d: any) => ({
-        title: d.title || "",
-        description: d.description || "",
+        title: d.title || "", description: d.description || "",
         category: d.category || (mode === "decisions" ? "operational" : "general"),
-        priority: d.priority || "medium",
-        due_date: d.due_date || null,
-        selected: true,
+        priority: d.priority || "medium", due_date: d.due_date || null, selected: true,
       }));
       setSummary(data?.summary || "");
       setItems(extracted);
       setProgress(100);
       setPhase("preview");
     } catch (err: any) {
-      toast.error(err.message || "Analyse fehlgeschlagen");
+      toast.error(err.message || t("shared.analysisError"));
       setPhase("upload");
     }
   };
@@ -174,7 +137,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
   const importItems = async () => {
     if (!user) return;
     const selected = items.filter(d => d.selected);
-    if (selected.length === 0) { toast.error(`Keine ${label} ausgewählt`); return; }
+    if (selected.length === 0) { toast.error(t("import.noItemsSelected", { label })); return; }
     setPhase("importing");
     setProgress(0);
     try {
@@ -198,11 +161,11 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
         if (error) throw error;
       }
       setProgress(100);
-      toast.success(`${selected.length} ${label} importiert`);
+      toast.success(t("import.imported", { count: selected.length, label }));
       onImported?.();
       setTimeout(() => { reset(); onOpenChange(false); }, 1200);
     } catch (err: any) {
-      toast.error(err.message || "Import fehlgeschlagen");
+      toast.error(err.message || "Import failed");
       setPhase("preview");
     }
   };
@@ -215,17 +178,15 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileUp className="w-5 h-5 text-primary" />
-            {label} importieren
+            {t("import.title", { label })}
           </DialogTitle>
         </DialogHeader>
 
         {phase === "upload" && (
           <div className="space-y-4">
             <div
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={e => e.preventDefault()}
-              onDrop={handleDrop}
+              onDragEnter={handleDragEnter} onDragLeave={handleDragLeave}
+              onDragOver={e => e.preventDefault()} onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
               className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border hover:border-primary/50 hover:bg-muted/20"}`}
             >
@@ -235,8 +196,8 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
                   <Upload className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold mb-1">Datei hochladen</p>
-                  <p className="text-xs text-muted-foreground">PDF, CSV, Excel oder Textdatei hierher ziehen oder klicken</p>
+                  <p className="text-sm font-semibold mb-1">{t("import.uploadTitle")}</p>
+                  <p className="text-xs text-muted-foreground">{t("import.uploadDesc")}</p>
                 </div>
                 <div className="flex gap-2 mt-1">
                   {[{ icon: FileText, label: "PDF" }, { icon: FileSpreadsheet, label: "Excel" }, { icon: FileText, label: "CSV" }].map((f, i) => (
@@ -251,12 +212,12 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-primary" />
                 <div>
-                  <p className="text-xs font-medium">CSV-Template</p>
-                  <p className="text-[10px] text-muted-foreground">Vorlage mit allen Spalten</p>
+                  <p className="text-xs font-medium">{t("import.csvTemplate")}</p>
+                  <p className="text-[10px] text-muted-foreground">{t("import.csvTemplateDesc")}</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-1.5 h-7 text-xs">
-                <Download className="w-3 h-3" />Template
+                <Download className="w-3 h-3" />{t("import.template")}
               </Button>
             </div>
           </div>
@@ -265,8 +226,8 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
         {phase === "analyzing" && (
           <div className="text-center py-12">
             <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-3" />
-            <p className="text-sm font-semibold mb-1">KI analysiert «{fileName}»</p>
-            <p className="text-xs text-muted-foreground mb-3">{label} werden erkannt und strukturiert...</p>
+            <p className="text-sm font-semibold mb-1">{t("import.aiAnalyzing", { fileName })}</p>
+            <p className="text-xs text-muted-foreground mb-3">{t("import.analyzing", { label })}</p>
             <Progress value={progress} className="max-w-xs mx-auto" />
           </div>
         )}
@@ -277,17 +238,17 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
               <div className="flex items-start gap-2 p-3 rounded-lg border border-primary/20 bg-primary/5">
                 <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-medium mb-0.5">KI-Zusammenfassung</p>
+                  <p className="text-xs font-medium mb-0.5">{t("import.aiSummary")}</p>
                   <p className="text-[10px] text-muted-foreground">{summary}</p>
                 </div>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">{selectedCount} von {items.length} ausgewählt</span>
+              <span className="text-xs text-muted-foreground">{t("import.selectedOf", { selected: selectedCount, total: items.length })}</span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={reset}>Abbrechen</Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={reset}>{t("import.cancel")}</Button>
                 <Button size="sm" className="h-7 text-xs gap-1" onClick={importItems} disabled={selectedCount === 0}>
-                  <Plus className="w-3 h-3" />{selectedCount} importieren
+                  <Plus className="w-3 h-3" />{t("import.importCount", { count: selectedCount })}
                 </Button>
               </div>
             </div>
@@ -308,7 +269,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
                         </Select>
                         <Select value={d.priority} onValueChange={v => updateItem(i, "priority", v)}>
                           <SelectTrigger className="h-6 text-[10px] w-[80px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>{PRIORITIES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
+                          <SelectContent>{priorities.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
                         </Select>
                         {d.due_date && <Badge variant="outline" className="text-[10px] gap-1"><Clock className="w-2.5 h-2.5" />{d.due_date}</Badge>}
                       </div>
@@ -323,8 +284,8 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
             {items.length === 0 && (
               <div className="text-center py-8">
                 <AlertTriangle className="w-6 h-6 text-warning mx-auto mb-2" />
-                <p className="text-sm font-medium">Keine {label} erkannt</p>
-                <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={reset}>Zurück</Button>
+                <p className="text-sm font-medium">{t("import.noItemsDetected", { label })}</p>
+                <Button variant="outline" size="sm" className="mt-2 h-7 text-xs" onClick={reset}>{t("import.back")}</Button>
               </div>
             )}
           </div>
@@ -335,15 +296,15 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
             {progress < 100 ? (
               <>
                 <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto mb-3" />
-                <p className="text-sm font-semibold">Importiere {selectedCount} {label}...</p>
+                <p className="text-sm font-semibold">{t("import.importing", { count: selectedCount, label })}</p>
               </>
             ) : (
               <>
                 <div className="w-12 h-12 rounded-full bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-3">
                   <Check className="w-6 h-6 text-success" />
                 </div>
-                <p className="text-sm font-semibold">Import abgeschlossen!</p>
-                <p className="text-xs text-muted-foreground mt-1">{selectedCount} {label} erstellt</p>
+                <p className="text-sm font-semibold">{t("import.importComplete")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{t("import.importCreated", { count: selectedCount, label })}</p>
               </>
             )}
             <Progress value={progress} className="max-w-xs mx-auto mt-3" />

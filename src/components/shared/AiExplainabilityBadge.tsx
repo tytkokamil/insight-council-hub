@@ -1,8 +1,9 @@
 import { ShieldCheck, ShieldAlert, AlertTriangle, Info, Database } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTranslation } from "react-i18next";
 
 interface AiExplainabilityBadgeProps {
-  confidence?: number | string | null; // 0-100 or "high"/"medium"/"low"
+  confidence?: number | string | null;
   factors?: string[];
   dataPoints?: number | null;
   className?: string;
@@ -22,20 +23,21 @@ const getLevel = (confidence: number | string | null | undefined): "high" | "med
   return "medium";
 };
 
-const CONFIG = {
-  high: { label: "Hohe Konfidenz", color: "text-success border-success/30 bg-success/10", Icon: ShieldCheck },
-  medium: { label: "Mittlere Konfidenz", color: "text-warning border-warning/30 bg-warning/10", Icon: ShieldAlert },
-  low: { label: "Niedrige Konfidenz", color: "text-destructive border-destructive/30 bg-destructive/10", Icon: AlertTriangle },
-};
-
 const AiExplainabilityBadge = ({ confidence, factors, dataPoints, className = "" }: AiExplainabilityBadgeProps) => {
+  const { t } = useTranslation();
+
   const level = getLevel(confidence);
+  const CONFIG = {
+    high: { label: t("shared.aiConfidenceHigh"), color: "text-success border-success/30 bg-success/10", Icon: ShieldCheck },
+    medium: { label: t("shared.aiConfidenceMedium"), color: "text-warning border-warning/30 bg-warning/10", Icon: ShieldAlert },
+    low: { label: t("shared.aiConfidenceLow"), color: "text-destructive border-destructive/30 bg-destructive/10", Icon: AlertTriangle },
+  };
+
   const { label, color, Icon } = CONFIG[level];
   const numericConfidence = typeof confidence === "number" ? confidence : null;
 
   return (
     <div className={`rounded-lg border p-3 space-y-2 ${color} ${className}`}>
-      {/* Confidence header */}
       <div className="flex items-center gap-2">
         <Icon className="w-4 h-4 shrink-0" />
         <div className="flex-1 min-w-0">
@@ -50,19 +52,18 @@ const AiExplainabilityBadge = ({ confidence, factors, dataPoints, className = ""
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="flex items-center gap-1 text-[10px] opacity-70">
-                <Database className="w-3 h-3" /> {dataPoints} Datenpunkte
+                <Database className="w-3 h-3" /> {dataPoints} {t("shared.aiDataPoints")}
               </span>
             </TooltipTrigger>
-            <TooltipContent><p className="text-xs">Anzahl ähnlicher Entscheidungen als Grundlage</p></TooltipContent>
+            <TooltipContent><p className="text-xs">{t("shared.aiDataPointsTooltip")}</p></TooltipContent>
           </Tooltip>
         )}
       </div>
 
-      {/* Top factors */}
       {factors && factors.length > 0 && (
         <div className="space-y-1">
           <p className="text-[10px] font-medium flex items-center gap-1 opacity-70">
-            <Info className="w-3 h-3" /> Top-Einflussfaktoren
+            <Info className="w-3 h-3" /> {t("shared.aiTopFactors")}
           </p>
           <div className="flex flex-wrap gap-1">
             {factors.slice(0, 3).map((f, i) => (

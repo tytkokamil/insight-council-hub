@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, Target, TrendingUp } from "lucide-react";
 import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
 import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
+import { useTranslation } from "react-i18next";
 
 interface AiInsightPanelProps {
   type: "pattern" | "dna" | "bottleneck";
@@ -13,6 +14,7 @@ interface AiInsightPanelProps {
 }
 
 const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) => {
+  const { t } = useTranslation();
   const [insights, setInsights] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
       if (data?.error) throw new Error(data.error);
       setInsights(data?.insights);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Analyse fehlgeschlagen");
+      setError(e instanceof Error ? e.message : t("shared.analysisError"));
     } finally {
       setLoading(false);
     }
@@ -39,10 +41,10 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
       <Card className={`border-primary/20 bg-primary/[0.02] ${className}`}>
         <CardContent className="p-5 text-center">
           <Sparkles className="w-5 h-5 text-primary mx-auto mb-2" />
-          <p className="text-sm font-medium mb-1">KI-Tiefenanalyse</p>
-          <p className="text-xs text-muted-foreground mb-3">Lass die KI verborgene Muster und Handlungsempfehlungen generieren.</p>
+          <p className="text-sm font-medium mb-1">{t("shared.aiDeepAnalysis")}</p>
+          <p className="text-xs text-muted-foreground mb-3">{t("shared.aiDeepAnalysisDesc")}</p>
           <Button size="sm" onClick={fetchInsights} className="gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> Analyse starten
+            <Sparkles className="w-3.5 h-3.5" /> {t("shared.aiStartAnalysis")}
           </Button>
           {error && <p className="text-xs text-destructive mt-2">{error}</p>}
         </CardContent>
@@ -55,7 +57,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
       <Card className={`border-primary/20 bg-primary/[0.02] ${className}`}>
         <CardContent className="p-5 text-center">
           <Loader2 className="w-5 h-5 text-primary mx-auto mb-2 animate-spin" />
-          <p className="text-sm text-muted-foreground">KI analysiert Daten...</p>
+          <p className="text-sm text-muted-foreground">{t("shared.aiAnalyzing")}</p>
         </CardContent>
       </Card>
     );
@@ -67,7 +69,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="text-sm font-semibold">KI-Tiefenanalyse</h3>
+            <h3 className="text-sm font-semibold">{t("shared.aiDeepAnalysis")}</h3>
           </div>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fetchInsights} disabled={loading}>
             <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
@@ -93,7 +95,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
                 <div className="flex items-start gap-2">
                   <TrendingUp className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs font-medium text-primary">30-Tage Prognose</p>
+                    <p className="text-xs font-medium text-primary">{t("shared.ai30DayForecast")}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{insights.prediction}</p>
                   </div>
                 </div>
@@ -104,7 +106,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
                 <div className="flex items-start gap-2">
                   <Target className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
                   <div>
-                    <p className="text-xs font-medium text-warning">Versteckte Korrelation</p>
+                    <p className="text-xs font-medium text-warning">{t("shared.aiHiddenCorrelation")}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{insights.hidden_correlation}</p>
                   </div>
                 </div>
@@ -120,7 +122,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
             )}
             {insights.strengths?.length > 0 && (
               <div className="space-y-1">
-                <p className="text-xs font-medium text-success">Stärken</p>
+                <p className="text-xs font-medium text-success">{t("shared.aiStrengths")}</p>
                 {insights.strengths.map((s: string, i: number) => (
                   <p key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
                     <span className="text-success mt-0.5">✓</span> {s}
@@ -130,19 +132,19 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
             )}
             {insights.growth_areas?.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-medium text-warning">Wachstumsfelder</p>
+                <p className="text-xs font-medium text-warning">{t("shared.aiGrowthAreas")}</p>
                 {insights.growth_areas.map((g: any, i: number) => (
                   <div key={i} className="p-2 rounded bg-muted/20 text-xs">
                     <p className="font-medium">{g.area}</p>
                     <p className="text-muted-foreground">→ {g.action}</p>
-                    <p className="text-primary text-[10px]">Erwarteter Impact: {g.expected_impact}</p>
+                    <p className="text-primary text-[10px]">{t("shared.aiExpectedImpact")}: {g.expected_impact}</p>
                   </div>
                 ))}
               </div>
             )}
             {insights.benchmark_comparison && (
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                <p className="text-xs font-medium text-primary mb-1">Benchmark-Vergleich</p>
+                <p className="text-xs font-medium text-primary mb-1">{t("shared.aiBenchmarkComparison")}</p>
                 <p className="text-xs text-muted-foreground">{insights.benchmark_comparison}</p>
               </div>
             )}
@@ -168,7 +170,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
             ))}
             {insights.quick_wins?.length > 0 && (
               <div className="p-3 rounded-lg bg-success/5 border border-success/20">
-                <p className="text-xs font-medium text-success mb-1">Quick Wins</p>
+                <p className="text-xs font-medium text-success mb-1">{t("shared.aiQuickWins")}</p>
                 {insights.quick_wins.map((qw: string, i: number) => (
                   <p key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
                     <span className="text-success mt-0.5">⚡</span> {qw}
@@ -179,13 +181,11 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
           </div>
         )}
 
-        {/* AI Explainability */}
         <AiExplainabilityBadge
           confidence={insights?.confidence}
           factors={insights?.deep_patterns?.slice(0, 2).map((p: any) => p.title) || insights?.strengths?.slice(0, 2) || insights?.root_causes?.slice(0, 2).map((rc: any) => rc.cause)}
         />
 
-        {/* AI Feedback */}
         <AiFeedbackButton context={`intelligence-${type}`} />
       </CardContent>
     </Card>

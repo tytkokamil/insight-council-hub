@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -54,6 +55,7 @@ const SidebarContent = ({
 );
 
 const AppLayout = ({ children }: { children: ReactNode }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -116,7 +118,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium"
       >
-        Zum Inhalt springen
+        {t("common.skipToContent")}
       </a>
 
       {isMobile && (
@@ -141,13 +143,13 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
               transition={{ duration: 0.25, ease: "easeOut" }}
               className="fixed top-0 left-0 bottom-0 z-50 w-[260px] bg-background border-r border-border/40 flex flex-col"
               role="navigation"
-              aria-label="Hauptnavigation"
+              aria-label={t("common.openNav")}
             >
               <div className="absolute top-3 right-3 z-10">
                 <button
                   onClick={() => setMobileOpen(false)}
                   className="w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground"
-                  aria-label="Navigation schließen"
+                  aria-label={t("common.closeNav")}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -169,7 +171,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
           style={{ width: collapsed ? 52 : 220 }}
           className="relative border-r border-border/40 bg-background flex flex-col shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
           role="navigation"
-          aria-label="Hauptnavigation"
+          aria-label={t("common.openNav")}
         >
           <SidebarContent
             collapsed={collapsed}

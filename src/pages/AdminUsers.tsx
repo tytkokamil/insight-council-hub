@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { toast } from "@/components/ui/sonner";
 import { useDecisions } from "@/hooks/useDecisions";
+import { useTranslation } from "react-i18next";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrgRole = Database["public"]["Enums"]["org_role"];
@@ -32,13 +33,8 @@ const roleBadgeVariant: Record<OrgRole, string> = {
   org_member: "bg-muted text-muted-foreground border-border",
 };
 
-const roleLabels: Record<OrgRole, string> = {
-  org_owner: "Org Owner",
-  org_admin: "Org Admin",
-  org_member: "Mitglied",
-};
-
 const AdminUsers = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -50,6 +46,12 @@ const AdminUsers = () => {
   const [inviting, setInviting] = useState(false);
   const { data: decisions = [] } = useDecisions();
 
+  const roleLabels: Record<OrgRole, string> = {
+    org_owner: t("admin.roleOrgOwner"),
+    org_admin: t("admin.roleOrgAdmin"),
+    org_member: t("admin.roleOrgMember"),
+  };
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -59,14 +61,10 @@ const AdminUsers = () => {
         body: { email: inviteEmail.trim().toLowerCase() },
       });
       if (error) throw error;
-      if (data?.error) {
-        toast.error(data.error);
-      } else {
-        toast.success(data?.message || "Einladung gesendet");
-        setInviteEmail("");
-      }
+      if (data?.error) { toast.error(data.error); }
+      else { toast.success(data?.message || t("admin.inviteSent")); setInviteEmail(""); }
     } catch (err: any) {
-      toast.error(err.message || "Einladung fehlgeschlagen");
+      toast.error(err.message || t("admin.inviteFailed"));
     }
     setInviting(false);
   };
@@ -80,10 +78,7 @@ const AdminUsers = () => {
     });
   }, [user, navigate]);
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    fetchUsers();
-  }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; fetchUsers(); }, [isAdmin]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -102,17 +97,16 @@ const AdminUsers = () => {
   };
 
   const handleRoleChange = async (userId: string, newRole: OrgRole) => {
-    if (userId === user?.id) { toast.error("Du kannst deine eigene Rolle nicht ändern."); return; }
+    if (userId === user?.id) { toast.error(t("admin.cantChangeOwnRole")); return; }
     setUpdating(userId);
     const { error } = await supabase.from("user_roles").update({ role: newRole }).eq("user_id", userId);
-    if (error) { toast.error("Rolle konnte nicht geändert werden."); }
-    else { toast.success(`Rolle zu ${roleLabels[newRole]} geändert.`); setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, role: newRole } : u))); }
+    if (error) { toast.error(t("admin.roleChangeFailed")); }
+    else { toast.success(t("admin.roleChanged", { role: roleLabels[newRole] })); setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, role: newRole } : u))); }
     setUpdating(null);
   };
 
   const filtered = users.filter((u) => (u.full_name || "").toLowerCase().includes(search.toLowerCase()) || u.user_id.toLowerCase().includes(search.toLowerCase()));
 
-  // Org analytics
   const orgStats = useMemo(() => {
     const totalDecisions = decisions.length;
     const slaBreaches = decisions.filter(d => (d.escalation_level ?? 0) > 0).length;
@@ -126,43 +120,34 @@ const AdminUsers = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold font-display flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />Administration</h1>
-            <p className="text-sm text-muted-foreground mt-1">Nutzer, Analytics und Systemverwaltung</p>
+            <h1 className="text-xl font-bold font-display flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />{t("admin.title")}</h1>
+            <p className="text-sm text-muted-foreground mt-1">{t("admin.subtitle")}</p>
           </div>
-          <Badge variant="outline" className="gap-1.5"><UserCog className="w-3.5 h-3.5" />{users.length} Nutzer</Badge>
+          <Badge variant="outline" className="gap-1.5"><UserCog className="w-3.5 h-3.5" />{t("admin.usersCount", { count: users.length })}</Badge>
         </div>
 
         <Tabs defaultValue="users">
           <TabsList>
-            <TabsTrigger value="users" className="gap-1.5"><Users className="w-3.5 h-3.5" />Nutzer</TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />Org Analytics</TabsTrigger>
-            <TabsTrigger value="logs" className="gap-1.5"><FileText className="w-3.5 h-3.5" />System Logs</TabsTrigger>
-            <TabsTrigger value="data" className="gap-1.5"><Download className="w-3.5 h-3.5" />Daten</TabsTrigger>
+            <TabsTrigger value="users" className="gap-1.5"><Users className="w-3.5 h-3.5" />{t("admin.usersTab")}</TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{t("admin.analyticsTab")}</TabsTrigger>
+            <TabsTrigger value="logs" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t("admin.logsTab")}</TabsTrigger>
+            <TabsTrigger value="data" className="gap-1.5"><Download className="w-3.5 h-3.5" />{t("admin.dataTab")}</TabsTrigger>
           </TabsList>
 
-          {/* Users Tab */}
           <TabsContent value="users" className="space-y-4 mt-4">
-            {/* Invite user form */}
             <Card>
               <CardContent className="p-4">
                 <form onSubmit={handleInvite} className="flex items-end gap-3">
                   <div className="flex-1">
                     <label className="text-sm font-medium flex items-center gap-2 mb-1.5">
-                      <Mail className="w-4 h-4 text-primary" />
-                      Neuen Nutzer per E-Mail einladen
+                      <Mail className="w-4 h-4 text-primary" />{t("admin.inviteLabel")}
                     </label>
-                    <input
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="email@beispiel.de"
-                      required
-                      className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
-                    />
+                    <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder={t("admin.invitePlaceholder")} required
+                      className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
                   <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10">
-                    <UserPlus className="w-4 h-4" />
-                    {inviting ? "Sende..." : "Einladen"}
+                    <UserPlus className="w-4 h-4" />{inviting ? t("admin.inviteSending") : t("admin.invite")}
                   </Button>
                 </form>
               </CardContent>
@@ -170,17 +155,17 @@ const AdminUsers = () => {
 
             <div className="relative max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input type="text" placeholder="Nutzer suchen..." value={search} onChange={(e) => setSearch(e.target.value)}
+              <input type="text" placeholder={t("admin.searchUsers")} value={search} onChange={(e) => setSearch(e.target.value)}
                 className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
             </div>
             <div className="border border-border rounded-xl overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="bg-muted/30 border-b border-border">
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Nutzer</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Rolle</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Beigetreten</th>
-                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Rolle ändern</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">{t("admin.colUser")}</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">{t("admin.colRole")}</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">{t("admin.colJoined")}</th>
+                    <th className="text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">{t("admin.colChangeRole")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -191,19 +176,19 @@ const AdminUsers = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <UserAvatar avatarUrl={u.avatar_url} fullName={u.full_name} />
-                          <div><p className="text-sm font-medium">{u.full_name || "Unbekannt"}</p><p className="text-xs text-muted-foreground">{u.user_id.slice(0, 8)}...</p></div>
+                          <div><p className="text-sm font-medium">{u.full_name || t("admin.unknown")}</p><p className="text-xs text-muted-foreground">{u.user_id.slice(0, 8)}...</p></div>
                         </div>
                       </td>
                       <td className="px-4 py-3"><Badge variant="outline" className={roleBadgeVariant[u.role]}>{roleLabels[u.role]}</Badge></td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(u.joined).toLocaleDateString("de-DE")}</td>
                       <td className="px-4 py-3 text-right">
-                        {u.user_id === user?.id ? <span className="text-xs text-muted-foreground italic">Du</span> : (
+                        {u.user_id === user?.id ? <span className="text-xs text-muted-foreground italic">{t("admin.you")}</span> : (
                           <Select value={u.role} onValueChange={(v) => handleRoleChange(u.user_id, v as OrgRole)} disabled={updating === u.user_id}>
                             <SelectTrigger className="w-[160px] h-8 text-xs ml-auto"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="org_owner">Org Owner</SelectItem>
-                              <SelectItem value="org_admin">Org Admin</SelectItem>
-                              <SelectItem value="org_member">Mitglied</SelectItem>
+                              <SelectItem value="org_owner">{t("admin.roleOrgOwner")}</SelectItem>
+                              <SelectItem value="org_admin">{t("admin.roleOrgAdmin")}</SelectItem>
+                              <SelectItem value="org_member">{t("admin.roleOrgMember")}</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
@@ -211,38 +196,37 @@ const AdminUsers = () => {
                     </tr>
                   ))}
                   {!loading && filtered.length === 0 && (
-                    <tr><td colSpan={4} className="text-center text-sm text-muted-foreground py-8">Keine Nutzer gefunden.</td></tr>
+                    <tr><td colSpan={4} className="text-center text-sm text-muted-foreground py-8">{t("admin.noUsers")}</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </TabsContent>
 
-          {/* Org Analytics Tab */}
           <TabsContent value="analytics" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card><CardContent className="p-5">
                 <div className="flex items-center gap-2 text-primary mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.userCount}</span></div>
-                <p className="text-xs text-muted-foreground">Registrierte Nutzer</p>
+                <p className="text-xs text-muted-foreground">{t("admin.registeredUsers")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
                 <div className="flex items-center gap-2 text-primary mb-1"><FileText className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.totalDecisions}</span></div>
-                <p className="text-xs text-muted-foreground">Entscheidungen gesamt</p>
+                <p className="text-xs text-muted-foreground">{t("admin.totalDecisions")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
                 <div className="flex items-center gap-2 text-destructive mb-1"><Activity className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.slaBreaches}</span></div>
-                <p className="text-xs text-muted-foreground">SLA Breaches</p>
+                <p className="text-xs text-muted-foreground">{t("admin.slaBreaches")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
                 <div className="flex items-center gap-2 text-success mb-1"><TrendingUp className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.completionRate}%</span></div>
-                <p className="text-xs text-muted-foreground">Abschlussrate</p>
+                <p className="text-xs text-muted-foreground">{t("admin.completionRate")}</p>
               </CardContent></Card>
             </div>
             <Card>
               <CardContent className="p-5">
-                <h3 className="text-sm font-semibold mb-3">Adoption Rate</h3>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.adoptionRate")}</h3>
                 <div className="space-y-2">
-                  {Object.entries(roleLabels).map(([role, label]) => {
+                  {(Object.entries(roleLabels) as [OrgRole, string][]).map(([role, label]) => {
                     const count = users.filter(u => u.role === role).length;
                     const pct = users.length > 0 ? Math.round((count / users.length) * 100) : 0;
                     return (
@@ -260,30 +244,28 @@ const AdminUsers = () => {
             </Card>
           </TabsContent>
 
-          {/* System Logs Tab */}
           <TabsContent value="logs" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-5">
-                <h3 className="text-sm font-semibold mb-3">Audit Trail</h3>
-                <p className="text-xs text-muted-foreground mb-4">Die letzten Systemereignisse aus dem Audit Log.</p>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.auditTrail")}</h3>
+                <p className="text-xs text-muted-foreground mb-4">{t("admin.auditDesc")}</p>
                 <AuditLogList />
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Data Management Tab */}
           <TabsContent value="data" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-5">
-                <h3 className="text-sm font-semibold mb-3">Datenexport</h3>
-                <p className="text-xs text-muted-foreground mb-4">Exportiere alle Entscheidungen und Aufgaben als CSV.</p>
-                <Button size="sm" variant="outline" className="gap-2"><Download className="w-3.5 h-3.5" />Alle Daten exportieren</Button>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.dataExport")}</h3>
+                <p className="text-xs text-muted-foreground mb-4">{t("admin.dataExportDesc")}</p>
+                <Button size="sm" variant="outline" className="gap-2"><Download className="w-3.5 h-3.5" />{t("admin.exportAll")}</Button>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-5">
-                <h3 className="text-sm font-semibold mb-3">Backup</h3>
-                <p className="text-xs text-muted-foreground">Automatische Backups werden täglich erstellt und 30 Tage aufbewahrt.</p>
+                <h3 className="text-sm font-semibold mb-3">{t("admin.backup")}</h3>
+                <p className="text-xs text-muted-foreground">{t("admin.backupDesc")}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -293,8 +275,8 @@ const AdminUsers = () => {
   );
 };
 
-// Mini audit log component
 const AuditLogList = () => {
+  const { t } = useTranslation();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -304,7 +286,7 @@ const AuditLogList = () => {
   }, []);
 
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</div>;
-  if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">Noch keine Audit-Einträge.</p>;
+  if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">{t("admin.noAuditEntries")}</p>;
 
   return (
     <div className="space-y-1 max-h-[400px] overflow-y-auto">
@@ -312,7 +294,7 @@ const AuditLogList = () => {
         <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
           <span className="text-muted-foreground w-28 shrink-0">{new Date(log.created_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
           <Badge variant="outline" className="text-[10px] shrink-0">{log.action}</Badge>
-          <span className="text-muted-foreground truncate">{log.field_name ? `${log.field_name}: ${log.old_value || "–"} → ${log.new_value || "–"}` : log.action}</span>
+          <span className="text-muted-foreground truncate">{log.field_name ? `${log.field_name}: ${log.old_value || "\u2013"} \u2192 ${log.new_value || "\u2013"}` : log.action}</span>
         </div>
       ))}
     </div>
