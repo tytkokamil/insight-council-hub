@@ -20,9 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useDecisions, useProfiles, buildProfileMap, useDependencies, useInvalidateDecisions, useReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
-import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import { useTranslatedLabels } from "@/lib/labels";
 import { differenceInDays, differenceInHours, format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useRiskDecisionLinks } from "@/hooks/useRisks";
@@ -30,6 +30,7 @@ import WatchlistButton from "@/components/decisions/WatchlistButton";
 import DecisionLifecycleBar from "@/components/decisions/DecisionLifecycleBar";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
+import { useTranslation } from "react-i18next";
 
 // Lazy-loaded panels
 import DiscussionPanel from "@/components/decisions/DiscussionPanel";
@@ -86,6 +87,10 @@ const Section = ({ title, icon: Icon, children, defaultOpen = true, badge }: {
 
 /* ────────────────── MAIN COMPONENT ────────────────── */
 const DecisionDetail = () => {
+  const { t, i18n } = useTranslation();
+  const tl = useTranslatedLabels(t);
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -175,11 +180,11 @@ const DecisionDetail = () => {
   const slaRemaining = useMemo(() => {
     if (!decision?.due_date || !decision || ["implemented", "rejected"].includes(decision.status)) return null;
     const hoursLeft = differenceInHours(new Date(decision.due_date), new Date());
-    if (hoursLeft < 0) return { text: `${Math.abs(hoursLeft)}h überfällig`, overdue: true, days: Math.ceil(Math.abs(hoursLeft) / 24) };
-    if (hoursLeft < 24) return { text: `${hoursLeft}h verbleibend`, overdue: false, days: 0 };
+    if (hoursLeft < 0) return { text: t("decisionDetail.slaOverdue", { hours: Math.abs(hoursLeft) }), overdue: true, days: Math.ceil(Math.abs(hoursLeft) / 24) };
+    if (hoursLeft < 24) return { text: t("decisionDetail.slaRemaining", { hours: hoursLeft }), overdue: false, days: 0 };
     const daysLeft = Math.floor(hoursLeft / 24);
-    return { text: `${daysLeft}d`, overdue: false, days: daysLeft };
-  }, [decision]);
+    return { text: t("decisionDetail.slaDays", { days: daysLeft }), overdue: false, days: daysLeft };
+  }, [decision, t]);
 
   const positionSummary = useMemo(() => {
     const support = stakeholderPositions.filter(p => p.position === "support").length;
@@ -202,20 +207,20 @@ const DecisionDetail = () => {
   const focusMessage = useMemo(() => {
     if (!decision) return null;
     const parts: string[] = [];
-    if (slaRemaining?.overdue) parts.push(`SLA verletzt seit ${slaRemaining.days} Tag${slaRemaining.days !== 1 ? "en" : ""}`);
-    if (missingReviewers.length > 0) parts.push(`${missingReviewers.length} Reviewer ausstehend`);
-    if (riskScore > 70) parts.push(`Risiko bei ${riskScore}%`);
-    if (computed.delayCostPerWeek > 0 && isActive) parts.push(`Geschätztes Verzögerungsrisiko: ${formatCost(computed.delayCostPerWeek)}/Woche`);
+    if (slaRemaining?.overdue) parts.push(t("decisionDetail.slaViolated", { days: slaRemaining.days }));
+    if (missingReviewers.length > 0) parts.push(t("decisionDetail.reviewersPending", { count: missingReviewers.length }));
+    if (riskScore > 70) parts.push(t("decisionDetail.riskAt", { score: riskScore }));
+    if (computed.delayCostPerWeek > 0 && isActive) parts.push(t("decisionDetail.delayRiskPerWeek", { cost: formatCost(computed.delayCostPerWeek) }));
     return parts.length > 0 ? parts.join(". ") + "." : null;
-  }, [decision, slaRemaining, missingReviewers, riskScore, computed.delayCostPerWeek, isActive]);
+  }, [decision, slaRemaining, missingReviewers, riskScore, computed.delayCostPerWeek, isActive, t]);
 
   if (!decision) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <p className="text-muted-foreground">Entscheidung nicht gefunden.</p>
+          <p className="text-muted-foreground">{t("decisionDetail.notFound")}</p>
           <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/decisions")}>
-            <ArrowLeft className="w-4 h-4" /> Zurück
+            <ArrowLeft className="w-4 h-4" /> {t("decisionDetail.back")}
           </Button>
         </div>
       </AppLayout>
@@ -237,7 +242,7 @@ const DecisionDetail = () => {
         field_name: "status", old_value: oldStatus, new_value: newStatus,
       });
       invalidate();
-      toast.success(`Status → ${statusLabels[newStatus]}`);
+      toast.success(`Status → ${tl.statusLabels[newStatus]}`);
     }
     setSaving(false);
   };
@@ -246,7 +251,7 @@ const DecisionDetail = () => {
     <AppLayout>
       {/* Back */}
       <Button variant="ghost" size="sm" className="gap-1.5 mb-4 -ml-2 text-muted-foreground hover:text-foreground" onClick={() => navigate("/decisions")}>
-        <ArrowLeft className="w-4 h-4" /> Entscheidungen
+        <ArrowLeft className="w-4 h-4" /> {t("decisionDetail.backToDecisions")}
       </Button>
 
       {/* ═══════════ 1. HEADER SECTION ═══════════ */}
@@ -262,15 +267,15 @@ const DecisionDetail = () => {
                 <SelectContent>
                   {statusOptions.map(s => (
                     <SelectItem key={s} value={s} disabled={!isOwner && s !== "approved" && s !== "rejected"}>
-                      {statusLabels[s]}
+                      {tl.statusLabels[s]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-              <Badge variant="outline" className="text-[10px]">{categoryLabels[decision.category]}</Badge>
-              <span className={`font-semibold ${priorityStyles[decision.priority]}`}>{priorityLabels[decision.priority]}</span>
+              <Badge variant="outline" className="text-[10px]">{tl.categoryLabels[decision.category]}</Badge>
+              <span className={`font-semibold ${priorityStyles[decision.priority]}`}>{tl.priorityLabels[decision.priority]}</span>
               <span>·</span>
               <span>Owner: {profileMap[decision.owner_id || decision.created_by] || "—"}</span>
               {decision.assignee_id && decision.assignee_id !== decision.owner_id && (
@@ -304,9 +309,9 @@ const DecisionDetail = () => {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
             { label: "Risk", value: `${riskScore}%`, icon: AlertTriangle, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success", bg: riskScore > 60 ? "bg-destructive/10" : riskScore > 40 ? "bg-warning/10" : "bg-success/10" },
-            { label: "Eskalation", value: `Level ${decision.escalation_level || 0}`, icon: ShieldAlert, color: (decision.escalation_level || 0) > 0 ? "text-destructive" : "text-muted-foreground", bg: (decision.escalation_level || 0) > 0 ? "bg-destructive/10" : "bg-muted/50" },
+            { label: t("decisionDetail.escalate"), value: `Level ${decision.escalation_level || 0}`, icon: ShieldAlert, color: (decision.escalation_level || 0) > 0 ? "text-destructive" : "text-muted-foreground", bg: (decision.escalation_level || 0) > 0 ? "bg-destructive/10" : "bg-muted/50" },
             { label: "Cost of Delay", value: isActive ? formatCost(computed.delayCostPerWeek) + "/Wo" : "—", icon: DollarSign, color: computed.delayCostPerWeek > 3000 ? "text-destructive" : "text-warning", bg: computed.delayCostPerWeek > 3000 ? "bg-destructive/10" : "bg-warning/10" },
-            { label: "Fällig in", value: slaRemaining?.text || "—", icon: Clock, color: slaRemaining?.overdue ? "text-destructive" : "text-muted-foreground", bg: slaRemaining?.overdue ? "bg-destructive/10" : "bg-muted/50" },
+            { label: t("decisionDetail.metaDue"), value: slaRemaining?.text || "—", icon: Clock, color: slaRemaining?.overdue ? "text-destructive" : "text-muted-foreground", bg: slaRemaining?.overdue ? "bg-destructive/10" : "bg-muted/50" },
             { label: "Health", value: `${Math.round(((100 - riskScore) * 0.3 + computed.reviewCompletion * 0.3 + computed.alignmentScore * 0.2 + (slaRemaining?.overdue ? 0 : 80) * 0.2))}/100`, icon: Target, color: "text-primary", bg: "bg-primary/10" },
           ].map(kpi => (
             <Tooltip key={kpi.label}>
@@ -336,16 +341,16 @@ const DecisionDetail = () => {
             <AlertCircle className="w-4.5 h-4.5 text-destructive" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-destructive uppercase tracking-wider mb-1">Attention Required</p>
+            <p className="text-xs font-semibold text-destructive uppercase tracking-wider mb-1">{t("decisionDetail.attentionRequired")}</p>
             <p className="text-sm text-destructive font-medium">{focusMessage}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {isActive && (decision.escalation_level || 0) === 0 && (
               <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={async () => {
                 await supabase.from("decisions").update({ escalation_level: 1, last_escalated_at: new Date().toISOString() }).eq("id", decision.id);
-                invalidate(); toast.success("Eskaliert auf Stufe 1");
+                invalidate(); toast.success(t("decisionDetail.escalated"));
               }}>
-                <ChevronUp className="w-3 h-3 mr-1" /> Eskalieren
+                <ChevronUp className="w-3 h-3 mr-1" /> {t("decisionDetail.escalate")}
               </Button>
             )}
           </div>
@@ -357,9 +362,9 @@ const DecisionDetail = () => {
         <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/40 border border-border mb-6">
           <Ban className="w-5 h-5 text-muted-foreground shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-muted-foreground">Entscheidung abgebrochen</p>
+            <p className="text-sm font-semibold text-muted-foreground">{t("decisionDetail.cancelled")}</p>
             <p className="text-xs text-muted-foreground/70">
-              {decision.cancelled_at ? `Am ${format(new Date(decision.cancelled_at), "dd.MM.yyyy HH:mm", { locale: de })}` : ""} · Keine weiteren Aktionen möglich.
+              {decision.cancelled_at ? t("decisionDetail.cancelledAt", { date: format(new Date(decision.cancelled_at), "dd.MM.yyyy HH:mm", { locale: dateFnsLocale }) }) : ""}
             </p>
           </div>
         </div>
@@ -368,10 +373,10 @@ const DecisionDetail = () => {
         <div className="flex items-center gap-3 p-4 rounded-xl bg-accent/20 border border-accent/30 mb-6">
           <Replace className="w-5 h-5 text-accent-foreground shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-accent-foreground">Entscheidung ersetzt</p>
+            <p className="text-sm font-semibold text-accent-foreground">{t("decisionDetail.superseded")}</p>
             {decision.superseded_by && (
               <Button variant="link" size="sm" className="text-xs p-0 h-auto" onClick={() => navigate(`/decisions/${decision.superseded_by}`)}>
-                Nachfolger anzeigen →
+                {t("decisionDetail.showSuccessor")}
               </Button>
             )}
           </div>
@@ -383,7 +388,7 @@ const DecisionDetail = () => {
         <div className="flex items-center gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20 mb-6">
           <AlertCircle className="w-4 h-4 text-warning shrink-0" />
           <p className="text-xs text-warning">
-            <span className="font-semibold">{computed.openLinkedTasks} offene Aufgabe{computed.openLinkedTasks > 1 ? "n" : ""}</span> verknüpft — müssen erledigt werden.
+            {t("decisionDetail.openTasksWarning", { count: computed.openLinkedTasks })}
           </p>
         </div>
       )}
@@ -395,30 +400,30 @@ const DecisionDetail = () => {
         <div className="lg:col-span-2 space-y-2">
 
           {/* ═══ 3. CORE INFORMATION ═══ */}
-          <Section title="Kontext & Entscheidung" icon={FileText}>
+          <Section title={t("decisionDetail.contextSection")} icon={FileText}>
             <div className="space-y-4">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Problem / Beschreibung</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">{t("decisionDetail.problemDesc")}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  {decision.description || "Keine Beschreibung vorhanden."}
+                  {decision.description || t("decisionDetail.noDescription")}
                 </p>
               </div>
               {decision.context && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Hintergrund</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">{t("decisionDetail.background")}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">{decision.context}</p>
                 </div>
               )}
               {decision.outcome && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Ergebnis / Empfehlung</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">{t("decisionDetail.outcomeRec")}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">{decision.outcome}</p>
                 </div>
               )}
               {/* Options */}
               {decision.options && Array.isArray(decision.options) && (decision.options as any[]).length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">Entscheidungsoptionen</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-2">{t("decisionDetail.optionsTitle")}</p>
                   <div className="grid gap-2">
                     {(decision.options as any[]).map((opt: any, i: number) => (
                       <Card key={i} className="border-border/50">
@@ -439,24 +444,24 @@ const DecisionDetail = () => {
           <Separator />
 
           {/* ═══ 5. RISK & IMPACT ═══ */}
-          <Section title="Risiko & Wirtschaftlicher Impact" icon={Shield}
-            badge={riskScore > 60 ? <Badge className="bg-destructive/20 text-destructive text-[10px]">Hoch</Badge> : undefined}
+          <Section title={t("decisionDetail.riskImpact")} icon={Shield}
+            badge={riskScore > 60 ? <Badge className="bg-destructive/20 text-destructive text-[10px]">{t("decisionDetail.highRisk")}</Badge> : undefined}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Risk breakdown */}
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <p className="text-xs font-semibold">Risiko-Profil</p>
+                  <p className="text-xs font-semibold">{t("decisionDetail.riskProfile")}</p>
                   <div className="space-y-2">
-                    <RiskBar label="KI Risk Score" value={riskScore} />
-                    <RiskBar label="Abhängigkeiten" value={Math.min(computed.depCount * 15, 100)} />
-                    <RiskBar label="Offene Tasks" value={Math.min(computed.openLinkedTasks * 20, 100)} />
+                    <RiskBar label={t("decisionDetail.aiRiskScore")} value={riskScore} />
+                    <RiskBar label={t("decisionDetail.dependencies")} value={Math.min(computed.depCount * 15, 100)} />
+                    <RiskBar label={t("decisionDetail.openTasks")} value={Math.min(computed.openLinkedTasks * 20, 100)} />
                   </div>
-                  <p className="text-[10px] text-muted-foreground">Confidence: {riskScore > 0 ? "Mittel" : "Keine Daten"} · {computed.riskCount} verknüpfte Risiken</p>
+                  <p className="text-[10px] text-muted-foreground">{t("decisionDetail.confidenceLabel")}: {riskScore > 0 ? t("decisionDetail.confidenceMedium") : t("decisionDetail.confidenceNone")} · {computed.riskCount} {t("decisionDetail.linkedRisks")}</p>
                   {/* Risk/Success factors */}
                   {decision.ai_risk_factors?.length > 0 && (
                     <div className="pt-2 border-t border-border">
-                      <p className="text-[10px] font-medium text-destructive mb-1">Risikofaktoren</p>
+                      <p className="text-[10px] font-medium text-destructive mb-1">{t("decisionDetail.riskFactors")}</p>
                       <div className="flex flex-wrap gap-1">
                         {decision.ai_risk_factors.map((f: string, i: number) => (
                           <Badge key={i} variant="outline" className="text-[10px] text-destructive border-destructive/20">{f}</Badge>
@@ -466,7 +471,7 @@ const DecisionDetail = () => {
                   )}
                   {decision.ai_success_factors?.length > 0 && (
                     <div className="pt-2 border-t border-border">
-                      <p className="text-[10px] font-medium text-success mb-1">Erfolgsfaktoren</p>
+                      <p className="text-[10px] font-medium text-success mb-1">{t("decisionDetail.successFactors")}</p>
                       <div className="flex flex-wrap gap-1">
                         {decision.ai_success_factors.map((f: string, i: number) => (
                           <Badge key={i} variant="outline" className="text-[10px] text-success border-success/20">{f}</Badge>
@@ -479,16 +484,16 @@ const DecisionDetail = () => {
               {/* Economic impact */}
               <Card>
                 <CardContent className="p-4 space-y-3">
-                  <p className="text-xs font-semibold">Wirtschaftlicher Impact</p>
+                  <p className="text-xs font-semibold">{t("decisionDetail.economicImpact")}</p>
                   <div className="space-y-2">
-                    <KpiRow label="Verzögerungskosten/Woche" value={isActive ? formatCost(computed.delayCostPerWeek) : "—"} color="text-destructive" />
-                    <KpiRow label="Gesamt-Delay Cost" value={isActive ? formatCost(computed.delayCost) : "—"} color="text-warning" />
-                    <KpiRow label="Budget-Exposure" value={formatCost(computed.delayCost * 1.5)} color="text-muted-foreground" />
-                    <KpiRow label="KI Impact Score" value={`${decision.ai_impact_score || 0}%`} color="text-primary" />
+                    <KpiRow label={t("decisionDetail.delayCostPerWeek")} value={isActive ? formatCost(computed.delayCostPerWeek) : "—"} color="text-destructive" />
+                    <KpiRow label={t("decisionDetail.totalDelayCost")} value={isActive ? formatCost(computed.delayCost) : "—"} color="text-warning" />
+                    <KpiRow label={t("decisionDetail.budgetExposure")} value={formatCost(computed.delayCost * 1.5)} color="text-muted-foreground" />
+                    <KpiRow label={t("decisionDetail.aiImpactScore")} value={`${decision.ai_impact_score || 0}%`} color="text-primary" />
                   </div>
                   {isActive && computed.delayCostPerWeek > 2000 && (
                     <div className="p-2 rounded-lg bg-destructive/5 border border-destructive/10">
-                      <p className="text-[10px] text-destructive font-medium">⚠ Hohe Verzögerungskosten — Priorisierung empfohlen</p>
+                      <p className="text-[10px] text-destructive font-medium">{t("decisionDetail.highDelayCost")}</p>
                     </div>
                   )}
                 </CardContent>
@@ -499,7 +504,7 @@ const DecisionDetail = () => {
           <Separator />
 
           {/* ═══ 6. DEPENDENCIES ═══ */}
-          <Section title="Abhängigkeiten & Aufgaben" icon={Link2}
+          <Section title={t("decisionDetail.depsSection")} icon={Link2}
             badge={computed.depCount > 0 ? <Badge variant="outline" className="text-[10px]">{computed.depCount}</Badge> : undefined}
           >
             <DependenciesPanel decisionId={decision.id} />
@@ -508,21 +513,21 @@ const DecisionDetail = () => {
           <Separator />
 
           {/* ═══ DISCUSSION ═══ */}
-          <Section title="Diskussion" icon={MessageSquare}>
+          <Section title={t("decisionDetail.discussionSection")} icon={MessageSquare}>
             <DiscussionPanel decisionId={decision.id} />
           </Section>
 
           <Separator />
 
           {/* ═══ 7. AUDIT TRAIL ═══ */}
-          <Section title="Aktivität & Audit Trail" icon={History} defaultOpen={false}>
+          <Section title={t("decisionDetail.auditSection")} icon={History} defaultOpen={false}>
             <AuditTrailPanel decisionId={decision.id} />
           </Section>
 
           <Separator />
 
           {/* ═══ IMPACT TRACKER ═══ */}
-          <Section title="Impact Tracking" icon={Target} defaultOpen={false}>
+          <Section title={t("decisionDetail.impactSection")} icon={Target} defaultOpen={false}>
             <ImpactTrackerPanel decision={decision} onUpdated={invalidate} />
           </Section>
 
@@ -530,7 +535,7 @@ const DecisionDetail = () => {
           {isImplemented && (
             <>
               <Separator />
-              <Section title="Post-Implementation Review" icon={Lightbulb}>
+              <Section title={t("decisionDetail.pirSection")} icon={Lightbulb}>
                 <PostImplementationReview decision={decision} onCompleted={invalidate} />
               </Section>
             </>
@@ -543,7 +548,7 @@ const DecisionDetail = () => {
           {/* ═══ 4. STAKEHOLDER & GOVERNANCE ═══ */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <p className="text-xs font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-muted-foreground" /> Stakeholder & Governance</p>
+              <p className="text-xs font-semibold flex items-center gap-2"><Users className="w-4 h-4 text-muted-foreground" /> {t("decisionDetail.stakeholderGov")}</p>
 
               {/* RACI */}
               <div className="grid grid-cols-2 gap-2">
@@ -562,19 +567,19 @@ const DecisionDetail = () => {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5">Review Status</p>
                 {decReviews.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Keine Reviewer zugewiesen</p>
+                  <p className="text-xs text-muted-foreground">{t("decisionDetail.noReviewers")}</p>
                 ) : (
                   <div className="space-y-1.5">
                     {decReviews.map(r => (
                       <div key={r.id} className="flex items-center justify-between text-xs">
-                        <span>{profileMap[r.reviewer_id] || "Unbekannt"}</span>
+                        <span>{profileMap[r.reviewer_id] || t("common.unknown", "Unbekannt")}</span>
                         {r.reviewed_at ? (
                           <Badge className="text-[10px] bg-success/20 text-success border-0">
                             <CheckCircle2 className="w-3 h-3 mr-0.5" /> Done
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="text-[10px] text-warning border-warning/30">
-                            <Circle className="w-3 h-3 mr-0.5" /> Ausstehend
+                            <Circle className="w-3 h-3 mr-0.5" /> {t("decisionDetail.reviewPending")}
                           </Badge>
                         )}
                       </div>
@@ -585,9 +590,9 @@ const DecisionDetail = () => {
 
               {/* Stakeholder alignment */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5">Stakeholder Alignment</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1.5">{t("decisionDetail.stakeholderAlignment")}</p>
                 {positionSummary.total === 0 ? (
-                  <p className="text-xs text-muted-foreground">Keine Positionen abgegeben</p>
+                  <p className="text-xs text-muted-foreground">{t("decisionDetail.noPositions")}</p>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-3 text-xs">
@@ -602,14 +607,14 @@ const DecisionDetail = () => {
                       {positionSummary.oppose > 0 && <div className="h-full bg-destructive" style={{ width: `${(positionSummary.oppose / positionSummary.total) * 100}%` }} />}
                     </div>
                     {positionSummary.oppose > 0 && (
-                      <p className="text-[10px] text-destructive">⚠ {positionSummary.oppose} Konflikt{positionSummary.oppose > 1 ? "e" : ""} — Alignment-Analyse empfohlen</p>
+                      <p className="text-[10px] text-destructive">⚠ {t("decisionDetail.conflictsWarning", { count: positionSummary.oppose })}</p>
                     )}
                   </div>
                 )}
               </div>
 
               <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => navigate(`/decisions/${decision.id}#alignment`)}>
-                Alignment-Details öffnen
+                {t("decisionDetail.alignmentDetails")}
               </Button>
             </CardContent>
           </Card>
@@ -618,7 +623,7 @@ const DecisionDetail = () => {
           <Collapsible>
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full text-xs gap-1.5 text-muted-foreground">
-                <Users className="w-3.5 h-3.5" /> Alignment bearbeiten <ChevronDown className="w-3 h-3" />
+                <Users className="w-3.5 h-3.5" /> {t("decisionDetail.editAlignment")} <ChevronDown className="w-3 h-3" />
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -633,49 +638,49 @@ const DecisionDetail = () => {
           {/* ═══ 8. AI INSIGHT PANEL ═══ */}
           <Card>
             <CardContent className="p-4 space-y-3">
-              <p className="text-xs font-semibold flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> KI Insight</p>
+              <p className="text-xs font-semibold flex items-center gap-2"><Brain className="w-4 h-4 text-primary" /> {t("decisionDetail.aiInsight")}</p>
 
               {/* Risk assessment */}
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Risikoeinschätzung</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">{t("decisionDetail.riskAssessment")}</p>
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${riskScore > 60 ? "bg-destructive" : riskScore > 40 ? "bg-warning" : "bg-success"}`} />
                   <p className="text-sm font-semibold">{riskScore}%</p>
                   <p className="text-xs text-muted-foreground">
-                    {riskScore > 60 ? "Hohes Risiko" : riskScore > 40 ? "Mittleres Risiko" : "Niedriges Risiko"}
+                    {riskScore > 60 ? t("decisionDetail.highRisk") : riskScore > 40 ? t("decisionDetail.mediumRisk") : t("decisionDetail.lowRisk")}
                   </p>
                 </div>
               </div>
 
               {/* Recommendation */}
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/60 mb-1">Empfehlung</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/60 mb-1">{t("decisionDetail.recommendation")}</p>
                 <p className="text-xs text-foreground">
                   {riskScore > 60
-                    ? "Risiko-Review durch zweiten Stakeholder empfohlen. Szenario-Analyse durchführen."
+                    ? t("decisionDetail.recHighRisk")
                     : missingReviewers.length > 0
-                      ? `${missingReviewers.length} Review${missingReviewers.length > 1 ? "s" : ""} ausstehend — Reviewer benachrichtigen.`
+                      ? t("decisionDetail.recPendingReviews", { count: missingReviewers.length })
                       : computed.reviewCompletion === 100
-                        ? "Alle Reviews abgeschlossen. Entscheidung kann genehmigt werden."
-                        : "Entscheidung verläuft planmäßig."}
+                        ? t("decisionDetail.recAllComplete")
+                        : t("decisionDetail.recOnTrack")}
                 </p>
               </div>
 
               {/* Next step */}
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Nächster Schritt</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">{t("decisionDetail.nextStep")}</p>
                 <p className="text-xs text-foreground">
-                  {decision.status === "draft" ? "Review starten und Reviewer zuweisen"
-                    : decision.status === "review" ? "Offene Reviews einfordern"
-                      : decision.status === "approved" ? "Implementierung beginnen und Tasks erstellen"
-                        : "Status aktuell halten"}
+                  {decision.status === "draft" ? t("decisionDetail.nextDraft")
+                    : decision.status === "review" ? t("decisionDetail.nextReview")
+                      : decision.status === "approved" ? t("decisionDetail.nextApproved")
+                        : t("decisionDetail.nextDefault")}
                 </p>
               </div>
 
               <Collapsible>
                 <CollapsibleTrigger asChild>
                   <Button variant="ghost" size="sm" className="w-full text-xs gap-1.5 text-muted-foreground">
-                    <Brain className="w-3.5 h-3.5" /> Detaillierte KI-Analyse <ChevronDown className="w-3 h-3" />
+                    <Brain className="w-3.5 h-3.5" /> {t("decisionDetail.detailedAi")} <ChevronDown className="w-3 h-3" />
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-2">
@@ -689,7 +694,7 @@ const DecisionDetail = () => {
           <Card>
             <CardContent className="p-4">
               <p className="text-xs font-semibold mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-muted-foreground" /> Review & Genehmigung
+                <CheckCircle2 className="w-4 h-4 text-muted-foreground" /> {t("decisionDetail.reviewApproval")}
               </p>
               <ReviewPanel decision={decision} onUpdated={invalidate} />
             </CardContent>
@@ -698,18 +703,18 @@ const DecisionDetail = () => {
           {/* Meta info */}
           <Card>
             <CardContent className="p-4">
-              <p className="text-xs font-semibold mb-2">Details</p>
+              <p className="text-xs font-semibold mb-2">{t("decisionDetail.details")}</p>
               <div className="space-y-1.5 text-xs">
-                <MetaRow label="Erstellt" value={format(new Date(decision.created_at), "dd.MM.yyyy HH:mm", { locale: de })} />
-                <MetaRow label="Letztes Update" value={format(new Date(decision.updated_at), "dd.MM.yyyy HH:mm", { locale: de })} />
+                <MetaRow label={t("decisionDetail.metaCreated")} value={format(new Date(decision.created_at), "dd.MM.yyyy HH:mm", { locale: dateFnsLocale })} />
+                <MetaRow label={t("decisionDetail.metaUpdated")} value={format(new Date(decision.updated_at), "dd.MM.yyyy HH:mm", { locale: dateFnsLocale })} />
                 {decision.due_date && (
-                  <MetaRow label="Fällig" value={format(new Date(decision.due_date), "dd.MM.yyyy", { locale: de })} highlight={slaRemaining?.overdue} />
+                  <MetaRow label={t("decisionDetail.metaDue")} value={format(new Date(decision.due_date), "dd.MM.yyyy", { locale: dateFnsLocale })} highlight={slaRemaining?.overdue} />
                 )}
                 {decision.implemented_at && (
-                  <MetaRow label="Umgesetzt" value={format(new Date(decision.implemented_at), "dd.MM.yyyy", { locale: de })} />
+                  <MetaRow label={t("decisionDetail.metaImplemented")} value={format(new Date(decision.implemented_at), "dd.MM.yyyy", { locale: dateFnsLocale })} />
                 )}
-                <MetaRow label="Kategorie" value={categoryLabels[decision.category]} />
-                <MetaRow label="Priorität" value={priorityLabels[decision.priority]} />
+                <MetaRow label={t("decisionDetail.metaCategory")} value={tl.categoryLabels[decision.category]} />
+                <MetaRow label={t("decisionDetail.metaPriority")} value={tl.priorityLabels[decision.priority]} />
               </div>
             </CardContent>
           </Card>
@@ -721,39 +726,39 @@ const DecisionDetail = () => {
         <div className="sticky bottom-0 z-10 mt-8 -mx-4 px-4 py-3 bg-background/80 backdrop-blur-lg border-t border-border flex items-center gap-2 flex-wrap">
           {decision.status === "draft" && (
             <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("review")}>
-              <PlayCircle className="w-3.5 h-3.5" /> Start Review
+              <PlayCircle className="w-3.5 h-3.5" /> {t("decisionDetail.startReview")}
             </Button>
           )}
           {decision.status === "review" && (
             <>
               <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("approved")}>
-                <ThumbsUp className="w-3.5 h-3.5" /> Genehmigen
+                <ThumbsUp className="w-3.5 h-3.5" /> {t("decisionDetail.approve")}
               </Button>
               <Button size="sm" variant="destructive" className="gap-1.5 text-xs" onClick={() => handleStatusChange("rejected")}>
-                <ThumbsDown className="w-3.5 h-3.5" /> Ablehnen
+                <ThumbsDown className="w-3.5 h-3.5" /> {t("decisionDetail.reject")}
               </Button>
             </>
           )}
           {decision.status === "approved" && (
             <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("implemented")}>
-              <CheckCircle2 className="w-3.5 h-3.5" /> Als umgesetzt markieren
+              <CheckCircle2 className="w-3.5 h-3.5" /> {t("decisionDetail.markImplemented")}
             </Button>
           )}
           {(decision.escalation_level || 0) === 0 && (
             <Button variant="outline" size="sm" className="gap-1.5 text-xs text-warning" onClick={async () => {
               await supabase.from("decisions").update({ escalation_level: 1, last_escalated_at: new Date().toISOString() }).eq("id", decision.id);
-              invalidate(); toast.success("Eskaliert auf Stufe 1");
+              invalidate(); toast.success(t("decisionDetail.escalated"));
             }}>
-              <ChevronUp className="w-3.5 h-3.5" /> Eskalieren
+              <ChevronUp className="w-3.5 h-3.5" /> {t("decisionDetail.escalate")}
             </Button>
           )}
           {isOwner && (
             <>
               <Button variant="outline" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => handleStatusChange("cancelled")}>
-                <Ban className="w-3.5 h-3.5" /> Abbrechen
+                <Ban className="w-3.5 h-3.5" /> {t("decisionDetail.cancelDecision")}
               </Button>
               <Button variant="outline" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => handleStatusChange("archived")}>
-                <History className="w-3.5 h-3.5" /> Archivieren
+                <History className="w-3.5 h-3.5" /> {t("decisionDetail.archiveDecision")}
               </Button>
             </>
           )}
