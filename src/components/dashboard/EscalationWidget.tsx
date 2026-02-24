@@ -7,8 +7,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import WidgetSkeleton from "./WidgetSkeleton";
+import { useTranslation } from "react-i18next";
 
 const EscalationWidget = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [overdue, setOverdue] = useState<any[]>([]);
@@ -63,14 +65,14 @@ const EscalationWidget = () => {
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-1.5">
-              <CardTitle className="text-sm">Eskalationen & Deadlines</CardTitle>
+              <CardTitle className="text-sm">{t("escalationWidget.title")}</CardTitle>
               <ScoreMethodology
-                title="Eskalationen"
-                description="Zeigt ungelesene Benachrichtigungen und überfällige Entscheidungen. Eskalationsstufen zeigen Dringlichkeit."
+                title={t("escalationWidget.title")}
+                description={t("escalationWidget.methodologyDesc")}
                 items={[
-                  { label: "Überfällig", formula: "Status ∈ {Draft, Review, Approved} UND due_date < heute" },
-                  { label: "Eskalationsstufe", formula: "Level 1 = niedrig, Level 2 = mittel (gelb), Level 3+ = kritisch (rot)" },
-                  { label: "Auto-Eskalation", formula: "Wird durch check-escalations Backend-Funktion basierend auf SLA ausgelöst" },
+                  { label: t("escalationWidget.overdue"), formula: t("escalationWidget.overdueFormula") },
+                  { label: t("escalationWidget.levelLabel"), formula: t("escalationWidget.levelFormula") },
+                  { label: t("escalationWidget.autoLabel"), formula: t("escalationWidget.autoFormula") },
                 ]}
               />
             </div>
@@ -103,7 +105,7 @@ const EscalationWidget = () => {
         {overdue.length > 0 && (
           <div className="space-y-2 pt-3 border-t border-border">
             <p className="text-xs font-medium text-destructive flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> Überfällige Entscheidungen
+              <Clock className="w-3.5 h-3.5" /> {t("escalationWidget.overdueDecisions")}
             </p>
             {overdue.map(d => (
               <div key={d.id} className={`flex items-center justify-between p-2.5 rounded-lg border text-xs ${escalationColor(d.escalation_level)}`}>

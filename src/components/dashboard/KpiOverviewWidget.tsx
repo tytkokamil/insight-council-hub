@@ -28,8 +28,6 @@ const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
   });
 
   const gradientId = `spark-${color.replace(/[^a-z]/gi, "")}`;
-
-  // Area fill path
   const firstX = pad;
   const lastX = pad + ((data.length - 1) / (data.length - 1)) * (w - pad * 2);
   const areaPath = `M${points[0]} ${points.slice(1).map(p => `L${p}`).join(" ")} L${lastX},${h} L${firstX},${h} Z`;
@@ -43,26 +41,12 @@ const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gradientId})`} />
-      <polyline
-        points={points.join(" ")}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {/* Dot on last point */}
-      <circle
-        cx={parseFloat(points[points.length - 1].split(",")[0])}
-        cy={parseFloat(points[points.length - 1].split(",")[1])}
-        r="2"
-        fill={color}
-      />
+      <polyline points={points.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={parseFloat(points[points.length - 1].split(",")[0])} cy={parseFloat(points[points.length - 1].split(",")[1])} r="2" fill={color} />
     </svg>
   );
 };
 
-/** Get the stroke color string from a tailwind-style token */
 const resolveColor = (colorClass: string) => {
   if (colorClass.includes("destructive")) return "hsl(var(--destructive))";
   if (colorClass.includes("success")) return "hsl(var(--success, 142 71% 45%))";
@@ -91,7 +75,6 @@ const KpiOverviewWidget = () => {
     const now = new Date();
     const weekMs = 7 * 86400000;
 
-    // Build 4-week buckets (week 0 = oldest, week 3 = current)
     const weeks = Array.from({ length: 4 }, (_, i) => {
       const start = new Date(now.getTime() - (4 - i) * weekMs);
       const end = new Date(now.getTime() - (3 - i) * weekMs);
@@ -99,7 +82,6 @@ const KpiOverviewWidget = () => {
     });
 
     const openDecisionsPerWeek = weeks.map(w => {
-      // Count decisions that were open at end of that week
       return decisions.filter(d => {
         const created = new Date(d.created_at);
         if (created > w.end) return false;
@@ -117,7 +99,7 @@ const KpiOverviewWidget = () => {
       return tasks.filter(t => {
         if (!t.due_date) return false;
         const due = new Date(t.due_date);
-        if (due >= w.end) return false; // not overdue yet at week end
+        if (due >= w.end) return false;
         const created = new Date(t.created_at);
         if (created > w.end) return false;
         const completed = t.completed_at ? new Date(t.completed_at) : null;
@@ -159,43 +141,43 @@ const KpiOverviewWidget = () => {
 
     return [
       {
-        label: t("kpi.openDecisions"),
+        label: t("kpiOverview.openDecisions"),
         value: openNow,
         icon: FileText,
         color: "text-primary",
         bg: "bg-primary/10",
         trend: trend(openNow, openPrev),
-        trendLabel: openNow > openPrev ? t("kpi.increase") : openNow < openPrev ? t("kpi.decrease") : t("kpi.stable"),
+        trendLabel: openNow > openPrev ? t("kpiOverview.increase") : openNow < openPrev ? t("kpiOverview.decrease") : t("kpiOverview.stable"),
         sparkData: openDecisionsPerWeek,
       },
       {
-        label: t("kpi.overdueTasks"),
+        label: t("kpiOverview.overdueTasks"),
         value: overdueNow,
         icon: AlertTriangle,
         color: overdueNow > 0 ? "text-destructive" : "text-success",
         bg: overdueNow > 0 ? "bg-destructive/10" : "bg-success/10",
         trend: overdueNow > 0 ? "up" as const : "neutral" as const,
-        trendLabel: overdueNow === 0 ? t("kpi.allOnTrack") : t("kpi.urgent", { count: overdueNow }),
+        trendLabel: overdueNow === 0 ? t("kpiOverview.allOnTrack") : t("kpiOverview.urgent", { count: overdueNow }),
         sparkData: overdueTasksPerWeek,
       },
       {
-        label: t("kpi.completedWeek"),
+        label: t("kpiOverview.completedWeek"),
         value: completedNow,
         icon: CheckCircle2,
         color: "text-success",
         bg: "bg-success/10",
         trend: trend(completedNow, completedPrev),
-        trendLabel: completedNow > completedPrev ? `+${completedNow - completedPrev} ${t("kpi.vsLastWeek")}` : completedNow < completedPrev ? `${completedNow - completedPrev} ${t("kpi.vsLastWeek")}` : t("kpi.sameAsLastWeek"),
+        trendLabel: completedNow > completedPrev ? `+${completedNow - completedPrev} ${t("kpiOverview.vsLastWeek")}` : completedNow < completedPrev ? `${completedNow - completedPrev} ${t("kpiOverview.vsLastWeek")}` : t("kpiOverview.sameAsLastWeek"),
         sparkData: completedPerWeek,
       },
       {
-        label: isPersonal ? t("kpi.activityWeek") : t("kpi.teamActivityWeek"),
+        label: isPersonal ? t("kpiOverview.activityWeek") : t("kpiOverview.teamActivityWeek"),
         value: activityNow,
         icon: isPersonal ? ListChecks : Users,
         color: "text-accent-foreground",
         bg: "bg-accent/30",
         trend: trend(activityNow, activityPrev),
-        trendLabel: activityNow > activityPrev ? t("kpi.moreActivity") : activityNow < activityPrev ? t("kpi.lessActivity") : t("kpi.stable"),
+        trendLabel: activityNow > activityPrev ? t("kpiOverview.moreActivity") : activityNow < activityPrev ? t("kpiOverview.lessActivity") : t("kpiOverview.stable"),
         sparkData: activityPerWeek,
       },
     ];
@@ -208,11 +190,9 @@ const KpiOverviewWidget = () => {
   };
 
   const trendColor = (trend: string, index: number) => {
-    // index 1 = overdue tasks (up is bad)
     if (index === 1) {
       return trend === "up" ? "text-destructive" : trend === "down" ? "text-success" : "text-muted-foreground";
     }
-    // index 2,3 = completed/activity (up is good)
     if (index === 2 || index === 3) {
       return trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";
     }

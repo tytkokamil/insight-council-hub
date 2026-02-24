@@ -7,11 +7,12 @@ import {
   TrendingUp, Shield, Link2, DollarSign,
 } from "lucide-react";
 import { differenceInDays } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface HealthDimension {
   key: string;
   label: string;
-  value: number; // 0-100
+  value: number;
   icon: React.ElementType;
   detail: string;
 }
@@ -81,74 +82,69 @@ const DecisionHealthScore = ({
   isActive,
   stakeholderPositions,
 }: Props) => {
+  const { t } = useTranslation();
+
   const { dimensions, overallScore, overallTraffic } = useMemo(() => {
-    // 1. Review Progress
     const reviewDim: HealthDimension = {
       key: "review",
-      label: "Review Progress",
+      label: t("healthScore.reviewProgress"),
       value: reviewCompletion,
       icon: CheckSquare,
-      detail: `${reviewCompletion}% der Reviews abgeschlossen`,
+      detail: t("healthScore.reviewDetail", { pct: reviewCompletion }),
     };
 
-    // 2. Stakeholder Alignment
     const total = stakeholderPositions.length;
     const support = stakeholderPositions.filter(p => p.position === "support").length;
     const oppose = stakeholderPositions.filter(p => p.position === "oppose").length;
     const alignValue = total > 0
-      ? Math.round(((support - oppose) / total) * 50 + 50) // -100..100 → 0..100
+      ? Math.round(((support - oppose) / total) * 50 + 50)
       : alignmentScore > 0 ? alignmentScore : 0;
     const alignDim: HealthDimension = {
       key: "alignment",
-      label: "Stakeholder Alignment",
+      label: t("healthScore.stakeholderAlignment"),
       value: alignValue,
       icon: Users,
       detail: total > 0
-        ? `${support} Support, ${total - support - oppose} Neutral, ${oppose} Oppose`
-        : alignmentScore > 0 ? `Strategie-Alignment: ${alignmentScore}%` : "Keine Stakeholder-Positionen",
+        ? t("healthScore.supportNeutralOppose", { support, neutral: total - support - oppose, oppose })
+        : alignmentScore > 0 ? t("healthScore.strategyAlignment", { pct: alignmentScore }) : t("healthScore.noPositions"),
     };
 
-    // 3. Risk Level (inverted: high risk = low score)
     const riskValue = 100 - riskScore;
     const riskDim: HealthDimension = {
       key: "risk",
-      label: "Risk Level",
+      label: t("healthScore.riskLevel"),
       value: riskValue,
       icon: AlertTriangle,
-      detail: `KI-Risk-Score: ${riskScore}% · ${riskCount} verknüpfte Risiken`,
+      detail: t("healthScore.riskDetail", { score: riskScore, count: riskCount }),
     };
 
-    // 4. Delay Probability
     let delayValue = 100;
     if (decision.due_date && isActive) {
       const daysLeft = differenceInDays(new Date(decision.due_date), new Date());
       const daysTotal = differenceInDays(new Date(decision.due_date), new Date(decision.created_at));
       if (daysLeft < 0) {
-        delayValue = 0; // overdue
+        delayValue = 0;
       } else if (daysTotal > 0) {
         const progress = (daysTotal - daysLeft) / daysTotal;
-        // If tasks are still open and time is running out, delay probability increases
         const taskPenalty = openLinkedTasks > 0 ? Math.min(openLinkedTasks * 10, 30) : 0;
         delayValue = Math.max(0, Math.round((1 - progress) * 100 - taskPenalty));
       }
     } else if (!decision.due_date) {
-      delayValue = 0; // no due date = can't assess
+      delayValue = 0;
     }
     const delayDim: HealthDimension = {
       key: "delay",
-      label: "Zeitplan-Sicherheit",
+      label: t("healthScore.scheduleSafety"),
       value: !decision.due_date ? 0 : delayValue,
       icon: Clock,
       detail: !decision.due_date
-        ? "Kein Fälligkeitsdatum gesetzt"
+        ? t("healthScore.noDueDate")
         : delayValue === 0
-          ? "Überfällig"
-          : `${delayValue}% Zeitpuffer verbleibend`,
+          ? t("healthScore.overdue")
+          : t("healthScore.bufferRemaining", { pct: delayValue }),
     };
 
     const dims = [reviewDim, alignDim, riskDim, delayDim];
-
-    // Overall: weighted average (only dimensions with data)
     const weights = dims.map(d => d.value > 0 || d.key === "delay" ? 1 : 0);
     const totalWeight = weights.reduce((a, b) => a + b, 0);
     const overall = totalWeight > 0
@@ -160,13 +156,12 @@ const DecisionHealthScore = ({
       overallScore: overall,
       overallTraffic: getTraffic(overall),
     };
-  }, [decision, reviewCompletion, alignmentScore, riskScore, riskCount, openLinkedTasks, stakeholderPositions, isActive]);
+  }, [decision, reviewCompletion, alignmentScore, riskScore, riskCount, openLinkedTasks, stakeholderPositions, isActive, t]);
 
   const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
 
   return (
     <div className="mb-6 space-y-3">
-      {/* Overall Health Score */}
       <Card className={`${trafficBg[overallTraffic]} border-0`}>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
@@ -179,7 +174,7 @@ const DecisionHealthScore = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className={`w-4 h-4 ${trafficText[overallTraffic]}`} />
-                <h3 className="font-semibold text-sm">Decision Health Score</h3>
+                <h3 className="font-semibold text-sm">{t("healthScore.title")}</h3>
               </div>
               <Progress value={overallScore} className={`h-2 bg-muted ${progressColor(overallTraffic)}`} />
             </div>
@@ -187,7 +182,6 @@ const DecisionHealthScore = ({
         </CardContent>
       </Card>
 
-      {/* Four dimensions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {dimensions.map(dim => {
           const traffic = dim.key === "risk"
@@ -221,12 +215,11 @@ const DecisionHealthScore = ({
         })}
       </div>
 
-      {/* Secondary metrics row */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { icon: Link2, label: "Dependencies", value: `${depCount}`, color: "text-primary" },
-          { icon: DollarSign, label: "Delay Cost", value: isActive ? formatCost(delayCost) : "—", color: "text-destructive" },
-          { icon: Shield, label: "Risiken", value: `${riskCount}`, color: riskCount > 0 ? "text-destructive" : "text-muted-foreground" },
+          { icon: Link2, label: t("healthScore.dependencies"), value: `${depCount}`, color: "text-primary" },
+          { icon: DollarSign, label: t("healthScore.delayCost"), value: isActive ? formatCost(delayCost) : "—", color: "text-destructive" },
+          { icon: Shield, label: t("healthScore.risks"), value: `${riskCount}`, color: riskCount > 0 ? "text-destructive" : "text-muted-foreground" },
         ].map(m => (
           <Card key={m.label} className="card-interactive">
             <CardContent className="p-3 text-center">

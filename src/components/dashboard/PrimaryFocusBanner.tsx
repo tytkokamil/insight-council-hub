@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { AlertTriangle, DollarSign, TrendingDown, ShieldAlert, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   decisions: any[];
@@ -13,14 +14,14 @@ interface Props {
 
 const PrimaryFocusBanner = ({ decisions, escalated, overdue, teams }: Props) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const signal = useMemo(() => {
     const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled", "superseded"].includes(d.status));
     const now = Date.now();
 
-    // Calculate delay costs for critical/high priority overdue decisions
     const teamRateMap: Record<string, number> = {};
-    teams.forEach((t: any) => { if (t.hourly_rate) teamRateMap[t.id] = t.hourly_rate; });
+    teams.forEach((tm: any) => { if (tm.hourly_rate) teamRateMap[tm.id] = tm.hourly_rate; });
 
     let totalDelayCost = 0;
     overdue.forEach(d => {
@@ -31,45 +32,46 @@ const PrimaryFocusBanner = ({ decisions, escalated, overdue, teams }: Props) => 
     });
 
     const slaViolations = escalated.filter(d => (d.escalation_level || 0) >= 2).length;
-    const criticalCount = active.filter(d => d.priority === "critical" && !["implemented", "rejected", "archived"].includes(d.status)).length;
 
-    // Determine severity
     if (escalated.length >= 3 || slaViolations >= 2) {
+      const costStr = totalDelayCost > 0 ? `${Math.round(totalDelayCost / 1000)}k€` : null;
       return {
         level: "critical" as const,
-        message: `${escalated.length} kritische Entscheidungen gefährden ${totalDelayCost > 0 ? `${Math.round(totalDelayCost / 1000)}k€ Budget` : "Ihren Zeitplan"} – ${slaViolations} SLA-Verletzungen aktiv`,
+        message: costStr
+          ? t("focusBanner.criticalBudget", { count: escalated.length, budget: costStr, violations: slaViolations })
+          : t("focusBanner.criticalTimeline", { count: escalated.length, violations: slaViolations }),
         icon: ShieldAlert,
         action: "/engine",
-        actionLabel: "Eskalationen öffnen",
+        actionLabel: t("focusBanner.openEscalations"),
       };
     }
 
     if (overdue.length >= 2) {
+      const costLabel = totalDelayCost > 0 ? `${Math.round(totalDelayCost / 1000)}k€` : t("focusBanner.overdueCostRising");
       return {
         level: "warning" as const,
-        message: `${overdue.length} überfällige Entscheidungen – geschätzte Verzögerungskosten: ${totalDelayCost > 0 ? `${Math.round(totalDelayCost / 1000)}k€` : "steigend"}`,
+        message: t("focusBanner.overdueMsg", { count: overdue.length, cost: costLabel }),
         icon: AlertTriangle,
         action: "/decisions",
-        actionLabel: "Überfällige anzeigen",
+        actionLabel: t("focusBanner.showOverdue"),
       };
     }
 
-    // Check momentum decline (simple heuristic: more created than completed recently)
     const thirtyDaysAgo = now - 30 * 86400000;
     const recentCreated = decisions.filter(d => new Date(d.created_at).getTime() > thirtyDaysAgo).length;
     const recentCompleted = decisions.filter(d => d.implemented_at && new Date(d.implemented_at).getTime() > thirtyDaysAgo).length;
     if (recentCreated > 0 && recentCompleted < recentCreated * 0.4) {
       return {
         level: "info" as const,
-        message: `Momentum sinkt – ${recentCreated} neue vs. ${recentCompleted} abgeschlossene Entscheidungen in 30 Tagen`,
+        message: t("focusBanner.momentumDecline", { created: recentCreated, completed: recentCompleted }),
         icon: TrendingDown,
         action: "/analytics",
-        actionLabel: "Analyse öffnen",
+        actionLabel: t("focusBanner.openAnalysis"),
       };
     }
 
     return null;
-  }, [decisions, escalated, overdue, teams]);
+  }, [decisions, escalated, overdue, teams, t]);
 
   if (!signal) return null;
 
