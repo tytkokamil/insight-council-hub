@@ -21,7 +21,7 @@ const Footer = () => {
               <span className="font-semibold text-[15px] tracking-tight">Decivio</span>
             </Link>
             <p className="text-xs text-muted-foreground/40 leading-relaxed max-w-[200px]">
-              Decision Governance für Teams mit Anspruch.
+              Decision Governance Platform — Entscheidungen sichtbar, messbar, lösbar.
             </p>
           </div>
 
@@ -42,11 +42,16 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-[11px] font-medium tracking-[0.15em] uppercase text-muted-foreground/30 mb-4">Lösungen</h4>
+            <h4 className="text-[11px] font-medium tracking-[0.15em] uppercase text-muted-foreground/30 mb-4">Branchen</h4>
             <ul className="space-y-2.5">
-              {["Finanzdienstleister", "Pharma", "Scale-Ups", "Changelog", "Status"].map(l => (
-                <li key={l}>
-                  <a href="#" className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{l}</a>
+              {[
+                { label: "Finanzdienstleister", href: "#use-cases" },
+                { label: "Pharma & Life Sciences", href: "#use-cases" },
+                { label: "Scale-Ups & Tech", href: "#use-cases" },
+                { label: "Public Sector", href: "#use-cases" },
+              ].map(l => (
+                <li key={l.label}>
+                  <a href={l.href} className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{l.label}</a>
                 </li>
               ))}
             </ul>
@@ -88,12 +93,15 @@ const Footer = () => {
 
         <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border/20">
           <p className="text-[11px] text-muted-foreground/30">
-            © 2026 Decivio. Alle Rechte vorbehalten.
+            © {new Date().getFullYear()} Decivio GmbH. Alle Rechte vorbehalten. EU-Hosting (Frankfurt).
           </p>
           <div className="flex items-center gap-6 mt-4 md:mt-0">
-            {["Twitter", "LinkedIn", "GitHub"].map(social => (
-              <a key={social} href="#" className="text-[11px] text-muted-foreground/30 hover:text-foreground transition-colors duration-200">
-                {social}
+            {[
+              { label: "LinkedIn", href: "https://linkedin.com/company/decivio" },
+              { label: "Twitter", href: "https://twitter.com/decivio" },
+            ].map(social => (
+              <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" className="text-[11px] text-muted-foreground/30 hover:text-foreground transition-colors duration-200">
+                {social.label}
               </a>
             ))}
           </div>

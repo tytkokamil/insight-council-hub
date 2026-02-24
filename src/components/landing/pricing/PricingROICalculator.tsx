@@ -33,9 +33,9 @@ const PricingROICalculator = () => {
     const totalMonthlySavings = Math.round(timeSavingsPerMonth + escalationCostSaved + overheadSaved);
     const annualSavings = totalMonthlySavings * 12;
 
-    // Cost of DecisionOS (Pro plan)
-    const monthlyCost = teamSize * 49;
-    const annualCost = monthlyCost * 10; // 2 months free
+    // Cost of DecisionOS (flat-rate pricing)
+    const monthlyCost = teamSize <= 10 ? 49 : teamSize <= 50 ? 149 : 499;
+    const annualCost = monthlyCost * 10; // 2 months free with annual
     const netROI = annualSavings - annualCost;
     const roiMultiple = annualCost > 0 ? Math.round(annualSavings / annualCost) : 0;
 
