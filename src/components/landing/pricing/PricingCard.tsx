@@ -80,7 +80,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
         <div className="flex items-center gap-1.5 mb-3">
           <Users className="w-3 h-3 text-muted-foreground" />
           <span className="text-[11px] text-muted-foreground">
-            Mindestens {plan.minSeats} Nutzer
+            Ab {plan.minSeats} Nutzer
           </span>
         </div>
       )}

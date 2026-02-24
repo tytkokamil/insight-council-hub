@@ -50,7 +50,7 @@ export const plans: Plan[] = [
     monthlyPrice: 49,
     annualPrice: 39,
     description: "Für kleine Teams bis 10 Personen.",
-    minSeats: 1,
+    minSeats: 3,
     features: [
       { label: "Bis zu 10 Nutzer", included: true },
       { label: "Vollständiger Decision Hub", included: true },
