@@ -205,7 +205,7 @@ const Decisions = () => {
           </>
         }
         primaryAction={
-          <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.new")}</Button>
+          <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.newButton")}</Button>
         }
       />
 

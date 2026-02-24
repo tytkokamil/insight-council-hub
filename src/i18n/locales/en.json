@@ -308,7 +308,7 @@
   "decisions": {
     "title": "Decisions",
     "countShown": "{{total}} decisions · {{shown}} shown",
-    "new": "New Decision",
+    "newButton": "New Decision",
     "searchPlaceholder": "Search decisions...",
     "noDecisions": "No decisions yet",
     "noDecisionsDesc": "Create your first decision or load sample data to explore the platform.",
