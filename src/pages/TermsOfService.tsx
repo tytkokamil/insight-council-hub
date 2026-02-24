@@ -43,22 +43,33 @@ const TermsOfService = () => (
           </section>
 
           <section>
-            <h2 className="text-foreground text-lg font-semibold">5. Verfügbarkeit</h2>
-            <p>Wir streben eine Verfügbarkeit von 99,9% an. Geplante Wartungsfenster werden mindestens 48 Stunden im Voraus angekündigt.</p>
+            <h2 className="text-foreground text-lg font-semibold">5. Verfügbarkeit & SLA</h2>
+            <p>Die garantierte Verfügbarkeit richtet sich nach dem gewählten Plan:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Free & Starter:</strong> Best-Effort-Verfügbarkeit</li>
+              <li><strong>Professional:</strong> 99,5% monatliche Uptime-Garantie</li>
+              <li><strong>Enterprise:</strong> 99,9% monatliche Uptime-Garantie mit SLA-Vertrag</li>
+            </ul>
+            <p>Geplante Wartungsfenster werden mindestens 48 Stunden im Voraus angekündigt und zählen nicht als Ausfallzeit.</p>
           </section>
 
           <section>
-            <h2 className="text-foreground text-lg font-semibold">6. Haftung</h2>
+            <h2 className="text-foreground text-lg font-semibold">6. KI-Funktionen</h2>
+            <p>Die Plattform bietet KI-gestützte Analysen und Empfehlungen. Diese dienen der Entscheidungsunterstützung und ersetzen keine menschliche Bewertung. Der Nutzer ist für alle getroffenen Entscheidungen selbst verantwortlich.</p>
+          </section>
+
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">7. Haftung</h2>
             <p>Die Haftung des Anbieters ist auf Vorsatz und grobe Fahrlässigkeit beschränkt, soweit gesetzlich zulässig.</p>
           </section>
 
           <section>
-            <h2 className="text-foreground text-lg font-semibold">7. Kündigung</h2>
+            <h2 className="text-foreground text-lg font-semibold">8. Kündigung</h2>
             <p>Der Nutzer kann den Service jederzeit kündigen. Nach Kündigung werden Daten gemäß den Aufbewahrungsfristen gelöscht.</p>
           </section>
 
           <section>
-            <h2 className="text-foreground text-lg font-semibold">8. Schlussbestimmungen</h2>
+            <h2 className="text-foreground text-lg font-semibold">9. Schlussbestimmungen</h2>
             <p>Es gilt deutsches Recht. Gerichtsstand ist der Sitz des Anbieters. Sollten einzelne Bestimmungen unwirksam sein, bleiben die übrigen bestehen.</p>
           </section>
         </div>
