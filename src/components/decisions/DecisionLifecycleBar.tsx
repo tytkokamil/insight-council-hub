@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertTriangle, Ban, Replace, CheckCircle2, Clock, Circle } from "lucide-react";
 import { differenceInDays, format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface DecisionLifecycleBarProps {
   decision: {
@@ -18,24 +19,27 @@ interface DecisionLifecycleBarProps {
   };
 }
 
-const STAGES = [
-  { key: "draft", label: "Entwurf" },
-  { key: "proposed", label: "Vorschlag" },
-  { key: "review", label: "Review" },
-  { key: "approved", label: "Genehmigt" },
-  { key: "implemented", label: "Umgesetzt" },
-] as const;
-
 const stageIndex: Record<string, number> = {
   draft: 0,
   proposed: 1,
   review: 2,
   approved: 3,
   implemented: 4,
-  rejected: 2, // stopped at review
+  rejected: 2,
 };
 
 const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
+  const { t, i18n } = useTranslation();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  const STAGES = [
+    { key: "draft", label: t("lifecycle.draft") },
+    { key: "proposed", label: t("lifecycle.proposed") },
+    { key: "review", label: t("lifecycle.review") },
+    { key: "approved", label: t("lifecycle.approved") },
+    { key: "implemented", label: t("lifecycle.implemented") },
+  ] as const;
+
   const isCancelled = decision.status === "cancelled";
   const isSuperseded = decision.status === "superseded";
   const isRejected = decision.status === "rejected";
@@ -53,19 +57,15 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
 
   return (
     <div className="space-y-2">
-      {/* Progress track */}
       <div className="relative flex items-center gap-0">
         {STAGES.map((stage, i) => {
           const isDone = i < currentIdx || (i === currentIdx && decision.status === "implemented");
           const isCurrent = i === currentIdx && !isDone;
           const isFuture = i > currentIdx;
-
-          // For terminal states, mark the stop point
           const isStopPoint = isTerminal && i === currentIdx;
 
           return (
             <div key={stage.key} className="flex items-center flex-1 last:flex-none">
-              {/* Connector line (before node, not for first) */}
               {i > 0 && (
                 <motion.div
                   className={`h-[3px] flex-1 rounded-full ${
@@ -82,7 +82,6 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                 />
               )}
 
-              {/* Node */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div
@@ -116,7 +115,6 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                     )}
                     {isFuture && <Circle className="w-2.5 h-2.5" />}
 
-                    {/* Escalation marker */}
                     {isCurrent && hasEscalation && (
                       <motion.div
                         className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-warning flex items-center justify-center"
@@ -127,7 +125,6 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                       </motion.div>
                     )}
 
-                    {/* Overdue marker */}
                     {isCurrent && isOverdue && !hasEscalation && (
                       <motion.div
                         className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-destructive flex items-center justify-center"
@@ -141,13 +138,13 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="text-xs">
                   <p className="font-semibold">{stage.label}</p>
-                  {isDone && <p className="text-muted-foreground">Abgeschlossen</p>}
-                  {isCurrent && !isTerminal && <p className="text-primary">Aktueller Status</p>}
-                  {isStopPoint && isCancelled && <p className="text-muted-foreground">Abgebrochen{decision.cancelled_at ? ` am ${format(new Date(decision.cancelled_at), "dd.MM.yy", { locale: de })}` : ""}</p>}
-                  {isStopPoint && isRejected && <p className="text-destructive">Abgelehnt</p>}
-                  {isStopPoint && isSuperseded && <p className="text-accent-foreground">Durch Nachfolger ersetzt</p>}
-                  {isCurrent && isOverdue && <p className="text-destructive">⚠ Überfällig</p>}
-                  {isCurrent && hasEscalation && <p className="text-warning">⚡ Eskalation Stufe {decision.escalation_level}</p>}
+                  {isDone && <p className="text-muted-foreground">{t("lifecycle.completed")}</p>}
+                  {isCurrent && !isTerminal && <p className="text-primary">{t("lifecycle.currentStatus")}</p>}
+                  {isStopPoint && isCancelled && <p className="text-muted-foreground">{decision.cancelled_at ? t("lifecycle.cancelledAt", { date: format(new Date(decision.cancelled_at), "dd.MM.yy", { locale: dateFnsLocale }) }) : t("lifecycle.cancelled")}</p>}
+                  {isStopPoint && isRejected && <p className="text-destructive">{t("lifecycle.rejected")}</p>}
+                  {isStopPoint && isSuperseded && <p className="text-accent-foreground">{t("lifecycle.superseded")}</p>}
+                  {isCurrent && isOverdue && <p className="text-destructive">{t("lifecycle.overdue")}</p>}
+                  {isCurrent && hasEscalation && <p className="text-warning">{t("lifecycle.escalationLevel", { level: decision.escalation_level })}</p>}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -155,7 +152,6 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
         })}
       </div>
 
-      {/* Labels */}
       <div className="flex items-start">
         {STAGES.map((stage, i) => {
           const isDone = i < currentIdx || (i === currentIdx && decision.status === "implemented");
@@ -172,24 +168,23 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
         })}
       </div>
 
-      {/* Duration badge */}
       <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <Clock className="w-3 h-3" /> {daysOpen}d Laufzeit
+          <Clock className="w-3 h-3" /> {t("lifecycle.daysOpen", { days: daysOpen })}
         </span>
         {isOverdue && (
           <span className="text-destructive font-medium flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" /> Überfällig
+            <AlertTriangle className="w-3 h-3" /> {t("lifecycle.overdueLabel")}
           </span>
         )}
         {hasEscalation && (
           <span className="text-warning font-medium">
-            ⚡ Stufe {decision.escalation_level}
+            {t("lifecycle.level", { level: decision.escalation_level })}
           </span>
         )}
         {decision.implemented_at && (
           <span className="text-success font-medium">
-            ✓ Umgesetzt am {format(new Date(decision.implemented_at), "dd.MM.yy", { locale: de })}
+            {t("lifecycle.implementedAt", { date: format(new Date(decision.implemented_at), "dd.MM.yy", { locale: dateFnsLocale }) })}
           </span>
         )}
       </div>

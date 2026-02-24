@@ -86,7 +86,7 @@ const DecisionSideDrawer = ({
                   <p className="font-bold text-lg">{decision.ai_risk_score || 0}%</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Impact</p>
+                  <p className="text-muted-foreground">{t("drawer.impact")}</p>
                   <p className="font-bold text-lg">{decision.ai_impact_score || 0}%</p>
                 </div>
               </div>
@@ -97,7 +97,7 @@ const DecisionSideDrawer = ({
           {m.openTasks > 0 && (
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20">
               <AlertCircle className="w-4 h-4 text-warning shrink-0" />
-              <p className="text-xs text-warning"><span className="font-semibold">{m.openTasks} offene Aufgabe{m.openTasks > 1 ? "n" : ""}</span></p>
+              <p className="text-xs text-warning"><span className="font-semibold">{t("drawer.openTasks", { count: m.openTasks })}</span></p>
             </div>
           )}
 

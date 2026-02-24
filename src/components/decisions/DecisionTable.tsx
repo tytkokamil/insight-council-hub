@@ -114,10 +114,10 @@ const DecisionTable = ({
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="text-sm font-medium">{decision.title}</p>
-                        {meta.isOverdue && <Badge variant="destructive" className="text-[9px] h-4 px-1">Overdue</Badge>}
-                        {meta.isEscalated && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">Eskaliert</Badge>}
-                        {meta.needsReview && <Badge className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">Review</Badge>}
-                        {meta.isBlocked && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">Blockiert</Badge>}
+                        {meta.isOverdue && <Badge variant="destructive" className="text-[9px] h-4 px-1">{t("table.overdue")}</Badge>}
+                        {meta.isEscalated && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">{t("table.escalated")}</Badge>}
+                        {meta.needsReview && <Badge className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">{t("table.review")}</Badge>}
+                        {meta.isBlocked && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">{t("table.blocked")}</Badge>}
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{categoryLabels[decision.category]}</p>
                     </td>
@@ -173,7 +173,7 @@ const DecisionTable = ({
                               await supabase.from("decisions").update({ status: s.value as any }).eq("id", decision.id);
                               onInvalidate(); toast.success(`→ ${s.label}`);
                             }} className="gap-2 text-xs">
-                              Status → {s.label}
+                              {t("table.statusTo", { label: s.label })}
                             </DropdownMenuItem>
                           ))}
                           <DropdownMenuSeparator />
