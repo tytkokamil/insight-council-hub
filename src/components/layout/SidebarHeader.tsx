@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import decivioLogo from "@/assets/decivio-logo.png";
+import { useTranslation } from "react-i18next";
 
 interface SidebarHeaderProps {
   collapsed: boolean;
@@ -18,46 +19,49 @@ const SidebarHeader = memo(({
   toggleTheme,
   onCollapse,
   onNavigate,
-}: SidebarHeaderProps) => (
-  <div className="flex items-center justify-between px-3 h-12 border-b border-border/40">
+}: SidebarHeaderProps) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-between px-3 h-12 border-b border-border/40">
       <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden" onClick={onNavigate}>
         <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded shrink-0" />
         {!collapsed && (
           <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
-          Decivio
-        </span>
-      )}
-    </Link>
-    <div className="flex items-center gap-0.5 shrink-0">
-      <button
-        onClick={toggleTheme}
-        className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground relative overflow-hidden"
-        title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-        aria-label={theme === "dark" ? "Zu Light Mode wechseln" : "Zu Dark Mode wechseln"}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span
-            key={theme}
-            initial={{ y: -14, opacity: 0, rotate: -90 }}
-            animate={{ y: 0, opacity: 1, rotate: 0 }}
-            exit={{ y: 14, opacity: 0, rotate: 90 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-          </motion.span>
-        </AnimatePresence>
-      </button>
-      <button
-        onClick={onCollapse}
-        className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex"
-        title={collapsed ? "Sidebar erweitern" : "Sidebar einklappen"}
-      >
-        {collapsed ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
-      </button>
+            Decivio
+          </span>
+        )}
+      </Link>
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button
+          onClick={toggleTheme}
+          className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground relative overflow-hidden"
+          title={theme === "dark" ? "Light Mode" : "Dark Mode"}
+          aria-label={theme === "dark" ? t("common.switchToLight") : t("common.switchToDark")}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.span
+              key={theme}
+              initial={{ y: -14, opacity: 0, rotate: -90 }}
+              animate={{ y: 0, opacity: 1, rotate: 0 }}
+              exit={{ y: 14, opacity: 0, rotate: 90 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            </motion.span>
+          </AnimatePresence>
+        </button>
+        <button
+          onClick={onCollapse}
+          className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex"
+          title={collapsed ? t("common.expandSidebar") : t("common.collapseSidebar")}
+        >
+          {collapsed ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
+        </button>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 
 SidebarHeader.displayName = "SidebarHeader";
 

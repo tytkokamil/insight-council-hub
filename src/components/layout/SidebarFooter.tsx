@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react";
 import UserAvatar from "@/components/shared/UserAvatar";
 import NotificationCenter from "./NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -17,6 +18,7 @@ const SidebarFooter = memo(({
   avatarUrl,
   onSignOut,
 }: SidebarFooterProps) => {
+  const { t } = useTranslation();
   const [rolePlan, setRolePlan] = useState<{ role: string; plan: string }>({ role: "", plan: "" });
 
   useEffect(() => {
@@ -69,7 +71,7 @@ const SidebarFooter = memo(({
               <button
                 onClick={onSignOut}
                 className="text-muted-foreground/50 hover:text-foreground transition-colors p-1 rounded-md hover:bg-foreground/[0.04]"
-                title="Abmelden"
+                title={t("auth.signIn") === "Sign In" ? "Sign out" : "Abmelden"}
               >
                 <LogOut className="w-3.5 h-3.5" />
               </button>
