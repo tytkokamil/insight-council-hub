@@ -148,9 +148,9 @@ const Dashboard = () => {
     const avgCompleted = lastThreeWeeks.reduce((s, w) => s + w.completed, 0) / 3;
     let trendInsight = "";
     if (avgCreated > avgCompleted * 1.5 && avgCreated > 1) {
-      trendInsight = "Mehr neue als abgeschlossene Entscheidungen – Rückstau wächst.";
+      trendInsight = t("dashboard.trendBacklogGrowing");
     } else if (avgCompleted > avgCreated * 1.3 && avgCompleted > 1) {
-      trendInsight = "Abschlussrate übersteigt Erstellung – Rückstau wird abgebaut.";
+      trendInsight = t("dashboard.trendBacklogShrinking");
     }
 
     const recentlyOpened = [...decisions].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
@@ -451,7 +451,7 @@ const Dashboard = () => {
                             <div className="flex items-center justify-between mb-4">
                               <div>
                                 <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                                <p className="text-xs text-muted-foreground">Abgeschlossen vs. Erstellt vs. Eskalationen</p>
+                                <p className="text-xs text-muted-foreground">{t("dashboard.chartSubtitle")}</p>
                               </div>
                             </div>
                             <div className="h-52">
@@ -471,9 +471,9 @@ const Dashboard = () => {
                                   <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
                                   <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
                                   <RechartsTooltip contentStyle={chartTooltipStyle} />
-                                  <Area type="monotone" dataKey="completed" name="Abgeschlossen" stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
-                                  <Area type="monotone" dataKey="created" name="Erstellt" stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
-                                  <Area type="monotone" dataKey="escalations" name="Eskalationen" stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
+                                  <Area type="monotone" dataKey="completed" name={t("dashboard.chartCompleted")} stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
+                                  <Area type="monotone" dataKey="created" name={t("dashboard.chartCreated")} stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
+                                  <Area type="monotone" dataKey="escalations" name={t("dashboard.chartEscalations")} stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
                                 </AreaChart>
                               </ResponsiveContainer>
                             </div>
