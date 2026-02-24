@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { toast } from "sonner";
-
+import i18n from "@/i18n";
 export const DECISIONS_KEY = ["decisions"] as const;
 export const TEAMS_KEY = ["teams"] as const;
 export const DEPENDENCIES_KEY = ["dependencies"] as const;
@@ -129,7 +129,7 @@ export const useProfiles = () =>
 /** Utility: build a map of user_id -> full_name from profiles data */
 export const buildProfileMap = (profiles: { user_id: string; full_name: string | null }[]) => {
   const map: Record<string, string> = {};
-  profiles.forEach(p => { map[p.user_id] = p.full_name || "Unbekannt"; });
+  profiles.forEach(p => { map[p.user_id] = p.full_name || i18n.t("strategy.unknown"); });
   return map;
 };
 
@@ -182,7 +182,7 @@ export const useUpdateDecisionStatus = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Statusänderung fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.statusChangeFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey });
@@ -214,7 +214,7 @@ export const useDeleteDecision = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Löschen fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.deleteFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey });
@@ -246,7 +246,7 @@ export const useUpdateDecisionPriority = () => {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) qc.setQueryData(queryKey, context.previous);
-      toast.error("Prioritätsänderung fehlgeschlagen – wurde zurückgesetzt.");
+      toast.error(i18n.t("hooks.priorityChangeFailed"));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey });
