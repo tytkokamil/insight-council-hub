@@ -1187,6 +1187,7 @@ export type Database = {
       }
       mfa_settings: {
         Row: {
+          backup_codes: string[] | null
           created_at: string
           email_otp_enabled: boolean
           id: string
@@ -1196,6 +1197,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          backup_codes?: string[] | null
           created_at?: string
           email_otp_enabled?: boolean
           id?: string
@@ -1205,6 +1207,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          backup_codes?: string[] | null
           created_at?: string
           email_otp_enabled?: boolean
           id?: string
@@ -1221,6 +1224,7 @@ export type Database = {
           deadline_enabled: boolean
           digest_frequency: string
           escalations: boolean
+          gamification_enabled: boolean
           id: string
           mention_enabled: boolean
           review_requests: boolean
@@ -1228,12 +1232,14 @@ export type Database = {
           team_updates: boolean
           updated_at: string
           user_id: string
+          watchlist_enabled: boolean
         }
         Insert: {
           created_at?: string
           deadline_enabled?: boolean
           digest_frequency?: string
           escalations?: boolean
+          gamification_enabled?: boolean
           id?: string
           mention_enabled?: boolean
           review_requests?: boolean
@@ -1241,12 +1247,14 @@ export type Database = {
           team_updates?: boolean
           updated_at?: string
           user_id: string
+          watchlist_enabled?: boolean
         }
         Update: {
           created_at?: string
           deadline_enabled?: boolean
           digest_frequency?: string
           escalations?: boolean
+          gamification_enabled?: boolean
           id?: string
           mention_enabled?: boolean
           review_requests?: boolean
@@ -1254,6 +1262,7 @@ export type Database = {
           team_updates?: boolean
           updated_at?: string
           user_id?: string
+          watchlist_enabled?: boolean
         }
         Relationships: []
       }
