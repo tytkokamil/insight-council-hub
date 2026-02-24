@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { GitBranch, Plus, Loader2, Trash2, Brain, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
+import { useTranslation } from "react-i18next";
 
 const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [scenarios, setScenarios] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState("");
@@ -37,10 +39,7 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
       probability: newProb,
       created_by: user.id,
     });
-    setNewTitle("");
-    setNewDesc("");
-    setNewProb(50);
-    setShowForm(false);
+    setNewTitle(""); setNewDesc(""); setNewProb(50); setShowForm(false);
     await fetchScenarios();
   };
 
@@ -51,7 +50,7 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
 
   const runSimulation = async () => {
     if (scenarios.length === 0) {
-      toast({ title: "Fehler", description: "Füge mindestens ein Szenario hinzu.", variant: "destructive" });
+      toast({ title: t("whatIf.error"), description: t("whatIf.minScenario"), variant: "destructive" });
       return;
     }
     setAnalyzing(true);
@@ -62,55 +61,48 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
       if (error) throw error;
       if (data.error) throw new Error(data.error);
       setAnalysisResult(data);
-      toast({ title: "Simulation abgeschlossen" });
+      toast({ title: t("whatIf.complete") });
     } catch (e: any) {
-      toast({ title: "Fehler", description: e.message, variant: "destructive" });
+      toast({ title: t("whatIf.error"), description: e.message, variant: "destructive" });
     }
     setAnalyzing(false);
   };
 
   const inputClass = "w-full px-3 py-2 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
 
-  const riskColor = (level: string) => {
-    if (level === "hoch") return "text-destructive";
-    if (level === "mittel") return "text-warning";
-    return "text-success";
-  };
-
   return (
     <div className="space-y-4 mt-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <GitBranch className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">What-If Simulator</h3>
+          <h3 className="text-sm font-semibold">{t("whatIf.title")}</h3>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => setShowForm(!showForm)}>
-            <Plus className="w-3 h-3" /> Szenario
+            <Plus className="w-3 h-3" /> {t("whatIf.addScenario")}
           </Button>
           <Button size="sm" className="gap-1 text-xs" onClick={runSimulation} disabled={analyzing || scenarios.length === 0}>
             {analyzing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Brain className="w-3 h-3" />}
-            Simulieren
+            {t("whatIf.simulate")}
           </Button>
         </div>
       </div>
 
       {showForm && (
         <div className="p-3 rounded-lg bg-muted/20 border border-border space-y-2">
-          <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Szenario-Titel (z.B. 'Markt bricht ein')" className={inputClass} />
-          <textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="Beschreibung..." className={`${inputClass} h-16 resize-none`} />
+          <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder={t("whatIf.scenarioPlaceholder")} className={inputClass} />
+          <textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder={t("whatIf.descPlaceholder")} className={`${inputClass} h-16 resize-none`} />
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Wahrscheinlichkeit: {newProb}%</label>
+            <label className="text-xs text-muted-foreground mb-1 block">{t("whatIf.probability", { pct: newProb })}</label>
             <input type="range" min={0} max={100} value={newProb} onChange={(e) => setNewProb(Number(e.target.value))} className="w-full accent-primary" />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={addScenario} disabled={!newTitle.trim()}>Hinzufügen</Button>
-            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>Abbrechen</Button>
+            <Button size="sm" onClick={addScenario} disabled={!newTitle.trim()}>{t("whatIf.add")}</Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowForm(false)}>{t("whatIf.cancel")}</Button>
           </div>
         </div>
       )}
 
-      {/* Scenarios List */}
       {scenarios.length > 0 ? (
         <div className="space-y-2">
           {scenarios.map(s => (
@@ -129,40 +121,37 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
       ) : (
         <div className="text-center py-6 text-muted-foreground">
           <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-30" />
-          <p className="text-xs">Füge Szenarien hinzu und lasse die KI die Auswirkungen simulieren.</p>
+          <p className="text-xs">{t("whatIf.emptyTitle")}</p>
         </div>
       )}
 
-      {/* Analysis Results */}
       {analysisResult && (
         <div className="space-y-3 pt-3 border-t border-border">
-          <h4 className="text-xs font-semibold">Simulationsergebnisse</h4>
-
+          <h4 className="text-xs font-semibold">{t("whatIf.results")}</h4>
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-lg bg-success/10 text-center">
-              <p className="text-xs text-muted-foreground">Best Case</p>
+              <p className="text-xs text-muted-foreground">{t("whatIf.bestCase")}</p>
               <p className="text-lg font-bold text-success">{analysisResult.best_case_probability}%</p>
             </div>
             <div className="p-3 rounded-lg bg-destructive/10 text-center">
-              <p className="text-xs text-muted-foreground">Worst Case</p>
+              <p className="text-xs text-muted-foreground">{t("whatIf.worstCase")}</p>
               <p className="text-lg font-bold text-destructive">{analysisResult.worst_case_probability}%</p>
             </div>
           </div>
-
           {analysisResult.scenario_results?.map((sr: any, i: number) => (
             <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border/50 space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold">{sr.scenario_title}</p>
-                <span className={`text-xs font-medium ${riskColor(sr.risk_level)}`}>Risiko: {sr.risk_level}</span>
+                <span className="text-xs font-medium">{t("whatIf.risk", { level: sr.risk_level })}</span>
               </div>
               <p className="text-xs text-muted-foreground">{sr.expected_outcome}</p>
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div className="text-xs">
-                  <p className="font-medium text-warning flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Mitigation</p>
+                  <p className="font-medium text-warning flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> {t("whatIf.mitigation")}</p>
                   <p className="text-muted-foreground">{sr.mitigation}</p>
                 </div>
                 <div className="text-xs">
-                  <p className="font-medium text-success flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Chance</p>
+                  <p className="font-medium text-success flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {t("whatIf.opportunity")}</p>
                   <p className="text-muted-foreground">{sr.opportunity}</p>
                 </div>
               </div>
@@ -175,16 +164,13 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
               </div>
             </div>
           ))}
-
-          {/* AI Explainability */}
           <AiExplainabilityBadge
             confidence={analysisResult.confidence || analysisResult.best_case_probability}
             factors={analysisResult.scenario_results?.slice(0, 2).map((sr: any) => sr.scenario_title)}
             dataPoints={scenarios.length}
           />
-
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-            <p className="text-xs font-medium text-primary mb-1">🎯 Gesamtempfehlung</p>
+            <p className="text-xs font-medium text-primary mb-1">{t("whatIf.recommendation")}</p>
             <p className="text-xs">{analysisResult.overall_recommendation}</p>
           </div>
         </div>
