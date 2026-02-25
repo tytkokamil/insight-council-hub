@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Users, MessageCircle, Settings, BarChart3, Trash2 } from "lucide-react";
+import { ArrowLeft, Users, MessageCircle, Settings, BarChart3, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -157,12 +157,18 @@ const TeamDetail = () => {
                   <SlaConfigPanel />
                 </div>
 
-                <hr className="border-border" />
+                <div className="mt-12" />
 
-                <div className="rounded-lg border border-destructive/30 p-4">
-                  <h2 className="text-sm font-semibold text-destructive mb-1">{t("teamDetail.dangerZone")}</h2>
-                  <p className="text-xs text-muted-foreground mb-4">
+                <div className="rounded-lg border-2 border-destructive/40 bg-destructive/5 p-5">
+                  <h2 className="text-sm font-semibold text-destructive mb-1 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    {t("teamDetail.dangerZone")}
+                  </h2>
+                  <p className="text-xs text-muted-foreground mb-2">
                     {t("teamDetail.deleteTeamDesc")}
+                  </p>
+                  <p className="text-xs text-destructive/80 mb-4 font-medium">
+                    {t("teamDetail.deleteTeamWarning")}
                   </p>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
