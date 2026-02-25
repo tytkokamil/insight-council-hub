@@ -621,7 +621,8 @@
     "noExportData": "No decisions to export",
     "exported": "Calendar exported",
     "exportedDesc": "ICS file downloaded",
-    "unscheduledTasks": "Tasks without deadline"
+    "unscheduledTasks": "Tasks without deadline",
+    "exportCalendar": "Export to Calendar"
   },
   "widgets": {
     "topActionNow": "👉 Top Action Now",
