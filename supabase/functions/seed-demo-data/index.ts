@@ -347,7 +347,7 @@ Deno.serve(async (req) => {
     }
 
     // ── 3. Create Tasks ──
-    const tasksToInsert = template.tasks.map(t => {
+    const tasksToInsert = template.tasks.map((t, idx) => {
       const rec: any = {
         title: t.title,
         status: t.status,
@@ -355,6 +355,7 @@ Deno.serve(async (req) => {
         category: t.category,
         created_by: userId,
         team_id: newTeam.id,
+        assignee_id: idx % 2 === 0 ? userId : null,
       };
       if (t.dueInDays !== undefined) rec.due_date = dueDate(t.dueInDays);
       if (t.completedDaysAgo) rec.completed_at = daysAgo(t.completedDaysAgo);

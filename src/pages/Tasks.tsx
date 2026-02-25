@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useTasks, useInvalidateTasks, type Task } from "@/hooks/useTasks";
 import { useProfiles, buildProfileMap } from "@/hooks/useDecisions";
@@ -122,14 +123,27 @@ const Tasks = () => {
   const [filterPriority, setFilterPriority] = useState<string[]>([]);
   const [filterCategory, setFilterCategory] = useState<string[]>([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [quickChip, setQuickChip] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
 
-  const activeFilterCount = filterStatus.length + filterPriority.length + filterCategory.length;
+  const activeFilterCount = filterStatus.length + filterPriority.length + filterCategory.length + (quickChip ? 1 : 0);
 
   const toggleFilter = (arr: string[], val: string, setter: (v: string[]) => void) => {
     setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
   };
 
-  const clearAllFilters = () => { setFilterStatus([]); setFilterPriority([]); setFilterCategory([]); };
+  const clearAllFilters = () => { setFilterStatus([]); setFilterPriority([]); setFilterCategory([]); setQuickChip(null); };
+
+  // Quick-chip counts
+  const chipCounts = useMemo(() => {
+    const now = new Date();
+    const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < now && t.status !== "done").length;
+    const critical = tasks.filter(t => t.priority === "critical" && t.status !== "done").length;
+    const blocked = tasks.filter(t => t.status === "blocked").length;
+    const myOpen = tasks.filter(t => (t.assignee_id === user?.id || t.created_by === user?.id) && t.status !== "done").length;
+    return { overdue, critical, blocked, myOpen };
+  }, [tasks, user]);
 
   const filteredTasks = useMemo(() => {
     let result = tasks;
@@ -140,8 +154,47 @@ const Tasks = () => {
     if (filterStatus.length > 0) result = result.filter(t => filterStatus.includes(t.status));
     if (filterPriority.length > 0) result = result.filter(t => filterPriority.includes(t.priority));
     if (filterCategory.length > 0) result = result.filter(t => filterCategory.includes(t.category));
+    // Quick chips
+    if (quickChip === "overdue") result = result.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== "done");
+    if (quickChip === "critical") result = result.filter(t => t.priority === "critical" && t.status !== "done");
+    if (quickChip === "blocked") result = result.filter(t => t.status === "blocked");
+    if (quickChip === "myOpen") result = result.filter(t => (t.assignee_id === user?.id || t.created_by === user?.id) && t.status !== "done");
     return [...result].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [tasks, searchQuery, filterStatus, filterPriority, filterCategory]);
+  }, [tasks, searchQuery, filterStatus, filterPriority, filterCategory, quickChip, user]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selectedIds.size === filteredTasks.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredTasks.map(t => t.id)));
+  };
+
+  const bulkChangeStatus = async (newStatus: string) => {
+    const ids = Array.from(selectedIds);
+    const updates: Record<string, any> = { status: newStatus, updated_at: new Date().toISOString() };
+    if (newStatus === "done") updates.completed_at = new Date().toISOString();
+    else updates.completed_at = null;
+    const { error } = await supabase.from("tasks").update(updates).in("id", ids);
+    if (error) { toast.error(t("tasks.statusChangeError")); return; }
+    toast.success(t("tasks.bulkStatusChanged", { count: ids.length }));
+    setSelectedIds(new Set());
+    invalidate();
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("tasks").delete().in("id", ids);
+    if (error) { toast.error(t("tasks.deleteError")); return; }
+    toast.success(t("tasks.bulkDeleted", { count: ids.length }));
+    setSelectedIds(new Set());
+    invalidate();
+  };
 
   const openCreate = () => { setForm(emptyForm); setShowCreate(true); };
 
@@ -264,7 +317,7 @@ const Tasks = () => {
         </motion.div>
       ) : (
         <>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input type="text" placeholder={t("tasks.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -336,6 +389,59 @@ const Tasks = () => {
             </ToggleGroup>
           </div>
 
+          {/* Quick-Filter Chips */}
+          <div className="flex items-center gap-1.5 flex-wrap mb-4">
+            <span className="text-[11px] font-medium text-muted-foreground mr-1">{t("savedViews.quickFilters", "Schnellfilter")}:</span>
+            {[
+              { key: "overdue", label: t("tasksPage.chipOverdue", "Überfällig"), count: chipCounts.overdue, show: chipCounts.overdue > 0 },
+              { key: "critical", label: t("tasksPage.chipCritical", "Kritisch"), count: chipCounts.critical, show: chipCounts.critical > 0 },
+              { key: "blocked", label: t("tasksPage.chipBlocked", "Blockiert"), count: chipCounts.blocked, show: chipCounts.blocked > 0 },
+              { key: "myOpen", label: t("tasksPage.chipMyOpen", "Meine offenen"), count: chipCounts.myOpen, show: true },
+            ].filter(c => c.show).map(chip => (
+              <button
+                key={chip.key}
+                onClick={() => setQuickChip(quickChip === chip.key ? null : chip.key)}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium border transition-all ${
+                  quickChip === chip.key
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted/40 text-muted-foreground border-border/50 hover:border-primary/30 hover:bg-muted/60"
+                }`}
+              >
+                {chip.label}
+                {chip.count > 0 && (
+                  <span className={`px-1 py-0 rounded text-[9px] font-bold ${
+                    quickChip === chip.key ? "bg-primary-foreground/20" : chip.key === "overdue" ? "bg-destructive/20 text-destructive" : "bg-muted"
+                  }`}>{chip.count}</span>
+                )}
+              </button>
+            ))}
+            {quickChip && (
+              <button onClick={() => setQuickChip(null)} className="px-2 py-1 rounded-md text-[11px] text-muted-foreground hover:text-foreground transition-colors">
+                <X className="w-3 h-3 inline mr-0.5" /> {t("common.reset")}
+              </button>
+            )}
+          </div>
+
+          {/* Bulk Action Bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <span className="text-xs font-medium">{selectedIds.size} {t("tasksPage.selected", "ausgewählt")}</span>
+              <div className="flex items-center gap-1.5 ml-auto">
+                {STATUS_OPTIONS.filter(s => s.value !== "backlog").map(s => (
+                  <Button key={s.value} variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => bulkChangeStatus(s.value)}>
+                    → {s.label}
+                  </Button>
+                ))}
+                <Button variant="outline" size="sm" className="h-7 text-[11px] text-destructive border-destructive/30 hover:bg-destructive/10" onClick={bulkDelete}>
+                  <Trash2 className="w-3 h-3 mr-1" /> {t("common.delete")}
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-[11px]" onClick={() => setSelectedIds(new Set())}>
+                  {t("common.cancel")}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {viewMode === "kanban" ? (
             <TaskKanbanBoard tasks={filteredTasks} profileMap={profileMap} onStatusChange={changeStatus} onEdit={openEdit} onDelete={setDeleteTask} />
           ) : (
@@ -343,6 +449,9 @@ const Tasks = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
+                     <th className="p-3 w-8">
+                       <input type="checkbox" checked={selectedIds.size === filteredTasks.length && filteredTasks.length > 0} onChange={selectAll} className="rounded border-input" />
+                     </th>
                      <th className="text-left p-3 text-xs font-medium text-muted-foreground w-8"></th>
                      <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("tasks.title")}</th>
                      <th className="text-left p-3 text-xs font-medium text-muted-foreground">Status</th>
@@ -354,8 +463,8 @@ const Tasks = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTasks.length === 0 ? (
-                    <tr><td colSpan={8} className="p-6 text-center text-sm text-muted-foreground">{t("common.noResults")}</td></tr>
+                   {filteredTasks.length === 0 ? (
+                    <tr><td colSpan={9} className="p-6 text-center text-sm text-muted-foreground">{t("common.noResults")}</td></tr>
                   ) : (
                     filteredTasks.map((task) => {
                       const sc = STATUS_CONFIG[task.status];
@@ -363,7 +472,10 @@ const Tasks = () => {
                       const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== "done";
 
                       return (
-                        <tr key={task.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <tr key={task.id} className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${isOverdue ? "bg-destructive/[0.03]" : ""}`}>
+                          <td className="p-3">
+                            <input type="checkbox" checked={selectedIds.has(task.id)} onChange={() => toggleSelect(task.id)} className="rounded border-input" />
+                          </td>
                           <td className="p-3">
                             <button
                               onClick={() => {
@@ -377,7 +489,10 @@ const Tasks = () => {
                             </button>
                           </td>
                           <td className="p-3 cursor-pointer" onClick={() => navigate(`/tasks/${task.id}`)}>
-                            <p className={`text-sm font-medium hover:text-primary transition-colors ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className={`text-sm font-medium hover:text-primary transition-colors ${task.status === "done" ? "line-through text-muted-foreground" : ""}`}>{task.title}</p>
+                              {isOverdue && <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-destructive/10 text-destructive border-destructive/30">{t("tasksPage.chipOverdue", "Überfällig")}</Badge>}
+                            </div>
                             {task.description && <p className="text-xs text-muted-foreground truncate max-w-[300px]">{task.description}</p>}
                           </td>
                           <td className="p-3">

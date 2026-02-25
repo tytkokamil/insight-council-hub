@@ -912,10 +912,13 @@
     "statusChangeError": "Statusänderung fehlgeschlagen",
     "undo": "Rückgängig",
     "statusReverted": "Status zurückgesetzt",
+    "bulkStatusChanged": "{{count}} Aufgaben aktualisiert",
+    "bulkDeleted": "{{count}} Aufgaben gelöscht",
     "demoCreating": "Demo-Daten werden erstellt…",
     "demoError": "Fehler",
     "demoCreated": "Demo-Daten erstellt!"
   },
+  "_tasksPage_chips_merged_below": "",
   "briefing": {
     "title": "Morning Brief",
     "loading": "Generiere dein Morning Briefing...",
@@ -3352,7 +3355,12 @@
     "dueLabel": "Fälligkeitsdatum",
     "assigneeLabel": "Zuständig",
     "assigneeNone": "Niemand",
-    "assigneeUnknown": "Unbekannt"
+    "assigneeUnknown": "Unbekannt",
+    "chipOverdue": "Überfällig",
+    "chipCritical": "Kritisch",
+    "chipBlocked": "Blockiert",
+    "chipMyOpen": "Meine offenen",
+    "selected": "ausgewählt"
   },
   "automationRules": {
     "title": "Automation Rules",

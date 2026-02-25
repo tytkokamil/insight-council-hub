@@ -912,6 +912,8 @@
     "statusChangeError": "Status change failed",
     "undo": "Undo",
     "statusReverted": "Status reverted",
+    "bulkStatusChanged": "{{count}} tasks updated",
+    "bulkDeleted": "{{count}} tasks deleted",
     "demoCreating": "Creating demo data…",
     "demoError": "Error",
     "demoCreated": "Demo data created!"
