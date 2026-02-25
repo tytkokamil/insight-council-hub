@@ -38,7 +38,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
       const [dRes, tRes, rRes, riRes, gRes, lRes] = await Promise.all([
         supabase.from("decisions").select("*").eq("team_id", teamId).is("deleted_at", null),
         supabase.from("tasks").select("*").eq("team_id", teamId).is("deleted_at", null),
-        supabase.from("decision_reviews").select("*, decisions!inner(team_id)").eq("decisions.team_id", teamId).eq("status", "review"),
+        supabase.from("decision_reviews").select("*, decisions!inner(team_id, title)").eq("decisions.team_id", teamId).eq("status", "review"),
         supabase.from("risks").select("*").eq("team_id", teamId).eq("status", "open"),
         supabase.from("strategic_goals").select("*").eq("team_id", teamId).eq("status", "active"),
         supabase.from("lessons_learned").select("*, decisions!inner(team_id)").eq("decisions.team_id", teamId).order("created_at", { ascending: false }).limit(5),
@@ -491,9 +491,14 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           </div>
           <div className="divide-y divide-border">
             {reviews.slice(0, 4).map((r) => (
-              <div key={r.id} className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20">
+              <div
+                key={r.id}
+                className="flex items-center gap-3 px-5 py-3 hover:bg-muted/20 cursor-pointer transition-colors"
+                onClick={() => navigate(`/decisions/${r.decision_id}`)}
+              >
                 <Badge variant="outline" className="text-[10px]">Review</Badge>
-                <span className="text-xs flex-1 truncate">Decision #{r.decision_id.slice(0, 8)}</span>
+                <span className="text-xs flex-1 truncate">{(r as any).decisions?.title || r.decision_id.slice(0, 8)}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
               </div>
             ))}
           </div>

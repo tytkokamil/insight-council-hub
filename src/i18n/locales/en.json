@@ -2189,6 +2189,7 @@
     "back": "Back",
     "deleteTeam": "Delete Team",
     "deleteTeamDesc": "The team and all associated data (members, invitations, messages) will be permanently deleted.",
+    "deleteTeamWarning": "⚠ This action cannot be undone. All decisions, tasks, and risks of this team will be lost.",
     "deleteTeamConfirm": "Are you sure you want to permanently delete the team \"{{name}}\"?",
     "deleteTeamSuccess": "Team has been deleted",
     "deleteTeamError": "Error deleting team",
@@ -4525,7 +4526,9 @@
     "helpText": "<strong>Warning:</strong> Hours before deadline for first warning. <strong>Urgent:</strong> Level 2. <strong>Overdue:</strong> Level 3 (0 = at deadline). <strong>Reassign:</strong> Days of inactivity until automatic reassignment.",
     "saving": "Saving...",
     "savedBtn": "Saved",
-    "saveBtn": "Save SLA"
+    "saveBtn": "Save SLA",
+    "emptyTitle": "No SLA rules configured",
+    "emptyDesc": "Default SLA times are being used. SLA rules can be created by an administrator."
   },
   "mfa": {
     "title": "Two-Factor Authentication (2FA)",

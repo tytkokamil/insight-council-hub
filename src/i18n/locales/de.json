@@ -2190,6 +2190,7 @@
     "back": "Zurück",
     "deleteTeam": "Team löschen",
     "deleteTeamDesc": "Das Team und alle zugehörigen Daten (Mitglieder, Einladungen, Nachrichten) werden unwiderruflich gelöscht.",
+    "deleteTeamWarning": "⚠ Diese Aktion kann nicht rückgängig gemacht werden. Alle Entscheidungen, Aufgaben und Risiken dieses Teams gehen verloren.",
     "deleteTeamConfirm": "Bist du sicher, dass du das Team \"{{name}}\" unwiderruflich löschen möchtest?",
     "deleteTeamSuccess": "Team wurde gelöscht",
     "deleteTeamError": "Fehler beim Löschen des Teams",
@@ -4531,7 +4532,9 @@
     "helpText": "<strong>Warnung:</strong> Stunden vor Deadline für erste Warnung. <strong>Dringend:</strong> Stufe 2. <strong>Überfällig:</strong> Stufe 3 (0 = bei Deadline). <strong>Reassign:</strong> Tage Inaktivität bis zur automatischen Neuzuweisung.",
     "saving": "Speichern...",
     "savedBtn": "Gespeichert",
-    "saveBtn": "SLA speichern"
+    "saveBtn": "SLA speichern",
+    "emptyTitle": "Keine SLA-Regeln konfiguriert",
+    "emptyDesc": "Standard-SLA-Zeiten werden verwendet. SLA-Regeln können vom Administrator erstellt werden."
   },
   "mfa": {
     "title": "Zwei-Faktor-Authentifizierung (2FA)",

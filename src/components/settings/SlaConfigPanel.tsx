@@ -86,6 +86,16 @@ const SlaConfigPanel = () => {
     return <div className="text-sm text-muted-foreground py-4 text-center">{t("slaConfig.loading")}</div>;
   }
 
+  if (configs.length === 0) {
+    return (
+      <div className="rounded-lg border border-border p-6 text-center">
+        <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+        <p className="text-sm font-medium text-muted-foreground">{t("slaConfig.emptyTitle")}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t("slaConfig.emptyDesc")}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Category tabs */}

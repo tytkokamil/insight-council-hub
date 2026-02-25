@@ -395,6 +395,15 @@ Deno.serve(async (req) => {
       await supabase.from("audit_logs").insert(auditLogs);
     }
 
+    // ── 9. Example Chat Messages ──
+    const chatMessages = [
+      { team_id: newTeam.id, user_id: userId, content: `Willkommen im Team "${newTeam.name}"! 🎉 Hier koordinieren wir unsere Entscheidungen.`, created_at: daysAgo(7) },
+      { team_id: newTeam.id, user_id: userId, content: "Ich habe die offenen Entscheidungen priorisiert. Bitte schaut euch die kritischen Reviews an.", created_at: daysAgo(5) },
+      { team_id: newTeam.id, user_id: userId, content: "Reminder: Deadline für die Cloud-Migration rückt näher. Status-Update im Command Center.", created_at: daysAgo(3) },
+      { team_id: newTeam.id, user_id: userId, content: "Gute Fortschritte diese Woche! 3 Entscheidungen abgeschlossen. 💪", created_at: daysAgo(1) },
+    ];
+    await supabase.from("team_messages").insert(chatMessages);
+
     const decCount = insertedDecisions?.length || 0;
 
     return new Response(JSON.stringify({
