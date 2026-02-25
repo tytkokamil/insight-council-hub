@@ -1,13 +1,16 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, FileText, ListTodo, Lightbulb, AlertTriangle, MessageSquare, X, ChevronRight } from "lucide-react";
+import { Search, FileText, ListTodo, Lightbulb, AlertTriangle, MessageSquare, X, ChevronRight, ExternalLink, CheckCircle2, PlayCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslatedLabels } from "@/lib/labels";
+import { toast } from "sonner";
+import { format, isPast, parseISO } from "date-fns";
+import { de } from "date-fns/locale";
 
 const Highlight = ({ text, query }: { text: string; query: string }) => {
   if (!query || !text) return <>{text}</>;
@@ -24,12 +27,36 @@ interface SearchResult {
   subtitle: string | null;
   meta: string;
   link: string;
+  status?: string;
+  priority?: string;
+  dueDate?: string | null;
 }
 
+const statusColor: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  open: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  in_review: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  decided: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  implemented: "bg-primary/15 text-primary border-primary/30",
+  archived: "bg-muted text-muted-foreground",
+  todo: "bg-muted text-muted-foreground",
+  in_progress: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  done: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30",
+  blocked: "bg-destructive/15 text-destructive border-destructive/30",
+};
+
+const priorityColor: Record<string, string> = {
+  critical: "bg-destructive/15 text-destructive border-destructive/30",
+  high: "bg-orange-500/15 text-orange-600 border-orange-500/30",
+  medium: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  low: "bg-muted text-muted-foreground",
+};
+
 const GlobalSearch = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const tl = useTranslatedLabels(t);
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [entityFilter, setEntityFilter] = useState<EntityType>("all");
@@ -44,14 +71,14 @@ const GlobalSearch = () => {
   ];
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    const timer = setTimeout(() => setDebouncedQuery(query.trim()), 200);
     return () => clearTimeout(timer);
   }, [query]);
 
   const { data: decisions = [] } = useQuery({
     queryKey: ["search-decisions"],
     queryFn: async () => {
-      const { data } = await supabase.from("decisions").select("id, title, description, status, priority, category").is("deleted_at", null);
+      const { data } = await supabase.from("decisions").select("id, title, description, status, priority, category, due_date").is("deleted_at", null);
       return data ?? [];
     },
     staleTime: 30_000,
@@ -60,7 +87,7 @@ const GlobalSearch = () => {
   const { data: tasks = [] } = useQuery({
     queryKey: ["search-tasks"],
     queryFn: async () => {
-      const { data } = await supabase.from("tasks").select("id, title, description, status, priority").is("deleted_at", null);
+      const { data } = await supabase.from("tasks").select("id, title, description, status, priority, due_date").is("deleted_at", null);
       return data ?? [];
     },
     staleTime: 30_000,
@@ -104,21 +131,27 @@ const GlobalSearch = () => {
           res.push({
             type: "decisions", id: d.id, title: d.title,
             subtitle: d.description?.slice(0, 120) || null,
-            meta: `${tl.statusLabels[d.status] || d.status} · ${tl.priorityLabels[d.priority] || d.priority} · ${tl.categoryLabels[d.category] || d.category}`,
+            meta: `${tl.categoryLabels[d.category] || d.category}`,
             link: `/decisions/${d.id}`,
+            status: d.status,
+            priority: d.priority,
+            dueDate: d.due_date,
           });
         }
       });
     }
 
     if (entityFilter === "all" || entityFilter === "tasks") {
-      tasks.forEach(t => {
-        if (t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)) {
+      tasks.forEach(tk => {
+        if (tk.title?.toLowerCase().includes(q) || tk.description?.toLowerCase().includes(q)) {
           res.push({
-            type: "tasks", id: t.id, title: t.title,
-            subtitle: t.description?.slice(0, 120) || null,
-            meta: `${t.status} · ${tl.priorityLabels[t.priority] || t.priority}`,
+            type: "tasks", id: tk.id, title: tk.title,
+            subtitle: tk.description?.slice(0, 120) || null,
+            meta: "",
             link: "/tasks",
+            status: tk.status,
+            priority: tk.priority,
+            dueDate: tk.due_date,
           });
         }
       });
@@ -144,8 +177,9 @@ const GlobalSearch = () => {
           res.push({
             type: "risks", id: r.id, title: r.title,
             subtitle: r.description?.slice(0, 120) || null,
-            meta: `${r.status} · Impact ${r.impact} × Likelihood ${r.likelihood}`,
+            meta: `Impact ${r.impact} × Likelihood ${r.likelihood}`,
             link: "/risks",
+            status: r.status,
           });
         }
       });
@@ -167,13 +201,23 @@ const GlobalSearch = () => {
     return res.slice(0, 50);
   }, [debouncedQuery, entityFilter, decisions, tasks, lessons, risks, comments, tl, t]);
 
+  // Group results by type
+  const groupedResults = useMemo(() => {
+    const groups: Record<string, SearchResult[]> = {};
+    results.forEach(r => {
+      if (!groups[r.type]) groups[r.type] = [];
+      groups[r.type].push(r);
+    });
+    return groups;
+  }, [results]);
+
   const entityCounts = useMemo(() => {
     if (!debouncedQuery || debouncedQuery.length < 2) return {} as Record<EntityType, number>;
     const q = debouncedQuery.toLowerCase();
     return {
       all: 0,
       decisions: decisions.filter(d => d.title?.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)).length,
-      tasks: tasks.filter(t => t.title?.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q)).length,
+      tasks: tasks.filter(tk => tk.title?.toLowerCase().includes(q) || tk.description?.toLowerCase().includes(q)).length,
       lessons: lessons.filter(l => [l.key_takeaway, l.what_went_well, l.what_went_wrong, l.recommendations].some(f => f?.toLowerCase().includes(q))).length,
       risks: risks.filter(r => r.title?.toLowerCase().includes(q) || r.description?.toLowerCase().includes(q)).length,
       comments: comments.filter(c => c.content?.toLowerCase().includes(q)).length,
@@ -187,6 +231,120 @@ const GlobalSearch = () => {
   const typeColor: Record<string, string> = {
     decisions: "text-primary", tasks: "text-accent-blue", lessons: "text-warning", risks: "text-destructive", comments: "text-muted-foreground",
   };
+
+  const typeLabel: Record<string, string> = {
+    decisions: t("globalSearch.decisions"),
+    tasks: t("globalSearch.tasks"),
+    lessons: t("globalSearch.lessons"),
+    risks: t("globalSearch.risks"),
+    comments: t("globalSearch.comments"),
+  };
+
+  const handleMarkTaskDone = useCallback(async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { error } = await supabase.from("tasks").update({ status: "done" }).eq("id", taskId);
+    if (error) { toast.error(t("hooks.statusChangeFailed")); return; }
+    qc.invalidateQueries({ queryKey: ["search-tasks"] });
+    toast.success(t("globalSearch.taskMarkedDone"));
+  }, [qc, t]);
+
+  const formatDue = (d: string | null | undefined) => {
+    if (!d) return null;
+    try {
+      const date = parseISO(d);
+      const overdue = isPast(date);
+      const formatted = format(date, "dd. MMM", { locale: i18n.language === "de" ? de : undefined });
+      return { formatted, overdue };
+    } catch { return null; }
+  };
+
+  const renderResultRow = (r: SearchResult) => {
+    const Icon = typeIcon[r.type] || FileText;
+    const due = formatDue(r.dueDate);
+
+    return (
+      <div
+        key={`${r.type}-${r.id}`}
+        className="group flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer hover:bg-muted/60 transition-colors border border-transparent hover:border-border/50"
+        onClick={() => navigate(r.link)}
+      >
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/50 ${typeColor[r.type]}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">
+            <Highlight text={r.title} query={debouncedQuery} />
+          </p>
+          {r.subtitle && (
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              <Highlight text={r.subtitle} query={debouncedQuery} />
+            </p>
+          )}
+        </div>
+
+        {/* Status + Priority badges for decisions & tasks */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {r.status && (
+            <Badge variant="outline" className={`text-[10px] border ${statusColor[r.status] || ""}`}>
+              {tl.statusLabels[r.status] || r.status}
+            </Badge>
+          )}
+          {r.priority && (r.type === "tasks" || r.type === "decisions") && (
+            <Badge variant="outline" className={`text-[10px] border ${priorityColor[r.priority] || ""}`}>
+              {tl.priorityLabels[r.priority] || r.priority}
+            </Badge>
+          )}
+          {due && (
+            <span className={`text-[10px] font-medium ${due.overdue ? "text-destructive" : "text-muted-foreground"}`}>
+              {due.formatted}
+            </span>
+          )}
+        </div>
+
+        {/* Hover actions */}
+        <div className="hidden group-hover:flex items-center gap-1 shrink-0 ml-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 px-2 text-xs"
+            onClick={(e) => { e.stopPropagation(); navigate(r.link); }}
+          >
+            <ExternalLink className="w-3 h-3 mr-1" />
+            {t("globalSearch.open")}
+          </Button>
+
+          {r.type === "decisions" && r.status === "in_review" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs text-amber-600"
+              onClick={(e) => { e.stopPropagation(); navigate(`${r.link}?tab=review`); }}
+            >
+              <PlayCircle className="w-3 h-3 mr-1" />
+              Review
+            </Button>
+          )}
+
+          {r.type === "tasks" && r.status !== "done" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs text-emerald-600"
+              onClick={(e) => handleMarkTaskDone(r.id, e)}
+            >
+              <CheckCircle2 className="w-3 h-3 mr-1" />
+              {t("globalSearch.markDone")}
+            </Button>
+          )}
+        </div>
+
+        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 group-hover:hidden" />
+      </div>
+    );
+  };
+
+  const groupOrder: EntityType[] = ["decisions", "tasks", "risks", "lessons", "comments"];
 
   return (
     <AppLayout>
@@ -250,45 +408,37 @@ const GlobalSearch = () => {
             <Search className="w-10 h-10 mx-auto mb-3 opacity-20" />
             <p className="text-sm">{t("globalSearch.noResults", { query: debouncedQuery })}</p>
           </div>
+        ) : entityFilter !== "all" ? (
+          /* Flat list when a specific type is selected */
+          <div className="space-y-1">
+            {results.map(renderResultRow)}
+          </div>
         ) : (
-          <div className="space-y-2">
-            {results.map(r => {
-              const Icon = typeIcon[r.type] || FileText;
+          /* Grouped by type when "All" is selected */
+          <div className="space-y-6">
+            {groupOrder.map(type => {
+              const group = groupedResults[type];
+              if (!group || group.length === 0) return null;
+              const Icon = typeIcon[type] || FileText;
               return (
-                <Card
-                  key={`${r.type}-${r.id}`}
-                  className="cursor-pointer hover:border-primary/30 transition-colors"
-                  onClick={() => navigate(r.link)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted/50 ${typeColor[r.type]}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-medium truncate">
-                            <Highlight text={r.title} query={debouncedQuery} />
-                          </p>
-                          <Badge variant="outline" className="text-[10px] shrink-0">{ENTITY_TABS.find(tab => tab.value === r.type)?.label}</Badge>
-                        </div>
-                        {r.subtitle && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            <Highlight text={r.subtitle} query={debouncedQuery} />
-                          </p>
-                        )}
-                        <p className="text-[10px] text-muted-foreground mt-1">{r.meta}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 mt-2" />
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={type}>
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <Icon className={`w-4 h-4 ${typeColor[type]}`} />
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {typeLabel[type]} <span className="text-[10px] font-normal">({group.length})</span>
+                    </h2>
+                  </div>
+                  <div className="space-y-1">
+                    {group.map(renderResultRow)}
+                  </div>
+                </div>
               );
             })}
-            {results.length >= 50 && (
-              <p className="text-xs text-muted-foreground text-center py-2">{t("globalSearch.showingFirst50")}</p>
-            )}
           </div>
+        )}
+
+        {results.length >= 50 && (
+          <p className="text-xs text-muted-foreground text-center py-2 mt-4">{t("globalSearch.showingFirst50")}</p>
         )}
       </div>
     </AppLayout>
