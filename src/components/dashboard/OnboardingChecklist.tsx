@@ -32,7 +32,10 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
   const [dismissed, setDismissed] = useState(() =>
     localStorage.getItem("onboarding-checklist-dismissed") === "true"
   );
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(() => {
+    // Auto-collapse if user already has some progress
+    return !(hasTeam && hasDecision);
+  });
 
   const steps: ChecklistStep[] = useMemo(() => [
     {

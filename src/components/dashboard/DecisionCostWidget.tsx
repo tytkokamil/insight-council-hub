@@ -52,6 +52,30 @@ const DecisionCostWidget = () => {
     return `${cost}€`;
   };
 
+  // Friendly state when no delay costs
+  if (openDecisions.length === 0 || totalCost === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-success" />
+            </div>
+            <CardTitle className="text-sm">{t("widgets.delayCost")}</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-2 mb-1">
+            <span className="font-display text-3xl font-bold text-success">0€</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("widgets.noDelayCost", { defaultValue: "Keine Verzögerungskosten — alle Entscheidungen im Plan 🎉" })}
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">

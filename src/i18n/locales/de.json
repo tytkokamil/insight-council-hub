@@ -684,6 +684,7 @@
     "confidenceMedium": "Mittel",
     "confidenceLow": "Niedrig",
     "openDecisionsCost": "{{count}} offene Entscheidungen verursachen Kosten",
+    "noDelayCost": "Keine Verzögerungskosten — alle Entscheidungen im Plan 🎉",
     "showCalc": "Berechnung anzeigen",
     "hideCalc": "Berechnung ausblenden",
     "adjustParams": "Parameter anpassen",
@@ -2242,10 +2243,10 @@
     "helpPrefix": "Hilfe —",
     "methodology": "Methodik",
     "source": "Quelle",
-    "pageRoleIntelligence": "Intelligence",
-    "pageRoleExecution": "Execution",
-    "pageRoleGovernance": "Governance",
-    "pageRoleKnowledge": "Knowledge"
+    "pageRoleIntelligence": "Analyse",
+    "pageRoleExecution": "Steuerung",
+    "pageRoleGovernance": "Kontrolle",
+    "pageRoleKnowledge": "Wissen"
   },
   "import": {
     "title": "{{label}} importieren",

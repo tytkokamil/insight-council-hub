@@ -684,6 +684,7 @@
     "confidenceMedium": "Medium",
     "confidenceLow": "Low",
     "openDecisionsCost": "{{count}} open decisions incurring costs",
+    "noDelayCost": "No delay costs — all decisions on track 🎉",
     "showCalc": "Show calculation",
     "hideCalc": "Hide calculation",
     "adjustParams": "Adjust parameters",
@@ -2242,9 +2243,9 @@
     "helpPrefix": "Help —",
     "methodology": "Methodology",
     "source": "Source",
-    "pageRoleIntelligence": "Intelligence",
-    "pageRoleExecution": "Execution",
-    "pageRoleGovernance": "Governance",
+    "pageRoleIntelligence": "Analytics",
+    "pageRoleExecution": "Control",
+    "pageRoleGovernance": "Compliance",
     "pageRoleKnowledge": "Knowledge"
   },
   "import": {

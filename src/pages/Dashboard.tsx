@@ -375,7 +375,7 @@ const Dashboard = () => {
         )}
 
         {/* ═══ ONBOARDING CHECKLIST ═══ */}
-        {!isLoading && !isExecutive && (
+        {!isLoading && !isExecutive && decisions.length < 10 && (
           <OnboardingChecklist
             hasTeam={teams.length > 0}
             hasDecision={decisions.length > 0}
@@ -397,13 +397,13 @@ const Dashboard = () => {
         {/* ═══ EXECUTIVE MODE: Compact Layout ═══ */}
         {isExecutive && !isLoading && (
           <>
-            {/* DQI Hero */}
+            {/* DQI Hero — prominent for executives */}
             <WidgetErrorBoundary>
               <DecisionQualityIndex />
             </WidgetErrorBoundary>
 
             {/* Escalations + Cost side by side */}
-            <div className="grid md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <WidgetErrorBoundary>
                 <EscalationWidget />
               </WidgetErrorBoundary>
@@ -426,8 +426,8 @@ const Dashboard = () => {
         {!isExecutive && !isLoading && (
           <>
             {/* Stuck Decisions + Escalations + Gamification */}
-            <div className="grid md:grid-cols-3 gap-5">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2">
                 <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
               </div>
               <div className="space-y-5">
@@ -467,11 +467,15 @@ const Dashboard = () => {
             <div className="border-t border-border pt-4">
               <button
                 onClick={() => setShowDeepDive(!showDeepDive)}
-                className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2"
               >
-                {showDeepDive ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                {showDeepDive ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 <span>{showDeepDive ? t("dashboard.hideDetails") : t("dashboard.showDetails")}</span>
-                <span className="text-[10px] text-muted-foreground/50 ml-1">DQI · Trends · Radar · Cost of Delay · Risk Portfolio</span>
+                <div className="flex flex-wrap gap-1.5 ml-2">
+                  {["DQI", "Trends", "Radar", "Cost of Delay", "Risk Portfolio"].map(label => (
+                    <span key={label} className="text-[11px] px-2 py-0.5 rounded-full bg-muted/60 border border-border/50 text-muted-foreground/70">{label}</span>
+                  ))}
+                </div>
               </button>
 
               <AnimatePresence>
@@ -489,7 +493,7 @@ const Dashboard = () => {
                     </WidgetErrorBoundary>
 
                     {/* Cost + Risk side by side */}
-                    <div className="grid md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <WidgetErrorBoundary>
                         <DecisionCostWidget />
                       </WidgetErrorBoundary>
@@ -497,8 +501,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Trends + Radar */}
-                    <div className="grid md:grid-cols-3 gap-5">
-                      <div className="md:col-span-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      <div className="lg:col-span-2">
                         <section>
                           <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
                           <div className="border border-border rounded-xl p-6">
