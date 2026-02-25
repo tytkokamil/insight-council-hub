@@ -2,7 +2,7 @@ import { memo, DragEvent, useMemo } from "react";
 import { format, isSameMonth, isToday, differenceInCalendarDays, addDays, startOfWeek } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, DollarSign } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
@@ -141,18 +141,28 @@ const MonthView = memo(({
           return (
             <>
               {isFirstInWeek && (
-                <div className="row-span-1 flex items-center justify-center border-b border-r border-border">
+                <div className="row-span-1 flex flex-col items-center justify-center gap-0.5 border-b border-r border-border px-0.5">
                   {momentum && (
                     <Tooltip>
                       <TooltipTrigger>
-                        <div className={cn(
-                          "w-2.5 h-2.5 rounded-full",
-                          momentum === "green" && "bg-success",
-                          momentum === "yellow" && "bg-warning",
-                          momentum === "red" && "bg-destructive animate-pulse",
-                        )} />
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className={cn(
+                            "w-2.5 h-2.5 rounded-full",
+                            momentum === "green" && "bg-success",
+                            momentum === "yellow" && "bg-warning",
+                            momentum === "red" && "bg-destructive animate-pulse",
+                          )} />
+                          <span className={cn(
+                            "text-[7px] font-semibold leading-none",
+                            momentum === "green" && "text-success",
+                            momentum === "yellow" && "text-warning",
+                            momentum === "red" && "text-destructive",
+                          )}>
+                            {momentum === "green" ? "OK" : momentum === "yellow" ? "!!" : "⚠"}
+                          </span>
+                        </div>
                       </TooltipTrigger>
-                      <TooltipContent side="left" className="text-xs">
+                      <TooltipContent side="left" className="text-xs max-w-[180px]">
                         {momentum === "green" && t("cal.weekGood")}
                         {momentum === "yellow" && t("cal.weekHigh")}
                         {momentum === "red" && t("cal.weekCritical")}
@@ -197,9 +207,8 @@ const MonthView = memo(({
                     {delayCost > 0 && (
                       <Tooltip>
                         <TooltipTrigger>
-                          <span className="text-[9px] font-semibold text-destructive flex items-center gap-0.5">
-                            <DollarSign className="w-2.5 h-2.5" />
-                            {delayCost >= 1000 ? `${(delayCost / 1000).toFixed(1)}k` : delayCost}
+                          <span className="text-[9px] font-semibold text-destructive">
+                            {delayCost >= 1000 ? `${(delayCost / 1000).toFixed(1)}k €` : `${delayCost} €`}
                           </span>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">

@@ -269,7 +269,7 @@ const DecisionCalendar = () => {
             <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
             <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
               <Download className="w-3.5 h-3.5" />
-              ICS
+              {t("calendar.exportCalendar")}
             </Button>
             <div className="w-px h-6 bg-border" />
             <ToggleGroup

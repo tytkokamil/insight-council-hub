@@ -1,5 +1,5 @@
 import { memo, DragEvent } from "react";
-import { GripVertical, User, Calendar, AlertTriangle, Zap, DollarSign, Link2 } from "lucide-react";
+import { GripVertical, User, Calendar, AlertTriangle, Zap, Link2 } from "lucide-react";
 import { format, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -95,8 +95,7 @@ const DecisionPill = memo(({ decision, draggingId, onDragStart, onDragEnd, onCli
               )}
               {delayCost > 0 && (
                 <div className="text-xs flex items-center gap-1">
-                  <DollarSign className="w-3 h-3 text-destructive" />
-                  <span className="font-semibold text-destructive">{delayCost.toLocaleString()}€</span>
+                  <span className="font-semibold text-destructive">{delayCost.toLocaleString()} €</span>
                 </div>
               )}
               {isOverdue && (

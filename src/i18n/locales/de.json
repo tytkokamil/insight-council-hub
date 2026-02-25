@@ -621,7 +621,8 @@
     "noExportData": "Keine Entscheidungen zum Exportieren",
     "exported": "Kalender exportiert",
     "exportedDesc": "ICS-Datei wurde heruntergeladen",
-    "unscheduledTasks": "Aufgaben ohne Deadline"
+    "unscheduledTasks": "Aufgaben ohne Deadline",
+    "exportCalendar": "Kalender exportieren"
   },
   "widgets": {
     "topActionNow": "👉 Top Action Now",
