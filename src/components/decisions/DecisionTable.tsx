@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { MoreHorizontal, Eye, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, ArrowRightLeft } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
@@ -22,6 +23,9 @@ export interface DecisionMeta {
   isBlocked: boolean;
   isHighRisk: boolean;
 }
+
+export type SortField = "title" | "status" | "priority" | "risk" | "due_date" | null;
+export type SortDir = "asc" | "desc";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -59,13 +63,78 @@ interface DecisionTableProps {
   userId?: string;
   onInvalidate: () => void;
   onClearFilters: () => void;
+  sortField?: SortField;
+  sortDir?: SortDir;
+  onSort?: (field: SortField) => void;
 }
+
+/* ── Sortable header cell ── */
+const SortableHeader = ({ field, label, currentField, currentDir, onSort, className }: {
+  field: SortField;
+  label: string;
+  currentField?: SortField;
+  currentDir?: SortDir;
+  onSort?: (f: SortField) => void;
+  className?: string;
+}) => {
+  const active = currentField === field;
+  const Icon = active ? (currentDir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+
+  return (
+    <th
+      className={`text-left p-3 text-xs font-medium text-muted-foreground select-none ${onSort ? "cursor-pointer hover:text-foreground group" : ""} ${className ?? ""}`}
+      onClick={() => onSort?.(field)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <Icon className={`w-3 h-3 shrink-0 transition-colors ${active ? "text-foreground" : "text-muted-foreground/40 group-hover:text-muted-foreground"}`} />
+      </span>
+    </th>
+  );
+};
+
+/* ── Badge row with limit ── */
+const DecisionBadges = ({ meta, t }: { meta: DecisionMeta; t: any }) => {
+  const badges: { label: string; className: string }[] = [];
+  if (meta.isOverdue) badges.push({ label: t("table.overdue"), className: "bg-destructive/20 text-destructive border-destructive/30" });
+  if (meta.isEscalated) badges.push({ label: t("table.escalated"), className: "bg-warning/20 text-warning border-warning/30" });
+  if (meta.needsReview) badges.push({ label: t("table.review"), className: "bg-primary/20 text-primary border-primary/30" });
+  if (meta.isBlocked) badges.push({ label: t("table.blocked"), className: "bg-warning/20 text-warning border-warning/30" });
+
+  if (badges.length === 0) return null;
+
+  const visible = badges.slice(0, 2);
+  const hidden = badges.slice(2);
+
+  return (
+    <>
+      {visible.map((b, i) => (
+        <Badge key={i} variant="outline" className={`text-[9px] h-4 px-1 ${b.className}`}>{b.label}</Badge>
+      ))}
+      {hidden.length > 0 && (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-[9px] h-4 px-1 bg-muted/50 text-muted-foreground border-border cursor-help">
+                +{hidden.length}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {hidden.map(b => b.label).join(", ")}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </>
+  );
+};
 
 const DecisionTable = ({
   decisions, decisionMeta, profileMap, selectedIds,
   onToggleSelect, onToggleSelectAll, onPreview, onEdit, onDelete,
   statusOptions, statusLabels, priorityLabels, categoryLabels,
   userId, onInvalidate, onClearFilters,
+  sortField, sortDir, onSort,
 }: DecisionTableProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -79,12 +148,12 @@ const DecisionTable = ({
               <th className="p-3 w-10">
                 <Checkbox checked={selectedIds.size === decisions.length && decisions.length > 0} onCheckedChange={onToggleSelectAll} />
               </th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.decision")}</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground">{t("decisions.statusLabel")}</th>
+              <SortableHeader field="title" label={t("decisions.decision")} currentField={sortField} currentDir={sortDir} onSort={onSort} />
+              <SortableHeader field="status" label={t("decisions.statusLabel")} currentField={sortField} currentDir={sortDir} onSort={onSort} />
               <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.owner")}</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.priorityLabel")}</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">{t("decisions.risk")}</th>
-              <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.due")}</th>
+              <SortableHeader field="priority" label={t("decisions.priorityLabel")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden md:table-cell" />
+              <SortableHeader field="risk" label={t("decisions.risk")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden lg:table-cell" />
+              <SortableHeader field="due_date" label={t("decisions.due")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden md:table-cell" />
               <th className="p-3 w-10"></th>
             </tr>
           </thead>
@@ -114,18 +183,32 @@ const DecisionTable = ({
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="text-sm font-medium">{decision.title}</p>
-                        {meta.isOverdue && <Badge variant="destructive" className="text-[9px] h-4 px-1">{t("table.overdue")}</Badge>}
-                        {meta.isEscalated && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">{t("table.escalated")}</Badge>}
-                        {meta.needsReview && <Badge className="text-[9px] h-4 px-1 bg-primary/20 text-primary border-primary/30">{t("table.review")}</Badge>}
-                        {meta.isBlocked && <Badge className="text-[9px] h-4 px-1 bg-warning/20 text-warning border-warning/30">{t("table.blocked")}</Badge>}
+                        <DecisionBadges meta={meta} t={t} />
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{categoryLabels[decision.category]}</p>
                     </td>
 
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[decision.status]}`}>
-                        {statusLabels[decision.status]}
-                      </span>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase hover:ring-2 hover:ring-ring/20 transition-all ${statusStyles[decision.status]}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {statusLabels[decision.status]}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                          {statusOptions.filter(s => s.value !== decision.status).map(s => (
+                            <DropdownMenuItem key={s.value} onClick={async () => {
+                              await supabase.from("decisions").update({ status: s.value as any }).eq("id", decision.id);
+                              onInvalidate(); toast.success(`→ ${s.label}`);
+                            }} className="gap-2 text-xs">
+                              <ArrowRightLeft className="w-3 h-3" /> {s.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
 
                     <td className="p-3 hidden md:table-cell">
@@ -159,36 +242,40 @@ const DecisionTable = ({
                     </td>
 
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/decisions/${decision.id}`)} className="gap-2">
-                            <Eye className="w-3.5 h-3.5" /> {t("common.open")}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          {statusOptions.filter(s => s.value !== decision.status).slice(0, 3).map(s => (
-                            <DropdownMenuItem key={s.value} onClick={async () => {
-                              await supabase.from("decisions").update({ status: s.value as any }).eq("id", decision.id);
-                              onInvalidate(); toast.success(`→ ${s.label}`);
-                            }} className="gap-2 text-xs">
-                              {t("table.statusTo", { label: s.label })}
+                      <div className="flex items-center gap-0.5">
+                        <TooltipProvider delayDuration={300}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/decisions/${decision.id}`)}>
+                                <Eye className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">{t("common.open")}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="w-3.5 h-3.5" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/decisions/${decision.id}`)} className="gap-2">
+                              <Eye className="w-3.5 h-3.5" /> {t("common.open")}
                             </DropdownMenuItem>
-                          ))}
-                          <DropdownMenuSeparator />
-                          {userId === decision.created_by && (
-                            <>
-                              <DropdownMenuItem onClick={() => onEdit(decision)} className="gap-2">
-                                <Pencil className="w-3.5 h-3.5" /> {t("common.edit")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onDelete(decision)} className="gap-2 text-destructive focus:text-destructive">
-                                <Trash2 className="w-3.5 h-3.5" /> {t("common.delete")}
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenuSeparator />
+                            {userId === decision.created_by && (
+                              <>
+                                <DropdownMenuItem onClick={() => onEdit(decision)} className="gap-2">
+                                  <Pencil className="w-3.5 h-3.5" /> {t("common.edit")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onDelete(decision)} className="gap-2 text-destructive focus:text-destructive">
+                                  <Trash2 className="w-3.5 h-3.5" /> {t("common.delete")}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 );

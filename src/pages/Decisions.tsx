@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
+import type { SortField, SortDir } from "@/components/decisions/DecisionTable";
 import DecisionsPageSkeleton from "@/components/decisions/DecisionsPageSkeleton";
 import { Plus, Download, FileText, FileUp } from "lucide-react";
 import { useTranslatedLabels } from "@/lib/labels";
@@ -100,6 +101,8 @@ const Decisions = () => {
   const [filterTeam, setFilterTeam] = useState<string[]>([]);
   const [quickChip, setQuickChip] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   // ── Dialog state ──
   const [showNewDialog, setShowNewDialog] = useState(false);
@@ -128,24 +131,56 @@ const Decisions = () => {
     return { overdue, escalated, review, highRisk, blocked };
   }, [decisions, decisionMeta]);
 
-  // ── Filtered decisions ──
-  const filtered = useMemo(() => decisions.filter((d) => {
-    if (debouncedSearch && !d.title.toLowerCase().includes(debouncedSearch.toLowerCase()) && !d.description?.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
-    if (filterStatus.length > 0 && !filterStatus.includes(d.status)) return false;
-    if (filterPriority.length > 0 && !filterPriority.includes(d.priority)) return false;
-    if (filterCategory.length > 0 && !filterCategory.includes(d.category)) return false;
-    if (filterTeam.length > 0 && (!d.team_id || !filterTeam.includes(d.team_id))) return false;
-    if (quickChip) {
-      const m = decisionMeta[d.id];
-      if (!m) return false;
-      if (quickChip === "overdue" && !m.isOverdue) return false;
-      if (quickChip === "escalated" && !m.isEscalated) return false;
-      if (quickChip === "review" && !m.needsReview) return false;
-      if (quickChip === "highRisk" && !m.isHighRisk) return false;
-      if (quickChip === "blocked" && !m.isBlocked) return false;
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
     }
-    return true;
-  }), [decisions, debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip, decisionMeta]);
+  };
+
+  const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+  // ── Filtered + sorted decisions ──
+  const filtered = useMemo(() => {
+    let result = decisions.filter((d) => {
+      if (debouncedSearch && !d.title.toLowerCase().includes(debouncedSearch.toLowerCase()) && !d.description?.toLowerCase().includes(debouncedSearch.toLowerCase())) return false;
+      if (filterStatus.length > 0 && !filterStatus.includes(d.status)) return false;
+      if (filterPriority.length > 0 && !filterPriority.includes(d.priority)) return false;
+      if (filterCategory.length > 0 && !filterCategory.includes(d.category)) return false;
+      if (filterTeam.length > 0 && (!d.team_id || !filterTeam.includes(d.team_id))) return false;
+      if (quickChip) {
+        const m = decisionMeta[d.id];
+        if (!m) return false;
+        if (quickChip === "overdue" && !m.isOverdue) return false;
+        if (quickChip === "escalated" && !m.isEscalated) return false;
+        if (quickChip === "review" && !m.needsReview) return false;
+        if (quickChip === "highRisk" && !m.isHighRisk) return false;
+        if (quickChip === "blocked" && !m.isBlocked) return false;
+      }
+      return true;
+    });
+
+    if (sortField) {
+      result = [...result].sort((a, b) => {
+        let cmp = 0;
+        switch (sortField) {
+          case "title": cmp = a.title.localeCompare(b.title); break;
+          case "status": cmp = a.status.localeCompare(b.status); break;
+          case "priority": cmp = (PRIORITY_ORDER[a.priority] ?? 9) - (PRIORITY_ORDER[b.priority] ?? 9); break;
+          case "risk": cmp = (a.ai_risk_score || 0) - (b.ai_risk_score || 0); break;
+          case "due_date": {
+            const da = a.due_date ? new Date(a.due_date).getTime() : Infinity;
+            const db = b.due_date ? new Date(b.due_date).getTime() : Infinity;
+            cmp = da - db; break;
+          }
+        }
+        return sortDir === "desc" ? -cmp : cmp;
+      });
+    }
+    return result;
+  }, [decisions, debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip, decisionMeta, sortField, sortDir]);
 
   // ── Actions ──
   const clearAllFilters = () => {
@@ -265,6 +300,9 @@ const Decisions = () => {
             userId={user?.id}
             onInvalidate={invalidate}
             onClearFilters={clearAllFilters}
+            sortField={sortField}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
         </>
       )}

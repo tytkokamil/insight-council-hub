@@ -1582,7 +1582,8 @@
     "viewDeleted": "\"{{name}}\" gelöscht",
     "viewNamePlaceholder": "View-Name...",
     "saveView": "View speichern",
-    "clearView": "View aufheben"
+    "clearView": "View aufheben",
+    "quickFilters": "Schnellfilter"
   },
   "lifecycle": {
     "draft": "Entwurf",
