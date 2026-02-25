@@ -2163,7 +2163,10 @@
     "active": "active",
     "pages": "Pages",
     "decisions": "Decisions",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "risks": "Risks",
+    "inviteTeam": "Invite Team",
+    "openDashboard": "Open Dashboard"
   },
   "teamSwitcher": {
     "personal": "Personal"
@@ -4615,7 +4618,10 @@
     "lessons": "Lessons",
     "risks": "Risks",
     "comments": "Comments",
-    "decision": "Decision"
+    "decision": "Decision",
+    "open": "Open",
+    "markDone": "Done",
+    "taskMarkedDone": "Task marked as done"
   },
   "hooks": {
     "statusChangeFailed": "Status change failed – rolled back.",

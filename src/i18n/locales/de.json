@@ -2164,7 +2164,10 @@
     "active": "aktiv",
     "pages": "Seiten",
     "decisions": "Entscheidungen",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "risks": "Risiken",
+    "inviteTeam": "Team einladen",
+    "openDashboard": "Dashboard öffnen"
   },
   "teamSwitcher": {
     "personal": "Persönlich"
@@ -4613,7 +4616,7 @@
     "title": "Globale Suche",
     "placeholder": "Entscheidungen, Aufgaben, Lessons, Risiken, Kommentare durchsuchen…",
     "minChars": "Mindestens 2 Zeichen eingeben, um zu suchen",
-    "noResults": "Keine Ergebnisse für {{query}}",
+    "noResults": "Keine Ergebnisse für \"{{query}}\"",
     "showingFirst50": "Zeige die ersten 50 Ergebnisse. Verfeinere deine Suche für genauere Resultate.",
     "all": "Alle",
     "decisions": "Entscheidungen",
@@ -4621,7 +4624,10 @@
     "lessons": "Lessons",
     "risks": "Risiken",
     "comments": "Kommentare",
-    "decision": "Entscheidung"
+    "decision": "Entscheidung",
+    "open": "Öffnen",
+    "markDone": "Erledigt",
+    "taskMarkedDone": "Aufgabe als erledigt markiert"
   },
   "hooks": {
     "statusChangeFailed": "Statusänderung fehlgeschlagen – wurde zurückgesetzt.",

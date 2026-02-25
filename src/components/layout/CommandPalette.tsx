@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/command";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings,
-  GitBranch, Radar, DollarSign, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, Calendar, Crosshair, Shield, Sun, LayoutDashboard, Brain,
-  Plus, ListTodo, Search, Clock, ArrowRight,
+  GitBranch, Radar, Dna, Zap, Trophy, FlaskConical, Target, Calendar, Crosshair, Shield, Sun, Brain,
+  Plus, ListTodo, Clock, AlertTriangle, UserPlus,
 } from "lucide-react";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import { useRisks } from "@/hooks/useRisks";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +26,7 @@ const CommandPalette = () => {
   const { data: decisions = [] } = useDecisions();
   const { data: tasks = [] } = useTasks();
   const { data: teams = [] } = useTeams();
+  const { data: risks = [] } = useRisks();
   const { selectedTeamId, setSelectedTeamId } = useTeamContext();
   const { t } = useTranslation();
 
@@ -52,6 +53,8 @@ const CommandPalette = () => {
   const quickActions = useMemo(() => [
     { label: t("cmd.newDecision"), path: "/decisions?new=true", icon: Plus, shortcut: "N" },
     { label: t("cmd.newTask"), path: "/tasks?new=true", icon: ListTodo, shortcut: "T" },
+    { label: t("cmd.inviteTeam"), path: "/teams?invite=true", icon: UserPlus },
+    { label: t("cmd.openDashboard"), path: "/dashboard", icon: BarChart3, shortcut: "D" },
     { label: t("cmd.openEscalation"), path: "/engine", icon: Zap },
     { label: t("cmd.openAnalytics"), path: "/analytics", icon: TrendingUp },
   ], [t]);
@@ -186,7 +189,7 @@ const CommandPalette = () => {
           <>
             <CommandSeparator />
             <CommandGroup heading={t("cmd.tasks")}>
-              {tasks.filter(t => t.status !== "done").slice(0, 10).map((tk) => (
+              {tasks.filter(tk => tk.status !== "done").slice(0, 10).map((tk) => (
                 <CommandItem
                   key={tk.id}
                   value={`task ${tk.title} ${tk.status}`}
@@ -198,6 +201,28 @@ const CommandPalette = () => {
                     <span className="truncate">{tk.title}</span>
                   </div>
                   <span className="text-[10px] text-muted-foreground uppercase">{tk.status}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {risks.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading={t("cmd.risks")}>
+              {risks.slice(0, 10).map((r) => (
+                <CommandItem
+                  key={r.id}
+                  value={`risk ${r.title} ${r.status}`}
+                  onSelect={() => go("/risks")}
+                  className="gap-2.5"
+                >
+                  <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="truncate">{r.title}</span>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground uppercase">{r.status}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
