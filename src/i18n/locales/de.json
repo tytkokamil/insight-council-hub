@@ -2738,7 +2738,11 @@
     "noOpenRows": "Keine offenen Entscheidungen vorhanden.",
     "warnPastDeadline": "Voraussichtlich {{days}} Tage nach Deadline",
     "warnBlocked": "Durch Abhängigkeit blockiert",
-    "warnAboveAverage": "Deutlich über Durchschnitt"
+    "warnAboveAverage": "Deutlich über Durchschnitt",
+    "timeRange30": "30 Tage",
+    "timeRange60": "60 Tage",
+    "timeRange90": "90 Tage",
+    "timeRangeAll": "Alle"
   },
   "opportunityCost": {
     "label": "Kostenanalyse",
