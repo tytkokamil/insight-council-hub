@@ -273,7 +273,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
             <PageHelpButton title={t("executiveDash.pageTitle")} description={t("executiveDash.helpDesc")} />
             <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
               setExporting(true);
-              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.exported"), description: t("executiveDash.boardReportDesc") }); }
+              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.boardPackExportedTitle"), description: t("executiveDash.boardPackExportedDesc") }); }
               catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
               setExporting(false);
             }} className="gap-2">
@@ -451,9 +451,14 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                               <Badge variant="outline" className={`text-[9px] ${d.priority === "critical" ? "border-destructive text-destructive" : d.priority === "high" ? "border-warning text-warning" : ""}`}>{d.priority}</Badge>
                             </td>
                             <td className="text-right py-3 px-4">
-                              <Link to={`/decisions/${d.id}`}>
-                                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" /></Button>
-                              </Link>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Link to={`/decisions/${d.id}`}>
+                                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1"><ExternalLink className="w-3 h-3" /></Button>
+                                  </Link>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">{t("executiveDash.openDecisionTooltip")}</TooltipContent>
+                              </Tooltip>
                             </td>
                           </tr>
                         );
@@ -549,7 +554,11 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
             <Card><CardContent className="p-4">
               <p className="text-[10px] text-muted-foreground mb-1">{t("executiveDash.openReviews")}</p>
               <p className="text-2xl font-bold number-highlight">{metrics.pendingReviews.length}</p>
-              <p className="text-[9px] text-muted-foreground">{t("executiveDash.avgWait", { days: metrics.reviewMedianWait })}</p>
+              <p className="text-[9px] text-muted-foreground">
+                {metrics.pendingReviews.length === 0 && metrics.reviewMedianWait === 0
+                  ? t("executiveDash.avgWait", { days: 0 })
+                  : t("executiveDash.avgWait", { days: metrics.reviewMedianWait })}
+              </p>
             </CardContent></Card>
           </div>
           {metrics.escalated.length > 0 && (
@@ -595,8 +604,14 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-6">
-                  <p className="text-sm text-muted-foreground mb-3">{t("executiveDash.briefDesc")}</p>
+              <div className="text-center py-6">
+                  <Zap className="w-8 h-8 text-primary/30 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground mb-2">{t("executiveDash.briefDesc")}</p>
+                  <div className="flex flex-wrap justify-center gap-2 mb-4">
+                    {["briefFeature1", "briefFeature2", "briefFeature3", "briefFeature4"].map(key => (
+                      <Badge key={key} variant="outline" className="text-[10px]">{t(`executiveDash.${key}`)}</Badge>
+                    ))}
+                  </div>
                   <Button onClick={generateBrief} disabled={briefLoading} className="gap-2">
                     {briefLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                     {briefLoading ? t("executiveDash.generating") : t("executiveDash.generateBrief")}
@@ -623,9 +638,14 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                         <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thTeam")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thRisk")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thSla")}</th>
-                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thDuration")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">
+                          <Tooltip><TooltipTrigger className="inline-flex items-center gap-1">{t("executiveDash.thDuration")} <Info className="w-3 h-3" /></TooltipTrigger><TooltipContent className="text-xs max-w-60">{t("executiveDash.durationTooltip")}</TooltipContent></Tooltip>
+                        </th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thEscalation")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thImpact")}</th>
+                        <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">
+                          <Tooltip><TooltipTrigger className="inline-flex items-center gap-1">{t("executiveDash.thImpl")} <Info className="w-3 h-3" /></TooltipTrigger><TooltipContent className="text-xs max-w-60">{t("executiveDash.implTooltip")}</TooltipContent></Tooltip>
+                        </th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thImpl")}</th>
                       </tr>
                     </thead>

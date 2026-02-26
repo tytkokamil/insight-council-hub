@@ -35,7 +35,7 @@ const ExecutiveHub = () => {
     try {
       const data = await fetchBoardReportData();
       generateBoardReport(data);
-      toast.success(t("executive.exportSuccess"));
+      toast.success(t("executiveDash.boardPackExportedTitle"), { description: t("executiveDash.boardPackExportedDesc") });
     } catch {
       toast.error(t("executive.exportError"));
     } finally {
