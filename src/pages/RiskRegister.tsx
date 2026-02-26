@@ -277,12 +277,19 @@ const RiskRegister = () => {
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold">{t("risk.heatmap")}</CardTitle>
-                  <div className="flex items-center gap-1">
-                    {(["count", "score", "economic"] as const).map(v => (
-                      <Button key={v} size="sm" variant={heatmapView === v ? "default" : "ghost"} className="h-6 text-[10px] px-2" onClick={() => setHeatmapView(v)}>
-                        {v === "count" ? t("risk.heatmapCount") : v === "score" ? t("risk.heatmapScore") : "€"}
-                      </Button>
-                    ))}
+                   <div className="flex items-center gap-1">
+                     {(["count", "score", "economic"] as const).map(v => (
+                       <Tooltip key={v}>
+                         <TooltipTrigger asChild>
+                           <Button size="sm" variant={heatmapView === v ? "default" : "ghost"} className="h-6 text-[10px] px-2" onClick={() => setHeatmapView(v)}>
+                             {v === "count" ? t("risk.heatmapCount") : v === "score" ? t("risk.heatmapScore") : "€"}
+                           </Button>
+                         </TooltipTrigger>
+                         <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                           {v === "count" ? t("risk.heatmapCountTooltip") : v === "score" ? t("risk.heatmapScoreTooltip") : t("risk.heatmapEconomicTooltip")}
+                         </TooltipContent>
+                       </Tooltip>
+                     ))}
                     {heatmapFilter && (
                       <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-destructive" onClick={() => setHeatmapFilter(null)}>
                         <X className="w-3 h-3 mr-0.5" /> {t("risk.heatmapClearFilter")}
@@ -292,12 +299,12 @@ const RiskRegister = () => {
                 </div>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="flex gap-4">
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="text-[10px] text-muted-foreground font-medium" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>
-                      {t("risk.likelihood")} →
-                    </span>
-                  </div>
+                 <div className="flex gap-4">
+                   <div className="flex flex-col items-center justify-center mr-1">
+                     <span className="text-xs text-muted-foreground font-semibold whitespace-nowrap" style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", letterSpacing: "0.05em" }}>
+                       ↑ {t("risk.likelihood")}
+                     </span>
+                   </div>
                   <div className="flex-1">
                     <div className="grid grid-cols-5 gap-1">
                       {[5, 4, 3, 2, 1].map(likelihood =>
