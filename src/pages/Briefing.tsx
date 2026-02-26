@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { Sun, Loader2, AlertTriangle, CheckCircle2, Zap, RefreshCw } from "lucide-react";
+import { Sun, Loader2, AlertTriangle, CheckCircle2, Zap, RefreshCw, FileDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+
+const priorityMap: Record<string, string> = {
+  critical: "priorityCritical",
+  high: "priorityHigh",
+  medium: "priorityMedium",
+  low: "priorityLow",
+};
 
 const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const { t, i18n } = useTranslation();
@@ -17,6 +25,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { toast } = useToast();
 
   const fetchBriefing = async (isRefresh = false) => {
@@ -30,6 +39,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
       setMomentum(data.momentum_score);
       setMomentumBreakdown(data.momentum_breakdown);
       setStats(data.stats);
+      setLastUpdated(new Date());
     } catch (e: any) {
       toast({ title: t("briefing.error"), description: e.message, variant: "destructive" });
     }
@@ -39,10 +49,91 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
 
   useEffect(() => { fetchBriefing(); }, []);
 
-  const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k€` : `${cost}€`;
+  const locale = i18n.language === "de" ? "de-DE" : "en-US";
+
+  const formatCost = (cost: number) =>
+    new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cost);
+
+  const translatePriority = (priority: string) => {
+    const key = priorityMap[priority?.toLowerCase()];
+    return key ? t(`briefing.${key}`) : priority;
+  };
+
   const momentumColor = (s: number) => s > 70 ? "text-success" : s > 40 ? "text-warning" : "text-destructive";
 
-  const today = new Date().toLocaleDateString(i18n.language === "de" ? "de-DE" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString(locale, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return null;
+    return lastUpdated.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const exportBriefingPdf = () => {
+    if (!briefing) return;
+    const doc = new jsPDF();
+    let y = 20;
+    doc.setFontSize(18);
+    doc.text(t("briefing.title"), 14, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text(today, 14, y);
+    y += 12;
+
+    // KPIs
+    doc.setFontSize(12);
+    const kpis = [
+      `${t("briefing.momentum")}: ${momentum ?? "—"}`,
+      `${t("briefing.delayCost")}: ${costSummary ? formatCost(costSummary.total_delay_cost) : "—"}`,
+      `${t("briefing.overdue")}: ${stats?.overdue ?? "—"}`,
+      `${t("briefing.avgVelocity")}: ${stats?.avg_velocity ?? "—"}d`,
+    ];
+    kpis.forEach(k => { doc.text(k, 14, y); y += 6; });
+    y += 4;
+
+    // Headline
+    doc.setFontSize(14);
+    const headlineLines = doc.splitTextToSize(briefing.headline || "", 180);
+    doc.text(headlineLines, 14, y);
+    y += headlineLines.length * 6 + 6;
+
+    doc.setFontSize(10);
+    // Urgent actions
+    if (briefing.urgent_actions?.length) {
+      doc.setFontSize(12);
+      doc.text(t("briefing.urgentActions"), 14, y); y += 7;
+      doc.setFontSize(10);
+      briefing.urgent_actions.forEach((a: string, i: number) => {
+        const lines = doc.splitTextToSize(`${i + 1}. ${a}`, 175);
+        doc.text(lines, 18, y);
+        y += lines.length * 5 + 2;
+      });
+      y += 4;
+    }
+
+    // Recommendation
+    if (briefing.recommendation) {
+      doc.setFontSize(12);
+      doc.text(t("briefing.recommendation"), 14, y); y += 7;
+      doc.setFontSize(10);
+      const recLines = doc.splitTextToSize(briefing.recommendation, 175);
+      doc.text(recLines, 18, y);
+      y += recLines.length * 5 + 6;
+    }
+
+    // Cost breakdown
+    if (costSummary?.top_costs?.length) {
+      doc.setFontSize(12);
+      doc.text(t("briefing.topDelayCosts"), 14, y); y += 7;
+      doc.setFontSize(10);
+      costSummary.top_costs.forEach((c: any) => {
+        doc.text(`${c.title} — ${formatCost(c.cost)} (${c.days} ${t("briefing.daysOpen")} · ${translatePriority(c.priority)})`, 18, y);
+        y += 6;
+      });
+    }
+
+    doc.save(`briefing-${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast({ title: t("briefing.exportPdfSuccess"), description: t("briefing.exportPdfDesc") });
+  };
 
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   if (loading) {
@@ -68,11 +159,24 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
               <h1 className="font-display text-xl font-bold">{t("briefing.title")}</h1>
             </div>
             <p className="text-muted-foreground text-sm">{today}</p>
+            {lastUpdated && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {t("briefing.lastUpdated", { time: formatLastUpdated() })}
+              </p>
+            )}
           </div>
-          <Button variant="outline" size="sm" onClick={() => fetchBriefing(true)} disabled={refreshing} className="gap-1">
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-            {t("briefing.refresh")}
-          </Button>
+          <div className="flex items-center gap-2">
+            {briefing && (
+              <Button variant="outline" size="sm" onClick={exportBriefingPdf} className="gap-1">
+                <FileDown className="w-3.5 h-3.5" />
+                {t("briefing.exportPdf")}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => fetchBriefing(true)} disabled={refreshing} className="gap-1">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+              {t("briefing.refresh")}
+            </Button>
+          </div>
         </div>
 
         {/* Top KPIs */}
@@ -131,8 +235,8 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
 
             <div className="grid grid-cols-2 gap-4">
               {/* Wins */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}>
-                <Card><CardContent className="p-5">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex">
+                <Card className="flex-1"><CardContent className="p-5">
                   <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-4 h-4 text-success" /> {t("briefing.positives")}
                   </h3>
@@ -147,8 +251,8 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
               </motion.div>
 
               {/* Risks */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
-                <Card><CardContent className="p-5">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex">
+                <Card className="flex-1"><CardContent className="p-5">
                   <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
                     <AlertTriangle className="w-4 h-4 text-warning" /> {t("briefing.risksInView")}
                   </h3>
@@ -183,7 +287,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
                       <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{c.title}</p>
-                          <p className="text-xs text-muted-foreground">{c.days} {t("briefing.daysOpen")} • {c.priority}</p>
+                          <p className="text-xs text-muted-foreground">{c.days} {t("briefing.daysOpen")} · {translatePriority(c.priority)}</p>
                         </div>
                         <span className="text-sm font-bold text-destructive shrink-0 ml-2">{formatCost(c.cost)}</span>
                       </div>

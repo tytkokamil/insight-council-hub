@@ -960,7 +960,15 @@
     "recommendation": "Empfehlung für heute",
     "topDelayCosts": "Teuerste Verzögerungen",
     "daysOpen": "Tage offen",
-    "noData": "Noch keine Daten für das Briefing vorhanden."
+    "noData": "Noch keine Daten für das Briefing vorhanden.",
+    "lastUpdated": "Zuletzt aktualisiert: {{time}}",
+    "exportPdf": "Briefing als PDF",
+    "exportPdfSuccess": "Briefing PDF exportiert",
+    "exportPdfDesc": "Enthält: Momentum, Verzögerungskosten, dringende Aktionen, Risiken und Empfehlung.",
+    "priorityCritical": "kritisch",
+    "priorityHigh": "hoch",
+    "priorityMedium": "mittel",
+    "priorityLow": "niedrig"
   },
   "analytics": {
     "hubTitle": "Analytics Hub",

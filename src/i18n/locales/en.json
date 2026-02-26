@@ -959,7 +959,15 @@
     "recommendation": "Recommendation for today",
     "topDelayCosts": "Most Expensive Delays",
     "daysOpen": "days open",
-    "noData": "No data available for the briefing yet."
+    "noData": "No data available for the briefing yet.",
+    "lastUpdated": "Last updated: {{time}}",
+    "exportPdf": "Export as PDF",
+    "exportPdfSuccess": "Briefing PDF exported",
+    "exportPdfDesc": "Contains: Momentum, delay costs, urgent actions, risks and recommendation.",
+    "priorityCritical": "critical",
+    "priorityHigh": "high",
+    "priorityMedium": "medium",
+    "priorityLow": "low"
   },
   "analytics": {
     "hubTitle": "Analytics Hub",
