@@ -12,8 +12,12 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Zap, Play, Loader2, AlertTriangle, CheckCircle2, Clock, Lightbulb, Shield,
   Users, SkipForward, ExternalLink, TrendingUp, TrendingDown, ArrowUpRight, Flame, Target, Activity,
-  DollarSign, Gauge, ChevronRight, ArrowRight, Settings, FileText, BarChart3, Info,
+  DollarSign, Gauge, ChevronRight, ArrowRight, Settings, FileText, BarChart3, Info, Rocket,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useDecisions, useFilteredNotifications, useFilteredDependencies } from "@/hooks/useDecisions";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -33,6 +37,7 @@ const EscalationEngine = () => {
   const navigate = useNavigate();
   const [running, setRunning] = useState(false);
   const [lastResult, setLastResult] = useState<EngineResult | null>(null);
+  const [showEngineConfirm, setShowEngineConfirm] = useState(false);
 
   const actionConfig: Record<string, { icon: any; label: string; color: string; bgColor: string }> = useMemo(() => ({
     escalation: { icon: AlertTriangle, label: t("escalationEngine.smartEscalation"), color: "text-destructive", bgColor: "bg-destructive/15" },
@@ -253,13 +258,36 @@ const EscalationEngine = () => {
         help={{ title: t("escalationEngine.title"), description: t("escalationEngine.help") }}
         primaryAction={
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate("/war-room")} className="gap-1.5 text-xs">
-              <Shield className="w-3.5 h-3.5" /> {t("escalationEngine.warRoom")}
-            </Button>
-            <Button size="sm" onClick={runEngine} disabled={running} className="gap-1.5">
-              {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              {running ? t("escalationEngine.engineRunning") : t("escalationEngine.engineStart")}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => navigate("/war-room")} className="gap-1.5 text-xs">
+                    <Shield className="w-3.5 h-3.5" /> {t("escalationEngine.warRoom")}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                  {t("escalationEngine.warRoomTooltip")}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <AlertDialog open={showEngineConfirm} onOpenChange={setShowEngineConfirm}>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" disabled={running} className="gap-1.5">
+                  {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                  {running ? t("escalationEngine.engineRunning") : t("escalationEngine.engineStart")}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("escalationEngine.engineConfirmTitle")}</AlertDialogTitle>
+                  <AlertDialogDescription>{t("escalationEngine.engineConfirmDesc")}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("escalationEngine.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => { setShowEngineConfirm(false); runEngine(); }}>{t("escalationEngine.engineConfirmAction")}</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         }
       />
@@ -304,26 +332,42 @@ const EscalationEngine = () => {
       </div>
 
       {/* ═══ 2. ENGINE STATUS ═══ */}
-      <Card className={`mb-6 ${engineStatus.active ? "border-success/30" : "border-destructive/50 bg-destructive/5"}`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div className={`w-2.5 h-2.5 rounded-full ${engineStatus.active ? "bg-success animate-pulse" : "bg-destructive"}`} />
-              <div>
-                <p className="text-sm font-semibold">{engineStatus.active ? t("escalationEngine.engineActive") : t("escalationEngine.engineInactive")}</p>
-                {!engineStatus.active && <p className="text-xs text-destructive mt-0.5">{t("escalationEngine.engineInactiveDesc")}</p>}
+      {engineStatus.active ? (
+        <Card className="mb-6 border-success/30">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+                <p className="text-sm font-semibold">{t("escalationEngine.engineActive")}</p>
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                <span>{t("escalationEngine.rulesActive")}: <strong className="text-foreground">{engineStatus.activeRules}</strong>/{engineStatus.totalRules}</span>
+                <span>{t("escalationEngine.autoEscalations")}: <strong className="text-foreground">{engineStatus.autoEscalations}</strong></span>
+                <span>{t("escalationEngine.autoReassignsLabel")}: <strong className="text-foreground">{engineStatus.autoReassigns}</strong></span>
+                <span>{t("escalationEngine.reviewSkips")}: <strong className="text-foreground">{engineStatus.reviewSkips}</strong></span>
+                <span>{t("escalationEngine.actions7d")}: <strong className="text-foreground">{engineStatus.recentActions}</strong></span>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-              <span>{t("escalationEngine.rulesActive")}: <strong className="text-foreground">{engineStatus.activeRules}</strong>/{engineStatus.totalRules}</span>
-              <span>{t("escalationEngine.autoEscalations")}: <strong className="text-foreground">{engineStatus.autoEscalations}</strong></span>
-              <span>{t("escalationEngine.autoReassignsLabel")}: <strong className="text-foreground">{engineStatus.autoReassigns}</strong></span>
-              <span>{t("escalationEngine.reviewSkips")}: <strong className="text-foreground">{engineStatus.reviewSkips}</strong></span>
-              <span>{t("escalationEngine.actions7d")}: <strong className="text-foreground">{engineStatus.recentActions}</strong></span>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <Rocket className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-primary">{t("escalationEngine.engineOnboardingTitle")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("escalationEngine.engineOnboardingDesc")}</p>
+                </div>
+              </div>
+              <Button size="sm" className="gap-1.5" onClick={() => navigate("/automation")}>
+                <Zap className="w-3.5 h-3.5" /> {t("escalationEngine.createFirstRule")}
+              </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ═══ LAST RUN RESULT ═══ */}
       {lastResult && (
@@ -425,15 +469,18 @@ const EscalationEngine = () => {
               <Card><CardContent className="p-4 text-center text-sm text-muted-foreground"><Activity className="w-6 h-6 mx-auto mb-2 opacity-30" /> {t("escalationEngine.noSystemicRisks")}</CardContent></Card>
             ) : (
               <div className="space-y-2">
-                {systemicRisks.map((r, i) => (
-                  <div key={i} className={`p-3 rounded-lg border ${r.severity === "critical" ? "border-destructive/50 bg-destructive/5" : "border-warning/50 bg-warning/5"}`}>
-                    <p className={`text-xs font-semibold ${r.severity === "critical" ? "text-destructive" : "text-warning"}`}>{r.title}</p>
-                    <p className="text-[11px] text-muted-foreground mt-1">{r.detail}</p>
+                {systemicRisks.map((r, i) => {
+                  const isEscWave = r.title.includes("Eskalation") || r.title.includes("escalation");
+                  return (
+                  <div key={i} className={`p-3 rounded-lg border ${r.severity === "critical" ? "border-destructive/50 bg-destructive/5" : "border-warning/50 bg-warning/5"} ${isEscWave ? "ring-2 ring-warning/40" : ""}`}>
+                    <p className={`font-semibold ${isEscWave ? "text-sm" : "text-xs"} ${r.severity === "critical" ? "text-destructive" : "text-warning"}`}>{r.title}</p>
+                    <p className={`text-muted-foreground mt-1 ${isEscWave ? "text-xs" : "text-[11px]"}`}>{r.detail}</p>
                     <div className="mt-2 pt-2 border-t border-border/50">
                       <p className="text-[10px] text-muted-foreground flex items-start gap-1"><Lightbulb className="w-3 h-3 shrink-0 mt-0.5 text-primary" /><span>{r.recommendation}</span></p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -483,7 +530,7 @@ const EscalationEngine = () => {
         <TabsList className="flex-wrap">
           <TabsTrigger value="sla">{t("escalationEngine.tabSla")}</TabsTrigger>
           <TabsTrigger value="escalations">{t("escalationEngine.tabEscalations", { count: activeEscalations.length })}</TabsTrigger>
-          <TabsTrigger value="log">{t("escalationEngine.tabLog")}</TabsTrigger>
+          <TabsTrigger value="log">{t("escalationEngine.tabEscLog")}</TabsTrigger>
           <TabsTrigger value="analytics">{t("escalationEngine.tabAnalytics")}</TabsTrigger>
         </TabsList>
 
