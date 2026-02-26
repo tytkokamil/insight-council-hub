@@ -5,7 +5,7 @@ import {
   History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles,
   Pencil, Plus, AlertTriangle, RotateCcw, Archive, Share2, Zap, Users, Target,
   MessageSquare, Shield, Activity, Clock, TrendingUp, TrendingDown, Eye, Download,
-  BarChart3, Gauge, Info, ChevronDown, ChevronRight, CalendarIcon, Layers
+  BarChart3, Gauge, Info, ChevronDown, ChevronRight, CalendarIcon, Layers, Fingerprint
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +28,7 @@ import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import DiffViewer from "@/components/audit/DiffViewer";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -40,6 +41,10 @@ interface AuditLog {
   created_at: string;
   decision_id: string;
   user_id: string;
+  change_reason: string | null;
+  signed_by: string | null;
+  signed_at: string | null;
+  signature_method: string | null;
   profiles: { full_name: string | null; avatar_url: string | null } | null;
   decisions: { title: string } | null;
 }
@@ -369,6 +374,19 @@ const AuditTrail = () => {
               </div>
             )}
 
+            {log.change_reason && (
+              <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1 italic">
+                <MessageSquare className="w-2.5 h-2.5" /> „{log.change_reason}"
+              </p>
+            )}
+
+            {log.signed_by && (
+              <p className="text-[10px] text-primary mt-1 flex items-center gap-1">
+                <Shield className="w-2.5 h-2.5" /> {t("audit.signedLabel")}
+                {log.signature_method === "password" ? " 🔐" : " ✓"}
+              </p>
+            )}
+
             {automated && (
               <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
                 <Zap className="w-2.5 h-2.5" /> {t("auditTrail.triggeredByRule")}
@@ -691,7 +709,34 @@ const AuditTrail = () => {
                 </div>
               )}
 
-              {(selectedLog.old_value || selectedLog.new_value) && (
+              {selectedLog.change_reason && (
+                <div className="text-xs">
+                  <p className="text-muted-foreground mb-0.5">{t("audit.reasonLabel")}</p>
+                  <div className="p-2 rounded-lg bg-muted/30 border border-border italic">
+                    <MessageSquare className="w-3 h-3 inline mr-1 text-muted-foreground" />
+                    „{selectedLog.change_reason}"
+                  </div>
+                </div>
+              )}
+
+              {selectedLog.signed_by && (
+                <div className="text-xs">
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                    <Fingerprint className="w-4 h-4 text-primary" />
+                    <div>
+                      <p className="font-medium text-primary">{t("audit.signedLabel")}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t("audit.signatureMethod")}: {selectedLog.signature_method === "password" ? t("audit.methodPassword") : t("audit.methodAcknowledge")}
+                        {selectedLog.signed_at && ` · ${formatTimestamp(selectedLog.signed_at)}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedLog.old_value && selectedLog.new_value && selectedLog.old_value.length > 30 && selectedLog.new_value.length > 30 ? (
+                <DiffViewer oldText={selectedLog.old_value} newText={selectedLog.new_value} />
+              ) : (selectedLog.old_value || selectedLog.new_value) && (
                 <div className="rounded-lg border border-border overflow-hidden">
                   <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
                     {t("auditTrail.beforeAfter")}

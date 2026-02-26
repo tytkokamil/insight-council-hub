@@ -21,6 +21,8 @@ import StrategyLinkPanel from "./StrategyLinkPanel";
 import EditDecisionDialog from "./EditDecisionDialog";
 import DeleteDecisionDialog from "./DeleteDecisionDialog";
 import ShareDecisionDialog from "./ShareDecisionDialog";
+import ChangeReasonDialog from "@/components/audit/ChangeReasonDialog";
+import SignatureConfirmDialog from "@/components/audit/SignatureConfirmDialog";
 import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle, Lock } from "lucide-react";
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -52,6 +54,10 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
   const [showShare, setShowShare] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [activeTab, setActiveTab] = useState("discussion");
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [pendingReason, setPendingReason] = useState("");
 
   // Count open tasks linked to this decision
   const openLinkedTasks = useMemo(() => {
@@ -82,8 +88,32 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
 
   if (!decision) return null;
 
-  const handleStatusChange = async (newStatus: string) => {
+  const CRITICAL_STATUSES = new Set(["approved", "implemented", "rejected"]);
+
+  const initiateStatusChange = (newStatus: string) => {
+    setPendingStatus(newStatus);
+    setShowReasonDialog(true);
+  };
+
+  const handleReasonConfirm = (reason: string) => {
+    setPendingReason(reason);
+    setShowReasonDialog(false);
+    if (pendingStatus && CRITICAL_STATUSES.has(pendingStatus)) {
+      setShowSignatureDialog(true);
+    } else {
+      executeStatusChange(reason, null);
+    }
+  };
+
+  const handleSignatureConfirm = (method: string) => {
+    setShowSignatureDialog(false);
+    executeStatusChange(pendingReason, method);
+  };
+
+  const executeStatusChange = async (reason: string, signatureMethod: string | null) => {
+    if (!pendingStatus) return;
     setSaving(true);
+    const newStatus = pendingStatus;
     const oldStatus = status;
     const updates: Record<string, any> = { status: newStatus as any };
     if (newStatus === "archived") updates.archived_at = new Date().toISOString();
@@ -96,16 +126,23 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
       .eq("id", decision.id);
     if (!error) {
       setStatus(newStatus);
-      await supabase.from("audit_logs").insert({
+      const auditEntry = {
         decision_id: decision.id,
         user_id: user!.id,
         action: newStatus === "archived" ? EventTypes.DECISION_ARCHIVED : EventTypes.DECISION_STATUS_CHANGED,
         field_name: "status",
         old_value: oldStatus,
         new_value: newStatus,
-      });
+        change_reason: reason,
+        signed_by: signatureMethod ? user!.id : undefined,
+        signed_at: signatureMethod ? new Date().toISOString() : undefined,
+        signature_method: signatureMethod || undefined,
+      };
+      await supabase.from("audit_logs").insert(auditEntry);
       onUpdated();
     }
+    setPendingStatus(null);
+    setPendingReason("");
     setSaving(false);
   };
 
@@ -290,7 +327,7 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
               variant={status === s ? "default" : "outline"}
               className="text-xs h-7"
               disabled={saving || (!isOwner && s !== "approved" && s !== "rejected")}
-              onClick={() => handleStatusChange(s)}
+              onClick={() => initiateStatusChange(s)}
             >
               {tl.statusLabels[s]}
             </Button>
@@ -342,6 +379,23 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             <ShareDecisionDialog decisionId={decision.id} decisionTeamId={decision.team_id} open={showShare} onOpenChange={setShowShare} />
           </>
         )}
+
+        <ChangeReasonDialog
+          open={showReasonDialog}
+          onOpenChange={(v) => { setShowReasonDialog(v); if (!v) setPendingStatus(null); }}
+          title={t("audit.reasonTitle")}
+          changeDescription={pendingStatus ? `${t("audit.statusChange")}: ${tl.statusLabels[status]} → ${tl.statusLabels[pendingStatus]}` : undefined}
+          onConfirm={handleReasonConfirm}
+          loading={saving}
+        />
+
+        <SignatureConfirmDialog
+          open={showSignatureDialog}
+          onOpenChange={(v) => { setShowSignatureDialog(v); if (!v) { setPendingStatus(null); setPendingReason(""); } }}
+          actionDescription={pendingStatus ? `${t("audit.statusChange")}: ${tl.statusLabels[status]} → ${tl.statusLabels[pendingStatus]}` : ""}
+          onConfirm={handleSignatureConfirm}
+          loading={saving}
+        />
       </DialogContent>
     </Dialog>
   );

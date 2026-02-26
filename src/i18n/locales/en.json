@@ -283,7 +283,32 @@
     "tomorrow": "Tomorrow",
     "personal": "Personal (no team)",
     "activate": "Activate",
-    "retry": "Try again"
+    "retry": "Try again",
+    "saving": "Saving...",
+    "or": "or"
+  },
+  "audit": {
+    "reasonTitle": "Reason Required",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Why is this change being made?",
+    "reasonHint": "The reason will be stored immutably in the audit trail.",
+    "confirmChange": "Confirm Change",
+    "statusChange": "Status Change",
+    "signatureTitle": "Electronic Signature",
+    "signatureCritical": "Critical Action — Signature Required",
+    "signatureMethodPassword": "Sign with Password",
+    "signaturePasswordPlaceholder": "Enter password to confirm",
+    "signaturePasswordError": "Invalid password — please try again.",
+    "signWithPassword": "Sign with Password",
+    "signatureAcknowledge": "I hereby confirm that I authorize this action and accept full responsibility for its consequences.",
+    "signWithAcknowledge": "Sign with Acknowledgment",
+    "verifying": "Verifying...",
+    "signedLabel": "Electronically Signed",
+    "signatureMethod": "Method",
+    "methodPassword": "Password Verification",
+    "methodAcknowledge": "Acknowledgment",
+    "noTextChanges": "No text changes detected.",
+    "diffTitle": "Change Diff (Word Level)"
   },
   "status": {
     "draft": "Draft",
