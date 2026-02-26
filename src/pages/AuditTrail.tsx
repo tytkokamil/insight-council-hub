@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import PageHeader from "@/components/shared/PageHeader";
 import { useTranslation } from "react-i18next";
 import {
   History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles,
   Pencil, Plus, AlertTriangle, RotateCcw, Archive, Share2, Zap, Users, Target,
   MessageSquare, Shield, Activity, Clock, TrendingUp, TrendingDown, Eye, Download,
-  BarChart3, Gauge, Info, ChevronDown, ChevronRight
+  BarChart3, Gauge, Info, ChevronDown, ChevronRight, CalendarIcon, Layers
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,9 +18,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { eventLabels, EventTypes } from "@/lib/eventTaxonomy";
 import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
+import { de, enUS } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -74,6 +81,38 @@ const isEscalation = (action: string) => action.includes("escalation") || action
 const isSlaViolation = (log: AuditLog) => log.field_name === "sla" || (log.action.includes("automation") && log.new_value?.includes("SLA"));
 const isCompliance = (log: AuditLog) => isEscalation(log.action) || isSlaViolation(log) || isOverride(log) || log.action.includes("risk");
 
+// ── Helpers ────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 50;
+
+/** Format a value: if it looks like an ISO timestamp, format it human-readable */
+function formatValue(val: string | null, locale: string): string {
+  if (!val) return "—";
+  // ISO timestamp pattern
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val)) {
+    try {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleString(locale === "de-DE" ? "de-DE" : "en-US", {
+          day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+        });
+      }
+    } catch { /* fall through */ }
+  }
+  // Date-only pattern
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+    try {
+      const d = new Date(val + "T00:00:00");
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString(locale === "de-DE" ? "de-DE" : "en-US", {
+          day: "numeric", month: "long", year: "numeric",
+        });
+      }
+    } catch { /* fall through */ }
+  }
+  return val;
+}
+
 // ── Main Component ─────────────────────────────────────────────────────
 
 const AuditTrail = () => {
@@ -86,7 +125,12 @@ const AuditTrail = () => {
   const [sourceFilter, setSourceFilter] = useState("all");
   const [complianceMode, setComplianceMode] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [page, setPage] = useState(1);
+  const [groupByDecision, setGroupByDecision] = useState(false);
   const locale = i18n.language === "de" ? "de-DE" : "en-US";
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
 
   useEffect(() => {
     if (!user) return;
@@ -96,7 +140,7 @@ const AuditTrail = () => {
         .from("audit_logs")
         .select("*, profiles!audit_logs_user_id_fkey(full_name, avatar_url), decisions!audit_logs_decision_id_fkey(title)")
         .order("created_at", { ascending: false })
-        .limit(500);
+        .limit(1000);
       if (data) setLogs(data as AuditLog[]);
       setLoading(false);
     };
@@ -172,9 +216,18 @@ const AuditTrail = () => {
     return Math.max(0, Math.min(100, Math.round(score)));
   }, [kpis, logs, last30DaysCutoff]);
 
+  // ── Filtering (with date range) ──
   const filtered = useMemo(() => {
     return logs.filter(log => {
       if (complianceMode && !isCompliance(log)) return false;
+      // Date range filter
+      const logDate = new Date(log.created_at);
+      if (dateFrom && logDate < dateFrom) return false;
+      if (dateTo) {
+        const endOfDay = new Date(dateTo);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (logDate > endOfDay) return false;
+      }
       const matchSearch = search === "" ||
         (log.decisions?.title || "").toLowerCase().includes(search.toLowerCase()) ||
         (log.profiles?.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -185,20 +238,38 @@ const AuditTrail = () => {
         (sourceFilter === "manual" && !isAutomation(log.action));
       return matchSearch && matchAction && matchSource;
     });
-  }, [logs, search, actionFilter, sourceFilter, complianceMode]);
+  }, [logs, search, actionFilter, sourceFilter, complianceMode, dateFrom, dateTo]);
 
+  // Reset page when filters change
+  useEffect(() => { setPage(1); }, [search, actionFilter, sourceFilter, complianceMode, dateFrom, dateTo, groupByDecision]);
+
+  // ── Pagination ──
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginatedLogs = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page]);
+
+  // ── Grouping (date-based or decision-based) ──
   const grouped = useMemo(() => {
+    const source = groupByDecision ? filtered : paginatedLogs;
     const groups: Record<string, AuditLog[]> = {};
-    filtered.forEach(log => {
-      const date = new Date(log.created_at).toLocaleDateString(locale, { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(log);
-    });
+    if (groupByDecision) {
+      source.forEach(log => {
+        const key = log.decisions?.title || log.decision_id;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(log);
+      });
+    } else {
+      source.forEach(log => {
+        const date = new Date(log.created_at).toLocaleDateString(locale, { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+        if (!groups[date]) groups[date] = [];
+        groups[date].push(log);
+      });
+    }
     return groups;
-  }, [filtered, locale]);
+  }, [groupByDecision ? filtered : paginatedLogs, locale, groupByDecision]);
 
   const uniqueActions = useMemo(() => Array.from(new Set(logs.map(l => l.action))), [logs]);
 
+  // ── Exports ──
   const exportAuditLog = () => {
     const csv = [
       [t("auditTrail.csvTimestamp"), t("auditTrail.csvUser"), t("auditTrail.csvAction"), t("auditTrail.csvDecision"), t("auditTrail.csvField"), t("auditTrail.csvOldValue"), t("auditTrail.csvNewValue"), t("auditTrail.csvSource")].join(","),
@@ -219,6 +290,96 @@ const AuditTrail = () => {
     URL.revokeObjectURL(url);
   };
 
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text("Audit Trail Report", 14, 18);
+    doc.setFontSize(9);
+    const dateRange = dateFrom || dateTo
+      ? `${dateFrom ? format(dateFrom, "dd.MM.yyyy") : "…"} – ${dateTo ? format(dateTo, "dd.MM.yyyy") : "…"}`
+      : t("auditTrail.allTime");
+    doc.text(`${t("auditTrail.generated")}: ${format(new Date(), "dd.MM.yyyy HH:mm")}  |  ${t("auditTrail.period")}: ${dateRange}  |  ${filtered.length} ${t("auditTrail.entries", { count: filtered.length })}`, 14, 25);
+
+    const head = [[t("auditTrail.csvTimestamp"), t("auditTrail.csvUser"), t("auditTrail.csvAction"), t("auditTrail.csvDecision"), t("auditTrail.csvField"), t("auditTrail.csvOldValue"), t("auditTrail.csvNewValue"), t("auditTrail.csvSource")]];
+    const body = filtered.map(l => [
+      new Date(l.created_at).toLocaleString(locale),
+      isAutomation(l.action) ? t("auditTrail.governanceEngine") : l.profiles?.full_name || t("auditTrail.system"),
+      actionConfig[l.action]?.label || l.action,
+      l.decisions?.title || "",
+      l.field_name || "",
+      formatValue(l.old_value, locale),
+      formatValue(l.new_value, locale),
+      isAutomation(l.action) ? t("auditTrail.automation") : t("auditTrail.manual"),
+    ]);
+    autoTable(doc, { head, body, startY: 30, styles: { fontSize: 7, cellPadding: 2 }, headStyles: { fillColor: [50, 50, 60] } });
+    doc.save(`audit-trail-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  // ── Render helpers ──
+  const formatTimestamp = (ts: string) => {
+    const d = new Date(ts);
+    return d.toLocaleString(locale, { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  const renderLogEntry = (log: AuditLog) => {
+    const config = actionConfig[log.action] || { label: log.action, icon: FileText, color: "text-muted-foreground" };
+    const Icon = config.icon;
+    const time = new Date(log.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    const automated = isAutomation(log.action);
+    const override = isOverride(log);
+
+    return (
+      <motion.div key={log.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <div className="relative flex items-start gap-4 py-3 group cursor-pointer" onClick={() => setSelectedLog(log)}>
+          <div className={`relative z-10 w-[30px] h-[30px] rounded-full border-2 border-background flex items-center justify-center shrink-0 shadow-sm ring-1 ring-border ${automated ? "bg-primary/10" : "bg-card"}`}>
+            <Icon className={`w-3.5 h-3.5 ${config.color}`} />
+          </div>
+
+          <div className={`flex-1 min-w-0 border rounded-xl p-3.5 group-hover:border-primary/20 transition-colors ${override ? "border-destructive/30 bg-destructive/5" : "border-border bg-card"}`}>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <UserAvatar avatarUrl={log.profiles?.avatar_url || null} fullName={log.profiles?.full_name} size="sm" />
+                <span className="text-sm font-medium">{automated ? t("auditTrail.governanceEngine") : log.profiles?.full_name || t("auditTrail.system")}</span>
+                <Badge variant="outline" className={`text-[10px] ${config.color} border-current/20`}>{config.label}</Badge>
+                <Badge variant={automated ? "default" : "outline"} className={`text-[10px] ${automated ? "bg-primary/10 text-primary border-primary/20" : ""}`}>
+                  {automated ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}
+                </Badge>
+                {override && <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Override</Badge>}
+              </div>
+              <span className="text-[11px] text-muted-foreground shrink-0">{time}</span>
+            </div>
+
+            {log.decisions?.title && (
+              <p className="text-xs text-muted-foreground mt-1.5 truncate">
+                <FileText className="w-3 h-3 inline mr-1" />{log.decisions.title}
+              </p>
+            )}
+
+            {log.field_name && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {t("auditTrail.field")}: <span className="font-medium text-foreground">{log.field_name}</span>
+              </p>
+            )}
+
+            {(log.old_value || log.new_value) && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-xs">
+                {log.old_value && <span className="px-2 py-0.5 rounded bg-destructive/10 text-destructive line-through truncate max-w-[200px]">{formatValue(log.old_value, locale)}</span>}
+                {log.old_value && log.new_value && <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />}
+                {log.new_value && <span className="px-2 py-0.5 rounded bg-primary/10 text-primary truncate max-w-[200px]">{formatValue(log.new_value, locale)}</span>}
+              </div>
+            )}
+
+            {automated && (
+              <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                <Zap className="w-2.5 h-2.5" /> {t("auditTrail.triggeredByRule")}
+              </p>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -228,9 +389,14 @@ const AuditTrail = () => {
           role="governance"
           help={{ title: t("auditTrail.title"), description: t("auditTrail.helpDesc") }}
           secondaryActions={
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportAuditLog}>
-              <Download className="w-3.5 h-3.5" /> {t("auditTrail.exportCsv")}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={exportAuditLog}>
+                <Download className="w-3.5 h-3.5" /> CSV
+              </Button>
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPdf}>
+                <FileText className="w-3.5 h-3.5" /> PDF
+              </Button>
+            </div>
           }
         />
 
@@ -266,9 +432,7 @@ const AuditTrail = () => {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger><Info className="w-3 h-3 text-muted-foreground" /></TooltipTrigger>
-                    <TooltipContent className="max-w-xs text-xs">
-                      <p>{t("auditTrail.stabilityTooltip")}</p>
-                    </TooltipContent>
+                    <TooltipContent className="max-w-xs text-xs"><p>{t("auditTrail.stabilityTooltip")}</p></TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
@@ -373,11 +537,45 @@ const AuditTrail = () => {
               <SelectItem value="automation">{t("auditTrail.automation")}</SelectItem>
             </SelectContent>
           </Select>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("h-9 gap-1.5 text-xs", (dateFrom || dateTo) && "border-primary text-primary")}>
+                <CalendarIcon className="w-3.5 h-3.5" />
+                {dateFrom ? format(dateFrom, "dd.MM.yy") : t("auditTrail.from")}
+                {" – "}
+                {dateTo ? format(dateTo, "dd.MM.yy") : t("auditTrail.to")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 flex" align="start">
+              <div className="p-2 border-r border-border">
+                <p className="text-[10px] font-semibold text-muted-foreground px-3 pt-1 mb-1">{t("auditTrail.from")}</p>
+                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} locale={dateFnsLocale}
+                  className={cn("p-3 pointer-events-auto")} disabled={(d) => dateTo ? d > dateTo : false} />
+              </div>
+              <div className="p-2">
+                <p className="text-[10px] font-semibold text-muted-foreground px-3 pt-1 mb-1">{t("auditTrail.to")}</p>
+                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} locale={dateFnsLocale}
+                  className={cn("p-3 pointer-events-auto")} disabled={(d) => dateFrom ? d < dateFrom : false} />
+              </div>
+            </PopoverContent>
+          </Popover>
+          {(dateFrom || dateTo) && (
+            <Button variant="ghost" size="sm" className="h-9 text-xs" onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}>
+              ✕ {t("auditTrail.clearDates")}
+            </Button>
+          )}
+
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background">
             <Shield className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-medium">{t("auditTrail.compliance")}</span>
             <Switch checked={complianceMode} onCheckedChange={setComplianceMode} />
           </div>
+
+          <Button variant={groupByDecision ? "default" : "outline"} size="sm" className="h-9 gap-1.5 text-xs" onClick={() => setGroupByDecision(!groupByDecision)}>
+            <Layers className="w-3.5 h-3.5" /> {t("auditTrail.groupByDecision")}
+          </Button>
+
           <Badge variant="outline" className="h-9 px-3 flex items-center gap-1.5 shrink-0">
             <FileText className="w-3.5 h-3.5" />{t("auditTrail.entries", { count: filtered.length })}
           </Badge>
@@ -400,88 +598,51 @@ const AuditTrail = () => {
               <History className="w-8 h-8 text-primary opacity-60" />
             </div>
             <h3 className="font-display text-lg font-semibold mb-2">
-              {search || actionFilter !== "all" || complianceMode ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
+              {search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
             </h3>
             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {search || actionFilter !== "all" || complianceMode ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
+              {search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {Object.entries(grouped).map(([date, entries]) => (
-              <div key={date}>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 shrink-0">{date}</span>
-                  <div className="h-px flex-1 bg-border" />
-                </div>
+          <>
+            <div className="space-y-8">
+              {Object.entries(grouped).map(([groupKey, entries]) => (
+                <div key={groupKey}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 shrink-0">
+                      {groupByDecision && <FileText className="w-3 h-3 inline mr-1" />}
+                      {groupKey}
+                      {groupByDecision && <Badge variant="outline" className="ml-2 text-[10px]">{entries.length}</Badge>}
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
 
-                <div className="relative ml-5">
-                  <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border" />
-                  <div className="space-y-1">
-                    {entries.map(log => {
-                      const config = actionConfig[log.action] || { label: log.action, icon: FileText, color: "text-muted-foreground" };
-                      const Icon = config.icon;
-                      const time = new Date(log.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
-                      const automated = isAutomation(log.action);
-                      const override = isOverride(log);
-
-                      return (
-                        <motion.div key={log.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                          <div className="relative flex items-start gap-4 py-3 group cursor-pointer" onClick={() => setSelectedLog(log)}>
-                            <div className={`relative z-10 w-[30px] h-[30px] rounded-full border-2 border-background flex items-center justify-center shrink-0 shadow-sm ring-1 ring-border ${automated ? "bg-primary/10" : "bg-card"}`}>
-                              <Icon className={`w-3.5 h-3.5 ${config.color}`} />
-                            </div>
-
-                            <div className={`flex-1 min-w-0 border rounded-xl p-3.5 group-hover:border-primary/20 transition-colors ${override ? "border-destructive/30 bg-destructive/5" : "border-border bg-card"}`}>
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <UserAvatar avatarUrl={log.profiles?.avatar_url || null} fullName={log.profiles?.full_name} size="sm" />
-                                  <span className="text-sm font-medium">{automated ? t("auditTrail.governanceEngine") : log.profiles?.full_name || t("auditTrail.system")}</span>
-                                  <Badge variant="outline" className={`text-[10px] ${config.color} border-current/20`}>{config.label}</Badge>
-                                  <Badge variant={automated ? "default" : "outline"} className={`text-[10px] ${automated ? "bg-primary/10 text-primary border-primary/20" : ""}`}>
-                                    {automated ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}
-                                  </Badge>
-                                  {override && <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Override</Badge>}
-                                </div>
-                                <span className="text-[11px] text-muted-foreground shrink-0">{time}</span>
-                              </div>
-
-                              {log.decisions?.title && (
-                                <p className="text-xs text-muted-foreground mt-1.5 truncate">
-                                  <FileText className="w-3 h-3 inline mr-1" />{log.decisions.title}
-                                </p>
-                              )}
-
-                              {log.field_name && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {t("auditTrail.field")}: <span className="font-medium text-foreground">{log.field_name}</span>
-                                </p>
-                              )}
-
-                              {(log.old_value || log.new_value) && (
-                                <div className="flex items-center gap-1.5 mt-1.5 text-xs">
-                                  {log.old_value && <span className="px-2 py-0.5 rounded bg-destructive/10 text-destructive line-through truncate max-w-[200px]">{log.old_value}</span>}
-                                  {log.old_value && log.new_value && <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />}
-                                  {log.new_value && <span className="px-2 py-0.5 rounded bg-primary/10 text-primary truncate max-w-[200px]">{log.new_value}</span>}
-                                </div>
-                              )}
-
-                              {automated && (
-                                <p className="text-[10px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                                  <Zap className="w-2.5 h-2.5" /> {t("auditTrail.triggeredByRule")}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                  <div className="relative ml-5">
+                    <div className="absolute left-[15px] top-0 bottom-0 w-px bg-border" />
+                    <div className="space-y-1">
+                      {entries.map(log => renderLogEntry(log))}
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+
+            {!groupByDecision && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                  ← {t("auditTrail.prev")}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {t("auditTrail.pageOf", { page, total: totalPages })}
+                </span>
+                <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                  {t("auditTrail.next")} →
+                </Button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
@@ -498,7 +659,7 @@ const AuditTrail = () => {
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <p className="text-muted-foreground mb-0.5">{t("auditTrail.timestamp")}</p>
-                  <p className="font-medium">{new Date(selectedLog.created_at).toLocaleString(locale)}</p>
+                  <p className="font-medium">{formatTimestamp(selectedLog.created_at)}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-0.5">{t("auditTrail.user")}</p>
@@ -510,7 +671,9 @@ const AuditTrail = () => {
                 </div>
                 <div>
                   <p className="text-muted-foreground mb-0.5">{t("auditTrail.source")}</p>
-                  <Badge variant="outline" className="text-[10px]">{isAutomation(selectedLog.action) ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}</Badge>
+                  <Badge variant="outline" className={`text-[10px] ${isAutomation(selectedLog.action) ? "bg-primary/10 text-primary border-primary/20" : ""}`}>
+                    {isAutomation(selectedLog.action) ? t("auditTrail.automationBadge") : t("auditTrail.manualBadge")}
+                  </Badge>
                 </div>
               </div>
 
@@ -536,11 +699,11 @@ const AuditTrail = () => {
                   <div className="grid grid-cols-2 divide-x divide-border">
                     <div className="p-3">
                       <p className="text-[10px] text-muted-foreground mb-1">{t("auditTrail.before")}</p>
-                      <p className="text-xs font-mono break-all bg-destructive/5 text-destructive rounded p-2">{selectedLog.old_value || "—"}</p>
+                      <p className="text-xs font-mono break-all bg-destructive/5 text-destructive rounded p-2">{formatValue(selectedLog.old_value, locale)}</p>
                     </div>
                     <div className="p-3">
                       <p className="text-[10px] text-muted-foreground mb-1">{t("auditTrail.after")}</p>
-                      <p className="text-xs font-mono break-all bg-primary/5 text-primary rounded p-2">{selectedLog.new_value || "—"}</p>
+                      <p className="text-xs font-mono break-all bg-primary/5 text-primary rounded p-2">{formatValue(selectedLog.new_value, locale)}</p>
                     </div>
                   </div>
                 </div>

@@ -3327,7 +3327,18 @@
     "csvOldValue": "Old Value",
     "csvNewValue": "New Value",
     "csvSource": "Source",
-    "noChanges": "No changes"
+    "noChanges": "No changes",
+    "from": "From",
+    "to": "To",
+    "clearDates": "Clear dates",
+    "groupByDecision": "By decision",
+    "prev": "Back",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}",
+    "exportPdf": "Export PDF",
+    "generated": "Generated",
+    "period": "Period",
+    "allTime": "All time"
   },
   "tasksPage": {
     "statusBacklog": "Backlog",
