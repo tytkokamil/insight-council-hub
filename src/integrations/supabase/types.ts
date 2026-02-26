@@ -53,6 +53,7 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          change_reason: string | null
           created_at: string
           decision_id: string
           field_name: string | null
@@ -60,10 +61,14 @@ export type Database = {
           new_value: string | null
           old_value: string | null
           org_id: string | null
+          signature_method: string | null
+          signed_at: string | null
+          signed_by: string | null
           user_id: string
         }
         Insert: {
           action: string
+          change_reason?: string | null
           created_at?: string
           decision_id: string
           field_name?: string | null
@@ -71,10 +76,14 @@ export type Database = {
           new_value?: string | null
           old_value?: string | null
           org_id?: string | null
+          signature_method?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
           user_id: string
         }
         Update: {
           action?: string
+          change_reason?: string | null
           created_at?: string
           decision_id?: string
           field_name?: string | null
@@ -82,6 +91,9 @@ export type Database = {
           new_value?: string | null
           old_value?: string | null
           org_id?: string | null
+          signature_method?: string | null
+          signed_at?: string | null
+          signed_by?: string | null
           user_id?: string
         }
         Relationships: [

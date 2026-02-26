@@ -28,6 +28,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRiskDecisionLinks } from "@/hooks/useRisks";
 import WatchlistButton from "@/components/decisions/WatchlistButton";
 import DecisionLifecycleBar from "@/components/decisions/DecisionLifecycleBar";
+import ChangeReasonDialog from "@/components/audit/ChangeReasonDialog";
+import SignatureConfirmDialog from "@/components/audit/SignatureConfirmDialog";
 import EditDecisionDialog from "@/components/decisions/EditDecisionDialog";
 import DeleteDecisionDialog from "@/components/decisions/DeleteDecisionDialog";
 import { useTranslation } from "react-i18next";
@@ -106,6 +108,10 @@ const DecisionDetail = () => {
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [showSignatureDialog, setShowSignatureDialog] = useState(false);
+  const [pendingReason, setPendingReason] = useState("");
 
   const { data: stakeholderPositions = [] } = useQuery({
     queryKey: ["stakeholder-positions", id],
@@ -227,8 +233,32 @@ const DecisionDetail = () => {
     );
   }
 
-  const handleStatusChange = async (newStatus: string) => {
+  const CRITICAL_STATUSES = new Set(["approved", "implemented", "rejected"]);
+
+  const handleStatusChange = (newStatus: string) => {
+    setPendingStatus(newStatus);
+    setShowReasonDialog(true);
+  };
+
+  const handleReasonConfirm = (reason: string) => {
+    setPendingReason(reason);
+    setShowReasonDialog(false);
+    if (pendingStatus && CRITICAL_STATUSES.has(pendingStatus)) {
+      setShowSignatureDialog(true);
+    } else {
+      executeStatusChange(reason, null);
+    }
+  };
+
+  const handleSignatureConfirm = (method: string) => {
+    setShowSignatureDialog(false);
+    executeStatusChange(pendingReason, method);
+  };
+
+  const executeStatusChange = async (reason: string, signatureMethod: string | null) => {
+    if (!pendingStatus) return;
     setSaving(true);
+    const newStatus = pendingStatus;
     const oldStatus = status;
     const updates: Record<string, any> = { status: newStatus as any, updated_at: new Date().toISOString() };
     if (newStatus === "implemented") updates.implemented_at = new Date().toISOString();
@@ -240,10 +270,16 @@ const DecisionDetail = () => {
       await supabase.from("audit_logs").insert({
         decision_id: decision.id, user_id: user!.id, action: EventTypes.DECISION_STATUS_CHANGED,
         field_name: "status", old_value: oldStatus, new_value: newStatus,
+        change_reason: reason,
+        signed_by: signatureMethod ? user!.id : undefined,
+        signed_at: signatureMethod ? new Date().toISOString() : undefined,
+        signature_method: signatureMethod || undefined,
       });
       invalidate();
       toast.success(`Status → ${tl.statusLabels[newStatus]}`);
     }
+    setPendingStatus(null);
+    setPendingReason("");
     setSaving(false);
   };
 
@@ -771,6 +807,21 @@ const DecisionDetail = () => {
           <DeleteDecisionDialog decision={decision} open={showDelete} onOpenChange={setShowDelete} onDeleted={() => { invalidate(); navigate("/decisions"); }} />
         </>
       )}
+
+      <ChangeReasonDialog
+        open={showReasonDialog}
+        onOpenChange={(v) => { setShowReasonDialog(v); if (!v) setPendingStatus(null); }}
+        changeDescription={pendingStatus ? `${t("audit.statusChange")}: ${tl.statusLabels[status]} → ${tl.statusLabels[pendingStatus]}` : undefined}
+        onConfirm={handleReasonConfirm}
+        loading={saving}
+      />
+      <SignatureConfirmDialog
+        open={showSignatureDialog}
+        onOpenChange={(v) => { setShowSignatureDialog(v); if (!v) { setPendingStatus(null); setPendingReason(""); } }}
+        actionDescription={pendingStatus ? `${t("audit.statusChange")}: ${tl.statusLabels[status]} → ${tl.statusLabels[pendingStatus]}` : ""}
+        onConfirm={handleSignatureConfirm}
+        loading={saving}
+      />
     </AppLayout>
   );
 };

@@ -283,7 +283,32 @@
     "tomorrow": "Morgen",
     "personal": "Persönlich (kein Team)",
     "activate": "Aktivieren",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "saving": "Speichern...",
+    "or": "oder"
+  },
+  "audit": {
+    "reasonTitle": "Begründung erforderlich",
+    "reasonLabel": "Begründung",
+    "reasonPlaceholder": "Warum wird diese Änderung vorgenommen?",
+    "reasonHint": "Die Begründung wird im Audit Trail revisionssicher gespeichert.",
+    "confirmChange": "Änderung bestätigen",
+    "statusChange": "Status-Änderung",
+    "signatureTitle": "Elektronische Signatur",
+    "signatureCritical": "Kritische Aktion — Signatur erforderlich",
+    "signatureMethodPassword": "Signatur per Passwort",
+    "signaturePasswordPlaceholder": "Passwort eingeben zur Bestätigung",
+    "signaturePasswordError": "Passwort ungültig — bitte erneut versuchen.",
+    "signWithPassword": "Mit Passwort signieren",
+    "signatureAcknowledge": "Ich bestätige hiermit, dass ich diese Aktion autorisiere und die volle Verantwortung für die Konsequenzen übernehme.",
+    "signWithAcknowledge": "Durch Bestätigung signieren",
+    "verifying": "Verifiziere...",
+    "signedLabel": "Elektronisch signiert",
+    "signatureMethod": "Methode",
+    "methodPassword": "Passwort-Verifizierung",
+    "methodAcknowledge": "Bestätigung",
+    "noTextChanges": "Keine Textänderungen erkannt.",
+    "diffTitle": "Änderungs-Diff (Wort-Ebene)"
   },
   "status": {
     "draft": "Entwurf",
