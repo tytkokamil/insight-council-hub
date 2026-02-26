@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, Target, TrendingUp } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, AlertTriangle, Lightbulb, Target, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
 import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,26 @@ interface AiInsightPanelProps {
   context: Record<string, any>;
   className?: string;
 }
+
+const MAX_DESC_LENGTH = 180;
+
+const TruncatedText = ({ text, className = "" }: { text: string; className?: string }) => {
+  const [expanded, setExpanded] = useState(false);
+  if (!text || text.length <= MAX_DESC_LENGTH) return <p className={className}>{text}</p>;
+  return (
+    <div>
+      <p className={className}>
+        {expanded ? text : `${text.slice(0, MAX_DESC_LENGTH)}…`}
+      </p>
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="text-[10px] text-primary hover:underline mt-0.5 inline-flex items-center gap-0.5"
+      >
+        {expanded ? <><ChevronUp className="w-3 h-3" /> Weniger</> : <><ChevronDown className="w-3 h-3" /> Mehr</>}
+      </button>
+    </div>
+  );
+};
 
 const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) => {
   const { t } = useTranslation();
@@ -82,9 +102,9 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
               <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border">
                 <div className="flex items-start gap-2">
                   <Lightbulb className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-medium">{p.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>
+                    <TruncatedText text={p.description} className="text-xs text-muted-foreground mt-0.5" />
                     <p className="text-xs text-primary mt-1">→ {p.actionable_tip}</p>
                   </div>
                 </div>

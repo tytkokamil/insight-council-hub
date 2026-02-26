@@ -2737,7 +2737,11 @@
     "noOpenRows": "No open decisions available.",
     "warnPastDeadline": "Expected {{days}} days past deadline",
     "warnBlocked": "Blocked by dependency",
-    "warnAboveAverage": "Significantly above average"
+    "warnAboveAverage": "Significantly above average",
+    "timeRange30": "30 Days",
+    "timeRange60": "60 Days",
+    "timeRange90": "90 Days",
+    "timeRangeAll": "All"
   },
   "opportunityCost": {
     "label": "Cost Analysis",

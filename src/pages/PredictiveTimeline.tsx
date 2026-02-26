@@ -33,6 +33,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
   const { t, i18n } = useTranslation();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
   const [sortBy, setSortBy] = useState<"predicted" | "priority" | "overdue">("predicted");
+  const [timeRange, setTimeRange] = useState<30 | 60 | 90 | 0>(0);
 
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
   const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
@@ -111,8 +112,15 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
     return timeline;
   }, [loading, allDecisions, deps, t]);
 
+  // Filter by time range
+  const filteredDecisions = useMemo(() => {
+    if (timeRange === 0) return decisions;
+    const cutoff = addDays(new Date(), timeRange);
+    return decisions.filter(d => d.predictedEnd <= cutoff);
+  }, [decisions, timeRange]);
+
   const sorted = useMemo(() => {
-    const copy = [...decisions];
+    const copy = [...filteredDecisions];
     if (sortBy === "predicted") copy.sort((a, b) => a.predictedEnd.getTime() - b.predictedEnd.getTime());
     else if (sortBy === "priority") {
       const w: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
@@ -121,17 +129,17 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
       copy.sort((a, b) => (b.warning ? 1 : 0) - (a.warning ? 1 : 0) || a.predictedEnd.getTime() - b.predictedEnd.getTime());
     }
     return copy;
-  }, [decisions, sortBy]);
+  }, [filteredDecisions, sortBy]);
 
   const ganttRange = useMemo(() => {
-    if (decisions.length === 0) return { start: new Date(), end: addDays(new Date(), 30), totalDays: 30 };
-    const starts = decisions.map(d => new Date(d.created_at));
-    const ends = decisions.map(d => d.predictedEnd);
+    if (sorted.length === 0) return { start: new Date(), end: addDays(new Date(), 30), totalDays: 30 };
+    const starts = sorted.map(d => new Date(d.created_at));
+    const ends = sorted.map(d => d.predictedEnd);
     const start = dateMin(starts);
     const end = dateMax(ends);
     const totalDays = Math.max(differenceInDays(end, start), 7);
     return { start, end: addDays(end, 2), totalDays: totalDays + 2 };
-  }, [decisions]);
+  }, [sorted]);
 
   const getBarStyle = (d: TimelineDecision) => {
     const startOffset = differenceInDays(new Date(d.created_at), ganttRange.start);
@@ -144,9 +152,12 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
   const priorityColor = (p: string) =>
     p === "critical" ? "bg-destructive" : p === "high" ? "bg-warning" : p === "medium" ? "bg-primary" : "bg-muted-foreground";
 
-  const avgPredicted = decisions.length ? Math.round(decisions.reduce((s, d) => s + d.predictedDaysLeft, 0) / decisions.length) : 0;
-  const atRisk = decisions.filter(d => d.warning).length;
-  const avgConfidence = decisions.length ? Math.round(decisions.reduce((s, d) => s + d.confidence, 0) / decisions.length) : 0;
+  const confidenceColor = (c: number) =>
+    c >= 70 ? "text-success" : c >= 50 ? "text-warning" : "text-destructive";
+
+  const avgPredicted = filteredDecisions.length ? Math.round(filteredDecisions.reduce((s, d) => s + d.predictedDaysLeft, 0) / filteredDecisions.length) : 0;
+  const atRisk = filteredDecisions.filter(d => d.warning).length;
+  const avgConfidence = filteredDecisions.length ? Math.round(filteredDecisions.reduce((s, d) => s + d.confidence, 0) / filteredDecisions.length) : 0;
 
   const dateMarkers = useMemo(() => {
     const markers: { label: string; position: number }[] = [];
@@ -175,7 +186,30 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
             <h1 className="text-xl font-semibold tracking-tight">{t("predictive.title")}</h1>
             <p className="text-sm text-muted-foreground mt-1">{t("predictive.subtitle")}</p>
           </div>
-          <PageHelpButton title={t("predictive.title")} description={t("predictive.helpDesc")} />
+          <div className="flex items-center gap-2">
+            {/* Time range filter */}
+            <div className="flex bg-muted/50 rounded-lg p-0.5">
+              {([
+                { value: 30, label: t("predictive.timeRange30") },
+                { value: 60, label: t("predictive.timeRange60") },
+                { value: 90, label: t("predictive.timeRange90") },
+                { value: 0, label: t("predictive.timeRangeAll") },
+              ] as const).map(r => (
+                <button
+                  key={r.value}
+                  onClick={() => setTimeRange(r.value)}
+                  className={`text-[10px] px-2.5 py-1 rounded-md transition-colors ${
+                    timeRange === r.value
+                      ? "bg-background text-foreground font-semibold shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <PageHelpButton title={t("predictive.title")} description={t("predictive.helpDesc")} />
+          </div>
         </div>
 
         {loading ? (
@@ -192,7 +226,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.openDecisions")}</p>
-                <p className="text-xl font-bold tabular-nums">{decisions.length}</p>
+                <p className="text-xl font-bold tabular-nums">{filteredDecisions.length}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgDaysToCompletion")}</p>
@@ -202,11 +236,11 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}
                 </p>
-                <p className="text-xl font-bold tabular-nums text-warning">{atRisk}</p>
+                <p className={`text-xl font-bold tabular-nums ${atRisk > 0 ? "text-warning" : "text-success"}`}>{atRisk}</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
-                <p className="text-xl font-bold tabular-nums">{avgConfidence}%</p>
+                <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
               </div>
             </div>
 
@@ -215,7 +249,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               subtitle={t("predictive.ganttSubtitle")}
               icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />}
             >
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-1 mb-4">
               {([
                 { key: "predicted", label: t("predictive.sortByPrediction") },
                 { key: "priority", label: t("predictive.sortByPriority") },
@@ -224,8 +258,10 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 <button
                   key={s.key}
                   onClick={() => setSortBy(s.key)}
-                  className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${
-                    sortBy === s.key ? "bg-foreground/10 text-foreground font-medium" : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                  className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                    sortBy === s.key
+                      ? "bg-foreground text-background font-semibold shadow-sm"
+                      : "bg-muted/50 text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {s.label}
@@ -251,10 +287,17 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                   const bar = getBarStyle(d);
                   return (
                     <div key={d.id} className="flex items-center h-12 hover:bg-muted/20 transition-colors group">
-                      <div className="w-[200px] shrink-0 px-3 flex items-center gap-2 min-w-0">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${priorityColor(d.priority)}`} />
-                        <span className="text-xs truncate">{d.title}</span>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="w-[200px] shrink-0 px-3 flex items-center gap-2 min-w-0 cursor-default">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${priorityColor(d.priority)}`} />
+                            <span className="text-xs truncate">{d.title}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="text-xs max-w-xs">
+                          {d.title}
+                        </TooltipContent>
+                      </Tooltip>
                       <div className="flex-1 relative h-full px-1">
                         <div
                           className="absolute top-0 bottom-0 w-px bg-primary/40 z-10"
@@ -297,7 +340,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                       </div>
                       <div className="w-24 shrink-0 text-right pr-3">
                         <p className="text-[10px] text-muted-foreground">{format(d.predictedEnd, "dd.MM.yy")}</p>
-                        <p className="text-[10px] text-muted-foreground/60">{d.confidence}%</p>
+                        <p className={`text-[10px] ${confidenceColor(d.confidence)}`}>{d.confidence}%</p>
                       </div>
                     </div>
                   );
@@ -322,7 +365,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               type="pattern"
               context={{
                 analysisType: "predictive_timeline",
-                openDecisions: decisions.length,
+                openDecisions: filteredDecisions.length,
                 avgPredictedDays: avgPredicted,
                 atRiskCount: atRisk,
                 avgConfidence,
