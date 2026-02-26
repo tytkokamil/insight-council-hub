@@ -265,14 +265,26 @@ const AutomationRules = () => {
       />
 
       <div className="mb-6">
-        {!engineActive && rules.length > 0 && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-center gap-3">
-            <XCircle className="w-5 h-5 text-destructive shrink-0" />
+        {rules.length === 0 && !loading && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/30 flex items-center gap-3">
+            <Zap className="w-5 h-5 text-primary shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-destructive">{t("automationRules.engineInactive")}</p>
+              <p className="text-sm font-semibold text-primary">{t("automationRules.onboardingTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t("automationRules.onboardingDesc")}</p>
+            </div>
+            <Button size="sm" className="ml-auto gap-1.5" onClick={() => setActiveTab("templates")}>
+              {t("automationRules.onboardingCta")} <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </motion.div>
+        )}
+        {!engineActive && rules.length > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/30 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-warning">{t("automationRules.engineInactive")}</p>
               <p className="text-xs text-muted-foreground">{t("automationRules.engineInactiveDesc")}</p>
             </div>
-            <Button size="sm" variant="destructive" className="ml-auto" onClick={() => rules.forEach(r => toggleRule(r.id, true))}>
+            <Button size="sm" variant="outline" className="ml-auto border-warning/30 text-warning hover:bg-warning/10" onClick={() => rules.forEach(r => toggleRule(r.id, true))}>
               {t("automationRules.activateAll")}
             </Button>
           </motion.div>
@@ -280,7 +292,7 @@ const AutomationRules = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
           {[
-            { label: t("automationRules.engineStatus"), value: engineActive ? t("automationRules.active") : t("automationRules.inactive"), icon: engineActive ? <Activity className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-destructive" />, highlight: !engineActive },
+            { label: t("automationRules.engineStatus"), value: rules.length === 0 ? t("automationRules.notConfigured") : engineActive ? t("automationRules.active") : t("automationRules.inactive"), icon: rules.length === 0 ? <Settings2 className="w-4 h-4 text-muted-foreground" /> : engineActive ? <Activity className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-warning" />, highlight: false },
             { label: t("automationRules.activeRules"), value: activeRuleCount.toString(), icon: <Zap className="w-4 h-4 text-primary" /> },
             { label: t("automationRules.triggered7d"), value: last7DaysLogs.length.toString(), icon: <Play className="w-4 h-4 text-primary" /> },
             { label: t("automationRules.autoEscalations"), value: autoEscalations.toString(), icon: <AlertTriangle className="w-4 h-4 text-destructive" /> },
@@ -316,22 +328,32 @@ const AutomationRules = () => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="flex items-end gap-4">
-              <div className="text-4xl font-bold">{automationScore}</div>
-              <div className="flex-1">
-                <div className="h-3 rounded-full bg-muted overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${automationScore}%` }} transition={{ duration: 1, ease: "easeOut" }}
-                    className={`h-full rounded-full ${automationScore >= 75 ? "bg-success" : automationScore >= 50 ? "bg-warning" : "bg-destructive"}`} />
-                </div>
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-                  <span>{t("automationRules.low")}</span><span>{t("automationRules.medium")}</span><span>{t("automationRules.high")}</span>
-                </div>
+            {rules.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <Settings2 className="w-8 h-8 text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">{t("automationRules.healthEmptyTitle")}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{t("automationRules.healthEmptyDesc")}</p>
               </div>
-            </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <span>{t("automationRules.categoriesCovered", { count: new Set(rules.filter(r => r.enabled).map(classifyRule)).size })}</span>
-              <span>{t("automationRules.executions30d", { count: last30DaysLogs.length })}</span>
-            </div>
+            ) : (
+              <>
+                <div className="flex items-end gap-4">
+                  <div className="text-4xl font-bold">{automationScore}</div>
+                  <div className="flex-1">
+                    <div className="h-3 rounded-full bg-muted overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${automationScore}%` }} transition={{ duration: 1, ease: "easeOut" }}
+                        className={`h-full rounded-full ${automationScore >= 75 ? "bg-success" : automationScore >= 50 ? "bg-warning" : "bg-primary"}`} />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                      <span>{t("automationRules.low")}</span><span>{t("automationRules.medium")}</span><span>{t("automationRules.high")}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <span>{t("automationRules.categoriesCovered", { count: new Set(rules.filter(r => r.enabled).map(classifyRule)).size })}</span>
+                  <span>{t("automationRules.executions30d", { count: last30DaysLogs.length })}</span>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
