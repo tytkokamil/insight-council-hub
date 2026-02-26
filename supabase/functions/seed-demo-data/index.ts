@@ -43,6 +43,9 @@ const teamTemplates = [
       { title: "Datenverlust bei Cloud-Migration", description: "Partieller Datenverlust während Migrationsphase.", likelihood: 3, impact: 5, risk_score: 15, status: "open", mitigation_plan: "Inkrementelle Migration mit Rollback und 3x Backup." },
       { title: "Key-Person Dependency Engineering", description: "Kritisches Wissen bei 2 Senior Engineers.", likelihood: 4, impact: 4, risk_score: 16, status: "open", mitigation_plan: "Knowledge-Sharing und Dokumentation." },
       { title: "API-Downtime bei Migration", description: "Unerwartete Downtime während Cloud-Umzug.", likelihood: 2, impact: 5, risk_score: 10, status: "open", mitigation_plan: "Blue-Green Deployment nutzen." },
+      { title: "Supply Chain Angriff auf Dependencies", description: "Kompromittierte NPM-Packages in der Build-Pipeline.", likelihood: 5, impact: 5, risk_score: 25, status: "open", mitigation_plan: "Lockfile Pinning, Snyk Scanning, Private Registry." },
+      { title: "Skalierungsprobleme bei Lastspitzen", description: "Datenbank-Engpässe bei >10k gleichzeitigen Nutzern.", likelihood: 3, impact: 4, risk_score: 12, status: "mitigating", mitigation_plan: "Read-Replicas, Connection Pooling, Auto-Scaling." },
+      { title: "Lizenzkosten-Explosion SaaS-Tools", description: "Unkontrollierte Lizenzkosten durch dezentrale Beschaffung.", likelihood: 2, impact: 2, risk_score: 4, status: "open", mitigation_plan: "Zentrales Tool-Management und jährliche Reviews." },
     ],
     goals: [
       { title: "Ø Entscheidungszeit unter 5 Tage", description: "Draft → Implementierung.", goal_type: "kpi", target_value: 5, current_value: 7.2, unit: "Tage", quarter: "Q2" },
@@ -80,6 +83,8 @@ const teamTemplates = [
     risks: [
       { title: "Churn bei Pricing-Umstellung", description: "Kunden könnten bei Preiserhöhung abwandern.", likelihood: 3, impact: 3, risk_score: 9, status: "mitigated", mitigation_plan: "Bestandskundenpreise 12 Monate grandfathered." },
       { title: "Content-Qualität bei Skalierung", description: "Mehr Content = Qualitätsrisiko.", likelihood: 3, impact: 3, risk_score: 9, status: "open", mitigation_plan: "Editorial Guidelines und Review-Prozess." },
+      { title: "Markenreputation durch KI-Content", description: "KI-generierter Content könnte als minderwertig wahrgenommen werden.", likelihood: 4, impact: 3, risk_score: 12, status: "open", mitigation_plan: "Human Review für alle KI-Inhalte, Brand Voice Guidelines." },
+      { title: "Wettbewerber-Preiskampf", description: "Aggressive Preissenkung durch etablierte Wettbewerber.", likelihood: 2, impact: 4, risk_score: 8, status: "open", mitigation_plan: "Value-Differenzierung statt Preiskampf." },
     ],
     goals: [
       { title: "NPS über 60", description: "Net Promoter Score Enterprise.", goal_type: "kpi", target_value: 60, current_value: 67, unit: "Score", quarter: "Q2" },
@@ -119,6 +124,8 @@ const teamTemplates = [
     risks: [
       { title: "DSGVO-Verstoß durch KI-Module", description: "Unbeabsichtigte Verarbeitung personenbezogener Daten.", likelihood: 2, impact: 5, risk_score: 10, status: "open", mitigation_plan: "DPIA durchführen, Anonymisierung implementieren." },
       { title: "Budget-Überschreitung Cloud", description: "Unkontrolliertes Wachstum der Cloud-Kosten.", likelihood: 3, impact: 3, risk_score: 9, status: "open", mitigation_plan: "Budget-Alerts und monatliches Review." },
+      { title: "Steuerliche Compliance Multi-Jurisdiktion", description: "Falsche Steuersätze in neuen Märkten.", likelihood: 4, impact: 5, risk_score: 20, status: "open", mitigation_plan: "Externe Steuerberatung pro Markt, automatisierte Tax Engine." },
+      { title: "Währungsrisiko bei Internationalisierung", description: "Wechselkursschwankungen bei EUR/USD Umsatz.", likelihood: 1, impact: 2, risk_score: 2, status: "accepted", mitigation_plan: "Hedging ab >100k Fremdwährungsumsatz." },
     ],
     goals: [
       { title: "ARR auf €2M steigern", description: "Annual Recurring Revenue.", goal_type: "okr", target_value: 2000000, current_value: 1350000, unit: "€", quarter: "Q4" },
@@ -156,6 +163,7 @@ const teamTemplates = [
     risks: [
       { title: "Fluktuation Schlüsselpositionen", description: "3 Senior-Rollen offen seit >6 Wochen.", likelihood: 3, impact: 4, risk_score: 12, status: "open", mitigation_plan: "Retention-Bonus und Entwicklungspläne." },
       { title: "Burnout-Risiko durch Wachstum", description: "Schnelles Wachstum ohne proportionale Einstellungen.", likelihood: 3, impact: 4, risk_score: 12, status: "open", mitigation_plan: "Workload-Monitoring und proaktives Hiring." },
+      { title: "Diskriminierungsklage durch Bias", description: "Unbewusster Bias im Recruiting-Prozess.", likelihood: 1, impact: 5, risk_score: 5, status: "open", mitigation_plan: "Strukturierte Interviews, Blind Screening, D&I Training." },
     ],
     goals: [
       { title: "eNPS über 50", description: "Employee Net Promoter Score.", goal_type: "kpi", target_value: 50, current_value: 45, unit: "Score", quarter: "Q3" },
@@ -193,6 +201,7 @@ const teamTemplates = [
     risks: [
       { title: "Datenqualität unter Schwellenwert", description: "Inkonsistente Daten in 3 kritischen Tabellen.", likelihood: 4, impact: 3, risk_score: 12, status: "open", mitigation_plan: "Data Quality Checks in Pipeline integrieren." },
       { title: "Vendor Lock-in Snowflake", description: "Hohe Abhängigkeit von Snowflake-Ökosystem.", likelihood: 2, impact: 4, risk_score: 8, status: "open", mitigation_plan: "Abstraktionsschicht und regelmäßige Evaluation." },
+      { title: "Datenleck durch fehlende Zugriffskontrolle", description: "Zu breite Zugriffsrechte auf sensitive Daten.", likelihood: 4, impact: 5, risk_score: 20, status: "mitigating", mitigation_plan: "RBAC für alle Datenquellen, Audit-Logs aktivieren." },
     ],
     goals: [
       { title: "Data Quality Score >95%", description: "Automatisierte Qualitätsprüfung.", goal_type: "kpi", target_value: 95, current_value: 82, unit: "%", quarter: "Q3" },
@@ -364,7 +373,17 @@ Deno.serve(async (req) => {
     await supabase.from("tasks").insert(tasksToInsert);
 
     // ── 4. Create Risks ──
-    await supabase.from("risks").insert(template.risks.map(r => ({ ...r, created_by: userId, team_id: newTeam.id })));
+    const { data: insertedRisks } = await supabase.from("risks").insert(template.risks.map(r => ({ ...r, created_by: userId, team_id: newTeam.id }))).select("id");
+
+    // ── 4b. Link risks to decisions ──
+    if (insertedRisks && insertedDecisions && insertedRisks.length > 0 && insertedDecisions.length > 0) {
+      const riskDecLinks = insertedRisks.slice(0, Math.min(insertedRisks.length, 4)).map((r, i) => ({
+        risk_id: r.id,
+        decision_id: insertedDecisions[i % insertedDecisions.length].id,
+        linked_by: userId,
+      }));
+      await supabase.from("risk_decision_links").insert(riskDecLinks);
+    }
 
     // ── 5. Create Strategic Goals ──
     await supabase.from("strategic_goals").insert(template.goals.map(g => ({ ...g, created_by: userId, team_id: newTeam.id, year: currentYear, status: "active" })));
