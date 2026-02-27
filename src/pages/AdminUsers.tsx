@@ -129,7 +129,7 @@ const AdminUsers = () => {
         <PageHeader
           title={t("admin.title")}
           subtitle={t("admin.subtitle")}
-          role="governance"
+          role="system"
           secondaryActions={
             <Badge variant="outline" className="gap-1.5"><UserCog className="w-3.5 h-3.5" />{t("admin.usersCount", { count: users.length })}</Badge>
           }

@@ -256,7 +256,7 @@ export default function Templates() {
         <PageHeader
           title={t("templates.pageTitle")}
           subtitle={t("templates.pageLabel")}
-          role="governance"
+          role="system"
           help={{ title: t("templates.pageTitle"), description: t("templates.helpDesc") }}
         />
 

@@ -215,7 +215,7 @@ const Strategy = () => {
       <PageHeader
         title={t("strategy.title")}
         subtitle={t("strategy.label")}
-        role="intelligence"
+        role="system"
         help={{ title: t("strategy.title"), description: t("strategy.help") }}
         primaryAction={
           <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2">

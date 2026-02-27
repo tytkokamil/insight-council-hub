@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import PageHelpButton from "./PageHelpButton";
 import { useTranslation } from "react-i18next";
 
-export type PageRole = "intelligence" | "execution" | "governance" | "knowledge";
+export type PageRole = "intelligence" | "execution" | "governance" | "knowledge" | "system";
 
 const PageHeader = ({
   title,
@@ -28,6 +28,7 @@ const PageHeader = ({
     execution: { labelKey: "shared.pageRoleExecution", icon: Settings, className: "bg-accent-violet/10 text-accent-violet border-accent-violet/20" },
     governance: { labelKey: "shared.pageRoleGovernance", icon: Shield, className: "bg-accent-rose/10 text-accent-rose border-accent-rose/20" },
     knowledge: { labelKey: "shared.pageRoleKnowledge", icon: BookOpen, className: "bg-accent-blue/10 text-accent-blue border-accent-blue/20" },
+    system: { labelKey: "shared.pageRoleSystem", icon: Settings, className: "bg-accent-amber/10 text-accent-amber border-accent-amber/20" },
   };
 
   const config = roleConfig[role];
