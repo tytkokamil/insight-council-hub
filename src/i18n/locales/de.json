@@ -2874,6 +2874,7 @@
       "inReview": "Im Review",
       "riskScore": "Risiko-Score",
       "velocity": "Decision Velocity",
+      "velocityTrend": "vs. Vorquartal",
       "q4Budget": "Q4 Budget-Freigabe",
       "statusApproved": "Freigegeben",
       "engineeringHiring": "Engineering Hiring Plan",
@@ -3039,7 +3040,8 @@
       "publicStatLabel": "Audit-Abdeckung"
     },
     "testimonials": {
-      "label": "Kundenstimmen",
+      "label": "Beispiel-Feedback",
+      "disclaimer": "* Illustratives Beispiel-Feedback basierend auf typischen Ergebnissen unserer Pilotprojekte. Namen und Unternehmen sind fiktiv.",
       "title": "Messbare Ergebnisse aus regulierten Branchen",
       "name1": "Dr. Christina Berger",
       "role1": "Chief Risk Officer, Finanzdienstleister",
@@ -3058,7 +3060,7 @@
       "metricLabel3": "Eskalationen"
     },
     "stats": {
-      "socialProof": "Bereits von Teams in diesen Branchen genutzt",
+      "socialProof": "Entwickelt für Teams in diesen Branchen",
       "finance": "Finanzdienstleister",
       "pharma": "Pharma",
       "scaleups": "Scale-Ups",
@@ -3067,7 +3069,7 @@
       "codAvoided": "CoD vermieden",
       "slaRate": "SLA-Bestehensquote",
       "fasterDecisions": "Schnellere Entscheidungen",
-      "roiFirstMonth": "ROI im ersten Monat"
+      "roiFirstMonth": "ROI im ersten Quartal"
     },
     "cta": {
       "title1": "In 5 Minuten eingerichtet.",
@@ -3075,7 +3077,7 @@
       "desc": "Jede offene Entscheidung kostet euer Unternehmen täglich Geld — macht diesen Verlust sichtbar, messbar und lösbar.",
       "startFree": "Kostenlos starten",
       "bookDemo": "Demo vereinbaren",
-      "socialProof": "Bereits von Teams in Finanz, Pharma und Scale-Ups genutzt."
+      "socialProof": "Entwickelt für Teams in Finanz, Pharma und Scale-Ups."
     },
     "footer": {
       "tagline": "Decision Governance Platform — Entscheidungen sichtbar, messbar, lösbar.",
@@ -3124,7 +3126,12 @@
       "decisionsMonth": "Entscheidungen / Monat",
       "avgHourlyRate": "Ø Stundensatz (€)",
       "roiBasedOn": "Basierend auf Durchschnittswerten: 42% schnellere Zyklen, 73% weniger Eskalationen, 75% weniger manueller Overhead.",
-      "annualSavings": "Jährliche Einsparung",
+      "roiMethodology": "Wie berechnen wir das?",
+      "roiMethodologyTitle": "Berechnungsmethode",
+      "roiMethod1": "Zeitersparnis: (12 − 7 Tage) × Entscheidungen × 8h × 30% Produktivitätsfaktor × Stundensatz",
+      "roiMethod2": "Eskalationskosten: Differenz der Eskalationsraten × 16h Aufwand pro Eskalation × Stundensatz",
+      "roiMethod3": "Overhead-Reduktion: (2h − 0,5h) Meeting-Zeit × 4 Wochen × Teamgröße × Stundensatz",
+      "annualSavings": "Geschätzte jährliche Einsparung",
       "daysSavedMonth": "Tage gespart/Monat",
       "escalationsAvoided": "Eskalationen vermieden",
       "monthlySavings": "Monatliche Ersparnis",

@@ -71,8 +71,14 @@ const PricingROICalculator = () => {
             </div>
             <Slider value={[avgHourlyRate]} onValueChange={([v]) => setAvgHourlyRate(v)} min={40} max={200} step={5} />
           </div>
-          <div className="pt-4 border-t border-border">
+          <div id="roi-methodology" className="pt-4 border-t border-border space-y-2">
+            <p className="text-[11px] font-semibold text-muted-foreground">{t("landing.pricing.roiMethodologyTitle")}</p>
             <p className="text-xs text-muted-foreground">{t("landing.pricing.roiBasedOn")}</p>
+            <ul className="text-[11px] text-muted-foreground/70 space-y-1 list-disc list-inside">
+              <li>{t("landing.pricing.roiMethod1")}</li>
+              <li>{t("landing.pricing.roiMethod2")}</li>
+              <li>{t("landing.pricing.roiMethod3")}</li>
+            </ul>
           </div>
         </div>
 
@@ -83,6 +89,15 @@ const PricingROICalculator = () => {
             <p className="text-sm text-muted-foreground mt-1">
               {roi.roiMultiple}× ROI · {teamSize <= 10 ? "Starter" : teamSize <= 50 ? "Professional" : "Enterprise"} (€{roi.monthlyCost}/Mo)
             </p>
+            <button
+              onClick={() => {
+                const el = document.getElementById("roi-methodology");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="mt-2 text-[11px] text-primary/60 hover:text-primary underline underline-offset-2 transition-colors"
+            >
+              {t("landing.pricing.roiMethodology")}
+            </button>
           </motion.div>
 
           <div className="grid grid-cols-2 gap-3">

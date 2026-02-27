@@ -2873,6 +2873,7 @@
       "inReview": "In Review",
       "riskScore": "Risk Score",
       "velocity": "Decision Velocity",
+      "velocityTrend": "vs. last quarter",
       "q4Budget": "Q4 Budget Approval",
       "statusApproved": "Approved",
       "engineeringHiring": "Engineering Hiring Plan",
@@ -3038,7 +3039,8 @@
       "publicStatLabel": "audit coverage"
     },
     "testimonials": {
-      "label": "Testimonials",
+      "label": "Example Feedback",
+      "disclaimer": "* Illustrative example feedback based on typical results from our pilot projects. Names and companies are fictional.",
       "title": "Measurable results from regulated industries",
       "name1": "Dr. Christina Berger",
       "role1": "Chief Risk Officer, Financial Services",
@@ -3057,7 +3059,7 @@
       "metricLabel3": "Escalations"
     },
     "stats": {
-      "socialProof": "Already used by teams in these industries",
+      "socialProof": "Built for teams in these industries",
       "finance": "Financial Services",
       "pharma": "Pharma",
       "scaleups": "Scale-Ups",
@@ -3066,7 +3068,7 @@
       "codAvoided": "CoD avoided",
       "slaRate": "SLA pass rate",
       "fasterDecisions": "Faster decisions",
-      "roiFirstMonth": "ROI in first month"
+      "roiFirstMonth": "ROI in first quarter"
     },
     "cta": {
       "title1": "Set up in 5 minutes.",
@@ -3074,7 +3076,7 @@
       "desc": "Every open decision costs your company money every day — make that loss visible, measurable and solvable.",
       "startFree": "Start for free",
       "bookDemo": "Book a demo",
-      "socialProof": "Already used by teams in Finance, Pharma and Scale-Ups."
+      "socialProof": "Built for teams in Finance, Pharma and Scale-Ups."
     },
     "footer": {
       "tagline": "Decision Governance Platform — Decisions visible, measurable, solvable.",
@@ -3123,7 +3125,12 @@
       "decisionsMonth": "Decisions / month",
       "avgHourlyRate": "Avg. hourly rate (€)",
       "roiBasedOn": "Based on averages: 42% faster cycles, 73% fewer escalations, 75% less manual overhead.",
-      "annualSavings": "Annual Savings",
+      "roiMethodology": "How do we calculate this?",
+      "roiMethodologyTitle": "Calculation Method",
+      "roiMethod1": "Time savings: (12 − 7 days) × decisions × 8h × 30% productivity factor × hourly rate",
+      "roiMethod2": "Escalation costs: escalation rate difference × 16h effort per escalation × hourly rate",
+      "roiMethod3": "Overhead reduction: (2h − 0.5h) meeting time × 4 weeks × team size × hourly rate",
+      "annualSavings": "Estimated Annual Savings",
       "daysSavedMonth": "Days saved/month",
       "escalationsAvoided": "Escalations avoided",
       "monthlySavings": "Monthly savings",

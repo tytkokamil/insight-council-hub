@@ -37,6 +37,10 @@ const TestimonialsSection = () => {
             </motion.div>
           ))}
         </div>
+
+        <p className="text-center text-[11px] text-muted-foreground/40 mt-8 italic">
+          {t("landing.testimonials.disclaimer")}
+        </p>
       </div>
     </section>
   );
