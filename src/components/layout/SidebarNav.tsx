@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings,
@@ -230,6 +230,14 @@ const SidebarNav = memo(({
   const { mode, setMode, shouldShowAdvanced, decisionCount } = useGuidedMode();
   const { t } = useTranslation();
   const [intelligenceUnlocked, setIntelligenceUnlocked] = useState(() => localStorage.getItem("intelligence-unlocked") === "true");
+  const [hasActiveMeeting, setHasActiveMeeting] = useState(false);
+
+  useEffect(() => {
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1)
+        .then(({ data }) => setHasActiveMeeting((data?.length ?? 0) > 0));
+    });
+  }, [pathname]);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     navGroupsDef.forEach(g => {
@@ -450,8 +458,8 @@ const SidebarNav = memo(({
                       {!collapsed && (
                         <span className="whitespace-nowrap flex items-center gap-1.5">
                           {t(item.label)}
-                          {isMeeting && (
-                            <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary">
+                          {isMeeting && hasActiveMeeting && (
+                            <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary animate-pulse">
                               {t("nav.live")}
                             </span>
                           )}
