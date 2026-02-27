@@ -236,17 +236,50 @@
   /* Clean card – border only, no shadows in dark */
   .cmd-card {
     @apply bg-card border border-border rounded-lg;
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .cmd-card:hover {
     border-color: hsl(var(--foreground) / 0.15);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* Elevated card variant */
+  .cmd-card-elevated {
+    @apply bg-card border border-border rounded-xl;
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  }
+
+  .cmd-card-elevated:hover {
+    border-color: hsl(var(--foreground) / 0.12);
+    box-shadow: var(--shadow-elevated);
+    transform: translateY(-1px);
+  }
+
+  /* Flat card – no hover effects, for static content */
+  .cmd-card-flat {
+    @apply bg-card/50 border border-border/60 rounded-lg;
   }
 
   /* Legacy aliases */
   .glass-card { @apply cmd-card; }
-  .glass-card-elevated { @apply cmd-card; }
+  .glass-card-elevated { @apply cmd-card-elevated; }
   .cmd-glow { @apply cmd-card; }
+
+  /* Section spacing – consistent page sections */
+  .section-gap { @apply space-y-6; }
+  .section-gap-sm { @apply space-y-4; }
+  .section-gap-lg { @apply space-y-8; }
+
+  /* Widget grid – consistent dashboard/bento layouts */
+  .widget-grid {
+    @apply grid gap-4 md:gap-5;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  .widget-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5; }
+  .widget-grid-3 { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5; }
+  .widget-grid-4 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5; }
 
   /* Data display – monospace */
   .data-value {
@@ -333,6 +366,10 @@
   .row-highlight {
     position: relative;
     transition: background-color 0.1s ease;
+  }
+  .row-highlight:hover {
+    background-color: hsl(var(--muted));
+  }
 
   /* Icon spin on hover (for settings/refresh icons) */
   .icon-spin-hover:hover svg {
@@ -353,10 +390,6 @@
 @keyframes tooltip-pop {
   from { opacity: 0; transform: scale(0.95) translateY(2px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
-}
-  .row-highlight:hover {
-    background-color: hsl(var(--muted));
-  }
 }
 
 @keyframes stagger-in {
