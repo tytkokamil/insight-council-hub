@@ -254,6 +254,9 @@ const SettingsPage = () => {
                     <div className="flex-1">
                       <p className="text-sm font-medium">{fullName || t("settings.unknown")}</p>
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      <button onClick={() => avatarInputRef.current?.click()} disabled={uploadingAvatar} className="text-xs text-primary hover:underline mt-1 cursor-pointer">
+                        {uploadingAvatar ? t("settings.uploading", "Wird hochgeladen…") : t("settings.uploadPhoto", "Bild hochladen")}
+                      </button>
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         <Badge variant="outline" className="text-[10px] font-normal">{roleLabels[userRole] || userRole}</Badge>
                         {teamMemberships.map(tm => (
@@ -505,7 +508,7 @@ const SettingsPage = () => {
                 <h2 className="text-sm font-medium mb-3">{t("settings.aiUsage")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
-                    { label: t("settings.aiRequestsMonth"), value: "–", icon: Zap },
+                    { label: t("settings.aiRequestsMonth"), value: aiProvider === "lovable" ? t("settings.aiIncludedInPlan", "Inklusive im Plan") : "–", icon: Zap },
                     { label: t("settings.aiActiveProvider"), value: AI_PROVIDERS.find(p => p.id === aiProvider)?.name || "Standard", icon: Brain },
                     { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
                     { label: t("settings.aiDataResidency"), value: "EU", icon: Server },

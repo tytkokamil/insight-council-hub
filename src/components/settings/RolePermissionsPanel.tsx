@@ -99,7 +99,37 @@ const RolePermissionsPanel = () => {
 
   const canEditRole = currentUserRole === "org_owner" || (currentUserRole === "org_admin" && selectedRole !== "org_admin" && selectedRole !== "org_owner");
 
+  const PERM_LABELS_DE: Record<string, string> = {
+    "decisions.read": "Entscheidungen › Lesen",
+    "decisions.create": "Entscheidungen › Erstellen",
+    "decisions.edit_own": "Entscheidungen › Eigene bearbeiten",
+    "decisions.edit_any": "Entscheidungen › Alle bearbeiten",
+    "decisions.delete": "Entscheidungen › Löschen",
+    "decisions.change_status": "Entscheidungen › Status ändern",
+    "reviews.submit": "Reviews › Einreichen",
+    "reviews.assign": "Reviews › Zuweisen",
+    "comments.write": "Kommentare › Schreiben",
+    "tasks.create": "Aufgaben › Erstellen",
+    "tasks.edit": "Aufgaben › Bearbeiten",
+    "risks.create": "Risiken › Erstellen",
+    "risks.read": "Risiken › Lesen",
+    "analytics.view": "Analytik › Anzeigen",
+    "executive.hub": "Executive › Hub",
+    "process.hub": "Prozess › Hub",
+    "templates.manage": "Vorlagen › Verwalten",
+    "templates.use": "Vorlagen › Verwenden",
+    "sla.manage": "SLA › Verwalten",
+    "automations.manage": "Automatisierungen › Verwalten",
+    "audit.read": "Audit › Lesen",
+    "users.manage": "Benutzer › Verwalten",
+    "roles.assign": "Rollen › Zuweisen",
+    "owner.assign": "Eigentümer › Zuweisen",
+    "billing.manage": "Abrechnung › Verwalten",
+    "org.settings": "Organisation › Einstellungen",
+  };
+
   const permLabel = (key: string): string => {
+    if (i18n.language === "de" && PERM_LABELS_DE[key]) return PERM_LABELS_DE[key];
     const parts = key.split(".");
     return parts.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" › ");
   };
