@@ -127,7 +127,7 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `team-performance-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.download = `Decivio-Team-Performance-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }, [teamStats, t]);
@@ -136,15 +136,12 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
     if (teamStats.length === 0) return;
     const { default: jsPDF } = await import("jspdf");
     const { default: autoTable } = await import("jspdf-autotable");
+    const { addPdfHeader, addPdfFooter } = await import("@/lib/pdfBranding");
     const doc = new jsPDF({ orientation: "landscape" });
-    doc.setFontSize(16);
-    doc.text(t("teamPerf.pdfTitle"), 14, 18);
-    doc.setFontSize(9);
-    doc.setTextColor(120);
-    doc.text(t("teamPerf.pdfCreated", { date: format(new Date(), "dd.MM.yyyy HH:mm") }), 14, 25);
+    const y = addPdfHeader(doc, t("teamPerf.pdfSubtitle", "Vergleich aller Teams"), `${teamStats.length} Teams`, t("teamPerf.pdfTitle"));
 
     autoTable(doc, {
-      startY: 32,
+      startY: y,
       head: [["#", t("teamPerf.csvTeam"), t("teamPerf.csvDecisions"), t("teamPerf.csvImplemented"), "Compl. %", t("teamPerf.csvVelocity"), t("teamPerf.csvReviewSpeed"), t("teamPerf.csvOpenReviews"), t("teamPerf.csvOpenRisks"), t("teamPerf.csvCriticalRisks"), t("teamPerf.csvOverdue")]],
       body: teamStats.map((ts, i) => [
         i + 1, ts.teamName, ts.totalDecisions, ts.implemented, `${ts.completionRate}%`,
@@ -153,10 +150,11 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
         ts.pendingReviews, ts.openRisks, ts.criticalRisks, ts.overdueCount,
       ]),
       styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [40, 40, 40] },
+      headStyles: { fillColor: [15, 23, 42], textColor: 255 },
     });
 
-    doc.save(`team-performance-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    addPdfFooter(doc);
+    doc.save(`Decivio-Team-Performance-${format(new Date(), "yyyy-MM-dd")}.pdf`);
   }, [teamStats, t]);
 
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;

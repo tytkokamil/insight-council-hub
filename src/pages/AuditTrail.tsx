@@ -290,21 +290,19 @@ const AuditTrail = () => {
     ].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `audit-trail-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `Decivio-Audit-Trail-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
   const exportPdf = async () => {
     const { default: jsPDF } = await import("jspdf");
     const { default: autoTable } = await import("jspdf-autotable");
+    const { addPdfHeader, addPdfFooter } = await import("@/lib/pdfBranding");
     const doc = new jsPDF({ orientation: "landscape" });
-    doc.setFontSize(16);
-    doc.text("Audit Trail Report", 14, 18);
-    doc.setFontSize(9);
     const dateRange = dateFrom || dateTo
       ? `${dateFrom ? format(dateFrom, "dd.MM.yyyy") : "…"} – ${dateTo ? format(dateTo, "dd.MM.yyyy") : "…"}`
       : t("auditTrail.allTime");
-    doc.text(`${t("auditTrail.generated")}: ${format(new Date(), "dd.MM.yyyy HH:mm")}  |  ${t("auditTrail.period")}: ${dateRange}  |  ${filtered.length} ${t("auditTrail.entries", { count: filtered.length })}`, 14, 25);
+    const y = addPdfHeader(doc, t("auditTrail.title"), `${filtered.length} ${t("auditTrail.entries", { count: filtered.length })}  |  ${t("auditTrail.period")}: ${dateRange}`, "Audit Trail");
 
     const head = [[t("auditTrail.csvTimestamp"), t("auditTrail.csvUser"), t("auditTrail.csvAction"), t("auditTrail.csvDecision"), t("auditTrail.csvField"), t("auditTrail.csvOldValue"), t("auditTrail.csvNewValue"), t("auditTrail.csvSource")]];
     const body = filtered.map(l => [
@@ -317,8 +315,9 @@ const AuditTrail = () => {
       formatValue(l.new_value, locale),
       isAutomation(l.action) ? t("auditTrail.automation") : t("auditTrail.manual"),
     ]);
-    autoTable(doc, { head, body, startY: 30, styles: { fontSize: 7, cellPadding: 2 }, headStyles: { fillColor: [50, 50, 60] } });
-    doc.save(`audit-trail-${new Date().toISOString().slice(0, 10)}.pdf`);
+    autoTable(doc, { head, body, startY: y, styles: { fontSize: 7, cellPadding: 2 }, headStyles: { fillColor: [15, 23, 42], textColor: 255 } });
+    addPdfFooter(doc);
+    doc.save(`Decivio-Audit-Trail-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   // ── Render helpers ──
