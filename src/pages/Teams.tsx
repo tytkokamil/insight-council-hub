@@ -50,7 +50,7 @@ const Teams = () => {
         role="execution"
         help={{ title: t("teams.title"), description: t("teams.helpDesc") }}
         primaryAction={
-          canCreateTeam ? (
+          canCreateTeam && teams.length > 0 ? (
             <Button size="sm" onClick={() => setShowCreate(true)} className="gap-2">
               <Plus className="w-4 h-4" />
               {t("teams.newTeam")}
