@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import PageHeader from "@/components/shared/PageHeader";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useTranslation } from "react-i18next";
 import {
   History, ArrowRight, Search, Filter, FileText, CheckCircle, XCircle, Sparkles,
@@ -611,17 +612,12 @@ const AuditTrail = () => {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-              <History className="w-8 h-8 text-primary opacity-60" />
-            </div>
-            <h3 className="font-display text-lg font-semibold mb-2">
-              {search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
-            </p>
-          </div>
+          <EmptyAnalysisState
+            icon={History}
+            title={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
+            description={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
+            hint={t("auditTrail.emptyHint", { defaultValue: "Jede Änderung an Entscheidungen wird automatisch und revisionssicher protokolliert." })}
+          />
         ) : (
           <>
             <div className="space-y-8">

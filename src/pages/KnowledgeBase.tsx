@@ -24,6 +24,7 @@ import {
   Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw,
 } from "lucide-react";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
@@ -417,6 +418,25 @@ const KnowledgeBase = () => {
       };
     }).filter(c => c.decisions > 0);
   }, [decisions, lessons]);
+
+  if (decisions.length === 0) {
+    return (
+      <AppLayout>
+        <PageHeader title={t("knowledge.title")} subtitle={t("knowledge.subtitle")} role="knowledge" help={{ title: t("knowledge.title"), description: t("knowledge.help") }} />
+        <EmptyAnalysisState
+          icon={BookOpen}
+          title={t("knowledge.noDataTitle", { defaultValue: "Noch keine Wissensbasis" })}
+          description={t("knowledge.noDataDesc", { defaultValue: "Implementiere Entscheidungen, um Lessons Learned zu dokumentieren und organisationales Wissen aufzubauen." })}
+          hint={t("knowledge.noDataHint", { defaultValue: "Die Wissensbasis wächst automatisch mit jeder abgeschlossenen Entscheidung." })}
+          features={[
+            { icon: Lightbulb, label: t("knowledge.featureLessons", { defaultValue: "Lessons Learned" }), desc: t("knowledge.featureLessonsDesc", { defaultValue: "Erfolge und Fehler systematisch dokumentieren" }) },
+            { icon: Brain, label: t("knowledge.featureAi", { defaultValue: "KI-Matching" }), desc: t("knowledge.featureAiDesc", { defaultValue: "Ähnliche Entscheidungen automatisch verknüpfen" }) },
+            { icon: Repeat, label: t("knowledge.featurePatterns", { defaultValue: "Muster-Erkennung" }), desc: t("knowledge.featurePatternDesc", { defaultValue: "Wiederkehrende Fehler identifizieren" }) },
+          ]}
+        />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
