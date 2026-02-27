@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { formatCost } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -249,6 +250,25 @@ const EscalationEngine = () => {
   };
 
   if (loading) return <AppLayout><div className="flex items-center justify-center h-64 text-muted-foreground text-sm">{t("escalationEngine.loading")}</div></AppLayout>;
+
+  if (decisions.length === 0) {
+    return (
+      <AppLayout>
+        <PageHeader title={t("escalationEngine.title")} subtitle={t("escalationEngine.subtitle")} role="governance" help={{ title: t("escalationEngine.title"), description: t("escalationEngine.help") }} />
+        <EmptyAnalysisState
+          icon={Zap}
+          title={t("escalationEngine.noDataTitle", { defaultValue: "Keine Entscheidungen vorhanden" })}
+          description={t("escalationEngine.noDataDesc", { defaultValue: "Erstelle Entscheidungen, um Eskalationen, Fristen und systemische Risiken automatisch zu überwachen." })}
+          hint={t("escalationEngine.noDataHint", { defaultValue: "Die Eskalations-Engine erkennt kritische Muster und schlägt automatisch Maßnahmen vor." })}
+          features={[
+            { icon: Flame, label: t("escalationEngine.featureCritical", { defaultValue: "Kritische Erkennung" }), desc: t("escalationEngine.featureCriticalDesc", { defaultValue: "Top-5 dringendste Entscheidungen automatisch priorisiert" }) },
+            { icon: Activity, label: t("escalationEngine.featureSystemic", { defaultValue: "Systemische Risiken" }), desc: t("escalationEngine.featureSystemicDesc", { defaultValue: "Muster-Erkennung über Teams und Kategorien" }) },
+            { icon: Settings, label: t("escalationEngine.featureAuto", { defaultValue: "Automatisierung" }), desc: t("escalationEngine.featureAutoDesc", { defaultValue: "Regelbasierte Eskalationen konfigurieren" }) },
+          ]}
+        />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

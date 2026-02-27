@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useDecisions, useReviews, useNotifications, useProfiles, buildProfileMap } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { supabase } from "@/integrations/supabase/client";
@@ -366,19 +367,12 @@ export default function Timeline() {
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-              <Clock className="w-8 h-8 text-primary opacity-60" />
-            </div>
-            <h3 className="font-display text-lg font-semibold mb-2">
-              {search || typeFilter !== "all" ? t("timeline.noEventsFound") : t("timeline.noActivity")}
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-              {search || typeFilter !== "all"
-                ? t("timeline.tryOtherFilters")
-                : t("timeline.timelineDesc")}
-            </p>
-          </div>
+          <EmptyAnalysisState
+            icon={Clock}
+            title={search || typeFilter !== "all" ? t("timeline.noEventsFound") : t("timeline.noActivity")}
+            description={search || typeFilter !== "all" ? t("timeline.tryOtherFilters") : t("timeline.timelineDesc")}
+            hint={t("timeline.emptyHint", { defaultValue: "Alle Änderungen an Entscheidungen und Aufgaben werden hier chronologisch protokolliert." })}
+          />
         ) : (
           <div className="space-y-8">
             {grouped.map(([dayKey, events]) => (
