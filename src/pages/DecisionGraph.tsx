@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { formatNumber } from "@/lib/formatters";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
@@ -236,26 +237,19 @@ const DecisionGraph = () => {
       <div className="relative rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
         {decisions.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-                <GitBranch className="w-8 h-8 text-primary opacity-60" />
-              </div>
-              <h3 className="font-display text-xl font-semibold mb-2">{t("graph.emptyTitle")}</h3>
-              <p className="text-sm text-muted-foreground mb-6">{t("graph.emptyDesc")}</p>
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { icon: GitBranch, label: t("graph.dependencies"), desc: t("graph.seeDeps") },
-                  { icon: AlertTriangle, label: t("graph.criticalPaths"), desc: t("graph.findBottlenecks") },
-                  { icon: DollarSign, label: t("graph.cascadeCosts"), desc: t("graph.analyzeImpact") },
-                ].map((f, i) => (
-                  <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border">
-                    <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                    <p className="text-xs font-semibold">{f.label}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <EmptyAnalysisState
+              icon={GitBranch}
+              title={t("graph.emptyTitle")}
+              description={t("graph.emptyDesc")}
+              ctaLabel={t("emptyState.defaultCta")}
+              ctaRoute="/decisions"
+              hint={t("graph.emptyHint", { defaultValue: "Erstelle Entscheidungen und verknüpfe sie, um den Graphen zu sehen." })}
+              features={[
+                { icon: GitBranch, label: t("graph.dependencies"), desc: t("graph.seeDeps") },
+                { icon: AlertTriangle, label: t("graph.criticalPaths"), desc: t("graph.findBottlenecks") },
+                { icon: DollarSign, label: t("graph.cascadeCosts"), desc: t("graph.analyzeImpact") },
+              ]}
+            />
           </div>
         ) : (
           <ReactFlow

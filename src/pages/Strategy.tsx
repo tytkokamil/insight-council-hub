@@ -6,6 +6,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import PageHeader from "@/components/shared/PageHeader";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDecisions } from "@/hooks/useDecisions";
@@ -363,14 +364,14 @@ const Strategy = () => {
       </div>
 
       {goals.length === 0 && !showCreate && (
-        <div className="rounded-lg border border-border bg-card p-12 text-center">
-          <Target className="w-12 h-12 text-primary mx-auto mb-4 opacity-40" />
-          <h3 className="font-display text-xl font-semibold mb-2">{t("strategy.noGoalsTitle")}</h3>
-          <p className="text-muted-foreground mb-4">{t("strategy.noGoalsDesc")}</p>
-          <Button onClick={() => setShowCreate(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> {t("strategy.createFirst")}
-          </Button>
-        </div>
+        <EmptyAnalysisState
+          icon={Target}
+          title={t("strategy.noGoalsTitle")}
+          description={t("strategy.noGoalsDesc")}
+          ctaLabel={t("strategy.createFirst")}
+          onCtaClick={() => setShowCreate(true)}
+          hint={t("strategy.emptyHint", { defaultValue: "Verknüpfe strategische Ziele mit Entscheidungen für eine durchgängige Governance." })}
+        />
       )}
     </AppLayout>
   );
