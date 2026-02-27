@@ -299,7 +299,9 @@ const Dashboard = () => {
     );
   }
 
-  const dashboardTitle = isPersonal ? t("dashboard.myWorkspace") : `${currentTeam?.name || "Team"}`;
+  const hour = new Date().getHours();
+  const greetingKey = hour < 12 ? "dashboard.goodMorning" : hour < 18 ? "dashboard.goodAfternoon" : "dashboard.goodEvening";
+  const dashboardTitle = isPersonal ? t(greetingKey, { name: firstName }) : `${currentTeam?.name || "Team"}`;
   const isExecutive = dashboardMode === "executive";
 
   return (
@@ -384,7 +386,23 @@ const Dashboard = () => {
           />
         )}
 
-        {/* ═══ PRIMARY FOCUS BANNER (financial warning) ═══ */}
+        {/* ═══ KEYBOARD SHORTCUT HINT ═══ */}
+        {!isLoading && decisions.length < 5 && !localStorage.getItem("shortcut-hint-dismissed") && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.5 }}
+            className="flex items-center justify-center gap-2 py-2"
+          >
+            <Command className="w-3 h-3 text-muted-foreground/40" />
+            <span className="text-[11px] text-muted-foreground/40">{t("dashboard.shortcutHint")}</span>
+            <button
+              onClick={() => localStorage.setItem("shortcut-hint-dismissed", "true")}
+              className="text-muted-foreground/30 hover:text-muted-foreground text-[10px] ml-1"
+            >✕</button>
+          </motion.div>
+        )}
+
         {!isLoading && (
           <PrimaryFocusBanner
             decisions={decisions}
