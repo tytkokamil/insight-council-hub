@@ -102,7 +102,7 @@ const EmptyAnalysisState = ({
           )}
 
           <motion.div variants={item} className={motivation ? "" : "mt-2"}>
-            <Button onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
+            <Button size="lg" onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
               <Plus className="w-4 h-4" />
               {resolvedCtaLabel}
             </Button>

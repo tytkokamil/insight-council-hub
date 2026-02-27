@@ -550,6 +550,7 @@
     "shortcutHint": "Tip: Press ⌘K for quick search",
     "noContextDecisions": "No decisions in this view",
     "noContextDecisionsDesc": "There are no decisions assigned to you yet. Create a new one or switch to the team view.",
+    "viewAllDecisions": "View all decisions",
     "loadFailed": "Failed to load",
     "retryDesc": "Please try again.",
     "welcome": "Welcome, {{name}}!",
