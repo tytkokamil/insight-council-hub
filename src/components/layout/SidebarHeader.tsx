@@ -22,8 +22,8 @@ const SidebarHeader = memo(({
 }: SidebarHeaderProps) => {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center justify-between px-3 h-12 border-b border-border/40">
-      <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden" onClick={onNavigate}>
+    <div className={`flex items-center ${collapsed ? "flex-col gap-1 px-1.5 py-2" : "justify-between px-3"} h-auto min-h-[48px] border-b border-border/40`}>
+      <Link to="/dashboard" className={`flex items-center gap-2 overflow-hidden ${collapsed ? "justify-center" : ""}`} onClick={onNavigate}>
         <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded shrink-0" />
         {!collapsed && (
           <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
@@ -31,7 +31,7 @@ const SidebarHeader = memo(({
           </span>
         )}
       </Link>
-      <div className="flex items-center gap-0.5 shrink-0">
+      <div className={`flex ${collapsed ? "flex-col" : ""} items-center gap-0.5 shrink-0`}>
         <button
           onClick={toggleTheme}
           className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground relative overflow-hidden"
@@ -53,10 +53,12 @@ const SidebarHeader = memo(({
         </button>
         <button
           onClick={onCollapse}
-          className="w-7 h-7 rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex"
+          className={`rounded-md hover:bg-muted/60 flex items-center justify-center transition-colors text-muted-foreground hover:text-foreground hidden md:flex ${
+            collapsed ? "w-8 h-8 bg-muted/40 hover:bg-primary/10 hover:text-primary" : "w-7 h-7"
+          }`}
           title={collapsed ? t("common.expandSidebar") : t("common.collapseSidebar")}
         >
-          {collapsed ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
+          {collapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
         </button>
       </div>
     </div>
