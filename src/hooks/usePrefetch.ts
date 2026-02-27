@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { DECISIONS_KEY, TEAMS_KEY, PROFILES_KEY } from "@/hooks/useDecisions";
+import { fetchDecisions, fetchTeams, fetchProfiles } from "@/lib/queryFns";
 import { useTeamContext } from "@/hooks/useTeamContext";
 
 /**
  * Returns a prefetch function that can be called on link hover
  * to warm the React Query cache before navigation.
+ * Uses shared queryFns from lib/queryFns.ts – single source of truth.
  */
 export const usePrefetchOnHover = () => {
   const qc = useQueryClient();
@@ -14,49 +15,28 @@ export const usePrefetchOnHover = () => {
 
   return useCallback(
     (path: string) => {
-      // Routes that use decisions data
       const decisionRoutes = ["/dashboard", "/decisions", "/graph", "/analytics", "/calendar", "/health", "/dna", "/engine", "/benchmarking", "/scenarios", "/timeline", "/strategy", "/patterns", "/bottlenecks", "/costs", "/friction", "/executive", "/briefing"];
 
       if (decisionRoutes.some((r) => path.startsWith(r))) {
         qc.prefetchQuery({
           queryKey: [...DECISIONS_KEY, selectedTeamId],
-          queryFn: async () => {
-            let query = supabase
-              .from("decisions")
-              .select("*")
-              .order("created_at", { ascending: false });
-            if (selectedTeamId) {
-              query = query.eq("team_id", selectedTeamId);
-            } else {
-              query = query.is("team_id", null);
-            }
-            const { data } = await query;
-            return data ?? [];
-          },
+          queryFn: () => fetchDecisions(selectedTeamId),
           staleTime: 30_000,
         });
       }
 
-      // Routes that use teams data
       if (["/teams", "/decisions", "/dashboard"].some((r) => path.startsWith(r))) {
         qc.prefetchQuery({
           queryKey: TEAMS_KEY,
-          queryFn: async () => {
-            const { data } = await supabase.from("teams").select("*");
-            return data ?? [];
-          },
+          queryFn: fetchTeams,
           staleTime: 60_000,
         });
       }
 
-      // Routes that use profiles
       if (["/dashboard", "/decisions"].some((r) => path.startsWith(r))) {
         qc.prefetchQuery({
           queryKey: PROFILES_KEY,
-          queryFn: async () => {
-            const { data } = await supabase.from("profiles").select("user_id, full_name");
-            return data ?? [];
-          },
+          queryFn: fetchProfiles,
           staleTime: 60_000,
         });
       }

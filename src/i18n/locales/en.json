@@ -288,7 +288,9 @@
     "activate": "Activate",
     "retry": "Try again",
     "saving": "Saving...",
-    "or": "or"
+    "or": "or",
+    "saveFailed": "Save failed",
+    "tryAgainLater": "Please try again."
   },
   "audit": {
     "reasonTitle": "Reason Required",
