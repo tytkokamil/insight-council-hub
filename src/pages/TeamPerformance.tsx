@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import PageHint from "@/components/shared/PageHint";
 import { useTeams, useProfiles, buildProfileMap, useReviews } from "@/hooks/useDecisions";
 import { useRisks } from "@/hooks/useRisks";
@@ -197,12 +198,13 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
             ))}
           </div>
         ) : teamStats.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">{t("teamPerf.noTeams")}</p>
-            </CardContent>
-          </Card>
+          <EmptyAnalysisState
+            icon={Users}
+            title={t("teamPerf.noTeams")}
+            description={t("teamPerf.noTeamsDesc", { defaultValue: "Erstelle Teams, um Leistungsvergleiche und Benchmarks zu sehen." })}
+            ctaLabel={t("teamPerf.createTeam", { defaultValue: "Team erstellen" })}
+            ctaRoute="/teams"
+          />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {teamStats.map((team, idx) => (
