@@ -22,9 +22,10 @@ interface Props {
   escalated: any[];
   pendingReviews: any[];
   blockedTasks: any[];
+  hasData?: boolean;
 }
 
-const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Props) => {
+const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasData = true }: Props) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -86,14 +87,18 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
       <motion.div
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-xl border border-success/20 bg-success/[0.04] p-5 flex items-center gap-4"
+        className={`rounded-xl border ${hasData ? "border-success/20 bg-success/[0.04]" : "border-border bg-muted/30"} p-5 flex items-center gap-4`}
       >
-        <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
-          <CheckCircle2 className="w-5 h-5 text-success" />
+        <div className={`w-10 h-10 rounded-xl ${hasData ? "bg-success/10" : "bg-muted"} flex items-center justify-center shrink-0`}>
+          <CheckCircle2 className={`w-5 h-5 ${hasData ? "text-success" : "text-muted-foreground/50"}`} />
         </div>
         <div>
-          <p className="text-sm font-semibold text-success">{t("widgets.allOnTrack")}</p>
-          <p className="text-xs text-muted-foreground">{t("widgets.noOpenItems")}</p>
+          <p className={`text-sm font-semibold ${hasData ? "text-success" : "text-muted-foreground"}`}>
+            {hasData ? t("widgets.allOnTrack") : t("widgets.noDataYet", { defaultValue: "Noch keine Daten" })}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {hasData ? t("widgets.noOpenItems") : t("widgets.noDataYetDesc", { defaultValue: "Erstelle deine erste Entscheidung, um das Dashboard mit Daten zu füllen." })}
+          </p>
         </div>
       </motion.div>
     );

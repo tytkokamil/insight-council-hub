@@ -268,6 +268,7 @@ const Dashboard = () => {
               escalated={computed.escalated}
               pendingReviews={computed.pendingReviews}
               blockedTasks={computed.blockedTasks}
+              hasData={decisions.length > 0}
             />
 
             {/* ═══ 2. KPI ROW – mode-dependent ═══ */}
