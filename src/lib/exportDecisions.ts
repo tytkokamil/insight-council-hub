@@ -161,6 +161,47 @@ export function exportPDF(decisions: DecisionExport[]) {
   }
 }
 
+interface TaskExport {
+  title: string;
+  status: string;
+  priority: string;
+  category: string;
+  description?: string | null;
+  due_date?: string | null;
+  created_at: string;
+  assignee_name?: string;
+}
+
+export function exportTasksCSV(tasks: TaskExport[]) {
+  const TASK_STATUS: Record<string, string> = {
+    backlog: t("tasksPage.statusBacklog"), open: t("exports.open"),
+    in_progress: t("exports.inProgress"), blocked: t("tasksPage.statusBlocked"),
+    done: t("exports.done"),
+  };
+  const P = getPriorityLabels();
+  const C = getCategoryLabels();
+
+  const headers = [
+    t("exports.title"), t("exports.status"), t("exports.priority"), t("exports.category"),
+    t("exports.description"), t("exports.responsible"), t("exports.due"), t("exports.created"),
+  ];
+
+  const rows = tasks.map((task) => [
+    task.title,
+    TASK_STATUS[task.status] || task.status,
+    P[task.priority] || task.priority,
+    C[task.category] || task.category,
+    (task.description || "").replace(/\n/g, " "),
+    task.assignee_name || "—",
+    formatDate(task.due_date),
+    formatDate(task.created_at),
+  ]);
+
+  const csv = [headers, ...rows].map((r) => r.map(escapeCSV).join(",")).join("\n");
+  const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
+  downloadFile(csv, `Decivio-Tasks_${dateStr}.csv`, "text/csv;charset=utf-8;");
+}
+
 function downloadFile(content: string, filename: string, mimeType: string) {
   const blob = new Blob(["\uFEFF" + content], { type: mimeType });
   const url = URL.createObjectURL(blob);

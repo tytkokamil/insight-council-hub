@@ -24,8 +24,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
-  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive, TrendingUp,
+  ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive, TrendingUp, Download, FileText,
 } from "lucide-react";
+import { exportTasksCSV } from "@/lib/exportDecisions";
+import { exportTasksExcel } from "@/lib/exportExcel";
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
 import { format } from "date-fns";
@@ -252,6 +254,11 @@ const Tasks = () => {
     });
   };
 
+  const prepareTaskExport = () => filteredTasks.map((task) => ({
+    ...task,
+    assignee_name: task.assignee_id ? profileMap[task.assignee_id] : undefined,
+  }));
+
   if (tasksError) return <AppLayout><QueryErrorRetry onRetry={refetchTasks} /></AppLayout>;
   if (isLoading) return <AppLayout><AnalysisPageSkeleton cards={3} sections={1} /></AppLayout>;
 
@@ -263,9 +270,22 @@ const Tasks = () => {
         role="execution"
         help={{ title: t("tasks.title"), description: t("tasks.helpDesc") }}
         secondaryActions={
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
-            <FileUp className="w-4 h-4" /> {t("common.import")}
-          </Button>
+          <>
+            {tasks.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => { exportTasksExcel(prepareTaskExport()); toast.success("Excel exportiert"); }} className="gap-2"><FileText className="w-4 h-4" /> Excel (.xlsx)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { exportTasksCSV(prepareTaskExport()); toast.success(t("decisions.csvExported", "CSV exportiert")); }} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
+              <FileUp className="w-4 h-4" /> {t("common.import")}
+            </Button>
+          </>
         }
         primaryAction={
           <Button size="sm" onClick={openCreate} className="gap-1.5">
