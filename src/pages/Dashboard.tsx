@@ -340,29 +340,8 @@ const Dashboard = () => {
         {/* ═══ LOADING SKELETON ═══ */}
         {isLoading && <DashboardSkeleton />}
 
-        {/* ═══ CONTEXT EMPTY STATE — no decisions in current view ═══ */}
-        {!isLoading && decisions.length === 0 && allDecisions.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[50vh]">
-            <div className="max-w-md mx-auto text-center">
-              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <LayoutDashboard className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-display text-xl font-semibold mb-2">{t("dashboard.noContextDecisions")}</h3>
-              <p className="text-sm text-muted-foreground mb-8">{t("dashboard.noContextDecisionsDesc")}</p>
-              <div className="flex items-center justify-center gap-3">
-                <Button variant="outline" size="lg" onClick={() => navigate("/decisions")} className="gap-2">
-                  <Eye className="w-4 h-4" /> {t("dashboard.viewAllDecisions")}
-                </Button>
-                <Button size="lg" onClick={() => navigate("/decisions")} className="gap-2">
-                  <Plus className="w-4 h-4" /> {t("dashboard.newDecision")}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* ═══ MAIN DASHBOARD — only when decisions exist ═══ */}
-        {!isLoading && decisions.length > 0 && (
+        {/* ═══ MAIN DASHBOARD ═══ */}
+        {!isLoading && (
           <>
             {/* ═══ 1. TOP ACTION NOW ═══ */}
             <TopActionNow
