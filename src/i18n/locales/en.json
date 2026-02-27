@@ -1112,6 +1112,7 @@
     "strategicGoals": "Strategic Goals",
     "linkedDecisions": "Linked Decisions",
     "avgProgress": "Avg Progress",
+    "avgProgressTooltip": "Average of all goal progress values: Each goal is calculated as a percentage (current ÷ target × 100), regardless of unit. The overall value is the mean across all goals.",
     "atRisk": "At Risk",
     "newGoalTitle": "New strategic goal",
     "titleLabel": "Title *",

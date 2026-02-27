@@ -52,6 +52,8 @@ const teamTemplates = [
     goals: [
       { title: "Ø Entscheidungszeit unter 5 Tage", description: "Draft → Implementierung.", goal_type: "kpi", target_value: 5, current_value: 7.2, unit: "Tage", quarter: "Q2" },
       { title: "Deployment Frequency >3x/Woche", description: "Häufigere, kleinere Releases.", goal_type: "kpi", target_value: 3, current_value: 1.8, unit: "pro Woche", quarter: "Q3" },
+      { title: "Zero Critical Incidents", description: "Keine Severity-1 Incidents im Quartal.", goal_type: "okr", target_value: 0, current_value: 1, unit: "Incidents", quarter: "Q2" },
+      { title: "Test Coverage >80%", description: "Unit- und Integration-Tests.", goal_type: "kpi", target_value: 80, current_value: 62, unit: "%", quarter: "Q3" },
     ],
   },
   {
@@ -91,6 +93,8 @@ const teamTemplates = [
     goals: [
       { title: "NPS über 60", description: "Net Promoter Score Enterprise.", goal_type: "kpi", target_value: 60, current_value: 67, unit: "Score", quarter: "Q2" },
       { title: "MQL +50% YoY", description: "Marketing Qualified Leads steigern.", goal_type: "okr", target_value: 150, current_value: 95, unit: "MQLs/Monat", quarter: "Q4" },
+      { title: "Brand Awareness +30%", description: "Gestützte Markenbekanntheit in Zielgruppe.", goal_type: "okr", target_value: 30, current_value: 18, unit: "%", quarter: "Q3" },
+      { title: "CAC unter €200", description: "Customer Acquisition Cost optimieren.", goal_type: "kpi", target_value: 200, current_value: 245, unit: "€", quarter: "Q3" },
     ],
   },
   {
@@ -132,6 +136,7 @@ const teamTemplates = [
     goals: [
       { title: "ARR auf €2M steigern", description: "Annual Recurring Revenue.", goal_type: "okr", target_value: 2000000, current_value: 1350000, unit: "€", quarter: "Q4" },
       { title: "Operative Marge >15%", description: "Operative Effizienz steigern.", goal_type: "kpi", target_value: 15, current_value: 11.5, unit: "%", quarter: "Q4" },
+      { title: "Cash Runway >18 Monate", description: "Finanzielle Sicherheit gewährleisten.", goal_type: "kpi", target_value: 18, current_value: 14, unit: "Monate", quarter: "Q3" },
     ],
   },
   {
@@ -170,6 +175,7 @@ const teamTemplates = [
     goals: [
       { title: "eNPS über 50", description: "Employee Net Promoter Score.", goal_type: "kpi", target_value: 50, current_value: 45, unit: "Score", quarter: "Q3" },
       { title: "Time-to-Hire unter 30 Tage", description: "Schnellerer Recruiting-Prozess.", goal_type: "kpi", target_value: 30, current_value: 42, unit: "Tage", quarter: "Q3" },
+      { title: "Retention Rate >92%", description: "Mitarbeiterbindung stärken.", goal_type: "kpi", target_value: 92, current_value: 88, unit: "%", quarter: "Q4" },
     ],
   },
   {
@@ -208,6 +214,7 @@ const teamTemplates = [
     goals: [
       { title: "Data Quality Score >95%", description: "Automatisierte Qualitätsprüfung.", goal_type: "kpi", target_value: 95, current_value: 82, unit: "%", quarter: "Q3" },
       { title: "Self-Service Adoption >60%", description: "Teams nutzen BI-Tools selbstständig.", goal_type: "kpi", target_value: 60, current_value: 25, unit: "%", quarter: "Q4" },
+      { title: "Report-Latenz <2 Sekunden", description: "Schnelle Dashboard-Ladezeiten.", goal_type: "kpi", target_value: 2, current_value: 3.5, unit: "Sekunden", quarter: "Q3" },
     ],
   },
 ];
@@ -398,8 +405,27 @@ Deno.serve(async (req) => {
       await supabase.from("risk_decision_links").insert(riskDecLinks);
     }
 
-    // ── 5. Create Strategic Goals ──
-    await supabase.from("strategic_goals").insert(template.goals.map(g => ({ ...g, created_by: userId, team_id: newTeam.id, year: currentYear, status: "active" })));
+    // ── 5. Create Strategic Goals & Link to Decisions ──
+    const { data: insertedGoals } = await supabase.from("strategic_goals").insert(template.goals.map(g => ({ ...g, created_by: userId, team_id: newTeam.id, year: currentYear, status: "active" }))).select("id");
+
+    // Link decisions to goals (2-3 decisions per goal)
+    if (insertedGoals && insertedGoals.length > 0 && insertedDecisions && insertedDecisions.length > 0) {
+      const goalLinks: any[] = [];
+      insertedGoals.forEach((goal, gIdx) => {
+        // Each goal gets 2-3 linked decisions, cycling through available decisions
+        const linksPerGoal = gIdx % 2 === 0 ? 3 : 2;
+        for (let j = 0; j < linksPerGoal && j < insertedDecisions.length; j++) {
+          const decIdx = (gIdx * 3 + j) % insertedDecisions.length;
+          goalLinks.push({
+            goal_id: goal.id,
+            decision_id: insertedDecisions[decIdx].id,
+            impact_weight: [40, 60, 80, 50, 70][j % 5],
+            linked_by: userId,
+          });
+        }
+      });
+      await supabase.from("decision_goal_links").insert(goalLinks);
+    }
 
     // ── 6. Lessons Learned for implemented decisions ──
     const implementedDecs = insertedDecisions?.filter(d => d.status === "implemented") || [];
