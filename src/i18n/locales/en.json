@@ -290,7 +290,8 @@
     "saving": "Saving...",
     "or": "or",
     "saveFailed": "Save failed",
-    "tryAgainLater": "Please try again."
+    "tryAgainLater": "Please try again.",
+    "noData": "No data"
   },
   "audit": {
     "reasonTitle": "Reason Required",
