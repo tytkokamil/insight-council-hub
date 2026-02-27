@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings,
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
@@ -445,15 +446,22 @@ const SidebarNav = memo(({
                       to={item.path}
                       onClick={onNavigate}
                       onMouseEnter={() => onPrefetch?.(item.path)}
-                      className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
+                      className={`relative w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
                         active
-                          ? "bg-primary/10 text-primary border-l-2 border-primary"
+                          ? "bg-primary/10 text-primary"
                           : isMeeting
                             ? "text-primary/80 hover:bg-primary/5 hover:text-primary"
                             : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                       }`}
                       title={collapsed ? t(item.label) : undefined}
                     >
+                      {active && (
+                        <motion.div
+                          layoutId="sidebar-active-indicator"
+                          className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-primary"
+                          transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                        />
+                      )}
                       <item.icon className={`w-4 h-4 shrink-0 ${isMeeting ? "opacity-80" : "opacity-60"}`} />
                       {!collapsed && (
                         <span className="whitespace-nowrap flex items-center gap-1.5">
