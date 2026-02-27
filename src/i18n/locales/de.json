@@ -1,12 +1,12 @@
 {
   "nav": {
-    "core": "CORE",
+    "core": "KERN",
     "teams": "TEAMS",
     "teamsNav": "Teams",
-    "governance": "GOVERNANCE",
-    "intelligence": "INTELLIGENCE",
+    "governance": "KONTROLLE",
+    "intelligence": "INTELLIGENZ",
     "system": "SYSTEM",
-    "insights": "INSIGHTS",
+    "insights": "EINBLICKE",
     "dashboard": "Dashboard",
     "decisions": "Entscheidungen",
     "tasks": "Aufgaben",
