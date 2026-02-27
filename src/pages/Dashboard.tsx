@@ -46,6 +46,7 @@ import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
+import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
 
 type DashboardMode = "operational" | "executive" | "admin";
 
@@ -269,8 +270,8 @@ const Dashboard = () => {
               blockedTasks={computed.blockedTasks}
             />
 
-            {/* ═══ 2. FOUR CORE KPIs ═══ */}
-            <CoreKpiGrid />
+            {/* ═══ 2. KPI ROW – mode-dependent ═══ */}
+            {isExecutive ? <CoreKpiGrid /> : <KpiOverviewWidget />}
 
             {/* ═══ ONBOARDING CHECKLIST ═══ */}
             {!isExecutive && decisions.length < 10 && (
