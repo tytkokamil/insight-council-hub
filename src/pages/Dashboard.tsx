@@ -225,6 +225,7 @@ const Dashboard = () => {
           title={dashboardTitle}
           subtitle={t("dashboard.whatNeedsAttention")}
           role="execution"
+          help={{ title: t("dashboard.title", { defaultValue: "Dashboard" }), description: t("dashboard.helpDesc", { defaultValue: "Dein zentrales Cockpit für Entscheidungen, KPIs und Handlungsbedarf. Wechsle zwischen Operational- und Executive-Modus." }) }}
           secondaryActions={
             <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
               <button
@@ -313,13 +314,10 @@ const Dashboard = () => {
                 </WidgetErrorBoundary>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <WidgetErrorBoundary>
-                    <EscalationWidget />
-                  </WidgetErrorBoundary>
-                  <WidgetErrorBoundary>
                     <DecisionCostWidget />
                   </WidgetErrorBoundary>
+                  <PortfolioRiskOverview decisions={decisions} risks={riskData} />
                 </div>
-                <PortfolioRiskOverview decisions={decisions} risks={riskData} />
                 <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
                   <AiBriefingWidget />
                 </Suspense>
