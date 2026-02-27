@@ -82,10 +82,17 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
 
   useEffect(() => {
     if (allComplete && !dismissed) {
-      const timer = setTimeout(() => setDismissed(true), 3000);
+      // Show celebration toast
+      import("sonner").then(({ toast }) => {
+        toast.success(t("widgets.allDoneCelebration"), {
+          icon: "🎉",
+          duration: 4000,
+        });
+      });
+      const timer = setTimeout(() => setDismissed(true), 4000);
       return () => clearTimeout(timer);
     }
-  }, [allComplete, dismissed]);
+  }, [allComplete, dismissed, t]);
 
   if (dismissed) return null;
 
