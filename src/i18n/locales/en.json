@@ -3615,7 +3615,15 @@
     "probableP": "Probable (P50)",
     "pessimisticP": "Pessimistic (P75)",
     "worstCaseP": "Worst Case (P95)",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "weekUnit": "week",
+    "weeksUnit": "weeks",
+    "weekShort": "W",
+    "runSimTooltip": "Simulates the delay for {{count}} selected decisions",
+    "monteCarloTooltip": "Probability that actual costs will reach or exceed this value (based on 1,000 simulation runs).",
+    "riskBarTooltip": "Distribution of simulation results: Left (green) = Best Case, right (red) = Worst Case. Width shows probability.",
+    "exportSim": "Export simulation",
+    "exported": "Simulation exported"
   },
   "decisionDna": {
     "label": "Diagnostics",
