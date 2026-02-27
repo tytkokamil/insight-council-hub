@@ -141,8 +141,18 @@ const Dashboard = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [navigate]);
 
-  const decisions = allDecisions;
-  const contextTasks = tasks;
+  const personalDecisions = allDecisions.filter(
+    (d) => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id
+  );
+  const decisions = isPersonal ? personalDecisions : allDecisions;
+
+  const personalTasks = tasks.filter(
+    (task) => task.created_by === user?.id || task.assignee_id === user?.id
+  );
+  const contextTasks = isPersonal ? personalTasks : tasks;
+
+  const contextDecisionIds = new Set(decisions.map((d) => d.id));
+  const contextReviews = reviews.filter((r) => contextDecisionIds.has(r.decision_id));
 
   // === ALL COMPUTED DATA ===
   const computed = useMemo(() => {
@@ -150,7 +160,7 @@ const Dashboard = () => {
     const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
     const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now);
     const escalated = active.filter(d => (d.escalation_level || 0) >= 1);
-    const pendingReviews = reviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
+    const pendingReviews = contextReviews.filter(r => !r.reviewed_at && r.reviewer_id === user?.id);
 
     const openDecisionIds = new Set(active.map(d => d.id));
     const blockedTaskIds = new Set<string>();
@@ -186,7 +196,7 @@ const Dashboard = () => {
       overdue, escalated, pendingReviews, active, blockedTasks,
       weekData, recentlyOpened, trendInsight,
     };
-  }, [decisions, contextTasks, reviews, dependencies, user, dateFnsLocale]);
+  }, [decisions, contextTasks, contextReviews, dependencies, user, dateFnsLocale, t]);
 
   const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
 
@@ -353,7 +363,7 @@ const Dashboard = () => {
               <OnboardingChecklist
                 hasTeam={teams.length > 0}
                 hasDecision={decisions.length > 0}
-                hasReview={reviews.length > 0}
+                hasReview={contextReviews.length > 0}
                 hasTemplate={decisions.some(d => !!d.template_used)}
               />
             )}
@@ -408,7 +418,7 @@ const Dashboard = () => {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                   <div className="lg:col-span-2">
-                    <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
+                    <StuckDecisionAnalyzer decisions={decisions} reviews={contextReviews} dependencies={allDependencies} teams={teams} />
                   </div>
                   <div className="space-y-5">
                     <WidgetErrorBoundary>

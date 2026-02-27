@@ -71,7 +71,9 @@ const CoreKpiGrid = () => {
   const { selectedTeamId } = useTeamContext();
 
   const isPersonal = selectedTeamId === null;
-  const decisions = allDecisions;
+  const decisions = isPersonal
+    ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id)
+    : allDecisions;
 
   const kpis = useMemo<CoreKpi[]>(() => {
     const now = new Date();
@@ -152,7 +154,7 @@ const CoreKpiGrid = () => {
         formula: t("coreKpi.slaFormula"),
       },
     ];
-  }, [allDecisions, reviews, tasks, teams, risks, t]);
+  }, [allDecisions, reviews, tasks, teams, risks, user, isPersonal, t]);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
