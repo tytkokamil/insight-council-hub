@@ -233,9 +233,9 @@ const Decisions = () => {
     <AppLayout>
       <PageHeader
         title={t("decisions.title")}
-        subtitle={t("decisions.countShown", { total: decisions.length, shown: filtered.length })}
+        subtitle={filtered.length < decisions.length ? t("decisions.countShown", { total: decisions.length, shown: filtered.length }) : t("decisions.subtitle", { total: decisions.length })}
         role="execution"
-        help={{ title: t("decisions.title"), description: t("decisions.helpDesc", "Zentrale Arbeitsfläche für alle Entscheidungen.") }}
+        help={{ title: t("decisions.title"), description: t("decisions.helpDesc") }}
         secondaryActions={
           <>
             {decisions.length > 0 && (

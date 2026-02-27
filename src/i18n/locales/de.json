@@ -342,7 +342,9 @@
   },
   "decisions": {
     "title": "Entscheidungen",
+    "subtitle": "{{total}} Entscheidungen",
     "countShown": "{{total}} Entscheidungen · {{shown}} angezeigt",
+    "helpDesc": "Zentrale Arbeitsfläche für alle Entscheidungen. Jede Entscheidung durchläuft: Entwurf → Review → Genehmigt → Umgesetzt. Nutze Schnellfilter, Bulk-Aktionen und KI-Analyse.",
     "newButton": "Neue Entscheidung",
     "searchPlaceholder": "Entscheidungen durchsuchen...",
     "noDecisions": "Noch keine Entscheidungen vorhanden",
@@ -1025,7 +1027,7 @@
   "executive": {
     "title": "Executive Hub",
     "subtitle": "C-Level Cockpit mit Briefing, Prognosen und Szenarien",
-    "help": "C-Level Cockpit mit Briefing, Prognosen, Kosten und Szenarien.",
+    "help": "Dein Management-Cockpit: KI-gestütztes Briefing, Prognosen, Kostenanalysen und strategische Szenarien — alles auf einen Blick für Führungsentscheidungen.",
     "boardPackPdf": "Board Pack PDF",
     "exporting": "Exportiere…",
     "exportSuccess": "Board Pack PDF exportiert",
@@ -2731,7 +2733,7 @@
     "label": "Prognose",
     "title": "Predictive Timeline",
     "subtitle": "KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern",
-    "helpDesc": "KI-gestützte Fertigstellungsprognose basierend auf historischen Mustern. Zeigt erwartete Abschlusszeiten und kritische Pfade mit Abhängigkeitsketten.",
+    "helpDesc": "Zeigt voraussichtliche Abschlusszeiten offener Entscheidungen basierend auf historischen Mustern. Kritische Pfade und Abhängigkeitsketten werden automatisch erkannt.",
     "noOpenDecisions": "Keine offenen Entscheidungen",
     "noOpenDecisionsDesc": "Die Timeline zeigt Prognosen für offene Entscheidungen. Erstelle eine neue Entscheidung, um die Vorhersage zu starten.",
     "noOpenDecisionsHint": "Historische Daten verbessern die Prognose-Genauigkeit",

@@ -342,7 +342,9 @@
   },
   "decisions": {
     "title": "Decisions",
+    "subtitle": "{{total}} decisions",
     "countShown": "{{total}} decisions · {{shown}} shown",
+    "helpDesc": "Central workspace for all decisions. Each decision goes through: Draft → Review → Approved → Implemented. Use quick filters, bulk actions and AI analysis.",
     "newButton": "New Decision",
     "searchPlaceholder": "Search decisions...",
     "noDecisions": "No decisions yet",
@@ -1024,7 +1026,7 @@
   "executive": {
     "title": "Executive Hub",
     "subtitle": "C-Level cockpit with briefing, forecasts and scenarios",
-    "help": "C-Level cockpit with briefing, forecasts, costs and scenarios.",
+    "help": "Your management cockpit: AI-powered briefing, forecasts, cost analysis and strategic scenarios — everything at a glance for leadership decisions.",
     "boardPackPdf": "Board Pack PDF",
     "exporting": "Exporting…",
     "exportSuccess": "Board Pack PDF exported",
@@ -2730,7 +2732,7 @@
     "label": "Forecast",
     "title": "Predictive Timeline",
     "subtitle": "AI-powered completion forecast based on historical patterns",
-    "helpDesc": "AI-powered completion forecast based on historical patterns. Shows expected completion times and critical paths with dependency chains.",
+    "helpDesc": "Shows expected completion times for open decisions based on historical patterns. Critical paths and dependency chains are automatically detected.",
     "noOpenDecisions": "No open decisions",
     "noOpenDecisionsDesc": "The timeline shows forecasts for open decisions. Create a new decision to start the prediction.",
     "noOpenDecisionsHint": "Historical data improves forecast accuracy",
