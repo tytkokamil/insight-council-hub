@@ -99,7 +99,7 @@ const DecisionGraph = () => {
   const { data: teams = [], isLoading: teamLoading } = useTeams();
 
   const decIds = useMemo(() => new Set(decisions.map(d => d.id)), [decisions]);
-  const deps = useMemo(() => allDeps.filter(d => d.source_decision_id && d.target_decision_id && (decIds.has(d.source_decision_id) || decIds.has(d.target_decision_id))), [allDeps, decIds]);
+  const deps = useMemo(() => allDeps.filter(d => d.source_decision_id && d.target_decision_id && decIds.has(d.source_decision_id) && decIds.has(d.target_decision_id)), [allDeps, decIds]);
 
   const edgeLabelMap: Record<string, string> = useMemo(() => ({
     blocks: t("graph.blocks"),
