@@ -47,7 +47,7 @@ serve(async (req) => {
     const { type, context } = await req.json();
     // type: "pattern" | "dna" | "bottleneck"
 
-    const systemPrompt = "Du bist ein Senior Business Intelligence Analyst für Entscheidungsmanagement. Antworte auf Deutsch, prägnant und datenbasiert. Liefere konkrete, umsetzbare Insights.";
+    const systemPrompt = "Du bist ein Senior Business Intelligence Analyst für Entscheidungsmanagement. Antworte auf Deutsch, prägnant und datenbasiert. Liefere konkrete, umsetzbare Insights. WICHTIG: Verwende NIEMALS technische Feldnamen oder Variablennamen (wie predictedDaysLeft, confidence, ai_risk_score etc.) in deinen Texten. Nutze stattdessen natürliche Begriffe wie 'verbleibende Tage', 'Konfidenz', 'Risikobewertung'.";
 
     if (type === "pattern") {
       const tools = [{

@@ -236,12 +236,18 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}
                 </p>
-                <p className={`text-xl font-bold tabular-nums ${atRisk > 0 ? "text-warning" : "text-success"}`}>{atRisk}</p>
+                <p className={`text-xl font-bold tabular-nums ${atRisk > filteredDecisions.length * 0.5 ? "text-destructive" : atRisk > 0 ? "text-warning" : "text-success"}`}>{atRisk}</p>
               </div>
-              <div className="p-3 rounded-lg bg-muted/30 border border-border">
-                <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
-                <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border cursor-default">
+                    <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
+                    <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{avgConfidence < 50 ? t("predictive.lowConfidenceHint") : avgConfidence < 70 ? t("predictive.medConfidenceHint") : t("predictive.highConfidenceHint")}</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent><p className="text-xs max-w-xs">{t("predictive.confidenceTooltip")}</p></TooltipContent>
+              </Tooltip>
             </div>
 
             <CollapsibleSection
@@ -370,7 +376,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                 atRiskCount: atRisk,
                 avgConfidence,
                 topRisks: sorted.filter(d => d.warning).slice(0, 5).map(d => ({
-                  title: d.title, warning: d.warning, predictedDaysLeft: d.predictedDaysLeft, confidence: d.confidence
+                  title: d.title, warning: d.warning, remainingDays: d.predictedDaysLeft, confidencePercent: d.confidence
                 })),
               }}
             />

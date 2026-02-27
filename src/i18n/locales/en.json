@@ -2749,7 +2749,11 @@
     "timeRange30": "30 Days",
     "timeRange60": "60 Days",
     "timeRange90": "90 Days",
-    "timeRangeAll": "All"
+    "timeRangeAll": "All",
+    "lowConfidenceHint": "Below 50% — low forecast quality",
+    "medConfidenceHint": "50–70% — moderate forecast quality",
+    "highConfidenceHint": "Above 70% — high forecast quality",
+    "confidenceTooltip": "Confidence is based on the number of comparable completed decisions. Below 50% is considered low, above 70% is reliable."
   },
   "opportunityCost": {
     "label": "Cost Analysis",
