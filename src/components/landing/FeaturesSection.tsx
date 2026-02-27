@@ -265,7 +265,7 @@ const FeaturesSection = () => {
 
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 0.3, duration: 0.8 }} className="mt-12 flex flex-wrap justify-center gap-3">
           {["CEO Briefing", "Decision DNA", "Health Heatmap", "Predictive Timeline", "Friction Map", "Benchmarking", "Audit Trail", "Strategy Alignment"].map((badge, i) => (
-            <motion.span key={badge} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.04, duration: 0.4 }} className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground hover:border-foreground/15 hover:text-foreground transition-all duration-300 cursor-default">
+            <motion.span key={badge} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.4 + i * 0.04, duration: 0.4 }} className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted/50 border border-border text-muted-foreground hover:border-foreground/15 hover:text-foreground hover:shadow-[var(--shadow-card)] transition-all duration-300 cursor-default select-none">
               {badge}
             </motion.span>
           ))}

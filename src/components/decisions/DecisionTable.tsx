@@ -140,11 +140,11 @@ const DecisionTable = ({
   const navigate = useNavigate();
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden cmd-card-elevated">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-muted/30">
+            <tr className="border-b border-border bg-muted/20">
               <th className="p-3 w-10">
                 <Checkbox checked={selectedIds.size === decisions.length && decisions.length > 0} onCheckedChange={onToggleSelectAll} />
               </th>
@@ -172,7 +172,7 @@ const DecisionTable = ({
                 return (
                   <tr
                     key={decision.id}
-                    className={`border-b border-border/50 hover:bg-muted/30 cursor-pointer transition-colors ${isSelected ? "bg-primary/5" : ""}`}
+                    className={`border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-all duration-150 ${isSelected ? "bg-primary/5" : ""}`}
                     onClick={() => onPreview(decision)}
                   >
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>

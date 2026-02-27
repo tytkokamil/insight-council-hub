@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3, FileText, Users, TrendingUp, Settings,
   GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
@@ -186,7 +186,7 @@ const SubGroupItem = ({
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
+        className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-all duration-150 ${
           hasActiveChild
             ? "text-foreground"
             : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
@@ -194,32 +194,38 @@ const SubGroupItem = ({
       >
         <subGroup.icon className="w-4 h-4 shrink-0 opacity-60" />
         <span className="whitespace-nowrap flex-1 text-left">{t(subGroup.label)}</span>
-        {open ? (
-          <ChevronDown className="w-3 h-3 shrink-0 opacity-40" />
-        ) : (
-          <ChevronRight className="w-3 h-3 shrink-0 opacity-40" />
-        )}
+        <ChevronDown className={`w-3 h-3 shrink-0 opacity-40 transition-transform duration-200 ${open ? "rotate-0" : "-rotate-90"}`} />
       </button>
-      {open && (
-        <div className="ml-[18px] pl-2 border-l border-border/30 space-y-px mt-px">
-          {visibleChildren.map(child => (
-            <Link
-              key={child.path}
-              to={child.path}
-              onClick={onNavigate}
-              onMouseEnter={() => onPrefetch?.(child.path)}
-              className={`w-full flex items-center gap-2 px-2 h-7 rounded-md text-[12px] font-medium transition-colors ${
-                pathname === child.path
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
-              }`}
-            >
-              <child.icon className="w-3.5 h-3.5 shrink-0 opacity-60" />
-              <span className="whitespace-nowrap">{t(child.label)}</span>
-            </Link>
-          ))}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className="ml-[18px] pl-2 border-l border-border/30 space-y-px mt-px">
+              {visibleChildren.map(child => (
+                <Link
+                  key={child.path}
+                  to={child.path}
+                  onClick={onNavigate}
+                  onMouseEnter={() => onPrefetch?.(child.path)}
+                  className={`w-full flex items-center gap-2 px-2 h-7 rounded-md text-[12px] font-medium transition-all duration-150 ${
+                    pathname === child.path
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                  }`}
+                >
+                  <child.icon className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                  <span className="whitespace-nowrap">{t(child.label)}</span>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -440,21 +446,21 @@ const SidebarNav = memo(({
 
                   const active = pathname === item.path;
                   const isMeeting = item.path === "/meeting";
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      onClick={onNavigate}
-                      onMouseEnter={() => onPrefetch?.(item.path)}
-                      className={`relative w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-colors ${
-                        active
-                          ? "bg-primary/10 text-primary"
-                          : isMeeting
-                            ? "text-primary/80 hover:bg-primary/5 hover:text-primary"
-                            : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
-                      }`}
-                      title={collapsed ? t(item.label) : undefined}
-                    >
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={onNavigate}
+                        onMouseEnter={() => onPrefetch?.(item.path)}
+                        className={`relative w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                          active
+                            ? "bg-primary/10 text-primary"
+                            : isMeeting
+                              ? "text-primary/80 hover:bg-primary/5 hover:text-primary"
+                              : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                        }`}
+                        title={collapsed ? t(item.label) : undefined}
+                      >
                       {active && (
                         <motion.div
                           layoutId="sidebar-active-indicator"
