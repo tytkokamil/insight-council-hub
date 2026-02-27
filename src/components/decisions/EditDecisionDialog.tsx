@@ -151,26 +151,26 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border max-w-lg">
+      <DialogContent className="glass-card border-border max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">{t("decisions.edit.title")}</DialogTitle>
+          <DialogTitle className="font-display tracking-tight">{t("decisions.edit.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.titleLabel")}</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            <label className="form-label">{t("decisions.edit.titleLabel")}</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="form-input" />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.descriptionLabel")}</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <label className="form-label">{t("decisions.edit.descriptionLabel")}</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="form-input" />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.contextLabel")}</label>
-            <Textarea value={context} onChange={(e) => setContext(e.target.value)} rows={2} />
+            <label className="form-label">{t("decisions.edit.contextLabel")}</label>
+            <Textarea value={context} onChange={(e) => setContext(e.target.value)} rows={2} className="form-input" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.categoryLabel")}</label>
+              <label className="form-label">{t("decisions.edit.categoryLabel")}</label>
               <Select value={category} onValueChange={(v) => setCategory(v as DecisionCategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -181,7 +181,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.priorityLabel")}</label>
+              <label className="form-label">{t("decisions.edit.priorityLabel")}</label>
               <Select value={priority} onValueChange={(v) => setPriority(v as DecisionPriority)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -193,8 +193,8 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("decisions.edit.dueDateLabel")}</label>
-            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <label className="form-label">{t("decisions.edit.dueDateLabel")}</label>
+            <Input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="form-input" />
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1.5">
@@ -221,7 +221,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             <Switch checked={confidential} onCheckedChange={setConfidential} />
           </div>
           <div className="border-t border-border pt-4">
-            <label className="text-xs font-medium text-foreground mb-1 block">{t("decisions.edit.changeReasonLabel")}</label>
+            <label className="form-label text-foreground">{t("decisions.edit.changeReasonLabel")}</label>
             <Textarea
               value={changeReason}
               onChange={(e) => setChangeReason(e.target.value)}
@@ -234,9 +234,9 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             </p>
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("decisions.edit.cancel")}</Button>
-          <Button onClick={handleSave} disabled={saving || !changeReason.trim()}>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="press-scale">{t("decisions.edit.cancel")}</Button>
+          <Button onClick={handleSave} disabled={saving || !changeReason.trim()} className="press-scale">
             {saving ? t("decisions.edit.saving") : t("decisions.edit.save")}
           </Button>
         </DialogFooter>
