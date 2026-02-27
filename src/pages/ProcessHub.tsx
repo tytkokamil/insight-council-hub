@@ -445,7 +445,7 @@ const ProcessHub = () => {
                         <td className="py-2.5 px-3 font-medium">{s.status}</td>
                         <td className="text-center py-2.5 px-3 tabular-nums">{s.avgDays}d</td>
                         <td className="text-center py-2.5 px-3">
-                          <span className={`text-xs font-medium tabular-nums ${s.delta > 0 ? "text-destructive" : "text-success"}`}>
+                          <span className={`text-xs font-medium tabular-nums ${s.delta > 0 ? "text-destructive" : s.delta < 0 ? "text-success" : "text-muted-foreground"}`}>
                             {s.delta > 0 ? "+" : ""}{s.delta}d
                           </span>
                         </td>
@@ -554,7 +554,7 @@ const ProcessHub = () => {
         defaultOpen={slaViolations.thisWeek > 0}
         className="mb-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <Card className="border-destructive/20">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">{t("process.violationsThisWeek")}</p>
@@ -575,6 +575,33 @@ const ProcessHub = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Expandable violation details */}
+        {(() => {
+          const violatingDecisions = decisions.filter(d => (d.escalation_level ?? 0) > 0 && !["implemented", "rejected", "archived"].includes(d.status));
+          if (violatingDecisions.length === 0) return null;
+          return (
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{t("process.affectedDecisions")}</p>
+                <div className="space-y-1.5">
+                  {violatingDecisions.slice(0, 8).map(d => (
+                    <div key={d.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/10 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => navigate(`/decisions/${d.id}`)}>
+                      <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                      <span className="text-sm font-medium flex-1 truncate">{d.title}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">{categoryLabelsStatic[d.category] || d.category}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium shrink-0">Lvl {d.escalation_level}</span>
+                      <ArrowRight className="w-3 h-3 text-muted-foreground shrink-0" />
+                    </div>
+                  ))}
+                  {violatingDecisions.length > 8 && (
+                    <p className="text-[10px] text-muted-foreground text-center pt-1">+{violatingDecisions.length - 8} {t("process.more")}</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
       </CollapsibleSection>
 
       {/* ═══════════════════════════════════════ */}

@@ -1100,7 +1100,9 @@
     "sharedDecisions": "shared decisions",
     "topActions": "Top Actions",
     "topActionsSub": "Prioritized by impact",
-    "open": "Open"
+    "open": "Open",
+    "affectedDecisions": "Affected Decisions",
+    "more": "more"
   },
   "strategy": {
     "label": "Strategy",
@@ -2520,7 +2522,8 @@
     "catOperational": "Operational",
     "catMarketing": "Marketing",
     "catGeneral": "General",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "openAction": "Open"
   },
   "benchmarking": {
     "label": "Comparison",
