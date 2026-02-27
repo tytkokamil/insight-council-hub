@@ -49,7 +49,7 @@ const StatsSection = () => {
     { value: 4.2, suffix: "M€", label: t("landing.stats.codAvoided") },
     { value: 98, suffix: "%", label: t("landing.stats.slaRate") },
     { value: 40, suffix: "%", label: t("landing.stats.fasterDecisions") },
-    { value: 2585, suffix: "%", label: t("landing.stats.roiFirstMonth") },
+    { value: 26, suffix: "×", label: t("landing.stats.roiFirstMonth") },
   ];
 
   return (

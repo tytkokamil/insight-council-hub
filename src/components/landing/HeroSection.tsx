@@ -126,11 +126,46 @@ const HeroSection = () => {
               </div>
               
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.7, duration: 0.6 }} className="p-5 rounded-xl bg-muted/10 border border-border/30">
-                <div className="text-xs font-medium text-muted-foreground mb-4">{t("landing.hero.velocity")}</div>
-                <div className="flex items-end gap-1.5 h-20">
-                  {[40, 65, 50, 80, 55, 90, 70, 95, 75, 60, 85, 72].map((h, i) => (
-                    <motion.div key={i} className="flex-1 rounded-sm bg-primary/8 hover:bg-primary/15 transition-colors" initial={{ height: 0 }} animate={{ height: `${h}%` }} transition={{ delay: 1.8 + i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }} />
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-xs font-medium text-muted-foreground">{t("landing.hero.velocity")}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-accent-teal font-medium">↑ 23%</span>
+                    <span className="text-[10px] text-muted-foreground/40">{t("landing.hero.velocityTrend")}</span>
+                  </div>
+                </div>
+                <div className="relative h-20">
+                  {/* Area chart with SVG curve */}
+                  <svg viewBox="0 0 240 80" className="w-full h-full" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="velocityGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.01" />
+                      </linearGradient>
+                    </defs>
+                    <motion.path
+                      d="M0,60 C20,55 30,48 50,42 C70,36 80,50 100,38 C120,26 130,32 150,20 C170,14 180,22 200,12 C220,8 230,10 240,6"
+                      fill="none"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0, opacity: 0 }}
+                      animate={{ pathLength: 1, opacity: 1 }}
+                      transition={{ delay: 1.8, duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                    <motion.path
+                      d="M0,60 C20,55 30,48 50,42 C70,36 80,50 100,38 C120,26 130,32 150,20 C170,14 180,22 200,12 C220,8 230,10 240,6 L240,80 L0,80 Z"
+                      fill="url(#velocityGrad)"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 2.2, duration: 0.8 }}
+                    />
+                  </svg>
+                  {/* Axis labels */}
+                  <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[9px] text-muted-foreground/30">
+                    {["Jan", "Mrz", "Mai", "Jul", "Sep", "Nov"].map(m => (
+                      <span key={m}>{m}</span>
+                    ))}
+                  </div>
                 </div>
               </motion.div>
               
