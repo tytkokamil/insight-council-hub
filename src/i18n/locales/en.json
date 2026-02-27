@@ -4914,5 +4914,18 @@
     "confidential": "Decivio — Confidential",
     "page": "Page {{current}} of {{total}}"
   },
+  "pilot": {
+    "title": "Feature Management",
+    "subtitle": "Enable only the modules your team needs during the pilot. Disabled modules are hidden from navigation.",
+    "active": "active",
+    "pilotActive": "Pilot mode active",
+    "pilotActiveTooltip": "In pilot mode you can enable and disable modules at any time to test the platform. Your data is preserved when disabling.",
+    "disableTitle": "Disable module",
+    "disableDescription": "will be removed from navigation. Your data remains fully preserved and is instantly available when you re-enable the module.",
+    "cancel": "Cancel",
+    "confirmDisable": "Disable",
+    "moduleEnabled": "\"{{module}}\" enabled",
+    "moduleDisabled": "\"{{module}}\" disabled — data preserved"
+  },
   "_end": true
 }
