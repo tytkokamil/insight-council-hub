@@ -14,8 +14,7 @@ import { useRisks } from "@/hooks/useRisks";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF loaded dynamically on export
 
 interface TeamStats {
   teamId: string;
@@ -133,8 +132,10 @@ const TeamPerformance = ({ embedded }: { embedded?: boolean }) => {
     URL.revokeObjectURL(url);
   }, [teamStats, t]);
 
-  const exportPDF = useCallback(() => {
+  const exportPDF = useCallback(async () => {
     if (teamStats.length === 0) return;
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
     doc.text(t("teamPerf.pdfTitle"), 14, 18);
