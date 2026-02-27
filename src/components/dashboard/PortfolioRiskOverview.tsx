@@ -73,7 +73,24 @@ const PortfolioRiskOverview = ({ decisions, risks = [] }: Props) => {
     technical: t("portfolioRisk.catTechnical"), operational: t("portfolioRisk.catOperational"), marketing: t("portfolioRisk.catMarketing"),
   };
 
-  if (analysis.activeCount === 0) return null;
+  if (analysis.activeCount === 0) {
+    return (
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+            <Shield className="w-3.5 h-3.5 text-primary" />
+            {t("portfolioRisk.title")}
+          </h2>
+        </div>
+        <Card>
+          <CardContent className="p-5 text-center">
+            <Shield className="w-5 h-5 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-xs text-muted-foreground">{t("common.noData", { defaultValue: "Noch keine Daten vorhanden." })}</p>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   return (
     <section>

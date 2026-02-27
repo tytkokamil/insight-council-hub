@@ -91,30 +91,8 @@ const Dashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [autoSeeded, setAutoSeeded] = useState(false);
   
-  // Auto-seed demo data on first visit (opt-out: user can skip)
-  useEffect(() => {
-    if (isLoading || autoSeeded || seedingDemo) return;
-    if (allDecisions.length > 0 || tasks.length > 0) return;
-    const skipped = localStorage.getItem("demo-seed-skipped");
-    const seeded = localStorage.getItem("demo-seed-completed");
-    if (skipped || seeded) return;
-    
-    // Auto-seed
-    setAutoSeeded(true);
-    setSeedingDemo(true);
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("seed-demo-data");
-        if (error) throw error;
-        if (data?.error) { setSeedingDemo(false); return; }
-        localStorage.setItem("demo-seed-completed", "true");
-        toast.success(t("dashboard.demoSuccess"));
-        setTimeout(() => { refetchDec(); refetchTasks(); window.location.reload(); }, 1200);
-      } catch {
-        setSeedingDemo(false);
-      }
-    })();
-  }, [isLoading, allDecisions.length, tasks.length, autoSeeded, seedingDemo]);
+  // Auto-seed disabled — let users see the empty dashboard with widgets
+  // Users can seed demo data from Decisions or Tasks pages
 
   useEffect(() => {
     const seen = localStorage.getItem("onboarding-completed");
@@ -199,16 +177,6 @@ const Dashboard = () => {
   }, [decisions, contextTasks, contextReviews, dependencies, user, dateFnsLocale, t]);
 
   const chartTooltipStyle = { fontSize: 12, borderRadius: 6, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", boxShadow: "none" };
-  const hasDecisionData = decisions.length > 0;
-
-  const renderNoDecisionDataCard = (title: string) => (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">{title}</p>
-      <p className="text-sm text-muted-foreground">
-        {t("dashboard.noDecisionData", { defaultValue: "Keine persönlichen Entscheidungsdaten." })}
-      </p>
-    </div>
-  );
 
   if (hasError) {
     return (
@@ -225,72 +193,7 @@ const Dashboard = () => {
     );
   }
 
-  // Empty state
-  if (!isLoading && allDecisions.length === 0 && tasks.length === 0) {
-    const handleSeedDemo = async () => {
-      setSeedingDemo(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("seed-demo-data");
-        if (error) throw error;
-        if (data?.error) { toast.error(data.error); setSeedingDemo(false); return; }
-        toast.success(t("dashboard.demoSuccess"));
-        setTimeout(() => { refetchDec(); refetchTasks(); window.location.reload(); }, 1000);
-      } catch (e: any) {
-        toast.error(t("dashboard.demoError"));
-        setSeedingDemo(false);
-      }
-    };
-
-    // If auto-seeding is in progress, show loading state
-    if (seedingDemo) {
-      return (
-        <AppLayout>
-          <div className="flex flex-col items-center justify-center min-h-[70vh]">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-lg">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-                <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight mb-2">{t("dashboard.welcome", { name: firstName })}</h1>
-              <p className="text-muted-foreground mb-4">{t("dashboard.creating")}</p>
-              <p className="text-xs text-muted-foreground/50">55 Entscheidungen · 3 Teams · 20 Tasks · 6 Risiken</p>
-            </motion.div>
-          </div>
-        </AppLayout>
-      );
-    }
-
-    const handleSkipDemo = () => {
-      localStorage.setItem("demo-seed-skipped", "true");
-      window.location.reload();
-    };
-
-    return (
-      <AppLayout>
-        <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-              <LayoutDashboard className="w-8 h-8 text-primary" />
-            </div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight mb-3">{t("dashboard.emptyTitle")}</h1>
-            <p className="text-muted-foreground text-sm mb-8">{t("dashboard.emptyDesc")}</p>
-            <div className="flex items-center justify-center gap-3">
-              <Button onClick={handleSeedDemo} variant="outline" size="lg" className="gap-2" disabled={seedingDemo}>
-                {seedingDemo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                {seedingDemo ? t("dashboard.creating") : t("dashboard.startWithDemo")}
-              </Button>
-              <Button onClick={() => navigate("/decisions")} size="lg" className="gap-2">
-                <Plus className="w-4 h-4" /> {t("dashboard.createFirstDecision")}
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-
-        <Suspense fallback={null}>
-          <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
-        </Suspense>
-      </AppLayout>
-    );
-  }
+  // No more full-page empty state — widgets render with zero data
 
   const hour = new Date().getHours();
   const greetingKey = hour < 12 ? "dashboard.goodMorning" : hour < 18 ? "dashboard.goodAfternoon" : "dashboard.goodEvening";
@@ -406,7 +309,7 @@ const Dashboard = () => {
             {isExecutive && (
               <>
                 <WidgetErrorBoundary>
-                  {hasDecisionData ? <DecisionQualityIndex /> : renderNoDecisionDataCard("DQI")}
+                  <DecisionQualityIndex />
                 </WidgetErrorBoundary>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <WidgetErrorBoundary>
@@ -416,14 +319,10 @@ const Dashboard = () => {
                     <DecisionCostWidget />
                   </WidgetErrorBoundary>
                 </div>
-                {hasDecisionData
-                  ? <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-                  : renderNoDecisionDataCard("Risk Portfolio")}
-                {hasDecisionData ? (
-                  <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-                    <AiBriefingWidget />
-                  </Suspense>
-                ) : renderNoDecisionDataCard(t("widgets.aiBriefing"))}
+                <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+                  <AiBriefingWidget />
+                </Suspense>
               </>
             )}
 
@@ -491,71 +390,65 @@ const Dashboard = () => {
                         className="space-y-8 mt-6"
                       >
                         <WidgetErrorBoundary>
-                          {hasDecisionData ? <DecisionQualityIndex /> : renderNoDecisionDataCard("DQI")}
+                          <DecisionQualityIndex />
                         </WidgetErrorBoundary>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <WidgetErrorBoundary>
                             <DecisionCostWidget />
                           </WidgetErrorBoundary>
-                          {hasDecisionData
-                            ? <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-                            : renderNoDecisionDataCard("Risk Portfolio")}
+                          <PortfolioRiskOverview decisions={decisions} risks={riskData} />
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                           <div className="lg:col-span-2">
-                            {hasDecisionData ? (
-                              <section>
-                                <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
-                                <div className="border border-border rounded-xl p-6">
-                                  <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                      <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                                      <p className="text-xs text-muted-foreground">{t("dashboard.chartSubtitle")}</p>
-                                    </div>
+                            <section>
+                              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
+                              <div className="border border-border rounded-xl p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div>
+                                    <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
+                                    <p className="text-xs text-muted-foreground">{t("dashboard.chartSubtitle")}</p>
                                   </div>
-                                  <div className="h-52">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                                        <defs>
-                                          <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
-                                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                          </linearGradient>
-                                          <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
-                                            <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
-                                          </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                                        <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                                        <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                                        <RechartsTooltip contentStyle={chartTooltipStyle} />
-                                        <Area type="monotone" dataKey="completed" name={t("dashboard.chartCompleted")} stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
-                                        <Area type="monotone" dataKey="created" name={t("dashboard.chartCreated")} stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
-                                        <Area type="monotone" dataKey="escalations" name={t("dashboard.chartEscalations")} stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
-                                      </AreaChart>
-                                    </ResponsiveContainer>
-                                  </div>
-                                  {computed.trendInsight && (
-                                    <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
-                                      <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
-                                      <p className="text-xs text-muted-foreground">
-                                        <span className="font-medium text-foreground">Insight: </span>
-                                        {computed.trendInsight}
-                                      </p>
-                                    </div>
-                                  )}
                                 </div>
-                              </section>
-                            ) : renderNoDecisionDataCard(t("dashboard.trends"))}
+                                <div className="h-52">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                                      <defs>
+                                        <linearGradient id="gradCompleted2" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradCreated2" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
+                                          <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                                        </linearGradient>
+                                      </defs>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                                      <RechartsTooltip contentStyle={chartTooltipStyle} />
+                                      <Area type="monotone" dataKey="completed" name={t("dashboard.chartCompleted")} stroke="hsl(var(--primary))" fill="url(#gradCompleted2)" strokeWidth={2} />
+                                      <Area type="monotone" dataKey="created" name={t("dashboard.chartCreated")} stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated2)" strokeWidth={1} strokeDasharray="4 4" />
+                                      <Area type="monotone" dataKey="escalations" name={t("dashboard.chartEscalations")} stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
+                                    </AreaChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                {computed.trendInsight && (
+                                  <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
+                                    <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    <p className="text-xs text-muted-foreground">
+                                      <span className="font-medium text-foreground">Insight: </span>
+                                      {computed.trendInsight}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </section>
                           </div>
-                          {hasDecisionData ? <DecisionRadar /> : renderNoDecisionDataCard("Radar")}
+                          <DecisionRadar />
                         </div>
-                        {hasDecisionData ? (
-                          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
-                            <AiBriefingWidget />
-                          </Suspense>
-                        ) : renderNoDecisionDataCard(t("widgets.aiBriefing"))}
+                        <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+                          <AiBriefingWidget />
+                        </Suspense>
                       </motion.div>
                     )}
                   </AnimatePresence>

@@ -58,7 +58,15 @@ const DecisionRadar = () => {
     ];
   }, [allDecisions, reviews, risks, user, isPersonal, t]);
 
-  if (!radarData) return null;
+  if (!radarData) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 text-center">
+        <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("radar.title")}</h3>
+        <Info className="w-5 h-5 text-muted-foreground/40 mx-auto mb-2" />
+        <p className="text-xs text-muted-foreground">{t("common.noData", { defaultValue: "Noch keine Daten vorhanden." })}</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div

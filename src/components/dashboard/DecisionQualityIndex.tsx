@@ -159,7 +159,17 @@ const DecisionQualityIndex = () => {
     };
   }, [allDecisions, reviews, tasks, escalationNotifs, user, isPersonal, selectedTeamId, t]);
 
-  if (score === null) return null;
+  if (score === null) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Gauge className="w-5 h-5 text-muted-foreground/40" />
+          <h2 className="text-base font-semibold tracking-tight">{t("dqi.title")}</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("common.noData", { defaultValue: "Noch keine Daten vorhanden." })}</p>
+      </div>
+    );
+  }
 
   const getScoreColor = (s: number) =>
     s >= 70 ? "text-success" : s >= 45 ? "text-warning" : "text-destructive";
