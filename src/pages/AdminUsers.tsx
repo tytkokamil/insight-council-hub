@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatDate, formatDateTime, formatDateTimeShort } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
+import PageHeader from "@/components/shared/PageHeader";
 import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -125,13 +126,14 @@ const AdminUsers = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold font-display flex items-center gap-2"><Shield className="w-5 h-5 text-primary" />{t("admin.title")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{t("admin.subtitle")}</p>
-          </div>
-          <Badge variant="outline" className="gap-1.5"><UserCog className="w-3.5 h-3.5" />{t("admin.usersCount", { count: users.length })}</Badge>
-        </div>
+        <PageHeader
+          title={t("admin.title")}
+          subtitle={t("admin.subtitle")}
+          role="governance"
+          secondaryActions={
+            <Badge variant="outline" className="gap-1.5"><UserCog className="w-3.5 h-3.5" />{t("admin.usersCount", { count: users.length })}</Badge>
+          }
+        />
 
         <Tabs defaultValue="users">
           <TabsList>

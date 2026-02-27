@@ -349,9 +349,9 @@ const GlobalSearch = () => {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("globalSearch.label")}</p>
-          <h1 className="text-xl font-semibold tracking-tight">{t("globalSearch.title")}</h1>
+        <div className="mb-8">
+          <h1 className="text-xl font-bold tracking-tight">{t("globalSearch.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("globalSearch.label")}</p>
         </div>
 
         <div className="relative mb-4">

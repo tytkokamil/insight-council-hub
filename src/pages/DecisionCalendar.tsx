@@ -16,7 +16,7 @@ import {
 import { de } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
-import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import AppLayout from "@/components/layout/AppLayout";
@@ -256,42 +256,42 @@ const DecisionCalendar = () => {
     <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("calendar.planning")}</p>
-            <h1 className="font-display text-xl font-bold">{t("calendar.title")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t("calendar.subtitle")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <PageHelpButton title={t("calendar.title")} description={t("calendar.help")} />
-            <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
-            <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
-              <Download className="w-3.5 h-3.5" />
-              {t("calendar.exportCalendar")}
-            </Button>
-            <div className="w-px h-6 bg-border" />
-            <ToggleGroup
-              type="single"
-              value={viewMode}
-              onValueChange={(v) => v && setViewMode(v as ViewMode)}
-              className="border border-border rounded-lg"
-            >
-              <ToggleGroupItem value="month" aria-label={t("calendar.monthView")} className="px-2.5 py-1.5 text-xs gap-1">
-                <LayoutGrid className="w-3.5 h-3.5" />
-                {t("calendar.month")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="week" aria-label={t("calendar.weekView")} className="px-2.5 py-1.5 text-xs gap-1">
-                <Rows3 className="w-3.5 h-3.5" />
-                {t("calendar.week")}
-              </ToggleGroupItem>
-              <ToggleGroupItem value="day" aria-label={t("calendar.dayView")} className="px-2.5 py-1.5 text-xs gap-1">
-                <CalendarRange className="w-3.5 h-3.5" />
-                {t("calendar.day")}
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <div className="w-px h-6 bg-border" />
+        <PageHeader
+          title={t("calendar.title")}
+          subtitle={t("calendar.subtitle")}
+          role="execution"
+          help={{ title: t("calendar.title"), description: t("calendar.help") }}
+          secondaryActions={
+            <>
+              <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
+              <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
+                <Download className="w-3.5 h-3.5" />
+                {t("calendar.exportCalendar")}
+              </Button>
+            </>
+          }
+        />
+        <div className="flex items-center justify-between gap-2 flex-wrap -mt-4 mb-2">
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => v && setViewMode(v as ViewMode)}
+            className="border border-border rounded-lg"
+          >
+            <ToggleGroupItem value="month" aria-label={t("calendar.monthView")} className="px-2.5 py-1.5 text-xs gap-1">
+              <LayoutGrid className="w-3.5 h-3.5" />
+              {t("calendar.month")}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="week" aria-label={t("calendar.weekView")} className="px-2.5 py-1.5 text-xs gap-1">
+              <Rows3 className="w-3.5 h-3.5" />
+              {t("calendar.week")}
+            </ToggleGroupItem>
+            <ToggleGroupItem value="day" aria-label={t("calendar.dayView")} className="px-2.5 py-1.5 text-xs gap-1">
+              <CalendarRange className="w-3.5 h-3.5" />
+              {t("calendar.day")}
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={goToday}>{t("calendar.today")}</Button>
             <Button variant="ghost" size="icon" onClick={goBack}>
               <ChevronLeft className="w-4 h-4" />

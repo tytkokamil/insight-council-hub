@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDecisions } from "@/hooks/useDecisions";
@@ -158,18 +158,17 @@ const Strategy = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("strategy.label")}</p>
-          <h1 className="font-display text-xl font-bold">{t("strategy.title")}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <PageHelpButton title={t("strategy.title")} description={t("strategy.help")} />
-          <Button onClick={() => setShowCreate(!showCreate)} className="gap-2">
+      <PageHeader
+        title={t("strategy.title")}
+        subtitle={t("strategy.label")}
+        role="intelligence"
+        help={{ title: t("strategy.title"), description: t("strategy.help") }}
+        primaryAction={
+          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2">
             <Plus className="w-4 h-4" /> {t("strategy.newGoal")}
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
