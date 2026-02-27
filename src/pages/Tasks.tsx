@@ -298,24 +298,32 @@ const Tasks = () => {
       />
 
       {tasks.length === 0 ? (
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-              <ListTodo className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="font-display text-2xl font-semibold tracking-tight mb-3">{t("tasks.emptyTitle")}</h3>
-            <p className="text-sm text-muted-foreground mb-8">{t("tasks.emptyDesc")}</p>
-            <div className="flex items-center justify-center gap-3">
-              <Button variant="outline" size="lg" onClick={async () => {
+        <EmptyAnalysisState
+          icon={ListTodo}
+          title={t("tasks.emptyTitle")}
+          description={t("tasks.emptyDesc")}
+          ctaLabel={t("tasks.createFirst")}
+          onCtaClick={openCreate}
+          motivation={t("tasks.emptyMotivation", { defaultValue: "Teams mit strukturiertem Task-Management schließen Projekte 35% schneller ab und reduzieren vergessene Aufgaben um 60%." })}
+          hint={t("tasks.emptyHint", { defaultValue: "Verknüpfe Aufgaben mit Entscheidungen für lückenloses Tracking." })}
+          features={[
+            { icon: Target, label: t("tasks.featurePriority", { defaultValue: "Priorisierung" }), desc: t("tasks.featurePriorityDesc", { defaultValue: "Kritische Aufgaben automatisch hervorheben" }) },
+            { icon: GitBranch, label: t("tasks.featureLink", { defaultValue: "Verknüpfungen" }), desc: t("tasks.featureLinkDesc", { defaultValue: "Aufgaben mit Entscheidungen verbinden" }) },
+            { icon: TrendingUp, label: t("tasks.featureKanban", { defaultValue: "Kanban-Board" }), desc: t("tasks.featureKanbanDesc", { defaultValue: "Visuelles Workflow-Management" }) },
+          ]}
+          quickActions={[
+            {
+              label: t("tasks.loadDemo", { defaultValue: "Demo laden" }),
+              icon: Zap,
+              onClick: async () => {
                 toast.info(t("tasks.demoCreating"));
                 const { data, error } = await supabase.functions.invoke("seed-demo-data");
                 if (error || data?.error) { toast.error(data?.error || t("tasks.demoError")); return; }
                 toast.success(t("tasks.demoCreated")); window.location.reload();
-              }} className="gap-2"><Zap className="w-4 h-4" /> {t("tasks.loadDemo")}</Button>
-              <Button size="lg" onClick={openCreate} className="gap-2"><Plus className="w-4 h-4" /> {t("tasks.createFirst")}</Button>
-            </div>
-          </motion.div>
-        </div>
+              },
+            },
+          ]}
+        />
       ) : (
         <>
           <div className="flex items-center gap-3 mb-2">
