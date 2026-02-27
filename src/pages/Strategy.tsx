@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppLayout from "@/components/layout/AppLayout";
@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { useDecisions } from "@/hooks/useDecisions";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { cn } from "@/lib/utils";
 import {
   Target, Plus, TrendingUp, DollarSign, BarChart3, Trash2, Loader2,
-  ChevronRight, Link2, CheckCircle2, AlertTriangle, Clock,
+  ChevronRight, Link2, CheckCircle2, AlertTriangle, Clock, Check,
 } from "lucide-react";
 
 interface Goal {
@@ -47,6 +48,24 @@ const statusBadgeKeys: Record<string, { labelKey: string; class: string }> = {
   missed: { labelKey: "strategy.statusMissed", class: "bg-destructive/20 text-destructive" },
 };
 
+/** Predefined goal suggestions shown before user creates any */
+interface GoalSuggestion {
+  key: string;
+  icon: any;
+  goal_type: string;
+  titleKey: string;
+  descKey: string;
+  defaultTarget: number;
+  defaultUnit: string;
+}
+
+const GOAL_SUGGESTIONS: GoalSuggestion[] = [
+  { key: "okr", icon: Target, goal_type: "okr", titleKey: "strategy.sugOkrTitle", descKey: "strategy.sugOkrDesc", defaultTarget: 100, defaultUnit: "%" },
+  { key: "revenue", icon: DollarSign, goal_type: "revenue", titleKey: "strategy.sugRevenueTitle", descKey: "strategy.sugRevenueDesc", defaultTarget: 1000000, defaultUnit: "€" },
+  { key: "kpi", icon: BarChart3, goal_type: "kpi", titleKey: "strategy.sugKpiTitle", descKey: "strategy.sugKpiDesc", defaultTarget: 90, defaultUnit: "%" },
+  { key: "quarterly", icon: Clock, goal_type: "quarterly", titleKey: "strategy.sugQuarterlyTitle", descKey: "strategy.sugQuarterlyDesc", defaultTarget: 100, defaultUnit: "%" },
+];
+
 const Strategy = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -56,16 +75,14 @@ const Strategy = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
-  const [isActivated, setIsActivated] = useState(() => localStorage.getItem("strategy-goals-activated") === "true");
+  const [adoptedSuggestions, setAdoptedSuggestions] = useState<Set<string>>(() => {
+    const stored = localStorage.getItem("adopted-goal-suggestions");
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
+  const [adoptingKey, setAdoptingKey] = useState<string | null>(null);
 
   const { selectedTeamId } = useTeamContext();
   const { data: teamDecisions = [] } = useDecisions();
-
-  const activateFeature = () => {
-    setIsActivated(true);
-    localStorage.setItem("strategy-goals-activated", "true");
-    toast({ title: t("strategy.featureActivated") });
-  };
 
   // Form state
   const [form, setForm] = useState({
@@ -108,6 +125,35 @@ const Strategy = () => {
   };
 
   useEffect(() => { fetchGoals(); }, [selectedTeamId, teamDecisions]);
+
+  /** Adopt a suggestion → create the goal in DB */
+  const adoptSuggestion = async (sug: GoalSuggestion) => {
+    if (!user) return;
+    setAdoptingKey(sug.key);
+    const { error } = await supabase.from("strategic_goals").insert({
+      title: t(sug.titleKey),
+      description: t(sug.descKey),
+      goal_type: sug.goal_type,
+      target_value: sug.defaultTarget,
+      unit: sug.defaultUnit,
+      quarter: `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`,
+      year: new Date().getFullYear(),
+      status: "active",
+      created_by: user.id,
+      team_id: selectedTeamId || null,
+    });
+    if (error) {
+      toast({ title: t("strategy.errorTitle"), description: error.message, variant: "destructive" });
+    } else {
+      const next = new Set(adoptedSuggestions);
+      next.add(sug.key);
+      setAdoptedSuggestions(next);
+      localStorage.setItem("adopted-goal-suggestions", JSON.stringify([...next]));
+      toast({ title: t("strategy.goalAdopted") });
+      fetchGoals();
+    }
+    setAdoptingKey(null);
+  };
 
   const createGoal = async () => {
     if (!form.title.trim() || !user) return;
@@ -164,62 +210,6 @@ const Strategy = () => {
     );
   }
 
-  // Suggestion / Proposal view when not activated
-  if (!isActivated && goals.length === 0) {
-    return (
-      <AppLayout>
-        <PageHeader
-          title={t("strategy.title")}
-          subtitle={t("strategy.label")}
-          role="intelligence"
-          help={{ title: t("strategy.title"), description: t("strategy.help") }}
-        />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto mt-12"
-        >
-          <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/[0.03] p-8 text-center space-y-5">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-              <Target className="w-7 h-7 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-lg font-display font-bold">{t("strategy.suggestionTitle")}</h2>
-              <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-md mx-auto">
-                {t("strategy.suggestionDesc")}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
-              {[
-                { icon: Target, label: t("strategy.suggestionOkr"), desc: t("strategy.suggestionOkrDesc") },
-                { icon: TrendingUp, label: t("strategy.suggestionLink"), desc: t("strategy.suggestionLinkDesc") },
-                { icon: CheckCircle2, label: t("strategy.suggestionTrack"), desc: t("strategy.suggestionTrackDesc") },
-              ].map((f, i) => (
-                <div key={i} className="rounded-lg border border-border bg-card p-3">
-                  <f.icon className="w-4 h-4 text-primary mb-1.5" />
-                  <p className="text-xs font-semibold">{f.label}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <Button size="sm" onClick={activateFeature} className="gap-2 mt-2">
-              <CheckCircle2 className="w-4 h-4" />
-              {t("strategy.activateFeature")}
-            </Button>
-          </div>
-        </motion.div>
-      </AppLayout>
-    );
-  }
-
-  // If activated via button but no goals yet, auto-mark as activated
-  if (!isActivated && goals.length > 0) {
-    localStorage.setItem("strategy-goals-activated", "true");
-  }
-
   return (
     <AppLayout>
       <PageHeader
@@ -234,39 +224,103 @@ const Strategy = () => {
         }
       />
 
-      {/* Active indicator */}
-      <div className="flex items-center gap-2 mb-5 px-1">
-        <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-        <span className="text-xs font-medium text-success">{t("strategy.featureActive")}</span>
-      </div>
+      {/* ═══ GOAL SUGGESTIONS ═══ */}
+      {goals.length === 0 && !showCreate && (
+        <div className="mb-8">
+          <h2 className="text-sm font-semibold mb-1">{t("strategy.sugSectionTitle")}</h2>
+          <p className="text-xs text-muted-foreground mb-4">{t("strategy.sugSectionDesc")}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {GOAL_SUGGESTIONS.map((sug, i) => {
+              const isAdopted = adoptedSuggestions.has(sug.key);
+              const isAdopting = adoptingKey === sug.key;
+              return (
+                <motion.div
+                  key={sug.key}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                  className={cn(
+                    "rounded-xl border-2 p-5 transition-all",
+                    isAdopted
+                      ? "border-success/40 bg-success/[0.05]"
+                      : "border-dashed border-border bg-card hover:border-primary/30"
+                  )}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                      isAdopted ? "bg-success/15" : "bg-muted/40"
+                    )}>
+                      <sug.icon className={cn("w-5 h-5", isAdopted ? "text-success" : "text-muted-foreground")} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-sm font-semibold">{t(sug.titleKey)}</p>
+                        {isAdopted && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-success/20 text-success flex items-center gap-0.5">
+                            <Check className="w-2.5 h-2.5" />
+                            {t("strategy.statusActive")}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{t(sug.descKey)}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        {!isAdopted ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 text-xs h-7"
+                            disabled={isAdopting}
+                            onClick={() => adoptSuggestion(sug)}
+                          >
+                            {isAdopting ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                            {t("strategy.adopt")}
+                          </Button>
+                        ) : (
+                          <span className="text-[10px] text-success font-medium flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" />
+                            {t("strategy.adopted")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { icon: Target, label: t("strategy.strategicGoals"), value: totalGoals, color: "text-primary" },
-          { icon: Link2, label: t("strategy.linkedDecisions"), value: linkedDecisionCount, color: linkedDecisionCount === 0 ? "text-destructive" : "text-success" },
-          { icon: TrendingUp, label: t("strategy.avgProgress"), value: `${avgProgress}%`, color: "text-warning", tooltip: t("strategy.avgProgressTooltip") },
-          { icon: AlertTriangle, label: t("strategy.atRisk"), value: atRiskCount, color: "text-destructive" },
-        ].map((card, i) => (
-          <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <card.icon className={`w-4 h-4 ${card.color}`} />
-              <span className="text-xs text-muted-foreground">{card.label}</span>
-              {card.tooltip && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="text-muted-foreground/50 cursor-help text-[10px]">ⓘ</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs">
-                    <p className="text-xs">{card.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-            <p className="font-display text-2xl font-bold tabular-nums">{card.value}</p>
-          </motion.div>
-        ))}
-      </div>
+      {/* Summary Cards – only when goals exist */}
+      {goals.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { icon: Target, label: t("strategy.strategicGoals"), value: totalGoals, color: "text-primary" },
+            { icon: Link2, label: t("strategy.linkedDecisions"), value: linkedDecisionCount, color: linkedDecisionCount === 0 ? "text-destructive" : "text-success" },
+            { icon: TrendingUp, label: t("strategy.avgProgress"), value: `${avgProgress}%`, color: "text-warning", tooltip: t("strategy.avgProgressTooltip") },
+            { icon: AlertTriangle, label: t("strategy.atRisk"), value: atRiskCount, color: "text-destructive" },
+          ].map((card, i) => (
+            <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <card.icon className={`w-4 h-4 ${card.color}`} />
+                <span className="text-xs text-muted-foreground">{card.label}</span>
+                {card.tooltip && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-muted-foreground/50 cursor-help text-[10px]">ⓘ</span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">{card.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+              </div>
+              <p className="font-display text-2xl font-bold tabular-nums">{card.value}</p>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Create Form */}
       {showCreate && (
@@ -334,20 +388,29 @@ const Strategy = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.03 }}
-              className="rounded-lg border border-border bg-card overflow-hidden"
+              className={cn(
+                "rounded-lg border overflow-hidden",
+                goal.status === "active" ? "border-success/30 bg-success/[0.02]" : "border-border bg-card"
+              )}
             >
               <div
                 className="p-4 cursor-pointer hover:bg-muted/10 transition-colors"
                 onClick={() => setExpandedGoal(isExpanded ? null : goal.id)}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-muted/30 ${config.color}`}>
-                    <config.icon className="w-5 h-5" />
+                  <div className={cn(
+                    "w-10 h-10 rounded-lg flex items-center justify-center",
+                    goal.status === "active" ? "bg-success/15" : "bg-muted/30"
+                  )}>
+                    <config.icon className={cn("w-5 h-5", goal.status === "active" ? "text-success" : config.color)} />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-sm font-semibold truncate">{goal.title}</p>
+                      {goal.status === "active" && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                      )}
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badge.class}`}>
                         {t(badge.labelKey)}
                       </span>
@@ -431,17 +494,6 @@ const Strategy = () => {
           );
         })}
       </div>
-
-      {goals.length === 0 && !showCreate && (
-        <EmptyAnalysisState
-          icon={Target}
-          title={t("strategy.noGoalsTitle")}
-          description={t("strategy.noGoalsDesc")}
-          ctaLabel={t("strategy.createFirst")}
-          onCtaClick={() => setShowCreate(true)}
-          hint={t("strategy.emptyHint", { defaultValue: "Verknüpfe strategische Ziele mit Entscheidungen für eine durchgängige Governance." })}
-        />
-      )}
     </AppLayout>
   );
 };
