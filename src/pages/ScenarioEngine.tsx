@@ -10,9 +10,10 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   FlaskConical, AlertTriangle, Clock, DollarSign, TrendingDown,
-  Play, Loader2, Users, GitBranch, Zap, ChevronRight,
+  Play, Loader2, Users, GitBranch, Zap, ChevronRight, Download, Info,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -207,6 +208,10 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t("scenarioEngine.delayWeeks", { count: delayWeeks })}</label>
                     <Slider value={[delayWeeks]} onValueChange={v => setDelayWeeks(v[0])} min={1} max={16} step={1} />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>1 {t("scenarioEngine.weekUnit")}</span>
+                      <span>16 {t("scenarioEngine.weeksUnit")}</span>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">{t("scenarioEngine.scope")}</label>
@@ -230,10 +235,17 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                     </Select>
                   </div>
                   <div className="flex items-end">
-                    <Button onClick={runSimulation} disabled={simulating || targetCount === 0} className="w-full">
-                      {simulating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
-                      {t("scenarioEngine.runSim", { count: targetCount })}
-                    </Button>
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <Button onClick={runSimulation} disabled={simulating || targetCount === 0} className="w-full">
+                            {simulating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                            {t("scenarioEngine.runSim", { count: targetCount })}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p className="text-xs">{t("scenarioEngine.runSimTooltip", { count: targetCount })}</p></TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               </CardContent>
@@ -244,30 +256,30 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <DollarSign className="w-6 h-6 mx-auto text-destructive mb-1" />
-                      <div className="text-2xl font-bold text-destructive">€{result.totalCost.toLocaleString()}</div>
-                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.totalCost")}</p>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.totalCost")}</p>
+                      <DollarSign className="w-5 h-5 mx-auto text-destructive mb-1" />
+                      <div className="text-2xl font-bold text-destructive">€{result.totalCost.toLocaleString("de-DE")}</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <AlertTriangle className="w-6 h-6 mx-auto text-warning mb-1" />
+                      <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.avgRiskIncrease")}</p>
+                      <AlertTriangle className="w-5 h-5 mx-auto text-warning mb-1" />
                       <div className="text-2xl font-bold">{result.avgRiskIncrease}%</div>
-                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.avgRiskIncrease")}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <Zap className="w-6 h-6 mx-auto text-destructive mb-1" />
+                      <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.criticalImpacts")}</p>
+                      <Zap className="w-5 h-5 mx-auto text-destructive mb-1" />
                       <div className="text-2xl font-bold">{result.criticalCount}</div>
-                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.criticalImpacts")}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-4 text-center">
-                      <GitBranch className="w-6 h-6 mx-auto text-primary mb-1" />
+                      <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.cascadeEffects")}</p>
+                      <GitBranch className="w-5 h-5 mx-auto text-primary mb-1" />
                       <div className="text-2xl font-bold">{result.impacts.reduce((s, i) => s + i.cascadeCount, 0)}</div>
-                      <p className="text-xs text-muted-foreground">{t("scenarioEngine.cascadeEffects")}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -305,7 +317,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={result.timelineData}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                              <XAxis dataKey="week" label={{ value: t("scenarioEngine.weeksDelay"), position: "bottom", offset: -5 }} />
+                              <XAxis dataKey="week" tickFormatter={(v: number) => `${t("scenarioEngine.weekShort")} ${v}`} label={{ value: t("scenarioEngine.weeksDelay"), position: "bottom", offset: -5 }} />
                               <YAxis yAxisId="cost" label={{ value: t("scenarioEngine.costLabel"), angle: -90, position: "insideLeft" }} />
                               <YAxis yAxisId="risk" orientation="right" domain={[0, 100]} label={{ value: t("scenarioEngine.riskPercent"), angle: 90, position: "insideRight" }} />
                               <Tooltip formatter={(val: number, name: string) => [name.includes("Cost") || name.includes("Kosten") ? `€${val.toLocaleString()}` : `${val}%`, name]} />
@@ -387,6 +399,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                   icon={<FlaskConical className="w-4 h-4 text-primary" />}
                   defaultOpen={true}
                 >
+                  <TooltipProvider>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {result.monteCarlo.map((mc, i) => (
                       <Card key={i} className={i === 3 ? "border-destructive/30" : i === 0 ? "border-success/30" : ""}>
@@ -395,18 +408,38 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           <p className={`text-xl font-bold tabular-nums ${i >= 3 ? "text-destructive" : i >= 2 ? "text-warning" : ""}`}>
                             €{mc.cost.toLocaleString("de-DE")}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t("scenarioEngine.riskMC", { value: mc.risk })}</p>
+                          <UITooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-xs text-muted-foreground mt-0.5 cursor-help inline-flex items-center gap-1 mx-auto">
+                                {t("scenarioEngine.riskMC", { value: mc.risk })}
+                                <Info className="w-3 h-3" />
+                              </p>
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-[200px]">
+                              <p className="text-xs">{t("scenarioEngine.monteCarloTooltip")}</p>
+                            </TooltipContent>
+                          </UITooltip>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
+                  </TooltipProvider>
                   <div className="mt-4">
-                    <div className="h-3 rounded-full bg-muted overflow-hidden flex">
-                      <div className="bg-success/60 h-full" style={{ width: "10%" }} />
-                      <div className="bg-primary/40 h-full" style={{ width: "40%" }} />
-                      <div className="bg-warning/50 h-full" style={{ width: "25%" }} />
-                      <div className="bg-destructive/50 h-full" style={{ width: "25%" }} />
-                    </div>
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="h-3 rounded-full bg-muted overflow-hidden flex cursor-help">
+                            <div className="bg-success/60 h-full" style={{ width: "10%" }} />
+                            <div className="bg-primary/40 h-full" style={{ width: "40%" }} />
+                            <div className="bg-warning/50 h-full" style={{ width: "25%" }} />
+                            <div className="bg-destructive/50 h-full" style={{ width: "25%" }} />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[280px]">
+                          <p className="text-xs">{t("scenarioEngine.riskBarTooltip")}</p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
                     <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
                       <span>{t("scenarioEngine.bestCase")}</span>
                       <span>{t("scenarioEngine.probable")}</span>
@@ -415,6 +448,37 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                     </div>
                   </div>
                 </CollapsibleSection>
+
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+                    const lines = [
+                      t("scenarioEngine.title"),
+                      `${t("scenarioEngine.delayWeeks", { count: delayWeeks })}`,
+                      "",
+                      `${t("scenarioEngine.totalCost")}: €${result.totalCost.toLocaleString("de-DE")}`,
+                      `${t("scenarioEngine.avgRiskIncrease")}: ${result.avgRiskIncrease}%`,
+                      `${t("scenarioEngine.criticalImpacts")}: ${result.criticalCount}`,
+                      `${t("scenarioEngine.cascadeEffects")}: ${result.impacts.reduce((s, i) => s + i.cascadeCount, 0)}`,
+                      "",
+                      t("scenarioEngine.monteCarloTitle"),
+                      ...result.monteCarlo.map(mc => `  ${mc.percentile}: €${mc.cost.toLocaleString("de-DE")} (${t("scenarioEngine.riskMC", { value: mc.risk })})`),
+                      "",
+                      t("scenarioEngine.tabImpact"),
+                      ...result.impacts.slice(0, 10).map(i => `  ${i.decision.title} — €${i.totalCost.toLocaleString("de-DE")} (${i.severity})`),
+                      "",
+                      result.aiInsights ? `${t("scenarioEngine.aiRecommendation")}: ${result.aiInsights}` : "",
+                    ];
+                    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url; a.download = `simulation-${new Date().toISOString().slice(0, 10)}.txt`;
+                    a.click(); URL.revokeObjectURL(url);
+                    toast({ title: t("scenarioEngine.exported") });
+                  }}>
+                    <Download className="w-3.5 h-3.5" />
+                    {t("scenarioEngine.exportSim")}
+                  </Button>
+                </div>
 
                 <AiInsightPanel
                   type="bottleneck"

@@ -3621,7 +3621,15 @@
     "probableP": "Wahrscheinlich (P50)",
     "pessimisticP": "Pessimistisch (P75)",
     "worstCaseP": "Worst Case (P95)",
-    "unknown": "Unbekannt"
+    "unknown": "Unbekannt",
+    "weekUnit": "Woche",
+    "weeksUnit": "Wochen",
+    "weekShort": "W",
+    "runSimTooltip": "Simuliert die Verzögerung für {{count}} ausgewählte Entscheidungen",
+    "monteCarloTooltip": "Wahrscheinlichkeit, dass die tatsächlichen Kosten diesen Wert erreichen oder überschreiten (basierend auf 1.000 Simulationsdurchläufen).",
+    "riskBarTooltip": "Verteilung der Simulationsergebnisse: Links (grün) = Best Case, rechts (rot) = Worst Case. Die Breite zeigt die Wahrscheinlichkeit.",
+    "exportSim": "Simulation exportieren",
+    "exported": "Simulation exportiert"
   },
   "decisionDna": {
     "label": "Diagnostik",
