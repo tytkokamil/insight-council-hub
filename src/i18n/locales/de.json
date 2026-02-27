@@ -3716,7 +3716,12 @@
     "avgDays": "Ø {{days}}d",
     "implemented": "umgesetzt",
     "total": "total",
-    "escalated": "eskaliert"
+    "escalated": "eskaliert",
+    "insufficientData": "Zu wenig Daten für eine verlässliche Berechnung",
+    "speedProfileEmpty": "Noch keine Kategoriedaten vorhanden",
+    "speedProfileEmptyHint": "Erstelle Entscheidungen in verschiedenen Kategorien, um das Geschwindigkeitsprofil zu sehen.",
+    "exportDna": "DNA exportieren",
+    "exported": "DNA-Report exportiert"
   },
   "escalationEngine": {
     "loading": "Lade Decision Control...",

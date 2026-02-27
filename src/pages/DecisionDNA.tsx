@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Dna, ShieldAlert, Zap, Clock, Users, GitBranch, TrendingUp, TrendingDown,
-  AlertTriangle, CheckCircle2, ArrowRight, BarChart3, ListChecks,
+  AlertTriangle, CheckCircle2, ArrowRight, BarChart3, ListChecks, Download, Info,
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -14,6 +15,7 @@ import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } f
 import { useTasks } from "@/hooks/useTasks";
 import { motion } from "framer-motion";
 import AiInsightPanel from "@/components/shared/AiInsightPanel";
+import { useToast } from "@/hooks/use-toast";
 
 interface Trait { id: string; label: string; description: string; score: number; sentiment: "positive" | "negative" | "neutral"; icon: any; insight: string; }
 interface CategoryProfile { category: string; label: string; avgDays: number; total: number; implementRate: number; escalationRate: number; }
@@ -109,9 +111,36 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
     else { setOverallArchetype(t("decisionDna.developing")); setArchetypeDescription(t("decisionDna.developingDesc")); }
   }, [loading, decisions, reviews, deps, teams, tasks, t]);
 
+  const { toast } = useToast();
+
   const sentimentColor = (s: string) => s === "positive" ? "text-success" : s === "negative" ? "text-destructive" : "text-warning";
   const sentimentBg = (s: string) => s === "positive" ? "bg-success/15 border-success/25" : s === "negative" ? "bg-destructive/15 border-destructive/25" : "bg-warning/15 border-warning/25";
   const scoreBarColor = (score: number) => score >= 70 ? "bg-success" : score >= 45 ? "bg-warning" : "bg-destructive";
+
+  const isInsufficientData = (trait: Trait) => trait.score === 0;
+
+  const handleExportDna = () => {
+    const lines = [
+      t("decisionDna.title"),
+      `${t("decisionDna.archetype")}: ${overallArchetype}`,
+      archetypeDescription,
+      "",
+      t("decisionDna.traitsTitle"),
+      ...traits.map(tr => `  ${tr.label}: ${tr.score}/100 (${tr.sentiment}) — ${tr.insight}`),
+      "",
+      t("decisionDna.speedProfile"),
+      ...categoryProfiles.map(cp => `  ${cp.label}: Ø ${cp.avgDays}d, ${cp.implementRate}% ${t("decisionDna.implemented")}, ${cp.total} ${t("decisionDna.total")}`),
+      "",
+      `${t("decisionDna.strengths")}: ${traits.filter(tr => tr.sentiment === "positive").length}`,
+      `${t("decisionDna.weaknesses")}: ${traits.filter(tr => tr.sentiment === "negative").length}`,
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `decision-dna-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast({ title: t("decisionDna.exported") });
+  };
 
   if (loading) return <AnalysisPageSkeleton cards={3} sections={2} />;
 
@@ -132,7 +161,13 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("decisionDna.label")}</p>
           <h1 className="text-xl font-semibold tracking-tight">{t("decisionDna.title")}</h1>
         </div>
-        <PageHelpButton title={t("decisionDna.title")} description={t("decisionDna.help")} />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportDna}>
+            <Download className="w-3.5 h-3.5" />
+            {t("decisionDna.exportDna")}
+          </Button>
+          <PageHelpButton title={t("decisionDna.title")} description={t("decisionDna.help")} />
+        </div>
       </div>
 
       <Card className="mb-8">
@@ -157,7 +192,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
           {traits.map((trait) => (
             <Card key={trait.id} className={`border ${sentimentBg(trait.sentiment)}`}>
               <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${sentimentColor(trait.sentiment)}`}><trait.icon className="w-4 h-4" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold">{trait.label}</p>
@@ -165,10 +200,19 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                   <span className={`text-xl font-bold tabular-nums ${sentimentColor(trait.sentiment)}`}>{trait.score}</span>
                 </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
-                  <div className={`h-full rounded-full ${scoreBarColor(trait.score)}`} style={{ width: `${trait.score}%` }} />
-                </div>
-                <p className="text-xs text-muted-foreground">{trait.insight}</p>
+                {isInsufficientData(trait) ? (
+                  <div className="flex items-center gap-1.5 py-1.5 px-2 rounded bg-muted/30 text-xs text-muted-foreground">
+                    <Info className="w-3 h-3 shrink-0" />
+                    {t("decisionDna.insufficientData")}
+                  </div>
+                ) : (
+                  <>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
+                      <div className={`h-full rounded-full ${scoreBarColor(trait.score)}`} style={{ width: `${trait.score}%` }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground">{trait.insight}</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -176,25 +220,35 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
       </CollapsibleSection>
 
       <CollapsibleSection title={t("decisionDna.speedProfile")} icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-8">
-        <Card>
-          <CardContent className="p-5">
-            <div className="space-y-3">
-              {categoryProfiles.map((cat) => {
-                const maxDays = Math.max(...categoryProfiles.map(c => c.avgDays), 1);
-                return (
-                  <div key={cat.category} className="flex items-center gap-4">
-                    <span className="text-sm font-medium w-24 shrink-0">{cat.label}</span>
-                    <div className="flex-1 h-6 rounded-lg bg-muted/30 overflow-hidden relative">
-                      <div className={`h-full rounded-lg ${cat.avgDays > 20 ? "bg-destructive/60" : cat.avgDays > 10 ? "bg-warning/50" : "bg-success/40"}`} style={{ width: `${(cat.avgDays / maxDays) * 100}%` }} />
-                      <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">Ø {cat.avgDays}d • {cat.implementRate}% {t("decisionDna.implemented")} • {cat.total} {t("decisionDna.total")}</span>
+        {categoryProfiles.length > 0 ? (
+          <Card>
+            <CardContent className="p-5">
+              <div className="space-y-3">
+                {categoryProfiles.map((cat) => {
+                  const maxDays = Math.max(...categoryProfiles.map(c => c.avgDays), 1);
+                  return (
+                    <div key={cat.category} className="flex items-center gap-4">
+                      <span className="text-sm font-medium w-24 shrink-0">{cat.label}</span>
+                      <div className="flex-1 h-6 rounded-lg bg-muted/30 overflow-hidden relative">
+                        <div className={`h-full rounded-lg ${cat.avgDays > 20 ? "bg-destructive/60" : cat.avgDays > 10 ? "bg-warning/50" : "bg-success/40"}`} style={{ width: `${(cat.avgDays / maxDays) * 100}%` }} />
+                        <span className="absolute inset-0 flex items-center px-3 text-[10px] font-medium">Ø {cat.avgDays}d • {cat.implementRate}% {t("decisionDna.implemented")} • {cat.total} {t("decisionDna.total")}</span>
+                      </div>
+                      {cat.escalationRate > 25 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">{cat.escalationRate}% {t("decisionDna.escalated")}</span>}
                     </div>
-                    {cat.escalationRate > 25 && <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/20 text-destructive font-medium shrink-0">{cat.escalationRate}% {t("decisionDna.escalated")}</span>}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Clock className="w-8 h-8 mx-auto mb-2 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">{t("decisionDna.speedProfileEmpty")}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("decisionDna.speedProfileEmptyHint")}</p>
+            </CardContent>
+          </Card>
+        )}
       </CollapsibleSection>
 
       <AiInsightPanel
