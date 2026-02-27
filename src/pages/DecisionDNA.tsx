@@ -219,7 +219,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title={t("decisionDna.speedProfile")} icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={false} className="mb-8">
+      <CollapsibleSection title={t("decisionDna.speedProfile")} subtitle={categoryProfiles.length > 0 ? t("decisionDna.traitsSub", { count: categoryProfiles.length }) : undefined} icon={<Clock className="w-4 h-4 text-muted-foreground" />} defaultOpen={categoryProfiles.length > 0} className="mb-8">
         {categoryProfiles.length > 0 ? (
           <Card>
             <CardContent className="p-5">
