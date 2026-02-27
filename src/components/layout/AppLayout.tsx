@@ -183,7 +183,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       )}
 
       <main id="main-content" className={`flex-1 overflow-auto ${isMobile ? "pt-14" : ""}`} role="main">
-        <div className="p-4 md:p-6 max-w-[1400px] mx-auto">
+        <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

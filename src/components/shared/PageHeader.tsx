@@ -37,17 +37,17 @@ const PageHeader = ({
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2.5 mb-1">
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 gap-1 font-medium border ${config.className}`}>
+        <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h1>
+          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 gap-1 font-medium border ${config.className} shrink-0`}>
             <RoleIcon className="w-3 h-3" />
-            {t(config.labelKey)}
+            <span className="hidden xs:inline">{t(config.labelKey)}</span>
           </Badge>
           {help && <PageHelpButton title={help.title} description={help.description} />}
         </div>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{subtitle}</p>
       </div>
-      <div className="flex items-center gap-2 shrink-0 flex-wrap [&>button]:h-9 [&>button]:text-sm [&>*>button]:h-9 [&>*>button]:text-sm">
+      <div className="flex items-center gap-2 shrink-0 flex-wrap [&>button]:h-8 [&>button]:text-xs sm:[&>button]:h-9 sm:[&>button]:text-sm [&>*>button]:h-8 [&>*>button]:text-xs sm:[&>*>button]:h-9 sm:[&>*>button]:text-sm">
         {secondaryActions}
         {primaryAction}
       </div>

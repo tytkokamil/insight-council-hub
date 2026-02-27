@@ -211,25 +211,25 @@ const SettingsPage = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl">
+      <div className="max-w-3xl mx-auto">
         <div className="mb-8">
           <h1 className="text-xl font-bold tracking-tight">{t("settings.pageTitle")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
         </div>
 
-        <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto">
+        <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap ${
                 activeTab === tab.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <tab.icon className="w-3.5 h-3.5" />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
               {activeTab === tab.key && (
-                <motion.div layoutId="settings-tab" className="absolute bottom-0 left-0 right-0 h-px bg-foreground" />
+                <motion.div layoutId="settings-tab" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />
               )}
             </button>
           ))}

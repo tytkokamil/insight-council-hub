@@ -326,7 +326,7 @@ const Tasks = () => {
         />
       ) : (
         <>
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-3">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input type="text" placeholder={t("tasks.searchPlaceholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
