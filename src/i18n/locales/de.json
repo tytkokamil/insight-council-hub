@@ -2836,7 +2836,8 @@
     "priHigh": "Hoch",
     "priCritical": "Kritisch",
     "typeDecision": "Entscheidungen",
-    "typeTask": "Aufgaben"
+    "typeTask": "Aufgaben",
+    "lowScoreHint": "Score steigt mit mehr abgeschlossenen Entscheidungen und Aufgaben."
   },
   "landing": {
     "nav": {

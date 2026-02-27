@@ -191,7 +191,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: Heart, label: t("healthHeatmap.healthIndex"), value: `${overallHealth}%`, color: overallHealth >= 60 ? "text-success" : "text-warning" },
+          { icon: Heart, label: t("healthHeatmap.healthIndex"), value: `${overallHealth}%`, color: overallHealth >= 60 ? "text-success" : "text-warning", hint: overallHealth < 40 ? t("healthHeatmap.lowScoreHint") : undefined },
           { icon: CheckCircle2, label: t("healthHeatmap.completed"), value: `${completedItems}/${totalItems}`, color: "text-primary", sub: `${decisions.length} ${t("healthHeatmap.decisionsLabel")} • ${tasks.length} ${t("healthHeatmap.tasksLabel")}` },
           { icon: AlertTriangle, label: t("healthHeatmap.overdueLabel"), value: overdueItems, color: "text-destructive" },
           {
@@ -209,6 +209,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
             </div>
             <p className={`font-display font-bold ${(card as any).small ? "text-sm" : "text-2xl"}`}>{card.value}</p>
             {(card as any).sub && <p className="text-[10px] text-muted-foreground mt-0.5">{(card as any).sub}</p>}
+            {(card as any).hint && <p className="text-[10px] text-muted-foreground mt-1">{(card as any).hint}</p>}
           </div>
         ))}
       </div>
@@ -308,7 +309,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
           title={t("healthHeatmap.insightsTitle")}
           subtitle={t("healthHeatmap.insightsSubtitle")}
           icon={<TrendingUp className="w-4 h-4 text-success" />}
-          defaultOpen={false}
+          defaultOpen={true}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {bestCell && bestCell[1].total > 0 && (

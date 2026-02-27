@@ -2835,7 +2835,8 @@
     "priHigh": "High",
     "priCritical": "Critical",
     "typeDecision": "Decisions",
-    "typeTask": "Tasks"
+    "typeTask": "Tasks",
+    "lowScoreHint": "Score increases with more completed decisions and tasks."
   },
   "landing": {
     "nav": {
