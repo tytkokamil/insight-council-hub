@@ -1,12 +1,15 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Clock } from "lucide-react";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { BarChart3, TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Clock, Info, ArrowRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend } from "recharts";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -19,8 +22,20 @@ const INDUSTRY_BENCHMARKS = {
 };
 type MetricKey = keyof typeof INDUSTRY_BENCHMARKS.average;
 
+const METRIC_IMPROVE_ROUTES: Record<string, string> = {
+  approvalRate: "/decisions",
+  avgDaysToDecision: "/analytics-hub",
+  implementationRate: "/decisions",
+  overdueRate: "/escalation-engine",
+  escalationRate: "/escalation-engine",
+  reviewCoverage: "/process-hub",
+  riskMitigationRate: "/risk-register",
+  crossTeamCollaboration: "/decision-graph",
+};
+
 const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: reviews = [], isLoading: loadingRev } = useFilteredReviews();
   const { data: deps = [], isLoading: loadingDeps } = useFilteredDependencies();
@@ -72,8 +87,8 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
   const barData = metrics ? Object.keys(METRIC_LABELS).map(key => ({ name: METRIC_LABELS[key].label, [t("benchmarking.yourCompany")]: metrics[key], [t("benchmarking.industryAvg")]: INDUSTRY_BENCHMARKS.average[key as MetricKey], [t("benchmarking.top10")]: INDUSTRY_BENCHMARKS.highPerformance[key as MetricKey] })) : [];
 
   const overallScore = getOverallScore();
-  const scoreLabel = overallScore >= 75 ? t("benchmarking.highPerformer") : overallScore >= 50 ? t("benchmarking.average") : t("benchmarking.improvementPotential");
-  const scoreColor = overallScore >= 75 ? "text-success" : overallScore >= 50 ? "text-warning" : "text-destructive";
+  const scoreLabel = overallScore >= 75 ? t("benchmarking.highPerformer") : overallScore >= 50 ? t("benchmarking.average") : t("benchmarking.developmentPhase");
+  const scoreColor = overallScore >= 75 ? "text-success" : overallScore >= 50 ? "text-warning" : "text-accent-foreground";
 
   const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : AppLayout;
   return (
@@ -96,8 +111,11 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                 <CardHeader className="pb-2"><CardTitle className="text-sm">{t("benchmarking.overallScore")}</CardTitle></CardHeader>
                 <CardContent className="flex flex-col items-center gap-3">
                   <div className={`text-5xl font-bold tabular-nums ${scoreColor}`}>{overallScore}</div>
-                  <Badge variant={overallScore >= 75 ? "default" : overallScore >= 50 ? "secondary" : "destructive"}>{scoreLabel}</Badge>
+                  <Badge variant={overallScore >= 75 ? "default" : "secondary"}>{scoreLabel}</Badge>
                   <Progress value={overallScore} className="w-full" />
+                  {overallScore < 50 && (
+                    <p className="text-[10px] text-muted-foreground text-center">{t("benchmarking.developmentPhaseHint")}</p>
+                  )}
                 </CardContent>
               </Card>
               <Card className="md:col-span-2">
@@ -111,6 +129,11 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
+              <Info className="w-4 h-4 text-muted-foreground shrink-0" />
+              <p className="text-[11px] text-muted-foreground">{t("benchmarking.benchmarkDisclaimer")}</p>
             </div>
 
             <CollapsibleSection title={t("benchmarking.comparisonCharts")} subtitle={t("benchmarking.comparisonChartsSub")} icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
@@ -143,7 +166,12 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                   {Object.entries(METRIC_LABELS).map(([key, meta]) => {
                     const trend = getTrend(key, metrics[key]); if (trend.color !== "text-destructive") return null;
                     const hp = INDUSTRY_BENCHMARKS.highPerformance[key as MetricKey] as number; const gap = meta.lowerIsBetter ? metrics[key] - hp : hp - metrics[key];
-                    return (<div key={key} className="p-3 rounded-lg border border-destructive/30 bg-destructive/5"><div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-destructive" /><span className="font-medium text-sm">{meta.label}</span></div><p className="text-xs text-muted-foreground">{gap > 0 ? t("benchmarking.gapToTop", { gap, suffix: meta.unit === "%" ? "pp" : ` ${meta.unit}` }) : t("benchmarking.nearBenchmark")}</p></div>);
+                    const route = METRIC_IMPROVE_ROUTES[key];
+                    return (<div key={key} className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                      <div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-destructive" /><span className="font-medium text-sm">{meta.label}</span></div>
+                      <p className="text-xs text-muted-foreground mb-2">{gap > 0 ? t("benchmarking.gapToTop", { gap, suffix: meta.unit === "%" ? "pp" : ` ${meta.unit}` }) : t("benchmarking.nearBenchmark")}</p>
+                      {route && <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 text-primary" onClick={() => navigate(route)}>{t("benchmarking.howToImprove")} <ArrowRight className="w-3 h-3" /></Button>}
+                    </div>);
                   }).filter(Boolean)}
                   {Object.entries(METRIC_LABELS).every(([key]) => getTrend(key, metrics[key]).color !== "text-destructive") && (
                     <div className="p-3 rounded-lg border border-success/30 bg-success/5 col-span-full"><p className="text-sm text-success font-medium">{t("benchmarking.allAboveAvg")}</p></div>
