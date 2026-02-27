@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Gauge, Shield, DollarSign, Timer, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,44 @@ interface CoreKpi {
   tooltip: string;
   formula: string;
 }
+
+/* Animated KPI value */
+const KpiValue = ({ value, className }: { value: string; className: string }) => {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [display, setDisplay] = useState("0");
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || hasAnimated.current) return;
+    // Extract numeric part
+    const numericMatch = value.match(/^([\d.]+)/);
+    if (!numericMatch) { setDisplay(value); return; }
+    const end = parseFloat(numericMatch[1]);
+    const suffix = value.replace(numericMatch[1], "");
+    const isInt = !numericMatch[1].includes(".");
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !hasAnimated.current) {
+        hasAnimated.current = true;
+        const start = performance.now();
+        const dur = 1000;
+        const step = (now: number) => {
+          const p = Math.min((now - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const cur = eased * end;
+          setDisplay(`${isInt ? Math.round(cur) : cur.toFixed(1)}${suffix}`);
+          if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [value]);
+
+  return <p ref={ref} className={`text-2xl font-bold font-display tabular-nums ${className}`}>{display}</p>;
+};
 
 const CoreKpiGrid = () => {
   const { t } = useTranslation();
@@ -128,7 +166,7 @@ const CoreKpiGrid = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.05 }}
         >
-          <Card className="h-full">
+          <Card className="h-full group hover:shadow-md hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-200">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-1.5">
@@ -144,11 +182,11 @@ const CoreKpiGrid = () => {
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <div className={`w-8 h-8 rounded-lg ${kpi.bgColor} flex items-center justify-center`}>
+                <div className={`w-8 h-8 rounded-lg ${kpi.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
                   <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
                 </div>
               </div>
-              <p className={`text-2xl font-bold font-display tabular-nums ${kpi.color}`}>{kpi.value}</p>
+              <KpiValue value={kpi.value} className={kpi.color} />
               <p className="text-[11px] text-muted-foreground mt-1">{kpi.subLabel}</p>
             </CardContent>
           </Card>
