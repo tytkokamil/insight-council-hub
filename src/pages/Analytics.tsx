@@ -5,7 +5,7 @@ import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
 import {
   TrendingUp, Clock, CheckCircle2, AlertTriangle, FileText,
   BarChart3, Users, Zap, Activity, DollarSign, Shield, Target,
-  ArrowUpRight, ArrowDownRight, ExternalLink, Lightbulb, GaugeCircle,
+  ArrowUpRight, ArrowDownRight, ExternalLink, Lightbulb, GaugeCircle, Minus,
 } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -117,6 +117,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       const date = new Date(d.created_at);
       return isAfter(date, prevRangeStart) && isBefore(date, rangeStart);
     });
+    const prevTasks = timeRange === "all" ? [] : allTasks.filter(t => {
+      const date = new Date(t.created_at);
+      return isAfter(date, prevRangeStart) && isBefore(date, rangeStart);
+    });
 
     const total = decisions.length;
     const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
@@ -150,6 +154,20 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const approved = decisions.filter(d => d.status === "approved" || d.status === "implemented");
     const implRate = approved.length > 0 ? Math.round((implemented.length / approved.length) * 100) : 0;
 
+    // Previous period comparison values
+    const prevActive = prevDecisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
+    const prevOverdue = prevActive.filter(d => d.due_date && new Date(d.due_date!) < rangeStart);
+    const prevOverdueRate = prevActive.length > 0 ? Math.round((prevOverdue.length / prevActive.length) * 100) : null;
+    const prevImpl = prevDecisions.filter(d => d.status === "implemented");
+    const prevApproved = prevDecisions.filter(d => d.status === "approved" || d.status === "implemented");
+    const prevImplRate = prevApproved.length > 0 ? Math.round((prevImpl.length / prevApproved.length) * 100) : null;
+    const prevWithDue = prevDecisions.filter(d => d.due_date);
+    const prevSlaCompliant = prevWithDue.filter(d => {
+      if (d.status === "implemented" && d.implemented_at) return new Date(d.implemented_at) <= new Date(d.due_date!);
+      return new Date(d.due_date!) >= rangeStart;
+    });
+    const prevSlaRate = prevWithDue.length > 0 ? Math.round((prevSlaCompliant.length / prevWithDue.length) * 100) : null;
+
     // Cost of Delay
     const costOfDelay = active.reduce((sum, dec) => {
       const team = teams.find((t: any) => t.id === dec.team_id);
@@ -179,7 +197,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
     // Insights
     const insights: { text: string; type: "warning" | "info" | "success"; action?: string }[] = [];
-    const prevOverdueRate = prevDecisions.length > 0 ? Math.round((prevDecisions.filter(d => d.due_date && new Date(d.due_date) < rangeStart).length / prevDecisions.length) * 100) : 0;
+    const prevOverdueRateInsight = prevDecisions.length > 0 ? Math.round((prevDecisions.filter(d => d.due_date && new Date(d.due_date) < rangeStart).length / prevDecisions.length) * 100) : 0;
     const costDelta = costOfDelay - prevCostOfDelay;
 
     // Top cost driver
@@ -350,7 +368,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     }).reverse();
 
     // Lessons stats
-    const lessonsRate = implemented.length > 0 ? Math.round((lessons.length / implemented.length) * 100) : 0;
+    const lessonsRate = implemented.length > 0 ? Math.min(100, Math.round((lessons.length / implemented.length) * 100)) : 0;
 
     return {
       total, active, implemented, overdue, escalated, critical, highRisk,
@@ -359,6 +377,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       riskDistribution, topCostDrivers: topCostDrivers.slice(0, 5), costByCategory,
       escPerWeek, openReviews: openReviews.length, medianReviewWait,
       goalAlignment, qualityTrend, lessonsRate, costDelta,
+      prevOverdueRate, prevImplRate, prevSlaRate,
     };
   }, [allDecisions, allTasks, teams, reviews, goals, goalLinks, lessons, timeRange, t, dateFnsLocale]);
 
@@ -376,15 +395,23 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     return embedded ? empty : <AppLayout>{empty}</AppLayout>;
   }
 
+  const trendArrow = (current: number, previous: number | null, lowerIsBetter = false) => {
+    if (previous === null) return null;
+    const diff = current - previous;
+    if (Math.abs(diff) < 2) return { icon: Minus, color: "text-muted-foreground", delta: 0 };
+    const better = lowerIsBetter ? diff < 0 : diff > 0;
+    return { icon: better ? ArrowUpRight : ArrowDownRight, color: better ? "text-success" : "text-destructive", delta: diff };
+  };
+
   const kpis = [
     { label: t("analytics.activeDecisions"), value: d.active.length, icon: FileText },
     { label: t("analytics.critical"), value: d.critical.length, icon: AlertTriangle, color: d.critical.length > 0 ? "text-destructive" : undefined },
     { label: t("analytics.medianTTD"), value: d.medianDuration > 0 ? `${d.medianDuration}d` : "—", icon: Clock },
-    { label: t("analytics.slaCompliance"), value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success" },
-    { label: t("analytics.overdueRate"), value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined },
+    { label: t("analytics.slaCompliance"), value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success", trend: trendArrow(d.slaRate, d.prevSlaRate) },
+    { label: t("analytics.overdueRate"), value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined, trend: trendArrow(d.overdueRate, d.prevOverdueRate, true) },
     { label: t("analytics.costOfDelay"), value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
     { label: t("analytics.qualityIndex"), value: d.qualityIndex, icon: GaugeCircle, color: d.qualityIndex >= 75 ? "text-success" : d.qualityIndex >= 50 ? "text-warning" : "text-destructive" },
-    { label: t("analytics.implementationRate"), value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive" },
+    { label: t("analytics.implementationRate"), value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive", trend: trendArrow(d.implRate, d.prevImplRate) },
   ];
 
   const content = (
@@ -398,7 +425,14 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                 <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
                 <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
               </div>
-              <div className={`text-xl font-bold tabular-nums ${kpi.color || ""}`}>{kpi.value}</div>
+              <div className="flex items-center gap-1">
+                <span className={`text-xl font-bold tabular-nums ${kpi.color || ""}`}>{kpi.value}</span>
+                {(kpi as any).trend && (
+                  <span className={`${(kpi as any).trend.color}`}>
+                    {(() => { const TIcon = (kpi as any).trend.icon; return <TIcon className="w-3 h-3" />; })()}
+                  </span>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -446,7 +480,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
-                  <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={8} />
+                  <XAxis dataKey="week" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} dy={8} interval={1} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={32} allowDecimals={false} />
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey={t("analyticsPage.created")} stroke={COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
@@ -581,7 +615,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   <div className="h-48 flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={d.riskDistribution} cx="50%" cy="50%" outerRadius={70} innerRadius={38} dataKey="value" paddingAngle={3} stroke="none">
+                        <Pie data={d.riskDistribution} cx="50%" cy="50%" outerRadius={70} innerRadius={38} dataKey="value" paddingAngle={3} stroke="none" label={({ name, value, percent }) => `${value} (${Math.round(percent * 100)}%)`}>
                           {d.riskDistribution.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
@@ -669,7 +703,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                 <ResponsiveContainer width="100%" height="100%">
                    <ComposedChart data={d.escPerWeek} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} vertical={false} />
-                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} interval={0} />
                     <YAxis yAxisId="left" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} allowDecimals={false} />
                     <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} width={28} unit="%" />
                     <Tooltip content={<CustomTooltip />} />
