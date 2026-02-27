@@ -1,6 +1,6 @@
 import { useState } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { decisionTemplates, DecisionTemplate } from "@/lib/decisionTemplates";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -253,13 +253,12 @@ export default function Templates() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("templates.pageLabel")}</p>
-            <h1 className="text-xl font-bold">{t("templates.pageTitle")}</h1>
-          </div>
-          <PageHelpButton title={t("templates.pageTitle")} description={t("templates.helpDesc")} />
-        </div>
+        <PageHeader
+          title={t("templates.pageTitle")}
+          subtitle={t("templates.pageLabel")}
+          role="governance"
+          help={{ title: t("templates.pageTitle"), description: t("templates.helpDesc") }}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <div className="lg:col-span-2 space-y-3">

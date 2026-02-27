@@ -17,7 +17,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import AppLayout from "@/components/layout/AppLayout";
 import { AlertTriangle, DollarSign, GitBranch, Info } from "lucide-react";
-import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 import { useTranslatedLabels } from "@/lib/labels";
 
@@ -216,21 +216,22 @@ const DecisionGraph = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("graph.network")}</p>
-          <h1 className="font-display text-xl font-bold">{t("graph.title")}</h1>
-        </div>
-        <div className="flex items-center gap-4 text-xs">
-          <PageHelpButton title={t("graph.title")} description={t("graph.helpDesc")} />
-          {statusLegend.map(([status, label]) => (
-            <div key={status} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: statusColors[status] }} />
-              <span className="text-muted-foreground">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      <PageHeader
+        title={t("graph.title")}
+        subtitle={t("graph.network")}
+        role="intelligence"
+        help={{ title: t("graph.title"), description: t("graph.helpDesc") }}
+        secondaryActions={
+          <div className="flex items-center gap-4 text-xs">
+            {statusLegend.map(([status, label]) => (
+              <div key={status} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ background: statusColors[status] }} />
+                <span className="text-muted-foreground">{label}</span>
+              </div>
+            ))}
+          </div>
+        }
+      />
 
       <div className="relative rounded-lg border border-border bg-card overflow-hidden" style={{ height: "calc(100vh - 180px)" }}>
         {decisions.length === 0 ? (

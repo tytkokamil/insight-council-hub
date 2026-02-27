@@ -3,7 +3,7 @@ import TeamsPageSkeleton from "@/components/teams/TeamsPageSkeleton";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import PageHelpButton from "@/components/shared/PageHelpButton";
+import PageHeader from "@/components/shared/PageHeader";
 import { Plus, Users as UsersIcon, ArrowRight, Mail, Shield, MessageSquare, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,21 +43,20 @@ const Teams = () => {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("teams.management")}</p>
-          <h1 className="font-display text-xl font-bold">{t("teams.title")}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <PageHelpButton title={t("teams.title")} description={t("teams.helpDesc")} />
-          {canCreateTeam && (
-            <Button onClick={() => setShowCreate(true)} className="gap-2">
+      <PageHeader
+        title={t("teams.title")}
+        subtitle={t("teams.management")}
+        role="execution"
+        help={{ title: t("teams.title"), description: t("teams.helpDesc") }}
+        primaryAction={
+          canCreateTeam ? (
+            <Button size="sm" onClick={() => setShowCreate(true)} className="gap-2">
               <Plus className="w-4 h-4" />
               {t("teams.newTeam")}
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {teams.length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
