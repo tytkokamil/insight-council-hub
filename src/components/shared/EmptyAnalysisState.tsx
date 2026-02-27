@@ -116,21 +116,22 @@ const EmptyAnalysisState = ({
           )}
 
           {features && features.length > 0 && (
-            <motion.div variants={item} className={`grid grid-cols-1 sm:grid-cols-${Math.min(features.length, 3)} gap-3 mt-8 max-w-lg mx-auto`}>
+            <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-8 max-w-xl mx-auto">
               {features.map((f, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 + i * 0.08 }}
+                  className="h-full"
                 >
-                  <Card className="text-left card-interactive">
-                    <div className="p-4">
-                      <div className={`w-8 h-8 rounded-lg bg-${accent}/10 flex items-center justify-center mb-2`}>
+                  <Card className="text-left h-full">
+                    <div className="p-4 flex flex-col h-full">
+                      <div className={`w-9 h-9 rounded-xl bg-${accent}/10 flex items-center justify-center mb-3 shrink-0`}>
                         <f.icon className={`w-4 h-4 text-${accent}`} />
                       </div>
-                      <p className="text-sm font-semibold">{f.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
+                      <p className="text-sm font-semibold leading-tight">{f.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{f.desc}</p>
                     </div>
                   </Card>
                 </motion.div>
