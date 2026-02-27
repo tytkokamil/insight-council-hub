@@ -73,14 +73,16 @@ const Section = ({ title, icon: Icon, children, defaultOpen = true, badge }: {
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <button className="flex items-center gap-2 w-full group py-2">
-          <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
-          <h2 className="text-sm font-semibold flex-1 text-left">{title}</h2>
+        <button className="flex items-center gap-2.5 w-full group py-2.5 px-1 rounded-lg hover:bg-muted/40 transition-colors -mx-1">
+          <div className="w-7 h-7 rounded-md bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-muted transition-colors">
+            <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+          </div>
+          <h2 className="text-sm font-semibold flex-1 text-left tracking-tight">{title}</h2>
           {badge}
-          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
         </button>
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-2 pb-4">
+      <CollapsibleContent className="pt-3 pb-4 animate-accordion-down">
         {children}
       </CollapsibleContent>
     </Collapsible>
@@ -342,7 +344,7 @@ const DecisionDetail = () => {
         </Card>
 
         {/* KPI Mini-Panel */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 stagger-children">
           {[
             { label: "Risk", value: `${riskScore}%`, icon: AlertTriangle, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success", bg: riskScore > 60 ? "bg-destructive/10" : riskScore > 40 ? "bg-warning/10" : "bg-success/10" },
             { label: t("decisionDetail.escalate"), value: `Level ${decision.escalation_level || 0}`, icon: ShieldAlert, color: (decision.escalation_level || 0) > 0 ? "text-destructive" : "text-muted-foreground", bg: (decision.escalation_level || 0) > 0 ? "bg-destructive/10" : "bg-muted/50" },
@@ -352,11 +354,13 @@ const DecisionDetail = () => {
           ].map(kpi => (
             <Tooltip key={kpi.label}>
               <TooltipTrigger asChild>
-                <Card className={`${kpi.bg} border-0`}>
+                <Card className={`${kpi.bg} border-0 card-interactive`}>
                   <CardContent className="p-3 text-center">
-                    <kpi.icon className={`w-4 h-4 mx-auto mb-1 ${kpi.color}`} />
-                    <p className={`text-base font-bold ${kpi.color}`}>{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
+                    <div className="w-7 h-7 rounded-md bg-background/60 flex items-center justify-center mx-auto mb-1.5">
+                      <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+                    </div>
+                    <p className={`text-base font-bold tabular-nums ${kpi.color}`}>{kpi.value}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.label}</p>
                   </CardContent>
                 </Card>
               </TooltipTrigger>
@@ -759,7 +763,11 @@ const DecisionDetail = () => {
 
       {/* ═══════════ 10. ACTIONS FOOTER ═══════════ */}
       {isActive && (
-        <div className="sticky bottom-0 z-10 mt-8 -mx-4 px-4 py-3 bg-background/80 backdrop-blur-lg border-t border-border flex items-center gap-2 flex-wrap">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="sticky bottom-0 z-10 mt-8 -mx-4 px-4 py-3 bg-background/80 backdrop-blur-lg border-t border-border flex items-center gap-2 flex-wrap">
           {decision.status === "draft" && (
             <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("review")}>
               <PlayCircle className="w-3.5 h-3.5" /> {t("decisionDetail.startReview")}
@@ -798,7 +806,7 @@ const DecisionDetail = () => {
               </Button>
             </>
           )}
-        </div>
+        </motion.div>
       )}
 
       {isOwner && (
@@ -830,12 +838,15 @@ const DecisionDetail = () => {
 
 const RiskBar = ({ label, value }: { label: string; value: number }) => (
   <div>
-    <div className="flex items-center justify-between text-[10px] mb-0.5">
+    <div className="flex items-center justify-between text-[10px] mb-1">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{Math.min(value, 100)}%</span>
+      <span className="font-semibold tabular-nums">{Math.min(value, 100)}%</span>
     </div>
-    <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-      <div className={`h-full rounded-full transition-all ${value > 60 ? "bg-destructive" : value > 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${Math.min(value, 100)}%` }} />
+    <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all duration-500 ease-out ${value > 60 ? "bg-destructive" : value > 40 ? "bg-warning" : "bg-success"}`}
+        style={{ width: `${Math.min(value, 100)}%` }}
+      />
     </div>
   </div>
 );

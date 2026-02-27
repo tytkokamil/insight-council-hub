@@ -51,20 +51,20 @@ const DecisionSideDrawer = ({
 
   return (
     <Sheet open={!!decision} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent className="w-[400px] sm:w-[440px] overflow-y-auto">
+      <SheetContent className="w-[400px] sm:w-[440px] overflow-y-auto border-l border-border">
         <SheetHeader>
-          <SheetTitle className="font-display text-lg">{decision.title}</SheetTitle>
+          <SheetTitle className="font-display text-lg tracking-tight">{decision.title}</SheetTitle>
         </SheetHeader>
-        <div className="mt-4 space-y-4">
+        <div className="mt-5 space-y-5">
           {/* Status & Priority */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase ${statusStyles[decision.status]}`}>
+            <span className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${statusStyles[decision.status]}`}>
               {statusLabels[decision.status]}
             </span>
             <span className={`text-xs font-semibold ${priorityStyles[decision.priority]}`}>
               {priorityLabels[decision.priority]}
             </span>
-            <span className="text-xs text-muted-foreground">{categoryLabels[decision.category]}</span>
+            <span className="text-xs text-muted-foreground">· {categoryLabels[decision.category]}</span>
           </div>
 
           {/* Description */}
@@ -107,7 +107,7 @@ const DecisionSideDrawer = ({
             <div className="flex flex-wrap gap-1.5">
               {statusOptions.map(s => (
                 <Button key={s.value} size="sm" variant={decision.status === s.value ? "default" : "outline"}
-                  className="text-xs h-7"
+                  className="text-xs h-7 press-scale"
                   onClick={async () => {
                     await supabase.from("decisions").update({ status: s.value as any }).eq("id", decision.id);
                     onInvalidate();
@@ -122,7 +122,7 @@ const DecisionSideDrawer = ({
 
           <Separator />
 
-          <Button className="w-full gap-2" onClick={() => { onClose(); navigate(`/decisions/${decision.id}`); }}>
+          <Button className="w-full gap-2 press-scale" onClick={() => { onClose(); navigate(`/decisions/${decision.id}`); }}>
             <Eye className="w-4 h-4" /> {t("decisions.toDetail")} <ChevronRight className="w-4 h-4 ml-auto" />
           </Button>
         </div>

@@ -417,12 +417,14 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
   const content = (
     <div className="space-y-8">
       {/* SECTION 1: Executive Summary KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 stagger-children">
         {kpis.map((kpi, i) => (
-          <Card key={i}>
+          <Card key={i} className="card-interactive">
             <CardContent className="p-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="w-5 h-5 rounded bg-muted/60 flex items-center justify-center">
+                  <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
+                </div>
                 <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
               </div>
               <div className="flex items-center gap-1">
