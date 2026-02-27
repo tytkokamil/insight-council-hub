@@ -683,6 +683,8 @@
     "resolveBlocks": "Resolve blocks",
     "allOnTrack": "All on track",
     "noOpenItems": "No open escalations, reviews or overdue decisions.",
+    "noDataYet": "No data yet",
+    "noDataYetDesc": "Create your first decision to populate the dashboard with data.",
     "firstSteps": "Getting Started",
     "allDone": "All done – good luck!",
     "allDoneCelebration": "Onboarding complete! You're all set 🚀",

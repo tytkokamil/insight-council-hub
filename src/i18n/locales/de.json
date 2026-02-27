@@ -683,6 +683,8 @@
     "resolveBlocks": "Blockaden lösen",
     "allOnTrack": "Alles auf Kurs",
     "noOpenItems": "Keine offenen Eskalationen, Reviews oder überfällige Entscheidungen.",
+    "noDataYet": "Noch keine Daten",
+    "noDataYetDesc": "Erstelle deine erste Entscheidung, um das Dashboard mit Daten zu füllen.",
     "firstSteps": "Erste Schritte",
     "allDone": "Alles erledigt – viel Erfolg!",
     "allDoneCelebration": "Onboarding abgeschlossen! Du bist startklar 🚀",
