@@ -224,8 +224,8 @@ const Strategy = () => {
         }
       />
 
-      {/* ═══ GOAL SUGGESTIONS ═══ */}
-      {goals.length === 0 && !showCreate && (
+      {/* ═══ GOAL SUGGESTIONS – always visible ═══ */}
+      {!showCreate && (
         <div className="mb-8">
           <h2 className="text-sm font-semibold mb-1">{t("strategy.sugSectionTitle")}</h2>
           <p className="text-xs text-muted-foreground mb-4">{t("strategy.sugSectionDesc")}</p>
