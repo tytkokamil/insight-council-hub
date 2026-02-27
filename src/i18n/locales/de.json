@@ -290,7 +290,8 @@
     "saving": "Speichern...",
     "or": "oder",
     "saveFailed": "Speichern fehlgeschlagen",
-    "tryAgainLater": "Bitte versuchen Sie es erneut."
+    "tryAgainLater": "Bitte versuchen Sie es erneut.",
+    "noData": "Keine Daten"
   },
   "audit": {
     "reasonTitle": "Begründung erforderlich",
