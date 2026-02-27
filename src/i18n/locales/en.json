@@ -3710,7 +3710,12 @@
     "avgDays": "Avg. {{days}}d",
     "implemented": "implemented",
     "total": "total",
-    "escalated": "escalated"
+    "escalated": "escalated",
+    "insufficientData": "Insufficient data for a reliable calculation",
+    "speedProfileEmpty": "No category data available yet",
+    "speedProfileEmptyHint": "Create decisions in different categories to see the speed profile.",
+    "exportDna": "Export DNA",
+    "exported": "DNA report exported"
   },
   "escalationEngine": {
     "loading": "Loading Decision Control...",
