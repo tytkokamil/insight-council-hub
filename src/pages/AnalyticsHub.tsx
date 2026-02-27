@@ -6,6 +6,7 @@ import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { BarChart3, TrendingUp, PieChart, Users, FileDown, Loader2 } from "lucide-react";
 import { useDecisions } from "@/hooks/useDecisions";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
@@ -61,10 +62,17 @@ const AnalyticsHub = () => {
         }
         primaryAction={
           hasEnoughData ? (
-            <Button size="sm" variant="outline" disabled={exporting} onClick={handleExport} className="gap-2">
-              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              {t("analytics.executiveSnapshot")}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" disabled={exporting} onClick={handleExport} className="gap-2">
+                    {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                    {t("analytics.executiveSnapshot")}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent><p className="text-xs">{t("analytics.executiveSnapshotTooltip")}</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : undefined
         }
       />

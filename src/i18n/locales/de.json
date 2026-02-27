@@ -979,6 +979,7 @@
     "last90": "Letzte 90 Tage",
     "all": "Gesamt",
     "executiveSnapshot": "Executive Snapshot",
+    "executiveSnapshotTooltip": "Exportiert KPIs, Bottleneck-Analyse, Risikoverteilung und Governance-Status als PDF für Board-Meetings.",
     "exported": "Exportiert",
     "exportedDesc": "Executive Snapshot als PDF.",
     "exportError": "Export fehlgeschlagen.",
