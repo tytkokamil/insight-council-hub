@@ -1,8 +1,12 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
-import { categoryLabels, statusLabels, priorityLabels } from "@/lib/labels";
+import { de, enUS } from "date-fns/locale";
+import i18n from "@/i18n";
+import { addPdfHeader, addPdfFooter, addSectionTitle } from "@/lib/pdfBranding";
+
+const t = (key: string, opts?: any): string => String(i18n.t(key, opts));
+const dateLoc = () => (i18n.language === "en" ? enUS : de);
 
 interface DecisionData {
   id: string;
@@ -37,8 +41,20 @@ interface DecisionTagData {
   tag_id: string;
 }
 
+const getStatusLabels = (): Record<string, string> => ({
+  draft: t("status.draft"), review: t("status.review"), approved: t("status.approved"),
+  implemented: t("status.implemented"), rejected: t("status.rejected"), archived: t("status.archived"),
+});
+const getPriorityLabels = (): Record<string, string> => ({
+  low: t("priority.low"), medium: t("priority.medium"), high: t("priority.high"), critical: t("priority.critical"),
+});
+const getCategoryLabels = (): Record<string, string> => ({
+  strategic: t("category.strategic"), budget: t("category.budget"), hr: t("category.hr"),
+  technical: t("category.technical"), operational: t("category.operational"), marketing: t("category.marketing"),
+});
+
 const fmtDate = (d: string | null | undefined) =>
-  d ? format(new Date(d), "dd.MM.yyyy", { locale: de }) : "—";
+  d ? format(new Date(d), "dd.MM.yyyy", { locale: dateLoc() }) : "—";
 
 const truncate = (s: string, max: number) =>
   s.length > max ? s.slice(0, max) + "…" : s;
@@ -49,47 +65,39 @@ export function generateLessonsReport(
   tags: TagData[],
   decisionTags: DecisionTagData[],
 ) {
+  const sl = getStatusLabels();
+  const pl = getPriorityLabels();
+  const cl = getCategoryLabels();
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
-  const now = format(new Date(), "dd. MMMM yyyy, HH:mm 'Uhr'", { locale: de });
-  const tagMap = new Map(tags.map(t => [t.id, t]));
+  const tagMap = new Map(tags.map(tg => [tg.id, tg]));
 
-  // --- HEADER ---
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, pw, 36, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text("Lessons Learned Report", 14, 16);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("DecisionOS — Knowledge Base Export", 14, 23);
-  doc.setFontSize(8);
-  doc.text(`Erstellt: ${now}`, 14, 30);
-  doc.text(`${decisions.length} Entscheidungen · ${lessons.length} Lessons`, pw - 14, 30, { align: "right" });
+  // --- BRANDED HEADER ---
+  let y = addPdfHeader(
+    doc,
+    t("lessonsReport.subtitle", "Knowledge Base Export"),
+    `${decisions.length} ${t("lessonsReport.decisions", "Entscheidungen")} · ${lessons.length} Lessons`,
+    t("lessonsReport.title", "Lessons Learned Report"),
+  );
 
   // --- SUMMARY ---
-  let y = 44;
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Zusammenfassung", 14, y);
-  y += 6;
+  y = addSectionTitle(doc, t("lessonsReport.summary", "Zusammenfassung"), y);
 
   const withLessons = decisions.filter(d => lessons.some(l => l.decision_id === d.id));
   const categoryCounts: Record<string, number> = {};
   decisions.forEach(d => { categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1; });
 
   const summaryRows = [
-    ["Abgeschlossene Entscheidungen", String(decisions.length)],
-    ["Davon mit Lessons Learned", `${withLessons.length} (${decisions.length ? Math.round(withLessons.length / decisions.length * 100) : 0}%)`],
-    ["Gesamte Lessons Learned", String(lessons.length)],
-    ["Verwendete Tags", String(tags.length)],
+    [t("lessonsReport.completedDecisions", "Abgeschlossene Entscheidungen"), String(decisions.length)],
+    [t("lessonsReport.withLessons", "Davon mit Lessons Learned"), `${withLessons.length} (${decisions.length ? Math.round(withLessons.length / decisions.length * 100) : 0}%)`],
+    [t("lessonsReport.totalLessons", "Gesamte Lessons Learned"), String(lessons.length)],
+    [t("lessonsReport.usedTags", "Verwendete Tags"), String(tags.length)],
   ];
 
   autoTable(doc, {
     startY: y,
-    head: [["Metrik", "Wert"]],
+    head: [[t("exports.metric", "Metrik"), t("exports.value", "Wert")]],
     body: summaryRows,
     theme: "grid",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 9, fontStyle: "bold" },
@@ -101,10 +109,7 @@ export function generateLessonsReport(
 
   // --- CATEGORY BREAKDOWN ---
   y = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Kategorieverteilung", 14, y);
-  y += 4;
+  y = addSectionTitle(doc, t("lessonsReport.categoryBreakdown", "Kategorieverteilung"), y);
 
   const catRows = Object.entries(categoryCounts)
     .sort((a, b) => b[1] - a[1])
@@ -113,12 +118,12 @@ export function generateLessonsReport(
         const dec = decisions.find(d => d.id === l.decision_id);
         return dec?.category === cat;
       });
-      return [categoryLabels[cat] ?? cat, String(count), String(catLessons.length)];
+      return [cl[cat] ?? cat, String(count), String(catLessons.length)];
     });
 
   autoTable(doc, {
     startY: y,
-    head: [["Kategorie", "Entscheidungen", "Lessons"]],
+    head: [[t("exports.category", "Kategorie"), t("lessonsReport.decisions", "Entscheidungen"), "Lessons"]],
     body: catRows,
     theme: "grid",
     headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -131,10 +136,7 @@ export function generateLessonsReport(
   y = (doc as any).lastAutoTable.finalY + 12;
   if (y > 240) { doc.addPage(); y = 20; }
 
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Detaillierte Lessons Learned", 14, y);
-  y += 6;
+  y = addSectionTitle(doc, t("lessonsReport.detailedTitle", "Detaillierte Lessons Learned"), y);
 
   const decisionsWithLessons = decisions.filter(d => lessons.some(l => l.decision_id === d.id));
 
@@ -145,11 +147,10 @@ export function generateLessonsReport(
       .map(dt => tagMap.get(dt.tag_id)?.name)
       .filter(Boolean);
 
-    // Check space for header
     if (y > 250) { doc.addPage(); y = 20; }
 
     // Decision header bar
-    doc.setFillColor(241, 245, 249); // slate-100
+    doc.setFillColor(241, 245, 249);
     doc.rect(14, y - 4, pw - 28, 18, "F");
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10);
@@ -159,10 +160,10 @@ export function generateLessonsReport(
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
     const meta = [
-      categoryLabels[dec.category] ?? dec.category,
-      priorityLabels[dec.priority] ?? dec.priority,
-      statusLabels[dec.status] ?? dec.status,
-      dec.implemented_at ? `Umgesetzt: ${fmtDate(dec.implemented_at)}` : "",
+      cl[dec.category] ?? dec.category,
+      pl[dec.priority] ?? dec.priority,
+      sl[dec.status] ?? dec.status,
+      dec.implemented_at ? `${t("lessonsReport.implemented", "Umgesetzt")}: ${fmtDate(dec.implemented_at)}` : "",
     ].filter(Boolean).join(" · ");
     doc.text(meta, 16, y + 8);
     if (decTags.length > 0) {
@@ -175,7 +176,7 @@ export function generateLessonsReport(
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(8);
       doc.setFont("helvetica", "italic");
-      const lines = doc.splitTextToSize(`Ergebnis: ${dec.outcome_notes}`, pw - 32);
+      const lines = doc.splitTextToSize(`${t("lessonsReport.result", "Ergebnis")}: ${dec.outcome_notes}`, pw - 32);
       doc.text(lines, 16, y);
       y += lines.length * 4 + 4;
     }
@@ -190,19 +191,19 @@ export function generateLessonsReport(
 
     autoTable(doc, {
       startY: y,
-      head: [["Kernerkenntnis", "Was lief gut", "Was lief schlecht", "Empfehlungen"]],
+      head: [[
+        t("lessonsReport.colTakeaway", "Kernerkenntnis"),
+        t("lessonsReport.colWentWell", "Was lief gut"),
+        t("lessonsReport.colWentWrong", "Was lief schlecht"),
+        t("lessonsReport.colRecommendations", "Empfehlungen"),
+      ]],
       body: lessonRows,
       theme: "striped",
       headStyles: { fillColor: [99, 102, 241], textColor: 255, fontSize: 7, fontStyle: "bold" },
       bodyStyles: { fontSize: 7 },
       margin: { left: 14, right: 14 },
       styles: { cellPadding: 2, overflow: "linebreak" },
-      columnStyles: {
-        0: { cellWidth: 42 },
-        1: { cellWidth: 38 },
-        2: { cellWidth: 38 },
-        3: { cellWidth: 42 },
-      },
+      columnStyles: { 0: { cellWidth: 42 }, 1: { cellWidth: 38 }, 2: { cellWidth: 38 }, 3: { cellWidth: 42 } },
     });
 
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -212,22 +213,18 @@ export function generateLessonsReport(
   const withoutLessons = decisions.filter(d => !lessons.some(l => l.decision_id === d.id));
   if (withoutLessons.length > 0) {
     if (y > 240) { doc.addPage(); y = 20; }
-    doc.setTextColor(30, 30, 30);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("Entscheidungen ohne Lessons Learned", 14, y);
-    y += 4;
+    y = addSectionTitle(doc, t("lessonsReport.withoutLessons", "Entscheidungen ohne Lessons Learned"), y);
 
     const noLessonRows = withoutLessons.slice(0, 20).map(d => [
       truncate(d.title, 45),
-      categoryLabels[d.category] ?? d.category,
-      statusLabels[d.status] ?? d.status,
+      cl[d.category] ?? d.category,
+      sl[d.status] ?? d.status,
       fmtDate(d.implemented_at),
     ]);
 
     autoTable(doc, {
       startY: y,
-      head: [["Titel", "Kategorie", "Status", "Umgesetzt"]],
+      head: [[t("exports.title"), t("exports.category"), t("exports.status"), t("lessonsReport.implemented", "Umgesetzt")]],
       body: noLessonRows,
       theme: "striped",
       headStyles: { fillColor: [15, 23, 42], textColor: 255, fontSize: 8, fontStyle: "bold" },
@@ -238,18 +235,8 @@ export function generateLessonsReport(
   }
 
   // --- FOOTER ---
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(150, 150, 150);
-    const ph = doc.internal.pageSize.getHeight();
-    doc.text("DecisionOS — Vertraulich · Lessons Learned Report", 14, ph - 8);
-    doc.text(`Seite ${i} von ${pageCount}`, pw - 14, ph - 8, { align: "right" });
-    doc.line(14, ph - 12, pw - 14, ph - 12);
-  }
+  addPdfFooter(doc);
 
   const dateStr = format(new Date(), "yyyy-MM-dd");
-  doc.save(`Lessons-Learned-Report_${dateStr}.pdf`);
+  doc.save(`Decivio-Lessons-Report_${dateStr}.pdf`);
 }

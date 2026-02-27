@@ -101,20 +101,33 @@ export function exportPDF(decisions: DecisionExport[]) {
   <meta charset="utf-8">
   <title>${t("exports.reportTitle")}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 40px; color: #1a1a1a; }
-    h1 { font-size: 22px; margin-bottom: 4px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; color: #1a1a1a; }
+    .header { background: #0f172a; color: white; padding: 24px 40px; display: flex; align-items: center; gap: 16px; }
+    .logo-mark { width: 32px; height: 32px; background: #6366f1; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; }
+    .header-text h1 { font-size: 18px; margin: 0; }
+    .header-text p { font-size: 11px; margin: 2px 0 0; opacity: 0.7; }
+    .content { padding: 24px 40px; }
     .meta { font-size: 12px; color: #666; margin-bottom: 24px; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; padding: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #666; border-bottom: 2px solid #333; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e5e5e5; font-size: 12px; }
     .summary { display: flex; gap: 24px; margin-bottom: 24px; }
     .stat { padding: 12px 16px; background: #f5f5f5; border-radius: 8px; }
     .stat-value { font-size: 24px; font-weight: 700; }
     .stat-label { font-size: 11px; color: #666; text-transform: uppercase; }
-    @media print { body { margin: 20px; } }
+    .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e5e5e5; font-size: 10px; color: #999; display: flex; justify-content: space-between; }
+    @media print { body { margin: 0; } .header { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
-  <h1>${t("exports.reportTitle")}</h1>
+  <div class="header">
+    <div class="logo-mark">D</div>
+    <div class="header-text">
+      <h1>Decivio</h1>
+      <p>${t("exports.reportTitle")}</p>
+    </div>
+  </div>
+  <div class="content">
   <p class="meta">${t("exports.createdAt", { date: now })} · ${t("exports.decisionsCount", { count: decisions.length })}</p>
   
   <div class="summary">
@@ -132,6 +145,11 @@ export function exportPDF(decisions: DecisionExport[]) {
     </thead>
     <tbody>${tableRows}</tbody>
   </table>
+  <div class="footer">
+    <span>Decivio · ${i18n.language === "de" ? "Vertraulich" : "Confidential"}</span>
+    <span>${now}</span>
+  </div>
+  </div>
 </body>
 </html>`;
 

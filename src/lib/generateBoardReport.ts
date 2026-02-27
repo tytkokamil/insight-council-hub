@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import i18n from "@/i18n";
+import { addPdfHeader, addPdfFooter, addSectionTitle } from "@/lib/pdfBranding";
 
 const t = (key: string, opts?: any): string => String(i18n.t(key, opts));
 const dateLoc = () => (i18n.language === "en" ? enUS : de);
@@ -74,31 +75,14 @@ export function generateBoardReport(data: BoardReportData) {
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageWidth = doc.internal.pageSize.getWidth();
-  const now = format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: dateLoc() });
   const profileMap: Record<string, string> = {};
   profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || t("boardReport.unknown"); });
 
-  // --- HEADER ---
-  doc.setFillColor(15, 23, 42);
-  doc.rect(0, 0, pageWidth, 36, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text("Board Report", 14, 16);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(t("boardReport.headerSubtitle"), 14, 23);
-  doc.setFontSize(8);
-  doc.text(`${t("boardReport.created")}: ${now}`, 14, 30);
-  doc.text(t("boardReport.decisionsCount", { count: decisions.length }), pageWidth - 14, 30, { align: "right" });
+  // --- BRANDED HEADER ---
+  let y = addPdfHeader(doc, t("boardReport.headerSubtitle"), t("boardReport.decisionsCount", { count: decisions.length }), "Board Report");
 
   // --- KPI SECTION ---
-  let y = 44;
-  doc.setTextColor(30, 30, 30);
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text(t("boardReport.kpiTitle"), 14, y);
-  y += 8;
+  y = addSectionTitle(doc, t("boardReport.kpiTitle"), y);
 
   const implemented = decisions.filter((d: any) => d.status === "implemented");
   const overdue = decisions.filter((d: any) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented");
@@ -369,19 +353,9 @@ export function generateBoardReport(data: BoardReportData) {
   }
 
   // --- FOOTER on each page ---
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(150, 150, 150);
-    const pageH = doc.internal.pageSize.getHeight();
-    doc.text(t("boardReport.confidential"), 14, pageH - 8);
-    doc.text(t("boardReport.page", { current: i, total: pageCount }), pageWidth - 14, pageH - 8, { align: "right" });
-    doc.line(14, pageH - 12, pageWidth - 14, pageH - 12);
-  }
+  addPdfFooter(doc);
 
   // Save
   const dateStr = format(new Date(), "yyyy-MM-dd", { locale: dateLoc() });
-  doc.save(`Board-Report_${dateStr}.pdf`);
+  doc.save(`Decivio-Board-Report_${dateStr}.pdf`);
 }

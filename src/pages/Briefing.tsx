@@ -71,14 +71,9 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const exportBriefingPdf = async () => {
     if (!briefing) return;
     const { default: jsPDF } = await import("jspdf");
+    const { addPdfHeader, addPdfFooter } = await import("@/lib/pdfBranding");
     const doc = new jsPDF();
-    let y = 20;
-    doc.setFontSize(18);
-    doc.text(t("briefing.title"), 14, y);
-    y += 8;
-    doc.setFontSize(10);
-    doc.text(today, 14, y);
-    y += 12;
+    let y = addPdfHeader(doc, t("briefing.subtitle", "Tägliche Entscheidungslage"), undefined, t("briefing.title"));
 
     // KPIs
     doc.setFontSize(12);
@@ -132,7 +127,8 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
       });
     }
 
-    doc.save(`briefing-${new Date().toISOString().slice(0, 10)}.pdf`);
+    addPdfFooter(doc);
+    doc.save(`Decivio-Briefing-${new Date().toISOString().slice(0, 10)}.pdf`);
     toast({ title: t("briefing.exportPdfSuccess"), description: t("briefing.exportPdfDesc") });
   };
 
