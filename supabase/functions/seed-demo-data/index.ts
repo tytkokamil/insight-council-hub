@@ -427,8 +427,18 @@ Deno.serve(async (req) => {
       await supabase.from("decision_goal_links").insert(goalLinks);
     }
 
-    // ── 6. Lessons Learned for implemented decisions ──
+    // ── 5b. Archive some older implemented decisions ──
     const implementedDecs = insertedDecisions?.filter(d => d.status === "implemented") || [];
+    // Archive the oldest 2 implemented decisions (if we have enough)
+    const toArchive = implementedDecs.slice(-2);
+    for (const dec of toArchive) {
+      await supabase.from("decisions").update({
+        status: "archived",
+        archived_at: daysAgo(5),
+      }).eq("id", dec.id);
+    }
+
+    // ── 6. Lessons Learned for implemented decisions ──
     const lessonTemplates = [
       { key_takeaway: "Frühzeitige Planung reduziert Risiken signifikant.", what_went_well: "Termingerecht umgesetzt.", what_went_wrong: "Scope anfangs nicht klar definiert.", recommendations: "Scope-Dokument vor Kickoff erstellen." },
       { key_takeaway: "Automatisierung spart langfristig enorme Ressourcen.", what_went_well: "ROI höher als erwartet.", what_went_wrong: "Einarbeitungszeit unterschätzt.", recommendations: "Training-Budget einplanen." },

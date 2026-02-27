@@ -665,7 +665,7 @@ const ArchivePage = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-sm">{t("archivePage.autoArchiveLabel")}</p>
-            <p className="text-xs text-muted-foreground">{t("archivePage.autoArchiveDesc")}</p>
+            <p className="text-xs text-muted-foreground">{t("archivePage.autoArchiveDesc", { days: autoArchiveDays })}</p>
           </div>
           <Switch checked={retentionEnabled} onCheckedChange={setRetentionEnabled} disabled={!isAdmin} />
         </div>
