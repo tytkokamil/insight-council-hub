@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
 
 const Teams = () => {
@@ -59,41 +60,19 @@ const Teams = () => {
       />
 
       {teams.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card>
-            <CardContent className="p-10">
-              <div className="max-w-md mx-auto text-center">
-                <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <UsersIcon className="w-7 h-7 text-primary" />
-                </div>
-                <h3 className="font-display text-xl font-bold mb-2">{t("teams.emptyTitle")}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{t("teams.emptyDesc")}</p>
-                <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {t("teams.emptyStatistic")}
-                </p>
-                <Button onClick={() => setShowCreate(true)} className="gap-2 mb-6">
-                  <Plus className="w-4 h-4" />
-                  {t("teams.createTeam")}
-                </Button>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {[
-                    { icon: Mail, label: t("teams.emailInvites"), desc: t("teams.emailInvitesDesc") },
-                    { icon: Shield, label: t("teams.roleManagement"), desc: t("teams.roleManagementDesc") },
-                    { icon: MessageSquare, label: t("teams.teamChat"), desc: t("teams.teamChatDesc") },
-                    { icon: BarChart3, label: t("teams.teamAnalytics"), desc: t("teams.teamAnalyticsDesc") },
-                  ].map((f, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-muted/30 border border-border text-center">
-                      <f.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
-                      <p className="text-xs font-medium">{f.label}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <EmptyAnalysisState
+          icon={UsersIcon}
+          title={t("teams.emptyTitle")}
+          description={t("teams.emptyDesc")}
+          ctaLabel={t("teams.createTeam")}
+          onCtaClick={() => setShowCreate(true)}
+          motivation={t("teams.emptyStatistic")}
+          features={[
+            { icon: Mail, label: t("teams.emailInvites"), desc: t("teams.emailInvitesDesc") },
+            { icon: Shield, label: t("teams.roleManagement"), desc: t("teams.roleManagementDesc") },
+            { icon: MessageSquare, label: t("teams.teamChat"), desc: t("teams.teamChatDesc") },
+          ]}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {teams.map((team, i) => (

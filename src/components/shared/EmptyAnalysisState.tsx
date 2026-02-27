@@ -28,7 +28,27 @@ interface EmptyAnalysisStateProps {
   motivation?: string;
   features?: FeatureHint[];
   quickActions?: QuickAction[];
+  /** Optional accent color override — defaults to primary */
+  accentClass?: string;
 }
+
+const dotPattern = (
+  <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" aria-hidden>
+    <pattern id="empty-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1" fill="currentColor" />
+    </pattern>
+    <rect width="100%" height="100%" fill="url(#empty-dots)" />
+  </svg>
+);
+
+const container = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+};
+const item = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } },
+};
 
 const EmptyAnalysisState = ({
   icon: Icon,
@@ -41,68 +61,92 @@ const EmptyAnalysisState = ({
   motivation,
   features,
   quickActions,
+  accentClass,
 }: EmptyAnalysisStateProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const resolvedCtaLabel = ctaLabel || t("emptyState.defaultCta");
+  const accent = accentClass || "primary";
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card>
-        <CardContent className="p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-            <Icon className="w-8 h-8 text-primary opacity-60" />
+    <motion.div variants={container} initial="hidden" animate="show">
+      <Card className="relative overflow-hidden">
+        {dotPattern}
+        <CardContent className="p-12 text-center relative">
+          {/* Decorative glow behind icon */}
+          <div className="relative mx-auto mb-5 w-16 h-16">
+            <div className={`absolute inset-0 rounded-2xl bg-${accent}/10 blur-xl scale-150 opacity-40`} />
+            <motion.div
+              variants={item}
+              className={`relative w-16 h-16 rounded-2xl bg-${accent}/10 border border-${accent}/20 flex items-center justify-center`}
+            >
+              <Icon className={`w-8 h-8 text-${accent} opacity-70`} />
+            </motion.div>
           </div>
-          <h3 className="font-display text-xl font-semibold mb-2">{title}</h3>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto mb-4">{description}</p>
+
+          <motion.h3 variants={item} className="font-display text-xl font-semibold mb-2">
+            {title}
+          </motion.h3>
+          <motion.p variants={item} className="text-muted-foreground text-sm max-w-md mx-auto mb-4">
+            {description}
+          </motion.p>
 
           {motivation && (
-            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/10 mb-6 max-w-md mx-auto">
-              <TrendingUp className="w-4 h-4 text-primary shrink-0" />
+            <motion.div
+              variants={item}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-${accent}/[0.04] border border-${accent}/10 mb-6 max-w-md mx-auto`}
+            >
+              <TrendingUp className={`w-4 h-4 text-${accent} shrink-0`} />
               <p className="text-xs text-foreground/80 text-left leading-relaxed">{motivation}</p>
             </motion.div>
           )}
 
-          <div className={motivation ? "" : "mt-2"}>
+          <motion.div variants={item} className={motivation ? "" : "mt-2"}>
             <Button onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
               <Plus className="w-4 h-4" />
               {resolvedCtaLabel}
             </Button>
-          </div>
+          </motion.div>
 
           {hint && (
-            <p className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
+            <motion.p variants={item} className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
               <ArrowRight className="w-3 h-3" />
               {hint}
-            </p>
+            </motion.p>
           )}
 
           {features && features.length > 0 && (
-            <div className={`grid grid-cols-${Math.min(features.length, 3)} gap-3 mt-8 max-w-lg mx-auto`}>
+            <motion.div variants={item} className={`grid grid-cols-1 sm:grid-cols-${Math.min(features.length, 3)} gap-3 mt-8 max-w-lg mx-auto`}>
               {features.map((f, i) => (
-                <Card key={i} className="text-left">
-                  <div className="p-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-                      <f.icon className="w-4 h-4 text-primary" />
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + i * 0.08 }}
+                >
+                  <Card className="text-left card-interactive">
+                    <div className="p-4">
+                      <div className={`w-8 h-8 rounded-lg bg-${accent}/10 flex items-center justify-center mb-2`}>
+                        <f.icon className={`w-4 h-4 text-${accent}`} />
+                      </div>
+                      <p className="text-sm font-semibold">{f.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
                     </div>
-                    <p className="text-sm font-semibold">{f.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
-                  </div>
-                </Card>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
 
           {quickActions && quickActions.length > 0 && (
-            <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
+            <motion.div variants={item} className="flex items-center justify-center gap-2 mt-6 flex-wrap">
               {quickActions.map((a, i) => (
                 <Button key={i} variant="outline" size="sm" onClick={a.onClick} className="gap-1.5 text-xs">
                   {a.icon && <a.icon className="w-3.5 h-3.5" />}
                   {a.label}
                 </Button>
               ))}
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>

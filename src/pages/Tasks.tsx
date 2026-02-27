@@ -34,6 +34,7 @@ import { format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 const useStatusConfig = () => {
   const { t } = useTranslation();
@@ -295,48 +296,31 @@ const Tasks = () => {
       />
 
       {tasks.length === 0 ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[60vh]">
-          <div className="max-w-lg mx-auto text-center">
-            <div className="w-14 h-14 mx-auto mb-6 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <ListTodo className="w-7 h-7 text-primary" />
-            </div>
-            <h3 className="font-display text-xl font-bold mb-2">{t("tasks.emptyTitle")}</h3>
-            <p className="text-sm text-muted-foreground mb-2">{t("tasks.emptyDesc")}</p>
-            <p className="text-xs text-primary/80 mb-6 flex items-center justify-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" />
-              {t("tasks.emptyStatistic")}
-            </p>
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <Button variant="outline" onClick={async () => {
-                const { toast: t2 } = await import("sonner");
-                t2.info(t("tasks.demoCreating"));
+        <EmptyAnalysisState
+          icon={ListTodo}
+          title={t("tasks.emptyTitle")}
+          description={t("tasks.emptyDesc")}
+          ctaLabel={t("tasks.createFirst")}
+          onCtaClick={openCreate}
+          motivation={t("tasks.emptyStatistic")}
+          features={[
+            { icon: Zap, label: t("tasks.statusTracking"), desc: t("tasks.statusTrackingDesc") },
+            { icon: GitBranch, label: t("tasks.teamAssignment"), desc: t("tasks.teamAssignmentDesc") },
+            { icon: Target, label: t("tasks.priorities"), desc: t("tasks.prioritiesDesc") },
+          ]}
+          quickActions={[
+            {
+              label: t("tasks.loadDemo"),
+              icon: Zap,
+              onClick: async () => {
+                toast.info(t("tasks.demoCreating"));
                 const { data, error } = await supabase.functions.invoke("seed-demo-data");
-                if (error || data?.error) { t2.error(data?.error || t("tasks.demoError")); return; }
-                t2.success(t("tasks.demoCreated")); window.location.reload();
-              }} className="gap-2"><Zap className="w-4 h-4" /> {t("tasks.loadDemo")}</Button>
-              <Button onClick={openCreate} className="gap-2">
-                <Plus className="w-4 h-4" /> {t("tasks.createFirst")}
-              </Button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Zap, label: t("tasks.statusTracking"), desc: t("tasks.statusTrackingDesc") },
-                { icon: GitBranch, label: t("tasks.teamAssignment"), desc: t("tasks.teamAssignmentDesc") },
-                { icon: Target, label: t("tasks.priorities"), desc: t("tasks.prioritiesDesc") },
-              ].map((f, i) => (
-                <Card key={i} className="text-left">
-                  <div className="p-4">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-                      <f.icon className="w-4 h-4 text-primary" />
-                    </div>
-                    <p className="text-sm font-semibold">{f.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+                if (error || data?.error) { toast.error(data?.error || t("tasks.demoError")); return; }
+                toast.success(t("tasks.demoCreated")); window.location.reload();
+              },
+            },
+          ]}
+        />
       ) : (
         <>
           <div className="flex items-center gap-3 mb-2">
