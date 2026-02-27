@@ -217,8 +217,8 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
             transition={{ duration: 0.15 }}
             role="dialog"
             aria-label={t("notif.title")}
-            className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border bg-card shadow-xl overflow-hidden flex flex-col"
-            style={{ left: collapsed ? 64 : 248 }}
+            className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border bg-card overflow-hidden flex flex-col"
+            style={{ left: collapsed ? 64 : 248, boxShadow: 'var(--shadow-elevated)' }}
           >
             <div className="px-4 py-3 border-b border-border bg-card">
               <div className="flex items-center justify-between mb-2">

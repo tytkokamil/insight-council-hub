@@ -70,9 +70,9 @@ const EmptyAnalysisState = ({
 
   return (
     <motion.div variants={container} initial="hidden" animate="show">
-      <Card className="relative overflow-hidden">
+      <Card className="relative overflow-hidden cmd-card-elevated">
         {dotPattern}
-        <CardContent className="p-12 text-center relative">
+        <CardContent className="p-10 sm:p-12 text-center relative">
           {/* Decorative glow behind icon */}
           <div className="relative mx-auto mb-5 w-16 h-16">
             <div className={`absolute inset-0 rounded-2xl bg-${accent}/10 blur-xl scale-150 opacity-40`} />
@@ -125,7 +125,7 @@ const EmptyAnalysisState = ({
                   transition={{ delay: 0.3 + i * 0.08 }}
                   className="h-full"
                 >
-                  <Card className="text-left h-full">
+                  <Card className="text-left h-full card-interactive">
                     <div className="p-4 flex flex-col h-full">
                       <div className={`w-9 h-9 rounded-xl bg-${accent}/10 flex items-center justify-center mb-3 shrink-0`}>
                         <f.icon className={`w-4 h-4 text-${accent}`} />

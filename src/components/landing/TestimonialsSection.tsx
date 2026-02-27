@@ -23,9 +23,9 @@ const TestimonialsSection = () => {
 
         <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {testimonials.map((tt, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.1, duration: 0.6, ease }} className="group relative p-7 rounded-2xl border border-border/50 bg-card/50 hover:bg-card hover:border-border transition-all duration-300 flex flex-col">
+            <motion.div key={i} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.1, duration: 0.6, ease }} className="group relative p-7 rounded-2xl border border-border/50 bg-card/50 hover:bg-card hover:border-border hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 flex flex-col">
               <div className="mb-5">
-                <span className="text-3xl font-bold font-display text-primary">{tt.metric}</span>
+                <span className="text-3xl font-bold font-display text-primary tabular-nums">{tt.metric}</span>
                 <span className="text-xs text-muted-foreground/60 ml-2">{tt.metricLabel}</span>
               </div>
               <Quote className="w-4 h-4 text-foreground/[0.08] mb-3" />
