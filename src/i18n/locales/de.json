@@ -548,6 +548,8 @@
     "goodEvening": "Guten Abend, {{name}}",
     "whatNeedsAttention": "Was braucht heute deine Aufmerksamkeit?",
     "shortcutHint": "Tipp: Drücke ⌘K für die Schnellsuche",
+    "noContextDecisions": "Keine Entscheidungen in dieser Ansicht",
+    "noContextDecisionsDesc": "Dir sind noch keine Entscheidungen zugewiesen. Erstelle eine neue oder wechsle zur Team-Ansicht.",
     "loadFailed": "Laden fehlgeschlagen",
     "retryDesc": "Bitte versuche es erneut.",
     "welcome": "Willkommen, {{name}}!",

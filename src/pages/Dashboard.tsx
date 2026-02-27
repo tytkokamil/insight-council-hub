@@ -361,221 +361,222 @@ const Dashboard = () => {
         {/* ═══ LOADING SKELETON ═══ */}
         {isLoading && <DashboardSkeleton />}
 
-        {/* ═══ 1. TOP ACTION NOW — Most important thing to do ═══ */}
-        {!isLoading && (
-          <TopActionNow
-            overdue={computed.overdue}
-            escalated={computed.escalated}
-            pendingReviews={computed.pendingReviews}
-            blockedTasks={computed.blockedTasks}
-          />
-        )}
-
-        {/* ═══ 2. FOUR CORE KPIs ═══ */}
-        {!isLoading && (
-          <CoreKpiGrid />
-        )}
-
-        {/* ═══ ONBOARDING CHECKLIST ═══ */}
-        {!isLoading && !isExecutive && decisions.length < 10 && (
-          <OnboardingChecklist
-            hasTeam={teams.length > 0}
-            hasDecision={decisions.length > 0}
-            hasReview={reviews.length > 0}
-            hasTemplate={decisions.some(d => !!d.template_used)}
-          />
-        )}
-
-        {/* ═══ KEYBOARD SHORTCUT HINT ═══ */}
-        {!isLoading && decisions.length < 5 && !localStorage.getItem("shortcut-hint-dismissed") && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="flex items-center justify-center gap-2 py-2"
-          >
-            <Command className="w-3 h-3 text-muted-foreground/40" />
-            <span className="text-[11px] text-muted-foreground/40">{t("dashboard.shortcutHint")}</span>
-            <button
-              onClick={() => localStorage.setItem("shortcut-hint-dismissed", "true")}
-              className="text-muted-foreground/30 hover:text-muted-foreground text-[10px] ml-1"
-            >✕</button>
+        {/* ═══ CONTEXT EMPTY STATE — no decisions in current view ═══ */}
+        {!isLoading && decisions.length === 0 && allDecisions.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center min-h-[40vh]">
+            <div className="max-w-md mx-auto text-center">
+              <div className="w-14 h-14 mx-auto mb-5 rounded-xl bg-muted/60 border border-border flex items-center justify-center">
+                <FileText className="w-7 h-7 text-muted-foreground/50" />
+              </div>
+              <h3 className="font-display text-lg font-semibold mb-2">{t("dashboard.noContextDecisions")}</h3>
+              <p className="text-sm text-muted-foreground mb-6">{t("dashboard.noContextDecisionsDesc")}</p>
+              <div className="flex items-center justify-center gap-3">
+                <Button variant="outline" size="sm" onClick={() => navigate("/decisions")} className="gap-1.5">
+                  <Plus className="w-4 h-4" /> {t("dashboard.newDecision")}
+                </Button>
+              </div>
+            </div>
           </motion.div>
         )}
 
-        {!isLoading && (
-          <PrimaryFocusBanner
-            decisions={decisions}
-            escalated={computed.escalated}
-            overdue={computed.overdue}
-            teams={teams}
-          />
-        )}
-
-        {/* ═══ EXECUTIVE MODE: Compact Layout ═══ */}
-        {isExecutive && !isLoading && (
+        {/* ═══ MAIN DASHBOARD — only when decisions exist ═══ */}
+        {!isLoading && decisions.length > 0 && (
           <>
-            {/* DQI Hero — prominent for executives */}
-            <WidgetErrorBoundary>
-              <DecisionQualityIndex />
-            </WidgetErrorBoundary>
+            {/* ═══ 1. TOP ACTION NOW ═══ */}
+            <TopActionNow
+              overdue={computed.overdue}
+              escalated={computed.escalated}
+              pendingReviews={computed.pendingReviews}
+              blockedTasks={computed.blockedTasks}
+            />
 
-            {/* Escalations + Cost side by side */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <WidgetErrorBoundary>
-                <EscalationWidget />
-              </WidgetErrorBoundary>
-              <WidgetErrorBoundary>
-                <DecisionCostWidget />
-              </WidgetErrorBoundary>
-            </div>
+            {/* ═══ 2. FOUR CORE KPIs ═══ */}
+            <CoreKpiGrid />
 
-            {/* Portfolio Risk */}
-            <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-
-            {/* AI Brief */}
-            <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-              <AiBriefingWidget />
-            </Suspense>
-          </>
-        )}
-
-        {/* ═══ OPERATIONAL MODE: Streamlined Layout ═══ */}
-        {!isExecutive && !isLoading && (
-          <>
-            {/* Stuck Decisions + Escalations + Gamification */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              <div className="lg:col-span-2">
-                <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
-              </div>
-              <div className="space-y-5">
-                <WidgetErrorBoundary>
-                  <EscalationWidget />
-                </WidgetErrorBoundary>
-                <WidgetErrorBoundary>
-                  <GamificationWidget decisions={decisions} tasks={contextTasks} teams={teams} />
-                </WidgetErrorBoundary>
-              </div>
-            </div>
-
-            {/* Recently Opened */}
-            {computed.recentlyOpened.length > 0 && (
-              <section>
-                <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.recentlyOpened")}</h2>
-                <div className="border border-border rounded-lg divide-y divide-border">
-                  {computed.recentlyOpened.map(d => (
-                    <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)}
-                      className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={cn("w-2 h-2 rounded-full shrink-0",
-                          d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary")} />
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
-                        <span className="text-sm truncate">{d.title}</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                        {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+            {/* ═══ ONBOARDING CHECKLIST ═══ */}
+            {!isExecutive && decisions.length < 10 && (
+              <OnboardingChecklist
+                hasTeam={teams.length > 0}
+                hasDecision={decisions.length > 0}
+                hasReview={reviews.length > 0}
+                hasTemplate={decisions.some(d => !!d.template_used)}
+              />
             )}
 
-            {/* ═══ DEEP DIVE — Expandable Details ═══ */}
-            <div className="border-t border-border pt-4">
-              <button
-                onClick={() => setShowDeepDive(!showDeepDive)}
-                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2"
+            {/* ═══ KEYBOARD SHORTCUT HINT ═══ */}
+            {decisions.length < 5 && !localStorage.getItem("shortcut-hint-dismissed") && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="flex items-center justify-center gap-2 py-2"
               >
-                {showDeepDive ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                <span>{showDeepDive ? t("dashboard.hideDetails") : t("dashboard.showDetails")}</span>
-                <div className="flex flex-wrap gap-1.5 ml-2">
-                  {["DQI", "Trends", "Radar", "Cost of Delay", "Risk Portfolio"].map(label => (
-                    <span key={label} className="text-[11px] px-2 py-0.5 rounded-full bg-muted/60 border border-border/50 text-muted-foreground/70">{label}</span>
-                  ))}
+                <Command className="w-3 h-3 text-muted-foreground/40" />
+                <span className="text-[11px] text-muted-foreground/40">{t("dashboard.shortcutHint")}</span>
+                <button
+                  onClick={() => localStorage.setItem("shortcut-hint-dismissed", "true")}
+                  className="text-muted-foreground/30 hover:text-muted-foreground text-[10px] ml-1"
+                >✕</button>
+              </motion.div>
+            )}
+
+            <PrimaryFocusBanner
+              decisions={decisions}
+              escalated={computed.escalated}
+              overdue={computed.overdue}
+              teams={teams}
+            />
+
+            {/* ═══ EXECUTIVE MODE ═══ */}
+            {isExecutive && (
+              <>
+                <WidgetErrorBoundary>
+                  <DecisionQualityIndex />
+                </WidgetErrorBoundary>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <WidgetErrorBoundary>
+                    <EscalationWidget />
+                  </WidgetErrorBoundary>
+                  <WidgetErrorBoundary>
+                    <DecisionCostWidget />
+                  </WidgetErrorBoundary>
                 </div>
-              </button>
+                <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+                  <AiBriefingWidget />
+                </Suspense>
+              </>
+            )}
 
-              <AnimatePresence>
-                {showDeepDive && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-8 mt-6"
-                  >
-                    {/* DQI */}
+            {/* ═══ OPERATIONAL MODE ═══ */}
+            {!isExecutive && (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                  <div className="lg:col-span-2">
+                    <StuckDecisionAnalyzer decisions={decisions} reviews={reviews} dependencies={allDependencies} teams={teams} />
+                  </div>
+                  <div className="space-y-5">
                     <WidgetErrorBoundary>
-                      <DecisionQualityIndex />
+                      <EscalationWidget />
                     </WidgetErrorBoundary>
+                    <WidgetErrorBoundary>
+                      <GamificationWidget decisions={decisions} tasks={contextTasks} teams={teams} />
+                    </WidgetErrorBoundary>
+                  </div>
+                </div>
 
-                    {/* Cost + Risk side by side */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <WidgetErrorBoundary>
-                        <DecisionCostWidget />
-                      </WidgetErrorBoundary>
-                      <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-                    </div>
-
-                    {/* Trends + Radar */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                      <div className="lg:col-span-2">
-                        <section>
-                          <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
-                          <div className="border border-border rounded-xl p-6">
-                            <div className="flex items-center justify-between mb-4">
-                              <div>
-                                <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
-                                <p className="text-xs text-muted-foreground">{t("dashboard.chartSubtitle")}</p>
-                              </div>
-                            </div>
-                            <div className="h-52">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
-                                  <defs>
-                                    <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
-                                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
-                                      <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                                  <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                                  <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
-                                  <RechartsTooltip contentStyle={chartTooltipStyle} />
-                                  <Area type="monotone" dataKey="completed" name={t("dashboard.chartCompleted")} stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
-                                  <Area type="monotone" dataKey="created" name={t("dashboard.chartCreated")} stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
-                                  <Area type="monotone" dataKey="escalations" name={t("dashboard.chartEscalations")} stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
-                                </AreaChart>
-                              </ResponsiveContainer>
-                            </div>
-                            {computed.trendInsight && (
-                              <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
-                                <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
-                                <p className="text-xs text-muted-foreground">
-                                  <span className="font-medium text-foreground">Insight: </span>
-                                  {computed.trendInsight}
-                                </p>
-                              </div>
-                            )}
+                {computed.recentlyOpened.length > 0 && (
+                  <section>
+                    <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.recentlyOpened")}</h2>
+                    <div className="border border-border rounded-lg divide-y divide-border">
+                      {computed.recentlyOpened.map(d => (
+                        <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)}
+                          className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={cn("w-2 h-2 rounded-full shrink-0",
+                              d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary")} />
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
+                            <span className="text-sm truncate">{d.title}</span>
                           </div>
-                        </section>
-                      </div>
-                      <DecisionRadar />
+                          <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                            {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
+                          </span>
+                        </button>
+                      ))}
                     </div>
-
-                    {/* AI Brief */}
-                    <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
-                      <AiBriefingWidget />
-                    </Suspense>
-                  </motion.div>
+                  </section>
                 )}
-              </AnimatePresence>
-            </div>
+
+                {/* ═══ DEEP DIVE ═══ */}
+                <div className="border-t border-border pt-4">
+                  <button
+                    onClick={() => setShowDeepDive(!showDeepDive)}
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors w-full py-2"
+                  >
+                    {showDeepDive ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    <span>{showDeepDive ? t("dashboard.hideDetails") : t("dashboard.showDetails")}</span>
+                    <div className="flex flex-wrap gap-1.5 ml-2">
+                      {["DQI", "Trends", "Radar", "Cost of Delay", "Risk Portfolio"].map(label => (
+                        <span key={label} className="text-[11px] px-2 py-0.5 rounded-full bg-muted/60 border border-border/50 text-muted-foreground/70">{label}</span>
+                      ))}
+                    </div>
+                  </button>
+
+                  <AnimatePresence>
+                    {showDeepDive && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-8 mt-6"
+                      >
+                        <WidgetErrorBoundary>
+                          <DecisionQualityIndex />
+                        </WidgetErrorBoundary>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <WidgetErrorBoundary>
+                            <DecisionCostWidget />
+                          </WidgetErrorBoundary>
+                          <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                          <div className="lg:col-span-2">
+                            <section>
+                              <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.trends")}</h2>
+                              <div className="border border-border rounded-xl p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div>
+                                    <p className="text-sm font-medium">{t("dashboard.decisionsPerWeek")}</p>
+                                    <p className="text-xs text-muted-foreground">{t("dashboard.chartSubtitle")}</p>
+                                  </div>
+                                </div>
+                                <div className="h-52">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={computed.weekData} margin={{ top: 5, right: 5, bottom: 0, left: -20 }}>
+                                      <defs>
+                                        <linearGradient id="gradCompleted" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="gradCreated" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.08} />
+                                          <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                                        </linearGradient>
+                                      </defs>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                                      <XAxis dataKey="week" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                                      <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} allowDecimals={false} />
+                                      <RechartsTooltip contentStyle={chartTooltipStyle} />
+                                      <Area type="monotone" dataKey="completed" name={t("dashboard.chartCompleted")} stroke="hsl(var(--primary))" fill="url(#gradCompleted)" strokeWidth={2} />
+                                      <Area type="monotone" dataKey="created" name={t("dashboard.chartCreated")} stroke="hsl(var(--muted-foreground))" fill="url(#gradCreated)" strokeWidth={1} strokeDasharray="4 4" />
+                                      <Area type="monotone" dataKey="escalations" name={t("dashboard.chartEscalations")} stroke="hsl(var(--destructive))" fill="none" strokeWidth={1.5} strokeDasharray="2 2" />
+                                    </AreaChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                {computed.trendInsight && (
+                                  <div className="mt-3 p-3 rounded-lg bg-primary/[0.04] border border-primary/10 flex items-center gap-2">
+                                    <Zap className="w-3.5 h-3.5 text-primary shrink-0" />
+                                    <p className="text-xs text-muted-foreground">
+                                      <span className="font-medium text-foreground">Insight: </span>
+                                      {computed.trendInsight}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </section>
+                          </div>
+                          <DecisionRadar />
+                        </div>
+                        <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+                          <AiBriefingWidget />
+                        </Suspense>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
