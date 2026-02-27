@@ -288,7 +288,9 @@
     "activate": "Aktivieren",
     "retry": "Erneut versuchen",
     "saving": "Speichern...",
-    "or": "oder"
+    "or": "oder",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "tryAgainLater": "Bitte versuchen Sie es erneut."
   },
   "audit": {
     "reasonTitle": "Begründung erforderlich",
