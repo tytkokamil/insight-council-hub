@@ -174,14 +174,14 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground mb-1">{t("aiAnalysis.riskScore")}</p>
-              <p className={`text-2xl font-bold font-display ${scoreColor(analysis.risk_score)}`}>{analysis.risk_score}%</p>
+              <p className={`text-2xl font-bold font-display tabular-nums ${scoreColor(analysis.risk_score)}`}>{analysis.risk_score}%</p>
               <div className="w-full h-2 rounded-full bg-muted mt-2 overflow-hidden">
                 <div className={`h-full rounded-full ${analysis.risk_score > 60 ? "bg-destructive" : analysis.risk_score > 40 ? "bg-warning" : "bg-success"}`} style={{ width: `${analysis.risk_score}%` }} />
               </div>
             </div>
             <div className="p-4 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground mb-1">{t("aiAnalysis.impactScore")}</p>
-              <p className={`text-2xl font-bold font-display ${scoreColor(100 - analysis.impact_score)}`}>{analysis.impact_score}%</p>
+              <p className={`text-2xl font-bold font-display tabular-nums ${scoreColor(100 - analysis.impact_score)}`}>{analysis.impact_score}%</p>
               <div className="w-full h-2 rounded-full bg-muted mt-2 overflow-hidden">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${analysis.impact_score}%` }} />
               </div>

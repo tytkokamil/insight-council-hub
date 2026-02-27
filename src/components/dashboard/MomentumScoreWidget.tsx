@@ -180,7 +180,7 @@ const MomentumScoreWidget = () => {
         {score !== null ? (
           <>
             <div className="flex items-end gap-2 mb-1">
-              <span className={`font-display text-4xl font-bold ${getColor(score)}`}>{score}</span>
+              <span className={`font-display text-4xl font-bold tabular-nums ${getColor(score)}`}>{score}</span>
               <span className="text-sm text-muted-foreground mb-1">/100</span>
               {predictedScore && predictedScore > score && (
                 <div className="flex items-center gap-1 text-success text-xs mb-1 ml-auto">

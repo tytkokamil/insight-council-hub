@@ -80,7 +80,7 @@ const VelocityScoreWidget = () => {
         {avgDays !== null ? (
           <>
             <div className="flex items-end gap-2 mb-2">
-              <span className="font-display text-3xl font-bold">{avgDays}</span>
+              <span className="font-display text-3xl font-bold tabular-nums">{avgDays}</span>
               <span className="text-sm text-muted-foreground mb-1">{t("widgets.daysAvg")}</span>
             </div>
             <div className={`flex items-center gap-1 text-xs ${trendColor} mb-4`}>

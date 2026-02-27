@@ -69,15 +69,15 @@ const ImpactTrackerPanel = ({ decision, onUpdated }: { decision: any; onUpdated:
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 rounded-lg bg-muted/30 text-center">
           <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.aiPrediction")}</p>
-          <p className="text-xl font-bold font-display text-primary">{predictedImpact}%</p>
+          <p className="text-xl font-bold font-display tabular-nums text-primary">{predictedImpact}%</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/30 text-center">
           <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.actualImpact")}</p>
-          <p className="text-xl font-bold font-display text-foreground">{decision.actual_impact_score ?? "—"}</p>
+          <p className="text-xl font-bold font-display tabular-nums text-foreground">{decision.actual_impact_score ?? "—"}</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/30 text-center">
           <p className="text-xs text-muted-foreground mb-1">{t("impactTracker.accuracy")}</p>
-          <p className={`text-xl font-bold font-display ${accuracy !== null ? (accuracy > 80 ? "text-success" : accuracy > 60 ? "text-warning" : "text-destructive") : "text-muted-foreground"}`}>
+          <p className={`text-xl font-bold font-display tabular-nums ${accuracy !== null ? (accuracy > 80 ? "text-success" : accuracy > 60 ? "text-warning" : "text-destructive") : "text-muted-foreground"}`}>
             {accuracy !== null ? `${accuracy}%` : "—"}
           </p>
         </div>

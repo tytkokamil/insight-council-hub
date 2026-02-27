@@ -106,17 +106,17 @@ const OpportunityCostRadar = ({ embedded }: { embedded?: boolean }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><Flame className="w-4 h-4 text-destructive" /><span className="text-xs text-muted-foreground">{t("opportunityCost.dailyLosses")}</span></div>
-          <p className="text-3xl font-bold tabular-nums text-destructive">{formatCurrency(totalDailyCost)}</p>
+          <p className="text-3xl font-bold font-display tabular-nums text-destructive">{formatCurrency(totalDailyCost)}</p>
           <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.dailyLossesDesc")}</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><DollarSign className="w-4 h-4 text-warning" /><span className="text-xs text-muted-foreground">{t("opportunityCost.accumulatedCosts")}</span></div>
-          <p className="text-3xl font-bold tabular-nums text-warning">{formatCurrency(totalAccumulated)}</p>
+          <p className="text-3xl font-bold font-display tabular-nums text-warning">{formatCurrency(totalAccumulated)}</p>
           <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.accumulatedCostsDesc")}</p>
         </CardContent></Card>
         <Card><CardContent className="p-5">
           <div className="flex items-center gap-2 mb-2"><Timer className="w-4 h-4 text-primary" /><span className="text-xs text-muted-foreground">{t("opportunityCost.openDecisions")}</span></div>
-          <p className="text-3xl font-bold tabular-nums">{entries.length}</p>
+          <p className="text-3xl font-bold font-display tabular-nums">{entries.length}</p>
           <p className="text-[10px] text-muted-foreground mt-1">{t("opportunityCost.ofWhichOverdue", { count: entries.filter(e => e.isOverdue).length })}</p>
         </CardContent></Card>
       </div>

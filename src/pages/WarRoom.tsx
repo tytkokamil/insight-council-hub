@@ -196,7 +196,7 @@ const WarRoom = () => {
                     <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
                     <span className="text-[10px] text-muted-foreground">{s.label}</span>
                   </div>
-                  <p className="text-xl font-bold font-display">{s.value}</p>
+                  <p className="text-xl font-bold font-display tabular-nums">{s.value}</p>
                 </div>
               ))}
             </div>
@@ -234,7 +234,7 @@ const WarRoom = () => {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-lg font-bold font-display text-foreground">{Math.round(d.urgencyScore)}</p>
+                          <p className="text-lg font-bold font-display tabular-nums text-foreground">{Math.round(d.urgencyScore)}</p>
                           <p className="text-[10px] text-muted-foreground">{t("warRoom.urgency")}</p>
                         </div>
                       </div>

@@ -158,7 +158,7 @@ const FrictionMap = ({ embedded }: { embedded?: boolean }) => {
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
             </div>
-            <p className="text-2xl font-bold tabular-nums">{card.value}{card.suffix || ""}</p>
+            <p className="text-2xl font-bold font-display tabular-nums">{card.value}{card.suffix || ""}</p>
           </div>
         ))}
       </div>
@@ -193,7 +193,7 @@ const FrictionMap = ({ embedded }: { embedded?: boolean }) => {
                         <div className={`h-full rounded-full ${frictionColor(team.frictionScore)}`} style={{ width: `${(team.frictionScore / maxFriction) * 100}%` }} />
                       </div>
                     </div>
-                    <div className={`text-right shrink-0 w-16 text-lg font-bold tabular-nums ${frictionTextColor(team.frictionScore)}`}>{team.frictionScore}</div>
+                    <div className={`text-right shrink-0 w-16 text-lg font-bold font-display tabular-nums ${frictionTextColor(team.frictionScore)}`}>{team.frictionScore}</div>
                   </div>
                 </div>
               ))}

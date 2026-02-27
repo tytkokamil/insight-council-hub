@@ -216,19 +216,19 @@ const AdminUsers = () => {
           <TabsContent value="analytics" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card><CardContent className="p-5">
-                <div className="flex items-center gap-2 text-primary mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.userCount}</span></div>
+                <div className="flex items-center gap-2 text-primary mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.userCount}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.registeredUsers")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
-                <div className="flex items-center gap-2 text-primary mb-1"><FileText className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.totalDecisions}</span></div>
+                <div className="flex items-center gap-2 text-primary mb-1"><FileText className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.totalDecisions}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.totalDecisions")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
-                <div className="flex items-center gap-2 text-destructive mb-1"><Activity className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.slaBreaches}</span></div>
+                <div className="flex items-center gap-2 text-destructive mb-1"><Activity className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.slaBreaches}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.slaBreaches")}</p>
               </CardContent></Card>
               <Card><CardContent className="p-5">
-                <div className="flex items-center gap-2 text-success mb-1"><TrendingUp className="w-4 h-4" /><span className="text-2xl font-bold font-display">{orgStats.completionRate}%</span></div>
+                <div className="flex items-center gap-2 text-success mb-1"><TrendingUp className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.completionRate}%</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.completionRate")}</p>
               </CardContent></Card>
             </div>

@@ -194,7 +194,7 @@ const Strategy = () => {
                 </Tooltip>
               )}
             </div>
-            <p className="font-display text-2xl font-bold">{card.value}</p>
+            <p className="font-display text-2xl font-bold tabular-nums">{card.value}</p>
           </motion.div>
         ))}
       </div>

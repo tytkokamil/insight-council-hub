@@ -268,7 +268,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
                       return (
                         <td key={col} className="p-1.5">
                           <div className={`rounded-lg p-2.5 text-center cursor-default ${getCellBg(cell.healthScore, cell.total)}`} title={`${cell.label}\nHealth: ${cell.healthScore}/100\n${cell.total} Items`}>
-                            <p className={`text-lg font-bold font-display ${getCellText(cell.healthScore, cell.total)}`}>
+                            <p className={`text-lg font-bold font-display tabular-nums ${getCellText(cell.healthScore, cell.total)}`}>
                               {cell.total === 0 ? "—" : cell.healthScore}
                             </p>
                             <p className="text-[9px] text-muted-foreground mt-0.5">
