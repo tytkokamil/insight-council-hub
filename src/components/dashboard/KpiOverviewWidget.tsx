@@ -200,7 +200,7 @@ const KpiOverviewWidget = () => {
   };
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="widget-grid-4">
       {kpis.map((kpi, i) => (
         <motion.div
           key={kpi.label}
@@ -208,7 +208,7 @@ const KpiOverviewWidget = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.05 }}
         >
-          <Card className="h-full">
+          <Card className="h-full hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 border-border/80">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-medium text-muted-foreground">{kpi.label}</span>

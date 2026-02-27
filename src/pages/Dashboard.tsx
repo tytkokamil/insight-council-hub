@@ -254,7 +254,7 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="space-y-8">
+      <div className="section-gap-lg">
 
         {/* ═══ LOADING SKELETON ═══ */}
         {isLoading && <DashboardSkeleton />}
@@ -314,7 +314,7 @@ const Dashboard = () => {
                 <WidgetErrorBoundary>
                   <DecisionQualityIndex />
                 </WidgetErrorBoundary>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="widget-grid-2">
                   <WidgetErrorBoundary>
                     <DecisionCostWidget />
                   </WidgetErrorBoundary>
@@ -329,11 +329,11 @@ const Dashboard = () => {
             {/* ═══ OPERATIONAL MODE ═══ */}
             {!isExecutive && (
               <>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                   <div className="lg:col-span-2">
                     <StuckDecisionAnalyzer decisions={decisions} reviews={contextReviews} dependencies={allDependencies} teams={teams} />
                   </div>
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     <WidgetErrorBoundary>
                       <EscalationWidget />
                     </WidgetErrorBoundary>
@@ -345,8 +345,8 @@ const Dashboard = () => {
 
                 {computed.recentlyOpened.length > 0 && (
                   <section>
-                    <h2 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">{t("dashboard.recentlyOpened")}</h2>
-                    <div className="border border-border rounded-lg divide-y divide-border">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">{t("dashboard.recentlyOpened")}</h2>
+                    <div className="border border-border rounded-xl divide-y divide-border overflow-hidden">
                       {computed.recentlyOpened.map(d => (
                         <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)}
                           className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">

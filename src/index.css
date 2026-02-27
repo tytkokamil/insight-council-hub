@@ -94,62 +94,62 @@
     --background: 228 16% 12%;
     --foreground: 225 15% 93%;
 
-    --card: 228 16% 14.5%;
+    --card: 228 16% 15%;
     --card-foreground: 225 15% 93%;
 
-    --popover: 228 16% 14%;
+    --popover: 228 16% 14.5%;
     --popover-foreground: 225 15% 92%;
 
-    --primary: 214 52% 42%;
+    --primary: 214 55% 48%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 14% 19%;
+    --secondary: 228 14% 20%;
     --secondary-foreground: 225 15% 93%;
 
-    --muted: 228 14% 19%;
-    --muted-foreground: 225 10% 58%;
+    --muted: 228 14% 20%;
+    --muted-foreground: 225 12% 62%;
 
-    --accent: 175 40% 14%;
-    --accent-foreground: 175 55% 65%;
+    --accent: 175 40% 15%;
+    --accent-foreground: 175 55% 68%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 152 55% 50%;
+    --success: 152 55% 52%;
     --success-foreground: 0 0% 98%;
 
-    --warning: 38 90% 55%;
+    --warning: 38 90% 58%;
     --warning-foreground: 38 80% 18%;
 
-    --border: 228 12% 24%;
-    --input: 228 12% 24%;
-    --ring: 214 52% 42%;
+    --border: 228 12% 22%;
+    --input: 228 12% 22%;
+    --ring: 214 55% 48%;
 
-    --chart-1: 214 52% 42%;
-    --chart-2: 152 55% 50%;
-    --chart-3: 38 90% 55%;
+    --chart-1: 214 55% 48%;
+    --chart-2: 152 55% 52%;
+    --chart-3: 38 90% 58%;
     --chart-4: 0 72% 55%;
-    --chart-5: 263 55% 60%;
+    --chart-5: 263 55% 62%;
 
     --sidebar: 228 16% 11%;
-    --sidebar-foreground: 225 10% 75%;
-    --sidebar-primary: 214 52% 42%;
+    --sidebar-foreground: 225 12% 78%;
+    --sidebar-primary: 214 55% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 14% 16%;
+    --sidebar-accent: 228 14% 17%;
     --sidebar-accent-foreground: 225 15% 92%;
     --sidebar-border: 228 12% 20%;
-    --sidebar-ring: 214 52% 42%;
+    --sidebar-ring: 214 55% 48%;
 
-    --accent-blue: 217 91% 60%;
-    --accent-teal: 175 70% 42%;
-    --accent-violet: 263 75% 65%;
-    --accent-rose: 347 80% 58%;
-    --accent-amber: 38 90% 55%;
+    --accent-blue: 217 91% 62%;
+    --accent-teal: 175 70% 45%;
+    --accent-violet: 263 75% 68%;
+    --accent-rose: 347 80% 60%;
+    --accent-amber: 38 90% 58%;
 
-    --shadow-glow: 0 0 20px -4px hsl(214 52% 42% / 0.2);
-    --shadow-card: 0 0 0 1px hsl(0 0% 100% / 0.04);
-    --shadow-card-hover: 0 0 0 1px hsl(214 52% 42% / 0.15), 0 4px 12px hsl(0 0% 0% / 0.3);
-    --shadow-elevated: 0 0 0 1px hsl(0 0% 100% / 0.06), 0 8px 24px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 20px -4px hsl(214 55% 48% / 0.25);
+    --shadow-card: 0 0 0 1px hsl(0 0% 100% / 0.05), 0 1px 3px hsl(0 0% 0% / 0.3);
+    --shadow-card-hover: 0 0 0 1px hsl(214 55% 48% / 0.18), 0 4px 16px hsl(0 0% 0% / 0.35);
+    --shadow-elevated: 0 0 0 1px hsl(0 0% 100% / 0.07), 0 8px 24px hsl(0 0% 0% / 0.45);
 
     --shadow-2xs: 0 1px 2px 0 rgb(0 0 0 / 0.15);
     --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
@@ -228,7 +228,26 @@
 
   /* Dark mode: ensure sufficient contrast on muted elements */
   .dark .text-muted-foreground {
-    color: hsl(225 10% 60%);
+    color: hsl(225 12% 64%);
+  }
+
+  /* Dark mode: improve card borders visibility */
+  .dark .border-border {
+    border-color: hsl(228 12% 24%);
+  }
+
+  /* Dark mode: Badge contrast boost */
+  .dark [class*="bg-primary/10"] {
+    background-color: hsl(var(--primary) / 0.15);
+  }
+  .dark [class*="bg-success/10"] {
+    background-color: hsl(var(--success) / 0.15);
+  }
+  .dark [class*="bg-warning/10"] {
+    background-color: hsl(var(--warning) / 0.15);
+  }
+  .dark [class*="bg-destructive/10"] {
+    background-color: hsl(var(--destructive) / 0.15);
   }
 }
 
