@@ -90,7 +90,7 @@ const navGroupsDef: NavGroupDef[] = [
           { icon: Dna, label: "nav.decisionDna", path: "/dna" },
           { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
           { icon: Activity, label: "nav.healthHeatmap", path: "/health" },
-          { icon: Clock, label: "nav.predictiveTimeline", path: "/predictive-timeline" },
+          { icon: Clock, label: "nav.predictiveTimeline", path: "/timeline" },
           { icon: FlaskConical, label: "nav.scenarios", path: "/scenarios" },
         ],
       } as NavSubGroup,
