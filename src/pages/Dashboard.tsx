@@ -251,42 +251,19 @@ const Dashboard = () => {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center min-h-[70vh]">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-lg">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-              <Zap className="w-8 h-8 text-primary" />
+              <LayoutDashboard className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mb-2">{t("dashboard.welcome", { name: firstName })}</h1>
-            <p className="text-muted-foreground mb-2">{t("dashboard.readyDesc")}</p>
-            <p className="text-sm text-muted-foreground/70 mb-8">{t("dashboard.startSteps")}</p>
-
-            <div className="grid gap-3 mb-8 text-left">
-              {[
-                { num: "1", label: t("dashboard.createTeam"), desc: t("dashboard.createTeamDesc"), path: "/teams", icon: Users },
-                { num: "2", label: t("dashboard.firstDecision"), desc: t("dashboard.firstDecisionDesc"), path: "/decisions", icon: FileText },
-                { num: "3", label: t("dashboard.startReview"), desc: t("dashboard.startReviewDesc"), path: "/decisions", icon: Eye },
-              ].map(step => (
-                <button key={step.num} onClick={() => navigate(step.path)}
-                  className="flex items-center gap-4 p-4 rounded-lg border border-border hover:border-primary/30 hover:bg-primary/[0.02] transition-all group">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center justify-center shrink-0">{step.num}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium group-hover:text-primary transition-colors">{step.label}</p>
-                    <p className="text-xs text-muted-foreground">{step.desc}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors shrink-0" />
-                </button>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Button onClick={handleSeedDemo} variant="outline" className="gap-1.5" disabled={seedingDemo}>
+            <h1 className="font-display text-2xl font-semibold tracking-tight mb-3">{t("dashboard.emptyTitle")}</h1>
+            <p className="text-muted-foreground text-sm mb-8">{t("dashboard.emptyDesc")}</p>
+            <div className="flex items-center justify-center gap-3">
+              <Button onClick={handleSeedDemo} variant="outline" className="gap-2" disabled={seedingDemo}>
                 {seedingDemo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                 {seedingDemo ? t("dashboard.creating") : t("dashboard.startWithDemo")}
               </Button>
-              <Button onClick={() => setShowOnboarding(true)} variant="outline" className="gap-1.5">
-                <Compass className="w-4 h-4" /> {t("dashboard.startTour")}
-              </Button>
-              <Button onClick={() => navigate("/decisions")} className="gap-1.5">
-                <Plus className="w-4 h-4" /> {t("dashboard.newDecision")}
+              <Button onClick={() => navigate("/decisions")} className="gap-2">
+                <Plus className="w-4 h-4" /> {t("dashboard.createFirstDecision")}
               </Button>
             </div>
           </motion.div>
