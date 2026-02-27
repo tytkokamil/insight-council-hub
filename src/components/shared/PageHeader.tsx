@@ -24,10 +24,10 @@ const PageHeader = ({
   const { t } = useTranslation();
 
   const roleConfig: Record<PageRole, { labelKey: string; icon: LucideIcon; className: string }> = {
-    intelligence: { labelKey: "shared.pageRoleIntelligence", icon: Brain, className: "bg-accent-violet/10 text-accent-violet border-accent-violet/20" },
-    execution: { labelKey: "shared.pageRoleExecution", icon: Settings, className: "bg-primary/10 text-primary border-primary/20" },
+    intelligence: { labelKey: "shared.pageRoleIntelligence", icon: Brain, className: "bg-accent-teal/10 text-accent-teal border-accent-teal/20" },
+    execution: { labelKey: "shared.pageRoleExecution", icon: Settings, className: "bg-accent-violet/10 text-accent-violet border-accent-violet/20" },
     governance: { labelKey: "shared.pageRoleGovernance", icon: Shield, className: "bg-accent-rose/10 text-accent-rose border-accent-rose/20" },
-    knowledge: { labelKey: "shared.pageRoleKnowledge", icon: BookOpen, className: "bg-accent-teal/10 text-accent-teal border-accent-teal/20" },
+    knowledge: { labelKey: "shared.pageRoleKnowledge", icon: BookOpen, className: "bg-accent-blue/10 text-accent-blue border-accent-blue/20" },
   };
 
   const config = roleConfig[role];
