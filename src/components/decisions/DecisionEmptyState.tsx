@@ -1,9 +1,8 @@
-import { motion } from "framer-motion";
-import { BarChart3, Plus, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BarChart3, Zap, Brain, GitBranch, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 
 interface DecisionEmptyStateProps {
   onNewDecision: () => void;
@@ -13,24 +12,32 @@ const DecisionEmptyState = ({ onNewDecision }: DecisionEmptyStateProps) => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center max-w-md">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6">
-          <BarChart3 className="w-8 h-8 text-primary" />
-        </div>
-        <h3 className="font-display text-2xl font-semibold tracking-tight mb-3">{t("decisions.noDecisions")}</h3>
-        <p className="text-sm text-muted-foreground mb-8">{t("decisions.noDecisionsDesc")}</p>
-        <div className="flex items-center justify-center gap-3">
-          <Button variant="outline" size="lg" onClick={async () => {
+    <EmptyAnalysisState
+      icon={BarChart3}
+      title={t("decisions.noDecisions")}
+      description={t("decisions.noDecisionsDesc")}
+      ctaLabel={t("decisions.createFirst")}
+      onCtaClick={onNewDecision}
+      motivation={t("decisions.emptyMotivation", { defaultValue: "Unternehmen mit systematischer Entscheidungsanalyse treffen 40% bessere strategische Entscheidungen und reduzieren Fehlentscheidungen um 28%." })}
+      hint={t("decisions.emptyHint", { defaultValue: "Treibe Entscheidungen bis zur Implementierung, um Prognosen und ROI-Daten zu erhalten." })}
+      features={[
+        { icon: Brain, label: t("decisions.featureAi", { defaultValue: "KI-Analyse" }), desc: t("decisions.featureAiDesc", { defaultValue: "Automatische Risiko- und Impact-Bewertung" }) },
+        { icon: GitBranch, label: t("decisions.featureDeps", { defaultValue: "Abhängigkeiten" }), desc: t("decisions.featureDepsDesc", { defaultValue: "Entscheidungen verknüpfen und Auswirkungen verfolgen" }) },
+        { icon: Target, label: t("decisions.featureTracking", { defaultValue: "Outcome-Tracking" }), desc: t("decisions.featureTrackingDesc", { defaultValue: "Ergebnisse messen und Lessons Learned ableiten" }) },
+      ]}
+      quickActions={[
+        {
+          label: t("decisions.loadDemo"),
+          icon: Zap,
+          onClick: async () => {
             toast.info(t("decisions.demoCreating"));
             const { data, error } = await supabase.functions.invoke("seed-demo-data");
             if (error || data?.error) { toast.error(data?.error || t("settings.error")); return; }
             toast.success(t("decisions.demoCreated")); window.location.reload();
-          }} className="gap-2"><Zap className="w-4 h-4" /> {t("decisions.loadDemo")}</Button>
-          <Button size="lg" onClick={onNewDecision} className="gap-2"><Plus className="w-4 h-4" /> {t("decisions.createFirst")}</Button>
-        </div>
-      </motion.div>
-    </div>
+          },
+        },
+      ]}
+    />
   );
 };
 
