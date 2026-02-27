@@ -1164,7 +1164,18 @@
     "statusMissed": "Verfehlt",
     "revenueGoal": "Revenue-Ziel",
     "unknown": "Unbekannt",
-    "impactLabel": "Impact: {{pct}}%"
+    "impactLabel": "Impact: {{pct}}%",
+    "suggestionTitle": "Strategische Ziele — Vorschlag",
+    "suggestionDesc": "Verknüpfe deine Entscheidungen mit OKRs, Revenue-Zielen und KPIs. So siehst du sofort, welche Entscheidungen strategischen Impact haben und wo Lücken bestehen.",
+    "suggestionOkr": "OKRs & KPIs",
+    "suggestionOkrDesc": "Definiere messbare Ziele und verfolge den Fortschritt in Echtzeit.",
+    "suggestionLink": "Entscheidungen verknüpfen",
+    "suggestionLinkDesc": "Verbinde jede Entscheidung mit strategischen Zielen für lückenlose Governance.",
+    "suggestionTrack": "Fortschritt messen",
+    "suggestionTrackDesc": "Verfolge automatisch den Gesamtfortschritt über alle Ziele hinweg.",
+    "activateFeature": "Funktion aktivieren",
+    "featureActivated": "Strategische Ziele aktiviert!",
+    "featureActive": "Strategische Ziele aktiv"
   },
   "meeting": {
     "agenda": "Agenda",

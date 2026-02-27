@@ -342,53 +342,71 @@ const TeamCommandCenter = ({ teamId }: Props) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* SECTION 4: Strategic Goals */}
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              {t("teamCmd.strategicGoals")}
-              <Badge variant="secondary" className="text-[10px]">{goals.length}</Badge>
-            </h3>
-            <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/strategy")}>
-              <Plus className="w-3 h-3" /> {t("teamCmd.addGoal")}
-            </Button>
-          </div>
+        {(() => {
+          const isStrategyActive = localStorage.getItem("strategy-goals-activated") === "true" || goals.length > 0;
+          return (
+            <div className={cn("rounded-xl border overflow-hidden", isStrategyActive ? "border-success/30 bg-success/[0.02]" : "border-border bg-card")}>
+              <div className={cn("px-5 py-3 border-b flex items-center justify-between", isStrategyActive ? "border-success/20" : "border-border")}>
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Target className={cn("w-4 h-4", isStrategyActive ? "text-success" : "text-primary")} />
+                  {t("teamCmd.strategicGoals")}
+                  {isStrategyActive && <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />}
+                  <Badge variant="secondary" className="text-[10px]">{goals.length}</Badge>
+                </h3>
+                {isStrategyActive && (
+                  <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/strategy")}>
+                    <Plus className="w-3 h-3" /> {t("teamCmd.addGoal")}
+                  </Button>
+                )}
+              </div>
 
-          {goals.length === 0 ? (
-            <div className="px-5 py-8 text-center">
-              <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-              <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noGoals")}</p>
-              <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noGoalsHint")}</p>
-              <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
-                <Plus className="w-3 h-3" />
-                {t("teamCmd.defineFirstGoal")}
-              </Button>
+              {!isStrategyActive ? (
+                <div className="px-5 py-6 text-center">
+                  <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
+                  <p className="text-sm font-medium text-muted-foreground">{t("strategy.suggestionTitle")}</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">{t("strategy.suggestionDesc")}</p>
+                  <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
+                    <CheckCircle className="w-3 h-3" />
+                    {t("strategy.activateFeature")}
+                  </Button>
+                </div>
+              ) : goals.length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <Target className="w-8 h-8 text-success mx-auto mb-2 opacity-40" />
+                  <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noGoals")}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noGoalsHint")}</p>
+                  <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
+                    <Plus className="w-3 h-3" />
+                    {t("teamCmd.defineFirstGoal")}
+                  </Button>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {goals.slice(0, 4).map((g) => {
+                    const progress = g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
+                    return (
+                      <div key={g.id} className="px-5 py-3">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-xs font-medium truncate">{g.title}</span>
+                          <span className={cn(
+                            "text-xs font-bold",
+                            progress >= 80 ? "text-success" : progress >= 40 ? "text-warning" : "text-muted-foreground"
+                          )}>{progress}%</span>
+                        </div>
+                        <Progress value={Math.min(progress, 100)} className="h-1.5" />
+                        {g.due_date && (
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {t("teamCmd.dueDateLabel")}: {format(new Date(g.due_date), "dd.MM.yyyy", { locale: dateFnsLocale })}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {goals.slice(0, 4).map((g) => {
-                const progress = g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
-                return (
-                  <div key={g.id} className="px-5 py-3">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs font-medium truncate">{g.title}</span>
-                      <span className={cn(
-                        "text-xs font-bold",
-                        progress >= 80 ? "text-success" : progress >= 40 ? "text-warning" : "text-muted-foreground"
-                      )}>{progress}%</span>
-                    </div>
-                    <Progress value={Math.min(progress, 100)} className="h-1.5" />
-                    {g.due_date && (
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {t("teamCmd.dueDateLabel")}: {format(new Date(g.due_date), "dd.MM.yyyy", { locale: dateFnsLocale })}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          );
+        })()}
 
         {/* SECTION 5: Learnings & Trends */}
         <div className="rounded-xl border border-border bg-card overflow-hidden">

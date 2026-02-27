@@ -1163,7 +1163,18 @@
     "statusMissed": "Missed",
     "revenueGoal": "Revenue Goal",
     "unknown": "Unknown",
-    "impactLabel": "Impact: {{pct}}%"
+    "impactLabel": "Impact: {{pct}}%",
+    "suggestionTitle": "Strategic Goals — Suggestion",
+    "suggestionDesc": "Link your decisions to OKRs, revenue targets, and KPIs. See which decisions have strategic impact and where gaps exist.",
+    "suggestionOkr": "OKRs & KPIs",
+    "suggestionOkrDesc": "Define measurable goals and track progress in real-time.",
+    "suggestionLink": "Link Decisions",
+    "suggestionLinkDesc": "Connect every decision with strategic goals for seamless governance.",
+    "suggestionTrack": "Track Progress",
+    "suggestionTrackDesc": "Automatically track overall progress across all goals.",
+    "activateFeature": "Activate Feature",
+    "featureActivated": "Strategic Goals activated!",
+    "featureActive": "Strategic Goals active"
   },
   "meeting": {
     "agenda": "Agenda",
