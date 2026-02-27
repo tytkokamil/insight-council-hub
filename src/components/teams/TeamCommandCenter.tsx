@@ -343,41 +343,29 @@ const TeamCommandCenter = ({ teamId }: Props) => {
 
         {/* SECTION 4: Strategic Goals */}
         {(() => {
-          const isStrategyActive = localStorage.getItem("strategy-goals-activated") === "true" || goals.length > 0;
+          const hasGoals = goals.length > 0;
           return (
-            <div className={cn("rounded-xl border overflow-hidden", isStrategyActive ? "border-success/30 bg-success/[0.02]" : "border-border bg-card")}>
-              <div className={cn("px-5 py-3 border-b flex items-center justify-between", isStrategyActive ? "border-success/20" : "border-border")}>
+            <div className={cn("rounded-xl border overflow-hidden", hasGoals ? "border-success/30 bg-success/[0.02]" : "border-border bg-card")}>
+              <div className={cn("px-5 py-3 border-b flex items-center justify-between", hasGoals ? "border-success/20" : "border-border")}>
                 <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Target className={cn("w-4 h-4", isStrategyActive ? "text-success" : "text-primary")} />
+                  <Target className={cn("w-4 h-4", hasGoals ? "text-success" : "text-primary")} />
                   {t("teamCmd.strategicGoals")}
-                  {isStrategyActive && <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />}
+                  {hasGoals && <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />}
                   <Badge variant="secondary" className="text-[10px]">{goals.length}</Badge>
                 </h3>
-                {isStrategyActive && (
-                  <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/strategy")}>
-                    <Plus className="w-3 h-3" /> {t("teamCmd.addGoal")}
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" className="text-xs gap-1" onClick={() => navigate("/strategy")}>
+                  <Plus className="w-3 h-3" /> {hasGoals ? t("teamCmd.addGoal") : t("strategy.adopt")}
+                </Button>
               </div>
 
-              {!isStrategyActive ? (
+              {!hasGoals ? (
                 <div className="px-5 py-6 text-center">
                   <Target className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                  <p className="text-sm font-medium text-muted-foreground">{t("strategy.suggestionTitle")}</p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">{t("strategy.suggestionDesc")}</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t("strategy.sugSectionTitle")}</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">{t("strategy.sugSectionDesc")}</p>
                   <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
                     <CheckCircle className="w-3 h-3" />
-                    {t("strategy.activateFeature")}
-                  </Button>
-                </div>
-              ) : goals.length === 0 ? (
-                <div className="px-5 py-8 text-center">
-                  <Target className="w-8 h-8 text-success mx-auto mb-2 opacity-40" />
-                  <p className="text-sm font-medium text-muted-foreground">{t("teamCmd.noGoals")}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noGoalsHint")}</p>
-                  <Button variant="outline" size="sm" className="mt-3 gap-1.5" onClick={() => navigate("/strategy")}>
-                    <Plus className="w-3 h-3" />
-                    {t("teamCmd.defineFirstGoal")}
+                    {t("strategy.adopt")}
                   </Button>
                 </div>
               ) : (
