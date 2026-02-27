@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { DollarSign, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
+import { useAuth } from "@/hooks/useAuth";
+import { useTeamContext } from "@/hooks/useTeamContext";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import WidgetSkeleton from "./WidgetSkeleton";
 import CostItemPopover from "./cost/CostItemPopover";
@@ -15,6 +17,9 @@ const DecisionCostWidget = () => {
   const { t } = useTranslation();
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
+  const { user } = useAuth();
+  const { selectedTeamId } = useTeamContext();
+  const isPersonal = selectedTeamId === null;
   const [showCalc, setShowCalc] = useState(false);
   const [orgDefaults, setOrgDefaults] = useState<CodConfig>(DEFAULT_COD_CONFIG);
 
@@ -40,7 +45,10 @@ const DecisionCostWidget = () => {
   if (decLoading || teamLoading) return <WidgetSkeleton rows={3} showScore />;
 
   const teamConfigMap = buildTeamConfigMap(teams as any[], orgDefaults);
-  const openDecisions = allDecisions.filter(d => d.status === "draft" || d.status === "review");
+  const scopedDecisions = isPersonal
+    ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id)
+    : allDecisions;
+  const openDecisions = scopedDecisions.filter(d => d.status === "draft" || d.status === "review");
   const { totalCost, costs } = calculateAllCosts(openDecisions, teamConfigMap, orgDefaults);
   const topCosts = costs.slice(0, 3);
   const confidence = getConfidenceLevel(totalCost, {
