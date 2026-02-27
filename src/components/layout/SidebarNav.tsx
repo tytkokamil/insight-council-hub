@@ -279,14 +279,14 @@ const SidebarNav = memo(({
           teams: "text-accent-blue/70",
           governance: "text-accent-rose/70",
           intelligence: "text-accent-teal/70",
-          system: "text-muted-foreground/40",
+          system: "text-accent-amber/70",
         };
         const groupDot: Record<string, string> = {
           core: "bg-accent-violet/50",
           teams: "bg-accent-blue/50",
           governance: "bg-accent-rose/50",
           intelligence: "bg-accent-teal/50",
-          system: "bg-muted-foreground/30",
+          system: "bg-accent-amber/50",
         };
 
         // Progressive group: hidden until user explicitly unlocks

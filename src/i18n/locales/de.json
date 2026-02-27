@@ -2329,7 +2329,8 @@
     "pageRoleIntelligence": "Analyse",
     "pageRoleExecution": "Steuerung",
     "pageRoleGovernance": "Kontrolle",
-    "pageRoleKnowledge": "Wissen"
+    "pageRoleKnowledge": "Wissen",
+    "pageRoleSystem": "System"
   },
   "import": {
     "title": "{{label}} importieren",
