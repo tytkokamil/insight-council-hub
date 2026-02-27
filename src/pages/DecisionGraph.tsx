@@ -108,6 +108,7 @@ const DecisionGraph = () => {
   }), [t]);
 
   useEffect(() => {
+    console.log("[DecisionGraph] decisions:", decisions.length, "deps:", deps.length, "allDeps:", allDeps.length, "loading:", decLoading, depLoading, teamLoading);
     if (decLoading || depLoading || teamLoading || decisions.length === 0) return;
 
     const teamRateMap = Object.fromEntries(teams.map((tm) => [tm.id, tm.hourly_rate || 75]));
