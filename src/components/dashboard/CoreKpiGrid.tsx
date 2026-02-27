@@ -158,7 +158,7 @@ const CoreKpiGrid = () => {
   }, [allDecisions, reviews, tasks, teams, risks, user, isPersonal, t]);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="widget-grid-4">
       {kpis.map((kpi, i) => (
         <motion.div
           key={kpi.label}
@@ -166,7 +166,7 @@ const CoreKpiGrid = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.05 }}
         >
-          <Card className="h-full group hover:shadow-md hover:shadow-primary/[0.04] hover:-translate-y-0.5 transition-all duration-200">
+          <Card className="h-full group hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 border-border/80">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-1.5">
