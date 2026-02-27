@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { AlertTriangle, User, Users, FolderOpen, Clock, TrendingDown, Zap, ArrowRight, CheckSquare, Shield, Lightbulb } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
@@ -17,11 +18,12 @@ interface TeamFriction { teamId: string; teamName: string; avgDays: number; esca
 
 const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [personBottlenecks, setPersonBottlenecks] = useState<PersonBottleneck[]>([]);
   const [categoryBottlenecks, setCategoryBottlenecks] = useState<CategoryBottleneck[]>([]);
   const [teamFrictions, setTeamFrictions] = useState<TeamFriction[]>([]);
   const [slaViolations, setSLAViolations] = useState<{ total: number; thisWeek: number; topTeams: { name: string; count: number }[]; avgResponse: number }>({ total: 0, thisWeek: 0, topTeams: [], avgResponse: 0 });
-  const [recommendations, setRecommendations] = useState<{ title: string; description: string; severity: string }[]>([]);
+  const [recommendations, setRecommendations] = useState<{ title: string; description: string; severity: string; route?: string }[]>([]);
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: tasks = [], isLoading: taskLoading } = useTasks();
@@ -152,13 +154,13 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
     setSLAViolations({ total: decisions.filter(d => (d.escalation_level ?? 0) > 0).length, thisWeek: thisWeekEsc.length, topTeams, avgResponse });
 
     // ── Recommendations ──
-    const recs: { title: string; description: string; severity: string }[] = [];
+    const recs: { title: string; description: string; severity: string; route?: string }[] = [];
     const slowPersons = persons.filter(p => p.percentile === "slow");
-    if (slowPersons.length > 0) recs.push({ title: t("bottleneck.recCoachSlow"), description: t("bottleneck.recCoachSlowDesc", { count: slowPersons.length }), severity: "high" });
+    if (slowPersons.length > 0) recs.push({ title: t("bottleneck.recCoachSlow"), description: t("bottleneck.recCoachSlowDesc", { count: slowPersons.length }), severity: "high", route: "/settings" });
     const slowCats = cats.filter(c => c.ratio > 1.5);
-    if (slowCats.length > 0) recs.push({ title: t("bottleneck.recOptimizeCat"), description: t("bottleneck.recOptimizeCatDesc", { cats: slowCats.map(c => categoryLabels[c.category] || c.category).join(", ") }), severity: "medium" });
+    if (slowCats.length > 0) recs.push({ title: t("bottleneck.recOptimizeCat"), description: t("bottleneck.recOptimizeCatDesc", { cats: slowCats.map(c => categoryLabels[c.category] || c.category).join(", ") }), severity: "medium", route: "/templates" });
     const highFrictionTeams = teamResults.filter(tr => tr.score > 50);
-    if (highFrictionTeams.length > 0) recs.push({ title: t("bottleneck.recReduceFriction"), description: t("bottleneck.recReduceFrictionDesc", { teams: highFrictionTeams.map(tr => tr.teamName).join(", ") }), severity: "high" });
+    if (highFrictionTeams.length > 0) recs.push({ title: t("bottleneck.recReduceFriction"), description: t("bottleneck.recReduceFrictionDesc", { teams: highFrictionTeams.map(tr => tr.teamName).join(", ") }), severity: "high", route: "/friction-map" });
     if (recs.length === 0) recs.push({ title: t("bottleneck.recNoCritical"), description: t("bottleneck.recNoCriticalDesc"), severity: "low" });
     setRecommendations(recs.slice(0, 3));
   }, [loading, decisions, tasks, teams, deps, reviews, profiles, notifications]);
@@ -309,15 +311,24 @@ const BottleneckIntelligence = ({ embedded }: { embedded?: boolean }) => {
       <CollapsibleSection title={t("bottleneck.top3Actions")} subtitle={t("bottleneck.top3ActionsSub")} icon={<Lightbulb className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
         <div className="space-y-2">
           {recommendations.map((rec, i) => (
-            <Card key={i} className={rec.severity === "high" ? "border-destructive/30" : rec.severity === "medium" ? "border-warning/30" : ""}>
+            <Card
+              key={i}
+              className={`${rec.route ? "cursor-pointer hover:border-foreground/20" : ""} transition-colors ${rec.severity === "high" ? "border-destructive/30" : rec.severity === "medium" ? "border-warning/30" : ""}`}
+              onClick={() => rec.route && navigate(rec.route)}
+            >
               <CardContent className="p-4 flex items-start gap-3">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${rec.severity === "high" ? "bg-destructive/15 text-destructive" : rec.severity === "medium" ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>
                   <span className="text-sm font-bold">{i + 1}</span>
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold">{rec.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{rec.description}</p>
                 </div>
+                {rec.route && (
+                  <span className="text-[10px] text-primary flex items-center gap-1 shrink-0 mt-1">
+                    <ArrowRight className="w-3 h-3" /> {t("bottleneck.openAction")}
+                  </span>
+                )}
               </CardContent>
             </Card>
           ))}
