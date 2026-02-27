@@ -13,7 +13,7 @@ interface AiInsightPanelProps {
   className?: string;
 }
 
-const MAX_DESC_LENGTH = 180;
+const MAX_DESC_LENGTH = 120;
 
 const TruncatedText = ({ text, className = "" }: { text: string; className?: string }) => {
   const [expanded, setExpanded] = useState(false);

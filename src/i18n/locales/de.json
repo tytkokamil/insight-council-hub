@@ -2750,7 +2750,11 @@
     "timeRange30": "30 Tage",
     "timeRange60": "60 Tage",
     "timeRange90": "90 Tage",
-    "timeRangeAll": "Alle"
+    "timeRangeAll": "Alle",
+    "lowConfidenceHint": "Unter 50% — niedrige Prognosequalität",
+    "medConfidenceHint": "50–70% — moderate Prognosequalität",
+    "highConfidenceHint": "Über 70% — hohe Prognosequalität",
+    "confidenceTooltip": "Die Konfidenz basiert auf der Anzahl vergleichbarer abgeschlossener Entscheidungen. Unter 50% gilt als niedrig, über 70% als zuverlässig."
   },
   "opportunityCost": {
     "label": "Kostenanalyse",
