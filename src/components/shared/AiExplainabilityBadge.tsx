@@ -37,14 +37,14 @@ const AiExplainabilityBadge = ({ confidence, factors, dataPoints, className = ""
   const numericConfidence = typeof confidence === "number" ? confidence : null;
 
   return (
-    <div className={`rounded-lg border p-3 space-y-2 ${color} ${className}`}>
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 shrink-0" />
+    <div className={`rounded-lg border p-4 space-y-2.5 ${color} ${className}`}>
+      <div className="flex items-center gap-2.5">
+        <Icon className="w-5 h-5 shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold">{label}</span>
+            <span className="text-sm font-semibold">{label}</span>
             {numericConfidence !== null && (
-              <span className="text-[10px] font-mono opacity-70">{numericConfidence}%</span>
+              <span className="text-xs font-mono opacity-80">{numericConfidence}%</span>
             )}
           </div>
         </div>

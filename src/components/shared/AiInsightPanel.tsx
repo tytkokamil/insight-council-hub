@@ -85,7 +85,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
 
   return (
     <Card className={`border-primary/20 bg-primary/[0.02] ${className}`}>
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-5 space-y-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -97,7 +97,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         </div>
 
         {type === "pattern" && insights && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {insights.deep_patterns?.map((p: any, i: number) => (
               <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border">
                 <div className="flex items-start gap-2">
@@ -136,7 +136,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         )}
 
         {type === "dna" && insights && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {insights.archetype_deep_dive && (
               <p className="text-sm text-muted-foreground">{insights.archetype_deep_dive}</p>
             )}
@@ -172,7 +172,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         )}
 
         {type === "bottleneck" && insights && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {insights.process_health_summary && (
               <p className="text-sm text-muted-foreground">{insights.process_health_summary}</p>
             )}
