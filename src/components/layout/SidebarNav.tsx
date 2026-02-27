@@ -274,14 +274,14 @@ const SidebarNav = memo(({
         const groupLabel = t(`nav.${group.labelKey}`);
         // Color coding per section
         const groupAccent: Record<string, string> = {
-          core: "",
+          core: "text-accent-violet/70",
           teams: "text-accent-blue/70",
           governance: "text-accent-rose/70",
           intelligence: "text-accent-teal/70",
           system: "text-muted-foreground/40",
         };
         const groupDot: Record<string, string> = {
-          core: "bg-foreground/20",
+          core: "bg-accent-violet/50",
           teams: "bg-accent-blue/50",
           governance: "bg-accent-rose/50",
           intelligence: "bg-accent-teal/50",
