@@ -237,8 +237,8 @@ const Decisions = () => {
         role="execution"
         help={{ title: t("decisions.title"), description: t("decisions.helpDesc") }}
         secondaryActions={
-          <>
-            {decisions.length > 0 && (
+          decisions.length > 0 ? (
+            <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
@@ -249,12 +249,14 @@ const Decisions = () => {
                   <DropdownMenuItem onClick={() => exportPDF(prepareExport())} className="gap-2"><FileText className="w-4 h-4" /> PDF</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
-            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
-          </>
+              <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+            </>
+          ) : undefined
         }
         primaryAction={
-          <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.newButton")}</Button>
+          decisions.length > 0 ? (
+            <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.newButton")}</Button>
+          ) : undefined
         }
       />
 

@@ -271,8 +271,8 @@ const Tasks = () => {
         role="execution"
         help={{ title: t("tasks.title"), description: t("tasks.helpDesc") }}
         secondaryActions={
-          <>
-            {tasks.length > 0 && (
+          tasks.length > 0 ? (
+            <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
@@ -282,16 +282,18 @@ const Tasks = () => {
                   <DropdownMenuItem onClick={() => { exportTasksCSV(prepareTaskExport()); toast.success(t("decisions.csvExported", "CSV exportiert")); }} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
-            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
-              <FileUp className="w-4 h-4" /> {t("common.import")}
-            </Button>
-          </>
+              <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5">
+                <FileUp className="w-4 h-4" /> {t("common.import")}
+              </Button>
+            </>
+          ) : undefined
         }
         primaryAction={
-          <Button size="sm" onClick={openCreate} className="gap-1.5">
-            <Plus className="w-4 h-4" /> {t("tasks.newTask")}
-          </Button>
+          tasks.length > 0 ? (
+            <Button size="sm" onClick={openCreate} className="gap-1.5">
+              <Plus className="w-4 h-4" /> {t("tasks.newTask")}
+            </Button>
+          ) : undefined
         }
       />
 
