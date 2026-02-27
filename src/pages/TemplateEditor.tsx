@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   FileText, Plus, Trash2, GripVertical, Save, AlertTriangle, ChevronDown, ChevronRight,
   Settings2, Download, Upload, Loader2, Copy, Shield, TrendingUp, Clock, Zap, BarChart3,
-  History, CheckCircle2, XCircle, Activity, DollarSign, Target, Link2, ArrowRight
+  History, CheckCircle2, XCircle, Activity, DollarSign, Target, Link2, ArrowRight, Info
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { type RequiredField, type ApprovalStep } from "@/lib/decisionTemplates";
 import { useTranslatedLabels } from "@/lib/labels";
 import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /* ─── Helpers ─── */
 function computeHealthScore(draft: DbTemplate, t: (k: string) => string): { score: number; checks: { label: string; ok: boolean }[] } {
@@ -240,6 +241,11 @@ const TemplateEditor = () => {
 
   const handleSave = () => {
     if (!localDraft) return;
+    const duplicate = templates.find(t => t.name.trim().toLowerCase() === localDraft.name.trim().toLowerCase() && t.id !== localDraft.id);
+    if (duplicate) {
+      toast.error(t("templateEditor.duplicateNameError", { name: localDraft.name }));
+      return;
+    }
     const newVersion = localDraft.version + 1;
     updateTemplate.mutate({
       id: localDraft.id,
@@ -551,7 +557,10 @@ const TemplateEditor = () => {
                               <Input value={field.label} onChange={e => updateField(idx, { label: e.target.value })} className="mt-0.5 h-8 text-xs" />
                             </div>
                             <div>
-                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.typeCol")}</label>
+                              <label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                {t("templateEditor.typeCol")}
+                                <span className="text-muted-foreground/50">({fieldTypes.length})</span>
+                              </label>
                               <Select value={field.type} onValueChange={v => updateField(idx, { type: v as any })}>
                                 <SelectTrigger className="mt-0.5 h-8 text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
@@ -566,7 +575,17 @@ const TemplateEditor = () => {
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="text-[10px] text-muted-foreground">{t("templateEditor.validationCol")}</label>
+                              <label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                {t("templateEditor.validationCol")}
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3 h-3 text-muted-foreground/50 cursor-help" />
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs">
+                                    <p className="text-xs">{t("templateEditor.validationTooltip")}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </label>
                               <Input value={(field as any).validation || ""} onChange={e => updateField(idx, { validation: e.target.value } as any)} className="mt-0.5 h-8 text-xs" placeholder={t("templateEditor.validationPlaceholder")} />
                             </div>
                             <div>
@@ -584,20 +603,27 @@ const TemplateEditor = () => {
                       <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={addField}>
                         <Plus className="w-3.5 h-3.5" /> {t("templateEditor.addField")}
                       </Button>
-                      <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => {
-                        if (!localDraft) return;
-                        patchDraft({
-                          required_fields: [
-                            ...localDraft.required_fields,
-                            { key: "budget_impact", label: "Budget-Auswirkung", type: "currency", placeholder: "€ Betrag eingeben", validation: "> 0" },
-                            { key: "roi_estimate", label: "ROI-Schätzung", type: "percent", placeholder: "Erwarteter ROI in %", validation: "" },
-                            { key: "risk_assessment", label: "Risiko-Bewertung", type: "risk_matrix", placeholder: "Likelihood × Impact", validation: "" },
-                          ],
-                        });
-                        toast.success(t("templateEditor.govFieldsAdded"));
-                      }}>
-                        <Shield className="w-3.5 h-3.5" /> {t("templateEditor.insertGovFields")}
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={() => {
+                            if (!localDraft) return;
+                            patchDraft({
+                              required_fields: [
+                                ...localDraft.required_fields,
+                                { key: "budget_impact", label: "Budget-Auswirkung", type: "currency", placeholder: "€ Betrag eingeben", validation: "> 0" },
+                                { key: "roi_estimate", label: "ROI-Schätzung", type: "percent", placeholder: "Erwarteter ROI in %", validation: "" },
+                                { key: "risk_assessment", label: "Risiko-Bewertung", type: "risk_matrix", placeholder: "Likelihood × Impact", validation: "" },
+                              ],
+                            });
+                            toast.success(t("templateEditor.govFieldsAdded"));
+                          }}>
+                            <Shield className="w-3.5 h-3.5" /> {t("templateEditor.insertGovFields")}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p className="text-xs">{t("templateEditor.govFieldsTooltip")}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </div>
                 )}
