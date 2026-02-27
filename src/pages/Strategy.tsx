@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AppLayout from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -174,14 +175,24 @@ const Strategy = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {[
           { icon: Target, label: t("strategy.strategicGoals"), value: totalGoals, color: "text-primary" },
-          { icon: Link2, label: t("strategy.linkedDecisions"), value: linkedDecisionCount, color: "text-success" },
-          { icon: TrendingUp, label: t("strategy.avgProgress"), value: `${avgProgress}%`, color: "text-warning" },
+          { icon: Link2, label: t("strategy.linkedDecisions"), value: linkedDecisionCount, color: linkedDecisionCount === 0 ? "text-destructive" : "text-success" },
+          { icon: TrendingUp, label: t("strategy.avgProgress"), value: `${avgProgress}%`, color: "text-warning", tooltip: t("strategy.avgProgressTooltip") },
           { icon: AlertTriangle, label: t("strategy.atRisk"), value: atRiskCount, color: "text-destructive" },
         ].map((card, i) => (
           <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1">
               <card.icon className={`w-4 h-4 ${card.color}`} />
               <span className="text-xs text-muted-foreground">{card.label}</span>
+              {card.tooltip && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-muted-foreground/50 cursor-help text-[10px]">ⓘ</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs">
+                    <p className="text-xs">{card.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
             <p className="font-display text-2xl font-bold">{card.value}</p>
           </motion.div>

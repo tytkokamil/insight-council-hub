@@ -1113,6 +1113,7 @@
     "strategicGoals": "Strategische Ziele",
     "linkedDecisions": "Verknüpfte Entscheidungen",
     "avgProgress": "Ø Fortschritt",
+    "avgProgressTooltip": "Durchschnitt aller Ziel-Fortschritte: Jedes Ziel wird als Prozent (Ist-Wert ÷ Ziel-Wert × 100) berechnet, unabhängig von der Einheit. Der Gesamtwert ist der Mittelwert aller Ziele.",
     "atRisk": "Gefährdet",
     "newGoalTitle": "Neues strategisches Ziel",
     "titleLabel": "Titel *",
