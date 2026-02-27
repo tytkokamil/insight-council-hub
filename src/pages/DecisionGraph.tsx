@@ -174,8 +174,8 @@ const DecisionGraph = () => {
 
     const graphEdges: Edge[] = deps.map((dep) => ({
       id: dep.id,
-      source: dep.source_decision_id,
-      target: dep.target_decision_id,
+      source: dep.source_decision_id as string,
+      target: dep.target_decision_id as string,
       type: "default",
       animated: dep.dependency_type === "blocks",
       label: edgeLabelMap[dep.dependency_type] || dep.dependency_type,
@@ -183,6 +183,8 @@ const DecisionGraph = () => {
       style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
       markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308" },
     }));
+
+    console.log("[DecisionGraph] graphNodes:", graphNodes.length, "graphEdges:", graphEdges.length, "sample edge:", graphEdges[0]);
 
     setNodes(graphNodes);
     setEdges(graphEdges);
