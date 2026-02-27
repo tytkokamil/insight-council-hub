@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatDate, formatDateTime, formatDateTimeShort } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -186,7 +187,7 @@ const AdminUsers = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3"><Badge variant="outline" className={roleBadgeVariant[u.role]}>{roleLabels[u.role]}</Badge></td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{new Date(u.joined).toLocaleDateString("de-DE")}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(u.joined)}</td>
                       <td className="px-4 py-3 text-right">
                         {u.user_id === user?.id ? <span className="text-xs text-muted-foreground italic">{t("admin.you")}</span> : (
                           <Select value={u.role} onValueChange={(v) => handleRoleChange(u.user_id, v as OrgRole)} disabled={updating === u.user_id}>
@@ -303,9 +304,8 @@ const AuditLogList = () => {
 
   const formatValue = (val: string | null) => {
     if (!val) return "\u2013";
-    // Format ISO timestamps to readable format
     if (/^\d{4}-\d{2}-\d{2}T/.test(val)) {
-      return new Date(val).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      return formatDateTime(val);
     }
     return val;
   };
@@ -316,7 +316,7 @@ const AuditLogList = () => {
         const decisionTitle = (log as any).decisions?.title;
         return (
           <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
-            <span className="text-muted-foreground w-28 shrink-0">{new Date(log.created_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+            <span className="text-muted-foreground w-28 shrink-0">{formatDateTimeShort(log.created_at)}</span>
             <Badge variant="outline" className="text-[10px] shrink-0">{log.action}</Badge>
             <span className="text-muted-foreground truncate">
               {decisionTitle && <span className="font-medium text-foreground">{decisionTitle}: </span>}

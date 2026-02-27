@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { formatDate } from "@/lib/formatters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -199,7 +200,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
                       {share.expires_at && (
                         <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                           <Clock className="w-3 h-3" />
-                          {expired ? t("decisions.share.expired") : t("decisions.share.until", { date: new Date(share.expires_at).toLocaleDateString("de-DE") })}
+                          {expired ? t("decisions.share.expired") : t("decisions.share.until", { date: formatDate(share.expires_at) })}
                         </span>
                       )}
                     </div>
@@ -307,7 +308,7 @@ const ShareDecisionDialog = ({ decisionId, decisionTeamId, open, onOpenChange }:
                 <span>
                   {" · "}
                   {duration === "custom"
-                    ? (customDate ? t("decisions.share.until", { date: new Date(customDate).toLocaleDateString("de-DE") }) : t("decisions.share.selectDate"))
+                    ? (customDate ? t("decisions.share.until", { date: formatDate(customDate) }) : t("decisions.share.selectDate"))
                     : `${duration} ${t("decisions.share.days7").replace("7 ", "").replace("7", "")}`}
                 </span>
               )}

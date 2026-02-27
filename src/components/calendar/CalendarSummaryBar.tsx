@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { formatCost } from "@/lib/formatters";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { AlertTriangle, TrendingUp, Zap, Brain } from "lucide-react";
@@ -94,7 +95,7 @@ const CalendarSummaryBar = memo(({ decisions, tasks, currentDate, viewMode }: Ca
         )}
         {stats.totalDelayCost > 0 && (
           <div className="flex items-center gap-1.5 text-xs ml-auto">
-            <span className="font-semibold text-destructive">{stats.totalDelayCost.toLocaleString()} €</span>
+            <span className="font-semibold text-destructive">{formatCost(stats.totalDelayCost)}</span>
             <span className="text-muted-foreground">{t("cal.delayRisk")}</span>
           </div>
         )}

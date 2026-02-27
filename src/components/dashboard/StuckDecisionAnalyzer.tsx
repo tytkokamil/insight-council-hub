@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { formatCost } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { differenceInDays } from "date-fns";
 import { AlertTriangle, Clock, Users, MessageSquare, Link2, ArrowRight, Zap, Pause, DollarSign } from "lucide-react";
@@ -163,7 +164,6 @@ const StuckDecisionAnalyzer = ({ decisions, reviews = [], dependencies = [], tea
 
   if (stuckDecisions.length === 0) return null;
 
-  const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k€` : `${cost}€`;
   const totalCost = stuckDecisions.reduce((s, d) => s + d.delayCost, 0);
 
   return (

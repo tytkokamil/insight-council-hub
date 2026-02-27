@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
@@ -258,7 +259,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                     <CardContent className="pt-4 text-center">
                       <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.totalCost")}</p>
                       <DollarSign className="w-5 h-5 mx-auto text-destructive mb-1" />
-                      <div className="text-2xl font-bold text-destructive">€{result.totalCost.toLocaleString("de-DE")}</div>
+                      <div className="text-2xl font-bold text-destructive">{formatCurrency(result.totalCost)}</div>
                     </CardContent>
                   </Card>
                   <Card>
@@ -406,7 +407,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                         <CardContent className="p-4 text-center">
                           <p className="text-[10px] text-muted-foreground mb-1">{mc.percentile}</p>
                           <p className={`text-xl font-bold tabular-nums ${i >= 3 ? "text-destructive" : i >= 2 ? "text-warning" : ""}`}>
-                            €{mc.cost.toLocaleString("de-DE")}
+                            {formatCurrency(mc.cost)}
                           </p>
                           <UITooltip>
                             <TooltipTrigger asChild>
@@ -455,16 +456,16 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                       t("scenarioEngine.title"),
                       `${t("scenarioEngine.delayWeeks", { count: delayWeeks })}`,
                       "",
-                      `${t("scenarioEngine.totalCost")}: €${result.totalCost.toLocaleString("de-DE")}`,
+                      `${t("scenarioEngine.totalCost")}: ${formatCurrency(result.totalCost)}`,
                       `${t("scenarioEngine.avgRiskIncrease")}: ${result.avgRiskIncrease}%`,
                       `${t("scenarioEngine.criticalImpacts")}: ${result.criticalCount}`,
                       `${t("scenarioEngine.cascadeEffects")}: ${result.impacts.reduce((s, i) => s + i.cascadeCount, 0)}`,
                       "",
                       t("scenarioEngine.monteCarloTitle"),
-                      ...result.monteCarlo.map(mc => `  ${mc.percentile}: €${mc.cost.toLocaleString("de-DE")} (${t("scenarioEngine.riskMC", { value: mc.risk })})`),
+                      ...result.monteCarlo.map(mc => `  ${mc.percentile}: ${formatCurrency(mc.cost)} (${t("scenarioEngine.riskMC", { value: mc.risk })})`),
                       "",
                       t("scenarioEngine.tabImpact"),
-                      ...result.impacts.slice(0, 10).map(i => `  ${i.decision.title} — €${i.totalCost.toLocaleString("de-DE")} (${i.severity})`),
+                      ...result.impacts.slice(0, 10).map(i => `  ${i.decision.title} — ${formatCurrency(i.totalCost)} (${i.severity})`),
                       "",
                       result.aiInsights ? `${t("scenarioEngine.aiRecommendation")}: ${result.aiInsights}` : "",
                     ];

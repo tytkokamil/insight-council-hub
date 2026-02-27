@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatCost } from "@/lib/formatters";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,7 +133,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           {totalDelayCost > 0 && (
             <div className="flex items-center gap-1.5 text-sm">
               <DollarSign className="w-4 h-4 text-destructive" />
-              <span className="font-bold text-destructive">{totalDelayCost.toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}€</span>
+              <span className="font-bold text-destructive">{formatCost(totalDelayCost)}</span>
               <span className="text-xs text-muted-foreground">{t("teamCmd.delayRisk")}</span>
             </div>
           )}

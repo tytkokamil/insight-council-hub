@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { formatCost } from "@/lib/formatters";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -167,7 +168,7 @@ const TaskDetail = () => {
   const decisionEscalated = (linkedDecision?.escalation_level || 0) > 0;
   const isBlockingCriticalDecision = !!(linkedDecision && (linkedDecision.priority === "critical" || linkedDecision.priority === "high") && task?.status !== "done");
 
-  const formatCost = (c: number) => c >= 1000 ? `${(c / 1000).toFixed(1)}k€` : `${c}€`;
+  
 
   /* Focus message */
   const focusMessage = useMemo(() => {
@@ -387,7 +388,7 @@ const TaskDetail = () => {
             { label: t("taskDetail.priority"), value: pc.label, icon: Target, color: pc.color, bg: task.priority === "critical" ? "bg-destructive/10" : task.priority === "high" ? "bg-warning/10" : "bg-primary/10" },
             { label: t("taskDetail.due"), value: task.due_date ? (computed.isOverdue ? t("taskDetail.dueOverdue", { days: computed.daysOverdue }) : t("taskDetail.dueIn", { days: differenceInDays(new Date(task.due_date), new Date()) })) : "—", icon: Clock, color: computed.isOverdue ? "text-destructive" : "text-muted-foreground", bg: computed.isOverdue ? "bg-destructive/10" : "bg-muted/50" },
             { label: t("taskDetail.openDays"), value: `${computed.daysOpen}d`, icon: AlertTriangle, color: computed.daysOpen > 14 ? "text-warning" : "text-muted-foreground", bg: computed.daysOpen > 14 ? "bg-warning/10" : "bg-muted/50" },
-            { label: t("taskDetail.delayRisk"), value: linkedDecision && isActive ? formatCost(computed.delayCostPerWeek) + `/${i18n.language === "de" ? "Wo" : "wk"}` : "—", icon: DollarSign, color: computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning", bg: linkedDecision ? (computed.delayCostPerWeek > 2000 ? "bg-destructive/10" : "bg-warning/10") : "bg-muted/50" },
+            { label: t("taskDetail.delayRisk"), value: linkedDecision && isActive ? formatCost(computed.delayCostPerWeek) + `/${t("taskDetail.perWeekShort")}` : "—", icon: DollarSign, color: computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning", bg: linkedDecision ? (computed.delayCostPerWeek > 2000 ? "bg-destructive/10" : "bg-warning/10") : "bg-muted/50" },
           ].map(kpi => (
             <Tooltip key={kpi.label}>
               <TooltipTrigger asChild>
@@ -562,12 +563,12 @@ const TaskDetail = () => {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{t("taskDetail.delayRiskLabel")}</span>
                     <span className={cn("font-bold", computed.delayCostPerWeek > 2000 ? "text-destructive" : "text-warning")}>
-                      {formatCost(computed.delayCostPerWeek)}/{i18n.language === "de" ? "Woche" : "week"}
+                      {formatCost(computed.delayCostPerWeek)}/{t("taskDetail.perWeek")}
                     </span>
                   </div>
                   {decisionRiskScore > 0 && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Decision Risk</span>
+                      <span className="text-muted-foreground">{t("taskDetail.decisionRisk")}</span>
                       <span className={cn("font-medium", decisionRiskScore > 60 ? "text-destructive" : "text-warning")}>{decisionRiskScore}%</span>
                     </div>
                   )}
