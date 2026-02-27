@@ -2142,6 +2142,8 @@ export type Database = {
       }
       teams: {
         Row: {
+          cod_overhead_factor: number
+          cod_persons: number
           created_at: string
           created_by: string | null
           description: string | null
@@ -2152,6 +2154,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          cod_overhead_factor?: number
+          cod_persons?: number
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -2162,6 +2166,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          cod_overhead_factor?: number
+          cod_persons?: number
           created_at?: string
           created_by?: string | null
           description?: string | null

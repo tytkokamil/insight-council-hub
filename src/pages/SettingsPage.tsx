@@ -20,6 +20,7 @@ import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
 import DemoDataPanel from "@/components/settings/DemoDataPanel";
+import OrgCodDefaultsPanel from "@/components/settings/OrgCodDefaultsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -716,6 +717,15 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
+              </section>
+
+              <hr className="border-border" />
+
+              {/* Cost-of-Delay Defaults */}
+              <section>
+                <h2 className="text-sm font-medium mb-4">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
+                <OrgCodDefaultsPanel />
               </section>
 
               <hr className="border-border" />

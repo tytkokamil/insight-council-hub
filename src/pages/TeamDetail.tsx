@@ -14,6 +14,7 @@ import TeamHealthIndicator from "@/components/teams/TeamHealthIndicator";
 import TeamChat from "@/components/teams/TeamChat";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import TeamDefaultsConfig from "@/components/teams/TeamDefaultsConfig";
+import CodConfigPanel from "@/components/teams/CodConfigPanel";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
@@ -145,6 +146,16 @@ const TeamDetail = () => {
                     {t("teamDetail.smartDefaultsDesc")}
                   </p>
                   <TeamDefaultsConfig teamId={team.id} />
+                </div>
+
+                <hr className="border-border" />
+
+                <div>
+                  <h2 className="text-sm font-semibold mb-1">{t("cod.teamTitle", "Cost-of-Delay-Konfiguration")}</h2>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {t("cod.teamDesc", "Definiere team-spezifische Parameter für die Berechnung von Verzögerungskosten.")}
+                  </p>
+                  <CodConfigPanel teamId={team.id} />
                 </div>
 
                 <hr className="border-border" />
