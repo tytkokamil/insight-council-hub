@@ -1,11 +1,26 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Beaker, BarChart3, Brain, Zap, Lock } from "lucide-react";
+import { Shield, Beaker, BarChart3, Brain, Zap, Lock, Info, AlertTriangle } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useTranslation } from "react-i18next";
+import { toast } from "@/components/ui/sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const categoryConfig: Record<string, { label: string; icon: React.ElementType; description: string }> = {
   core: { label: "Kern-Module", icon: Shield, description: "Essenzielle Funktionen für den täglichen Betrieb" },
@@ -15,7 +30,18 @@ const categoryConfig: Record<string, { label: string; icon: React.ElementType; d
 };
 
 const PilotSettings = () => {
+  const { t } = useTranslation();
   const { flags, loading, toggleFlag } = useFeatureFlags();
+  const { can } = usePermissions();
+  const navigate = useNavigate();
+  const [pendingDisable, setPendingDisable] = useState<{ key: string; label: string } | null>(null);
+
+  // Admin-only guard
+  useEffect(() => {
+    if (!can.manageUsers) navigate("/dashboard");
+  }, [can.manageUsers, navigate]);
+
+  if (!can.manageUsers) return null;
 
   const grouped = flags.reduce<Record<string, typeof flags>>((acc, flag) => {
     if (!acc[flag.category]) acc[flag.category] = [];
@@ -26,24 +52,49 @@ const PilotSettings = () => {
   const enabledCount = flags.filter((f) => f.enabled).length;
   const totalCount = flags.length;
 
+  const handleToggle = (featureKey: string, label: string, checked: boolean) => {
+    if (!checked) {
+      setPendingDisable({ key: featureKey, label });
+    } else {
+      toggleFlag(featureKey, true);
+      toast.success(t("pilot.moduleEnabled", { module: label }));
+    }
+  };
+
+  const confirmDisable = () => {
+    if (pendingDisable) {
+      toggleFlag(pendingDisable.key, false);
+      toast.info(t("pilot.moduleDisabled", { module: pendingDisable.label }));
+      setPendingDisable(null);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-1">
           <Beaker className="w-5 h-5 text-primary" />
-          <h1 className="font-display text-xl font-bold">Pilot-Modus</h1>
+          <h1 className="font-display text-xl font-bold">{t("pilot.title")}</h1>
         </div>
         <p className="text-sm text-muted-foreground">
-          Aktiviere nur die Module, die dein Team im Pilot braucht. Deaktivierte Module verschwinden aus der Navigation.
+          {t("pilot.subtitle")}
         </p>
         <div className="mt-3 flex items-center gap-2">
           <Badge variant="outline" className="font-mono text-xs">
-            {enabledCount} / {totalCount} aktiv
+            {enabledCount} / {totalCount} {t("pilot.active")}
           </Badge>
           {enabledCount < totalCount && (
-            <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
-              Pilot-Modus aktiv
-            </Badge>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge className="bg-primary/10 text-primary border-primary/20 text-xs gap-1 cursor-help">
+                  <Info className="w-3 h-3" />
+                  {t("pilot.pilotActive")}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-[250px] text-xs">
+                {t("pilot.pilotActiveTooltip")}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -121,7 +172,7 @@ const PilotSettings = () => {
                           </div>
                           <Switch
                             checked={flag.enabled}
-                            onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)}
+                            onCheckedChange={(checked) => handleToggle(flag.feature_key, flag.label, checked)}
                           />
                         </div>
                       ))}
@@ -133,6 +184,25 @@ const PilotSettings = () => {
           })
         )}
       </div>
+
+      {/* Disable confirmation dialog */}
+      <AlertDialog open={!!pendingDisable} onOpenChange={(open) => !open && setPendingDisable(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+              {t("pilot.disableTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>„{pendingDisable?.label}"</strong> {t("pilot.disableDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("pilot.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDisable}>{t("pilot.confirmDisable")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
