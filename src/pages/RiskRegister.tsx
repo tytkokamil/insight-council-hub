@@ -262,7 +262,7 @@ const RiskRegister = () => {
                     <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
                     <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                   </div>
-                  <span className={`font-display text-xl font-bold ${kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
                 </CardContent>
               </Card>
             ))}

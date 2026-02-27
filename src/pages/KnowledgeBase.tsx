@@ -765,11 +765,11 @@ const KnowledgeBase = () => {
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
                           <p className="text-[10px] text-muted-foreground">{t("knowledge.aiPrediction")}</p>
-                          <p className="text-lg font-bold font-display text-primary">{selected.ai_impact_score ?? 0}%</p>
+                          <p className="text-lg font-bold font-display tabular-nums text-primary">{selected.ai_impact_score ?? 0}%</p>
                         </div>
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
                           <p className="text-[10px] text-muted-foreground">{t("knowledge.actual")}</p>
-                          <p className="text-lg font-bold font-display">{selected.actual_impact_score}%</p>
+                          <p className="text-lg font-bold font-display tabular-nums">{selected.actual_impact_score}%</p>
                         </div>
                         <div className="p-2 rounded-lg bg-muted/30 text-center">
                           <p className="text-[10px] text-muted-foreground">{t("knowledge.deviation")}</p>

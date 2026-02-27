@@ -407,7 +407,7 @@ const ProcessHub = () => {
                 <card.icon className={`w-4 h-4 ${card.color}`} />
                 <span className="text-xs text-muted-foreground">{card.label}</span>
               </div>
-              <p className="text-2xl font-bold tabular-nums">{card.value}<span className="text-xs font-normal text-muted-foreground">{card.suffix || ""}</span></p>
+              <p className="text-2xl font-bold font-display tabular-nums">{card.value}<span className="text-xs font-normal text-muted-foreground">{card.suffix || ""}</span></p>
             </CardContent>
           </Card>
         ))}
@@ -558,7 +558,7 @@ const ProcessHub = () => {
           <Card className="border-destructive/20">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">{t("process.violationsThisWeek")}</p>
-              <p className="text-2xl font-bold tabular-nums text-destructive">{slaViolations.thisWeek}</p>
+              <p className="text-2xl font-bold font-display tabular-nums text-destructive">{slaViolations.thisWeek}</p>
             </CardContent>
           </Card>
           <Card>
@@ -570,7 +570,7 @@ const ProcessHub = () => {
           <Card className={slaViolations.predictedNext5d > 0 ? "border-warning/20" : ""}>
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">{t("process.earlyWarning5d")}</p>
-              <p className={`text-2xl font-bold tabular-nums ${slaViolations.predictedNext5d > 0 ? "text-warning" : "text-success"}`}>{slaViolations.predictedNext5d}</p>
+              <p className={`text-2xl font-bold font-display tabular-nums ${slaViolations.predictedNext5d > 0 ? "text-warning" : "text-success"}`}>{slaViolations.predictedNext5d}</p>
               <p className="text-[10px] text-muted-foreground">{t("process.expectedViolations")}</p>
             </CardContent>
           </Card>

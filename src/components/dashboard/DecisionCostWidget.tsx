@@ -62,7 +62,7 @@ const DecisionCostWidget = () => {
         </CardHeader>
         <CardContent>
           <div className="flex items-end gap-2 mb-1">
-            <span className="font-display text-3xl font-bold text-success">0 €</span>
+            <span className="font-display text-3xl font-bold tabular-nums text-success">0 €</span>
           </div>
           <p className="text-xs text-muted-foreground">
             {t("widgets.noDelayCost", { defaultValue: "Keine Verzögerungskosten — alle Entscheidungen im Plan 🎉" })}
@@ -97,7 +97,7 @@ const DecisionCostWidget = () => {
       </CardHeader>
       <CardContent>
         <div className="flex items-end gap-2 mb-1">
-          <span className="font-display text-3xl font-bold text-destructive">{formatCost(totalCost)}</span>
+          <span className="font-display text-3xl font-bold tabular-nums text-destructive">{formatCost(totalCost)}</span>
           <span className={`text-[10px] font-medium mb-1 ${confidence.color}`}>
             {t("widgets.confidenceLabel")}: {confidence.label}
           </span>

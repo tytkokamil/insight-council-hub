@@ -148,7 +148,7 @@ const CoreKpiGrid = () => {
                   <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
                 </div>
               </div>
-              <p className={`text-2xl font-bold tabular-nums ${kpi.color}`}>{kpi.value}</p>
+              <p className={`text-2xl font-bold font-display tabular-nums ${kpi.color}`}>{kpi.value}</p>
               <p className="text-[11px] text-muted-foreground mt-1">{kpi.subLabel}</p>
             </CardContent>
           </Card>

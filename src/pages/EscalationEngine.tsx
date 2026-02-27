@@ -313,7 +313,7 @@ const EscalationEngine = () => {
                   <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className={`font-display text-xl font-bold ${kpi.isScore || kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.isScore || kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
                   {kpi.trend !== null && kpi.trend !== 0 && (
                     <span className={`text-[10px] font-medium flex items-center gap-0.5 mb-0.5 ${kpi.trend > 0 ? "text-destructive" : "text-success"}`}>
                       {kpi.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -437,7 +437,7 @@ const EscalationEngine = () => {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-bold font-display">{Math.round(d.urgencyScore)}</p>
+                      <p className="text-lg font-bold font-display tabular-nums">{Math.round(d.urgencyScore)}</p>
                       <p className="text-[10px] text-muted-foreground">{t("escalationEngine.urgency")}</p>
                     </div>
                   </div>
@@ -688,21 +688,21 @@ const EscalationEngine = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card><CardContent className="p-4">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("escalationEngine.escalationRate")}</p>
-                <p className={`text-2xl font-bold font-display ${(open.length > 0 ? Math.round(activeEscalations.length / open.length * 100) : 0) > 20 ? "text-destructive" : "text-success"}`}>
+                <p className={`text-2xl font-bold font-display tabular-nums ${(open.length > 0 ? Math.round(activeEscalations.length / open.length * 100) : 0) > 20 ? "text-destructive" : "text-success"}`}>
                   {open.length > 0 ? Math.round(activeEscalations.length / open.length * 100) : 0}%
                 </p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("escalationEngine.avgEscDuration")}</p>
-                <p className="text-2xl font-bold font-display">{escAnalytics.avgDuration}d</p>
+                <p className="text-2xl font-bold font-display tabular-nums">{escAnalytics.avgDuration}d</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("escalationEngine.highestLevel")}</p>
-                <p className="text-2xl font-bold font-display text-destructive">L{escAnalytics.maxLevel}</p>
+                <p className="text-2xl font-bold font-display tabular-nums text-destructive">L{escAnalytics.maxLevel}</p>
               </CardContent></Card>
               <Card><CardContent className="p-4">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("escalationEngine.earlyWarnings")}</p>
-                <p className={`text-2xl font-bold font-display ${escAnalytics.earlyWarnings.length > 0 ? "text-warning" : "text-success"}`}>{escAnalytics.earlyWarnings.length}</p>
+                <p className={`text-2xl font-bold font-display tabular-nums ${escAnalytics.earlyWarnings.length > 0 ? "text-warning" : "text-success"}`}>{escAnalytics.earlyWarnings.length}</p>
                 <p className="text-[10px] text-muted-foreground">{t("escalationEngine.next5Days")}</p>
               </CardContent></Card>
             </div>

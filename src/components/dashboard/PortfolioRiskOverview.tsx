@@ -96,7 +96,7 @@ const PortfolioRiskOverview = ({ decisions, risks = [] }: Props) => {
               </div>
               <span className="text-[10px] text-muted-foreground">{t("portfolioRisk.portfolioRisk")}</span>
             </div>
-            <p className={`text-2xl font-bold font-display ${riskConfig.color}`}>{analysis.avgRisk}%</p>
+            <p className={`text-2xl font-bold font-display tabular-nums ${riskConfig.color}`}>{analysis.avgRisk}%</p>
             <Badge className={`text-[9px] mt-1 ${riskConfig.bg} ${riskConfig.color} border-0`}>{riskConfig.label}</Badge>
           </CardContent>
         </Card>
@@ -107,7 +107,7 @@ const PortfolioRiskOverview = ({ decisions, risks = [] }: Props) => {
               <AlertTriangle className="w-4 h-4 text-destructive" />
               <span className="text-[10px] text-muted-foreground">{t("portfolioRisk.highRisk")}</span>
             </div>
-            <p className="text-2xl font-bold font-display">{analysis.highRisk}</p>
+            <p className="text-2xl font-bold font-display tabular-nums">{analysis.highRisk}</p>
             <p className="text-[10px] text-muted-foreground">{t("portfolioRisk.ofActive", { count: analysis.activeCount })}</p>
           </CardContent>
         </Card>
@@ -118,7 +118,7 @@ const PortfolioRiskOverview = ({ decisions, risks = [] }: Props) => {
               <Activity className="w-4 h-4 text-warning" />
               <span className="text-[10px] text-muted-foreground">{t("portfolioRisk.openRisks")}</span>
             </div>
-            <p className="text-2xl font-bold font-display">{analysis.openRisks}</p>
+            <p className="text-2xl font-bold font-display tabular-nums">{analysis.openRisks}</p>
             {analysis.criticalOpenRisks > 0 && (
               <p className="text-[10px] text-destructive">{t("portfolioRisk.criticalCount", { count: analysis.criticalOpenRisks })}</p>
             )}
