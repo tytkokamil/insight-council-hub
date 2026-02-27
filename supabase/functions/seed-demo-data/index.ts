@@ -295,6 +295,17 @@ Deno.serve(async (req) => {
       // Audit logs for personal
       if (pDecs && pDecs.length > 0) {
         await supabase.from("audit_logs").insert(pDecs.slice(0, 5).map(d => ({ decision_id: d.id, user_id: u, action: "created", created_at: d.created_at })));
+
+        // Personal decision dependencies
+        if (pDecs.length >= 5) {
+          const pIds = pDecs.map(d => d.id);
+          await supabase.from("decision_dependencies").insert([
+            { source_decision_id: pIds[0], target_decision_id: pIds[2], dependency_type: "influences", created_by: u },
+            { source_decision_id: pIds[2], target_decision_id: pIds[3], dependency_type: "requires", created_by: u },
+            { source_decision_id: pIds[6], target_decision_id: pIds[0], dependency_type: "blocks", created_by: u },
+            ...(pIds.length > 5 ? [{ source_decision_id: pIds[4], target_decision_id: pIds[5], dependency_type: "influences", created_by: u }] : []),
+          ]);
+        }
       }
 
       personalMsg = " + 12 persönliche Entscheidungen, 8 Tasks, 2 Risiken, 2 Ziele";
@@ -412,6 +423,33 @@ Deno.serve(async (req) => {
     if (insertedDecisions && insertedDecisions.length > 0) {
       const auditLogs = insertedDecisions.slice(0, 6).map(d => ({ decision_id: d.id, user_id: userId, action: "created", created_at: d.created_at }));
       await supabase.from("audit_logs").insert(auditLogs);
+    }
+
+    // ── 8b. Decision Dependencies (Graph Edges) ──
+    if (insertedDecisions && insertedDecisions.length >= 6) {
+      const ids = insertedDecisions.map(d => d.id);
+      // Create meaningful dependency chains within each team
+      // Pattern: first few decisions form a chain, plus some cross-links
+      const depInserts = [
+        // Chain: 0 blocks 1, 1 requires 2
+        { source_decision_id: ids[0], target_decision_id: ids[1], dependency_type: "blocks", created_by: userId },
+        { source_decision_id: ids[1], target_decision_id: ids[2], dependency_type: "requires", created_by: userId },
+        // 0 influences 3
+        { source_decision_id: ids[0], target_decision_id: ids[3], dependency_type: "influences", created_by: userId },
+        // 2 blocks 4
+        { source_decision_id: ids[2], target_decision_id: ids[4], dependency_type: "blocks", created_by: userId },
+        // 3 requires 5
+        { source_decision_id: ids[3], target_decision_id: ids[5], dependency_type: "requires", created_by: userId },
+        // 5 influences 6 (if exists)
+        ...(ids.length > 6 ? [{ source_decision_id: ids[5], target_decision_id: ids[6], dependency_type: "influences", created_by: userId }] : []),
+        // Cross-link: 4 influences 7 (if exists)
+        ...(ids.length > 7 ? [{ source_decision_id: ids[4], target_decision_id: ids[7], dependency_type: "influences", created_by: userId }] : []),
+        // 6 blocks 8 (if exists)
+        ...(ids.length > 8 ? [{ source_decision_id: ids[6], target_decision_id: ids[8], dependency_type: "blocks", created_by: userId }] : []),
+        // 7 requires 9 (if exists)
+        ...(ids.length > 9 ? [{ source_decision_id: ids[7], target_decision_id: ids[9], dependency_type: "requires", created_by: userId }] : []),
+      ];
+      await supabase.from("decision_dependencies").insert(depInserts);
     }
 
     // ── 9. Example Chat Messages ──
