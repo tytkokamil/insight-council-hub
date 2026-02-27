@@ -56,9 +56,16 @@ const Strategy = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [expandedGoal, setExpandedGoal] = useState<string | null>(null);
+  const [isActivated, setIsActivated] = useState(() => localStorage.getItem("strategy-goals-activated") === "true");
 
   const { selectedTeamId } = useTeamContext();
   const { data: teamDecisions = [] } = useDecisions();
+
+  const activateFeature = () => {
+    setIsActivated(true);
+    localStorage.setItem("strategy-goals-activated", "true");
+    toast({ title: t("strategy.featureActivated") });
+  };
 
   // Form state
   const [form, setForm] = useState({
@@ -157,6 +164,62 @@ const Strategy = () => {
     );
   }
 
+  // Suggestion / Proposal view when not activated
+  if (!isActivated && goals.length === 0) {
+    return (
+      <AppLayout>
+        <PageHeader
+          title={t("strategy.title")}
+          subtitle={t("strategy.label")}
+          role="intelligence"
+          help={{ title: t("strategy.title"), description: t("strategy.help") }}
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-2xl mx-auto mt-12"
+        >
+          <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/[0.03] p-8 text-center space-y-5">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <Target className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-display font-bold">{t("strategy.suggestionTitle")}</h2>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-md mx-auto">
+                {t("strategy.suggestionDesc")}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
+              {[
+                { icon: Target, label: t("strategy.suggestionOkr"), desc: t("strategy.suggestionOkrDesc") },
+                { icon: TrendingUp, label: t("strategy.suggestionLink"), desc: t("strategy.suggestionLinkDesc") },
+                { icon: CheckCircle2, label: t("strategy.suggestionTrack"), desc: t("strategy.suggestionTrackDesc") },
+              ].map((f, i) => (
+                <div key={i} className="rounded-lg border border-border bg-card p-3">
+                  <f.icon className="w-4 h-4 text-primary mb-1.5" />
+                  <p className="text-xs font-semibold">{f.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <Button size="sm" onClick={activateFeature} className="gap-2 mt-2">
+              <CheckCircle2 className="w-4 h-4" />
+              {t("strategy.activateFeature")}
+            </Button>
+          </div>
+        </motion.div>
+      </AppLayout>
+    );
+  }
+
+  // If activated via button but no goals yet, auto-mark as activated
+  if (!isActivated && goals.length > 0) {
+    localStorage.setItem("strategy-goals-activated", "true");
+  }
+
   return (
     <AppLayout>
       <PageHeader
@@ -170,6 +233,12 @@ const Strategy = () => {
           </Button>
         }
       />
+
+      {/* Active indicator */}
+      <div className="flex items-center gap-2 mb-5 px-1">
+        <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
+        <span className="text-xs font-medium text-success">{t("strategy.featureActive")}</span>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
