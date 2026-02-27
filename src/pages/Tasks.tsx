@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
+import QueryErrorRetry from "@/components/shared/QueryErrorRetry";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import PageHeader from "@/components/shared/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +75,7 @@ const Tasks = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
-  const { data: tasks = [], isLoading } = useTasks();
+  const { data: tasks = [], isLoading, isError: tasksError, refetch: refetchTasks } = useTasks();
   const { data: profiles = [] } = useProfiles();
   const invalidate = useInvalidateTasks();
   const profileMap = buildProfileMap(profiles);
@@ -251,6 +252,7 @@ const Tasks = () => {
     });
   };
 
+  if (tasksError) return <AppLayout><QueryErrorRetry onRetry={refetchTasks} /></AppLayout>;
   if (isLoading) return <AppLayout><AnalysisPageSkeleton cards={3} sections={1} /></AppLayout>;
 
   return (

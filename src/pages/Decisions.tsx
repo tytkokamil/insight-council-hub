@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import type { SortField, SortDir } from "@/components/decisions/DecisionTable";
 import DecisionsPageSkeleton from "@/components/decisions/DecisionsPageSkeleton";
 import { Plus, Download, FileText, FileUp } from "lucide-react";
+import QueryErrorRetry from "@/components/shared/QueryErrorRetry";
 import { useTranslatedLabels } from "@/lib/labels";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ const Decisions = () => {
   const PRIORITY_OPTIONS = Object.entries(tl.priorityLabels).map(([value, label]) => ({ value, label }));
   const CATEGORY_OPTIONS = Object.entries(tl.categoryLabels).map(([value, label]) => ({ value, label }));
 
-  const { data: decisions = [], isLoading: decisionsLoading } = useDecisions();
+  const { data: decisions = [], isLoading: decisionsLoading, isError: decisionsError, refetch: refetchDecisions } = useDecisions();
   const { data: teams = [] } = useTeams();
   const { data: profiles = [] } = useProfiles();
   const { data: allDeps = [] } = useDependencies();
@@ -215,6 +216,14 @@ const Decisions = () => {
     assignee_name: d.assignee_id ? profileMap[d.assignee_id] : undefined,
     creator_name: profileMap[d.created_by],
   }));
+
+  if (decisionsError) {
+    return (
+      <AppLayout>
+        <QueryErrorRetry onRetry={refetchDecisions} message={t("decisions.loadError", "Entscheidungen konnten nicht geladen werden")} />
+      </AppLayout>
+    );
+  }
 
   if (decisionsLoading) {
     return <AppLayout><DecisionsPageSkeleton /></AppLayout>;

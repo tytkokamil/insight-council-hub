@@ -26,8 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jsPDF loaded dynamically on export
 import DiffViewer from "@/components/audit/DiffViewer";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -295,7 +294,9 @@ const AuditTrail = () => {
     URL.revokeObjectURL(url);
   };
 
-  const exportPdf = () => {
+  const exportPdf = async () => {
+    const { default: jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
     doc.text("Audit Trail Report", 14, 18);

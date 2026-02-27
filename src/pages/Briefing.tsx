@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
-import jsPDF from "jspdf";
+// jsPDF loaded dynamically on export
 
 const priorityMap: Record<string, string> = {
   critical: "priorityCritical",
@@ -68,8 +68,9 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
     return lastUpdated.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   };
 
-  const exportBriefingPdf = () => {
+  const exportBriefingPdf = async () => {
     if (!briefing) return;
+    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     let y = 20;
     doc.setFontSize(18);
