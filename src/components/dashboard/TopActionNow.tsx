@@ -140,8 +140,10 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
     <motion.div
       initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.005 }}
       transition={{ duration: 0.4 }}
-      className={`rounded-xl border ${styles.border} ${styles.bg} p-5 flex items-center gap-4`}
+      className={`rounded-xl border ${styles.border} ${styles.bg} p-5 flex items-center gap-4 cursor-pointer transition-shadow hover:shadow-md`}
+      onClick={() => navigate(action.path)}
     >
       <div className={`w-10 h-10 rounded-xl ${styles.iconBg} flex items-center justify-center shrink-0 ${styles.pulse ? "animate-pulse" : ""}`}>
         <Icon className={`w-5 h-5 ${styles.iconColor}`} />
@@ -158,9 +160,9 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks }: Prop
       <Button
         size="sm"
         className="shrink-0 gap-1.5"
-        onClick={() => navigate(action.path)}
+        onClick={(e) => { e.stopPropagation(); navigate(action.path); }}
       >
-        {action.actionLabel} <ArrowRight className="w-3.5 h-3.5" />
+        {action.actionLabel} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
       </Button>
     </motion.div>
   );
