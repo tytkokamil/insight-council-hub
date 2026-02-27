@@ -4274,7 +4274,7 @@
     "retRejectedYears": "1 Jahr",
     "autoArchive": "Auto-Archivierung",
     "autoArchiveLabel": "Automatische Archivierung",
-    "autoArchiveDesc": "Umgesetzte Entscheidungen nach X Tagen automatisch archivieren.",
+    "autoArchiveDesc": "Umgesetzte Entscheidungen nach {{days}} Tagen automatisch archivieren.",
     "archiveAfterDays": "Archivieren nach (Tagen)",
     "deleteAfterDays": "Endgültig löschen nach (Tagen, optional)",
     "never": "Nie",
