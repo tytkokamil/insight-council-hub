@@ -182,7 +182,7 @@ const AdminUsers = () => {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <UserAvatar avatarUrl={u.avatar_url} fullName={u.full_name} />
-                          <div><p className="text-sm font-medium">{u.full_name || t("admin.unknown")}</p><p className="text-xs text-muted-foreground">{u.user_id.slice(0, 8)}...</p></div>
+                          <div><p className="text-sm font-medium">{u.full_name || t("admin.unknown")}</p><p className="text-xs text-muted-foreground">{u.email}</p></div>
                         </div>
                       </td>
                       <td className="px-4 py-3"><Badge variant="outline" className={roleBadgeVariant[u.role]}>{roleLabels[u.role]}</Badge></td>
@@ -274,7 +274,11 @@ const AdminUsers = () => {
             <Card>
               <CardContent className="p-5">
                 <h3 className="text-sm font-semibold mb-3">{t("admin.backup")}</h3>
-                <p className="text-xs text-muted-foreground">{t("admin.backupDesc")}</p>
+                <p className="text-xs text-muted-foreground mb-2">{t("admin.backupDesc")}</p>
+                <div className="flex items-center gap-4 mt-3">
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">{t("admin.backupStatus")}</Badge>
+                  <span className="text-xs text-muted-foreground">{t("admin.lastBackup")}</span>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -290,22 +294,37 @@ const AuditLogList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(20)
+    supabase.from("audit_logs").select("*, decisions(title)").order("created_at", { ascending: false }).limit(20)
       .then(({ data }) => { setLogs(data || []); setLoading(false); });
   }, []);
 
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</div>;
   if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">{t("admin.noAuditEntries")}</p>;
 
+  const formatValue = (val: string | null) => {
+    if (!val) return "\u2013";
+    // Format ISO timestamps to readable format
+    if (/^\d{4}-\d{2}-\d{2}T/.test(val)) {
+      return new Date(val).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    }
+    return val;
+  };
+
   return (
     <div className="space-y-1 max-h-[400px] overflow-y-auto">
-      {logs.map((log) => (
-        <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
-          <span className="text-muted-foreground w-28 shrink-0">{new Date(log.created_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
-          <Badge variant="outline" className="text-[10px] shrink-0">{log.action}</Badge>
-          <span className="text-muted-foreground truncate">{log.field_name ? `${log.field_name}: ${log.old_value || "\u2013"} \u2192 ${log.new_value || "\u2013"}` : log.action}</span>
-        </div>
-      ))}
+      {logs.map((log) => {
+        const decisionTitle = (log as any).decisions?.title;
+        return (
+          <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
+            <span className="text-muted-foreground w-28 shrink-0">{new Date(log.created_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+            <Badge variant="outline" className="text-[10px] shrink-0">{log.action}</Badge>
+            <span className="text-muted-foreground truncate">
+              {decisionTitle && <span className="font-medium text-foreground">{decisionTitle}: </span>}
+              {log.field_name ? `${log.field_name}: ${formatValue(log.old_value)} \u2192 ${formatValue(log.new_value)}` : log.action}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
