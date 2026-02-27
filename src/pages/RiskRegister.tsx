@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import AppLayout from "@/components/layout/AppLayout";
+import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -420,14 +421,14 @@ const RiskRegister = () => {
         {isLoading ? (
           <p className="text-muted-foreground text-sm text-center py-8">{t("risk.loading")}</p>
         ) : risks.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-border bg-card p-12 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center mx-auto mb-5">
-              <Shield className="w-8 h-8 text-destructive opacity-60" />
-            </div>
-            <h3 className="font-display text-xl font-semibold mb-2">{t("risk.emptyTitle")}</h3>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto mb-6">{t("risk.emptyDesc")}</p>
-            <Button onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }} className="gap-2"><Plus className="w-4 h-4" /> {t("risk.createFirst")}</Button>
-          </motion.div>
+          <EmptyAnalysisState
+            icon={Shield}
+            title={t("risk.emptyTitle")}
+            description={t("risk.emptyDesc")}
+            ctaLabel={t("risk.createFirst")}
+            onCtaClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }}
+            accentClass="destructive"
+          />
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             <Search className="w-10 h-10 mx-auto mb-3 opacity-30" />
