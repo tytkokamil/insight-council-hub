@@ -141,14 +141,8 @@ const Dashboard = () => {
     return () => document.removeEventListener("keydown", handler);
   }, [navigate]);
 
-  const personalDecisions = allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id);
-  const decisions = isPersonal
-    ? (personalDecisions.length > 0 ? personalDecisions : allDecisions)
-    : allDecisions;
-  const personalTasks = tasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id);
-  const contextTasks = isPersonal
-    ? (personalTasks.length > 0 ? personalTasks : tasks)
-    : tasks;
+  const decisions = allDecisions;
+  const contextTasks = tasks;
 
   // === ALL COMPUTED DATA ===
   const computed = useMemo(() => {

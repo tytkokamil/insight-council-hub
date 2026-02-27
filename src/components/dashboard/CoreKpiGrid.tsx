@@ -71,12 +71,9 @@ const CoreKpiGrid = () => {
   const { selectedTeamId } = useTeamContext();
 
   const isPersonal = selectedTeamId === null;
+  const decisions = allDecisions;
 
   const kpis = useMemo<CoreKpi[]>(() => {
-    const decisions = isPersonal
-      ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
-      : allDecisions;
-
     const now = new Date();
     const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled", "superseded"].includes(d.status));
     const implemented = decisions.filter(d => d.status === "implemented");
@@ -155,7 +152,7 @@ const CoreKpiGrid = () => {
         formula: t("coreKpi.slaFormula"),
       },
     ];
-  }, [allDecisions, reviews, tasks, teams, risks, user, isPersonal, selectedTeamId, t]);
+  }, [allDecisions, reviews, tasks, teams, risks, t]);
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
