@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatNumber } from "@/lib/formatters";
 import { FileText, PlayCircle, CheckCircle2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -203,7 +204,7 @@ const MeetingMode = () => {
                         </Badge>
                         {isEscalated && <Badge variant="destructive" className="text-[10px]">⚠️</Badge>}
                         {cost > 0 && (
-                          <span className="text-[10px] text-warning font-medium">{cost.toLocaleString("de-DE")}{t("meeting.perWeek")}</span>
+                          <span className="text-[10px] text-warning font-medium">{formatNumber(cost)}{t("meeting.perWeek")}</span>
                         )}
                       </div>
                     </button>

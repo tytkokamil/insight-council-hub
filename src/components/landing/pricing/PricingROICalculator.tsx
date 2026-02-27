@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatCurrency } from "@/lib/formatters";
 import { motion } from "framer-motion";
 import { Calculator, TrendingUp, Clock, AlertTriangle, DollarSign } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
@@ -85,9 +86,9 @@ const PricingROICalculator = () => {
         <div className="space-y-4">
           <motion.div key={roi.annualSavings} initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="rounded-xl border-2 border-primary/30 bg-primary/[0.03] p-6 text-center">
             <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">{t("landing.pricing.annualSavings")}</p>
-            <p className="text-4xl font-bold gradient-text">€{roi.annualSavings.toLocaleString("de-DE")}</p>
+            <p className="text-4xl font-bold gradient-text">{formatCurrency(roi.annualSavings)}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {roi.roiMultiple}× ROI · {teamSize <= 10 ? "Starter" : teamSize <= 50 ? "Professional" : "Enterprise"} (€{roi.monthlyCost}/Mo)
+              {roi.roiMultiple}× ROI · {teamSize <= 10 ? "Starter" : teamSize <= 50 ? "Professional" : "Enterprise"} ({formatCurrency(roi.monthlyCost)}/{t("landing.pricing.perMonth")})
             </p>
             <button
               onClick={() => {
@@ -104,8 +105,8 @@ const PricingROICalculator = () => {
             {[
               { icon: Clock, label: t("landing.pricing.daysSavedMonth"), value: roi.daysSavedPerMonth },
               { icon: AlertTriangle, label: t("landing.pricing.escalationsAvoided"), value: `${roi.escalationsSaved}/a` },
-              { icon: DollarSign, label: t("landing.pricing.monthlySavings"), value: `€${roi.totalMonthlySavings.toLocaleString("de-DE")}` },
-              { icon: TrendingUp, label: t("landing.pricing.netRoiYear"), value: `+€${roi.netROI.toLocaleString("de-DE")}`, color: "text-accent-teal" },
+              { icon: DollarSign, label: t("landing.pricing.monthlySavings"), value: formatCurrency(roi.totalMonthlySavings) },
+              { icon: TrendingUp, label: t("landing.pricing.netRoiYear"), value: `+${formatCurrency(roi.netROI)}`, color: "text-accent-teal" },
             ].map((item, i) => (
               <div key={i} className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center gap-2 mb-1">

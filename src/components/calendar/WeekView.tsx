@@ -1,4 +1,5 @@
 import { memo, DragEvent } from "react";
+import { formatCost, formatNumber } from "@/lib/formatters";
 import { format, isToday, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -98,11 +99,11 @@ const WeekView = memo(({
                     <TooltipTrigger>
                       <span className="text-[9px] font-semibold text-destructive flex items-center gap-0.5">
                         <DollarSign className="w-2.5 h-2.5" />
-                        {delayCost >= 1000 ? `${(delayCost / 1000).toFixed(1)}k€` : `${delayCost}€`}
+                        {formatCost(delayCost)}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent className="text-xs">
-                      {t("cal.delayCost", { cost: delayCost.toLocaleString() })}
+                      {t("cal.delayCost", { cost: formatNumber(delayCost) })}
                     </TooltipContent>
                   </Tooltip>
                 </div>

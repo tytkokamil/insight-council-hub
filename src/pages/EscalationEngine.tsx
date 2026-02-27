@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { formatCost } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
@@ -54,7 +55,7 @@ const EscalationEngine = () => {
 
   const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
 
-  const formatCost = (cost: number) => cost >= 1000 ? `${(cost / 1000).toFixed(1)}k €` : `${Math.round(cost)} €`;
+  
 
   const { data: decisions = [], isLoading: decLoading } = useDecisions();
   const { data: notifications = [], isLoading: notifLoading } = useFilteredNotifications();

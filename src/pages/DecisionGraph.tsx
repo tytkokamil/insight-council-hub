@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { formatNumber } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import {
   ReactFlow,
@@ -157,7 +158,7 @@ const DecisionGraph = () => {
           priority: dec.priority,
           category: dec.category,
           delayCost,
-          delayCostFormatted: t("graph.delayCost", { cost: delayCost.toLocaleString("de-DE") }),
+          delayCostFormatted: t("graph.delayCost", { cost: formatNumber(delayCost) }),
           cascadeCount: cascade.count,
           cascadeIds: cascade.ids,
           cascadeLabel: t("graph.cascadeAffected", { count: cascade.count }),
@@ -280,7 +281,7 @@ const DecisionGraph = () => {
                   {selectedNode.delayCost > 0 && (
                     <div className="flex items-center gap-2 text-warning text-xs font-medium p-2 rounded-lg bg-warning/10">
                       <DollarSign className="w-3.5 h-3.5" />
-                      {t("graph.directDelayCost", { cost: selectedNode.delayCost.toLocaleString("de-DE") })}
+                      {t("graph.directDelayCost", { cost: formatNumber(selectedNode.delayCost) })}
                     </div>
                   )}
                   {cascadeInfo && (
@@ -294,7 +295,7 @@ const DecisionGraph = () => {
                         <span className="text-destructive font-bold">{t("graph.cascadeFollowUp", { count: cascadeInfo.count })}</span>
                       </p>
                       <p className="text-xs font-medium text-destructive">
-                        {t("graph.chainCost", { cost: cascadeInfo.cost.toLocaleString("de-DE") })}
+                        {t("graph.chainCost", { cost: formatNumber(cascadeInfo.cost) })}
                       </p>
                       <div className="space-y-1 mt-1">
                         {cascadeInfo.chain.slice(0, 5).map((title, i) => (
