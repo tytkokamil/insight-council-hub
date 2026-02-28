@@ -61,9 +61,9 @@ const AiBriefingWidget = () => {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <h3 className="text-sm font-semibold">{t("widgets.aiBriefing")}</h3>
-          {momentum != null && (
+          {momentum != null && momentum > 0 && (
             <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-              momentum > 70 ? "bg-success/10 text-success" : momentum > 40 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"
+              momentum > 70 ? "bg-success/10 text-success" : momentum > 40 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
             }`}>
               {t("briefing.momentum")} {momentum}
             </span>
