@@ -27,9 +27,9 @@ const DashboardPreview = () => {
         ))}
       </div>
       {[
-        { t: "Q4 Budget", s: "Approved", p: 92 },
-        { t: "Hiring Plan", s: "In Review", p: 65 },
-        { t: "Tech Migration", s: "Draft", p: 30 },
+        { t: "Q4 Budget", s: "Genehmigt", p: 92 },
+        { t: "Hiring Plan", s: "Im Review", p: 65 },
+        { t: "Tech Migration", s: "Entwurf", p: 30 },
       ].map((d, i) => (
         <motion.div key={d.t} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 + i * 0.15 }} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
           <div className="flex-1">
@@ -85,16 +85,16 @@ const TeamPreview = () => (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="w-8 h-8 rounded-full bg-muted/30 border-2 border-background flex items-center justify-center text-xs text-muted-foreground">+8</motion.div>
     </div>
     {[
-      { name: "Anna M.", status: "Approved", icon: CheckCircle2 },
-      { name: "Thomas K.", status: "In Review", icon: Clock },
-      { name: "Sarah L.", status: "Pending", icon: Target },
+      { name: "Anna M.", status: "Genehmigt", icon: CheckCircle2 },
+      { name: "Thomas K.", status: "Im Review", icon: Clock },
+      { name: "Sarah L.", status: "Ausstehend", icon: Target },
     ].map((r, i) => (
       <motion.div key={r.name} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.15 }} className="flex items-center justify-between p-2.5 rounded-xl bg-muted/20 border border-border/30">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-foreground/[0.06] flex items-center justify-center text-[10px] font-bold text-foreground/60">{r.name[0]}</div>
           <span className="text-sm">{r.name}</span>
         </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === "Approved" ? "bg-success/10 text-success" : r.status === "In Review" ? "bg-warning/10 text-warning" : "bg-muted/30 text-muted-foreground"}`}>{r.status}</span>
+        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === "Genehmigt" ? "bg-success/10 text-success" : r.status === "Im Review" ? "bg-warning/10 text-warning" : "bg-muted/30 text-muted-foreground"}`}>{r.status}</span>
       </motion.div>
     ))}
   </div>
@@ -109,7 +109,7 @@ const GraphPreview = () => (
     ))}
     <svg className="absolute inset-0 w-full h-full" style={{ zIndex: -1 }}>
       {[["22%", "35%", "52%", "22%"], ["57%", "22%", "82%", "42%"], ["35%", "78%", "52%", "22%"], ["37%", "78%", "67%", "82%"]].map(([x1, y1, x2, y2], i) => (
-        <motion.line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--border))" strokeWidth="1.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6 + i * 0.1, duration: 0.5 }} />
+        <motion.line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="hsl(var(--foreground) / 0.4)" strokeWidth="2.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6 + i * 0.1, duration: 0.5 }} />
       ))}
     </svg>
   </div>
@@ -126,7 +126,7 @@ const CtaPreview = () => {
         <div className="text-sm font-semibold">{t("landing.tour.readyBetter")}</div>
         <div className="text-xs text-muted-foreground">{t("landing.tour.freePlan")}</div>
       </motion.div>
-      {[t("landing.tour.unlimitedDecisions"), t("landing.tour.aiIncluded"), t("landing.tour.teamCollaboration")].map((f, i) => (
+      {["1 Nutzer kostenlos", "Decision Hub inklusive", "Audit Trail 30 Tage"].map((f, i) => (
         <motion.div key={f} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 + i * 0.1 }} className="flex items-center gap-2 text-xs text-muted-foreground">
           <CheckCircle2 className="w-3.5 h-3.5 text-foreground/30" />{f}
         </motion.div>
