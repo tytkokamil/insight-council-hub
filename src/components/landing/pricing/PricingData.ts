@@ -132,10 +132,10 @@ export const getTrustItems = (t: TFunction): string[] => [
 ];
 
 export const getValueStats = (t: TFunction) => [
-  { metric: "€4.2M", description: t("landing.pricing.valueCod") },
-  { metric: "98%", description: t("landing.pricing.valueSla") },
-  { metric: "40%", description: t("landing.pricing.valueFaster") },
-  { metric: "2.585%", description: t("landing.pricing.valueRoi") },
+  { metric: "Mio. €", description: t("landing.pricing.valueCod") },
+  { metric: ">95%", description: t("landing.pricing.valueSla") },
+  { metric: "bis zu 3×", description: t("landing.pricing.valueFaster") },
+  { metric: "schnell", description: t("landing.pricing.valueRoi") },
 ];
 
 export const getFaqItems = (t: TFunction) => [
