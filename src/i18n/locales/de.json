@@ -1179,7 +1179,7 @@
     "adopted": "Übernommen",
     "goalAdopted": "Ziel übernommen und aktiviert!"
   },
-  "meeting": {
+  "meetingTabs": {
     "agenda": "Agenda",
     "review": "Review",
     "protocol": "Protokoll",
@@ -1962,6 +1962,13 @@
     "taskStatusDone": "Erledigt"
   },
   "meeting": {
+    "agenda": "Agenda",
+    "review": "Review",
+    "protocol": "Protokoll",
+    "selectForRoom": "Wähle die Entscheidungen für das Decision Room ({{count}} ausgewählt)",
+    "noOpenDecisions": "Keine offenen Entscheidungen zur Besprechung.",
+    "startReview": "Review starten ({{count}} Decisions)",
+    "perWeek": "€/Wo",
     "decisionRoom": "Decision Room",
     "participants": "Teilnehmer",
     "decisionsLabel": "Entscheidungen",
