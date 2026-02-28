@@ -2363,7 +2363,7 @@ export type Database = {
         | "org_admin"
         | "org_member"
         | "org_executive"
-        | "org_reviewer"
+        | "org_lead"
         | "org_viewer"
       outcome_type: "successful" | "partial" | "failed"
       share_permission: "read" | "comment" | "edit"
@@ -2566,7 +2566,7 @@ export const Constants = {
         "org_admin",
         "org_member",
         "org_executive",
-        "org_reviewer",
+        "org_lead",
         "org_viewer",
       ],
       outcome_type: ["successful", "partial", "failed"],

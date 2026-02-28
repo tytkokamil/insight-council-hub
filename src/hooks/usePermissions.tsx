@@ -2,12 +2,17 @@ import { useState, useEffect, useMemo, createContext, useContext, ReactNode, use
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-export type OrgRoleKey = "org_owner" | "org_admin" | "org_executive" | "org_member" | "org_reviewer" | "org_viewer";
+export type OrgRoleKey = "org_owner" | "org_admin" | "org_executive" | "org_lead" | "org_member" | "org_viewer";
 
+/**
+ * Hierarchy for UI ordering (display purposes).
+ * NOTE: Executive is a parallel branch — read-only, no write permissions.
+ * The actual permission logic uses explicit mappings, not hierarchy.
+ */
 const ROLE_HIERARCHY: OrgRoleKey[] = [
   "org_viewer",
-  "org_reviewer",
   "org_member",
+  "org_lead",
   "org_executive",
   "org_admin",
   "org_owner",
@@ -17,16 +22,28 @@ function roleLevel(r: OrgRoleKey): number {
   return ROLE_HIERARCHY.indexOf(r);
 }
 
+/**
+ * Write-aware min-role check matching the SQL has_min_role function.
+ * Executive is EXCLUDED from write paths (org_member check won't match executive).
+ */
 function hasMinRole(current: OrgRoleKey, min: OrgRoleKey): boolean {
-  return roleLevel(current) >= roleLevel(min);
+  const allowed: Record<OrgRoleKey, OrgRoleKey[]> = {
+    org_viewer:    ["org_viewer", "org_member", "org_lead", "org_executive", "org_admin", "org_owner"],
+    org_member:    ["org_member", "org_lead", "org_admin", "org_owner"], // Executive excluded from write
+    org_lead:      ["org_lead", "org_admin", "org_owner"],
+    org_executive: ["org_executive", "org_admin", "org_owner"],
+    org_admin:     ["org_admin", "org_owner"],
+    org_owner:     ["org_owner"],
+  };
+  return (allowed[min] || []).includes(current);
 }
 
 export const ROLE_LABELS: Record<OrgRoleKey, string> = {
   org_owner: "Owner",
   org_admin: "Admin",
   org_executive: "Executive",
+  org_lead: "Team Lead",
   org_member: "Member",
-  org_reviewer: "Reviewer",
   org_viewer: "Viewer",
 };
 
@@ -34,14 +51,14 @@ export const ROLE_LABELS_DE: Record<OrgRoleKey, string> = {
   org_owner: "Eigentümer",
   org_admin: "Administrator",
   org_executive: "Executive",
+  org_lead: "Team Lead",
   org_member: "Mitglied",
-  org_reviewer: "Reviewer",
   org_viewer: "Betrachter",
 };
 
 /** All granular permission keys */
 export type PermissionKey =
-  | "decisions.read" | "decisions.create" | "decisions.edit_own" | "decisions.edit_any" | "decisions.delete" | "decisions.change_status"
+  | "decisions.read" | "decisions.create" | "decisions.edit_own" | "decisions.edit_any" | "decisions.delete_own" | "decisions.delete_any" | "decisions.change_status"
   | "reviews.submit" | "reviews.assign" | "comments.write"
   | "tasks.create" | "tasks.edit" | "risks.create" | "risks.read"
   | "analytics.view" | "executive.hub" | "process.hub"
@@ -52,7 +69,8 @@ export interface Permissions {
   createDecision: boolean;
   editOwnDecision: boolean;
   editAnyDecision: boolean;
-  deleteDecision: boolean;
+  deleteOwnDecision: boolean;
+  deleteAnyDecision: boolean;
   changeStatus: boolean;
   submitReview: boolean;
   assignReviewer: boolean;
@@ -74,6 +92,8 @@ export interface Permissions {
   assignOwner: boolean;
   manageBilling: boolean;
   manageOrgSettings: boolean;
+  /** @deprecated Use deleteOwnDecision or deleteAnyDecision */
+  deleteDecision: boolean;
 }
 
 /** Map from PermissionKey to Permissions field */
@@ -81,7 +101,8 @@ export const PERMISSION_MAP: Record<string, keyof Permissions> = {
   "decisions.create": "createDecision",
   "decisions.edit_own": "editOwnDecision",
   "decisions.edit_any": "editAnyDecision",
-  "decisions.delete": "deleteDecision",
+  "decisions.delete_own": "deleteOwnDecision",
+  "decisions.delete_any": "deleteAnyDecision",
   "decisions.change_status": "changeStatus",
   "reviews.submit": "submitReview",
   "reviews.assign": "assignReviewer",
@@ -115,7 +136,7 @@ export const PERMISSION_CATEGORIES: Record<string, { label: string; labelDe: str
   decisions: {
     label: "Decisions",
     labelDe: "Entscheidungen",
-    keys: ["decisions.read", "decisions.create", "decisions.edit_own", "decisions.edit_any", "decisions.delete", "decisions.change_status"],
+    keys: ["decisions.read", "decisions.create", "decisions.edit_own", "decisions.edit_any", "decisions.delete_own", "decisions.delete_any", "decisions.change_status"],
   },
   reviews: {
     label: "Reviews & Comments",
@@ -144,34 +165,73 @@ export const PERMISSION_CATEGORIES: Record<string, { label: string; labelDe: str
   },
 };
 
-/** Default permissions based on role hierarchy (hardcoded baseline) */
+/**
+ * Default permissions based on RBAC spec.
+ * Executive is explicitly read-only — does NOT inherit Member write permissions.
+ * Team Lead inherits Member permissions + team management.
+ */
 export function getDefaultPermissions(r: OrgRoleKey): Permissions {
+  // Executive: read-only across org, no create/edit/delete
+  if (r === "org_executive") {
+    return {
+      createDecision: false,
+      editOwnDecision: false,
+      editAnyDecision: false,
+      deleteOwnDecision: false,
+      deleteAnyDecision: false,
+      changeStatus: false,
+      submitReview: false,
+      assignReviewer: false,
+      writeComments: false,
+      createTask: false,
+      editTask: false,
+      createRisk: false,
+      readRiskRegister: true,
+      viewAnalytics: true,
+      viewExecutiveHub: true,
+      viewProcessHub: true,
+      manageTemplates: false,
+      useTemplates: false,
+      manageSLA: false,
+      manageAutomations: false,
+      viewAuditTrail: true,
+      manageUsers: false,
+      assignRoles: false,
+      assignOwner: false,
+      manageBilling: false,
+      manageOrgSettings: false,
+      deleteDecision: false,
+    };
+  }
+
   return {
     createDecision: hasMinRole(r, "org_member"),
     editOwnDecision: hasMinRole(r, "org_member"),
     editAnyDecision: hasMinRole(r, "org_admin"),
-    deleteDecision: hasMinRole(r, "org_admin"),
+    deleteOwnDecision: hasMinRole(r, "org_member"),
+    deleteAnyDecision: hasMinRole(r, "org_admin"),
     changeStatus: hasMinRole(r, "org_member"),
-    submitReview: ["org_owner", "org_admin", "org_member", "org_reviewer"].includes(r),
+    submitReview: hasMinRole(r, "org_member"),
     assignReviewer: hasMinRole(r, "org_member"),
-    writeComments: ["org_owner", "org_admin", "org_member", "org_reviewer"].includes(r),
+    writeComments: hasMinRole(r, "org_member"),
     createTask: hasMinRole(r, "org_member"),
     editTask: hasMinRole(r, "org_member"),
     createRisk: hasMinRole(r, "org_member"),
-    readRiskRegister: hasMinRole(r, "org_executive") || r === "org_member",
-    viewAnalytics: hasMinRole(r, "org_executive"),
+    readRiskRegister: hasMinRole(r, "org_member"),
+    viewAnalytics: hasMinRole(r, "org_lead") || hasMinRole(r, "org_executive"),
     viewExecutiveHub: hasMinRole(r, "org_executive"),
-    viewProcessHub: hasMinRole(r, "org_executive"),
+    viewProcessHub: hasMinRole(r, "org_lead") || hasMinRole(r, "org_executive"),
     manageTemplates: hasMinRole(r, "org_admin"),
     useTemplates: hasMinRole(r, "org_member"),
-    manageSLA: hasMinRole(r, "org_admin"),
-    manageAutomations: hasMinRole(r, "org_admin"),
-    viewAuditTrail: hasMinRole(r, "org_admin"),
+    manageSLA: hasMinRole(r, "org_lead"),
+    manageAutomations: hasMinRole(r, "org_lead"),
+    viewAuditTrail: hasMinRole(r, "org_lead"),
     manageUsers: hasMinRole(r, "org_admin"),
     assignRoles: hasMinRole(r, "org_admin"),
     assignOwner: r === "org_owner",
     manageBilling: r === "org_owner",
     manageOrgSettings: hasMinRole(r, "org_admin"),
+    deleteDecision: hasMinRole(r, "org_admin"), // deprecated, kept for backward compat
   };
 }
 
@@ -246,7 +306,7 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     const { data: overridesData } = await supabase
       .from("role_permissions")
       .select("permission, enabled, org_id")
-      .eq("role", userRole);
+      .eq("role", userRole as any);
 
     if (overridesData && overridesData.length > 0) {
       const orgId = profileRes.data?.org_id;
@@ -280,7 +340,7 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
   }, [role, customOverrides]);
 
   const isAdmin = hasMinRole(role, "org_admin");
-  const isExecutive = hasMinRole(role, "org_executive");
+  const isExecutive = role === "org_executive" || hasMinRole(role, "org_admin");
   const progressiveStage = getProgressiveStage(decisionCount);
 
   /** Combined visibility check: role permission + feature flag + progressive disclosure */

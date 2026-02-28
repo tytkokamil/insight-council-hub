@@ -121,7 +121,7 @@ interface SidebarNavProps {
 }
 
 const ROLE_HIERARCHY: OrgRoleKey[] = [
-  "org_viewer", "org_reviewer", "org_member", "org_executive", "org_admin", "org_owner",
+  "org_viewer", "org_member", "org_lead", "org_executive", "org_admin", "org_owner",
 ];
 
 function meetsMinRole(current: OrgRoleKey, min?: OrgRoleKey): boolean {
