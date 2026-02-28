@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { exportTasksCSV } from "@/lib/exportDecisions";
 import { exportTasksExcel } from "@/lib/exportExcel";
+import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import ImportDialog from "@/components/shared/ImportDialog";
 import TaskKanbanBoard from "@/components/tasks/TaskKanbanBoard";
 import { format } from "date-fns";
@@ -520,8 +521,19 @@ const Tasks = () => {
                           <td className="p-3">
                             <span className="text-xs text-muted-foreground">{CATEGORY_LABELS[task.category] || task.category}</span>
                           </td>
-                          <td className="p-3">
-                            <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || "—" : "—"}</span>
+                          <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || "—" : "—"}</span>
+                              {task.assignee_id && (
+                                <QuickMessageButton
+                                  teamId={task.team_id}
+                                  decisionId={null}
+                                  contextLabel={task.title}
+                                  recipientName={profileMap[task.assignee_id]}
+                                  recipientId={task.assignee_id}
+                                />
+                              )}
+                            </div>
                           </td>
                           <td className="p-3">
                             <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>

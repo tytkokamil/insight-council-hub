@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -211,7 +212,7 @@ const DecisionTable = ({
                       </DropdownMenu>
                     </td>
 
-                    <td className="p-3 hidden md:table-cell">
+                    <td className="p-3 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
                           {(profileMap[decision.assignee_id || decision.created_by] || "?").charAt(0).toUpperCase()}
@@ -219,6 +220,13 @@ const DecisionTable = ({
                         <span className="text-xs text-muted-foreground truncate max-w-[80px]">
                           {profileMap[decision.assignee_id || decision.created_by] || "—"}
                         </span>
+                        <QuickMessageButton
+                          teamId={decision.team_id}
+                          decisionId={decision.id}
+                          decisionTitle={decision.title}
+                          recipientName={profileMap[decision.assignee_id || decision.created_by]}
+                          recipientId={decision.assignee_id || decision.created_by}
+                        />
                       </div>
                     </td>
 
