@@ -77,11 +77,11 @@ const DecisionRoomHeader = ({
             <p className="text-sm font-semibold">{totalDecisions}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-destructive/10 border border-destructive/20">
-          <AlertTriangle className="w-4 h-4 text-destructive shrink-0" />
+        <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${criticalCount > 0 ? "bg-destructive/10 border-destructive/20" : "bg-muted/30 border-border"}`}>
+          <AlertTriangle className={`w-4 h-4 shrink-0 ${criticalCount > 0 ? "text-destructive" : "text-muted-foreground"}`} />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.criticalLabel")}</p>
-            <p className="text-sm font-semibold text-destructive">{criticalCount}</p>
+            <p className={`text-sm font-semibold ${criticalCount > 0 ? "text-destructive" : ""}`}>{criticalCount}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border">

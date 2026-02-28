@@ -1178,7 +1178,7 @@
     "adopted": "Adopted",
     "goalAdopted": "Goal adopted and activated!"
   },
-  "meeting": {
+  "meetingTabs": {
     "agenda": "Agenda",
     "review": "Review",
     "protocol": "Protocol",
@@ -1961,6 +1961,13 @@
     "taskStatusDone": "Done"
   },
   "meeting": {
+    "agenda": "Agenda",
+    "review": "Review",
+    "protocol": "Protocol",
+    "selectForRoom": "Select decisions for the Decision Room ({{count}} selected)",
+    "noOpenDecisions": "No open decisions to discuss.",
+    "startReview": "Start review ({{count}} Decisions)",
+    "perWeek": "€/wk",
     "decisionRoom": "Decision Room",
     "participants": "Participants",
     "decisionsLabel": "Decisions",
