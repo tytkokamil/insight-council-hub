@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle, Clock, Eye, Link2, ArrowRight,
-  CheckCircle2, ShieldAlert, Zap,
+  CheckCircle2, ShieldAlert, Zap, Plus, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface TopAction {
   urgency: "critical" | "warning" | "info" | "success";
@@ -26,6 +28,7 @@ interface Props {
 }
 
 const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasData = true }: Props) => {
+  const [seedingDemo, setSeedingDemo] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -82,24 +85,56 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasDat
     return null;
   }, [overdue, escalated, pendingReviews, blockedTasks, t]);
 
+  const handleSeedDemo = async () => {
+    setSeedingDemo(true);
+    toast.info(t("decisions.demoCreating", { defaultValue: "Beispieldaten werden erstellt…" }));
+    const { data, error } = await supabase.functions.invoke("seed-demo-data");
+    setSeedingDemo(false);
+    if (error || data?.error) { toast.error(data?.error || t("settings.error")); return; }
+    toast.success(t("decisions.demoCreated", { defaultValue: "Beispieldaten erstellt!" }));
+    window.location.reload();
+  };
+
   if (!action) {
     return (
       <motion.div
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-xl border ${hasData ? "border-success/20 bg-success/[0.04]" : "border-border bg-muted/30"} p-5 flex items-center gap-4`}
+        className={`rounded-xl border ${hasData ? "border-success/20 bg-success/[0.04]" : "border-border bg-muted/30"} p-5`}
       >
-        <div className={`w-10 h-10 rounded-xl ${hasData ? "bg-success/10" : "bg-muted"} flex items-center justify-center shrink-0`}>
-          <CheckCircle2 className={`w-5 h-5 ${hasData ? "text-success" : "text-muted-foreground/50"}`} />
+        <div className="flex items-center gap-4">
+          <div className={`w-10 h-10 rounded-xl ${hasData ? "bg-success/10" : "bg-muted"} flex items-center justify-center shrink-0`}>
+            <CheckCircle2 className={`w-5 h-5 ${hasData ? "text-success" : "text-muted-foreground/50"}`} />
+          </div>
+          <div>
+            <p className={`text-sm font-semibold ${hasData ? "text-success" : "text-muted-foreground"}`}>
+              {hasData ? t("widgets.allOnTrack") : t("widgets.noDataYet", { defaultValue: "Noch keine Daten" })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {hasData ? t("widgets.noOpenItems") : t("widgets.noDataYetDesc", { defaultValue: "Erstelle deine erste Entscheidung, um das Dashboard mit Daten zu füllen." })}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className={`text-sm font-semibold ${hasData ? "text-success" : "text-muted-foreground"}`}>
-            {hasData ? t("widgets.allOnTrack") : t("widgets.noDataYet", { defaultValue: "Noch keine Daten" })}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {hasData ? t("widgets.noOpenItems") : t("widgets.noDataYetDesc", { defaultValue: "Erstelle deine erste Entscheidung, um das Dashboard mit Daten zu füllen." })}
-          </p>
-        </div>
+
+        {!hasData && (
+          <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pl-14">
+            <Button size="sm" className="gap-1.5" onClick={() => navigate("/decisions")}>
+              <Plus className="w-3.5 h-3.5" />
+              {t("widgets.firstDecision", { defaultValue: "Erste Entscheidung anlegen" })}
+            </Button>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{t("common.or", { defaultValue: "oder" })}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={handleSeedDemo}
+              disabled={seedingDemo}
+            >
+              {seedingDemo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+              {t("decisions.loadDemo", { defaultValue: "Beispieldaten laden" })}
+            </Button>
+          </div>
+        )}
       </motion.div>
     );
   }
