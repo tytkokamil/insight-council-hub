@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { formatDate, formatDateTime, formatDateTimeShort } from "@/lib/formatters";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
-import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail, Settings2, Zap, Lock } from "lucide-react";
+import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail, Settings2, Zap, Lock, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -55,6 +56,10 @@ const AdminUsers = () => {
   const [updating, setUpdating] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [transferTarget, setTransferTarget] = useState<string | null>(null);
+  const [showTransferConfirm, setShowTransferConfirm] = useState(false);
+  const [transferring, setTransferring] = useState(false);
+  const currentUserRole = users.find(u => u.user_id === user?.id)?.role;
   const { data: decisions = [] } = useDecisions();
   const { flags, loading: flagsLoading, toggleFlag } = useFeatureFlags();
 
@@ -118,6 +123,26 @@ const AdminUsers = () => {
     if (error) { toast.error(t("admin.roleChangeFailed")); }
     else { toast.success(t("admin.roleChanged", { role: roleLabels[newRole] })); setUsers((prev) => prev.map((u) => (u.user_id === userId ? { ...u, role: newRole } : u))); }
     setUpdating(null);
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!user || !transferTarget) return;
+    setTransferring(true);
+    try {
+      const { error } = await supabase.rpc("transfer_ownership", {
+        _current_owner_id: user.id,
+        _new_owner_id: transferTarget,
+      });
+      if (error) throw error;
+      const targetName = users.find(u => u.user_id === transferTarget)?.full_name || "User";
+      toast.success(t("admin.transferSuccess", { name: targetName }));
+      setShowTransferConfirm(false);
+      setTransferTarget(null);
+      fetchUsers();
+    } catch (err: any) {
+      toast.error(t("admin.transferFailed"));
+    }
+    setTransferring(false);
   };
 
   const filtered = users.filter((u) => (u.full_name || "").toLowerCase().includes(search.toLowerCase()) || u.user_id.toLowerCase().includes(search.toLowerCase()));
@@ -222,6 +247,68 @@ const AdminUsers = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Owner Transfer - only visible to current owner */}
+            {currentUserRole === "org_owner" && (
+              <Card className="border-destructive/30">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <ArrowRightLeft className="w-4 h-4 text-destructive" />
+                    <h3 className="text-sm font-semibold">{t("admin.transferOwnership")}</h3>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">{t("admin.transferOwnershipDesc")}</p>
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 max-w-xs">
+                      <label className="text-xs font-medium mb-1.5 block">{t("admin.transferTo")}</label>
+                      <Select value={transferTarget || ""} onValueChange={setTransferTarget}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={t("admin.transferSelectUser")} /></SelectTrigger>
+                        <SelectContent>
+                          {users.filter(u => u.user_id !== user?.id).map(u => (
+                            <SelectItem key={u.user_id} value={u.user_id}>
+                              {u.full_name || u.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={!transferTarget}
+                      onClick={() => setShowTransferConfirm(true)}
+                      className="gap-2"
+                    >
+                      <ArrowRightLeft className="w-3.5 h-3.5" />
+                      {t("admin.transferConfirm")}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <AlertDialog open={showTransferConfirm} onOpenChange={setShowTransferConfirm}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    {t("admin.transferConfirmTitle")}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("admin.transferConfirmDesc", { name: users.find(u => u.user_id === transferTarget)?.full_name || "User" })}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("admin.transferCancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleTransferOwnership}
+                    disabled={transferring}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {transferring ? "…" : t("admin.transferConfirm")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </TabsContent>
 
           {/* ═══════════════ ANALYTICS ═══════════════ */}
