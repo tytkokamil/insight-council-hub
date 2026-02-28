@@ -122,6 +122,18 @@ const Strategy = () => {
 
     setGoals(enriched);
     setLoading(false);
+
+    // Sync adoptedSuggestions with actual DB goals
+    const goalTitles = new Set(goalsData.map(g => g.title));
+    const validAdopted = new Set<string>();
+    for (const sug of GOAL_SUGGESTIONS) {
+      const sugTitle = t(sug.titleKey);
+      if (goalTitles.has(sugTitle)) {
+        validAdopted.add(sug.key);
+      }
+    }
+    setAdoptedSuggestions(validAdopted);
+    localStorage.setItem("adopted-goal-suggestions", JSON.stringify([...validAdopted]));
   };
 
   useEffect(() => { fetchGoals(); }, [selectedTeamId, teamDecisions]);
