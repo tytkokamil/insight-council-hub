@@ -61,9 +61,9 @@ const AIShowcaseSection = () => {
 
             <div className="grid grid-cols-3 gap-6 mt-10">
               {[
-                { label: t("landing.aiShowcase.fasterDecisions"), value: "73%", icon: Clock },
-                { label: t("landing.aiShowcase.betterOutcomes"), value: "2.5x", icon: Target },
-                { label: t("landing.aiShowcase.fewerEscalations"), value: "45%", icon: Shield },
+                { label: t("landing.aiShowcase.fasterDecisions"), value: "3×", icon: Clock },
+                { label: t("landing.aiShowcase.betterOutcomes"), value: "↑", icon: Target },
+                { label: t("landing.aiShowcase.fewerEscalations"), value: "↓", icon: Shield },
               ].map((metric, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 + i * 0.1, ease }}>
                   <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 tabular-nums">{metric.value}</div>

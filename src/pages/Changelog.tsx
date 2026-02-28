@@ -78,7 +78,7 @@ const entries: ChangelogEntry[] = [
     icon: <Zap className="w-4 h-4" />,
     type: "improvement",
     items: [
-      "Dashboard-Ladezeit um 40% reduziert (Server-Side KPI-Berechnung)",
+      "Dashboard-Ladezeit deutlich reduziert (Server-Side KPI-Berechnung)",
       "RBAC: Granulare Berechtigungen pro Rolle konfigurierbar",
       "Audit Trail mit vollständiger Versionierung",
       "Rate Limiting für alle API-Endpunkte",

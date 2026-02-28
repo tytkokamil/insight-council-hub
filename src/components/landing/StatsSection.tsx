@@ -46,10 +46,10 @@ const StatsSection = () => {
   ];
 
   const metrics = [
-    { value: 4.2, suffix: "M€", label: t("landing.stats.codAvoided") },
-    { value: 98, suffix: "%", label: t("landing.stats.slaRate") },
-    { value: 40, suffix: "%", label: t("landing.stats.fasterDecisions") },
-    { value: 26, suffix: "×", label: t("landing.stats.roiFirstMonth") },
+    { value: "Mio. €", label: t("landing.stats.codAvoided") },
+    { value: ">95%", label: t("landing.stats.slaRate") },
+    { value: "bis zu 3×", label: t("landing.stats.fasterDecisions") },
+    { value: "schnell", label: t("landing.stats.roiFirstMonth") },
   ];
 
   return (
@@ -72,7 +72,7 @@ const StatsSection = () => {
           {metrics.map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="bg-card text-center p-6">
               <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display text-primary">
-                <AnimatedNumber value={stat.value} suffix={stat.suffix} />
+                {stat.value}
               </div>
               <div className="text-[11px] text-muted-foreground/60 font-medium">{stat.label}</div>
             </motion.div>
