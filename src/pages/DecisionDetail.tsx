@@ -43,7 +43,7 @@ import ImpactTrackerPanel from "@/components/decisions/ImpactTrackerPanel";
 import StakeholderAlignmentPanel from "@/components/decisions/StakeholderAlignmentPanel";
 import DependenciesPanel from "@/components/decisions/DependenciesPanel";
 import PostImplementationReview from "@/components/decisions/PostImplementationReview";
-
+import QuickMessageButton from "@/components/shared/QuickMessageButton";
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
@@ -315,9 +315,26 @@ const DecisionDetail = () => {
               <Badge variant="outline" className="text-[10px]">{tl.categoryLabels[decision.category]}</Badge>
               <span className={`font-semibold ${priorityStyles[decision.priority]}`}>{tl.priorityLabels[decision.priority]}</span>
               <span>·</span>
-              <span>Owner: {profileMap[decision.owner_id || decision.created_by] || "—"}</span>
+              <span className="inline-flex items-center gap-0.5">
+                Owner: {profileMap[decision.owner_id || decision.created_by] || "—"}
+                <QuickMessageButton
+                  teamId={decision.team_id}
+                  decisionId={decision.id}
+                  recipientName={profileMap[decision.owner_id || decision.created_by]}
+                />
+              </span>
               {decision.assignee_id && decision.assignee_id !== decision.owner_id && (
-                <><span>·</span><span>Assignee: {profileMap[decision.assignee_id] || "—"}</span></>
+                <>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-0.5">
+                    Assignee: {profileMap[decision.assignee_id] || "—"}
+                    <QuickMessageButton
+                      teamId={decision.team_id}
+                      decisionId={decision.id}
+                      recipientName={profileMap[decision.assignee_id]}
+                    />
+                  </span>
+                </>
               )}
             </div>
           </div>

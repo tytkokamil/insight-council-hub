@@ -29,6 +29,7 @@ import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import QuickMessageButton from "@/components/shared/QuickMessageButton";
 
 /* ── Config ── */
 const statusKeys = ["backlog", "open", "in_progress", "blocked", "done"] as const;
@@ -341,7 +342,17 @@ const TaskDetail = () => {
               <Badge variant="outline" className="text-[10px]">{categoryLabel(task.category)}</Badge>
               <span className={`font-semibold ${pc.color}`}>{pc.label}</span>
               {task.assignee_id && (
-                <><span>·</span><span>{profileMap[task.assignee_id] || t("taskDetail.assigned")}</span></>
+                <>
+                  <span>·</span>
+                  <span className="inline-flex items-center gap-0.5">
+                    {profileMap[task.assignee_id] || t("taskDetail.assigned")}
+                    <QuickMessageButton
+                      teamId={task.team_id}
+                      decisionId={linkedDecision?.id}
+                      recipientName={profileMap[task.assignee_id]}
+                    />
+                  </span>
+                </>
               )}
               <span>·</span>
               <span>{t("taskDetail.created", { date: format(new Date(task.created_at), "dd. MMM yyyy", { locale: dateFnsLocale }) })}</span>

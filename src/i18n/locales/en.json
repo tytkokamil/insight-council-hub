@@ -5022,5 +5022,9 @@
     "cta": "Upgrade now",
     "later": "Later"
   },
+  "quickMessage": {
+    "sendTo": "Message {{name}} in team chat",
+    "openChat": "Open in team chat"
+  },
   "_end": true
 }

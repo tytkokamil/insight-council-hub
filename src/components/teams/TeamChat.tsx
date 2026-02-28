@@ -25,6 +25,7 @@ interface TeamMessage {
 interface TeamChatProps {
   teamId: string;
   teamName: string;
+  initialLinkedDecisionId?: string | null;
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -53,7 +54,7 @@ const RenderMentionContent = ({ content, isOwn }: { content: string; isOwn: bool
   );
 };
 
-const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
+const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) => {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
@@ -250,6 +251,18 @@ const TeamChat = ({ teamId, teamName }: TeamChatProps) => {
 
     return () => { supabase.removeChannel(channel); };
   }, [teamId]);
+
+  // Apply initial linked decision from URL param
+  useEffect(() => {
+    if (initialLinkedDecisionId && Object.keys(decisions).length > 0) {
+      setLinkedDecisionId(initialLinkedDecisionId);
+      if (decisions[initialLinkedDecisionId]) {
+        toast.success(t("teamChat.decisionLinked", { title: decisions[initialLinkedDecisionId] }));
+      }
+      // Focus the input
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [initialLinkedDecisionId, decisions]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

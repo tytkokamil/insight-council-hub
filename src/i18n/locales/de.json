@@ -5028,5 +5028,9 @@
     "cta": "Jetzt upgraden",
     "later": "Später"
   },
+  "quickMessage": {
+    "sendTo": "Nachricht an {{name}} im Team-Chat",
+    "openChat": "Im Team-Chat öffnen"
+  },
   "_end": true
 }
