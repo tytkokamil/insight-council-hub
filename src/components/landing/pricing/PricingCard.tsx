@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, X, Brain, ArrowRight, Sparkles, Users, Crown } from "lucide-react";
@@ -18,27 +19,69 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
   const price = plan.monthlyPrice === null ? null : annual ? plan.annualPrice : plan.monthlyPrice;
   const isMailto = plan.ctaLink.startsWith("mailto:");
 
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const rotateX = useSpring(useTransform(mouseY, [0, 1], [4, -4]), { stiffness: 200, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [0, 1], [-4, 4]), { stiffness: 200, damping: 20 });
+  const glareX = useTransform(mouseX, [0, 1], [0, 100]);
+  const glareY = useTransform(mouseY, [0, 1], [0, 100]);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width);
+    mouseY.set((e.clientY - rect.top) / rect.height);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0.5);
+    mouseY.set(0.5);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ delay: index * 0.1, duration: 0.8, ease }}
-      className="group relative flex flex-col"
+      transition={{ delay: index * 0.12, duration: 0.8, ease }}
+      className="group relative flex flex-col perspective-[1200px]"
     >
       {/* Animated gradient border glow for highlighted card */}
       {plan.highlighted && (
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/40 via-accent-violet/30 to-accent-teal/30 opacity-60 group-hover:opacity-100 blur-[1px] transition-opacity duration-500" />
+        <motion.div
+          className="absolute -inset-[1px] rounded-2xl opacity-60 group-hover:opacity-100 blur-[1px] transition-opacity duration-500"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--primary)/0.4), hsl(var(--accent-violet)/0.3), hsl(var(--accent-teal)/0.3))",
+            backgroundSize: "200% 200%",
+          }}
+          animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        />
       )}
 
-      <div
-        className={`relative rounded-2xl border p-6 transition-all duration-500 flex flex-col flex-1 backdrop-blur-sm ${
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className={`relative rounded-2xl border p-6 transition-all duration-500 flex flex-col flex-1 backdrop-blur-sm overflow-hidden ${
           plan.highlighted
             ? "border-primary/40 bg-card/95 shadow-[0_0_40px_-8px_hsl(var(--primary)/0.15)]"
             : "border-border/60 bg-card/80 hover:border-foreground/15 hover:shadow-[0_8px_30px_-10px_hsl(var(--primary)/0.08)]"
         }`}
-        style={plan.highlighted ? { transform: "translateY(-4px)" } : undefined}
       >
+        {/* Glare overlay */}
+        <motion.div
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: useTransform(
+              [glareX, glareY],
+              ([x, y]) => `radial-gradient(circle at ${x}% ${y}%, hsl(var(--primary)/0.06) 0%, transparent 60%)`
+            ),
+          }}
+        />
+
         {/* Popular badge with shimmer */}
         {plan.highlighted && (
           <motion.div
@@ -81,9 +124,9 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
             <div className="flex items-baseline gap-1.5">
               <motion.span
                 key={`${price}-${annual}`}
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease }}
+                initial={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{ duration: 0.5, ease }}
                 className="text-3xl font-bold tracking-tight tabular-nums"
               >
                 {plan.name === t("landing.pricing.enterpriseName") && `${t("landing.pricing.from")} `}€{price}
@@ -142,7 +185,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
           </Link>
         )}
 
-        {/* Feature list with staggered animation */}
+        {/* Feature list */}
         <ul className="space-y-2 flex-1">
           {plan.features.map((feature, fi) => (
             <motion.li
@@ -151,17 +194,19 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08 + fi * 0.03, duration: 0.4, ease }}
-              className="flex items-start gap-2.5 text-[13px]"
+              className="flex items-start gap-2.5 text-[13px] group/feat"
             >
               {!feature.included ? (
                 <X className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
               ) : feature.ai ? (
                 <span className="relative shrink-0 mt-0.5">
                   <Brain className="w-3.5 h-3.5 text-accent-violet" />
-                  <span className="absolute -inset-1 bg-accent-violet/10 rounded-full blur-sm" />
+                  <span className="absolute -inset-1 bg-accent-violet/10 rounded-full blur-sm group-hover/feat:bg-accent-violet/20 transition-colors" />
                 </span>
               ) : (
-                <Check className="w-3.5 h-3.5 text-accent-teal shrink-0 mt-0.5" />
+                <span className="relative shrink-0 mt-0.5">
+                  <Check className="w-3.5 h-3.5 text-accent-teal" />
+                </span>
               )}
               <span
                 className={
@@ -169,7 +214,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
                     ? "text-muted-foreground/40 line-through"
                     : feature.ai
                     ? "text-foreground font-medium"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground group-hover/feat:text-foreground transition-colors duration-200"
                 }
               >
                 {feature.label}
@@ -184,7 +229,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
             {plan.idealFor}
           </p>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };
