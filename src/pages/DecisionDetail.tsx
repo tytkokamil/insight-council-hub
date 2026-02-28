@@ -320,7 +320,9 @@ const DecisionDetail = () => {
                 <QuickMessageButton
                   teamId={decision.team_id}
                   decisionId={decision.id}
+                  decisionTitle={decision.title}
                   recipientName={profileMap[decision.owner_id || decision.created_by]}
+                  recipientId={decision.owner_id || decision.created_by}
                 />
               </span>
               {decision.assignee_id && decision.assignee_id !== decision.owner_id && (
@@ -331,7 +333,9 @@ const DecisionDetail = () => {
                     <QuickMessageButton
                       teamId={decision.team_id}
                       decisionId={decision.id}
+                      decisionTitle={decision.title}
                       recipientName={profileMap[decision.assignee_id]}
+                      recipientId={decision.assignee_id}
                     />
                   </span>
                 </>

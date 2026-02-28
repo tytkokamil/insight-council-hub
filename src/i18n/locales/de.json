@@ -5029,8 +5029,13 @@
     "later": "Später"
   },
   "quickMessage": {
-    "sendTo": "Nachricht an {{name}} im Team-Chat",
-    "openChat": "Im Team-Chat öffnen"
+    "sendTo": "Nachricht an {{name}}",
+    "openChat": "Im Team-Chat öffnen",
+    "to": "An: {{name}}",
+    "placeholder": "Nachricht schreiben…",
+    "sent": "Nachricht gesendet",
+    "sendError": "Nachricht konnte nicht gesendet werden",
+    "openFullChat": "Vollständigen Chat öffnen"
   },
   "_end": true
 }
