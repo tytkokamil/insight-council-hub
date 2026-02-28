@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { formatDate, formatDateTime, formatDateTimeShort } from "@/lib/formatters";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
-import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail } from "lucide-react";
+import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail, Settings2, Zap, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -11,11 +11,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserAvatar from "@/components/shared/UserAvatar";
 import { toast } from "@/components/ui/sonner";
 import { useDecisions } from "@/hooks/useDecisions";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useTranslation } from "react-i18next";
+import RolePermissionsPanel from "@/components/settings/RolePermissionsPanel";
+import DemoDataPanel from "@/components/settings/DemoDataPanel";
 import type { Database } from "@/integrations/supabase/types";
 
 type OrgRole = Database["public"]["Enums"]["org_role"];
@@ -42,6 +46,8 @@ const AdminUsers = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "users";
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -50,6 +56,7 @@ const AdminUsers = () => {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const { data: decisions = [] } = useDecisions();
+  const { flags, loading: flagsLoading, toggleFlag } = useFeatureFlags();
 
   const roleLabels: Record<OrgRole, string> = {
     org_owner: t("admin.roleOrgOwner"),
@@ -135,14 +142,16 @@ const AdminUsers = () => {
           }
         />
 
-        <Tabs defaultValue="users">
+        <Tabs defaultValue={initialTab}>
           <TabsList>
             <TabsTrigger value="users" className="gap-1.5"><Users className="w-3.5 h-3.5" />{t("admin.usersTab")}</TabsTrigger>
             <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{t("admin.analyticsTab")}</TabsTrigger>
+            <TabsTrigger value="config" className="gap-1.5"><Settings2 className="w-3.5 h-3.5" />{t("admin.configTab", "Konfiguration")}</TabsTrigger>
             <TabsTrigger value="logs" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t("admin.logsTab")}</TabsTrigger>
             <TabsTrigger value="data" className="gap-1.5"><Download className="w-3.5 h-3.5" />{t("admin.dataTab")}</TabsTrigger>
           </TabsList>
 
+          {/* ═══════════════ USERS ═══════════════ */}
           <TabsContent value="users" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-4">
@@ -215,6 +224,7 @@ const AdminUsers = () => {
             </div>
           </TabsContent>
 
+          {/* ═══════════════ ANALYTICS ═══════════════ */}
           <TabsContent value="analytics" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card><CardContent className="p-5">
@@ -256,6 +266,51 @@ const AdminUsers = () => {
             </Card>
           </TabsContent>
 
+          {/* ═══════════════ CONFIG (Feature Flags + Role Permissions) ═══════════════ */}
+          <TabsContent value="config" className="space-y-6 mt-4">
+            {/* Feature Flags */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Zap className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">{t("settings.featureFlags")}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.featureFlagsDesc")}</p>
+                {flagsLoading ? (
+                  <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-md animate-pulse" />)}</div>
+                ) : (
+                  <div className="space-y-1">
+                    {flags.map((flag) => (
+                      <div key={flag.feature_key} className={`flex items-center justify-between py-3 ${!flag.enabled ? "opacity-50" : ""}`}>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm">{flag.label}</p>
+                            <Badge variant="outline" className="text-[10px]">{flag.category}</Badge>
+                          </div>
+                          {flag.description && <p className="text-xs text-muted-foreground mt-0.5">{flag.description}</p>}
+                        </div>
+                        <Switch checked={flag.enabled} onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Role Permissions */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="w-4 h-4 text-primary" />
+                  <h3 className="text-sm font-semibold">{t("settings.rolePermsTitle", "Rollen-Berechtigungen")}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
+                <RolePermissionsPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════ LOGS ═══════════════ */}
           <TabsContent value="logs" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-5">
@@ -266,6 +321,7 @@ const AdminUsers = () => {
             </Card>
           </TabsContent>
 
+          {/* ═══════════════ DATA (Export + Demo Data) ═══════════════ */}
           <TabsContent value="data" className="space-y-4 mt-4">
             <Card>
               <CardContent className="p-5">
@@ -284,6 +340,8 @@ const AdminUsers = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <DemoDataPanel />
           </TabsContent>
         </Tabs>
       </div>
