@@ -295,8 +295,30 @@ const SidebarNav = memo(({
           system: "bg-accent-amber/50",
         };
 
-        // Progressive group: hidden until user explicitly unlocks — skip teaser entirely
-        if (group.progressive && !intelligenceUnlocked) {
+        // Progressive group: show unlock teaser when not yet unlocked
+        if (group.progressive && !intelligenceUnlocked && !collapsed) {
+          return (
+            <div key={group.labelKey}>
+              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
+                {groupLabel}
+              </p>
+              <button
+                onClick={() => {
+                  localStorage.setItem("intelligence-unlocked", "true");
+                  setIntelligenceUnlocked(true);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.02] transition-colors group"
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-60" />
+                <span className="text-left flex-1">
+                  <span className="block text-[11px] font-medium">{t("nav.unlockIntelligence", { defaultValue: "Intelligence freischalten" })}</span>
+                  <span className="block text-[10px] opacity-60">{t("nav.unlockIntelligenceHint", { defaultValue: "Empfohlen ab 25 Entscheidungen", count: 25 })}</span>
+                </span>
+              </button>
+            </div>
+          );
+        }
+        if (group.progressive && !intelligenceUnlocked && collapsed) {
           return null;
         }
 
