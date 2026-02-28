@@ -4994,5 +4994,33 @@
     "moduleEnabled": "\"{{module}}\" enabled",
     "moduleDisabled": "\"{{module}}\" disabled — data preserved"
   },
+  "upgrade": {
+    "executiveTitle": "Executive Hub",
+    "executiveDesc": "Strategic overview with CEO briefing, board reports, and organization-wide KPIs — built for leadership.",
+    "analyticsTitle": "Analytics Hub",
+    "analyticsDesc": "Deep analytics on decision quality, cycle times, and team performance with interactive charts.",
+    "bottlenecksTitle": "Process Hub",
+    "bottlenecksDesc": "Identify bottlenecks in your decision processes with friction maps and flow analysis.",
+    "auditTitle": "Audit Trail",
+    "auditDesc": "Complete traceability of all decision changes — essential for compliance and governance.",
+    "engineTitle": "Decision Control",
+    "engineDesc": "Automatic escalations, SLA monitoring, and rule-based workflows for consistent decision-making.",
+    "calendarTitle": "Decision Calendar",
+    "calendarDesc": "Visualize deadlines and planned reviews in an intuitive calendar view.",
+    "risksTitle": "Risk Register",
+    "risksDesc": "Capture, assess, and link risks to decisions for comprehensive risk management.",
+    "teamsTitle": "Team Management",
+    "teamsDesc": "Organize your team with roles, responsibilities, and cross-team collaboration.",
+    "dashboardTitle": "Dashboard",
+    "dashboardDesc": "Your personal cockpit with KPIs, open tasks, and current decision status.",
+    "decisionsTitle": "Decisions",
+    "decisionsDesc": "Create, manage, and track all decisions with structured workflows.",
+    "tasksTitle": "Tasks",
+    "tasksDesc": "Task management directly linked to your decisions — nothing gets lost.",
+    "genericDesc": "{{feature}} is not included in your current plan. Upgrade for access to this feature.",
+    "requiredPlan": "From {{plan}}",
+    "cta": "Upgrade now",
+    "later": "Later"
+  },
   "_end": true
 }
