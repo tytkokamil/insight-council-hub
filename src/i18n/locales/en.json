@@ -5023,8 +5023,13 @@
     "later": "Later"
   },
   "quickMessage": {
-    "sendTo": "Message {{name}} in team chat",
-    "openChat": "Open in team chat"
+    "sendTo": "Message {{name}}",
+    "openChat": "Open in team chat",
+    "to": "To: {{name}}",
+    "placeholder": "Write a message…",
+    "sent": "Message sent",
+    "sendError": "Could not send message",
+    "openFullChat": "Open full chat"
   },
   "_end": true
 }

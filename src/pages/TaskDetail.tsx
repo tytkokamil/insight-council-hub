@@ -349,7 +349,10 @@ const TaskDetail = () => {
                     <QuickMessageButton
                       teamId={task.team_id}
                       decisionId={linkedDecision?.id}
+                      decisionTitle={linkedDecision?.title}
+                      contextLabel={linkedDecision ? linkedDecision.title : task.title}
                       recipientName={profileMap[task.assignee_id]}
+                      recipientId={task.assignee_id}
                     />
                   </span>
                 </>
