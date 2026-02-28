@@ -5000,5 +5000,33 @@
     "moduleEnabled": "\u201E{{module}}\u201C aktiviert",
     "moduleDisabled": "\u201E{{module}}\u201C deaktiviert \u2014 Daten bleiben erhalten"
   },
+  "upgrade": {
+    "executiveTitle": "Executive Hub",
+    "executiveDesc": "Strategische Übersicht mit CEO-Briefing, Board Reports und organisationsweiten KPIs — ideal für Führungskräfte.",
+    "analyticsTitle": "Analytics Hub",
+    "analyticsDesc": "Tiefgehende Analysen zu Entscheidungsqualität, Durchlaufzeiten und Team-Performance mit interaktiven Charts.",
+    "bottlenecksTitle": "Process Hub",
+    "bottlenecksDesc": "Identifiziere Engpässe und Flaschenhälse in deinen Entscheidungsprozessen mit Friction Maps und Flow-Analysen.",
+    "auditTitle": "Audit Trail",
+    "auditDesc": "Lückenlose Nachverfolgung aller Änderungen an Entscheidungen — unverzichtbar für Compliance und Governance.",
+    "engineTitle": "Decision Control",
+    "engineDesc": "Automatische Eskalationen, SLA-Überwachung und Regelwerke für konsistente Entscheidungsprozesse.",
+    "calendarTitle": "Entscheidungskalender",
+    "calendarDesc": "Visualisiere Deadlines und geplante Reviews in einer übersichtlichen Kalenderansicht.",
+    "risksTitle": "Risiko-Register",
+    "risksDesc": "Erfasse, bewerte und verknüpfe Risiken mit Entscheidungen für ein vollständiges Risikomanagement.",
+    "teamsTitle": "Team-Verwaltung",
+    "teamsDesc": "Organisiere dein Team mit Rollen, Verantwortlichkeiten und teamübergreifender Zusammenarbeit.",
+    "dashboardTitle": "Dashboard",
+    "dashboardDesc": "Dein persönliches Cockpit mit KPIs, offenen Aufgaben und dem aktuellen Entscheidungsstatus.",
+    "decisionsTitle": "Entscheidungen",
+    "decisionsDesc": "Erstelle, verwalte und verfolge alle Entscheidungen mit strukturierten Workflows.",
+    "tasksTitle": "Aufgaben",
+    "tasksDesc": "Aufgabenmanagement direkt verknüpft mit deinen Entscheidungen — nichts geht verloren.",
+    "genericDesc": "{{feature}} ist in deinem aktuellen Plan nicht enthalten. Upgrade für Zugriff auf dieses Feature.",
+    "requiredPlan": "Ab {{plan}}",
+    "cta": "Jetzt upgraden",
+    "later": "Später"
+  },
   "_end": true
 }
