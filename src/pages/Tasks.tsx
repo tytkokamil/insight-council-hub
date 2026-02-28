@@ -304,7 +304,7 @@ const Tasks = () => {
           description={t("tasks.emptyDesc")}
           ctaLabel={t("tasks.createFirst")}
           onCtaClick={openCreate}
-          motivation={t("tasks.emptyMotivation", { defaultValue: "Teams mit strukturiertem Task-Management schließen Projekte 35% schneller ab und reduzieren vergessene Aufgaben um 60%." })}
+          motivation={t("tasks.emptyMotivation", { defaultValue: "Teams mit strukturiertem Task-Management berichten von deutlich schnellerer Projektabwicklung und weniger vergessenen Aufgaben." })}
           hint={t("tasks.emptyHint", { defaultValue: "Verknüpfe Aufgaben mit Entscheidungen für lückenloses Tracking." })}
           features={[
             { icon: Target, label: t("tasks.featurePriority", { defaultValue: "Priorisierung" }), desc: t("tasks.featurePriorityDesc", { defaultValue: "Kritische Aufgaben automatisch hervorheben" }) },
