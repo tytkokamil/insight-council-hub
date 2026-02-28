@@ -11,10 +11,12 @@ export const fetchDecisions = async (selectedTeamId: string | null) => {
     .order("created_at", { ascending: false });
 
   if (selectedTeamId) {
+    // Team mode: only decisions belonging to this team
     query = query.eq("team_id", selectedTeamId);
+  } else {
+    // Personal mode: only decisions without a team (personal workspace)
+    query = query.is("team_id", null);
   }
-  // Personal mode: fetch ALL decisions visible to the user (RLS handles access).
-  // Client-side filtering by ownership happens in components (e.g. CoreKpiGrid, Decisions page).
 
   const { data, error } = await query;
   if (error) throw error;
