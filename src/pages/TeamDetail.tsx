@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +23,9 @@ const TeamDetail = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "command";
+  const initialLinkedDecisionId = searchParams.get("linkDecision") || null;
   const [team, setTeam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isTeamAdmin, setIsTeamAdmin] = useState(false);
@@ -101,7 +104,7 @@ const TeamDetail = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="command">
+        <Tabs defaultValue={initialTab} onValueChange={(v) => { searchParams.set("tab", v); setSearchParams(searchParams, { replace: true }); }}>
           <TabsList>
             <TabsTrigger value="command" className="gap-1.5">
               <BarChart3 className="w-3.5 h-3.5" />
@@ -133,7 +136,7 @@ const TeamDetail = () => {
 
           <TabsContent value="chat" className="mt-6">
             <div className="rounded-lg border border-border overflow-hidden">
-              <TeamChat teamId={team.id} teamName={team.name} />
+              <TeamChat teamId={team.id} teamName={team.name} initialLinkedDecisionId={initialLinkedDecisionId} />
             </div>
           </TabsContent>
 
