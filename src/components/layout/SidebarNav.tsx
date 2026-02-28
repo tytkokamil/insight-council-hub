@@ -295,36 +295,9 @@ const SidebarNav = memo(({
           system: "bg-accent-amber/50",
         };
 
-        // Progressive group: hidden until user explicitly unlocks
+        // Progressive group: hidden until user explicitly unlocks — skip teaser entirely
         if (group.progressive && !intelligenceUnlocked) {
-          if (collapsed) return null;
-          const PROGRESSIVE_THRESHOLD = 25;
-          const remaining = Math.max(0, PROGRESSIVE_THRESHOLD - decisionCount);
-          return (
-            <div key={group.labelKey}>
-              <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
-                {groupLabel}
-              </p>
-              <button
-                onClick={() => {
-                  localStorage.setItem("intelligence-unlocked", "true");
-                  setIntelligenceUnlocked(true);
-                }}
-                className="w-full flex items-center gap-2 px-2 py-2.5 rounded-lg text-[12px] text-muted-foreground/60 hover:text-foreground hover:bg-accent-teal/5 border border-transparent hover:border-accent-teal/20 transition-all group cursor-pointer"
-              >
-                <Brain className="w-4 h-4 shrink-0 text-accent-teal/50 group-hover:text-accent-teal" />
-                <span className="text-left flex-1">
-                  <span className="block text-[11px] font-semibold">{t("nav.unlockIntelligence")}</span>
-                  <span className="block text-[10px] opacity-60 mt-0.5">
-                    {remaining > 0
-                      ? t("nav.intelligenceRecommended", { count: remaining })
-                      : t("nav.intelligenceReady")}
-                  </span>
-                </span>
-                <Sparkles className="w-3.5 h-3.5 shrink-0 text-accent-teal/40 group-hover:text-accent-teal" />
-              </button>
-            </div>
-          );
+          return null;
         }
 
         

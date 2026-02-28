@@ -357,9 +357,10 @@ const Dashboard = () => {
                     <WidgetErrorBoundary>
                       <EscalationWidget />
                     </WidgetErrorBoundary>
-                    <WidgetErrorBoundary>
+                    {/* GamificationWidget hidden for now — re-enable later */}
+                    {/* <WidgetErrorBoundary>
                       <GamificationWidget decisions={decisions} tasks={contextTasks} teams={teams} />
-                    </WidgetErrorBoundary>
+                    </WidgetErrorBoundary> */}
                   </div>
                 </div>
 
