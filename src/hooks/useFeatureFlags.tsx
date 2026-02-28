@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface FeatureFlag {
   feature_key: string;
@@ -29,8 +30,10 @@ interface FeatureFlagsContextType {
 const FeatureFlagsContext = createContext<FeatureFlagsContextType | undefined>(undefined);
 
 export const FeatureFlagsProvider = ({ children }: { children: ReactNode }) => {
+  const { user } = useAuth();
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
 
   const fetchFlags = useCallback(async () => {
     const { data } = await supabase
@@ -42,16 +45,30 @@ export const FeatureFlagsProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
+  // Check if user is org_owner — owners see everything
+  useEffect(() => {
+    if (!user) { setIsOwner(false); return; }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        setIsOwner(data?.some((r) => r.role === "org_owner") ?? false);
+      });
+  }, [user]);
+
   useEffect(() => {
     fetchFlags();
   }, [fetchFlags]);
 
   const isEnabled = useCallback(
     (key: string) => {
+      // Org owners always have all features enabled
+      if (isOwner) return true;
       const flag = flags.find((f) => f.feature_key === key);
-      return flag?.enabled ?? true; // default to enabled if not found
+      return flag?.enabled ?? true;
     },
-    [flags]
+    [flags, isOwner]
   );
 
   const toggleFlag = useCallback(
