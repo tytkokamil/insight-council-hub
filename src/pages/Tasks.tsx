@@ -296,6 +296,9 @@ const Tasks = () => {
           ) : undefined
         }
       />
+      {!selectedTeamId && (
+        <p className="text-xs text-muted-foreground -mt-3 mb-2">{t("common.personalHint")}</p>
+      )}
 
       {tasks.length === 0 ? (
         <EmptyAnalysisState

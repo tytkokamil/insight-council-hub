@@ -285,6 +285,7 @@
     "today": "Heute",
     "tomorrow": "Morgen",
     "personal": "Persönlich (kein Team)",
+    "personalHint": "Persönliche Einträge sind nur für dich sichtbar und erscheinen nicht in Team-Auswertungen.",
     "activate": "Aktivieren",
     "retry": "Erneut versuchen",
     "saving": "Speichern...",

@@ -44,6 +44,9 @@ const DecisionCostWidget = () => {
 
   if (decLoading || teamLoading) return <WidgetSkeleton rows={3} showScore />;
 
+  // Don't show cost widget in personal mode
+  if (isPersonal) return null;
+
   const teamConfigMap = buildTeamConfigMap(teams as any[], orgDefaults);
   const scopedDecisions = isPersonal
     ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id)

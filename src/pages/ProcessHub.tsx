@@ -32,8 +32,11 @@ const categoryLabelsStatic: Record<string, string> = { strategic: "Strategic", b
 const ProcessHub = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { data: decisions = [], isLoading: decLoading } = useDecisions();
-  const { data: tasks = [], isLoading: taskLoading } = useTasks();
+  const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
+  const { data: allTasks = [], isLoading: taskLoading } = useTasks();
+  // Exclude personal data (team_id === null) from process analytics
+  const decisions = useMemo(() => allDecisions.filter(d => d.team_id !== null), [allDecisions]);
+  const tasks = useMemo(() => allTasks.filter((t: any) => t.team_id !== null), [allTasks]);
   const { data: teams = [], isLoading: teamLoading } = useTeams();
   const { data: deps = [], isLoading: depLoading } = useFilteredDependencies();
   const { data: reviews = [], isLoading: revLoading } = useFilteredReviews();

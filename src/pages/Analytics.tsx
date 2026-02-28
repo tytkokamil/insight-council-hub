@@ -109,15 +109,19 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     const rangeDays = timeRange === "all" ? 9999 : parseInt(timeRange);
     const rangeStart = subDays(now, rangeDays);
 
+    // Exclude personal decisions (team_id === null) from analytics
+    const orgDecisions = allDecisions.filter(d => d.team_id !== null);
+    const orgTasks = allTasks.filter(t => t.team_id !== null);
+
     // Filter by time range
-    const decisions = timeRange === "all" ? allDecisions : allDecisions.filter(d => isAfter(new Date(d.created_at), rangeStart));
-    const tasks = timeRange === "all" ? allTasks : allTasks.filter(t => isAfter(new Date(t.created_at), rangeStart));
+    const decisions = timeRange === "all" ? orgDecisions : orgDecisions.filter(d => isAfter(new Date(d.created_at), rangeStart));
+    const tasks = timeRange === "all" ? orgTasks : orgTasks.filter(t => isAfter(new Date(t.created_at), rangeStart));
     const prevRangeStart = subDays(rangeStart, rangeDays);
-    const prevDecisions = timeRange === "all" ? [] : allDecisions.filter(d => {
+    const prevDecisions = timeRange === "all" ? [] : orgDecisions.filter(d => {
       const date = new Date(d.created_at);
       return isAfter(date, prevRangeStart) && isBefore(date, rangeStart);
     });
-    const prevTasks = timeRange === "all" ? [] : allTasks.filter(t => {
+    const prevTasks = timeRange === "all" ? [] : orgTasks.filter(t => {
       const date = new Date(t.created_at);
       return isAfter(date, prevRangeStart) && isBefore(date, rangeStart);
     });
