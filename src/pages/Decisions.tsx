@@ -22,6 +22,7 @@ import DecisionBulkActions from "@/components/decisions/DecisionBulkActions";
 import DecisionSideDrawer from "@/components/decisions/DecisionSideDrawer";
 import DecisionEmptyState from "@/components/decisions/DecisionEmptyState";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTasks } from "@/hooks/useTasks";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
 import { exportDecisionsExcel } from "@/lib/exportExcel";
@@ -46,6 +47,7 @@ const Decisions = () => {
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const navigate = useNavigate();
+  const { selectedTeamId } = useTeamContext();
   const { user } = useAuth();
   const teamMap: Record<string, string> = {};
   teams.forEach(t => { teamMap[t.id] = t.name; });
@@ -259,6 +261,9 @@ const Decisions = () => {
           ) : undefined
         }
       />
+      {!selectedTeamId && (
+        <p className="text-xs text-muted-foreground -mt-3 mb-2">{t("common.personalHint")}</p>
+      )}
 
       {decisions.length === 0 ? (
         <DecisionEmptyState onNewDecision={() => setShowNewDialog(true)} />

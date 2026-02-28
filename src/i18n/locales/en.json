@@ -285,6 +285,7 @@
     "today": "Today",
     "tomorrow": "Tomorrow",
     "personal": "Personal (no team)",
+    "personalHint": "Personal entries are only visible to you and do not appear in team analytics.",
     "activate": "Activate",
     "retry": "Try again",
     "saving": "Saving...",

@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
       const personalDecisions = [
         { title: "Weiterbildung: Leadership-Programm vs. Fachzertifikat", description: "Führungskräfteentwicklung: Internes Leadership-Programm oder externes Product-Management-Zertifikat für das Team.", status: "draft", priority: "high", category: "hr", due_date: dueDate(30), created_at: daysAgo(3), ...base, ai_risk_score: 20, ai_impact_score: 70 },
         { title: "Home-Office Setup Upgrade", description: "Ergonomischer Arbeitsplatz: Standing Desk, Monitor-Arm, Noise-Cancelling Headset.", status: "approved", priority: "medium", category: "operational", due_date: dueDate(14), created_at: daysAgo(5), ...base, ai_risk_score: 5, ai_impact_score: 35 },
-        { title: "Persönliches OKR-Framework", description: "Quartals-Ziele für persönliche Produktivität und Wachstum definieren.", status: "proposed", priority: "medium", category: "strategic", due_date: dueDate(7), created_at: daysAgo(2), ...base, ai_risk_score: 5, ai_impact_score: 50 },
+        { title: "Quartals-OKRs für persönlichen Bereich definieren", description: "Individuelle Ziele und Key Results für das kommende Quartal festlegen.", status: "proposed", priority: "medium", category: "strategic", due_date: dueDate(7), created_at: daysAgo(2), ...base, ai_risk_score: 5, ai_impact_score: 50 },
         { title: "Vendor-Evaluierung: CRM-System Migration", description: "Vergleich von Salesforce, HubSpot und Pipedrive für die Vertriebsabteilung — Kosten, Integrations-Aufwand und Migrationszeitplan.", status: "draft", priority: "low", category: "strategic", due_date: dueDate(60), created_at: daysAgo(1), ...base, ai_risk_score: 30, ai_impact_score: 45 },
         { title: "Konferenz-Teilnahme WebSummit 2026", description: "Teilnahme, Reiseplanung und Networking-Strategie.", status: "review", priority: "medium", category: "marketing", due_date: dueDate(45), created_at: daysAgo(4), ...base, ai_risk_score: 10, ai_impact_score: 40 },
         { title: "Mentoring-Programm starten", description: "Regelmäßiges Mentoring für 2 Junior-Kollegen aufsetzen.", status: "proposed", priority: "medium", category: "hr", due_date: dueDate(21), created_at: daysAgo(6), ...base, ai_risk_score: 5, ai_impact_score: 55 },
@@ -270,11 +270,11 @@ Deno.serve(async (req) => {
       const { data: pDecs } = await supabase.from("decisions").insert(personalDecisions as any[]).select("id, status, created_at");
 
       const personalTasks = [
-        { title: "MBA-Programme recherchieren", status: "in_progress", priority: "high", category: "hr", due_date: dueDate(7), created_by: u },
-        { title: "Standing Desk bestellen", status: "open", priority: "medium", category: "operational", due_date: dueDate(3), created_by: u },
+        { title: "Weiterbildungsbudget Q2 recherchieren", status: "in_progress", priority: "high", category: "hr", due_date: dueDate(7), created_by: u },
+        { title: "Home-Office Ausstattung finalisieren", status: "open", priority: "medium", category: "operational", due_date: dueDate(3), created_by: u },
         { title: "Quartals-OKRs definieren", status: "open", priority: "medium", category: "strategic", due_date: dueDate(5), created_by: u },
         { title: "LinkedIn-Artikel schreiben", status: "backlog", priority: "low", category: "marketing", created_by: u },
-        { title: "Versicherungen vergleichen", status: "open", priority: "high", category: "budget", due_date: dueDate(14), created_by: u },
+        { title: "Konferenz-Teilnahme beantragen", status: "open", priority: "high", category: "budget", due_date: dueDate(14), created_by: u },
         { title: "Mentoring Kick-off vorbereiten", status: "open", priority: "medium", category: "hr", due_date: dueDate(10), created_by: u },
         { title: "Obsidian Templates anlegen", status: "done", priority: "medium", category: "technical", created_by: u, completed_at: daysAgo(20) },
         { title: "Delegations-Matrix erstellen", status: "done", priority: "high", category: "operational", created_by: u, completed_at: daysAgo(10) },
@@ -282,8 +282,8 @@ Deno.serve(async (req) => {
       await supabase.from("tasks").insert(personalTasks as any[]);
 
       await supabase.from("risks").insert([
-        { title: "Burnout-Risiko durch Überarbeitung", description: "Hohe Arbeitslast seit 3 Monaten.", likelihood: 3, impact: 4, risk_score: 12, status: "open", created_by: u, mitigation_plan: "Strikte Arbeitszeiten, delegieren, wöchentlicher Check-in." },
-        { title: "Wissensverlust ohne Dokumentation", description: "Kritisches Wissen nur im Kopf.", likelihood: 3, impact: 3, risk_score: 9, status: "open", created_by: u, mitigation_plan: "Obsidian Knowledge Base kontinuierlich pflegen." },
+        { title: "Burnout-Risiko im Team durch Überarbeitung", description: "Hohe Arbeitslast seit 3 Monaten ohne Entlastung.", likelihood: 3, impact: 4, risk_score: 12, status: "open", created_by: u, mitigation_plan: "Workload-Review, Delegationsmatrix, wöchentlicher Team-Check-in." },
+        { title: "Wissensverlust bei Schlüsselpersonen", description: "Kritisches Wissen nicht dokumentiert.", likelihood: 3, impact: 3, risk_score: 9, status: "open", created_by: u, mitigation_plan: "Knowledge Base pflegen, Cross-Training einführen." },
       ]);
 
       await supabase.from("strategic_goals").insert([

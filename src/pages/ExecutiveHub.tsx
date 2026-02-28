@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useCallback } from "react";
+import { lazy, Suspense, useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
@@ -26,7 +26,9 @@ const ExecutiveHub = () => {
   const { t } = useTranslation();
   const [tab, setTab] = useState("dashboard");
   const [exporting, setExporting] = useState(false);
-  const { data: decisions = [], isLoading } = useDecisions();
+  const { data: allDecisions = [], isLoading } = useDecisions();
+  // Exclude personal decisions from executive analytics
+  const decisions = useMemo(() => allDecisions.filter(d => d.team_id !== null), [allDecisions]);
   const implemented = decisions.filter(d => d.status === "implemented").length;
   const hasEnoughData = decisions.length >= MIN_DECISIONS && implemented >= 3;
 
