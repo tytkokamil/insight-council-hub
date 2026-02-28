@@ -40,8 +40,8 @@ const EscalationWidget = () => {
       if (selectedTeamId) {
         overdueQuery = overdueQuery.eq("team_id", selectedTeamId);
       } else {
+        // Personal mode: show all decisions the user owns/created/is assigned to (across all teams)
         overdueQuery = overdueQuery
-          .is("team_id", null)
           .or(`created_by.eq.${user.id},assignee_id.eq.${user.id},owner_id.eq.${user.id}`);
       }
 
