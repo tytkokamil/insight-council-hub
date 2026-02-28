@@ -101,12 +101,29 @@ const EmptyAnalysisState = ({
             </motion.div>
           )}
 
-          <motion.div variants={item} className={motivation ? "" : "mt-2"}>
+          <motion.div variants={item} className={`${motivation ? "" : "mt-2"} flex flex-col sm:flex-row items-center justify-center gap-3`}>
             <Button size="lg" onClick={onCtaClick || (() => navigate(ctaRoute!))} className="gap-2">
               <Plus className="w-4 h-4" />
               {resolvedCtaLabel}
             </Button>
+            {quickActions && quickActions.length > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground hidden sm:inline">{t("common.or", { defaultValue: "oder" })}</span>
+                {quickActions.map((a, i) => (
+                  <Button key={i} variant="outline" size="lg" onClick={a.onClick} className="gap-2">
+                    {a.icon && <a.icon className="w-4 h-4" />}
+                    {a.label}
+                  </Button>
+                ))}
+              </>
+            )}
           </motion.div>
+
+          {quickActions && quickActions.length > 0 && (
+            <motion.p variants={item} className="text-xs text-muted-foreground mt-3">
+              {t("emptyState.demoHint", { defaultValue: "Noch nicht sicher? Lade Beispieldaten und sieh das Produkt in Aktion." })}
+            </motion.p>
+          )}
 
           {hint && (
             <motion.p variants={item} className="text-xs text-muted-foreground mt-4 flex items-center justify-center gap-1">
@@ -139,16 +156,6 @@ const EmptyAnalysisState = ({
             </motion.div>
           )}
 
-          {quickActions && quickActions.length > 0 && (
-            <motion.div variants={item} className="flex items-center justify-center gap-2 mt-6 flex-wrap">
-              {quickActions.map((a, i) => (
-                <Button key={i} variant="outline" size="sm" onClick={a.onClick} className="gap-1.5 text-xs">
-                  {a.icon && <a.icon className="w-3.5 h-3.5" />}
-                  {a.label}
-                </Button>
-              ))}
-            </motion.div>
-          )}
         </CardContent>
       </Card>
     </motion.div>
