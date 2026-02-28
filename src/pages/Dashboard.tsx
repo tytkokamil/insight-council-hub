@@ -275,7 +275,7 @@ const Dashboard = () => {
             {isExecutive ? <CoreKpiGrid /> : <KpiOverviewWidget />}
 
             {/* ═══ ONBOARDING CHECKLIST ═══ */}
-            {!isExecutive && decisions.length < 10 && (
+            {decisions.length < 10 && (
               <OnboardingChecklist
                 hasTeam={teams.length > 0}
                 hasDecision={decisions.length > 0}
@@ -311,18 +311,38 @@ const Dashboard = () => {
             {/* ═══ EXECUTIVE MODE ═══ */}
             {isExecutive && (
               <>
-                <WidgetErrorBoundary>
-                  <DecisionQualityIndex />
-                </WidgetErrorBoundary>
-                <div className="widget-grid-2">
-                  <WidgetErrorBoundary>
-                    <DecisionCostWidget />
-                  </WidgetErrorBoundary>
-                  <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-                </div>
-                <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-                  <AiBriefingWidget />
-                </Suspense>
+                {decisions.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border border-primary/20 bg-primary/[0.02] rounded-lg p-8 text-center"
+                  >
+                    <Crown className="w-8 h-8 text-primary/30 mx-auto mb-3" />
+                    <h3 className="text-sm font-semibold mb-1">{t("dashboard.executiveEmptyTitle", { defaultValue: "Dein Executive Dashboard" })}</h3>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                      {t("dashboard.executiveEmptyDesc", { defaultValue: "Decision Quality Index, Portfolio Risk und KI-Briefing füllen sich automatisch mit deinen ersten Entscheidungen." })}
+                    </p>
+                    <Button size="sm" className="mt-4 gap-1.5" onClick={() => navigate("/decisions")}>
+                      <Plus className="w-3.5 h-3.5" />
+                      {t("widgets.firstDecision")}
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <>
+                    <WidgetErrorBoundary>
+                      <DecisionQualityIndex />
+                    </WidgetErrorBoundary>
+                    <div className="widget-grid-2">
+                      <WidgetErrorBoundary>
+                        <DecisionCostWidget />
+                      </WidgetErrorBoundary>
+                      <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                    </div>
+                    <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+                      <AiBriefingWidget />
+                    </Suspense>
+                  </>
+                )}
               </>
             )}
 

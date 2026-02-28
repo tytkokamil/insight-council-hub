@@ -182,9 +182,12 @@ const OnboardingChecklist = ({ hasTeam, hasDecision, hasReview, hasTemplate }: O
                     </div>
                     {!done && (
                       <Button
-                        variant="ghost"
+                        variant={step.id === "decision" ? "default" : "ghost"}
                         size="sm"
-                        className="shrink-0 text-xs text-primary hover:text-primary gap-1"
+                        className={step.id === "decision"
+                          ? "shrink-0 text-xs gap-1"
+                          : "shrink-0 text-xs text-primary hover:text-primary gap-1"
+                        }
                         onClick={() => navigate(step.actionPath)}
                       >
                         {step.actionLabel}
