@@ -32,7 +32,7 @@ const Footer = () => {
                 { label: t("landing.footer.features"), href: "#features" },
                 { label: t("landing.footer.pricing"), href: "#pricing" },
                 { label: t("landing.footer.useCases"), href: "#use-cases" },
-                { label: t("landing.footer.templates"), href: "#" },
+                { label: t("landing.footer.templates"), href: "#features" },
               ].map(l => (
                 <li key={l.label}><a href={l.href} className="text-sm text-muted-foreground/50 hover:text-foreground transition-colors duration-200">{l.label}</a></li>
               ))}
