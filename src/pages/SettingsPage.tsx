@@ -15,15 +15,12 @@ import {
   MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info
 } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
-import RolePermissionsPanel from "@/components/settings/RolePermissionsPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
-import DemoDataPanel from "@/components/settings/DemoDataPanel";
 import OrgCodDefaultsPanel from "@/components/settings/OrgCodDefaultsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
-import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useTranslation } from "react-i18next";
 
 const AI_PROVIDERS = [
@@ -41,7 +38,6 @@ const SettingsPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { theme, toggleTheme } = useTheme();
-  const { flags, loading: flagsLoading, toggleFlag } = useFeatureFlags();
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>("general");
 
@@ -802,80 +798,44 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
-              {/* Feature Flags */}
+              {/* Quick Links to Admin Page */}
               <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.featureFlags")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.featureFlagsDesc")}</p>
-                {flagsLoading ? (
-                  <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-md animate-pulse" />)}</div>
-                ) : (
-                  <div className="space-y-1">
-                    {flags.map((flag) => (
-                      <div key={flag.feature_key} className={`flex items-center justify-between py-3 ${!flag.enabled ? "opacity-50" : ""}`}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm">{flag.label}</p>
-                            <Badge variant="outline" className="text-[10px]">{flag.category}</Badge>
-                          </div>
-                          {flag.description && <p className="text-xs text-muted-foreground mt-0.5">{flag.description}</p>}
-                        </div>
-                        <Switch checked={flag.enabled} onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)} />
+                <h2 className="text-sm font-medium mb-3">{t("settings.adminTools", "Administration")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.adminToolsDesc", "Erweiterte Verwaltungsfunktionen findest du in der Admin-Konsole.")}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { label: t("settings.userManagement"), desc: t("settings.adminUserMgmtDesc", "Nutzer einladen, Rollen ändern"), icon: Users, path: "/admin/users" },
+                    { label: t("settings.featureFlags"), desc: t("settings.adminFeatureFlagsDesc", "Module aktivieren & deaktivieren"), icon: Zap, path: "/admin/users?tab=config" },
+                    { label: t("settings.rolePermsTitle", "Berechtigungen"), desc: t("settings.adminPermsDesc", "Rollen-Berechtigungen anpassen"), icon: Lock, path: "/admin/users?tab=config" },
+                    { label: t("settings.adminDataMgmt", "Daten & Demo"), desc: t("settings.adminDataMgmtDesc", "Demo-Daten laden, Daten zurücksetzen"), icon: Database, path: "/admin/users?tab=data" },
+                  ].map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => window.location.href = item.path}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 hover:border-muted-foreground/30 transition-all text-left group"
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                        <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <hr className="border-border" />
-
-              {/* User List */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.userManagement")}</h2>
-                <div className="space-y-1">
-                  {allUsers.slice(0, 10).map(u => {
-                    const role = allRoles.find(r => r.user_id === u.user_id);
-                    return (
-                      <div key={u.user_id} className="flex items-center justify-between py-2.5 px-3 rounded-md hover:bg-muted/20 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                            <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{u.full_name || t("settings.unknown")}</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[10px]">{roleLabels[role?.role] || "Member"}</Badge>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{item.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{item.desc}</p>
                       </div>
-                    );
-                  })}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
+                    </button>
+                  ))}
                 </div>
-                {allUsers.length > 10 && (
-                  <p className="text-xs text-muted-foreground mt-2">{t("settings.moreUsers", { count: allUsers.length - 10 })}</p>
-                )}
               </section>
 
               <hr className="border-border" />
 
+              {/* Roles Info */}
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.roles")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">
                   {t("settings.yourRole")} <Badge variant="outline" className="ml-1 text-[10px] font-normal">{roleLabels[userRole]}</Badge>
                 </p>
               </section>
-
-              <hr className="border-border" />
-
-              {/* Custom Role Permissions */}
-              <section>
-                <h2 className="text-sm font-medium mb-2">{t("settings.rolePermsTitle", "Rollen-Berechtigungen")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
-                <RolePermissionsPanel />
-              </section>
-
-              <hr className="border-border" />
-
-              {/* Demo Data & Reset */}
-              <DemoDataPanel />
             </div>
           )}
         </motion.div>
