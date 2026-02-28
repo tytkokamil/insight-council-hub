@@ -2299,6 +2299,10 @@ export type Database = {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
       }
+      transfer_ownership: {
+        Args: { _current_owner_id: string; _new_owner_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       comment_type: "comment" | "feedback" | "risk_flag"
