@@ -35,7 +35,10 @@ const SidebarFooter = memo(({
           .select("plan")
           .eq("id", profileData.org_id)
           .maybeSingle();
-        if (orgData?.plan) plan = orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1);
+        if (orgData?.plan) {
+          const planMap: Record<string, string> = { starter: "Free", pro: "Pro", business: "Business", enterprise: "Enterprise" };
+          plan = planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1);
+        }
       }
       const roleMap: Record<string, string> = {
         org_owner: "Org Owner",

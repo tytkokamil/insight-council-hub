@@ -67,19 +67,29 @@ const SettingsPage = () => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allRoles, setAllRoles] = useState<any[]>([]);
   const [mfaActive, setMfaActive] = useState(false);
+  const [orgPlan, setOrgPlan] = useState("Free");
 
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       const [profileRes, aiRes, notifRes, roleRes, teamsRes, mfaRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single(),
+        supabase.from("profiles").select("full_name, avatar_url, org_id").eq("user_id", user.id).single(),
         supabase.from("user_ai_settings").select("*").eq("user_id", user.id).single(),
         supabase.from("notification_preferences").select("*").eq("user_id", user.id).single(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).single(),
         supabase.from("team_members").select("*, teams(name)").eq("user_id", user.id),
         supabase.from("mfa_settings").select("totp_enabled, email_otp_enabled").eq("user_id", user.id).single(),
       ]);
-      if (profileRes.data) { setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null); }
+      if (profileRes.data) {
+        setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null);
+        if (profileRes.data.org_id) {
+          const { data: orgData } = await supabase.from("organizations").select("plan").eq("id", profileRes.data.org_id).maybeSingle();
+          if (orgData?.plan) {
+            const planMap: Record<string, string> = { starter: "Free", pro: "Pro", business: "Business", enterprise: "Enterprise" };
+            setOrgPlan(planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1));
+          }
+        }
+      }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
       if (notifRes.data) { setNotifPrefs({ review_requests: notifRes.data.review_requests, escalations: notifRes.data.escalations, team_updates: notifRes.data.team_updates, mention_enabled: notifRes.data.mention_enabled ?? true, deadline_enabled: notifRes.data.deadline_enabled ?? true, status_change_enabled: notifRes.data.status_change_enabled ?? true, digest_frequency: notifRes.data.digest_frequency ?? "instant" }); }
       if (roleRes.data) setUserRole(roleRes.data.role);
@@ -288,7 +298,7 @@ const SettingsPage = () => {
                 <h2 className="text-sm font-medium mb-3">{t("settings.workspace")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
-                    { label: t("settings.wsPlan"), value: "Pro", icon: Zap },
+                    { label: t("settings.wsPlan"), value: orgPlan, icon: Zap },
                     { label: t("settings.wsUsers"), value: adminStats?.totalUsers || "–", icon: Users },
                     { label: t("settings.wsDecisions"), value: adminStats?.totalDecisions || "–", icon: Activity },
                     { label: t("settings.wsTeams"), value: teamMemberships.length, icon: Building2 },
