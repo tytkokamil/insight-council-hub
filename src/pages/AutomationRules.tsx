@@ -295,7 +295,7 @@ const AutomationRules = () => {
             { label: t("automationRules.engineStatus"), value: rules.length === 0 ? t("automationRules.notConfigured") : engineActive ? t("automationRules.active") : t("automationRules.inactive"), icon: rules.length === 0 ? <Settings2 className="w-4 h-4 text-muted-foreground" /> : engineActive ? <Activity className="w-4 h-4 text-success" /> : <XCircle className="w-4 h-4 text-warning" />, highlight: false },
             { label: t("automationRules.activeRules"), value: activeRuleCount.toString(), icon: <Zap className="w-4 h-4 text-primary" /> },
             { label: t("automationRules.triggered7d"), value: last7DaysLogs.length.toString(), icon: <Play className="w-4 h-4 text-primary" /> },
-            { label: t("automationRules.autoEscalations"), value: autoEscalations.toString(), icon: <AlertTriangle className="w-4 h-4 text-destructive" /> },
+            { label: t("automationRules.autoEscalations"), value: autoEscalations.toString(), icon: <AlertTriangle className={`w-4 h-4 ${autoEscalations > 0 ? "text-destructive" : "text-muted-foreground"}`} /> },
             { label: t("automationRules.slaSet"), value: autoSlaSet.toString(), icon: <Clock className="w-4 h-4 text-blue-500" /> },
             { label: t("automationRules.notifications"), value: autoNotifications.toString(), icon: <Users className="w-4 h-4 text-warning" /> },
             { label: t("automationRules.statusChanges"), value: autoStatusChanges.toString(), icon: <RefreshCw className="w-4 h-4 text-accent-foreground" /> },
@@ -377,7 +377,11 @@ const AutomationRules = () => {
               </div>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              {t("automationRules.goalTarget")} {governanceLevel < 80 ? t("automationRules.goalRemaining", { pct: 80 - governanceLevel }) : t("automationRules.goalReached")}
+              {rules.length === 0
+                ? t("automationRules.goalEmptyHint", { defaultValue: "Erstelle deine erste Regel, um die Automatisierungsquote zu steigern." })
+                : governanceLevel >= 80
+                  ? t("automationRules.goalReached")
+                  : `${t("automationRules.goalTarget")} ${t("automationRules.goalRemaining", { pct: 80 - governanceLevel })}`}
             </p>
           </CardContent>
         </Card>
