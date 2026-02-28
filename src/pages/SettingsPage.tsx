@@ -32,7 +32,7 @@ const AI_PROVIDERS = [
 
 type SettingsTab = "general" | "notifications" | "ai" | "security" | "admin";
 
-const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_member: "Mitglied", org_reviewer: "Reviewer", org_viewer: "Betrachter" };
+const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
 const SettingsPage = () => {
   const { user } = useAuth();

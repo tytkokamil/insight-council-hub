@@ -16,7 +16,7 @@ interface RolePermRow {
   enabled: boolean;
 }
 
-const EDITABLE_ROLES: OrgRoleKey[] = ["org_viewer", "org_reviewer", "org_member", "org_executive"];
+const EDITABLE_ROLES: OrgRoleKey[] = ["org_viewer", "org_member", "org_lead", "org_executive"];
 
 const RolePermissionsPanel = () => {
   const { t, i18n } = useTranslation();
@@ -104,7 +104,8 @@ const RolePermissionsPanel = () => {
     "decisions.create": "Entscheidungen › Erstellen",
     "decisions.edit_own": "Entscheidungen › Eigene bearbeiten",
     "decisions.edit_any": "Entscheidungen › Alle bearbeiten",
-    "decisions.delete": "Entscheidungen › Löschen",
+    "decisions.delete_own": "Entscheidungen › Eigene löschen",
+    "decisions.delete_any": "Entscheidungen › Alle löschen",
     "decisions.change_status": "Entscheidungen › Status ändern",
     "reviews.submit": "Reviews › Einreichen",
     "reviews.assign": "Reviews › Zuweisen",
