@@ -10,9 +10,9 @@ import AppLayout from "@/components/layout/AppLayout";
 import UserAvatar from "@/components/shared/UserAvatar";
 import {
   User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
-  RotateCcw, Clock, Sun, Moon, Globe, Activity, BarChart3, Users, Lock, Zap,
+  RotateCcw, Clock, Sun, Moon, Globe, Activity, Users, Lock, Zap,
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
-  MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info, Gift
+  Server, ChevronRight, Gift, Plug, Scale
 } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
@@ -40,7 +40,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "referral" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "governance" | "integrations" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
@@ -74,8 +74,6 @@ const SettingsPage = () => {
   const [userRole, setUserRole] = useState<string>("org_member");
   const [teamMemberships, setTeamMemberships] = useState<any[]>([]);
   const [adminStats, setAdminStats] = useState<any>(null);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [allRoles, setAllRoles] = useState<any[]>([]);
   const [mfaActive, setMfaActive] = useState(false);
   const [orgPlan, setOrgPlan] = useState("Free");
 
@@ -111,44 +109,34 @@ const SettingsPage = () => {
 
   const isAdmin = userRole === "org_owner" || userRole === "org_admin";
 
-  // Fetch admin stats
   useEffect(() => {
     if (!isAdmin) return;
     const fetchAdminStats = async () => {
-      const [profilesRes, rolesRes, decisionsRes, escalationsRes] = await Promise.all([
+      const [profilesRes, decisionsRes, escalationsRes] = await Promise.all([
         supabase.from("profiles").select("user_id, full_name, created_at"),
-        supabase.from("user_roles").select("*"),
         supabase.from("decisions").select("id, status, escalation_level, due_date, created_at").is("deleted_at", null),
         supabase.from("decisions").select("id").is("deleted_at", null).gte("escalation_level", 1),
       ]);
-      const profiles = profilesRes.data || [];
       const decisions = decisionsRes.data || [];
       const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       const overdue = decisions.filter(d => d.due_date && new Date(d.due_date) < now && !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
-
       setAdminStats({
-        totalUsers: profiles.length,
-        activeUsers: profiles.length, // simplified
-        inactiveUsers: 0,
+        totalUsers: (profilesRes.data || []).length,
         totalDecisions: decisions.length,
         openEscalations: (escalationsRes.data || []).length,
         slaViolations: overdue.length,
       });
-      setAllUsers(profiles);
-      setAllRoles(rolesRes.data || []);
     };
     fetchAdminStats();
   }, [isAdmin]);
 
-  // Security Health Score
   const securityScore = useMemo(() => {
-    let score = 30; // base: password set
+    let score = 30;
     if (mfaActive) score += 20;
     if (notifPrefs.escalations) score += 10;
     if (notifPrefs.review_requests) score += 10;
     if (teamMemberships.length > 0) score += 10;
-    if (aiProvider === "lovable") score += 10; // no external key exposure
+    if (aiProvider === "lovable") score += 10;
     if (fullName) score += 10;
     return Math.min(100, score);
   }, [notifPrefs, teamMemberships, aiProvider, fullName, mfaActive]);
@@ -200,13 +188,6 @@ const SettingsPage = () => {
     setAvatarUrl(newUrl); setUploadingAvatar(false);
   };
 
-  const handleNotifToggle = async (key: keyof typeof notifPrefs) => {
-    if (!user) return;
-    const updated = { ...notifPrefs, [key]: !notifPrefs[key] };
-    setNotifPrefs(updated);
-    await supabase.from("notification_preferences").upsert({ user_id: user.id, ...updated }, { onConflict: "user_id" });
-  };
-
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
     document.documentElement.lang = lng;
@@ -218,8 +199,10 @@ const SettingsPage = () => {
   const tabs: { key: SettingsTab; label: string; icon: React.ElementType; show?: boolean }[] = [
     { key: "general", label: t("settings.general"), icon: User },
     { key: "notifications", label: t("settings.notifications"), icon: Bell },
-    { key: "ai", label: t("settings.ai"), icon: Brain },
     { key: "security", label: t("settings.security"), icon: Shield },
+    { key: "governance", label: "Governance", icon: Scale },
+    { key: "ai", label: t("settings.ai"), icon: Brain },
+    { key: "integrations", label: "Integrationen", icon: Plug, show: isAdmin },
     { key: "referral", label: t("settings.referral"), icon: Gift },
     { key: "admin", label: t("settings.admin"), icon: Settings2, show: isAdmin },
   ];
@@ -316,7 +299,7 @@ const SettingsPage = () => {
                     { label: t("settings.wsDataLocation"), value: "EU", icon: Server },
                     { label: t("settings.wsRole"), value: roleLabels[userRole], icon: Shield },
                   ].map((item, i) => (
-                     <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                    <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
                         <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -346,11 +329,6 @@ const SettingsPage = () => {
 
               <hr className="border-border/40" />
 
-              {/* Progressive Override */}
-              <ProgressiveOverrideToggle user={user} />
-
-              <hr className="border-border/40" />
-
               {/* Language */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.language")}</h2>
@@ -363,26 +341,10 @@ const SettingsPage = () => {
                         <p className="text-xs text-muted-foreground">{t("settings.interfaceLanguageDesc")}</p>
                       </div>
                     </div>
-                     <div className="flex items-center rounded-md border border-border/60 p-0.5">
+                    <div className="flex items-center rounded-md border border-border/60 p-0.5">
                       {[{ code: "de", label: t("settings.german") }, { code: "en", label: t("settings.english") }].map(lng => (
                         <button key={lng.code} onClick={() => changeLanguage(lng.code)}
                           className={`px-3 py-1 rounded text-xs font-medium transition-colors ${i18n.language === lng.code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                          {lng.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm">{t("settings.exportLanguage")}</p>
-                        <p className="text-xs text-muted-foreground">{t("settings.exportLanguageDesc")}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center rounded-md border border-border/60 p-0.5">
-                      {[{ code: "de", label: "DE" }, { code: "en", label: "EN" }].map(lng => (
-                        <button key={lng.code} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${lng.code === "de" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                           {lng.label}
                         </button>
                       ))}
@@ -393,9 +355,11 @@ const SettingsPage = () => {
 
               <hr className="border-border/40" />
 
-              {/* Terminology */}
-              {isAdmin && <TerminologyPanel />}
+              <ProgressiveOverrideToggle user={user} />
 
+              <hr className="border-border/40" />
+
+              {isAdmin && <TerminologyPanel />}
               {isAdmin && <hr className="border-border/40" />}
 
               <IndustryConfigSection />
@@ -421,9 +385,8 @@ const SettingsPage = () => {
                 <NotificationMatrixPanel />
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Escalation Priority */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.escalationPriority")}</h2>
                 <div className="space-y-2">
@@ -433,7 +396,7 @@ const SettingsPage = () => {
                     { level: t("settings.escMedium"), behavior: t("settings.escMediumBehavior"), color: "text-muted-foreground" },
                     { level: t("settings.escLow"), behavior: t("settings.escLowBehavior"), color: "text-muted-foreground" },
                   ].map((esc, i) => (
-                     <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className={`w-3.5 h-3.5 ${esc.color}`} />
                         <span className="text-sm font-medium">{esc.level}</span>
@@ -444,9 +407,8 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Executive Digest Options */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.execDigest")}</h2>
                 <div className="space-y-2">
@@ -466,12 +428,11 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* WhatsApp Integration */}
               <WhatsAppSettingsPanel />
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.quietHours")}</h2>
@@ -480,10 +441,170 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ SECURITY ═══════════════ */}
+          {activeTab === "security" && (
+            <div className="space-y-6">
+              {/* Security Health */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">{t("settings.securityHealth")}</h2>
+                <div className="p-4 rounded-lg border border-border/60 bg-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className={`w-5 h-5 ${securityScore >= 80 ? "text-success" : securityScore >= 60 ? "text-warning" : "text-destructive"}`} />
+                      <span className="text-2xl font-bold">{securityScore}</span>
+                      <span className="text-sm text-muted-foreground">/ 100</span>
+                    </div>
+                    <Badge className={`text-[10px] ${securityScore >= 80 ? "bg-success/10 text-success border-success/20" : securityScore >= 60 ? "bg-warning/10 text-warning border-warning/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
+                      {securityScore >= 80 ? t("settings.secGood") : securityScore >= 60 ? t("settings.secNeedsImprovement") : t("settings.secCritical")}
+                    </Badge>
+                  </div>
+                  <Progress value={securityScore} className="h-1.5 mb-3" />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    {[
+                      { label: t("settings.secPasswordSet"), ok: true },
+                      { label: t("settings.sec2faActive"), ok: mfaActive },
+                      { label: t("settings.secSsoActive"), ok: false },
+                      { label: t("settings.secSessionTimeout"), ok: true },
+                      { label: t("settings.secProfileComplete"), ok: !!fullName },
+                      { label: t("settings.secEscalationsActive"), ok: notifPrefs.escalations },
+                    ].map((check, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        {check.ok ? <CheckCircle2 className="w-3 h-3 text-success" /> : <AlertTriangle className="w-3 h-3 text-warning" />}
+                        <span className={check.ok ? "text-foreground" : "text-muted-foreground"}>{check.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <hr className="border-border/40" />
+
+              <ActiveSessionsPanel />
+
+              <hr className="border-border/40" />
+
+              <MfaSettingsPanel />
+
+              <hr className="border-border/40" />
+
+              {/* Password */}
+              <section>
+                <h2 className="text-sm font-medium mb-4">{t("settings.changePassword")}</h2>
+                <div className="space-y-3 max-w-sm">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.newPassword")}</label>
+                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t("settings.newPasswordPlaceholder")} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.confirmPassword")}</label>
+                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("settings.confirmPasswordPlaceholder")} className={inputClass} />
+                  </div>
+                  <Button size="sm" variant="outline" onClick={handlePasswordChange} disabled={changingPassword || !newPassword}>
+                    {changingPassword ? t("settings.updating") : t("settings.changePassword")}
+                  </Button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* ═══════════════ GOVERNANCE ═══════════════ */}
+          {activeTab === "governance" && (
+            <div className="space-y-6">
+              {/* Access Control */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">{t("settings.accessControl")}</h2>
+                <p className="text-xs text-muted-foreground mb-3">{t("settings.accessControlDesc")}</p>
+                <div className="rounded-lg border border-border/60 overflow-hidden">
+                  <div className="grid grid-cols-5 gap-0 bg-muted/30 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    <div className="p-2.5">{t("settings.acAction")}</div>
+                    <div className="p-2.5 text-center">Owner</div>
+                    <div className="p-2.5 text-center">Admin</div>
+                    <div className="p-2.5 text-center">Lead</div>
+                    <div className="p-2.5 text-center">Member</div>
+                  </div>
+                  {[
+                    { action: t("settings.acCreateDecisions"), permissions: [true, true, true, true] },
+                    { action: t("settings.acDeleteDecisions"), permissions: [true, true, false, false] },
+                    { action: t("settings.acConfigSla"), permissions: [true, true, false, false] },
+                    { action: t("settings.acChangeEscalations"), permissions: [true, true, true, false] },
+                    { action: t("settings.acManageTemplates"), permissions: [true, true, false, false] },
+                    { action: t("settings.acManageUsers"), permissions: [true, true, false, false] },
+                    { action: t("settings.acFeatureFlags"), permissions: [true, true, false, false] },
+                    { action: t("settings.acRetention"), permissions: [true, true, false, false] },
+                    { action: t("settings.acHardDelete"), permissions: [true, false, false, false] },
+                  ].map((row, i) => (
+                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border/40 items-center">
+                      <div className="p-2.5 text-xs">{row.action}</div>
+                      {row.permissions.map((p, j) => (
+                        <div key={j} className="p-2.5 text-center">
+                          {p ? <CheckCircle2 className="w-3.5 h-3.5 text-success mx-auto" /> : <span className="text-muted-foreground text-xs">–</span>}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border/40" />
+
+              {/* SLA */}
+              <section>
+                <h2 className="text-sm font-medium mb-4">{t("settings.slaConfig")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.slaConfigDesc")}</p>
+                <SlaConfigPanel />
+              </section>
+
+              <hr className="border-border/40" />
+
+              {/* Cost-of-Delay Defaults */}
+              <section>
+                <h2 className="text-sm font-medium mb-4">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
+                <OrgCodDefaultsPanel />
+              </section>
+
+              <hr className="border-border/40" />
+
+              {/* Delegation */}
+              <section>
+                <h2 className="text-sm font-medium mb-4">{t("settings.delegation")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.delegationDesc")}</p>
+                <DelegationPanel />
+              </section>
+
+              <hr className="border-border/40" />
+
+              {/* Compliance */}
+              <section>
+                <h2 className="text-sm font-medium mb-3">{t("settings.compliance")}</h2>
+                <div className="space-y-2">
+                  {[
+                    { label: t("settings.compGdpr"), status: t("settings.compActive"), icon: ShieldCheck, color: "text-success" },
+                    { label: t("settings.compDataProcessing"), status: t("settings.compEuOnly"), icon: Server, color: "text-primary" },
+                    { label: t("settings.compAuditTrail"), status: t("settings.compImmutable"), icon: Lock, color: "text-success" },
+                    { label: t("settings.compEncryption"), status: "AES-256", icon: KeyRound, color: "text-success" },
+                    { label: t("settings.compSoc2"), status: t("settings.compCompliant"), icon: Shield, color: "text-primary" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
+                      <div className="flex items-center gap-2">
+                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
+                        <span className="text-sm">{item.label}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <hr className="border-border/40" />
+
+              <AuditIntegrityPanel />
+            </div>
+          )}
+
           {/* ═══════════════ AI ═══════════════ */}
           {activeTab === "ai" && (
             <div className="space-y-6">
-              {/* AI Usage Dashboard */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.aiUsage")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -493,7 +614,7 @@ const SettingsPage = () => {
                     { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
                     { label: t("settings.aiDataResidency"), value: "EU", icon: Server },
                   ].map((stat, i) => (
-                     <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                    <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
                         <stat.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -504,9 +625,8 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Provider Selection */}
               <section>
                 <h2 className="text-sm font-medium mb-4">{t("settings.aiProvider")}</h2>
                 <div className="grid grid-cols-2 gap-2 mb-4">
@@ -550,9 +670,8 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* AI Scope Settings */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.aiGovernanceScope")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.aiGovernanceScopeDesc")}</p>
@@ -574,185 +693,30 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Data Residency */}
               <section>
                 <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <div className="flex items-center gap-2 mb-1">
                     <Server className="w-4 h-4 text-primary" />
                     <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t("settings.aiDataResidencyInfo")}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
                 </div>
               </section>
             </div>
           )}
 
-          {/* ═══════════════ SECURITY ═══════════════ */}
-          {activeTab === "security" && (
+          {/* ═══════════════ INTEGRATIONS (admin only) ═══════════════ */}
+          {activeTab === "integrations" && isAdmin && (
             <div className="space-y-6">
-              {/* Security Health Dashboard */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.securityHealth")}</h2>
-                <div className="p-4 rounded-lg border border-border/60 bg-card">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className={`w-5 h-5 ${securityScore >= 80 ? "text-success" : securityScore >= 60 ? "text-warning" : "text-destructive"}`} />
-                      <span className="text-2xl font-bold">{securityScore}</span>
-                      <span className="text-sm text-muted-foreground">/ 100</span>
-                    </div>
-                    <Badge className={`text-[10px] ${securityScore >= 80 ? "bg-success/10 text-success border-success/20" : securityScore >= 60 ? "bg-warning/10 text-warning border-warning/20" : "bg-destructive/10 text-destructive border-destructive/20"}`}>
-                      {securityScore >= 80 ? t("settings.secGood") : securityScore >= 60 ? t("settings.secNeedsImprovement") : t("settings.secCritical")}
-                    </Badge>
-                  </div>
-                  <Progress value={securityScore} className="h-1.5 mb-3" />
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                    {[
-                      { label: t("settings.secPasswordSet"), ok: true },
-                      { label: t("settings.sec2faActive"), ok: mfaActive },
-                      { label: t("settings.secSsoActive"), ok: false },
-                      { label: t("settings.secSessionTimeout"), ok: true },
-                      { label: t("settings.secProfileComplete"), ok: !!fullName },
-                      { label: t("settings.secEscalationsActive"), ok: notifPrefs.escalations },
-                    ].map((check, i) => (
-                      <div key={i} className="flex items-center gap-1.5">
-                        {check.ok ? <CheckCircle2 className="w-3 h-3 text-success" /> : <AlertTriangle className="w-3 h-3 text-warning" />}
-                        <span className={check.ok ? "text-foreground" : "text-muted-foreground"}>{check.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
-
+              <InboundEmailPanel />
               <hr className="border-border/40" />
-
-              {/* Active Sessions */}
-              <section>
-                <ActiveSessionsPanel />
-              </section>
-
+              <TeamsIntegrationPanel />
               <hr className="border-border/40" />
-
-              {/* 2FA Settings */}
-              <section>
-                <MfaSettingsPanel />
-              </section>
-
+              <WebhookSettingsPanel />
               <hr className="border-border/40" />
-
-              {/* Password */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.changePassword")}</h2>
-                <div className="space-y-3 max-w-sm">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.newPassword")}</label>
-                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t("settings.newPasswordPlaceholder")} className={inputClass} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.confirmPassword")}</label>
-                    <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("settings.confirmPasswordPlaceholder")} className={inputClass} />
-                  </div>
-                  <Button size="sm" variant="outline" onClick={handlePasswordChange} disabled={changingPassword || !newPassword}>
-                    {changingPassword ? t("settings.updating") : t("settings.changePassword")}
-                  </Button>
-                </div>
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* Access Control */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.accessControl")}</h2>
-                <p className="text-xs text-muted-foreground mb-3">{t("settings.accessControlDesc")}</p>
-                 <div className="rounded-lg border border-border/60 overflow-hidden">
-                   <div className="grid grid-cols-5 gap-0 bg-muted/30 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                    <div className="p-2.5">{t("settings.acAction")}</div>
-                    <div className="p-2.5 text-center">Owner</div>
-                    <div className="p-2.5 text-center">Admin</div>
-                    <div className="p-2.5 text-center">Lead</div>
-                    <div className="p-2.5 text-center">Member</div>
-                  </div>
-                  {[
-                    { action: t("settings.acCreateDecisions"), permissions: [true, true, true, true] },
-                    { action: t("settings.acDeleteDecisions"), permissions: [true, true, false, false] },
-                    { action: t("settings.acConfigSla"), permissions: [true, true, false, false] },
-                    { action: t("settings.acChangeEscalations"), permissions: [true, true, true, false] },
-                    { action: t("settings.acManageTemplates"), permissions: [true, true, false, false] },
-                    { action: t("settings.acManageUsers"), permissions: [true, true, false, false] },
-                    { action: t("settings.acFeatureFlags"), permissions: [true, true, false, false] },
-                    { action: t("settings.acRetention"), permissions: [true, true, false, false] },
-                    { action: t("settings.acHardDelete"), permissions: [true, false, false, false] },
-                  ].map((row, i) => (
-                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border/40 items-center">
-                      <div className="p-2.5 text-xs">{row.action}</div>
-                      {row.permissions.map((p, j) => (
-                        <div key={j} className="p-2.5 text-center">
-                          {p ? <CheckCircle2 className="w-3.5 h-3.5 text-success mx-auto" /> : <span className="text-muted-foreground text-xs">–</span>}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* Cost-of-Delay Defaults */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
-                <OrgCodDefaultsPanel />
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* SLA */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.slaConfig")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.slaConfigDesc")}</p>
-                <SlaConfigPanel />
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* Delegation */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.delegation")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.delegationDesc")}</p>
-                <DelegationPanel />
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* Compliance & Data Privacy */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.compliance")}</h2>
-                <div className="space-y-2">
-                  {[
-                    { label: t("settings.compGdpr"), status: t("settings.compActive"), icon: ShieldCheck, color: "text-success" },
-                    { label: t("settings.compDataProcessing"), status: t("settings.compEuOnly"), icon: Server, color: "text-primary" },
-                    { label: t("settings.compAuditTrail"), status: t("settings.compImmutable"), icon: Lock, color: "text-success" },
-                    { label: t("settings.compEncryption"), status: "AES-256", icon: KeyRound, color: "text-success" },
-                    { label: t("settings.compSoc2"), status: t("settings.compCompliant"), icon: Shield, color: "text-primary" },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
-                      <div className="flex items-center gap-2">
-                        <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
-                        <span className="text-sm">{item.label}</span>
-                      </div>
-                      <Badge variant="outline" className="text-[10px]">{item.status}</Badge>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-               <hr className="border-border/40" />
-
-              {/* Audit Trail Integrity */}
-              <AuditIntegrityPanel />
+              <PdfBrandingSection />
             </div>
           )}
 
@@ -766,7 +730,6 @@ const SettingsPage = () => {
           {/* ═══════════════ ADMIN ═══════════════ */}
           {activeTab === "admin" && isAdmin && (
             <div className="space-y-6">
-              {/* Admin Overview Dashboard */}
               {adminStats && (
                 <section>
                   <h2 className="text-sm font-medium mb-3">{t("settings.adminOverview")}</h2>
@@ -791,9 +754,8 @@ const SettingsPage = () => {
                 </section>
               )}
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Quick Links to Admin Page */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.adminTools", "Administration")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.adminToolsDesc", "Erweiterte Verwaltungsfunktionen findest du in der Admin-Konsole.")}</p>
@@ -802,7 +764,7 @@ const SettingsPage = () => {
                     { label: t("settings.userManagement"), desc: t("settings.adminUserMgmtDesc", "Nutzer einladen, Rollen ändern"), icon: Users, path: "/admin/users" },
                     { label: t("settings.featureFlags"), desc: t("settings.adminFeatureFlagsDesc", "Module aktivieren & deaktivieren"), icon: Zap, path: "/admin/users?tab=config" },
                     { label: t("settings.rolePermsTitle", "Berechtigungen"), desc: t("settings.adminPermsDesc", "Rollen-Berechtigungen anpassen"), icon: Lock, path: "/admin/users?tab=config" },
-                    { label: t("settings.adminDataMgmt", "Daten & Demo"), desc: t("settings.adminDataMgmtDesc", "Demo-Daten laden, Daten zurücksetzen"), icon: Database, path: "/admin/users?tab=data" },
+                    { label: t("settings.adminDataMgmt", "Daten & Demo"), desc: t("settings.adminDataMgmtDesc", "Demo-Daten laden, Daten zurücksetzen"), icon: Scale, path: "/admin/users?tab=data" },
                   ].map((item, i) => (
                     <button
                       key={i}
@@ -822,29 +784,8 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-               <hr className="border-border/40" />
+              <hr className="border-border/40" />
 
-              {/* Inbound Email */}
-              <InboundEmailPanel />
-
-               <hr className="border-border/40" />
-
-              {/* Microsoft Teams */}
-              <TeamsIntegrationPanel />
-
-               <hr className="border-border/40" />
-
-              {/* Webhooks */}
-              <WebhookSettingsPanel />
-
-               <hr className="border-border/40" />
-
-              {/* PDF Branding */}
-              <PdfBrandingSection />
-
-               <hr className="border-border/40" />
-
-              {/* Roles Info */}
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.roles")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">
