@@ -40,7 +40,7 @@ const DecisionRoomHeader = ({
   const progress = totalDecisions > 0 ? Math.round((reviewedCount / totalDecisions) * 100) : 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 mb-6">
+    <div className="rounded-xl border border-border/60 bg-card p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-lg font-semibold tracking-tight flex items-center gap-2">
@@ -52,7 +52,7 @@ const DecisionRoomHeader = ({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/60">
             <Timer className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-mono font-medium">{formatTime(elapsed)}</span>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setTimerActive(prev => !prev)}>
@@ -63,35 +63,35 @@ const DecisionRoomHeader = ({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
           <Users className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.participants")}</p>
             <p className="text-sm font-semibold">{participantCount}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
           <Shield className="w-4 h-4 text-primary shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.decisionsLabel")}</p>
             <p className="text-sm font-semibold">{totalDecisions}</p>
           </div>
         </div>
-        <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${criticalCount > 0 ? "bg-destructive/10 border-destructive/20" : "bg-muted/30 border-border"}`}>
+        <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${criticalCount > 0 ? "bg-destructive/10 border-destructive/20" : "bg-muted/30 border-border/60"}`}>
           <AlertTriangle className={`w-4 h-4 shrink-0 ${criticalCount > 0 ? "text-destructive" : "text-muted-foreground"}`} />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.criticalLabel")}</p>
             <p className={`text-sm font-semibold ${criticalCount > 0 ? "text-destructive" : ""}`}>{criticalCount}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
           <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.escalationsLabel")}</p>
             <p className="text-sm font-semibold">{openEscalations}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
           <DollarSign className="w-4 h-4 text-warning shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground">{t("meeting.totalRisk")}</p>
