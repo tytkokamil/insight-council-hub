@@ -16,21 +16,13 @@ html {
   --lp-bg: 225 20% 98%;
   --lp-card: 0 0% 100%;
   --lp-primary: 217 91% 53%;
-  --lp-amber: 38 92% 50%;
-  --lp-green: 160 60% 40%;
-  --lp-red: 0 84% 55%;
-  --lp-teal: 175 84% 32%;
-  --lp-violet: 263 85% 50%;
-  --lp-text: 228 12% 18%;
-  --lp-text-muted: 215 14% 46%;
-  --lp-text-faint: 215 12% 62%;
-  --lp-border: 225 16% 88%;
   background: hsl(var(--lp-bg));
-  color: hsl(var(--lp-text));
-  font-family: 'DM Sans', 'Inter', sans-serif;
+  color: hsl(228 12% 18%);
+  font-family: 'Inter', 'DM Sans', sans-serif;
 }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
-  font-family: 'Syne', 'Space Grotesk', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.025em;
 }
 
 

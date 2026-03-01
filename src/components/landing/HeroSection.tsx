@@ -24,130 +24,80 @@ const LiveCounter = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 0.7, duration: 0.8, ease }}
-      className="max-w-lg mx-auto mt-10 mb-10"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6, duration: 0.8, ease }}
+      className="max-w-md mx-auto mt-10 mb-10"
     >
-      <div className="relative rounded-2xl border border-border bg-card p-6 overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
-
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-          <span className="text-xs text-muted-foreground">Ihre simulierten Verzögerungskosten heute</span>
+      <div className="relative rounded-2xl border border-border/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+          <span className="text-[11px] text-muted-foreground">Simulierte Verzögerungskosten heute</span>
         </div>
-
-        <div className="text-4xl md:text-5xl font-bold text-warning tabular-nums tracking-tight" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+        <div className="text-3xl md:text-4xl font-bold text-warning tabular-nums tracking-tight font-mono">
           €{value.toFixed(2)}
         </div>
-
-        <p className="text-[11px] text-muted-foreground mt-3">
-          Basierend auf 5 offenen Entscheidungen · €120/h · 8h/Tag · 3 Personen
-        </p>
-        <p className="text-[10px] text-muted-foreground/60 mt-1 italic">
-          * Demo-Berechnung — konfigurieren Sie Ihre eigenen Werte im ROI-Rechner
+        <p className="text-[10px] text-muted-foreground/60 mt-2">
+          5 offene Entscheidungen · €120/h · 8h/Tag · 3 Personen
         </p>
       </div>
     </motion.div>
   );
 };
 
-const TypingEffect = ({ text, delay = 0 }: { text: string; delay?: number }) => {
-  const [displayed, setDisplayed] = useState("");
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setStarted(true), delay * 1000);
-    return () => clearTimeout(timer);
-  }, [delay]);
-
-  useEffect(() => {
-    if (!started) return;
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayed(text.slice(0, i + 1));
-      i++;
-      if (i >= text.length) clearInterval(interval);
-    }, 22);
-    return () => clearInterval(interval);
-  }, [started, text]);
-
-  return (
-    <span>
-      {displayed}
-      {started && displayed.length < text.length && (
-        <span className="inline-block w-[2px] h-[1em] bg-primary/60 ml-0.5 animate-pulse align-text-bottom" />
-      )}
-    </span>
-  );
-};
-
-
-
-
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const gridY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const glowScale = useTransform(scrollYProgress, [0, 1], [1, 1.3]);
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 40]);
-
-  const trustItems = [
-    "✓ Keine Kreditkarte",
-    "✓ In 3 Minuten startklar",
-    "✓ NIS2 & ISO 9001 dokumentiert",
-  ];
 
   return (
     <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
-      {/* Parallax grid */}
-      <motion.div style={{ y: gridY }} className="absolute inset-0 opacity-[0.4]" >
-        <div className="absolute inset-0" style={{
-          backgroundImage: "linear-gradient(hsl(225 16% 88% / 0.6) 1px, transparent 1px), linear-gradient(90deg, hsl(225 16% 88% / 0.6) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }} />
-      </motion.div>
-      {/* Parallax glow */}
-      <motion.div style={{ scale: glowScale }} className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none" />
+      {/* Soft gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-[hsl(225,20%,98%)] to-transparent" />
+      
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 opacity-[0.3]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(225 16% 78% / 0.4) 1px, transparent 1px)",
+        backgroundSize: "32px 32px",
+      }} />
 
       <motion.div style={{ y: contentY }} className="container relative z-10 mx-auto px-4">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-3xl mx-auto text-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ delay: 0.1, duration: 0.8, ease }}
-            className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-border bg-card shadow-sm mb-8"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.7, ease }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/60 bg-white/70 backdrop-blur-sm mb-8"
           >
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-medium text-muted-foreground tracking-[0.12em] uppercase">
-              Decision Governance Platform · Made in Germany
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[11px] font-medium text-muted-foreground tracking-wide">
+              Decision Governance Platform
             </span>
           </motion.div>
 
           {/* Headline */}
-          <h1 className="text-[clamp(2.2rem,5.5vw,5rem)] font-bold tracking-[-0.04em] leading-[1.05] mb-6">
-            <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8, ease }} className="block text-foreground">
-              Jede offene Entscheidung
-            </motion.span>
-            <motion.span initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35, duration: 0.8, ease }} className="block">
-              <span className="text-foreground">kostet Ihr Unternehmen </span>
-              <span className="text-warning">echtes Geld.</span>
-            </motion.span>
-          </h1>
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.8, ease }}
+            className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6 text-foreground"
+          >
+            Jede offene Entscheidung
+            <br />
+            kostet Ihr Unternehmen{" "}
+            <span className="text-warning">echtes Geld.</span>
+          </motion.h1>
 
           {/* Subline */}
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8, ease }}
-            className="text-[17px] md:text-[19px] text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+            transition={{ delay: 0.35, duration: 0.8, ease }}
+            className="text-[16px] md:text-[18px] text-muted-foreground max-w-xl mx-auto leading-relaxed"
           >
-            <TypingEffect
-              text="Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden."
-              delay={0.8}
-            />
+            Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden.
           </motion.p>
 
           <LiveCounter />
@@ -156,20 +106,20 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.6, ease }}
+            transition={{ delay: 0.7, duration: 0.6, ease }}
             className="flex flex-col sm:flex-row gap-3 justify-center"
           >
             <Link
               to="/auth"
-              className="group inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+              className="group inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-7 py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
             >
               Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <button
               onClick={() => setShowTour(true)}
-              className="group inline-flex items-center justify-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 px-8 py-3.5 rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
+              className="group inline-flex items-center justify-center gap-2 text-[14px] font-medium text-muted-foreground hover:text-foreground border border-border/60 hover:border-border px-7 py-3 rounded-xl transition-all duration-200"
             >
-              <Play className="w-4 h-4 group-hover:scale-110 transition-transform" /> Demo ansehen
+              <Play className="w-3.5 h-3.5" /> Demo ansehen
             </button>
           </motion.div>
 
@@ -177,19 +127,13 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
             className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           >
-            {trustItems.map((item, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.3 + i * 0.1, duration: 0.5, ease }}
-                className="text-[12px] text-muted-foreground/70"
-              >
-                {item}
-              </motion.span>
+            {["Keine Kreditkarte", "In 3 Minuten startklar", "DSGVO-konform"].map((item, i) => (
+              <span key={i} className="text-[11px] text-muted-foreground/60">
+                ✓ {item}
+              </span>
             ))}
           </motion.div>
         </div>

@@ -13,10 +13,10 @@ const ROICalculatorSection = () => {
     return hourlyRate * 8 * persons * decisions * delayDays;
   }, [hourlyRate, persons, decisions, delayDays]);
 
-  const inputClass = "w-full h-11 px-4 rounded-xl bg-muted/50 border border-border text-foreground text-sm font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/30 transition-all tabular-nums";
+  const inputClass = "w-full h-10 px-3 rounded-xl bg-white/80 border border-border/50 text-foreground text-sm font-medium focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all tabular-nums";
 
   return (
-    <section id="roi" className="py-24 relative bg-muted/30">
+    <section id="roi" className="py-24 relative">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -27,48 +27,47 @@ const ROICalculatorSection = () => {
         >
           <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">ROI-Rechner</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-            Was kostet Entscheidungsverzögerung in Ihrem Unternehmen?
+            Was kostet Entscheidungsverzögerung?
           </h2>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.1, duration: 0.7, ease }}
-          className="max-w-[700px] mx-auto"
+          transition={{ delay: 0.1, duration: 0.6, ease }}
+          className="max-w-[640px] mx-auto"
         >
-          <div className="rounded-2xl border border-border bg-card p-8 shadow-md">
-            <div className="grid grid-cols-2 gap-4 mb-8">
+          <div className="rounded-2xl border border-border/50 bg-white/80 backdrop-blur-sm p-7">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-xs text-muted-foreground mb-2">Stundensatz (€/Stunde)</label>
+                <label className="block text-[11px] text-muted-foreground/70 mb-1.5">Stundensatz (€/h)</label>
                 <input type="number" value={hourlyRate} onChange={e => setHourlyRate(Number(e.target.value) || 0)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-2">Betroffene Personen</label>
+                <label className="block text-[11px] text-muted-foreground/70 mb-1.5">Betroffene Personen</label>
                 <input type="number" value={persons} onChange={e => setPersons(Number(e.target.value) || 0)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-2">Offene Entscheidungen</label>
+                <label className="block text-[11px] text-muted-foreground/70 mb-1.5">Offene Entscheidungen</label>
                 <input type="number" value={decisions} onChange={e => setDecisions(Number(e.target.value) || 0)} className={inputClass} />
               </div>
               <div>
-                <label className="block text-xs text-muted-foreground mb-2">Ø Verzögerung (Tage)</label>
+                <label className="block text-[11px] text-muted-foreground/70 mb-1.5">Ø Verzögerung (Tage)</label>
                 <input type="number" value={delayDays} onChange={e => setDelayDays(Number(e.target.value) || 0)} className={inputClass} />
               </div>
             </div>
 
-            {/* Result */}
-            <div className="rounded-xl border border-warning/20 bg-warning/[0.04] p-6 text-center">
+            <div className="rounded-xl border border-warning/15 bg-warning/[0.03] p-5 text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-warning animate-pulse" />
-                <span className="text-xs text-muted-foreground">Ihre Verzögerungskosten pro Monat</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+                <span className="text-[11px] text-muted-foreground/60">Verzögerungskosten pro Monat</span>
               </div>
-              <div className="text-4xl md:text-5xl font-bold text-warning tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <div className="text-3xl md:text-4xl font-bold text-warning tabular-nums font-mono">
                 €{monthlyCost.toLocaleString("de-DE")}
               </div>
-              <p className="text-sm text-muted-foreground mt-3">
-                Decivio Professional kostet €149/Monat — ROI nach weniger als 1 Tag vermiedener Verzögerung.
+              <p className="text-[12px] text-muted-foreground/60 mt-2">
+                Decivio Professional: €149/Monat — ROI nach weniger als 1 Tag.
               </p>
             </div>
           </div>
