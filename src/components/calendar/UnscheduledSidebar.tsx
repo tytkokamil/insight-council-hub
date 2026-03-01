@@ -20,8 +20,8 @@ const UnscheduledSidebar = memo(({
   if (decisions.length === 0) return null;
 
   return (
-    <div className="border border-border rounded-xl bg-card overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
+    <div className="border border-border/60 rounded-xl bg-card overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-border/60 flex items-center gap-2">
         <CalendarOff className="w-3.5 h-3.5 text-muted-foreground" />
         <span className="text-xs font-semibold text-muted-foreground">{t("cal.noDeadline")}</span>
         <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">{decisions.length}</span>
@@ -33,7 +33,7 @@ const UnscheduledSidebar = memo(({
           ))}
         </div>
       </ScrollArea>
-      <div className="px-3 py-1.5 border-t border-border">
+      <div className="px-3 py-1.5 border-t border-border/60">
         <p className="text-[10px] text-muted-foreground italic">{t("cal.dragToAssign")}</p>
       </div>
     </div>
