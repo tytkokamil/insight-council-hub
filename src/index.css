@@ -32,14 +32,16 @@
     --accent: 175 40% 92%;
     --accent-foreground: 175 60% 28%;
 
-    --destructive: 0 84% 55%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 152 60% 38%;
+    --success: 160 60% 45%;
     --success-foreground: 0 0% 98%;
 
-    --warning: 38 92% 48%;
+    --warning: 38 92% 50%;
     --warning-foreground: 38 80% 18%;
+
+    --neutral: 215 16% 57%;
 
     --border: 225 16% 88%;
     --input: 225 16% 88%;
@@ -115,11 +117,13 @@
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 98%;
 
-    --success: 152 55% 52%;
+    --success: 160 55% 52%;
     --success-foreground: 0 0% 98%;
 
     --warning: 38 90% 58%;
     --warning-foreground: 38 80% 18%;
+
+    --neutral: 215 16% 60%;
 
     --border: 228 12% 22%;
     --input: 228 12% 22%;
@@ -184,14 +188,16 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-size: 13px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', 'Inter', sans-serif;
-    font-weight: 600;
-    letter-spacing: -0.025em;
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 
   /* Focus visible – clear ring for keyboard users */
@@ -291,14 +297,28 @@
   .section-gap-sm { @apply space-y-4; }
   .section-gap-lg { @apply space-y-8; }
 
-  /* Widget grid – consistent dashboard/bento layouts */
+  /* Widget grid – consistent dashboard/bento layouts (12px gap) */
   .widget-grid {
-    @apply grid gap-4 md:gap-5;
+    @apply grid gap-3;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
-  .widget-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5; }
-  .widget-grid-3 { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5; }
-  .widget-grid-4 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5; }
+  .widget-grid-2 { @apply grid grid-cols-1 md:grid-cols-2 gap-3; }
+  .widget-grid-3 { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3; }
+  .widget-grid-4 { @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3; }
+
+  /* Typography utilities */
+  .label-caps {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .meta-text {
+    font-size: 11px;
+    color: hsl(var(--muted-foreground));
+  }
 
   /* Data display – monospace */
   .data-value {
