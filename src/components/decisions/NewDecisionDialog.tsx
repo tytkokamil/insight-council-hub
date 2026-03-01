@@ -18,6 +18,7 @@ import {
 import ApplyLearningPanel from "./ApplyLearningPanel";
 import TemplateBrowserModal from "./TemplateBrowserModal";
 import ContextualAINudges from "./ContextualAINudges";
+import AiSuggestionsPanel from "./AiSuggestionsPanel";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
@@ -637,7 +638,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="glass-card border-border max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="glass-card border-border max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             {step === "form" && selectedTemplate && (
@@ -795,6 +796,27 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               title={title}
               description={description}
               hasStakeholders={!!teamId && allApprovalSteps.length > 0}
+            />
+
+            {/* AI Suggestions Panel */}
+            <AiSuggestionsPanel
+              title={title}
+              description={description}
+              category={category}
+              priority={priority}
+              onApplyTitle={(t) => setTitle(t)}
+              onApplyTemplate={(templateName) => {
+                const match = availableTemplates.find(tpl =>
+                  tpl.name.toLowerCase().includes(templateName.toLowerCase()) ||
+                  templateName.toLowerCase().includes(tpl.name.toLowerCase())
+                );
+                if (match) applyTemplate(match);
+              }}
+              onApplySlaDays={(days) => {
+                const due = new Date();
+                due.setDate(due.getDate() + days);
+                setDueDate(due.toISOString().split("T")[0]);
+              }}
             />
 
             {/* Apply Learning Panel */}

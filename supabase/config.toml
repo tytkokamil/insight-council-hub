@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.daily-engine]
 verify_jwt = false
+
+[functions.decision-suggestions]
+verify_jwt = false
