@@ -352,9 +352,19 @@ const SettingsPage = () => {
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.onboarding")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.onboardingDesc")}</p>
-                <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
-                  <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
+                    <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={async () => {
+                    if (!user) return;
+                    await supabase.from("profiles").update({ onboarding_completed: false } as any).eq("user_id", user.id);
+                    toast({ title: "Onboarding zurückgesetzt", description: "Du wirst beim nächsten Laden zum Welcome-Wizard weitergeleitet." });
+                    setTimeout(() => window.location.reload(), 1000);
+                  }} className="gap-1.5">
+                    <RotateCcw className="w-3 h-3" />Onboarding zurücksetzen
+                  </Button>
+                </div>
               </section>
             </div>
           )}
