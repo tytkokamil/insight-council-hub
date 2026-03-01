@@ -99,7 +99,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         {type === "pattern" && insights && (
           <div className="space-y-4">
             {insights.deep_patterns?.map((p: any, i: number) => (
-              <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border">
+              <div key={i} className="p-3 rounded-lg bg-muted/20 border border-border/60">
                 <div className="flex items-start gap-2">
                   <Lightbulb className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
                   <div className="min-w-0">
@@ -177,7 +177,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
               <p className="text-sm text-muted-foreground">{insights.process_health_summary}</p>
             )}
             {insights.root_causes?.map((rc: any, i: number) => (
-              <div key={i} className={`p-3 rounded-lg border ${rc.priority === "critical" ? "border-destructive/30 bg-destructive/5" : rc.priority === "high" ? "border-warning/30 bg-warning/5" : "border-border bg-muted/5"}`}>
+              <div key={i} className={`p-3 rounded-lg border ${rc.priority === "critical" ? "border-destructive/30 bg-destructive/5" : rc.priority === "high" ? "border-warning/30 bg-warning/5" : "border-border/60 bg-muted/5"}`}>
                 <div className="flex items-start gap-2">
                   <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${rc.priority === "critical" ? "text-destructive" : rc.priority === "high" ? "text-warning" : "text-muted-foreground"}`} />
                   <div>

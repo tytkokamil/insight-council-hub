@@ -188,7 +188,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
               onDragEnter={handleDragEnter} onDragLeave={handleDragLeave}
               onDragOver={e => e.preventDefault()} onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border hover:border-primary/50 hover:bg-muted/20"}`}
+              className={`relative border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${isDragging ? "border-primary bg-primary/5 scale-[1.01]" : "border-border/60 hover:border-primary/50 hover:bg-muted/20"}`}
             >
               <input ref={fileInputRef} type="file" className="hidden" accept=".csv,.xlsx,.xls,.txt,.tsv,.pdf" onChange={handleFileSelect} />
               <div className="flex flex-col items-center gap-3">
@@ -208,7 +208,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/10">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-muted/10">
               <div className="flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-primary" />
                 <div>
@@ -254,9 +254,9 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
             </div>
             <div className="space-y-2 max-h-[40vh] overflow-y-auto">
               {items.map((d, i) => (
-                <div key={i} className={`rounded-lg border p-3 transition-all ${d.selected ? "border-primary/30 bg-background" : "border-border bg-muted/20 opacity-60"}`}>
+                <div key={i} className={`rounded-lg border p-3 transition-all ${d.selected ? "border-primary/30 bg-background" : "border-border/60 bg-muted/20 opacity-60"}`}>
                   <div className="flex items-start gap-2">
-                    <button onClick={() => toggleItem(i)} className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${d.selected ? "bg-primary border-primary text-primary-foreground" : "border-border"}`}>
+                    <button onClick={() => toggleItem(i)} className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${d.selected ? "bg-primary border-primary text-primary-foreground" : "border-border/60"}`}>
                       {d.selected && <Check className="w-2.5 h-2.5" />}
                     </button>
                     <div className="flex-1 min-w-0 space-y-1.5">

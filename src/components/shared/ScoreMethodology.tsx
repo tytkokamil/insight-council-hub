@@ -33,7 +33,7 @@ const ScoreMethodology = ({ title, description, items, source }: ScoreMethodolog
         <TooltipContent side="bottom" align="start" className="max-w-xs p-3 space-y-2">
           <p className="text-xs font-semibold">{title} – {t("shared.methodology")}</p>
           <p className="text-[11px] text-muted-foreground leading-relaxed">{description}</p>
-          <div className="space-y-1.5 pt-1 border-t border-border">
+          <div className="space-y-1.5 pt-1 border-t border-border/40">
             {items.map((item, i) => (
               <div key={i} className="text-[11px]">
                 <span className="font-medium">{item.label}</span>
@@ -43,7 +43,7 @@ const ScoreMethodology = ({ title, description, items, source }: ScoreMethodolog
             ))}
           </div>
           {source && (
-            <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border">
+            <p className="text-[10px] text-muted-foreground/70 pt-1 border-t border-border/40">
               {t("shared.source")}: {source}
             </p>
           )}
