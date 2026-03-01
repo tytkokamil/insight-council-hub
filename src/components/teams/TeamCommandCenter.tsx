@@ -110,7 +110,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
   }, [decisions]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
 
       {/* SECTION 1: Team Health Overview */}
       <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
@@ -147,7 +147,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
             { label: t("teamCmd.velocity30d"), value: velocity, color: "text-success", icon: TrendingUp },
             { label: t("teamCmd.openRisks"), value: risks.length, color: risks.length > 0 ? "text-warning" : "text-muted-foreground", icon: ShieldAlert },
           ].map((kpi) => (
-            <div key={kpi.label} className="px-4 py-3 text-center">
+            <div key={kpi.label} className="px-4 py-3 text-center min-h-[90px] flex flex-col justify-center">
               <kpi.icon className={cn("w-4 h-4 mx-auto mb-1", kpi.color)} />
               <p className={cn("text-xl font-bold", kpi.color)}>{kpi.value}</p>
               <p className="text-[10px] text-muted-foreground">{kpi.label}</p>
@@ -219,8 +219,10 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                         <TooltipTrigger>
                           <span className={cn(
                             "text-xs font-semibold",
-                            d.ai_risk_score >= 70 ? "text-destructive" : d.ai_risk_score >= 40 ? "text-warning" : "text-success"
-                          )}>{d.ai_risk_score}%</span>
+                            d.ai_risk_score >= 60 ? "text-destructive" : d.ai_risk_score >= 31 ? "text-warning" : "text-success"
+                          )} style={{
+                            color: d.ai_risk_score >= 60 ? "#EF4444" : d.ai_risk_score >= 31 ? "#F59E0B" : "#10B981"
+                          }}>{d.ai_risk_score}%</span>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">{t("teamCmd.riskScore")}</TooltipContent>
                       </Tooltip>
@@ -371,13 +373,26 @@ const TeamCommandCenter = ({ teamId }: Props) => {
               ) : (
                 <div className="divide-y divide-border/60">
                   {goals.slice(0, 4).map((g) => {
-                    const progress = g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
+                    const isInverse = /incident|error|minim|zero|null/i.test(g.title);
+                    let progress: number;
+                    if (isInverse) {
+                      progress = (g.target_value === 0 && (g.current_value ?? 0) === 0) ? 100
+                        : g.target_value ? Math.max(0, Math.round(((g.target_value - (g.current_value ?? 0)) / g.target_value) * 100))
+                        : 0;
+                    } else {
+                      progress = g.target_value ? Math.round(((g.current_value ?? 0) / g.target_value) * 100) : 0;
+                    }
                     return (
                       <div key={g.id} className="px-5 py-3">
                         <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-xs font-medium truncate">{g.title}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-medium truncate">{g.title}</span>
+                            {isInverse && (
+                              <Badge variant="outline" className="text-[9px] text-muted-foreground border-border/60 shrink-0">Ziel: minimieren</Badge>
+                            )}
+                          </div>
                           <span className={cn(
-                            "text-xs font-bold",
+                            "text-xs font-bold shrink-0",
                             progress >= 80 ? "text-success" : progress >= 40 ? "text-warning" : "text-muted-foreground"
                           )}>{progress}%</span>
                         </div>
