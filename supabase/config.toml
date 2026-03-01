@@ -84,5 +84,8 @@ verify_jwt = false
 [functions.dispatch-webhook]
 verify_jwt = false
 
+[functions.external-review]
+verify_jwt = false
+
 [functions.predictive-sla]
 verify_jwt = false

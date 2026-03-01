@@ -349,6 +349,12 @@
     "webhookPayloadInfo": "Payload-Format:",
     "webhookHmacInfo": "Signiert mit HMAC-SHA256 im Header X-Decivio-Signature"
   },
+  "externalReview": {
+    "expiredTitle": "Link abgelaufen",
+    "expiredDesc": "Dieser Review-Link ist nicht mehr gültig (30-Tage-Limit).",
+    "invalidTitle": "Ungültiger Link",
+    "invalidDesc": "Bitte verwenden Sie den Link aus der Einladungs-E-Mail."
+  },
   "common": {
     "skipToContent": "Zum Inhalt springen",
     "openNav": "Navigation öffnen",
@@ -432,6 +438,19 @@
     "critical": "Kritisch"
   },
   "decisions": {
+    "externalInviteTitle": "Externen Reviewer einladen",
+    "externalInviteDesc": "Generieren Sie einen sicheren Einmal-Link für einen Reviewer ohne Decivio-Account.",
+    "externalForDecision": "Für Entscheidung:",
+    "externalName": "Name des Reviewers",
+    "externalNamePlaceholder": "z.B. Dr. Max Müller",
+    "externalEmail": "E-Mail-Adresse",
+    "externalGenerate": "Link generieren",
+    "externalLinkReady": "Einladungslink erstellt!",
+    "externalShareLink": "Link teilen (per E-Mail oder Chat):",
+    "externalLinkHint": "Der Reviewer kann ohne Account kommentieren, genehmigen oder ablehnen. Link läuft nach 30 Tagen ab.",
+    "externalDone": "Fertig",
+    "externalInviteCreated": "Externer Review-Link erstellt.",
+    "externalInviteFailed": "Link konnte nicht erstellt werden.",
     "title": "Entscheidungen",
     "subtitle": "{{total}} Entscheidungen",
     "countShown": "{{total}} Entscheidungen · {{shown}} angezeigt",

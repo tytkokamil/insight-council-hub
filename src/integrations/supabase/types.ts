@@ -1182,6 +1182,59 @@ export type Database = {
         }
         Relationships: []
       }
+      external_review_tokens: {
+        Row: {
+          acted_at: string | null
+          action_taken: string | null
+          created_at: string
+          decision_id: string
+          expires_at: string
+          feedback: string | null
+          id: string
+          invited_by: string
+          reviewer_email: string
+          reviewer_name: string
+          status: string
+          token: string
+        }
+        Insert: {
+          acted_at?: string | null
+          action_taken?: string | null
+          created_at?: string
+          decision_id: string
+          expires_at?: string
+          feedback?: string | null
+          id?: string
+          invited_by: string
+          reviewer_email: string
+          reviewer_name: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          acted_at?: string | null
+          action_taken?: string | null
+          created_at?: string
+          decision_id?: string
+          expires_at?: string
+          feedback?: string | null
+          id?: string
+          invited_by?: string
+          reviewer_email?: string
+          reviewer_name?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_review_tokens_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           category: string

@@ -6,7 +6,7 @@ import {
   ThumbsUp, ThumbsDown, PlayCircle, ChevronUp, Ban, Replace,
   Brain, DollarSign, Target, Users, Link2, History, Shield,
   ChevronDown, Lightbulb, FileText, MessageSquare, AlertTriangle,
-  CheckCircle2, Circle,
+  CheckCircle2, Circle, UserPlus,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +46,7 @@ import DependenciesPanel from "@/components/decisions/DependenciesPanel";
 import PostImplementationReview from "@/components/decisions/PostImplementationReview";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import ArchiveSummaryBox from "@/components/decisions/ArchiveSummaryBox";
+import InviteExternalReviewerDialog from "@/components/decisions/InviteExternalReviewerDialog";
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
@@ -112,6 +113,7 @@ const DecisionDetail = () => {
   const [saving, setSaving] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showExternalInvite, setShowExternalInvite] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   const [showReasonDialog, setShowReasonDialog] = useState(false);
   const [showSignatureDialog, setShowSignatureDialog] = useState(false);
@@ -750,9 +752,14 @@ const DecisionDetail = () => {
           {/* Review Panel */}
           <Card>
             <CardContent className="p-4">
-              <p className="text-xs font-semibold mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-muted-foreground" /> {t("decisionDetail.reviewApproval")}
-              </p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-muted-foreground" /> {t("decisionDetail.reviewApproval")}
+                </p>
+                <Button variant="ghost" size="sm" className="text-[10px] gap-1 h-6" onClick={() => setShowExternalInvite(true)}>
+                  <UserPlus className="w-3 h-3" /> {t("decisions.externalInviteTitle")}
+                </Button>
+              </div>
               <ReviewPanel decision={decision} onUpdated={invalidate} />
             </CardContent>
           </Card>
@@ -830,6 +837,7 @@ const DecisionDetail = () => {
         <>
           <EditDecisionDialog decision={decision} open={showEdit} onOpenChange={setShowEdit} onUpdated={invalidate} />
           <DeleteDecisionDialog decision={decision} open={showDelete} onOpenChange={setShowDelete} onDeleted={() => { invalidate(); navigate("/decisions"); }} />
+          <InviteExternalReviewerDialog decisionId={decision.id} decisionTitle={decision.title} open={showExternalInvite} onOpenChange={setShowExternalInvite} />
         </>
       )}
 
