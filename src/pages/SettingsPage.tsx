@@ -19,6 +19,7 @@ import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
 import OrgCodDefaultsPanel from "@/components/settings/OrgCodDefaultsPanel";
+import IndustryConfigSection from "@/components/settings/IndustryConfigSection";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -379,6 +380,10 @@ const SettingsPage = () => {
                   </div>
                 </div>
               </section>
+
+              <hr className="border-border" />
+
+              <IndustryConfigSection />
 
               <hr className="border-border" />
 
