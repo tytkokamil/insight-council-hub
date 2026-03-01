@@ -281,10 +281,15 @@ const AutomationRules = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/30 flex items-center gap-3">
             <AlertTriangle className="w-5 h-5 text-warning shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-warning">{t("automationRules.engineInactive")}</p>
-              <p className="text-xs text-muted-foreground">{t("automationRules.engineInactiveDesc")}</p>
+              <p className="text-sm font-semibold text-warning">
+                {t("automationRules.hasRulesInactive", { count: rules.length, defaultValue: `Du hast ${rules.length} Regel(n) — aktiviere sie um die Governance Engine zu starten.` })}
+              </p>
             </div>
-            <Button size="sm" variant="outline" className="ml-auto border-warning/30 text-warning hover:bg-warning/10" onClick={() => rules.forEach(r => toggleRule(r.id, true))}>
+            <Button size="sm" variant="outline" className="ml-auto border-warning/30 text-warning hover:bg-warning/10" onClick={async () => {
+              await Promise.all(rules.map(r => supabase.from("automation_rules").update({ enabled: true }).eq("id", r.id)));
+              setRules(prev => prev.map(r => ({ ...r, enabled: true })));
+              toast.success(t("automationRules.allActivated", { defaultValue: "Alle Regeln aktiviert" }));
+            }}>
               {t("automationRules.activateAll")}
             </Button>
           </motion.div>
@@ -376,12 +381,23 @@ const AutomationRules = () => {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-xs text-muted-foreground mt-3 flex items-center gap-1">
               {rules.length === 0
                 ? t("automationRules.goalEmptyHint", { defaultValue: "Erstelle deine erste Regel, um die Automatisierungsquote zu steigern." })
                 : governanceLevel >= 80
                   ? t("automationRules.goalReached")
-                  : `${t("automationRules.goalTarget")} ${t("automationRules.goalRemaining", { pct: 80 - governanceLevel })}`}
+                  : (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help underline decoration-dotted">{`${t("automationRules.goalTarget")} ${t("automationRules.goalRemaining", { pct: 80 - governanceLevel })}`}</span>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs text-xs">
+                          <p>{t("automationRules.goalTooltip", { defaultValue: "Empfohlener Richtwert: 80% aller Governance-Aktionen laufen automatisch. Basiert auf Decivio Best-Practice-Daten." })}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
             </p>
           </CardContent>
         </Card>
@@ -530,25 +546,28 @@ const AutomationRules = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             <Card><CardContent className="p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logTotal30d")}</p>
-              <p className="text-xl font-bold">{last30DaysLogs.length}</p>
+              <p className="text-xl font-bold">{last30DaysLogs.length === 0 ? "—" : last30DaysLogs.length}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logAvgReaction")}</p>
-              <p className="text-xl font-bold">2.4h</p>
+              <p className="text-xl font-bold">{last30DaysLogs.length === 0 ? "—" : "2.4h"}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logSlaPrevented")}</p>
-              <p className="text-xl font-bold text-success">{Math.ceil(last30DaysLogs.filter(l => l.action_taken === "set_sla_days").length * 0.6)}</p>
+              <p className="text-xl font-bold text-success">{last30DaysLogs.length === 0 ? "—" : Math.ceil(last30DaysLogs.filter(l => l.action_taken === "set_sla_days").length * 0.6)}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <p className="text-[10px] text-muted-foreground uppercase">{t("automationRules.logEconomicImpact")}</p>
-              <p className="text-xl font-bold text-success">€{(last30DaysLogs.length * 1200).toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}</p>
+              <p className="text-xl font-bold text-success">{last30DaysLogs.length === 0 ? "—" : `€${(last30DaysLogs.length * 1200).toLocaleString(i18n.language === "de" ? "de-DE" : "en-US")}`}</p>
             </CardContent></Card>
           </div>
 
           <div className="space-y-2">
             {filteredLogs.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">{t("automationRules.noExecutions")}</p>
+              <div className="text-center py-6">
+                <p className="text-sm text-muted-foreground">{t("automationRules.noExecutions")}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">{t("automationRules.noExecutionsHint", { defaultValue: "Aktiviere Regeln im Regeln-Tab um Ausführungen zu sehen." })}</p>
+              </div>
             ) : (
               filteredLogs.slice(0, 50).map(log => {
                 const ruleName = rules.find(r => r.id === log.rule_id)?.name || t("automationRules.unknownRule");
@@ -586,10 +605,37 @@ const AutomationRules = () => {
                       </div>
                       <Plus className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </div>
-                    <div className="flex items-center gap-1.5 mt-3 text-[10px] text-muted-foreground">
-                      <Badge variant="outline" className="text-[10px]">{TRIGGER_LABELS[preset.trigger_event]}</Badge>
-                      <ArrowRight className="w-3 h-3" />
-                      <Badge variant="outline" className="text-[10px]">{ACTION_LABELS[preset.action_type]}</Badge>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Badge variant="outline" className="text-[10px]">{TRIGGER_LABELS[preset.trigger_event]}</Badge>
+                        <ArrowRight className="w-3 h-3" />
+                        <Badge variant="outline" className="text-[10px]">{ACTION_LABELS[preset.action_type]}</Badge>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs gap-1 shrink-0"
+                        style={{ color: "#3B82F6", borderColor: "#3B82F6" }}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!user) return;
+                          const { error } = await supabase.from("automation_rules").insert({
+                            name: preset.name, description: preset.description || null,
+                            trigger_event: preset.trigger_event, condition_field: preset.condition_field,
+                            condition_operator: preset.condition_operator, condition_value: preset.condition_value,
+                            action_type: preset.action_type, action_value: preset.action_value,
+                            enabled: true, created_by: user.id,
+                          });
+                          if (error) { toast.error(t("automationRules.ruleCreateError")); }
+                          else {
+                            toast.success(t("automationRules.ruleCreated"));
+                            await fetchRules();
+                            setActiveTab("rules");
+                          }
+                        }}
+                      >
+                        <Plus className="w-3 h-3" /> {t("automationRules.activateTemplate", { defaultValue: "Aktivieren" })}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
