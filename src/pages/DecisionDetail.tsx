@@ -8,6 +8,8 @@ import {
   ChevronDown, Lightbulb, FileText, MessageSquare, AlertTriangle,
   CheckCircle2, Circle,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +26,6 @@ import { useTranslatedLabels } from "@/lib/labels";
 import { differenceInDays, differenceInHours, format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
 import { useRiskDecisionLinks } from "@/hooks/useRisks";
 import WatchlistButton from "@/components/decisions/WatchlistButton";
 import DecisionLifecycleBar from "@/components/decisions/DecisionLifecycleBar";
@@ -577,17 +578,8 @@ const DecisionDetail = () => {
 
           <Separator />
 
-          {/* ═══ DISCUSSION ═══ */}
-          <Section title={t("decisionDetail.discussionSection")} icon={MessageSquare}>
-            <DiscussionPanel decisionId={decision.id} />
-          </Section>
-
-          <Separator />
-
-          {/* ═══ 7. AUDIT TRAIL ═══ */}
-          <Section title={t("decisionDetail.auditSection")} icon={History} defaultOpen={false}>
-            <AuditTrailPanel decisionId={decision.id} />
-          </Section>
+          {/* ═══ DISCUSSION & AUDIT TRAIL TABS ═══ */}
+          <DecisionThreadTabs decisionId={decision.id} />
 
           <Separator />
 
@@ -856,6 +848,48 @@ const DecisionDetail = () => {
         loading={saving}
       />
     </AppLayout>
+  );
+};
+
+/* ────────────────── Decision Thread Tabs ────────────────── */
+const DecisionThreadTabs = ({ decisionId }: { decisionId: string }) => {
+  const { t } = useTranslation();
+  const { data: commentCount = 0 } = useQuery({
+    queryKey: ["comment-count", decisionId],
+    queryFn: async () => {
+      const { count } = await supabase.from("comments").select("*", { count: "exact", head: true }).eq("decision_id", decisionId);
+      return count || 0;
+    },
+    staleTime: 15_000,
+  });
+
+  return (
+    <Tabs defaultValue="details" className="w-full">
+      <TabsList className="w-full grid grid-cols-3">
+        <TabsTrigger value="details" className="text-xs gap-1.5">
+          <FileText className="w-3.5 h-3.5" /> {t("decisionDetail.details")}
+        </TabsTrigger>
+        <TabsTrigger value="discussion" className="text-xs gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5" /> {t("decisionDetail.discussionSection")}
+          {commentCount > 0 && (
+            <Badge variant="secondary" className="ml-1 text-[10px] h-4 min-w-4 px-1">{commentCount}</Badge>
+          )}
+        </TabsTrigger>
+        <TabsTrigger value="audit" className="text-xs gap-1.5">
+          <History className="w-3.5 h-3.5" /> Audit Trail
+        </TabsTrigger>
+      </TabsList>
+      <TabsContent value="details">
+        {/* Details content is rendered outside tabs in the main layout */}
+        <p className="text-sm text-muted-foreground py-4 text-center">{t("decisionDetail.detailsAbove")}</p>
+      </TabsContent>
+      <TabsContent value="discussion">
+        <DiscussionPanel decisionId={decisionId} />
+      </TabsContent>
+      <TabsContent value="audit">
+        <AuditTrailPanel decisionId={decisionId} />
+      </TabsContent>
+    </Tabs>
   );
 };
 

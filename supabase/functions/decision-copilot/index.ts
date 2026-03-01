@@ -72,6 +72,23 @@ serve(async (req) => {
     const userId = extractUserId(req);
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
+    // Thread summary mode
+    if (body.mode === "thread_summary") {
+      const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: comments } = await client.from("comments").select("content, created_at, profiles!comments_user_id_fkey(full_name)").eq("decision_id", body.decisionId).order("created_at", { ascending: true });
+      const { data: dec } = await client.from("decisions").select("title, description").eq("id", body.decisionId).single();
+      if (!comments?.length || comments.length < 5) return new Response(JSON.stringify({ summary: null }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const commentText = comments.map((c: any) => `${c.profiles?.full_name || "?"}: ${c.content}`).join("\n");
+      const msgs = [
+        { role: "system", content: "Fasse die bisherige Diskussion in 2-3 Sätzen zusammen. Nenne die wichtigsten Punkte und offene Fragen. Antworte auf Deutsch." },
+        { role: "user", content: `Entscheidung: ${dec?.title}\n\nDiskussion (${comments.length} Kommentare):\n${commentText}` },
+      ];
+      const result = await callProvider(settings, msgs, [], undefined);
+      const text = typeof result === "string" ? result : JSON.stringify(result);
+      return new Response(JSON.stringify({ summary: text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     // Free-form prompt mode (used by Meeting Mode)
     if (body.prompt && !body.decision) {
       const messages = [

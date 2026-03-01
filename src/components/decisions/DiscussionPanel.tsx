@@ -3,10 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfiles } from "@/hooks/useDecisions";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageSquare, AlertTriangle, ThumbsUp, AtSign } from "lucide-react";
+import { MessageSquare, AlertTriangle, ThumbsUp, AtSign, Paperclip, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 
 type CommentType = "comment" | "feedback" | "risk_flag";
 
@@ -31,14 +31,63 @@ const RenderContent = ({ content }: { content: string }) => {
   );
 };
 
+/** AI-generated thread summary shown when >5 comments */
+const ThreadSummary = ({ decisionId, commentCount }: { decisionId: string; commentCount: number }) => {
+  const { t } = useTranslation();
+  const [summary, setSummary] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (commentCount < 5) return;
+    const cached = sessionStorage.getItem(`thread-summary-${decisionId}`);
+    if (cached) { setSummary(cached); return; }
+
+    setLoading(true);
+    supabase.functions.invoke("decision-copilot", {
+      body: {
+        mode: "thread_summary",
+        decisionId,
+      },
+    }).then(({ data }) => {
+      const text = data?.summary || null;
+      if (text) {
+        setSummary(text);
+        sessionStorage.setItem(`thread-summary-${decisionId}`, text);
+      }
+    }).finally(() => setLoading(false));
+  }, [decisionId, commentCount]);
+
+  if (commentCount < 5) return null;
+  if (loading) return (
+    <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
+      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+      <p className="text-xs text-primary">{t("discussion.generatingSummary")}</p>
+    </div>
+  );
+  if (!summary) return null;
+
+  return (
+    <div className="p-3 rounded-lg bg-primary/5 border border-primary/15 mb-3">
+      <div className="flex items-center gap-1.5 mb-1">
+        <Sparkles className="w-3.5 h-3.5 text-primary" />
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-primary">{t("discussion.threadSummary")}</p>
+      </div>
+      <p className="text-xs text-foreground leading-relaxed">{summary}</p>
+    </div>
+  );
+};
+
 const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const { data: profiles = [] } = useProfiles();
+  const queryClient = useQueryClient();
   const [comments, setComments] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [type, setType] = useState<CommentType>("comment");
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const typeConfig = useMemo(() => ({
     comment: { label: t("discussion.comment"), icon: MessageSquare, color: "text-primary" },
@@ -115,16 +164,37 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
   const handleSubmit = async () => {
     if (!content.trim() || !user) return;
     setLoading(true);
+
+    // Upload file if present
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
+    if (file) {
+      const ext = file.name.split(".").pop();
+      const path = `comments/${decisionId}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(path, file);
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+        fileUrl = urlData.publicUrl;
+        fileName = file.name;
+      }
+    }
+
+    const contentWithFile = fileUrl
+      ? `${content.trim()}\n\n📎 [${fileName}](${fileUrl})`
+      : content.trim();
+
     await supabase.from("comments").insert({
       decision_id: decisionId,
       user_id: user.id,
-      content: content.trim(),
+      content: contentWithFile,
       type: type as any,
     });
     setContent("");
     setType("comment");
+    setFile(null);
     setMentionQuery(null);
     await fetchComments();
+    queryClient.invalidateQueries({ queryKey: ["comment-count", decisionId] });
     setLoading(false);
   };
 
@@ -132,6 +202,9 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
 
   return (
     <div className="space-y-4 mt-4">
+      {/* AI Thread Summary */}
+      <ThreadSummary decisionId={decisionId} commentCount={comments.length} />
+
       <div className="space-y-3 max-h-60 overflow-y-auto">
         {comments.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">{t("discussion.noComments")}</p>
@@ -202,10 +275,28 @@ const DiscussionPanel = ({ decisionId }: { decisionId: string }) => {
               </div>
             )}
           </div>
-          <Button onClick={handleSubmit} disabled={loading || !content.trim()} className="self-end">
-            {t("discussion.send")}
-          </Button>
+          <div className="flex flex-col gap-1 self-end">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => fileInputRef.current?.click()}>
+              <Paperclip className="w-3.5 h-3.5" />
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading || !content.trim()} size="sm">
+              {t("discussion.send")}
+            </Button>
+          </div>
         </div>
+        {file && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1">
+            <Paperclip className="w-3 h-3" />
+            <span className="truncate">{file.name}</span>
+            <button className="text-destructive hover:underline ml-auto text-[10px]" onClick={() => setFile(null)}>×</button>
+          </div>
+        )}
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
           <AtSign className="w-3 h-3" /> {t("discussion.mentionHint")}
         </p>

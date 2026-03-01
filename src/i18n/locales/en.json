@@ -1466,7 +1466,8 @@
   },
   "auditTrail": {
     "noChanges": "No changes recorded yet.",
-    "system": "System"
+    "system": "System",
+    "commented": "commented"
   },
   "discussion": {
     "comment": "Comment",
@@ -1477,7 +1478,9 @@
     "placeholder": "Write a comment... @Name to mention",
     "send": "Send",
     "mentionHint": "Type @ to mention people",
-    "mentionHeading": "Mention people"
+    "mentionHeading": "Mention people",
+    "threadSummary": "Discussion Summary",
+    "generatingSummary": "Generating summary…"
   },
   "impactTracker": {
     "notImplemented": "Impact tracking is available once the decision has been implemented.",
@@ -4424,6 +4427,7 @@
     "depsSection": "Dependencies & Tasks",
     "discussionSection": "Discussion",
     "auditSection": "Activity & Audit Trail",
+    "detailsAbove": "Detail information is shown above on this page.",
     "impactSection": "Impact Tracking",
     "pirSection": "Post-Implementation Review",
     "stakeholderGov": "Stakeholder & Governance",
