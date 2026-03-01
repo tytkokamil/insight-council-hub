@@ -5050,5 +5050,19 @@
     "escalated": "Decision has been escalated",
     "escalateError": "Escalation failed"
   },
+  "terminology": {
+    "title": "Language & Terminology",
+    "description": "Customize terms for your organization. Changes apply everywhere in the application.",
+    "reset": "Reset to defaults",
+    "resetDone": "Terminology reset to defaults",
+    "labels": {
+      "decision": "Decision",
+      "reviewer": "Reviewer",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "open": "Open",
+      "team": "Team"
+    }
+  },
   "_end": true
 }

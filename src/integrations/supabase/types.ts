@@ -2193,6 +2193,41 @@ export type Database = {
           },
         ]
       }
+      terminology: {
+        Row: {
+          created_at: string
+          custom_term: string
+          default_term: string
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_term: string
+          default_term: string
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_term?: string
+          default_term?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "terminology_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_ai_settings: {
         Row: {
           api_key: string | null

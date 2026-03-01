@@ -8,6 +8,7 @@ import { TeamProvider } from "@/hooks/useTeamContext";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { FeatureFlagsProvider } from "@/hooks/useFeatureFlags";
 import { GuidedModeProvider } from "@/hooks/useGuidedMode";
+import { TerminologyProvider } from "@/hooks/useTerminology";
 import { PermissionsProvider } from "@/hooks/usePermissions";
 import GlobalErrorBoundary from "@/components/shared/GlobalErrorBoundary";
 import { HelmetProvider } from "react-helmet-async";
@@ -69,11 +70,13 @@ const App = () => (
             <PermissionsProvider>
             <GuidedModeProvider>
             <TeamProvider>
+            <TerminologyProvider>
             <Routes>
               {publicRoutes}
               {protectedRoutes}
               {catchAllRoute}
             </Routes>
+            </TerminologyProvider>
             </TeamProvider>
             </GuidedModeProvider>
             </PermissionsProvider>
