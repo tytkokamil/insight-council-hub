@@ -27,7 +27,7 @@ const SubNav = <T extends string>({ items, active, onChange, layoutId = "subnav"
           <button
             key={item.key}
             onClick={() => onChange(item.key)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors relative whitespace-nowrap rounded-t-md ${
+            className={`flex items-center gap-1.5 px-2.5 py-2 text-xs font-medium transition-colors relative whitespace-nowrap rounded-t-md ${
               isActive
                 ? "text-foreground"
                 : "text-muted-foreground hover:text-foreground"
