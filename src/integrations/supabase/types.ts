@@ -1809,6 +1809,69 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      referral_conversions: {
+        Row: {
+          activated_at: string | null
+          commission_amount: number
+          commission_released_at: string | null
+          created_at: string
+          id: string
+          payout_month: string | null
+          plan: string
+          referred_email: string | null
+          referred_user_id: string | null
+          referrer_id: string
+          status: string
+        }
+        Insert: {
+          activated_at?: string | null
+          commission_amount?: number
+          commission_released_at?: string | null
+          created_at?: string
+          id?: string
+          payout_month?: string | null
+          plan?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_id: string
+          status?: string
+        }
+        Update: {
+          activated_at?: string | null
+          commission_amount?: number
+          commission_released_at?: string | null
+          created_at?: string
+          id?: string
+          payout_month?: string | null
+          plan?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       review_delegations: {
         Row: {
           active: boolean
