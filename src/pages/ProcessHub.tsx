@@ -6,6 +6,7 @@ import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AiInsightPanel from "@/components/shared/AiInsightPanel";
+import AnomalyCards from "@/components/shared/AnomalyCards";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Radar, Flame, Activity, Shield, Users, Clock, TrendingUp, TrendingDown,
@@ -415,6 +416,11 @@ const ProcessHub = () => {
           </Card>
         ))}
       </div>
+
+      {/* ═══════════════════════════════════════ */}
+      {/* 1b) ANOMALY DETECTION */}
+      {/* ═══════════════════════════════════════ */}
+      <AnomalyCards className="mb-8" />
 
       {/* ═══════════════════════════════════════ */}
       {/* 2) BOTTLENECK INTELLIGENCE */}
