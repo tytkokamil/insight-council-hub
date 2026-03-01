@@ -1413,6 +1413,7 @@ export type Database = {
           decision_count: number | null
           full_name: string | null
           id: string
+          industry: string | null
           org_id: string | null
           progressive_override: boolean | null
           updated_at: string
@@ -1425,6 +1426,7 @@ export type Database = {
           decision_count?: number | null
           full_name?: string | null
           id?: string
+          industry?: string | null
           org_id?: string | null
           progressive_override?: boolean | null
           updated_at?: string
@@ -1437,6 +1439,7 @@ export type Database = {
           decision_count?: number | null
           full_name?: string | null
           id?: string
+          industry?: string | null
           org_id?: string | null
           progressive_override?: boolean | null
           updated_at?: string
