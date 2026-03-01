@@ -103,7 +103,7 @@ const CommandPalette = () => {
               <a.icon className="w-4 h-4 text-primary shrink-0" />
               <span className="flex-1">{a.label}</span>
               {a.shortcut && (
-                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground font-mono">
+                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-muted border border-border/60 text-muted-foreground font-mono">
                   {a.shortcut}
                 </kbd>
               )}
