@@ -62,3 +62,9 @@ verify_jwt = false
 
 [functions.archive-intelligence]
 verify_jwt = false
+
+[functions.review-notify]
+verify_jwt = false
+
+[functions.email-action]
+verify_jwt = false
