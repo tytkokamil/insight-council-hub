@@ -1,6 +1,7 @@
 {
   "nav": {
     "core": "KERN",
+    "workspace": "WORKSPACE",
     "teams": "TEAMS",
     "teamsNav": "Teams",
     "governance": "KONTROLLE",

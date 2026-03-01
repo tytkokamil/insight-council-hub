@@ -168,7 +168,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       {!isMobile && (
         <aside
-          style={{ width: collapsed ? 52 : 220 }}
+          style={{ width: collapsed ? 52 : 240 }}
           className="relative border-r border-border/40 bg-background flex flex-col shrink-0 overflow-hidden transition-[width] duration-200 ease-out"
           role="navigation"
           aria-label={t("common.openNav")}
