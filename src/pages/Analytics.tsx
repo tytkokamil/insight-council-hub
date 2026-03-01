@@ -419,14 +419,14 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
   ];
 
   const content = (
-    <div className="space-y-8">
+    <div className="section-gap-lg">
       {/* SECTION 1: Executive Summary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 stagger-children">
         {kpis.map((kpi, i) => (
-          <Card key={i} className="card-interactive">
+          <Card key={i} className="card-interactive border-border/60">
             <CardContent className="p-3">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <div className="w-5 h-5 rounded bg-muted/60 flex items-center justify-center">
+                <div className="w-5 h-5 rounded bg-muted/40 flex items-center justify-center">
                   <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
                 </div>
                 <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
@@ -446,10 +446,10 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
 
       {/* SECTION 2: Insight Bar */}
       {d.insights.length > 0 && (
-        <Card className="border-l-4 border-l-warning">
+        <Card className="border-l-4 border-l-warning border-border/60">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-               <Lightbulb className="w-4 h-4 text-warning" />
+               <Lightbulb className="w-3.5 h-3.5 text-warning" />
                <span className="text-sm font-semibold">{t("analytics.whatChanged")}</span>
             </div>
             <div className="space-y-1.5">
@@ -470,7 +470,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
          subtitle={t("analytics.throughputSub")}
          icon={<TrendingUp className="w-4 h-4 text-primary" />}
       >
-        <Card>
+        <Card className="border-border/60">
           <CardContent className="pt-6 pb-4 px-4">
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -521,7 +521,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Where Time is Lost */}
-          <Card>
+          <Card className="border-border/60">
              <CardHeader className="pb-2">
                <CardTitle className="text-sm font-medium">{t("analytics.medianDaysByPhase")}</CardTitle>
             </CardHeader>
@@ -557,7 +557,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           </Card>
 
           {/* Status × Team Heatmap */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.statusTeamHeatmap")}</CardTitle>
             </CardHeader>
@@ -566,7 +566,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-border">
+                       <tr className="border-b border-border/60">
                          <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
                         {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => (
                           <th key={s} className="text-center py-2 px-2 font-medium text-muted-foreground">{s}</th>
@@ -575,7 +575,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                     </thead>
                     <tbody>
                       {teams.map((team: any) => (
-                        <tr key={team.id} className="border-b border-border/30">
+                        <tr key={team.id} className="border-b border-border/20">
                           <td className="py-2 px-2 font-medium truncate max-w-[120px]">{team.name}</td>
                           {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => {
                             const cell = d.heatmapData.find(h => h.team === team.name && h.status === s);
@@ -611,7 +611,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       >
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Risk Distribution Donut */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-0">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.riskDistribution")}</CardTitle>
             </CardHeader>
@@ -642,7 +642,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           </Card>
 
           {/* Top 5 Cost Drivers */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.top5CostDrivers")}</CardTitle>
             </CardHeader>
@@ -664,7 +664,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           </Card>
 
           {/* Cost by Category */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.costByCategory")}</CardTitle>
             </CardHeader>
@@ -700,7 +700,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* SLA + Escalation Trend */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.slaComplianceEscalations")}</CardTitle>
             </CardHeader>
@@ -722,7 +722,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           </Card>
 
           {/* Review Queue & Governance KPIs */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.reviewQueueGovernance")}</CardTitle>
             </CardHeader>
@@ -746,7 +746,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                 </div>
               </div>
               {d.escalated.length > 0 && (
-                <div className="border-t border-border pt-3">
+                <div className="border-t border-border/40 pt-3">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("analyticsPage.escalatedDecisions")}</p>
                   <div className="space-y-1.5">
                     {d.escalated.slice(0, 3).map(dec => (
@@ -771,7 +771,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Quality Index Trend */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.qualityTrend6m")}</CardTitle>
             </CardHeader>
@@ -800,7 +800,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           </Card>
 
           {/* Strategic Goal Alignment */}
-          <Card>
+          <Card className="border-border/60">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{t("analyticsPage.strategicGoalCoverage")}</CardTitle>
             </CardHeader>
@@ -833,7 +833,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
               )}
 
               {/* Learning signal */}
-              <div className="border-t border-border mt-4 pt-3">
+              <div className="border-t border-border/40 mt-4 pt-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">{t("analyticsPage.lessonsLearnedCoverage")}</span>
                   <span className={`font-bold ${d.lessonsRate >= 50 ? "text-success" : d.lessonsRate >= 20 ? "text-warning" : "text-destructive"}`}>{d.lessonsRate}%</span>
