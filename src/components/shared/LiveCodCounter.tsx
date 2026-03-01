@@ -12,7 +12,7 @@ interface LiveCodCounterProps {
   /** Timestamp when the decision was created */
   createdAt: string;
   /** Size variant */
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "hero";
   /** Daily cost for tooltip */
   dailyCost?: number;
   /** Whether to show the timer icon */
@@ -35,6 +35,7 @@ const sizeClasses = {
   sm: "text-xs",
   md: "text-sm font-semibold",
   lg: "text-3xl font-bold font-display",
+  hero: "text-5xl font-bold font-display text-destructive",
 };
 
 const LiveCodCounter = ({
@@ -73,7 +74,7 @@ const LiveCodCounter = ({
   const counter = (
     <span className={`inline-flex items-center gap-1 tabular-nums ${sizeClasses[size]} ${colorClass} transition-colors duration-300`}>
       {showIcon && (
-        <Timer className={`shrink-0 animate-pulse ${size === "lg" ? "w-5 h-5" : size === "md" ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
+        <Timer className={`shrink-0 animate-pulse ${size === "hero" ? "w-7 h-7" : size === "lg" ? "w-5 h-5" : size === "md" ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
       )}
       {formattedCost}
     </span>
