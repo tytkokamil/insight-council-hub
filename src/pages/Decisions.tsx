@@ -22,6 +22,7 @@ import DecisionBulkActions from "@/components/decisions/DecisionBulkActions";
 import DecisionSideDrawer from "@/components/decisions/DecisionSideDrawer";
 import DecisionEmptyState from "@/components/decisions/DecisionEmptyState";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
+import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTasks } from "@/hooks/useTasks";
 import { exportCSV, exportPDF } from "@/lib/exportDecisions";
@@ -309,26 +310,26 @@ const Decisions = () => {
             )}
           </AnimatePresence>
 
-          <DecisionTable
-            decisions={filtered}
+          <DecisionTableWithPredictions
+            filtered={filtered}
             decisionMeta={decisionMeta}
             profileMap={profileMap}
             selectedIds={selectedIds}
-            onToggleSelect={toggleSelect}
-            onToggleSelectAll={toggleSelectAll}
-            onPreview={setPreviewDecision}
-            onEdit={setEditDecision}
-            onDelete={setDeleteDecision}
-            statusOptions={STATUS_OPTIONS}
-            statusLabels={tl.statusLabels}
-            priorityLabels={tl.priorityLabels}
-            categoryLabels={tl.categoryLabels}
+            toggleSelect={toggleSelect}
+            toggleSelectAll={toggleSelectAll}
+            setPreviewDecision={setPreviewDecision}
+            setEditDecision={setEditDecision}
+            setDeleteDecision={setDeleteDecision}
+            STATUS_OPTIONS={STATUS_OPTIONS}
+            tl={tl}
             userId={user?.id}
-            onInvalidate={invalidate}
-            onClearFilters={clearAllFilters}
+            invalidate={invalidate}
+            clearAllFilters={clearAllFilters}
             sortField={sortField}
             sortDir={sortDir}
-            onSort={handleSort}
+            handleSort={handleSort}
+            allDecisions={decisions}
+            allReviews={allReviews}
           />
         </>
       )}
@@ -350,6 +351,35 @@ const Decisions = () => {
       {deleteDecision && <DeleteDecisionDialog decision={deleteDecision} open={!!deleteDecision} onOpenChange={(open) => { if (!open) setDeleteDecision(null); }} onDeleted={invalidate} />}
       <ImportDialog open={showImport} onOpenChange={setShowImport} mode="decisions" onImported={invalidate} />
     </AppLayout>
+  );
+};
+
+/* Wrapper to compute predictions and pass to DecisionTable */
+const DecisionTableWithPredictions = ({ filtered, decisionMeta, profileMap, selectedIds, toggleSelect, toggleSelectAll, setPreviewDecision, setEditDecision, setDeleteDecision, STATUS_OPTIONS, tl, userId, invalidate, clearAllFilters, sortField, sortDir, handleSort, allDecisions, allReviews }: any) => {
+  const { predictions } = usePredictiveSla(allDecisions, allReviews);
+  return (
+    <DecisionTable
+      decisions={filtered}
+      decisionMeta={decisionMeta}
+      profileMap={profileMap}
+      selectedIds={selectedIds}
+      onToggleSelect={toggleSelect}
+      onToggleSelectAll={toggleSelectAll}
+      onPreview={setPreviewDecision}
+      onEdit={setEditDecision}
+      onDelete={setDeleteDecision}
+      statusOptions={STATUS_OPTIONS}
+      statusLabels={tl.statusLabels}
+      priorityLabels={tl.priorityLabels}
+      categoryLabels={tl.categoryLabels}
+      userId={userId}
+      onInvalidate={invalidate}
+      onClearFilters={clearAllFilters}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={handleSort}
+      slaPredictions={predictions}
+    />
   );
 };
 

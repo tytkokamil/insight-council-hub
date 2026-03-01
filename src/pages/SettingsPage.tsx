@@ -539,6 +539,22 @@ const SettingsPage = () => {
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.slaConfigDesc")}</p>
                 <SlaConfigPanel />
                 <div className="border-t border-border/30 pt-4 mt-4">
+                  <h3 className="text-sm font-medium mb-2">{t("predictiveSla.settingsTitle", "Predictive SLA — Frühwarnung")}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{t("predictiveSla.settingsDesc", "Warnt bevor eine SLA-Verletzung eintritt, basierend auf historischen Review-Dauern.")}</p>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-muted-foreground whitespace-nowrap">Frühwarnung bei</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={14}
+                      defaultValue={parseInt(localStorage.getItem("sla-early-warning-days") || "2")}
+                      onChange={e => localStorage.setItem("sla-early-warning-days", e.target.value)}
+                      className="w-16 h-8 px-2 rounded-lg bg-background border border-input text-sm text-center focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20"
+                    />
+                    <span className="text-xs text-muted-foreground">Tagen vor Deadline</span>
+                  </div>
+                </div>
+                <div className="border-t border-border/30 pt-4 mt-4">
                   <h3 className="text-sm font-medium mb-3">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h3>
                   <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
                   <OrgCodDefaultsPanel />

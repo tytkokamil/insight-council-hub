@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { QualityScoreBadge } from "./DecisionQualityScore";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import LiveCodCounter from "@/components/shared/LiveCodCounter";
-import { PredictiveSlaInlineBadge, usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
+import { PredictiveSlaInlineBadge, type PredictiveSlaEntry } from "@/components/decisions/PredictiveSlaWarning";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,6 +70,7 @@ interface DecisionTableProps {
   sortField?: SortField;
   sortDir?: SortDir;
   onSort?: (field: SortField) => void;
+  slaPredictions?: PredictiveSlaEntry[];
 }
 
 /* ── Sortable header cell ── */
@@ -138,11 +139,11 @@ const DecisionTable = ({
   onToggleSelect, onToggleSelectAll, onPreview, onEdit, onDelete,
   statusOptions, statusLabels, priorityLabels, categoryLabels,
   userId, onInvalidate, onClearFilters,
-  sortField, sortDir, onSort,
+  sortField, sortDir, onSort, slaPredictions = [],
 }: DecisionTableProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { predictions } = usePredictiveSla();
+  const predictions = slaPredictions;
 
   return (
     <Card className="overflow-hidden border-border/60">

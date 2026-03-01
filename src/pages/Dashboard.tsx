@@ -51,6 +51,7 @@ import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanne
 import AnomalyCards from "@/components/shared/AnomalyCards";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
+import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 
 type DashboardMode = "operational" | "executive" | "admin";
 
@@ -307,12 +308,14 @@ const Dashboard = () => {
             {!isGuidedMode && (
               <>
             {/* ═══ 1. TOP ACTION NOW ═══ */}
-            <TopActionNow
+            <DashboardTopActionWithSla
               overdue={computed.overdue}
               escalated={computed.escalated}
               pendingReviews={computed.pendingReviews}
               blockedTasks={computed.blockedTasks}
               hasData={decisions.length > 0}
+              decisions={decisions}
+              reviews={contextReviews}
             />
 
             {/* ═══ 2. KPI ROW – mode-dependent ═══ */}
@@ -545,6 +548,11 @@ const Dashboard = () => {
       </div>
     </AppLayout>
   );
+};
+/* Wrapper to compute predictions for TopActionNow */
+const DashboardTopActionWithSla = ({ decisions, reviews, ...props }: any) => {
+  const { predictions } = usePredictiveSla(decisions, reviews);
+  return <TopActionNow {...props} slaPredictions={predictions} />;
 };
 
 export default Dashboard;
