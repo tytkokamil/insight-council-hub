@@ -199,8 +199,21 @@ const Strategy = () => {
     toast({ title: t("strategy.goalDeleted") });
   };
 
+  const isInverseGoal = (g: Goal) => {
+    // Goals where lower is better (e.g. incidents, errors)
+    const lowerIsBetterKeywords = ["incident", "error", "bug", "risk", "zero", "minimize", "reduce", "weniger"];
+    const titleLower = g.title.toLowerCase();
+    return lowerIsBetterKeywords.some(kw => titleLower.includes(kw));
+  };
+
   const getProgress = (g: Goal) => {
-    if (!g.target_value || g.target_value === 0) return 0;
+    if (!g.target_value && g.target_value !== 0) return 0;
+    if (isInverseGoal(g)) {
+      // For inverse goals: 100% when current <= target
+      if (g.target_value === 0) return (g.current_value || 0) <= 0 ? 100 : 0;
+      return Math.min(100, Math.round(Math.max(0, (1 - ((g.current_value || 0) - g.target_value) / g.target_value)) * 100));
+    }
+    if (g.target_value === 0) return 0;
     return Math.min(100, Math.round(((g.current_value || 0) / g.target_value) * 100));
   };
 
@@ -230,14 +243,14 @@ const Strategy = () => {
         role="system"
         help={{ title: t("strategy.title"), description: t("strategy.help") }}
         primaryAction={
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2">
+          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2" style={{ backgroundColor: "#1E3A5F" }}>
             <Plus className="w-4 h-4" /> {t("strategy.newGoal")}
           </Button>
         }
       />
 
-      {/* ═══ GOAL SUGGESTIONS – always visible ═══ */}
-      {!showCreate && (
+      {/* ═══ GOAL SUGGESTIONS – conditional ═══ */}
+      {!showCreate && goals.filter(g => g.status === "active").length < 3 && (
         <div className="mb-8">
           <h2 className="text-sm font-semibold mb-1">{t("strategy.sugSectionTitle")}</h2>
           <p className="text-xs text-muted-foreground mb-4">{t("strategy.sugSectionDesc")}</p>
@@ -304,16 +317,29 @@ const Strategy = () => {
         </div>
       )}
 
+      {/* Collapsed suggestion link when 3+ active goals */}
+      {!showCreate && goals.filter(g => g.status === "active").length >= 3 && (
+        <div className="mb-8">
+          <button
+            onClick={() => setShowCreate(true)}
+            className="text-xs hover:underline transition-colors"
+            style={{ color: "#64748B", fontSize: "12px" }}
+          >
+            ＋ Weiteres Ziel-Template übernehmen
+          </button>
+        </div>
+      )}
+
       {/* Summary Cards – only when goals exist */}
       {goals.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
             { icon: Target, label: t("strategy.strategicGoals"), value: totalGoals, color: "text-primary" },
             { icon: Link2, label: t("strategy.linkedDecisions"), value: linkedDecisionCount, color: linkedDecisionCount === 0 ? "text-destructive" : "text-success" },
             { icon: TrendingUp, label: t("strategy.avgProgress"), value: `${avgProgress}%`, color: "text-warning", tooltip: t("strategy.avgProgressTooltip") },
             { icon: AlertTriangle, label: t("strategy.atRisk"), value: atRiskCount, color: "text-destructive" },
           ].map((card, i) => (
-            <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4">
+            <motion.div key={card.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="rounded-lg border border-border bg-card p-4 min-h-[90px] flex flex-col justify-center">
               <div className="flex items-center gap-2 mb-1">
                 <card.icon className={`w-4 h-4 ${card.color}`} />
                 <span className="text-xs text-muted-foreground">{card.label}</span>
@@ -427,7 +453,10 @@ const Strategy = () => {
                         {t(badge.labelKey)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                    {isInverseGoal(goal) && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">Ziel: minimieren</span>
+                    )}
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground mt-0.5">
                       <span className={`font-medium ${config.color}`}>{config.label === "quarterlyGoal" ? t("strategy.quarterlyGoal") : config.label}</span>
                       {goal.quarter && <span>{goal.quarter} {goal.year}</span>}
                       <span className="flex items-center gap-1">
@@ -506,6 +535,19 @@ const Strategy = () => {
           );
         })}
       </div>
+
+      {/* Goal list footer */}
+      {!loading && goals.length > 0 && (
+        <div className="mt-4">
+          <div className="border-t border-border/40" />
+          <p className="text-center text-muted-foreground mt-3" style={{ fontSize: "11px" }}>
+            {goals.length <= 5
+              ? `${goals.length} von ${goals.length} Zielen angezeigt`
+              : <button onClick={() => {}} className="hover:underline text-primary">Alle {goals.length} Ziele anzeigen →</button>
+            }
+          </p>
+        </div>
+      )}
     </AppLayout>
   );
 };
