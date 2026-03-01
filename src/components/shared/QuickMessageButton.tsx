@@ -114,7 +114,7 @@ const QuickMessageButton = ({
       <PopoverContent align="start" className="w-80 p-0" sideOffset={8}>
         {/* Context banner */}
         {(decisionTitle || contextLabel) && (
-          <div className="px-3 py-2 border-b border-border bg-primary/5 flex items-center gap-2">
+          <div className="px-3 py-2 border-b border-border/60 bg-primary/5 flex items-center gap-2">
             <Link2 className="w-3.5 h-3.5 text-primary shrink-0" />
             <span className="text-xs font-medium text-primary truncate flex-1">
               {contextLabel || decisionTitle}

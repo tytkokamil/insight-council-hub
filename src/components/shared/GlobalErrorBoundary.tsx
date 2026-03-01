@@ -54,7 +54,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
           </div>
 
           {this.state.error && (
-            <div className="bg-muted/50 border border-border rounded-lg p-3 text-left">
+            <div className="bg-muted/50 border border-border/60 rounded-lg p-3 text-left">
               <p className="text-xs font-mono text-muted-foreground break-all">
                 {this.state.error.message}
               </p>
@@ -71,7 +71,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
             </button>
             <button
               onClick={this.handleGoHome}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border/60 bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <Home className="w-4 h-4" />
               {t("shared.errorHome")}
