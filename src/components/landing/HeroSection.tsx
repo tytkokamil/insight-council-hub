@@ -177,7 +177,7 @@ const HeroSection = () => {
             Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden.
           </motion.p>
 
-          <LiveCounter />
+          
 
           {/* CTAs */}
           <motion.div
