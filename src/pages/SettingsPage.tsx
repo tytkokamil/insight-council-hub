@@ -627,21 +627,21 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Active Sessions */}
               <section>
                 <ActiveSessionsPanel />
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* 2FA Settings */}
               <section>
                 <MfaSettingsPanel />
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Password */}
               <section>
