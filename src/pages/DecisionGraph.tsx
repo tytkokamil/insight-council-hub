@@ -30,51 +30,32 @@ const statusColors: Record<string, string> = {
   rejected: "#ef4444",
 };
 
-const prioritySize: Record<string, number> = {
-  low: 140,
-  medium: 160,
-  high: 180,
-  critical: 200,
-};
+// Priority no longer affects node size — fixed at 140×80
 
 const DecisionNode = ({ data }: { data: any }) => {
   const borderColor = statusColors[data.status] || "#6b7280";
-  const isCriticalPath = data.cascadeCount > 0;
-  const isBlocked = data.isBlocked;
 
   return (
     <div
-      className="rounded-xl p-3 min-w-[180px] max-w-[220px] cursor-pointer transition-all hover:scale-105 bg-card text-card-foreground"
+      className="rounded-lg p-2 cursor-pointer transition-all hover:scale-105 bg-card text-card-foreground group relative"
       style={{
         border: `2px solid ${borderColor}`,
-        boxShadow: isCriticalPath
-          ? `0 0 20px ${borderColor}40, 0 0 40px ${borderColor}20`
-          : "0 4px 12px hsl(var(--shadow-color, 0 0% 0%) / 0.15)",
+        width: 140,
+        maxHeight: 80,
+        boxShadow: "0 2px 8px hsl(var(--shadow-color, 0 0% 0%) / 0.1)",
+        overflow: "hidden",
       }}
+      title={`${data.statusLabel} · ${data.priorityLabel} · ${data.categoryLabel}${data.ownerName ? ` · ${data.ownerName}` : ""}${data.cascadeCount > 0 ? ` · ${data.cascadeLabel}` : ""}`}
     >
-      <div className="flex items-center gap-2 mb-1.5">
-        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: borderColor }} />
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-          {data.statusLabel}
-        </span>
-        {isBlocked && <AlertTriangle className="w-3 h-3 text-destructive ml-auto" />}
-      </div>
-      <p className="text-sm font-semibold text-foreground leading-tight mb-2 line-clamp-2">{data.label}</p>
-      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-        <span className="capitalize">{data.priorityLabel}</span>
-        <span className="capitalize">{data.categoryLabel}</span>
-      </div>
+      <span
+        className="inline-block text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0 rounded mb-1"
+        style={{ background: `${borderColor}20`, color: borderColor }}
+      >
+        {data.statusLabel}
+      </span>
+      <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{data.label}</p>
       {data.delayCost > 0 && (
-        <div className="mt-2 flex items-center gap-1 text-[10px] text-warning font-medium">
-          <DollarSign className="w-3 h-3" />
-          {data.delayCostFormatted}
-        </div>
-      )}
-      {data.cascadeCount > 0 && (
-        <div className="mt-1 flex items-center gap-1 text-[10px] text-destructive font-medium">
-          <GitBranch className="w-3 h-3" />
-          {data.cascadeLabel}
-        </div>
+        <p className="text-[9px] text-destructive font-medium mt-0.5 truncate">{data.delayCostFormatted}</p>
       )}
     </div>
   );
@@ -84,8 +65,8 @@ const nodeTypes = { decision: DecisionNode };
 
 const edgeTypeStyles: Record<string, any> = {
   blocks: { stroke: "#ef4444", strokeWidth: 2, animated: true },
-  influences: { stroke: "#eab308", strokeWidth: 1.5, strokeDasharray: "5 5" },
-  requires: { stroke: "#3b82f6", strokeWidth: 1.5 },
+  influences: { stroke: "#f59e0b", strokeWidth: 1.5 },
+  requires: { stroke: "#1e3a5f", strokeWidth: 1.5 },
 };
 
 const DecisionGraph = () => {
@@ -256,7 +237,8 @@ const DecisionGraph = () => {
             nodes={nodes} edges={edges}
             onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick} nodeTypes={nodeTypes}
-            fitView minZoom={0.3} maxZoom={2}
+            fitView fitViewOptions={{ padding: 0.15 }}
+            minZoom={0.3} maxZoom={2}
             proOptions={{ hideAttribution: true }}
           >
             <Background color="hsl(var(--border))" gap={24} size={1} />
@@ -323,14 +305,14 @@ const DecisionGraph = () => {
                 <p className="font-semibold text-xs mb-1">{t("graph.connectionTypes")}</p>
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-0.5 bg-destructive rounded" />
-                  <span className="text-muted-foreground">{t("graph.blocksAnimated")}</span>
+                  <span className="text-muted-foreground">{t("graph.blocksLabel", "Blockiert")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-0.5 bg-warning rounded" style={{ borderTop: "1px dashed" }} />
+                  <div className="w-6 h-0.5 bg-warning rounded" />
                   <span className="text-muted-foreground">{t("graph.influencesLabel")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-0.5 bg-primary rounded" />
+                  <div className="w-6 h-0.5 rounded" style={{ background: "#1e3a5f" }} />
                   <span className="text-muted-foreground">{t("graph.requiresLabel")}</span>
                 </div>
               </div>
