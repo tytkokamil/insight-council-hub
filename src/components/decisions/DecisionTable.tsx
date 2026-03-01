@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
+import LiveCodCounter from "@/components/shared/LiveCodCounter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -244,9 +245,20 @@ const DecisionTable = ({
                     </td>
 
                     <td className="p-3 hidden md:table-cell">
-                      <span className={`text-xs ${meta.isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                        {decision.due_date ? format(new Date(decision.due_date), "dd.MM.yy", { locale: de }) : "—"}
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className={`text-xs ${meta.isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                          {decision.due_date ? format(new Date(decision.due_date), "dd.MM.yy", { locale: de }) : "—"}
+                        </span>
+                        {(meta.isOverdue || meta.isEscalated) && decision.cost_per_day > 0 && (
+                          <LiveCodCounter
+                            baseCost={Math.round(((Date.now() - new Date(decision.created_at).getTime()) / 86400000) * decision.cost_per_day)}
+                            costPerSecond={decision.cost_per_day / 86400}
+                            createdAt={decision.created_at}
+                            size="sm"
+                            dailyCost={decision.cost_per_day}
+                          />
+                        )}
+                      </div>
                     </td>
 
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
