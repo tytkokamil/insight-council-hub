@@ -12,7 +12,7 @@ import {
   User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
   RotateCcw, Clock, Sun, Moon, Globe, Activity, BarChart3, Users, Lock, Zap,
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
-  MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info
+  MonitorSmartphone, Timer, TrendingUp, Database, Server, ChevronRight, Info, Gift
 } from "lucide-react";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
@@ -26,6 +26,7 @@ import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
 import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import ReferralPanel from "@/components/settings/ReferralPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -37,7 +38,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
@@ -217,6 +218,7 @@ const SettingsPage = () => {
     { key: "notifications", label: t("settings.notifications"), icon: Bell },
     { key: "ai", label: t("settings.ai"), icon: Brain },
     { key: "security", label: t("settings.security"), icon: Shield },
+    { key: "referral", label: t("settings.referral"), icon: Gift },
     { key: "admin", label: t("settings.admin"), icon: Settings2, show: isAdmin },
   ];
 
@@ -796,6 +798,13 @@ const SettingsPage = () => {
                   ))}
                 </div>
               </section>
+            </div>
+          )}
+
+          {/* ═══════════════ REFERRAL ═══════════════ */}
+          {activeTab === "referral" && (
+            <div className="space-y-6">
+              <ReferralPanel />
             </div>
           )}
 
