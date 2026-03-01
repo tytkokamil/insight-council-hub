@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Pause } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductTourModal from "./ProductTourModal";
+import teaserVideo from "@/assets/decisionos-teaser-video.mp4";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -47,6 +48,77 @@ const LiveCounter = () => {
         <p className="text-[10px] text-muted-foreground/60 mt-1 italic">
           * Demo-Berechnung — konfigurieren Sie Ihre eigenen Werte im ROI-Rechner
         </p>
+      </div>
+    </motion.div>
+  );
+};
+
+const TypingEffect = ({ text, delay = 0 }: { text: string; delay?: number }) => {
+  const [displayed, setDisplayed] = useState("");
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStarted(true), delay * 1000);
+    return () => clearTimeout(timer);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!started) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) clearInterval(interval);
+    }, 22);
+    return () => clearInterval(interval);
+  }, [started, text]);
+
+  return (
+    <span>
+      {displayed}
+      {started && displayed.length < text.length && (
+        <span className="inline-block w-[2px] h-[1em] bg-primary/60 ml-0.5 animate-pulse align-text-bottom" />
+      )}
+    </span>
+  );
+};
+
+const VideoTeaser = () => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(true);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (playing) {
+      videoRef.current.pause();
+    } else {
+      videoRef.current.play();
+    }
+    setPlaying(!playing);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay: 1.0, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="max-w-3xl mx-auto mt-12 mb-4"
+    >
+      <div className="relative rounded-2xl border border-border overflow-hidden shadow-lg group cursor-pointer" onClick={togglePlay}>
+        <video
+          ref={videoRef}
+          src={teaserVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="w-full aspect-video object-cover"
+        />
+        <div className={`absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300 ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
+          <div className="w-14 h-14 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+            {playing ? <Pause className="w-5 h-5 text-foreground" /> : <Play className="w-5 h-5 text-foreground ml-0.5" />}
+          </div>
+        </div>
       </div>
     </motion.div>
   );
@@ -112,10 +184,15 @@ const HeroSection = () => {
             transition={{ delay: 0.5, duration: 0.8, ease }}
             className="text-[17px] md:text-[19px] text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden.
+            <TypingEffect
+              text="Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden."
+              delay={0.8}
+            />
           </motion.p>
 
           <LiveCounter />
+
+          <VideoTeaser />
 
           {/* CTAs */}
           <motion.div
