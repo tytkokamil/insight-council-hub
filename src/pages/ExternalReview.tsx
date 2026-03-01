@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2, XCircle, FileText, Paperclip, MessageSquare, Clock,
-  Loader2, AlertTriangle, ShieldCheck, ExternalLink
+  Loader2, AlertTriangle, ShieldCheck, ExternalLink, DollarSign
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { de } from "date-fns/locale";
@@ -19,15 +19,23 @@ const priorityConfig: Record<string, { label: string; class: string }> = {
   low: { label: "Niedrig", class: "bg-muted text-muted-foreground border-border" },
 };
 
+const statusLabels: Record<string, string> = {
+  draft: "Entwurf", proposed: "Vorgeschlagen", review: "In Review",
+  approved: "Genehmigt", rejected: "Abgelehnt", implemented: "Umgesetzt",
+  cancelled: "Abgebrochen", archived: "Archiviert",
+};
+
 interface DecisionData {
   id: string;
   title: string;
   description: string | null;
+  context: string | null;
   status: string;
   priority: string;
   category: string;
   due_date: string | null;
   created_at: string;
+  cost_per_day: number | null;
 }
 
 interface Attachment {
@@ -47,7 +55,8 @@ interface Comment {
 
 const ExternalReviewPage = () => {
   const [params] = useSearchParams();
-  const token = params.get("token");
+  const routeParams = useParams<{ token?: string }>();
+  const token = routeParams.token || params.get("token");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +67,9 @@ const ExternalReviewPage = () => {
   const [creatorName, setCreatorName] = useState("");
   const [alreadyActed, setAlreadyActed] = useState(false);
   const [actionTaken, setActionTaken] = useState<string | null>(null);
+  const [actedAt, setActedAt] = useState<string | null>(null);
 
+  const [activeAction, setActiveAction] = useState<"approve" | "reject" | null>(null);
   const [feedback, setFeedback] = useState("");
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -82,7 +93,7 @@ const ExternalReviewPage = () => {
       });
       if (fnErr) throw fnErr;
       if (data?.error) {
-        setError(data.error === "expired" ? "Dieser Link ist abgelaufen (30-Tage-Limit)." : data.message || "Ungültiger Link.");
+        setError(data.error === "expired" ? "Dieser Link ist abgelaufen." : data.message || "Ungültiger Link.");
         setLoading(false);
         return;
       }
@@ -93,6 +104,7 @@ const ExternalReviewPage = () => {
       setCreatorName(data.creator_name || "");
       setAlreadyActed(data.already_acted);
       setActionTaken(data.action_taken);
+      setActedAt(data.acted_at || null);
     } catch {
       setError("Fehler beim Laden der Entscheidung.");
     }
@@ -100,19 +112,18 @@ const ExternalReviewPage = () => {
   };
 
   const submitAction = async (action: "approve" | "reject") => {
+    if (!feedback.trim()) return;
     setSubmitting(true);
     try {
       const { data, error: fnErr } = await supabase.functions.invoke("external-review", {
-        body: { action, token, feedback: feedback.trim() || null },
+        body: { action, token, feedback: feedback.trim() },
       });
       if (fnErr) throw fnErr;
       if (data?.error) throw new Error(data.message);
       setActionDone(action);
       setAlreadyActed(true);
       setActionTaken(action);
-    } catch {
-      // show inline
-    }
+    } catch { /* inline */ }
     setSubmitting(false);
   };
 
@@ -134,23 +145,37 @@ const ExternalReviewPage = () => {
     setCommentSubmitting(false);
   };
 
-  // ── Error / Loading states ──
+  const formatDate = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString("de-DE", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      }) + " Uhr";
+    } catch { return iso; }
+  };
+
+  // ── Loading ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  // ── Error ──
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-muted/30 flex flex-col items-center justify-center p-4">
         <div className="max-w-md text-center space-y-4">
           <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
           <h1 className="text-lg font-semibold">Zugriff nicht möglich</h1>
           <p className="text-sm text-muted-foreground">{error}</p>
+          <Link to="/auth">
+            <Button variant="outline" size="sm">Zum Login</Button>
+          </Link>
         </div>
+        <ViralFooter />
       </div>
     );
   }
@@ -158,31 +183,73 @@ const ExternalReviewPage = () => {
   if (!decision) return null;
 
   const prio = priorityConfig[decision.priority] || priorityConfig.medium;
+  const weeklyCost = decision.cost_per_day ? Number(decision.cost_per_day) * 7 : null;
+
+  // ── Success confirmation (after action) ──
+  if (actionDone) {
+    return (
+      <div className="min-h-screen bg-muted/30 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
+            <div className={`h-2 w-full ${actionDone === "approve" ? "bg-success" : "bg-destructive"}`} />
+            <div className="p-8 text-center space-y-4">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${actionDone === "approve" ? "bg-success/10" : "bg-destructive/10"}`}>
+                {actionDone === "approve"
+                  ? <CheckCircle2 className="w-10 h-10 text-success" />
+                  : <XCircle className="w-10 h-10 text-destructive" />
+                }
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">
+                {actionDone === "approve" ? "Genehmigt!" : "Abgelehnt"}
+              </h1>
+              <p className="text-base font-semibold text-foreground">„{decision.title}"</p>
+              <p className="text-sm text-muted-foreground">Von: {reviewerName} (extern)</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
+                <Clock className="w-3 h-3" /> {formatDate(new Date().toISOString())}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Diese Aktion wurde im Audit Trail dokumentiert. Der Ersteller wurde benachrichtigt.
+              </p>
+              <Link to="/auth">
+                <Button variant="outline" className="gap-2 mt-2">
+                  Alle Entscheidungen ansehen →
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        <ViralFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
       {/* Header */}
-      <header className="bg-background border-b border-border px-4 py-3">
+      <header className="bg-card border-b border-border px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-primary" />
+            <img src={decivioLogo} alt="Decivio" className="h-5 opacity-60" />
             <span className="text-xs text-muted-foreground">
-              Externes Review — Eingeladen als <strong className="text-foreground">{reviewerName}</strong>
+              Externe Review
             </span>
           </div>
-          <Badge variant="outline" className="text-[9px]">Einmal-Link • 30 Tage</Badge>
+          <span className="text-xs text-muted-foreground">
+            Eingeladen als <strong className="text-foreground">{reviewerName || "Reviewer"}</strong>
+          </span>
         </div>
       </header>
 
       {/* Main content */}
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         {/* Decision card */}
-        <div className="bg-background rounded-xl border border-border p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border p-6 space-y-4">
           {/* Title + meta */}
           <div>
-            <div className="flex items-start gap-2 mb-2">
+            <div className="flex items-start gap-2 mb-2 flex-wrap">
               <Badge variant="outline" className={`text-[10px] shrink-0 ${prio.class}`}>{prio.label}</Badge>
               <Badge variant="outline" className="text-[10px] shrink-0">{decision.category}</Badge>
+              <Badge variant="outline" className="text-[10px] shrink-0">{statusLabels[decision.status] || decision.status}</Badge>
             </div>
             <h1 className="text-xl font-bold text-foreground leading-tight">{decision.title}</h1>
             <p className="text-xs text-muted-foreground mt-1">
@@ -195,8 +262,31 @@ const ExternalReviewPage = () => {
 
           {/* Description */}
           {decision.description && (
-            <div className="prose prose-sm max-w-none text-foreground/90">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{decision.description}</p>
+            <div>
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Beschreibung</h3>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{decision.description}</p>
+            </div>
+          )}
+
+          {/* Context */}
+          {decision.context && (
+            <div>
+              <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-1">Kontext & Hintergrund</h3>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{decision.context}</p>
+            </div>
+          )}
+
+          {/* Economic impact */}
+          {weeklyCost && weeklyCost > 0 && (
+            <div className="p-3 rounded-lg bg-warning/5 border border-warning/20">
+              <div className="flex items-center gap-2 text-sm font-semibold text-warning">
+                <DollarSign className="w-4 h-4" />
+                Wirtschaftlicher Impact
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Cost-of-Delay: <strong>{Number(decision.cost_per_day).toLocaleString("de-DE")} € / Tag</strong>
+                {" "}({weeklyCost.toLocaleString("de-DE")} € / Woche)
+              </p>
             </div>
           )}
 
@@ -248,39 +338,16 @@ const ExternalReviewPage = () => {
           )}
         </div>
 
-        {/* Add comment */}
-        <div className="bg-background rounded-xl border border-border p-4">
-          <h3 className="text-xs font-medium mb-2">Kommentar hinzufügen</h3>
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Ihr Kommentar..."
-            className="mb-2 text-sm"
-            rows={3}
-            maxLength={5000}
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={submitComment}
-            disabled={commentSubmitting || !newComment.trim()}
-            className="gap-1.5"
-          >
-            {commentSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
-            Kommentar senden
-          </Button>
-        </div>
-
         {/* Action section */}
-        <div className="bg-background rounded-xl border border-border p-6">
-          {alreadyActed || actionDone ? (
+        <div className="bg-card rounded-xl border border-border p-6">
+          {alreadyActed ? (
             <div className="text-center space-y-2">
-              {(actionTaken === "approve" || actionDone === "approve") ? (
+              {actionTaken === "approve" ? (
                 <>
-                  <CheckCircle2 className="w-10 h-10 text-primary mx-auto" />
+                  <CheckCircle2 className="w-10 h-10 text-success mx-auto" />
                   <h2 className="text-lg font-semibold">Genehmigt</h2>
                   <p className="text-sm text-muted-foreground">
-                    Sie haben diese Entscheidung genehmigt. Der Ersteller wurde benachrichtigt.
+                    Sie haben diese Entscheidung genehmigt{actedAt ? ` am ${formatDate(actedAt)}` : ""}. Der Ersteller wurde benachrichtigt.
                   </p>
                 </>
               ) : (
@@ -288,7 +355,7 @@ const ExternalReviewPage = () => {
                   <XCircle className="w-10 h-10 text-destructive mx-auto" />
                   <h2 className="text-lg font-semibold">Abgelehnt</h2>
                   <p className="text-sm text-muted-foreground">
-                    Sie haben diese Entscheidung abgelehnt. Der Ersteller wurde benachrichtigt.
+                    Sie haben diese Entscheidung abgelehnt{actedAt ? ` am ${formatDate(actedAt)}` : ""}. Der Ersteller wurde benachrichtigt.
                   </p>
                 </>
               )}
@@ -296,53 +363,131 @@ const ExternalReviewPage = () => {
           ) : (
             <>
               <h3 className="text-sm font-medium mb-3">Ihre Entscheidung</h3>
-              <Textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Optionales Feedback oder Begründung..."
-                className="mb-4 text-sm"
-                rows={3}
-                maxLength={5000}
-              />
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => submitAction("approve")}
-                  disabled={submitting}
-                  className="flex-1 gap-2"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                  Genehmigen
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => submitAction("reject")}
-                  disabled={submitting}
-                  className="flex-1 gap-2"
-                >
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                  Ablehnen
-                </Button>
-              </div>
+
+              {/* Action buttons */}
+              {!activeAction ? (
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => setActiveAction("approve")}
+                    className="flex-1 gap-2 h-12 text-base font-semibold bg-success hover:bg-success/90 text-white"
+                  >
+                    <CheckCircle2 className="w-5 h-5" /> Genehmigen
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setActiveAction("reject")}
+                    className="flex-1 gap-2 h-12 text-base font-semibold"
+                  >
+                    <XCircle className="w-5 h-5" /> Ablehnen
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const el = document.getElementById("ext-comment-box");
+                      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      el?.querySelector("textarea")?.focus();
+                    }}
+                    className="gap-2 h-12"
+                    title="Kommentar ohne Entscheidung"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    {activeAction === "approve"
+                      ? <CheckCircle2 className="w-5 h-5 text-success" />
+                      : <XCircle className="w-5 h-5 text-destructive" />
+                    }
+                    <span className="text-sm font-medium">
+                      {activeAction === "approve" ? "Genehmigung bestätigen" : "Ablehnung bestätigen"}
+                    </span>
+                  </div>
+                  <Textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Bitte geben Sie eine Begründung an (Pflichtfeld)…"
+                    className="text-sm"
+                    rows={3}
+                    maxLength={5000}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => submitAction(activeAction)}
+                      disabled={submitting || !feedback.trim()}
+                      className={`flex-1 gap-2 ${activeAction === "approve" ? "bg-success hover:bg-success/90 text-white" : ""}`}
+                      variant={activeAction === "reject" ? "destructive" : "default"}
+                    >
+                      {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Absenden
+                    </Button>
+                    <Button variant="ghost" onClick={() => { setActiveAction(null); setFeedback(""); }}>
+                      Abbrechen
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
 
-        {/* Viral footer */}
-        <footer className="text-center py-8 space-y-2">
-          <div className="flex items-center justify-center gap-2 opacity-50 hover:opacity-80 transition-opacity">
-            <img src={decivioLogo} alt="Decivio" className="h-5" />
+        {/* Comment box */}
+        {!alreadyActed && (
+          <div id="ext-comment-box" className="bg-card rounded-xl border border-border p-4">
+            <h3 className="text-xs font-medium mb-2 flex items-center gap-1.5">
+              <MessageSquare className="w-3 h-3" /> Kommentar ohne Entscheidung
+            </h3>
+            <Textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Ihr Kommentar oder Ihre Rückfrage..."
+              className="mb-2 text-sm"
+              rows={3}
+              maxLength={5000}
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={submitComment}
+              disabled={commentSubmitting || !newComment.trim()}
+              className="gap-1.5"
+            >
+              {commentSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+              Kommentar senden
+            </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground">
-            Diese Entscheidung wurde mit{" "}
-            <a href="https://decivio.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
-              Decivio
-            </a>{" "}
-            erstellt — Entscheidungsmanagement für Teams.
-          </p>
-        </footer>
+        )}
+
+        {/* Viral footer */}
+        <ViralFooter />
       </main>
     </div>
   );
 };
+
+const ViralFooter = () => (
+  <footer className="text-center py-8 space-y-3">
+    <a href="/" className="opacity-50 hover:opacity-80 transition-opacity inline-block">
+      <img src={decivioLogo} alt="Decivio" className="h-5 mx-auto" />
+    </a>
+    <p className="text-[10px] text-muted-foreground">
+      Powered by{" "}
+      <a href="https://decivio.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+        Decivio
+      </a>{" "}
+      — Decision Intelligence Platform
+    </p>
+    <a
+      href="https://decivio.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block text-xs text-primary hover:underline font-medium"
+    >
+      Kostenlos testen →
+    </a>
+  </footer>
+);
 
 export default ExternalReviewPage;

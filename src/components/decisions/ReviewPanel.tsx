@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Plus, User, UserCheck } from "lucide-react";
+import { CheckCircle2, XCircle, Plus, User, UserCheck, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => void }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [reviews, setReviews] = useState<any[]>([]);
+  const [externalReviews, setExternalReviews] = useState<any[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
   const [selectedReviewer, setSelectedReviewer] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -43,10 +44,20 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     if (data) setDelegationsForMe(data.map(d => d.delegator_id));
   };
 
+  const fetchExternalReviews = async () => {
+    const { data } = await supabase
+      .from("external_review_tokens")
+      .select("id, reviewer_name, reviewer_email, status, action_taken, acted_at, feedback")
+      .eq("decision_id", decision.id)
+      .order("created_at", { ascending: true });
+    if (data) setExternalReviews(data);
+  };
+
   useEffect(() => {
     fetchReviews();
     fetchProfiles();
     fetchDelegations();
+    fetchExternalReviews();
   }, [decision.id]);
 
   const addReviewer = async () => {
@@ -127,42 +138,82 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
   return (
     <div className="space-y-4 mt-4">
       <div className="space-y-2">
-        {reviews.length === 0 ? (
+        {reviews.length === 0 && externalReviews.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-4">{t("reviewPanel.noReviewers")}</p>
-        ) : reviews.map((r, i) => {
-          const canAct = canActOnReview(r);
-          const isDelegated = canAct && r.reviewer_id !== user?.id;
-          return (
-            <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold">
-                {i + 1}
-              </div>
-              <User className="w-4 h-4 text-muted-foreground" />
-              <div className="flex-1 min-w-0">
-                <span className="text-sm font-medium">{r.profiles?.full_name || t("reviewPanel.unknown")}</span>
-                {isDelegated && (
-                  <span className="flex items-center gap-1 text-[10px] text-primary mt-0.5">
-                    <UserCheck className="w-3 h-3" /> {t("reviewPanel.delegating", { name: getDelegatorName(r.reviewer_id) })}
+        ) : (
+          <>
+            {reviews.map((r, i) => {
+              const canAct = canActOnReview(r);
+              const isDelegated = canAct && r.reviewer_id !== user?.id;
+              return (
+                <div key={r.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                  <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold">
+                    {i + 1}
+                  </div>
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium">{r.profiles?.full_name || t("reviewPanel.unknown")}</span>
+                    {isDelegated && (
+                      <span className="flex items-center gap-1 text-[10px] text-primary mt-0.5">
+                        <UserCheck className="w-3 h-3" /> {t("reviewPanel.delegating", { name: getDelegatorName(r.reviewer_id) })}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium capitalize ${statusColors[r.status] || ""}`}>
+                    {statusLabel(r.status)}
                   </span>
-                )}
-              </div>
-              <span className={`text-xs font-medium capitalize ${statusColors[r.status] || ""}`}>
-                {statusLabel(r.status)}
-              </span>
-              {r.feedback && <span className="text-xs text-muted-foreground truncate max-w-32">"{r.feedback}"</span>}
-              {canAct && (
-                <div className="flex gap-1">
-                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success" onClick={() => handleReview(r.id, "approved")} disabled={loading}>
-                    <CheckCircle2 className="w-3 h-3" /> {t("reviewPanel.approve")}
-                  </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive" onClick={() => handleReview(r.id, "rejected")} disabled={loading}>
-                    <XCircle className="w-3 h-3" /> {t("reviewPanel.reject")}
-                  </Button>
+                  {r.feedback && <span className="text-xs text-muted-foreground truncate max-w-32">"{r.feedback}"</span>}
+                  {canAct && (
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-success" onClick={() => handleReview(r.id, "approved")} disabled={loading}>
+                        <CheckCircle2 className="w-3 h-3" /> {t("reviewPanel.approve")}
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-destructive" onClick={() => handleReview(r.id, "rejected")} disabled={loading}>
+                        <XCircle className="w-3 h-3" /> {t("reviewPanel.reject")}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+
+            {/* External reviews */}
+            {externalReviews.map((er) => {
+              const extStatusColors: Record<string, string> = {
+                pending: "text-warning",
+                approved: "text-success",
+                rejected: "text-destructive",
+              };
+              const extStatusLabel = (s: string) => {
+                if (s === "approved") return t("reviewPanel.approved");
+                if (s === "rejected") return t("reviewPanel.rejected");
+                return t("reviewPanel.pending");
+              };
+              return (
+                <div key={er.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                  <div className="w-7 h-7 rounded-full bg-muted/60 flex items-center justify-center">
+                    <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-medium">{er.reviewer_name || er.reviewer_email}</span>
+                      <Badge variant="outline" className="text-[9px] bg-muted/50 text-muted-foreground border-border h-4 px-1.5">
+                        Extern
+                      </Badge>
+                    </div>
+                    {er.reviewer_name && (
+                      <span className="text-[10px] text-muted-foreground">{er.reviewer_email}</span>
+                    )}
+                  </div>
+                  <span className={`text-xs font-medium capitalize ${extStatusColors[er.status] || ""}`}>
+                    {extStatusLabel(er.status)}
+                  </span>
+                  {er.feedback && <span className="text-xs text-muted-foreground truncate max-w-32">"{er.feedback}"</span>}
+                </div>
+              );
+            })}
+          </>
+        )}
       </div>
 
       {reviews.some((r) => canActOnReview(r)) && (

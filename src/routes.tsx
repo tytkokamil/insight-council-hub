@@ -99,6 +99,7 @@ export const publicRoutes = (
     <Route path="/approve/:token" element={<L><EmailAction /></L>} />
     <Route path="/reject/:token" element={<L><EmailAction /></L>} />
     <Route path="/review/external" element={<L><ExternalReview /></L>} />
+    <Route path="/review/:token" element={<L><ExternalReview /></L>} />
     <Route path="/contact" element={<L><Contact /></L>} />
     <Route path="/docs" element={<L><HelpCenter /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
