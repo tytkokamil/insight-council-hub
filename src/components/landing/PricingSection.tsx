@@ -95,10 +95,11 @@ const PricingSection = () => (
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1, duration: 0.7, ease }}
-              className={`relative flex flex-col rounded-2xl border p-7 transition-all ${
+              whileHover={{ y: -4 }}
+              className={`relative flex flex-col rounded-2xl border p-7 transition-all duration-300 ${
                 plan.highlighted
-                  ? "border-primary/30 bg-card shadow-lg scale-[1.03]"
-                  : "border-border bg-card hover:shadow-md"
+                  ? "border-primary/30 bg-card shadow-lg scale-[1.03] hover:shadow-xl"
+                  : "border-border bg-card hover:shadow-md hover:border-primary/15"
               }`}
             >
               {plan.highlighted && (

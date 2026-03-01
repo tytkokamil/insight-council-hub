@@ -82,9 +82,16 @@ const ProblemSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5, ease }}
-                className="group flex items-start gap-4 p-5 rounded-xl border border-destructive/20 bg-destructive/[0.03] hover:translate-x-1 transition-transform duration-200 cursor-default"
+                whileHover={{ x: 4, scale: 1.01 }}
+                className="group flex items-start gap-4 p-5 rounded-xl border border-destructive/20 bg-destructive/[0.03] hover:bg-destructive/[0.06] hover:border-destructive/30 hover:shadow-sm cursor-default transition-colors duration-200"
               >
-                <span className="text-2xl shrink-0 mt-0.5">{p.icon}</span>
+                <motion.span
+                  className="text-2xl shrink-0 mt-0.5"
+                  whileHover={{ scale: 1.2, rotate: 5 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  {p.icon}
+                </motion.span>
                 <div>
                   <h3 className="text-[15px] font-semibold text-foreground mb-1">{p.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
@@ -99,7 +106,8 @@ const ProblemSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg"
+            whileHover={{ y: -2 }}
+            className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
             <div className="px-5 py-3 border-b border-border flex items-center gap-2">
               <div className="flex gap-1.5">
@@ -116,7 +124,15 @@ const ProblemSection = () => {
 
             <div className="p-4 space-y-2">
               {dashboardItems.map((item, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 10 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.4 + i * 0.08, duration: 0.4, ease }}
+                  whileHover={{ scale: 1.01, backgroundColor: "hsl(var(--muted) / 0.5)" }}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 transition-colors"
+                >
                   <div className={`w-1 h-8 rounded-full ${item.priority}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
@@ -125,7 +141,7 @@ const ProblemSection = () => {
                   <div className="text-sm font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                     {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-muted-foreground">–</span>}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
 

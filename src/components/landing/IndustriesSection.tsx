@@ -40,14 +40,21 @@ const IndustriesSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06, duration: 0.5, ease }}
-            className={`relative p-5 rounded-xl border bg-card cursor-default transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${
+            whileHover={{ y: -3, scale: 1.02 }}
+            className={`relative p-5 rounded-xl border bg-card cursor-default transition-all duration-200 hover:shadow-md ${
               ind.focus ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"
             }`}
           >
             {ind.focus && (
               <span className="absolute top-3 right-3 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full tracking-wider uppercase">Fokus</span>
             )}
-            <span className="text-2xl block mb-3">{ind.icon}</span>
+            <motion.span
+              className="text-2xl block mb-3"
+              whileHover={{ scale: 1.2 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              {ind.icon}
+            </motion.span>
             <h3 className="text-sm font-semibold text-foreground mb-1">{ind.name}</h3>
             <p className="text-[12px] text-muted-foreground leading-relaxed">{ind.desc}</p>
           </motion.div>
