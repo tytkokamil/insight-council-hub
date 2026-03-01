@@ -23,9 +23,10 @@ import { calculateQualityScore, QualityScoreCircle, QualityScoreHints } from "./
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
-import { Crown } from "lucide-react";
+import { Crown, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTranslatedLabels } from "@/lib/labels";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 
 interface Props {
   open: boolean;
@@ -47,6 +48,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const { templates: dbTemplates } = useTemplates();
+  const { isDecisionLimitReached, decisionCount, maxDecisions, isFree } = useFreemiumLimits();
 
   // Convert DB templates to DecisionTemplate interface for the UI
   const availableTemplates: DecisionTemplate[] = useMemo(
@@ -310,6 +312,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !user) return;
+    if (isDecisionLimitReached) return;
 
     if (!validateRequiredFields()) return;
 
@@ -489,9 +492,38 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
   const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
 
+  // ─── Decision Limit Banner ───
+  const renderLimitBanner = () => {
+    if (!isDecisionLimitReached) return null;
+    return (
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/10 border border-warning/25 mb-4">
+        <div className="w-9 h-9 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+          <Lock className="w-4 h-4 text-warning" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-warning">{t("freemium.decisionLimitTitle")}</p>
+          <p className="text-xs text-warning/80 mt-0.5">
+            {t("freemium.decisionLimitDesc", { count: maxDecisions })}
+          </p>
+          <Button
+            size="sm"
+            className="mt-2 gap-1.5 text-xs"
+            onClick={() => {
+              onOpenChange(false);
+              window.location.href = "/#pricing";
+            }}
+          >
+            <Crown className="w-3.5 h-3.5" /> {t("freemium.upgradeCta")}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // ─── Template Selection Step ───
   const renderTemplateStep = () => (
     <div className="space-y-3">
+      {renderLimitBanner()}
       <p className="text-sm text-muted-foreground">
         {t("newDecision.templateIntro")}
       </p>
@@ -866,9 +898,10 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             )}
 
             {error && <p className="text-destructive text-sm">{error}</p>}
+            {renderLimitBanner()}
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>{t("newDecision.cancel")}</Button>
-              <Button type="submit" disabled={loading || !title.trim()}>{loading ? t("newDecision.creating") : t("newDecision.create")}</Button>
+              <Button type="submit" disabled={loading || !title.trim() || isDecisionLimitReached}>{loading ? t("newDecision.creating") : t("newDecision.create")}</Button>
             </div>
           </form>
         )}
