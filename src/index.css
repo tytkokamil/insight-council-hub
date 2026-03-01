@@ -23,6 +23,10 @@ html {
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.025em;
+  color: hsl(228 15% 18%);
+}
+.landing-page p {
+  color: hsl(225 10% 42%);
 }
 
 
@@ -355,6 +359,22 @@ html {
   /* No glow */
   .glow-effect { box-shadow: none; }
 
+  /* Settings group card – wraps related sections */
+  .settings-group {
+    @apply bg-card rounded-xl border border-border/60 p-6;
+  }
+  .settings-group + .settings-group {
+    @apply mt-4;
+  }
+  .settings-group h2 {
+    @apply text-sm font-semibold mb-4;
+  }
+
+  /* Section divider – softer than hr */
+  .section-divider {
+    @apply border-t border-border/30 my-6;
+  }
+
   /* Status badges – clean, subtle */
   .status-draft { @apply bg-muted text-muted-foreground; }
   .status-review { @apply bg-warning/10 text-warning; }
@@ -372,6 +392,22 @@ html {
       linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
       linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
     background-size: 40px 40px;
+  }
+
+  /* Landing page section transitions */
+  .lp-section-fade {
+    position: relative;
+  }
+  .lp-section-fade::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: linear-gradient(to bottom, hsl(var(--lp-bg, 225 20% 98%)), transparent);
+    pointer-events: none;
+    z-index: 1;
   }
 }
 

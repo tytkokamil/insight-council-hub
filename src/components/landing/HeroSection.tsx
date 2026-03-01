@@ -121,17 +121,18 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
-      {/* Clean background */}
+      {/* Premium gradient background */}
       <motion.div style={{ scale: bgScale, opacity: bgOpacity }} className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-background to-transparent" />
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent-violet/[0.02] blur-[100px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[140px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-accent-violet/[0.03] blur-[120px]" />
+        <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full bg-accent-teal/[0.02] blur-[100px]" />
       </motion.div>
       
-      {/* Subtle dot grid */}
-      <div className="absolute inset-0 opacity-[0.12]" style={{
-        backgroundImage: "radial-gradient(circle, hsl(225 16% 70% / 0.3) 1px, transparent 1px)",
-        backgroundSize: "32px 32px",
+      {/* Refined dot grid */}
+      <div className="absolute inset-0 opacity-[0.08]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(225 16% 60% / 0.4) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
       }} />
 
       <Particles />
@@ -143,10 +144,10 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.7, ease }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/60 bg-white/70 backdrop-blur-sm mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/15 bg-white/80 backdrop-blur-sm mb-10 shadow-sm"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-medium text-muted-foreground tracking-wide">
+            <span className="text-[11px] font-semibold text-primary/80 tracking-wide uppercase">
               Decision Governance Platform
             </span>
           </motion.div>
@@ -156,7 +157,8 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6 text-foreground"
+            className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6"
+            style={{ color: 'hsl(228 15% 18%)' }}
           >
             Jede offene Entscheidung
             <br />
@@ -169,7 +171,8 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.8, ease }}
-            className="text-[16px] md:text-[18px] text-muted-foreground max-w-xl mx-auto leading-relaxed"
+            className="text-[16px] md:text-[18px] max-w-xl mx-auto leading-relaxed"
+            style={{ color: 'hsl(225 10% 45%)' }}
           >
             Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden.
           </motion.p>
@@ -185,17 +188,16 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-7 py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground bg-gradient-to-b from-primary to-[hsl(214,52%,22%)] hover:from-primary/90 hover:to-[hsl(214,52%,20%)] px-8 py-3.5 rounded-xl shadow-[0_2px_12px_-3px_hsl(214_52%_25%/0.4)] hover:shadow-[0_4px_20px_-4px_hsl(214_52%_25%/0.5)] transition-all duration-300 overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </span>
-              {/* Glow pulse on CTA */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent-blue to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite] opacity-0 group-hover:opacity-30 transition-opacity" />
             </Link>
             <button
               onClick={() => setShowTour(true)}
-              className="group inline-flex items-center justify-center gap-2 text-[14px] font-medium text-muted-foreground hover:text-foreground border border-border/60 hover:border-border px-7 py-3 rounded-xl transition-all duration-200"
+              className="group inline-flex items-center justify-center gap-2 text-[14px] font-medium hover:text-foreground border border-border/60 hover:border-border bg-white/60 backdrop-blur-sm px-7 py-3.5 rounded-xl transition-all duration-200 hover:shadow-sm"
+              style={{ color: 'hsl(225 10% 40%)' }}
             >
               <Play className="w-3.5 h-3.5" /> Demo ansehen
             </button>
@@ -206,11 +208,11 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 0.8 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+            className="mt-14 flex flex-wrap items-center justify-center gap-x-8 gap-y-2"
           >
             {["Keine Kreditkarte", "In 3 Minuten startklar", "DSGVO-konform"].map((item, i) => (
-              <span key={i} className="text-[11px] text-muted-foreground/60">
-                ✓ {item}
+              <span key={i} className="text-[11px] font-medium" style={{ color: 'hsl(225 10% 55%)' }}>
+                <span className="text-success mr-1">✓</span> {item}
               </span>
             ))}
           </motion.div>

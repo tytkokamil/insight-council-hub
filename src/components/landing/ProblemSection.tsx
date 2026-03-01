@@ -55,7 +55,7 @@ const ProblemSection = () => {
   }, []);
 
   return (
-    <section id="problem" className="py-24 relative bg-muted/20">
+    <section id="problem" className="py-24 relative bg-gradient-to-b from-muted/30 via-muted/10 to-transparent">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -65,10 +65,10 @@ const ProblemSection = () => {
           className="text-center max-w-2xl mx-auto mb-16"
         >
           <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Das Problem</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ color: 'hsl(228 15% 18%)' }}>
             Was in jedem Mittelständler täglich passiert — unbemerkt.
           </h2>
-          <p className="text-muted-foreground leading-relaxed">
+          <p className="leading-relaxed" style={{ color: 'hsl(225 10% 45%)' }}>
             Entscheidungen bleiben offen. Reviewer reagieren nicht. Niemand sieht was es kostet.
           </p>
         </motion.div>
@@ -83,14 +83,14 @@ const ProblemSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.5, ease }}
-                className="flex items-start gap-4 p-5 rounded-xl border border-destructive/10 bg-white/60 backdrop-blur-sm"
+                className="flex items-start gap-4 p-5 rounded-xl border border-destructive/8 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors duration-300"
               >
-                <div className="w-9 h-9 rounded-xl bg-destructive/8 flex items-center justify-center shrink-0">
-                  <p.icon className="w-4 h-4 text-destructive/70" />
+                <div className="w-9 h-9 rounded-xl bg-destructive/6 flex items-center justify-center shrink-0">
+                  <p.icon className="w-4 h-4 text-destructive/60" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-semibold text-foreground mb-1">{p.title}</h3>
-                  <p className="text-[13px] text-muted-foreground leading-relaxed">{p.desc}</p>
+                  <h3 className="text-[14px] font-semibold mb-1" style={{ color: 'hsl(228 15% 20%)' }}>{p.title}</h3>
+                  <p className="text-[13px] leading-relaxed" style={{ color: 'hsl(225 10% 48%)' }}>{p.desc}</p>
                 </div>
               </motion.div>
             ))}
