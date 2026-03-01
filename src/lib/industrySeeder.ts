@@ -316,6 +316,7 @@ export async function seedIndustryData(
     is_system: true,
     created_by: userId,
     version: 1,
+    industry: industryId,
   }));
 
   const { error: tplErr } = await supabase
