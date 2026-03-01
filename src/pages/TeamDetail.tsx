@@ -135,7 +135,7 @@ const TeamDetail = () => {
           </TabsContent>
 
           <TabsContent value="chat" className="mt-6">
-            <div className="rounded-lg border border-border overflow-hidden">
+            <div className="rounded-lg border border-border/60 overflow-hidden">
               <TeamChat teamId={team.id} teamName={team.name} initialLinkedDecisionId={initialLinkedDecisionId} />
             </div>
           </TabsContent>
@@ -151,7 +151,7 @@ const TeamDetail = () => {
                   <TeamDefaultsConfig teamId={team.id} />
                 </div>
 
-                <hr className="border-border" />
+                <hr className="border-border/40" />
 
                 <div>
                   <h2 className="text-sm font-semibold mb-1">{t("cod.teamTitle", "Cost-of-Delay-Konfiguration")}</h2>
@@ -161,7 +161,7 @@ const TeamDetail = () => {
                   <CodConfigPanel teamId={team.id} />
                 </div>
 
-                <hr className="border-border" />
+                <hr className="border-border/40" />
 
                 <div>
                   <h2 className="text-sm font-semibold mb-1">{t("teamDetail.slaConfig")}</h2>
