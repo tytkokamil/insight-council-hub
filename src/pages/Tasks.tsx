@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
 import AppLayout from "@/components/layout/AppLayout";
 import QueryErrorRetry from "@/components/shared/QueryErrorRetry";
 import PageHelpButton from "@/components/shared/PageHelpButton";
@@ -25,6 +26,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Plus, CheckCircle2, Circle, Clock, AlertTriangle, Pencil, Trash2,
   ListTodo, FileUp, Search, LayoutGrid, List, MoreHorizontal, Eye, Filter, X, Zap, Target, GitBranch, Ban, Archive, TrendingUp, Download, FileText,
+  Link as LinkIcon,
 } from "lucide-react";
 import { exportTasksCSV } from "@/lib/exportDecisions";
 import { exportTasksExcel } from "@/lib/exportExcel";
@@ -85,6 +87,48 @@ const Tasks = () => {
   const profileMap = buildProfileMap(profiles);
   const STATUS_CONFIG = useStatusConfig();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
+
+  // Fetch linked decisions for tasks via decision_dependencies
+  const taskIds = useMemo(() => tasks.map(t => t.id), [tasks]);
+  const { data: taskDecisionLinks = [] } = useQuery({
+    queryKey: ["task-decision-links", taskIds],
+    queryFn: async () => {
+      if (taskIds.length === 0) return [];
+      const { data: deps } = await supabase
+        .from("decision_dependencies")
+        .select("source_task_id, target_task_id, source_decision_id, target_decision_id")
+        .or(`source_task_id.in.(${taskIds.join(",")}),target_task_id.in.(${taskIds.join(",")})`);
+      if (!deps || deps.length === 0) return [];
+      const decisionIds = new Set<string>();
+      for (const d of deps) {
+        if (d.source_decision_id) decisionIds.add(d.source_decision_id);
+        if (d.target_decision_id) decisionIds.add(d.target_decision_id);
+      }
+      if (decisionIds.size === 0) return [];
+      const { data: decisions } = await supabase
+        .from("decisions")
+        .select("id, title")
+        .in("id", Array.from(decisionIds));
+      const decMap = Object.fromEntries((decisions || []).map(d => [d.id, d.title]));
+      return deps.map(d => ({
+        taskId: d.source_task_id || d.target_task_id,
+        decisionId: d.source_decision_id || d.target_decision_id,
+        decisionTitle: decMap[d.source_decision_id || d.target_decision_id || ""] || null,
+      }));
+    },
+    enabled: taskIds.length > 0,
+    staleTime: 30_000,
+  });
+
+  const taskDecisionMap = useMemo(() => {
+    const map: Record<string, { decisionId: string; decisionTitle: string }> = {};
+    for (const link of taskDecisionLinks) {
+      if (link.taskId && link.decisionId && link.decisionTitle) {
+        map[link.taskId] = { decisionId: link.decisionId, decisionTitle: link.decisionTitle };
+      }
+    }
+    return map;
+  }, [taskDecisionLinks]);
 
   const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
     critical: { color: "bg-destructive/20 text-destructive", label: t("tasksPage.priorityCritical") },
@@ -507,6 +551,17 @@ const Tasks = () => {
                               {isOverdue && <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-destructive/10 text-destructive border-destructive/30">{t("tasksPage.chipOverdue", "Überfällig")}</Badge>}
                             </div>
                             {task.description && <p className="text-xs text-muted-foreground truncate max-w-[300px]">{task.description}</p>}
+                            {taskDecisionMap[task.id] && (
+                              <Link
+                                to={`/decisions/${taskDecisionMap[task.id].decisionId}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex items-center gap-1 mt-0.5 hover:underline"
+                                style={{ fontSize: "11px", color: "#64748B" }}
+                              >
+                                <LinkIcon className="w-3 h-3" style={{ color: "#64748B" }} />
+                                {taskDecisionMap[task.id].decisionTitle}
+                              </Link>
+                            )}
                           </td>
                           <td className="p-3">
                             <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold uppercase ${statusStyles[task.status] || ""}`}>
@@ -523,7 +578,7 @@ const Tasks = () => {
                           </td>
                           <td className="p-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || "—" : "—"}</span>
+                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span> : <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span>}</span>
                               {task.assignee_id && (
                                 <QuickMessageButton
                                   teamId={task.team_id}
@@ -536,7 +591,7 @@ const Tasks = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className={`text-xs ${isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                            <span className={`text-xs ${!isOverdue ? "text-muted-foreground" : ""}`} style={isOverdue ? { color: "#EF4444", fontWeight: 500 } : undefined}>
                               {task.due_date ? format(new Date(task.due_date), "dd.MM.yy", { locale: dateFnsLocale }) : "—"}
                               {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
                             </span>
