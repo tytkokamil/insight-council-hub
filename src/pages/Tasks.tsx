@@ -392,7 +392,7 @@ const Tasks = () => {
                 </div>
               </PopoverContent>
             </Popover>
-            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)} className="border border-border rounded-lg">
+            <ToggleGroup type="single" value={viewMode} onValueChange={(v) => v && setViewMode(v as any)} className="border border-border/60 rounded-lg">
               <ToggleGroupItem value="list" className="px-2 py-1 h-9" aria-label={t("tasksPage.listView")}>
                 <List className="w-4 h-4" />
               </ToggleGroupItem>
@@ -458,10 +458,10 @@ const Tasks = () => {
           {viewMode === "kanban" ? (
             <TaskKanbanBoard tasks={filteredTasks} profileMap={profileMap} onStatusChange={changeStatus} onEdit={openEdit} onDelete={setDeleteTask} />
           ) : (
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden border-border/60">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border bg-muted/30">
+                  <tr className="border-b border-border/60 bg-muted/30">
                      <th className="p-3 w-8">
                        <input type="checkbox" checked={selectedIds.size === filteredTasks.length && filteredTasks.length > 0} onChange={selectAll} className="rounded border-input" />
                      </th>
@@ -485,7 +485,7 @@ const Tasks = () => {
                       const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== "done";
 
                       return (
-                        <tr key={task.id} className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${isOverdue ? "bg-destructive/[0.03]" : ""}`}>
+                        <tr key={task.id} className={`border-b border-border/40 hover:bg-muted/30 transition-colors ${isOverdue ? "bg-destructive/[0.03]" : ""}`}>
                           <td className="p-3">
                             <input type="checkbox" checked={selectedIds.has(task.id)} onChange={() => toggleSelect(task.id)} className="rounded border-input" />
                           </td>

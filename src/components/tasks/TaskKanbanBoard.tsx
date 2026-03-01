@@ -77,12 +77,12 @@ const TaskKanbanBoard = memo(({ tasks, profileMap, onStatusChange, onEdit, onDel
           onDragLeave={() => setDragOverCol(null)}
           onDrop={(e) => handleDrop(e, col.key)}
           className={cn(
-            "rounded-xl border border-border border-t-4 bg-card transition-colors min-h-[300px]",
+            "rounded-xl border border-border/60 border-t-4 bg-card transition-colors min-h-[300px]",
             col.color,
             dragOverCol === col.key && "bg-primary/5 ring-2 ring-inset ring-primary/30"
           )}
         >
-          <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
+          <div className="px-3 py-2.5 border-b border-border/60 flex items-center justify-between">
             <span className="text-xs font-semibold">{col.label}</span>
             <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
               {columns[col.key]?.length ?? 0}
@@ -101,7 +101,7 @@ const TaskKanbanBoard = memo(({ tasks, profileMap, onStatusChange, onEdit, onDel
                     onDragStart={(e) => handleDragStart(e, task.id)}
                     onDragEnd={() => { setDraggingId(null); setDragOverCol(null); }}
                     className={cn(
-                      "rounded-lg border border-border bg-background p-2.5 cursor-grab active:cursor-grabbing hover:shadow-sm transition-all",
+                      "rounded-lg border border-border/60 bg-background p-2.5 cursor-grab active:cursor-grabbing hover:shadow-sm transition-all",
                       draggingId === task.id && "opacity-40 scale-95"
                     )}
                   >
