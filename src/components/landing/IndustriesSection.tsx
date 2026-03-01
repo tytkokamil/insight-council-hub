@@ -24,11 +24,11 @@ const IndustriesSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center max-w-2xl mx-auto mb-14"
       >
-        <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Branchen</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+        <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase" style={{ color: 'hsl(220 45% 50%)' }}>Branchen</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
           Für jede Branche die richtige Sprache.
         </h2>
-        <p className="text-muted-foreground leading-relaxed">
+        <p className="leading-relaxed">
           Decivio passt sich Ihrer Branche an — Terminologie, Templates, Compliance-Anforderungen.
         </p>
       </motion.div>
@@ -41,13 +41,13 @@ const IndustriesSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.05, duration: 0.5, ease }}
-            className="p-5 rounded-xl border border-border/50 bg-white/60 backdrop-blur-sm hover:border-border hover:shadow-sm transition-all duration-200"
+            className="p-5 rounded-xl border border-border/30 bg-white/60 backdrop-blur-sm hover:border-border/50 hover:shadow-[0_4px_16px_-6px_hsl(220,20%,50%,0.06)] transition-all duration-200"
           >
-            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center mb-3">
-              <ind.icon className="w-4 h-4 text-foreground/50" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-3" style={{ background: 'hsl(220 30% 95%)' }}>
+              <ind.icon className="w-4 h-4" style={{ color: 'hsl(220 30% 55%)' }} />
             </div>
-            <h3 className="text-[13px] font-semibold text-foreground mb-1">{ind.name}</h3>
-            <p className="text-[12px] text-muted-foreground leading-relaxed">{ind.desc}</p>
+            <h3 className="text-[13px] font-semibold mb-1">{ind.name}</h3>
+            <p className="text-[12px] leading-relaxed">{ind.desc}</p>
           </motion.div>
         ))}
       </div>

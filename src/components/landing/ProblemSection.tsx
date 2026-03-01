@@ -15,9 +15,9 @@ const problems = [
 ];
 
 const dashboardItems = [
-  { title: "Cloud-Migration AWS → Azure", status: "Eskaliert", statusColor: "text-destructive", cost: 10240, live: true, priority: "bg-destructive" },
-  { title: "Investitionsfreigabe CNC-Maschine", status: "SLA läuft ab", statusColor: "text-warning", cost: 28500, live: false, priority: "bg-warning" },
-  { title: "Lieferantenwechsel Hydraulik", status: "Überfällig", statusColor: "text-warning", cost: 6800, live: true, priority: "bg-warning" },
+  { title: "Cloud-Migration AWS → Azure", status: "Eskaliert", statusColor: "text-[hsl(0,45%,58%)]", cost: 10240, live: true, priority: "bg-[hsl(0,45%,58%)]" },
+  { title: "Investitionsfreigabe CNC-Maschine", status: "SLA läuft ab", statusColor: "text-[hsl(35,50%,50%)]", cost: 28500, live: false, priority: "bg-[hsl(35,50%,50%)]" },
+  { title: "Lieferantenwechsel Hydraulik", status: "Überfällig", statusColor: "text-[hsl(35,50%,50%)]", cost: 6800, live: true, priority: "bg-[hsl(35,50%,50%)]" },
   { title: "Make-or-Buy Steuerungsplatine", status: "Offen", statusColor: "text-muted-foreground", cost: null, live: false, priority: "bg-muted-foreground/30" },
 ];
 
@@ -39,7 +39,7 @@ const LiveCost = ({ base, live }: { base: number; live: boolean }) => {
     ? `€${(value / 1000).toFixed(0)}k`
     : `€${value.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`;
 
-  return <span className="text-warning font-mono text-sm">{formatted}</span>;
+  return <span className="font-mono text-sm" style={{ color: 'hsl(220 40% 50%)' }}>{formatted}</span>;
 };
 
 const ProblemSection = () => {
@@ -55,7 +55,7 @@ const ProblemSection = () => {
   }, []);
 
   return (
-    <section id="problem" className="py-24 relative bg-gradient-to-b from-muted/30 via-muted/10 to-transparent">
+    <section id="problem" className="py-24 relative bg-gradient-to-b from-muted/20 via-transparent to-transparent">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -64,11 +64,11 @@ const ProblemSection = () => {
           transition={{ duration: 0.7, ease }}
           className="text-center max-w-2xl mx-auto mb-16"
         >
-          <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Das Problem</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ color: 'hsl(228 12% 32%)' }}>
+          <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase" style={{ color: 'hsl(220 45% 50%)' }}>Das Problem</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Was in jedem Mittelständler täglich passiert — unbemerkt.
           </h2>
-          <p className="leading-relaxed" style={{ color: 'hsl(225 10% 45%)' }}>
+          <p className="leading-relaxed">
             Entscheidungen bleiben offen. Reviewer reagieren nicht. Niemand sieht was es kostet.
           </p>
         </motion.div>
@@ -83,14 +83,14 @@ const ProblemSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.5, ease }}
-                className="flex items-start gap-4 p-5 rounded-xl border border-destructive/8 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors duration-300"
+                className="flex items-start gap-4 p-5 rounded-xl border border-border/30 bg-white/70 backdrop-blur-sm hover:bg-white/90 transition-colors duration-300"
               >
-                <div className="w-9 h-9 rounded-xl bg-destructive/6 flex items-center justify-center shrink-0">
-                  <p.icon className="w-4 h-4 text-destructive/60" />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'hsl(220 40% 95%)' }}>
+                  <p.icon className="w-4 h-4" style={{ color: 'hsl(220 35% 55%)' }} />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-semibold mb-1" style={{ color: 'hsl(228 12% 34%)' }}>{p.title}</h3>
-                  <p className="text-[13px] leading-relaxed" style={{ color: 'hsl(225 10% 48%)' }}>{p.desc}</p>
+                  <h3 className="text-[14px] font-semibold mb-1">{p.title}</h3>
+                  <p className="text-[13px] leading-relaxed">{p.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -102,15 +102,15 @@ const ProblemSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15, duration: 0.7, ease }}
-            className="rounded-2xl border border-border/60 bg-white overflow-hidden shadow-sm"
+            className="rounded-2xl border border-border/40 bg-white overflow-hidden shadow-[0_4px_24px_-8px_hsl(220,20%,50%,0.08)]"
           >
-            <div className="px-5 py-3 border-b border-border/40 flex items-center gap-2">
+            <div className="px-5 py-3 border-b border-border/30 flex items-center gap-2">
               <div className="flex gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-destructive/30" />
-                <div className="w-2 h-2 rounded-full bg-warning/30" />
-                <div className="w-2 h-2 rounded-full bg-success/30" />
+                <div className="w-2 h-2 rounded-full" style={{ background: 'hsl(0 40% 70%)' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: 'hsl(40 45% 70%)' }} />
+                <div className="w-2 h-2 rounded-full" style={{ background: 'hsl(140 35% 65%)' }} />
               </div>
-              <span className="text-[11px] text-muted-foreground/60 font-mono mx-auto">Offene Entscheidungen</span>
+              <span className="text-[11px] font-mono mx-auto" style={{ color: 'hsl(220 10% 65%)' }}>Offene Entscheidungen</span>
             </div>
 
             <div className="p-4 space-y-2">
@@ -121,11 +121,11 @@ const ProblemSection = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.3 + i * 0.06, duration: 0.4, ease }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border/30 bg-muted/20"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border/20 bg-muted/15"
                 >
                   <div className={`w-1 h-8 rounded-full ${item.priority}`} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-foreground truncate">{item.title}</p>
+                    <p className="text-[13px] font-medium truncate">{item.title}</p>
                     <p className={`text-[11px] ${item.statusColor}`}>{item.status}</p>
                   </div>
                   <div className="tabular-nums">
@@ -135,9 +135,9 @@ const ProblemSection = () => {
               ))}
             </div>
 
-            <div className="px-5 py-3 border-t border-border/40 flex items-center justify-between">
-              <span className="text-[11px] text-muted-foreground/60">Economic Exposure</span>
-              <span className="text-base font-bold text-warning tabular-nums font-mono">
+            <div className="px-5 py-3 border-t border-border/30 flex items-center justify-between">
+              <span className="text-[11px]" style={{ color: 'hsl(220 10% 62%)' }}>Economic Exposure</span>
+              <span className="text-base font-bold tabular-nums font-mono" style={{ color: 'hsl(220 40% 50%)' }}>
                 €{totalExposure.toLocaleString("de-DE", { maximumFractionDigits: 0 })}
               </span>
             </div>
