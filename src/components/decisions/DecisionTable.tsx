@@ -43,11 +43,11 @@ const statusStyles: Record<string, string> = {
   archived: "bg-muted/50 text-muted-foreground/60",
 };
 
-const priorityStyles: Record<string, string> = {
-  low: "text-muted-foreground",
-  medium: "text-accent-blue",
-  high: "text-warning",
-  critical: "text-destructive font-semibold",
+const priorityBadgeStyles: Record<string, string> = {
+  low: "bg-muted text-muted-foreground border-border/50",
+  medium: "bg-accent-blue/10 text-accent-blue border-accent-blue/20",
+  high: "bg-warning/10 text-warning border-warning/20",
+  critical: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 interface DecisionTableProps {
@@ -156,7 +156,6 @@ const DecisionTable = ({
               <SortableHeader field="title" label={t("decisions.decision")} currentField={sortField} currentDir={sortDir} onSort={onSort} />
               <SortableHeader field="status" label={t("decisions.statusLabel")} currentField={sortField} currentDir={sortDir} onSort={onSort} />
               <th className="text-left p-3 text-xs font-medium text-muted-foreground hidden md:table-cell">{t("decisions.owner")}</th>
-              <SortableHeader field="priority" label={t("decisions.priorityLabel")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden md:table-cell" />
               <SortableHeader field="risk" label={t("decisions.risk")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden lg:table-cell" />
               <SortableHeader field="due_date" label={t("decisions.due")} currentField={sortField} currentDir={sortDir} onSort={onSort} className="hidden md:table-cell" />
               <th className="p-3 w-10"></th>
@@ -165,7 +164,7 @@ const DecisionTable = ({
           <tbody>
             {decisions.length === 0 ? (
               <tr>
-                <td colSpan={8} className="p-12 text-center">
+                <td colSpan={7} className="p-12 text-center">
                   <p className="text-sm text-muted-foreground">{t("decisions.noFilterResults")}</p>
                   <Button variant="outline" size="sm" className="mt-3" onClick={onClearFilters}>{t("decisions.resetFilters")}</Button>
                 </td>
@@ -178,13 +177,14 @@ const DecisionTable = ({
                   <tr
                     key={decision.id}
                     className={`border-b border-border/20 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors duration-100 ${isSelected ? "bg-primary/[0.04]" : ""}`}
+                    style={meta.isOverdue ? { borderLeft: "3px solid rgba(239, 68, 68, 0.6)" } : undefined}
                     onClick={() => onPreview(decision)}
                   >
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onCheckedChange={() => onToggleSelect(decision.id)} />
                     </td>
 
-                    {/* Title + badges */}
+                    {/* Title + category + priority badge + status badges */}
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <QualityScoreBadge decision={decision} />
@@ -192,7 +192,12 @@ const DecisionTable = ({
                         <DecisionBadges meta={meta} t={t} />
                         <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />
                       </div>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">{categoryLabels[decision.category]}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground">{categoryLabels[decision.category]}</span>
+                        <Badge variant="outline" className={`text-[9px] h-4 px-1.5 ${priorityBadgeStyles[decision.priority]}`}>
+                          {priorityLabels[decision.priority]}
+                        </Badge>
+                      </div>
                     </td>
 
                     <td className="p-3">
@@ -236,12 +241,6 @@ const DecisionTable = ({
                       </div>
                     </td>
 
-                    <td className="p-3 hidden md:table-cell">
-                      <span className={`text-xs font-semibold ${priorityStyles[decision.priority]}`}>
-                        {priorityLabels[decision.priority]}
-                      </span>
-                    </td>
-
                     <td className="p-3 hidden lg:table-cell">
                       <div className="flex items-center gap-2">
                         <div className={`w-2 h-2 rounded-full ${(decision.ai_risk_score || 0) > 60 ? "bg-destructive" : (decision.ai_risk_score || 0) > 40 ? "bg-warning" : "bg-success"}`} />
@@ -254,14 +253,10 @@ const DecisionTable = ({
                         <span className={`text-xs ${meta.isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                           {decision.due_date ? format(new Date(decision.due_date), "dd.MM.yy", { locale: de }) : "—"}
                         </span>
-                        {(meta.isOverdue || meta.isEscalated) && decision.cost_per_day > 0 && (
-                          <LiveCodCounter
-                            baseCost={Math.round(((Date.now() - new Date(decision.created_at).getTime()) / 86400000) * decision.cost_per_day)}
-                            costPerSecond={decision.cost_per_day / 86400}
-                            createdAt={decision.created_at}
-                            size="sm"
-                            dailyCost={decision.cost_per_day}
-                          />
+                        {meta.cost > 0 && (
+                          <span className="text-[11px] font-medium" style={{ color: "#EF4444" }}>
+                            ⏱ {meta.cost >= 1000 ? `${(meta.cost / 1000).toFixed(1)}k` : Math.round(meta.cost)}€/Wo
+                          </span>
                         )}
                       </div>
                     </td>
