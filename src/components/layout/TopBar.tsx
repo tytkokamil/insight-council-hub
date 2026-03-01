@@ -179,7 +179,7 @@ const TopBar = memo(({ collapsed }: TopBarProps) => {
         </div>
 
         {/* Notifications */}
-        <NotificationCenter collapsed={false} />
+        <NotificationCenter collapsed={false} position="topbar" />
 
         {/* Contextual Action */}
         {action && (
