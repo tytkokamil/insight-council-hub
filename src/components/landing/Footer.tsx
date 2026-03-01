@@ -2,65 +2,66 @@ import { Link } from "react-router-dom";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 const Footer = () => (
-  <footer className="border-t border-border py-16 bg-muted/30">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-14">
+  <footer className="border-t border-border py-14 bg-muted/30">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
         {/* Logo */}
         <div className="col-span-2 md:col-span-1">
-          <Link to="/" className="flex items-center gap-2 mb-4">
+          <Link to="/" className="flex items-center gap-2 mb-3">
             <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded-md" />
-            <span className="font-semibold text-[15px] text-foreground">Decivio</span>
+            <span className="font-semibold text-sm text-foreground">Decivio</span>
           </Link>
-          <p className="text-xs text-muted-foreground leading-relaxed max-w-[220px]">
-            Decision Governance Platform für den Mittelstand. Made in Germany.
+          <p className="text-xs text-muted-foreground leading-relaxed max-w-[200px]">
+            Decision Governance Platform für den Mittelstand.
           </p>
         </div>
 
         {/* Product */}
         <div>
-          <h4 className="text-[11px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/60 mb-4">Produkt</h4>
-          <ul className="space-y-2.5">
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/50 mb-3">Produkt</h4>
+          <ul className="space-y-2">
             {[
               { label: "Features", href: "#solution" },
               { label: "Branchen", href: "#industries" },
-              { label: "Compliance", href: "#compliance" },
               { label: "Preise", href: "#pricing" },
+              { label: "Changelog", to: "/changelog" },
             ].map(l => (
-              <li key={l.label}><a href={l.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">{l.label}</a></li>
-            ))}
-            <li><Link to="/changelog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Changelog</Link></li>
-          </ul>
-        </div>
-
-        {/* Industries */}
-        <div>
-          <h4 className="text-[11px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/60 mb-4">Branchen</h4>
-          <ul className="space-y-2.5">
-            {["Maschinenbau", "Pharma", "Automotive", "Finanzdienstleister", "IT & Software"].map(l => (
-              <li key={l}><a href="#industries" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{l}</a></li>
+              <li key={l.label}>
+                {'to' in l && l.to
+                  ? <Link to={l.to} className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">{l.label}</Link>
+                  : <a href={l.href} className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">{l.label}</a>
+                }
+              </li>
             ))}
           </ul>
         </div>
 
         {/* Company */}
         <div>
-          <h4 className="text-[11px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/60 mb-4">Unternehmen</h4>
-          <ul className="space-y-2.5">
-            <li><Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Datenschutz</Link></li>
-            <li><Link to="/imprint" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Impressum</Link></li>
-            <li><Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AGB</Link></li>
-            <li><Link to="/avv" className="text-sm text-muted-foreground hover:text-foreground transition-colors">AVV</Link></li>
-            <li><Link to="/ai-policy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">KI-Richtlinie</Link></li>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/50 mb-3">Unternehmen</h4>
+          <ul className="space-y-2">
+            <li><Link to="/privacy" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">Datenschutz</Link></li>
+            <li><Link to="/imprint" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">Impressum</Link></li>
+            <li><Link to="/terms" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">AGB</Link></li>
+            <li><Link to="/avv" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">AVV</Link></li>
+          </ul>
+        </div>
+
+        {/* Legal */}
+        <div>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/50 mb-3">Compliance</h4>
+          <ul className="space-y-2">
+            <li><Link to="/ai-policy" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">KI-Richtlinie</Link></li>
+            <li><a href="#compliance" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">Frameworks</a></li>
           </ul>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border">
-        <p className="text-[11px] text-muted-foreground/60">© 2026 Decivio · Made in Germany 🇩🇪</p>
-        <div className="flex items-center gap-6 mt-4 md:mt-0">
-          <Link to="/privacy" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">Datenschutz</Link>
-          <Link to="/imprint" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">Impressum</Link>
-          <Link to="/terms" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">AGB</Link>
+      <div className="flex items-center justify-between pt-6 border-t border-border/60">
+        <p className="text-[11px] text-muted-foreground/50">© 2026 Decivio · Made in Germany</p>
+        <div className="flex items-center gap-5">
+          <Link to="/privacy" className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors">Datenschutz</Link>
+          <Link to="/imprint" className="text-[11px] text-muted-foreground/50 hover:text-foreground transition-colors">Impressum</Link>
         </div>
       </div>
     </div>

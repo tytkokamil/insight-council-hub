@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
+import { Factory, Pill, Car, Landmark, Monitor, HardHat, Zap, HeartPulse } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const industries = [
-  { icon: "🏭", name: "Maschinenbau", desc: "ECOs, Projektfreigaben, Maschinenabnahmen", focus: true },
-  { icon: "💊", name: "Pharma", desc: "Change Control, CAPA, Batch-Freigaben", focus: false },
-  { icon: "🚗", name: "Automotive", desc: "PPAP, 8D-Reports, Änderungsmanagement", focus: false },
-  { icon: "🏦", name: "Finanzdienstleister", desc: "Kreditentscheidungen, Compliance", focus: false },
-  { icon: "💻", name: "IT & Software", desc: "ADRs, Release-Freigaben, Security", focus: false },
-  { icon: "🏗️", name: "Bau", desc: "Nachträge, Subunternehmer, Abnahmen", focus: false },
-  { icon: "⚡", name: "Energie", desc: "Netzinvestitionen, KRITIS, NIS2", focus: false },
-  { icon: "🏥", name: "Healthcare", desc: "Geräteinvestitionen, Protokolländerungen", focus: false },
+  { icon: Factory, name: "Maschinenbau", desc: "ECOs, Projektfreigaben, Maschinenabnahmen", focus: true },
+  { icon: Pill, name: "Pharma", desc: "Change Control, CAPA, Batch-Freigaben", focus: false },
+  { icon: Car, name: "Automotive", desc: "PPAP, 8D-Reports, Änderungsmanagement", focus: false },
+  { icon: Landmark, name: "Finanzdienstleister", desc: "Kreditentscheidungen, Compliance", focus: false },
+  { icon: Monitor, name: "IT & Software", desc: "ADRs, Release-Freigaben, Security", focus: false },
+  { icon: HardHat, name: "Bau", desc: "Nachträge, Subunternehmer, Abnahmen", focus: false },
+  { icon: Zap, name: "Energie", desc: "Netzinvestitionen, KRITIS, NIS2", focus: false },
+  { icon: HeartPulse, name: "Healthcare", desc: "Geräteinvestitionen, Protokolländerungen", focus: false },
 ];
 
 const IndustriesSection = () => (
@@ -40,21 +41,16 @@ const IndustriesSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06, duration: 0.5, ease }}
-            whileHover={{ y: -3, scale: 1.02 }}
-            className={`relative p-5 rounded-xl border bg-card cursor-default transition-all duration-200 hover:shadow-md ${
+            className={`relative p-5 rounded-xl border bg-card transition-colors duration-200 ${
               ind.focus ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"
             }`}
           >
             {ind.focus && (
               <span className="absolute top-3 right-3 text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full tracking-wider uppercase">Fokus</span>
             )}
-            <motion.span
-              className="text-2xl block mb-3"
-              whileHover={{ scale: 1.2 }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
-              {ind.icon}
-            </motion.span>
+            <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center mb-3">
+              <ind.icon className="w-4 h-4 text-foreground/60" />
+            </div>
             <h3 className="text-sm font-semibold text-foreground mb-1">{ind.name}</h3>
             <p className="text-[12px] text-muted-foreground leading-relaxed">{ind.desc}</p>
           </motion.div>
