@@ -234,7 +234,7 @@ const SettingsPage = () => {
           <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
         </div>
 
-        <div className="flex items-center gap-1 border-b border-border mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
+        <div className="flex items-center gap-1 border-b border-border/60 mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
           {visibleTabs.map((tab) => (
             <button
               key={tab.key}
@@ -302,7 +302,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Workspace Info */}
               <section>
@@ -316,7 +316,7 @@ const SettingsPage = () => {
                     { label: t("settings.wsDataLocation"), value: "EU", icon: Server },
                     { label: t("settings.wsRole"), value: roleLabels[userRole], icon: Shield },
                   ].map((item, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                     <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
                         <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -327,7 +327,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Appearance */}
               <section>
@@ -344,12 +344,12 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Progressive Override */}
               <ProgressiveOverrideToggle user={user} />
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Language */}
               <section>
@@ -363,7 +363,7 @@ const SettingsPage = () => {
                         <p className="text-xs text-muted-foreground">{t("settings.interfaceLanguageDesc")}</p>
                       </div>
                     </div>
-                    <div className="flex items-center rounded-md border border-border p-0.5">
+                     <div className="flex items-center rounded-md border border-border/60 p-0.5">
                       {[{ code: "de", label: t("settings.german") }, { code: "en", label: t("settings.english") }].map(lng => (
                         <button key={lng.code} onClick={() => changeLanguage(lng.code)}
                           className={`px-3 py-1 rounded text-xs font-medium transition-colors ${i18n.language === lng.code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
@@ -380,7 +380,7 @@ const SettingsPage = () => {
                         <p className="text-xs text-muted-foreground">{t("settings.exportLanguageDesc")}</p>
                       </div>
                     </div>
-                    <div className="flex items-center rounded-md border border-border p-0.5">
+                    <div className="flex items-center rounded-md border border-border/60 p-0.5">
                       {[{ code: "de", label: "DE" }, { code: "en", label: "EN" }].map(lng => (
                         <button key={lng.code} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${lng.code === "de" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                           {lng.label}
@@ -391,16 +391,16 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               {/* Terminology */}
               {isAdmin && <TerminologyPanel />}
 
-              {isAdmin && <hr className="border-border" />}
+              {isAdmin && <hr className="border-border/40" />}
 
               <IndustryConfigSection />
 
-              <hr className="border-border" />
+              <hr className="border-border/40" />
 
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.onboarding")}</h2>
@@ -421,7 +421,7 @@ const SettingsPage = () => {
                 <NotificationMatrixPanel />
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Escalation Priority */}
               <section>
@@ -433,7 +433,7 @@ const SettingsPage = () => {
                     { level: t("settings.escMedium"), behavior: t("settings.escMediumBehavior"), color: "text-muted-foreground" },
                     { level: t("settings.escLow"), behavior: t("settings.escLowBehavior"), color: "text-muted-foreground" },
                   ].map((esc, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
+                     <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className={`w-3.5 h-3.5 ${esc.color}`} />
                         <span className="text-sm font-medium">{esc.level}</span>
@@ -444,7 +444,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Executive Digest Options */}
               <section>
@@ -466,12 +466,12 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* WhatsApp Integration */}
               <WhatsAppSettingsPanel />
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.quietHours")}</h2>
@@ -493,7 +493,7 @@ const SettingsPage = () => {
                     { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
                     { label: t("settings.aiDataResidency"), value: "EU", icon: Server },
                   ].map((stat, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                     <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
                       <div className="flex items-center gap-1.5 mb-1">
                         <stat.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -504,7 +504,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Provider Selection */}
               <section>
@@ -512,7 +512,7 @@ const SettingsPage = () => {
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {AI_PROVIDERS.map((p) => (
                     <button key={p.id} onClick={() => { setAiProvider(p.id); setAiModel(p.models?.[0] || ""); }}
-                      className={`text-left p-3 rounded-md border transition-colors ${aiProvider === p.id ? "border-foreground" : "border-border hover:border-foreground/30"}`}>
+                      className={`text-left p-3 rounded-md border transition-colors ${aiProvider === p.id ? "border-foreground" : "border-border/60 hover:border-foreground/30"}`}>
                       <div className="flex items-center gap-1.5 mb-0.5">
                         {p.id === "lovable" && <Sparkles className="w-3 h-3" />}
                         <span className="text-sm font-medium">{p.name}</span>
@@ -522,7 +522,7 @@ const SettingsPage = () => {
                   ))}
                 </div>
                 {aiProvider !== "lovable" && selectedProvider && (
-                  <div className="space-y-3 pt-4 border-t border-border">
+                  <div className="space-y-3 pt-4 border-t border-border/40">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-medium text-muted-foreground">{t("settings.apiKey")}</label>
@@ -550,7 +550,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* AI Scope Settings */}
               <section>
@@ -574,7 +574,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Data Residency */}
               <section>
@@ -597,7 +597,7 @@ const SettingsPage = () => {
               {/* Security Health Dashboard */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.securityHealth")}</h2>
-                <div className="p-4 rounded-lg border border-border bg-card">
+                <div className="p-4 rounded-lg border border-border/60 bg-card">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className={`w-5 h-5 ${securityScore >= 80 ? "text-success" : securityScore >= 60 ? "text-warning" : "text-destructive"}`} />
@@ -661,14 +661,14 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Access Control */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.accessControl")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.accessControlDesc")}</p>
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="grid grid-cols-5 gap-0 bg-muted/50 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                 <div className="rounded-lg border border-border/60 overflow-hidden">
+                   <div className="grid grid-cols-5 gap-0 bg-muted/30 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                     <div className="p-2.5">{t("settings.acAction")}</div>
                     <div className="p-2.5 text-center">Owner</div>
                     <div className="p-2.5 text-center">Admin</div>
@@ -686,7 +686,7 @@ const SettingsPage = () => {
                     { action: t("settings.acRetention"), permissions: [true, true, false, false] },
                     { action: t("settings.acHardDelete"), permissions: [true, false, false, false] },
                   ].map((row, i) => (
-                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border items-center">
+                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border/40 items-center">
                       <div className="p-2.5 text-xs">{row.action}</div>
                       {row.permissions.map((p, j) => (
                         <div key={j} className="p-2.5 text-center">
@@ -698,7 +698,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Cost-of-Delay Defaults */}
               <section>
@@ -707,7 +707,7 @@ const SettingsPage = () => {
                 <OrgCodDefaultsPanel />
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* SLA */}
               <section>
@@ -716,7 +716,7 @@ const SettingsPage = () => {
                 <SlaConfigPanel />
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Delegation */}
               <section>
@@ -725,7 +725,7 @@ const SettingsPage = () => {
                 <DelegationPanel />
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Compliance & Data Privacy */}
               <section>
@@ -738,7 +738,7 @@ const SettingsPage = () => {
                     { label: t("settings.compEncryption"), status: "AES-256", icon: KeyRound, color: "text-success" },
                     { label: t("settings.compSoc2"), status: t("settings.compCompliant"), icon: Shield, color: "text-primary" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border">
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
                       <div className="flex items-center gap-2">
                         <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
                         <span className="text-sm">{item.label}</span>
@@ -749,7 +749,7 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Audit Trail Integrity */}
               <AuditIntegrityPanel />
@@ -779,7 +779,7 @@ const SettingsPage = () => {
                       { label: t("settings.adminSecurityScore"), value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
                       { label: t("settings.adminTeams"), value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
                     ].map((stat, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                      <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
                         <div className="flex items-center gap-1.5 mb-1">
                           <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
                           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -791,7 +791,7 @@ const SettingsPage = () => {
                 </section>
               )}
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Quick Links to Admin Page */}
               <section>
@@ -807,7 +807,7 @@ const SettingsPage = () => {
                     <button
                       key={i}
                       onClick={() => window.location.href = item.path}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-muted/30 hover:border-muted-foreground/30 transition-all text-left group"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-card hover:bg-muted/30 hover:border-muted-foreground/30 transition-all text-left group"
                     >
                       <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                         <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -822,27 +822,27 @@ const SettingsPage = () => {
                 </div>
               </section>
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Inbound Email */}
               <InboundEmailPanel />
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Microsoft Teams */}
               <TeamsIntegrationPanel />
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Webhooks */}
               <WebhookSettingsPanel />
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* PDF Branding */}
               <PdfBrandingSection />
 
-              <hr className="border-border" />
+               <hr className="border-border/40" />
 
               {/* Roles Info */}
               <section>
@@ -887,7 +887,7 @@ const PdfBrandingSection = () => {
         {t("settings.brandingTitle")}
       </h2>
       <p className="text-xs text-muted-foreground mb-3">{t("settings.brandingDesc")}</p>
-      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+      <div className="flex items-center justify-between p-3 rounded-lg border border-border/60">
         <div>
           <p className="text-sm">{t("settings.brandingHide")}</p>
           <p className="text-[11px] text-muted-foreground">{t("settings.brandingHideDesc")}</p>
