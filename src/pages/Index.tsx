@@ -4,10 +4,11 @@ import HeroSection from "@/components/landing/HeroSection";
 import LogoBar from "@/components/landing/LogoBar";
 import ProblemSection from "@/components/landing/ProblemSection";
 import SolutionSection from "@/components/landing/SolutionSection";
+import MetricsShowcase from "@/components/landing/MetricsShowcase";
+import ProductShowcase from "@/components/landing/ProductShowcase";
 import IndustriesSection from "@/components/landing/IndustriesSection";
 import ComplianceSection from "@/components/landing/ComplianceSection";
 import ROICalculatorSection from "@/components/landing/ROICalculatorSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FAQSection from "@/components/landing/FAQSection";
 import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
@@ -110,11 +111,11 @@ const Index = () => {
           <LogoBar />
           <ProblemSection />
           <SolutionSection />
-          
+          <MetricsShowcase />
+          <ProductShowcase />
           <IndustriesSection />
           <ComplianceSection />
           <ROICalculatorSection />
-          <TestimonialsSection />
           <FAQSection />
           <PricingSection />
           <CTASection />
