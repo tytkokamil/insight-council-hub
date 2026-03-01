@@ -96,6 +96,8 @@ export const publicRoutes = (
     <Route path="/roadmap" element={<L><Roadmap /></L>} />
     <Route path="/reset-password" element={<L><ResetPassword /></L>} />
     <Route path="/action" element={<L><EmailAction /></L>} />
+    <Route path="/approve/:token" element={<L><EmailAction /></L>} />
+    <Route path="/reject/:token" element={<L><EmailAction /></L>} />
     <Route path="/review/external" element={<L><ExternalReview /></L>} />
     <Route path="/contact" element={<L><Contact /></L>} />
     <Route path="/docs" element={<L><HelpCenter /></L>} />

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     if (tokenError || !tokenRow) {
       return new Response(
-        JSON.stringify({ error: "invalid_token", message: "Dieser Link ist ungültig." }),
+        JSON.stringify({ error: "invalid_token", message: "Dieser Link ist ungültig oder abgelaufen." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -45,6 +45,8 @@ Deno.serve(async (req) => {
           error: "already_used",
           message: "Dieser Link wurde bereits verwendet.",
           decision_id: tokenRow.decision_id,
+          used_at: tokenRow.used_at,
+          original_action: tokenRow.action_type,
         }),
         { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -55,7 +57,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           error: "expired",
-          message: "Dieser Link ist abgelaufen.",
+          message: "Dieser Link ist abgelaufen. Bitte loggen Sie sich ein, um die Aktion auszuführen.",
           decision_id: tokenRow.decision_id,
         }),
         { status: 410, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
       .update({ used: true, used_at: new Date().toISOString(), feedback: feedback || null })
       .eq("id", tokenRow.id);
 
-    // 6. Also mark the other token for same review as used (approve/reject pair)
+    // 6. Mark the paired token as used too
     await supabase
       .from("email_action_tokens")
       .update({ used: true, used_at: new Date().toISOString() })
@@ -103,16 +105,27 @@ Deno.serve(async (req) => {
 
     const userName = profile?.full_name || "Unbekannt";
 
-    // 8. Write audit log
+    // 8. Capture request metadata for audit
+    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
+    // 9. Write audit log with source: email_one_click
     await supabase.from("audit_logs").insert({
       decision_id: tokenRow.decision_id,
       user_id: tokenRow.user_id,
       action: tokenRow.action_type === "approve" ? "review.approved" : "review.rejected",
       field_name: "review",
-      new_value: `${userName} hat via E-Mail ${tokenRow.action_type === "approve" ? "genehmigt" : "abgelehnt"}${feedback ? `: ${feedback}` : ""}`,
+      new_value: JSON.stringify({
+        reviewer: userName,
+        source: "email_one_click",
+        action: tokenRow.action_type,
+        ip_address: ipAddress,
+        user_agent: userAgent.substring(0, 200),
+        feedback: feedback || null,
+      }),
     });
 
-    // 9. Get decision title for response
+    // 10. Get decision title for response
     const { data: decision } = await supabase
       .from("decisions")
       .select("title")
