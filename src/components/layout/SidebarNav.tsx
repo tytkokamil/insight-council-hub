@@ -2,13 +2,13 @@ import { memo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BarChart3, FileText, Users, TrendingUp, Settings,
-  GitBranch, Radar, DollarSign, Shield, Calendar, CalendarDays, Crosshair, Flame, Activity,
-  Dna, Zap, Trophy, FlaskConical, Target, Sun, LayoutDashboard, UserCog, History, Beaker, Brain,
-  ListTodo, ChevronDown, ChevronRight, Briefcase, Cpu, Lightbulb, AlertTriangle, BookOpen, Clock,
-  Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles, Crown,
+  BarChart3, FileText, Users, Settings, Shield, Calendar, Activity,
+  Dna, Zap, Target, LayoutDashboard, UserCog, History, Brain,
+  ListTodo, ChevronDown, ChevronRight, Cpu, AlertTriangle, BookOpen, Clock,
+  Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles,
+  GitBranch, Trophy, FlaskConical, Plus,
 } from "lucide-react";
-import { useGuidedMode, BASIC_MODE_PATHS } from "@/hooks/useGuidedMode";
+import { useGuidedMode } from "@/hooks/useGuidedMode";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
@@ -22,27 +22,16 @@ interface NavItem {
   featureKey?: string;
   adminOnly?: boolean;
   minRole?: OrgRoleKey;
+  badge?: "decisions" | "reviews";
 }
 
 interface NavSubGroup {
   icon: React.ElementType;
   label: string;
   featureKey?: string;
+  minRole?: OrgRoleKey;
   children: NavItem[];
 }
-
-interface NavGroup {
-  label: string;
-  items: (NavItem | NavSubGroup)[];
-  defaultCollapsed?: boolean;
-}
-
-function isSubGroup(item: NavItem | NavSubGroup): item is NavSubGroup {
-  return "children" in item;
-}
-
-/* nav group keys map to i18n keys */
-const navGroupKey = (label: string) => label;
 
 interface NavGroupDef {
   labelKey: string;
@@ -51,75 +40,111 @@ interface NavGroupDef {
   progressive?: boolean;
 }
 
-const navGroupsDef: NavGroupDef[] = [
-  {
-    labelKey: "core",
-    items: [
-      { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard", featureKey: "dashboard" },
-      { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
-      { icon: ListTodo, label: "nav.tasks", path: "/tasks", featureKey: "tasks" },
-      { icon: Calendar, label: "nav.calendar", path: "/calendar", featureKey: "calendar" },
-      { icon: SearchIcon, label: "nav.search", path: "/search" },
-    ],
-  },
-  {
-    labelKey: "teams",
-    items: [
-      { icon: Users, label: "nav.teamsNav", path: "/teams", featureKey: "teams" },
-      { icon: Video, label: "nav.meeting", path: "/meeting" },
-    ],
-  },
-  {
-    labelKey: "governance",
-    items: [
-      { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
-      { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
-      { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
-      { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_admin" },
-    ],
-  },
-  {
-    labelKey: "intelligence",
-    progressive: true,
-    items: [
-      { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive", minRole: "org_executive" },
-      { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics", minRole: "org_executive" },
-      { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks", minRole: "org_executive" },
-      { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
-      {
-        icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics", minRole: "org_executive",
-        children: [
-          { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
-          { icon: Dna, label: "nav.decisionDna", path: "/dna" },
-          { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
-          { icon: Activity, label: "nav.healthHeatmap", path: "/health" },
-          { icon: Clock, label: "nav.predictiveTimeline", path: "/timeline" },
-          { icon: FlaskConical, label: "nav.scenarios", path: "/scenarios" },
-        ],
-      } as NavSubGroup,
-    ],
-  },
-  {
-    labelKey: "system",
-    items: [
-      { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
-      { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
-      { icon: Archive, label: "nav.archive", path: "/archive" },
-      { icon: Settings, label: "nav.settings", path: "/settings" },
-      { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
-      { icon: Beaker, label: "nav.featureManagement", path: "/feature-management", adminOnly: true },
-    ],
-  },
-];
+function isSubGroup(item: NavItem | NavSubGroup): item is NavSubGroup {
+  return "children" in item;
+}
 
-interface SidebarNavProps {
-  collapsed: boolean;
-  isAdmin: boolean;
-  isFeatureEnabled: (key: string) => boolean;
-  pathname: string;
-  onNavigate?: () => void;
-  onPrefetch?: (path: string) => void;
-  userRole?: OrgRoleKey;
+/* ── Role-based nav definitions ── */
+
+const WORKSPACE_GROUP: NavGroupDef = {
+  labelKey: "workspace",
+  items: [
+    { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard", featureKey: "dashboard" },
+    { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions", badge: "decisions" },
+    { icon: ListTodo, label: "nav.tasks", path: "/tasks", featureKey: "tasks" },
+    { icon: Calendar, label: "nav.calendar", path: "/calendar", featureKey: "calendar" },
+  ],
+};
+
+const INTELLIGENCE_GROUP: NavGroupDef = {
+  labelKey: "intelligence",
+  progressive: true,
+  items: [
+    { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive", minRole: "org_executive" },
+    { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics", minRole: "org_executive" },
+    { icon: Cpu, label: "nav.processHub", path: "/process", featureKey: "bottlenecks", minRole: "org_executive" },
+    { icon: Dna, label: "nav.decisionDna", path: "/dna", minRole: "org_executive" },
+    {
+      icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics", minRole: "org_executive",
+      children: [
+        { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
+        { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
+        { icon: Activity, label: "nav.healthHeatmap", path: "/health" },
+        { icon: Clock, label: "nav.predictiveTimeline", path: "/timeline" },
+        { icon: FlaskConical, label: "nav.scenarios", path: "/scenarios" },
+      ],
+    } as NavSubGroup,
+  ],
+};
+
+const GOVERNANCE_GROUP: NavGroupDef = {
+  labelKey: "governance",
+  items: [
+    { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
+    { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
+    { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
+    { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_lead" },
+  ],
+};
+
+const SETTINGS_GROUP: NavGroupDef = {
+  labelKey: "system",
+  items: [
+    { icon: Settings, label: "nav.settings", path: "/settings" },
+    { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
+    { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
+    { icon: Archive, label: "nav.archive", path: "/archive" },
+    { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
+    { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
+  ],
+};
+
+/** Full sidebar for Owner/Admin */
+const FULL_GROUPS: NavGroupDef[] = [WORKSPACE_GROUP, INTELLIGENCE_GROUP, GOVERNANCE_GROUP, SETTINGS_GROUP];
+
+/** Role-specific sidebar configs */
+function getGroupsForRole(role: OrgRoleKey): NavGroupDef[] {
+  switch (role) {
+    case "org_viewer":
+      return [{
+        labelKey: "workspace",
+        items: [
+          { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
+        ],
+      }];
+    case "org_executive":
+      return [
+        {
+          labelKey: "workspace",
+          items: [
+            { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
+            { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
+            { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
+            { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+          ],
+        },
+      ];
+    case "org_member":
+      return [
+        {
+          labelKey: "workspace",
+          items: [
+            { icon: LayoutDashboard, label: "nav.dashboard", path: "/dashboard", featureKey: "dashboard" },
+            { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions", badge: "decisions" },
+            { icon: ListTodo, label: "nav.tasks", path: "/tasks", featureKey: "tasks" },
+            { icon: Calendar, label: "nav.calendar", path: "/calendar", featureKey: "calendar" },
+          ],
+        },
+        {
+          labelKey: "system",
+          items: [
+            { icon: Settings, label: "nav.settings", path: "/settings" },
+          ],
+        },
+      ];
+    default:
+      return FULL_GROUPS;
+  }
 }
 
 const ROLE_HIERARCHY: OrgRoleKey[] = [
@@ -132,41 +157,50 @@ function meetsMinRole(current: OrgRoleKey, min?: OrgRoleKey): boolean {
 }
 
 const PLAN_BADGE: Record<string, string> = {
-  starter: "Starter",
-  pro: "Pro",
-  business: "Business",
-  enterprise: "Enterprise",
+  starter: "Starter", pro: "Pro", business: "Business", enterprise: "Enterprise",
 };
 
-/* ── Locked nav item (greyed out with plan badge) ── */
+/* ── Section accent colors ── */
+const GROUP_ACCENT: Record<string, string> = {
+  workspace: "text-accent-violet/70",
+  teams: "text-accent-blue/70",
+  governance: "text-accent-rose/70",
+  intelligence: "text-accent-teal/70",
+  system: "text-accent-amber/70",
+};
+
+const GROUP_DOT: Record<string, string> = {
+  workspace: "bg-accent-violet/50",
+  teams: "bg-accent-blue/50",
+  governance: "bg-accent-rose/50",
+  intelligence: "bg-accent-teal/50",
+  system: "bg-accent-amber/50",
+};
+
+/* ── Locked nav item ── */
 const LockedNavItem = ({
   item, collapsed, onUpgradeClick, minPlan,
 }: {
-  item: NavItem;
-  collapsed: boolean;
+  item: NavItem; collapsed: boolean;
   onUpgradeClick: (featureKey: string, label: string, minPlan: string) => void;
   minPlan: string;
 }) => {
   const { t } = useTranslation();
   const badge = PLAN_BADGE[minPlan] || "Pro";
-
   return (
     <button
       onClick={() => onUpgradeClick(item.featureKey || "", t(item.label), minPlan)}
-      className="w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium text-muted-foreground/40 hover:text-muted-foreground/60 hover:bg-foreground/[0.02] transition-all duration-150 cursor-pointer group"
+      className="w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium text-muted-foreground/40 hover:text-muted-foreground/60 hover:bg-foreground/[0.02] transition-all duration-150 cursor-pointer group"
       title={collapsed ? `${t(item.label)} (${badge})` : undefined}
     >
       <item.icon className="w-4 h-4 shrink-0 opacity-30 group-hover:opacity-40" />
       {!collapsed && (
         <>
           <span className="whitespace-nowrap flex-1 text-left">{t(item.label)}</span>
-          <span className="inline-flex h-4 items-center px-1.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/8 text-primary/50 border border-primary/10">
+          <span className="inline-flex h-4 items-center px-1.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
             {badge}
           </span>
         </>
-      )}
-      {collapsed && (
-        <span className="sr-only">{t(item.label)} ({badge})</span>
       )}
     </button>
   );
@@ -177,20 +211,14 @@ const SubGroupItem = ({
   subGroup, collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
   onUpgradeClick, getMinPlan,
 }: {
-  subGroup: NavSubGroup;
-  collapsed: boolean;
-  isAdmin: boolean;
-  isFeatureEnabled: (key: string) => boolean;
-  pathname: string;
-  onNavigate?: () => void;
-  onPrefetch?: (path: string) => void;
+  subGroup: NavSubGroup; collapsed: boolean; isAdmin: boolean;
+  isFeatureEnabled: (key: string) => boolean; pathname: string;
+  onNavigate?: () => void; onPrefetch?: (path: string) => void;
   userRole?: OrgRoleKey;
   onUpgradeClick: (featureKey: string, label: string, minPlan: string) => void;
   getMinPlan: (featureKey: string) => string;
 }) => {
   const { t } = useTranslation();
-
-  // Check if the entire subgroup is plan-locked
   const subGroupFeatureKey = subGroup.featureKey;
   const isSubGroupLocked = subGroupFeatureKey ? !isFeatureEnabled(subGroupFeatureKey) : false;
 
@@ -205,8 +233,7 @@ const SubGroupItem = ({
   const hasActiveChild = enabledChildren.some(c => pathname === c.path);
   const [open, setOpen] = useState(hasActiveChild);
 
-  // Check subgroup-level minRole
-  if ((subGroup as any).minRole && !meetsMinRole(userRole, (subGroup as any).minRole)) return null;
+  if (subGroup.minRole && !meetsMinRole(userRole, subGroup.minRole)) return null;
 
   if (isSubGroupLocked) {
     const minPlan = getMinPlan(subGroupFeatureKey || "");
@@ -215,11 +242,11 @@ const SubGroupItem = ({
     return (
       <button
         onClick={() => onUpgradeClick(subGroupFeatureKey || "", t(subGroup.label), minPlan)}
-        className="w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium text-muted-foreground/40 hover:text-muted-foreground/60 hover:bg-foreground/[0.02] transition-all duration-150 cursor-pointer group"
+        className="w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium text-muted-foreground/40 hover:text-muted-foreground/60 hover:bg-foreground/[0.02] transition-all duration-150 cursor-pointer group"
       >
         <subGroup.icon className="w-4 h-4 shrink-0 opacity-30 group-hover:opacity-40" />
         <span className="whitespace-nowrap flex-1 text-left">{t(subGroup.label)}</span>
-        <span className="inline-flex h-4 items-center px-1.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/8 text-primary/50 border border-primary/10">
+        <span className="inline-flex h-4 items-center px-1.5 rounded text-[9px] font-semibold uppercase tracking-wider bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
           {badge}
         </span>
       </button>
@@ -233,14 +260,10 @@ const SubGroupItem = ({
       <div className="space-y-px">
         {enabledChildren.map(child => (
           <Link
-            key={child.path}
-            to={child.path}
-            onClick={onNavigate}
+            key={child.path} to={child.path} onClick={onNavigate}
             onMouseEnter={() => onPrefetch?.(child.path)}
-            className={`w-full flex items-center justify-center h-8 rounded-md text-[13px] transition-colors ${
-              pathname === child.path
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+            className={`w-full flex items-center justify-center py-[7px] rounded-lg text-[13px] transition-colors ${
+              pathname === child.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
             }`}
             title={t(child.label)}
           >
@@ -255,10 +278,8 @@ const SubGroupItem = ({
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-all duration-150 ${
-          hasActiveChild
-            ? "text-foreground"
-            : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+        className={`w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium transition-all duration-150 ${
+          hasActiveChild ? "text-foreground" : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
         }`}
       >
         <subGroup.icon className="w-4 h-4 shrink-0 opacity-60" />
@@ -277,14 +298,10 @@ const SubGroupItem = ({
             <div className="ml-[18px] pl-2 border-l border-border/30 space-y-px mt-px">
               {enabledChildren.map(child => (
                 <Link
-                  key={child.path}
-                  to={child.path}
-                  onClick={onNavigate}
+                  key={child.path} to={child.path} onClick={onNavigate}
                   onMouseEnter={() => onPrefetch?.(child.path)}
                   className={`w-full flex items-center gap-2 px-2 h-7 rounded-md text-[12px] font-medium transition-all duration-150 ${
-                    pathname === child.path
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                    pathname === child.path ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
                   }`}
                 >
                   <child.icon className="w-3.5 h-3.5 shrink-0 opacity-60" />
@@ -301,7 +318,7 @@ const SubGroupItem = ({
                   >
                     <child.icon className="w-3.5 h-3.5 shrink-0 opacity-30 group-hover:opacity-40" />
                     <span className="whitespace-nowrap flex-1 text-left">{t(child.label)}</span>
-                    <span className="inline-flex h-3.5 items-center px-1 rounded text-[8px] font-semibold uppercase tracking-wider bg-primary/8 text-primary/50 border border-primary/10">
+                    <span className="inline-flex h-3.5 items-center px-1 rounded text-[8px] font-semibold uppercase tracking-wider bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
                       {PLAN_BADGE[mp] || "Pro"}
                     </span>
                   </button>
@@ -316,16 +333,26 @@ const SubGroupItem = ({
 };
 
 /* ── Main nav ── */
+interface SidebarNavProps {
+  collapsed: boolean;
+  isAdmin: boolean;
+  isFeatureEnabled: (key: string) => boolean;
+  pathname: string;
+  onNavigate?: () => void;
+  onPrefetch?: (path: string) => void;
+  userRole?: OrgRoleKey;
+}
+
 const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: SidebarNavProps) => {
-  const { mode, setMode, shouldShowAdvanced, decisionCount } = useGuidedMode();
+  const { decisionCount } = useGuidedMode();
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
   const [intelligenceUnlocked, setIntelligenceUnlocked] = useState(() => localStorage.getItem("intelligence-unlocked") === "true");
   const [hasActiveMeeting, setHasActiveMeeting] = useState(false);
+  const [openDecisionCount, setOpenDecisionCount] = useState(0);
 
-  // Upgrade modal state
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; featureKey: string; label: string; minPlan: string }>({
     open: false, featureKey: "", label: "", minPlan: "pro",
   });
@@ -343,63 +370,34 @@ const SidebarNav = memo(({
     import("@/integrations/supabase/client").then(({ supabase }) => {
       supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1)
         .then(({ data }) => setHasActiveMeeting((data?.length ?? 0) > 0));
+      // Fetch open decision count for badge
+      supabase.from("decisions").select("id", { count: "exact", head: true })
+        .in("status", ["draft", "proposed", "review"])
+        .is("deleted_at", null)
+        .then(({ count }) => setOpenDecisionCount(count || 0));
     });
   }, [pathname]);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    navGroupsDef.forEach(g => {
-      if (g.defaultCollapsed) initial[g.labelKey] = true;
-    });
-    return initial;
-  });
 
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const toggleGroup = (label: string) => {
     setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
+  // Determine nav groups based on role
+  const isFullRole = userRole === "org_owner" || userRole === "org_admin" || userRole === "org_lead";
+  const navGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
+
   return (
     <>
-      <nav className="flex-1 px-2 py-2 space-y-4 overflow-y-auto overflow-x-hidden">
-        {/* Guided Mode Toggle */}
-        {!collapsed && (
-          <div className="px-2 pb-1">
-            <div className="flex items-center rounded-md border border-border p-0.5">
-              {(["basic", "advanced"] as const).map(m => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  className={`flex-1 px-2 py-1 rounded text-[10px] font-medium transition-colors ${
-                    mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m === "basic" ? t("nav.basic") : t("nav.advanced")}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        {navGroupsDef.map((group) => {
-          const groupLabel = t(`nav.${group.labelKey}`);
-          const groupAccent: Record<string, string> = {
-            core: "text-accent-violet/70",
-            teams: "text-accent-blue/70",
-            governance: "text-accent-rose/70",
-            intelligence: "text-accent-teal/70",
-            system: "text-accent-amber/70",
-          };
-          const groupDot: Record<string, string> = {
-            core: "bg-accent-violet/50",
-            teams: "bg-accent-blue/50",
-            governance: "bg-accent-rose/50",
-            intelligence: "bg-accent-teal/50",
-            system: "bg-accent-amber/50",
-          };
+      <nav className="flex-1 px-2 py-2 space-y-5 overflow-y-auto overflow-x-hidden">
+        {navGroups.map((group) => {
+          const groupLabel = t(`nav.${group.labelKey}`, { defaultValue: group.labelKey });
 
           // Progressive group: show unlock teaser when not yet unlocked
           if (group.progressive && !intelligenceUnlocked && !collapsed) {
             return (
               <div key={group.labelKey}>
-                <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
+                <p className={`label-caps px-2 pb-1.5 pt-4 ${GROUP_ACCENT[group.labelKey] || "text-muted-foreground/40"}`}>
                   {groupLabel}
                 </p>
                 <button
@@ -407,74 +405,36 @@ const SidebarNav = memo(({
                     localStorage.setItem("intelligence-unlocked", "true");
                     setIntelligenceUnlocked(true);
                   }}
-                  className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.02] transition-colors group"
+                  className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.02] transition-colors group"
                 >
                   <Sparkles className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-60" />
                   <span className="text-left flex-1">
                     <span className="block text-[11px] font-medium">{t("nav.unlockIntelligence", { defaultValue: "Intelligence freischalten" })}</span>
-                    <span className="block text-[10px] opacity-60">{t("nav.unlockIntelligenceHint", { defaultValue: "Empfohlen ab 25 Entscheidungen", count: 25 })}</span>
+                    <span className="block text-[10px] opacity-60">{t("nav.unlockIntelligenceHint", { defaultValue: "Empfohlen ab 25 Entscheidungen" })}</span>
                   </span>
                 </button>
               </div>
             );
           }
-          if (group.progressive && !intelligenceUnlocked && collapsed) {
-            return null;
-          }
+          if (group.progressive && !intelligenceUnlocked && collapsed) return null;
 
-          // Separate items into: visible (enabled), locked (feature-gated), and hidden (role/admin)
           const lockedByPlan: NavItem[] = [];
-          const lockedItems: NavItem[] = []; // basic-mode locked
           const visibleItems = group.items.filter(item => {
             if (isSubGroup(item)) {
-              // SubGroups handle their own locking internally
-              if ((item as any).minRole && !meetsMinRole(userRole, (item as any).minRole)) return false;
-              return true; // Let SubGroupItem handle feature gating
+              if (item.minRole && !meetsMinRole(userRole, item.minRole)) return false;
+              return true;
             }
             if ("adminOnly" in item && item.adminOnly && !isAdmin) return false;
             if ("minRole" in item && item.minRole && !meetsMinRole(userRole, item.minRole)) return false;
-            // Feature-gated: show as locked instead of hiding
             if ("featureKey" in item && item.featureKey && !isFeatureEnabled(item.featureKey)) {
               lockedByPlan.push(item as NavItem);
-              return false;
-            }
-            if (!group.progressive && mode === "basic" && !BASIC_MODE_PATHS.has(item.path)) {
-              lockedItems.push(item as NavItem);
               return false;
             }
             return true;
           });
 
-          const allItems = [...visibleItems];
-          const hasAnyContent = visibleItems.length > 0 || lockedByPlan.length > 0 || lockedItems.length > 0;
+          const hasAnyContent = visibleItems.length > 0 || lockedByPlan.length > 0;
           if (!hasAnyContent) return null;
-
-          // Only basic-mode locked teaser (no plan-locked items)
-          if (visibleItems.length === 0 && lockedByPlan.length === 0 && lockedItems.length > 0 && !collapsed) {
-            const teaserKeys: Record<string, string> = {
-              insights: "nav.teaserInsights",
-              governance: "nav.teaserGovernance",
-            };
-            return (
-              <div key={group.labelKey}>
-                <p className={`px-2 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/40"}`}>
-                  {groupLabel}
-                </p>
-                <button
-                  onClick={() => setMode("advanced")}
-                  className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-[12px] text-muted-foreground/50 hover:text-muted-foreground hover:bg-foreground/[0.02] transition-colors group"
-                >
-                  <Lock className="w-3.5 h-3.5 shrink-0 opacity-40 group-hover:opacity-60" />
-                  <span className="text-left flex-1">
-                    <span className="block text-[11px] font-medium">{teaserKeys[group.labelKey] ? t(teaserKeys[group.labelKey]) : `${lockedItems.length} Features`}</span>
-                    <span className="block text-[10px] opacity-60">{t("nav.switchToAdvanced")}</span>
-                  </span>
-                </button>
-              </div>
-            );
-          }
-
-          if (visibleItems.length === 0 && lockedByPlan.length === 0) return null;
 
           const isGroupCollapsed = collapsedGroups[group.labelKey] ?? false;
           const hasActiveItem = visibleItems.some(item => {
@@ -485,14 +445,14 @@ const SidebarNav = memo(({
           return (
             <div key={group.labelKey}>
               {!collapsed && (
-                <div className="flex items-center gap-1 px-2 mb-1.5">
+                <div className="flex items-center gap-1 px-2 pb-1.5 pt-4 first:pt-0">
                   <button
                     onClick={group.defaultCollapsed !== undefined ? () => toggleGroup(group.labelKey) : undefined}
-                    className={`flex-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${groupAccent[group.labelKey] || "text-muted-foreground/60"} ${
+                    className={`flex-1 flex items-center gap-1.5 label-caps ${GROUP_ACCENT[group.labelKey] || "text-muted-foreground/60"} ${
                       group.defaultCollapsed !== undefined ? "hover:text-muted-foreground/80 cursor-pointer" : "cursor-default"
                     }`}
                   >
-                    <span className={`w-1.5 h-1.5 rounded-full ${groupDot[group.labelKey] || "bg-muted-foreground/30"}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${GROUP_DOT[group.labelKey] || "bg-muted-foreground/30"}`} />
                     <span className="flex-1 text-left">{groupLabel}</span>
                     {group.defaultCollapsed !== undefined && (
                       isGroupCollapsed && !hasActiveItem ? (
@@ -506,10 +466,7 @@ const SidebarNav = memo(({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => {
-                            localStorage.removeItem("intelligence-unlocked");
-                            setIntelligenceUnlocked(false);
-                          }}
+                          onClick={() => { localStorage.removeItem("intelligence-unlocked"); setIntelligenceUnlocked(false); }}
                           className="text-muted-foreground/40 hover:text-muted-foreground transition-colors"
                         >
                           <Lock className="w-3 h-3" />
@@ -517,7 +474,6 @@ const SidebarNav = memo(({
                       </TooltipTrigger>
                       <TooltipContent side="right" className="text-xs">
                         <p>{t("nav.hideIntelligence")}</p>
-                        <p className="text-muted-foreground text-[10px]">{t("nav.hideIntelligenceHint", { count: 25 })}</p>
                       </TooltipContent>
                     </Tooltip>
                   )}
@@ -529,30 +485,23 @@ const SidebarNav = memo(({
                     if (isSubGroup(item)) {
                       return (
                         <SubGroupItem
-                          key={item.label}
-                          subGroup={item}
-                          collapsed={collapsed}
-                          isAdmin={isAdmin}
-                          isFeatureEnabled={isFeatureEnabled}
-                          pathname={pathname}
-                          onNavigate={onNavigate}
-                          onPrefetch={onPrefetch}
-                          userRole={userRole}
-                          onUpgradeClick={openUpgradeModal}
-                          getMinPlan={getMinPlan}
+                          key={item.label} subGroup={item} collapsed={collapsed}
+                          isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled}
+                          pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch}
+                          userRole={userRole} onUpgradeClick={openUpgradeModal} getMinPlan={getMinPlan}
                         />
                       );
                     }
 
                     const active = pathname === item.path;
                     const isMeeting = item.path === "/meeting";
+                    const showBadge = item.badge === "decisions" && openDecisionCount > 0;
+
                     return (
                       <Link
-                        key={item.path}
-                        to={item.path}
-                        onClick={onNavigate}
+                        key={item.path} to={item.path} onClick={onNavigate}
                         onMouseEnter={() => onPrefetch?.(item.path)}
-                        className={`relative w-full flex items-center gap-2 px-2 h-8 rounded-md text-[13px] font-medium transition-all duration-150 ${
+                        className={`relative w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium transition-all duration-150 ${
                           active
                             ? "bg-primary/10 text-primary"
                             : isMeeting
@@ -568,9 +517,9 @@ const SidebarNav = memo(({
                             transition={{ type: "spring", stiffness: 350, damping: 30 }}
                           />
                         )}
-                        <item.icon className={`w-4 h-4 shrink-0 ${isMeeting ? "opacity-80" : "opacity-60"}`} />
+                        <item.icon className={`w-4 h-4 shrink-0 ${active ? "opacity-100" : "opacity-60"}`} />
                         {!collapsed && (
-                          <span className="whitespace-nowrap flex items-center gap-1.5">
+                          <span className="whitespace-nowrap flex-1 flex items-center gap-1.5">
                             {t(item.label)}
                             {isMeeting && hasActiveMeeting && (
                               <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary animate-pulse">
@@ -579,18 +528,19 @@ const SidebarNav = memo(({
                             )}
                           </span>
                         )}
+                        {showBadge && (
+                          <span className="min-w-[16px] h-[16px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-0.5">
+                            {openDecisionCount > 99 ? "99+" : openDecisionCount}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}
 
-                  {/* Plan-locked items: visible but greyed out with badge */}
                   {lockedByPlan.map((item) => (
                     <LockedNavItem
-                      key={item.path}
-                      item={item}
-                      collapsed={collapsed}
-                      onUpgradeClick={openUpgradeModal}
-                      minPlan={getMinPlan(item.featureKey || "")}
+                      key={item.path} item={item} collapsed={collapsed}
+                      onUpgradeClick={openUpgradeModal} minPlan={getMinPlan(item.featureKey || "")}
                     />
                   ))}
                 </div>
@@ -598,9 +548,54 @@ const SidebarNav = memo(({
             </div>
           );
         })}
+
+        {/* Dynamic Teams section for full roles */}
+        {isFullRole && !collapsed && (
+          <div>
+            <p className={`label-caps px-2 pb-1.5 pt-4 ${GROUP_ACCENT.teams}`}>
+              {t("nav.teamsNav", { defaultValue: "Teams" })}
+            </p>
+            <div className="space-y-px">
+              <Link
+                to="/teams" onClick={onNavigate}
+                onMouseEnter={() => onPrefetch?.("/teams")}
+                className={`relative w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                  pathname === "/teams" || pathname.startsWith("/teams/")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                }`}
+              >
+                {(pathname === "/teams" || pathname.startsWith("/teams/")) && (
+                  <motion.div
+                    layoutId="sidebar-active-indicator"
+                    className="absolute left-0 top-1 bottom-1 w-[3px] rounded-full bg-primary"
+                    transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                  />
+                )}
+                <Users className="w-4 h-4 shrink-0 opacity-60" />
+                <span className="flex-1">{t("nav.teamsNav", { defaultValue: "Teams" })}</span>
+              </Link>
+              {hasActiveMeeting && (
+                <Link
+                  to="/meeting" onClick={onNavigate}
+                  className={`relative w-full flex items-center gap-2 px-2 py-[7px] rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                    pathname === "/meeting" ? "bg-primary/10 text-primary" : "text-primary/80 hover:bg-primary/5 hover:text-primary"
+                  }`}
+                >
+                  <Video className="w-4 h-4 shrink-0 opacity-80" />
+                  <span className="flex-1 flex items-center gap-1.5">
+                    {t("nav.meeting")}
+                    <span className="inline-flex h-4 items-center px-1 rounded text-[9px] font-semibold uppercase tracking-wider bg-primary/10 text-primary animate-pulse">
+                      {t("nav.live")}
+                    </span>
+                  </span>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
-      {/* Upgrade Modal */}
       <FeatureUpgradeModal
         open={upgradeModal.open}
         onOpenChange={(open) => setUpgradeModal(prev => ({ ...prev, open }))}
@@ -614,5 +609,5 @@ const SidebarNav = memo(({
 
 SidebarNav.displayName = "SidebarNav";
 
-export { navGroupsDef as navGroups };
+export { FULL_GROUPS as navGroups };
 export default SidebarNav;

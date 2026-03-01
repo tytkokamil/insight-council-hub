@@ -41,9 +41,12 @@ const SidebarFooter = memo(({
         }
       }
       const roleMap: Record<string, string> = {
-        org_owner: "Org Owner",
-        org_admin: "Org Admin",
+        org_owner: "Owner",
+        org_admin: "Admin",
+        org_executive: "Executive",
+        org_lead: "Team Lead",
         org_member: "Member",
+        org_viewer: "Viewer",
       };
       setRolePlan({
         role: roleMap[roleData?.role || ""] || "Member",
