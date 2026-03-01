@@ -17,6 +17,7 @@ import ScrollProgress from "@/components/landing/ScrollProgress";
 import StickyCTA from "@/components/landing/StickyCTA";
 import BackToTop from "@/components/landing/BackToTop";
 import ComparisonSection from "@/components/landing/ComparisonSection";
+import VideoSection from "@/components/landing/VideoSection";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -34,28 +35,43 @@ const faqJsonLd = {
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "Was ist Decivio?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Decivio ist eine Decision Governance Platform, die Entscheidungen in Unternehmen sichtbar, messbar und compliance-konform macht. Mit Echtzeit-Cost-of-Delay-Tracking, KI-gestützten Briefings und kryptographischem Audit Trail." },
+      "name": "Was genau ist Decivio?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Decivio ist eine Decision Governance Platform, die alle offenen Entscheidungen in Ihrem Unternehmen sichtbar macht, Verzögerungskosten in Echtzeit berechnet und Compliance-Anforderungen automatisch dokumentiert — mit kryptographischem Audit Trail." },
     },
     {
       "@type": "Question",
-      "name": "Für welche Unternehmen ist Decivio geeignet?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Decivio richtet sich an Unternehmen mit 20–500 Mitarbeitern aus Branchen wie Maschinenbau, Automotive, Pharma, Finanzdienstleistungen und IT-Dienstleistungen." },
+      "name": "Für welche Unternehmensgröße ist Decivio geeignet?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Decivio richtet sich an Unternehmen mit 20 bis 500 Mitarbeitern. Besonders geeignet für Mittelständler aus Maschinenbau, Automotive, Pharma, Finanzdienstleistungen und IT-Dienstleistungen." },
+    },
+    {
+      "@type": "Question",
+      "name": "Wie schnell kann ich starten?",
+      "acceptedAnswer": { "@type": "Answer", "text": "In unter 3 Minuten. Registrieren, Branche wählen, erste Entscheidung anlegen. Kein IT-Projekt, keine Installation, keine Kreditkarte." },
     },
     {
       "@type": "Question",
       "name": "Ist Decivio DSGVO-konform?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Ja. Alle Daten werden auf Servern in Deutschland gehostet (ISO 27001 zertifiziert). Ein Auftragsverarbeitungsvertrag (AVV) ist inklusive." },
+      "acceptedAnswer": { "@type": "Answer", "text": "Ja. Alle Daten werden auf ISO 27001-zertifizierten Servern in Deutschland gehostet. Ein Auftragsverarbeitungsvertrag (AVV) ist in jedem Plan inklusive. Wir verarbeiten keine Daten außerhalb der EU." },
     },
     {
       "@type": "Question",
-      "name": "Welche Compliance-Frameworks unterstützt Decivio?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Decivio unterstützt NIS2, ISO 9001, IATF 16949, GMP/FDA 21 CFR Part 11, MaRisk, DSGVO, VOB/VgV, Solvency II und den EU AI Act mit branchenspezifischen Templates." },
+      "name": "Welche Compliance-Frameworks werden unterstützt?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Decivio unterstützt NIS2, ISO 9001, IATF 16949, GMP/FDA 21 CFR Part 11, MaRisk, DSGVO, VOB/VgV, Solvency II und den EU AI Act — mit branchenspezifischen Vorlagen und automatischer Dokumentation." },
     },
     {
       "@type": "Question",
       "name": "Was kostet Decivio?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Decivio bietet einen kostenlosen Plan (1 Nutzer, 10 Entscheidungen), Professional für €149/Monat (bis 25 Nutzer) und individuelle Enterprise-Pläne. Alle Pläne mit 14 Tagen kostenloser Testphase." },
+      "acceptedAnswer": { "@type": "Answer", "text": "Es gibt einen kostenlosen Plan für Einzelpersonen (1 Nutzer, 10 Entscheidungen). Professional kostet €149/Monat für bis zu 25 Nutzer. Enterprise-Pläne sind individuell. Alle Pläne mit 14 Tagen kostenloser Testphase — keine Kreditkarte nötig." },
+    },
+    {
+      "@type": "Question",
+      "name": "Wie funktioniert der KI Daily Brief?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Jeden Morgen analysiert unsere KI Ihre offenen Entscheidungen und erstellt ein Executive Briefing: Die 3 kritischsten Entscheidungen, SLA-Warnungen, Economic Exposure und empfohlene Sofort-Maßnahmen — in 30 Sekunden erfassbar." },
+    },
+    {
+      "@type": "Question",
+      "name": "Kann ich Decivio mit meinen bestehenden Tools verbinden?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Ja. Decivio bietet Webhooks, Microsoft Teams-Integration, E-Mail-basierte Workflows (One-Click Approval) und eine API für individuelle Anbindungen." },
     },
   ],
 };
@@ -92,6 +108,7 @@ const Index = () => {
         <Navbar />
         <main>
           <HeroSection />
+          <VideoSection />
           <StatsSection />
           <LogoBar />
           <ProblemSection />

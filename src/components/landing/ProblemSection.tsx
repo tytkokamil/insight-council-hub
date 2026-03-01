@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const DAILY_RATE = 1960;
+const DAILY_RATE = 5 * 120 * 8 * 3 / 5; // 5 decisions, €120/h, 8h, 3 persons, per decision = €2,880
 const PER_SECOND_RATE = DAILY_RATE / 86400;
 
 const problems = [
@@ -15,7 +15,7 @@ const problems = [
 
 const dashboardItems = [
   { title: "Cloud-Migration AWS → Azure", priority: "bg-destructive", status: "Eskaliert", statusColor: "text-destructive", cost: 10240, live: true },
-  { title: "Investitionsfreigabe CNC-Maschine", priority: "bg-warning", status: "SLA läuft heute ab", statusColor: "text-warning", cost: 285000, live: false },
+  { title: "Investitionsfreigabe CNC-Maschine", priority: "bg-warning", status: "SLA läuft heute ab", statusColor: "text-warning", cost: 28500, live: false },
   { title: "Lieferantenwechsel Hydraulik", priority: "bg-warning", status: "Überfällig", statusColor: "text-warning", cost: 6800, live: true },
   { title: "Make-or-Buy Steuerungsplatine", priority: "bg-muted-foreground/40", status: "Offen", statusColor: "text-muted-foreground", cost: null, live: false },
 ];
@@ -42,13 +42,13 @@ const LiveCost = ({ base, live }: { base: number; live: boolean }) => {
 };
 
 const ProblemSection = () => {
-  const [totalExposure, setTotalExposure] = useState(17040);
+  const [totalExposure, setTotalExposure] = useState(45300);
   const start = useRef(Date.now());
 
   useEffect(() => {
     const id = setInterval(() => {
       const elapsed = (Date.now() - start.current) / 1000;
-      setTotalExposure(17040 + elapsed * (DAILY_RATE / 86400) * 2);
+      setTotalExposure(45300 + elapsed * (DAILY_RATE / 86400) * 2);
     }, 100);
     return () => clearInterval(id);
   }, []);

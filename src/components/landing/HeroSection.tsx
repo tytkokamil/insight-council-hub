@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Play, Pause } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductTourModal from "./ProductTourModal";
-import teaserVideo from "@/assets/decisionos-teaser-video.mp4";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -83,46 +82,8 @@ const TypingEffect = ({ text, delay = 0 }: { text: string; delay?: number }) => 
   );
 };
 
-const VideoTeaser = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(true);
 
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (playing) {
-      videoRef.current.pause();
-    } else {
-      videoRef.current.play();
-    }
-    setPlaying(!playing);
-  };
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 1.0, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-3xl mx-auto mt-12 mb-4"
-    >
-      <div className="relative rounded-2xl border border-border overflow-hidden shadow-lg group cursor-pointer" onClick={togglePlay}>
-        <video
-          ref={videoRef}
-          src={teaserVideo}
-          autoPlay
-          muted
-          loop
-          playsInline
-          className="w-full aspect-video object-cover"
-        />
-        <div className={`absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300 ${playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"}`}>
-          <div className="w-14 h-14 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
-            {playing ? <Pause className="w-5 h-5 text-foreground" /> : <Play className="w-5 h-5 text-foreground ml-0.5" />}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
@@ -134,7 +95,6 @@ const HeroSection = () => {
 
   const trustItems = [
     "✓ Keine Kreditkarte",
-    "✓ DSGVO-konform · Server in Deutschland",
     "✓ In 3 Minuten startklar",
     "✓ NIS2 & ISO 9001 dokumentiert",
   ];
@@ -191,8 +151,6 @@ const HeroSection = () => {
           </motion.p>
 
           <LiveCounter />
-
-          <VideoTeaser />
 
           {/* CTAs */}
           <motion.div
