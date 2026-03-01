@@ -1057,6 +1057,63 @@ export type Database = {
         }
         Relationships: []
       }
+      email_action_tokens: {
+        Row: {
+          action_type: string
+          created_at: string
+          decision_id: string
+          expires_at: string
+          feedback: string | null
+          id: string
+          review_id: string
+          token: string
+          used: boolean
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          decision_id: string
+          expires_at: string
+          feedback?: string | null
+          id?: string
+          review_id: string
+          token: string
+          used?: boolean
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          decision_id?: string
+          expires_at?: string
+          feedback?: string | null
+          id?: string
+          review_id?: string
+          token?: string
+          used?: boolean
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_action_tokens_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_action_tokens_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "decision_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_otp_codes: {
         Row: {
           code: string

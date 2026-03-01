@@ -53,11 +53,23 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     if (!selectedReviewer) return;
     setLoading(true);
     const nextOrder = reviews.length + 1;
-    await supabase.from("decision_reviews").insert({
+    const { data: newReview } = await supabase.from("decision_reviews").insert({
       decision_id: decision.id,
       reviewer_id: selectedReviewer,
       step_order: nextOrder,
-    });
+    }).select().single();
+
+    // Trigger email notification with one-click action tokens
+    if (newReview) {
+      supabase.functions.invoke("review-notify", {
+        body: {
+          decision_id: decision.id,
+          reviewer_id: selectedReviewer,
+          review_id: newReview.id,
+        },
+      }).catch(() => {}); // fire-and-forget
+    }
+
     setSelectedReviewer("");
     await fetchReviews();
     setLoading(false);

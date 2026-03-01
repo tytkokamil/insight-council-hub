@@ -56,6 +56,7 @@ const AiDataPolicy = lazy(() => import("./pages/AiDataPolicy"));
 const SubProcessors = lazy(() => import("./pages/SubProcessors"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
+const EmailAction = lazy(() => import("./pages/EmailAction"));
 
 // ── Wrappers ───────────────────────────────────────────
 
@@ -89,6 +90,7 @@ export const publicRoutes = (
     <Route path="/changelog" element={<L><Changelog /></L>} />
     <Route path="/roadmap" element={<L><Roadmap /></L>} />
     <Route path="/reset-password" element={<L><ResetPassword /></L>} />
+    <Route path="/action" element={<L><EmailAction /></L>} />
   </>
 );
 
