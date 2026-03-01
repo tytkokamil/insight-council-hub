@@ -1762,6 +1762,7 @@ export type Database = {
           created_at: string
           decision_count: number | null
           full_name: string | null
+          hide_pdf_branding: boolean
           id: string
           industry: string | null
           org_id: string | null
@@ -1775,6 +1776,7 @@ export type Database = {
           created_at?: string
           decision_count?: number | null
           full_name?: string | null
+          hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
           org_id?: string | null
@@ -1788,6 +1790,7 @@ export type Database = {
           created_at?: string
           decision_count?: number | null
           full_name?: string | null
+          hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
           org_id?: string | null
