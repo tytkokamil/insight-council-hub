@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -89,6 +89,82 @@ const Section = ({ title, icon: Icon, children, defaultOpen = true, badge }: {
         {children}
       </CollapsibleContent>
     </Collapsible>
+  );
+};
+
+/* ────────────────── Live CoD KPI Panel ────────────────── */
+const DetailKpiPanel = ({ riskScore, decision, isActive, computed, slaRemaining, formatCost, t }: any) => {
+  const [sessionAccrued, setSessionAccrued] = useState(0);
+  const startRef = useRef(Date.now());
+  const costPerSecond = useMemo(() => {
+    // hourlyRate × 8h × persons × overhead / 86400
+    const hourlyRate = 85, persons = 3, overhead = 1.5;
+    return (hourlyRate * 8 * persons * overhead) / 86400;
+  }, []);
+  const weeklyRate = computed.delayCostPerWeek;
+  const liveWeeklyCost = weeklyRate + sessionAccrued * 7;
+
+  useEffect(() => {
+    if (!isActive || weeklyRate <= 0) return;
+    const tick = () => {
+      if (document.visibilityState === "visible") {
+        setSessionAccrued((Date.now() - startRef.current) / 1000 * costPerSecond);
+      }
+    };
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [isActive, costPerSecond, weeklyRate]);
+
+  const codColor = liveWeeklyCost > 1000 ? "#EF4444" : liveWeeklyCost >= 500 ? "#F59E0B" : "#64748B";
+
+  const kpis = [
+    { label: "Risk", value: `${riskScore}%`, icon: AlertTriangle, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success", bg: riskScore > 60 ? "bg-destructive/10" : riskScore > 40 ? "bg-warning/10" : "bg-success/10" },
+    { label: t("decisionDetail.escalate"), value: `Level ${decision.escalation_level || 0}`, icon: ShieldAlert, color: (decision.escalation_level || 0) > 0 ? "text-destructive" : "text-muted-foreground", bg: (decision.escalation_level || 0) > 0 ? "bg-destructive/10" : "bg-muted/50" },
+    { label: t("decisionDetail.metaDue"), value: slaRemaining?.text || "—", icon: Clock, color: slaRemaining?.overdue ? "text-destructive" : "text-muted-foreground", bg: slaRemaining?.overdue ? "bg-destructive/10" : "bg-muted/50" },
+    { label: "Health", value: `${Math.round(((100 - riskScore) * 0.3 + computed.reviewCompletion * 0.3 + computed.alignmentScore * 0.2 + (slaRemaining?.overdue ? 0 : 80) * 0.2))}/100`, icon: Target, color: "text-primary", bg: "bg-primary/10" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 stagger-children">
+      {kpis.map(kpi => (
+        <Tooltip key={kpi.label}>
+          <TooltipTrigger asChild>
+            <Card className={`${kpi.bg} border-0 card-interactive`}>
+              <CardContent className="p-3 text-center">
+                <div className="w-7 h-7 rounded-md bg-background/60 flex items-center justify-center mx-auto mb-1.5">
+                  <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+                </div>
+                <p className={`text-base font-bold tabular-nums ${kpi.color}`}>{kpi.value}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.label}</p>
+              </CardContent>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent><p className="text-xs">{kpi.label}</p></TooltipContent>
+        </Tooltip>
+      ))}
+      {/* Live CoD Card */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Card className={`border-0 card-interactive`} style={{ backgroundColor: liveWeeklyCost > 1000 ? "hsl(0 84% 60% / 0.1)" : liveWeeklyCost >= 500 ? "hsl(38 92% 50% / 0.1)" : "hsl(var(--muted) / 0.5)" }}>
+            <CardContent className="p-3 text-center">
+              <div className="w-7 h-7 rounded-md bg-background/60 flex items-center justify-center mx-auto mb-1.5">
+                <DollarSign className="w-3.5 h-3.5" style={{ color: codColor }} />
+              </div>
+              <p className="text-base font-bold tabular-nums" style={{ color: codColor }}>
+                {isActive ? formatCost(Math.round(liveWeeklyCost)) + "/Wo" : "—"}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Cost of Delay</p>
+              {isActive && sessionAccrued > 0 && (
+                <p className="text-[9px] mt-1" style={{ color: codColor }}>
+                  ↑ {sessionAccrued.toFixed(2)}€ seit Seitenöffnung
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TooltipTrigger>
+        <TooltipContent><p className="text-xs">Echtzeit Cost-of-Delay: Stundensatz × 8h × Personen × Overhead</p></TooltipContent>
+      </Tooltip>
+    </div>
   );
 };
 
@@ -371,31 +447,16 @@ const DecisionDetail = () => {
           </CardContent>
         </Card>
 
-        {/* KPI Mini-Panel */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 stagger-children">
-          {[
-            { label: "Risk", value: `${riskScore}%`, icon: AlertTriangle, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success", bg: riskScore > 60 ? "bg-destructive/10" : riskScore > 40 ? "bg-warning/10" : "bg-success/10" },
-            { label: t("decisionDetail.escalate"), value: `Level ${decision.escalation_level || 0}`, icon: ShieldAlert, color: (decision.escalation_level || 0) > 0 ? "text-destructive" : "text-muted-foreground", bg: (decision.escalation_level || 0) > 0 ? "bg-destructive/10" : "bg-muted/50" },
-            { label: "Cost of Delay", value: isActive ? formatCost(computed.delayCostPerWeek) + "/Wo" : "—", icon: DollarSign, color: computed.delayCostPerWeek > 3000 ? "text-destructive" : "text-warning", bg: computed.delayCostPerWeek > 3000 ? "bg-destructive/10" : "bg-warning/10" },
-            { label: t("decisionDetail.metaDue"), value: slaRemaining?.text || "—", icon: Clock, color: slaRemaining?.overdue ? "text-destructive" : "text-muted-foreground", bg: slaRemaining?.overdue ? "bg-destructive/10" : "bg-muted/50" },
-            { label: "Health", value: `${Math.round(((100 - riskScore) * 0.3 + computed.reviewCompletion * 0.3 + computed.alignmentScore * 0.2 + (slaRemaining?.overdue ? 0 : 80) * 0.2))}/100`, icon: Target, color: "text-primary", bg: "bg-primary/10" },
-          ].map(kpi => (
-            <Tooltip key={kpi.label}>
-              <TooltipTrigger asChild>
-                <Card className={`${kpi.bg} border-0 card-interactive`}>
-                  <CardContent className="p-3 text-center">
-                    <div className="w-7 h-7 rounded-md bg-background/60 flex items-center justify-center mx-auto mb-1.5">
-                      <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
-                    </div>
-                    <p className={`text-base font-bold tabular-nums ${kpi.color}`}>{kpi.value}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{kpi.label}</p>
-                  </CardContent>
-                </Card>
-              </TooltipTrigger>
-              <TooltipContent><p className="text-xs">{kpi.label}</p></TooltipContent>
-            </Tooltip>
-          ))}
-        </div>
+        {/* KPI Mini-Panel with live CoD */}
+        <DetailKpiPanel
+          riskScore={riskScore}
+          decision={decision}
+          isActive={isActive}
+          computed={computed}
+          slaRemaining={slaRemaining}
+          formatCost={formatCost}
+          t={t}
+        />
       </div>
 
       {/* ═══════════ 2. PRIMARY FOCUS BOX ═══════════ */}
