@@ -317,6 +317,24 @@ const AuditTrail = () => {
       isAutomation(l.action) ? t("auditTrail.automation") : t("auditTrail.manual"),
     ]);
     autoTable(doc, { head, body, startY: y, styles: { fontSize: 7, cellPadding: 2 }, headStyles: { fillColor: [15, 23, 42], textColor: 255 } });
+
+    // Add cryptographic verification info
+    const lastLog = filtered[filtered.length - 1] as any;
+    const lastHash = lastLog?.integrity_hash;
+    if (lastHash) {
+      const pageCount = doc.getNumberOfPages();
+      doc.setPage(pageCount);
+      const ph = doc.internal.pageSize.getHeight();
+      const pw = doc.internal.pageSize.getWidth();
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(130, 130, 130);
+      const secText = i18n.language === "de"
+        ? `Dieser Audit Trail ist kryptographisch gesichert. Verifizierungscode: ${lastHash.substring(0, 16)}...`
+        : `This audit trail is cryptographically secured. Verification code: ${lastHash.substring(0, 16)}...`;
+      doc.text(secText, pw / 2, ph - 20, { align: "center" });
+    }
+
     addPdfFooter(doc);
     doc.save(`Decivio-Audit-Trail-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
