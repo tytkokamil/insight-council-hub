@@ -24,6 +24,7 @@ import TerminologyPanel from "@/components/settings/TerminologyPanel";
 import WhatsAppSettingsPanel from "@/components/settings/WhatsAppSettingsPanel";
 import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
+import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -865,6 +866,11 @@ const SettingsPage = () => {
 
               {/* Microsoft Teams */}
               <TeamsIntegrationPanel />
+
+              <hr className="border-border" />
+
+              {/* Webhooks */}
+              <WebhookSettingsPanel />
 
               <hr className="border-border" />
 
