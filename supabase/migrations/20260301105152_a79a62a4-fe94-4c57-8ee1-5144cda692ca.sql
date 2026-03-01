@@ -1,0 +1,1 @@
+ALTER TABLE public.decision_templates ADD COLUMN IF NOT EXISTS industry text DEFAULT NULL;

@@ -608,6 +608,7 @@ export type Database = {
           governance_notes: string | null
           icon_color: string | null
           id: string
+          industry: string | null
           is_system: boolean
           name: string
           org_id: string | null
@@ -629,6 +630,7 @@ export type Database = {
           governance_notes?: string | null
           icon_color?: string | null
           id?: string
+          industry?: string | null
           is_system?: boolean
           name: string
           org_id?: string | null
@@ -650,6 +652,7 @@ export type Database = {
           governance_notes?: string | null
           icon_color?: string | null
           id?: string
+          industry?: string | null
           is_system?: boolean
           name?: string
           org_id?: string | null

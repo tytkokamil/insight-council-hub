@@ -16,6 +16,7 @@ import {
   ChevronDown, ChevronUp, Clock, CheckSquare, Zap, ArrowLeft, Sparkles, TrendingUp,
 } from "lucide-react";
 import ApplyLearningPanel from "./ApplyLearningPanel";
+import TemplateBrowserModal from "./TemplateBrowserModal";
 import ContextualAINudges from "./ContextualAINudges";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -67,6 +68,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [showRecommendations, setShowRecommendations] = useState(false);
   const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null);
   const [pinnedLessons, setPinnedLessons] = useState<any[]>([]);
+  const [templateBrowserOpen, setTemplateBrowserOpen] = useState(false);
   const [ownerId, setOwnerId] = useState("");
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -652,6 +654,24 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
         {step === "template" ? renderTemplateStep() : (
           <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+            {/* Template Browser Button */}
+            {!selectedTemplate && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-2 border-dashed"
+                onClick={() => setTemplateBrowserOpen(true)}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Aus Vorlage starten
+              </Button>
+            )}
+            <TemplateBrowserModal
+              open={templateBrowserOpen}
+              onOpenChange={setTemplateBrowserOpen}
+              onSelectTemplate={applyTemplate}
+            />
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.titleLabel")}</label>
               <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("newDecision.titlePlaceholder")} className={inputClass} required />
