@@ -57,12 +57,16 @@ const DecisionCalendar = () => {
   const { data: allTasks = [] } = useTasks();
   const { data: profiles } = useProfiles();
   const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
+  const [complianceEvents, setComplianceEvents] = useState<any[]>([]);
   const queryClient = useQueryClient();
 
-  // Load SLA configs dynamically
+  // Load SLA configs and compliance events
   useEffect(() => {
     supabase.from("sla_configs").select("*").then(({ data }) => {
       if (data) setSlaConfigs(data);
+    });
+    supabase.from("compliance_events").select("*").then(({ data }) => {
+      if (data) setComplianceEvents(data);
     });
   }, []);
 
@@ -118,6 +122,17 @@ const DecisionCalendar = () => {
   const unscheduledTasks = useMemo(() => {
     return allTasks.filter((tk) => !tk.due_date);
   }, [allTasks]);
+
+  const complianceByDate = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const ev of complianceEvents) {
+      if (!ev.event_date) continue;
+      const key = ev.event_date;
+      if (!map[key]) map[key] = [];
+      map[key].push(ev);
+    }
+    return map;
+  }, [complianceEvents]);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -326,6 +341,7 @@ const DecisionCalendar = () => {
                   currentDate={currentDate}
                   decisionsByDate={decisionsByDate}
                   slaConfigs={slaConfigs}
+                  complianceByDate={complianceByDate}
                   {...sharedDragProps}
                 />
               )}
