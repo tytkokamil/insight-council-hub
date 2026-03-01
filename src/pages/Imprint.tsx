@@ -20,25 +20,30 @@ const Imprint = () => (
         </div>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
+          {/* ⚠️ TODO: Vor Go-Live alle [TODO]-Platzhalter mit echten Firmendaten ersetzen! */}
+          <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 mb-6">
+            <p className="text-sm font-semibold text-warning">⚠️ Entwurf — Platzhalter müssen vor Veröffentlichung ersetzt werden</p>
+          </div>
+
           <section>
             <h2 className="text-foreground text-lg font-semibold">Angaben gemäß § 5 TMG</h2>
             <p>
               Decivio GmbH<br />
-              Musterstraße 42<br />
-              10115 Berlin<br />
+              [TODO: Straße + Hausnummer]<br />
+              [TODO: PLZ + Stadt]<br />
               Deutschland
             </p>
           </section>
 
           <section>
             <h2 className="text-foreground text-lg font-semibold">Vertreten durch</h2>
-            <p>Geschäftsführer: [Name einfügen]</p>
+            <p>Geschäftsführer: [TODO: Name des Geschäftsführers]</p>
           </section>
 
           <section>
             <h2 className="text-foreground text-lg font-semibold">Kontakt</h2>
             <p>
-              Telefon: +49 (0) 30 12345678<br />
+              Telefon: [TODO: Telefonnummer]<br />
               E-Mail: info@decivio.com
             </p>
           </section>
@@ -46,14 +51,14 @@ const Imprint = () => (
           <section>
             <h2 className="text-foreground text-lg font-semibold">Registereintrag</h2>
             <p>
-              Handelsregister: Amtsgericht Berlin-Charlottenburg<br />
-              Registernummer: HRB [Nummer einfügen]
+              Handelsregister: [TODO: Amtsgericht]<br />
+              Registernummer: HRB [TODO: HRB-Nummer]
             </p>
           </section>
 
           <section>
             <h2 className="text-foreground text-lg font-semibold">Umsatzsteuer-ID</h2>
-            <p>Umsatzsteuer-Identifikationsnummer gemäß §27a UStG: DE [Nummer einfügen]</p>
+            <p>Umsatzsteuer-Identifikationsnummer gemäß §27a UStG: DE [TODO: USt-ID-Nummer]</p>
           </section>
 
           <section>

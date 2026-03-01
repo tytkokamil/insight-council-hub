@@ -73,7 +73,7 @@ const AiDataPolicy = () => (
 
             <h3 className="text-foreground text-base font-semibold mt-4">2.2 OpenAI</h3>
             <p><strong>Anbieter:</strong> OpenAI, LLC, 3180 18th Street, San Francisco, CA 94110, USA</p>
-            <p><strong>Eingesetzte Modelle:</strong> GPT-4o (optional, für spezifische Analysen)</p>
+            <p><strong>Eingesetzte Modelle:</strong> GPT-5 / GPT-5 Mini (optional, für spezifische Analysen)</p>
             <p><strong>Datenverarbeitung:</strong> OpenAI verarbeitet API-Daten nicht für Modell-Training (Zero Data Retention Policy für API-Nutzung).</p>
             <p><strong>Rechtsgrundlage für Drittlandübermittlung:</strong> EU-Standardvertragsklauseln (SCCs) gemäß Art. 46 Abs. 2 lit. c DSGVO</p>
             <p><strong>Datenschutzerklärung:</strong> <a href="https://openai.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">openai.com/privacy</a></p>

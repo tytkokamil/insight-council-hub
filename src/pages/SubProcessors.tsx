@@ -5,8 +5,8 @@ import { ArrowLeft, Link2 } from "lucide-react";
 const subProcessors = [
   { name: "Supabase Inc.", purpose: "Datenbankhosting, Authentifizierung, Edge Functions, Row-Level Security", location: "USA (Daten in EU-Region Frankfurt)", transfer: "Ja (EU→US)", legal: "SCCs + DPA" },
   { name: "Lovable Technologies", purpose: "Plattform-Infrastruktur und Hosting", location: "EU", transfer: "Nein", legal: "DPA" },
-  { name: "Google LLC", purpose: "KI-Verarbeitung (Gemini API) — nur bei Nutzung von KI-Features", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + Google API DPA" },
-  { name: "OpenAI LLC", purpose: "KI-Verarbeitung (GPT API) — optional, nur bei Nutzung", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + OpenAI DPA" },
+  { name: "Google LLC", purpose: "KI-Verarbeitung (Gemini 2.5 Flash / Pro) — nur bei Nutzung von KI-Features", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + Google API DPA" },
+  { name: "OpenAI LLC", purpose: "KI-Verarbeitung (GPT-5 / GPT-5 Mini) — optional, nur bei Nutzung", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + OpenAI DPA" },
 ];
 
 const SubProcessors = () => (
