@@ -96,7 +96,7 @@ const IndustrySelectionScreen = ({ onComplete }: IndustrySelectionScreenProps) =
                 className={`relative text-left p-4 rounded-xl border-2 transition-all duration-150 ${
                   isSelected
                     ? "border-primary bg-primary/5 shadow-md"
-                    : "border-border hover:border-primary/40 hover:bg-muted/30"
+                    : "border-border/60 hover:border-primary/40 hover:bg-muted/30"
                 }`}
               >
                 {isSelected && (
@@ -122,7 +122,7 @@ const IndustrySelectionScreen = ({ onComplete }: IndustrySelectionScreenProps) =
       </div>
 
       {/* Bottom Bar */}
-      <div className="fixed bottom-0 inset-x-0 bg-background/80 backdrop-blur-lg border-t border-border px-4 py-4">
+      <div className="fixed bottom-0 inset-x-0 bg-background/80 backdrop-blur-lg border-t border-border/60 px-4 py-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             onClick={handleSkip}
