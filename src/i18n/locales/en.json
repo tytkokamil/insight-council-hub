@@ -5031,5 +5031,16 @@
     "sendError": "Could not send message",
     "openFullChat": "Open full chat"
   },
+  "predictiveSla": {
+    "title": "Predictive SLA Warnings",
+    "badge": "SLA ⚠",
+    "tooltipDelay": "Based on {{name}}'s past behavior, this decision will likely be completed {{days}} days after the SLA deadline.",
+    "allClear": "No SLA violations predicted — all reviewers on track.",
+    "reviewerDelay": "{{name}} — Avg response time: {{avgHours}}h",
+    "predictedDelay": "Predicted delay: {{days}} days past SLA deadline",
+    "escalateNow": "Escalate now",
+    "escalated": "Decision has been escalated",
+    "escalateError": "Escalation failed"
+  },
   "_end": true
 }

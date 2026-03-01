@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import PredictiveSlaPanel from "@/components/decisions/PredictiveSlaWarning";
 import { formatCost } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -547,13 +548,18 @@ const EscalationEngine = () => {
       </div>
 
       {/* ═══ TABS ═══ */}
-      <Tabs defaultValue="sla" className="space-y-4">
+      <Tabs defaultValue="predictive" className="space-y-4">
         <TabsList className="flex-wrap">
+          <TabsTrigger value="predictive">{t("predictiveSla.title")}</TabsTrigger>
           <TabsTrigger value="sla">{t("escalationEngine.tabSla")}</TabsTrigger>
           <TabsTrigger value="escalations">{t("escalationEngine.tabEscalations", { count: activeEscalations.length })}</TabsTrigger>
           <TabsTrigger value="log">{t("escalationEngine.tabEscLog")}</TabsTrigger>
           <TabsTrigger value="analytics">{t("escalationEngine.tabAnalytics")}</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="predictive">
+          <PredictiveSlaPanel />
+        </TabsContent>
 
         <TabsContent value="sla">
           <div className="space-y-4">

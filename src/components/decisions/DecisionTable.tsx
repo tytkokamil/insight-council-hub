@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import LiveCodCounter from "@/components/shared/LiveCodCounter";
+import { PredictiveSlaInlineBadge, usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -140,6 +141,7 @@ const DecisionTable = ({
 }: DecisionTableProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { predictions } = usePredictiveSla();
 
   return (
     <Card className="overflow-hidden cmd-card-elevated">
@@ -186,6 +188,7 @@ const DecisionTable = ({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="text-sm font-medium">{decision.title}</p>
                         <DecisionBadges meta={meta} t={t} />
+                        <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />
                       </div>
                       <p className="text-[11px] text-muted-foreground mt-0.5">{categoryLabels[decision.category]}</p>
                     </td>

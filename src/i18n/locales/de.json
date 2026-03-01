@@ -5037,5 +5037,16 @@
     "sendError": "Nachricht konnte nicht gesendet werden",
     "openFullChat": "Vollständigen Chat öffnen"
   },
+  "predictiveSla": {
+    "title": "Predictive SLA Warnings",
+    "badge": "SLA ⚠",
+    "tooltipDelay": "Basierend auf dem bisherigen Verhalten von {{name}} wird diese Entscheidung voraussichtlich {{days}} Tage nach der SLA-Frist abgeschlossen.",
+    "allClear": "Keine SLA-Verletzungen prognostiziert — alle Reviewer im Zeitplan.",
+    "reviewerDelay": "{{name}} — Ø Reaktionszeit: {{avgHours}}h",
+    "predictedDelay": "Prognostizierte Verzögerung: {{days}} Tage nach SLA-Frist",
+    "escalateNow": "Jetzt eskalieren",
+    "escalated": "Entscheidung wurde eskaliert",
+    "escalateError": "Eskalation fehlgeschlagen"
+  },
   "_end": true
 }
