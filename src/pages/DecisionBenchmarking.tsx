@@ -113,9 +113,9 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                   <div className={`text-5xl font-bold tabular-nums ${scoreColor}`}>{overallScore}</div>
                   <Badge variant={overallScore >= 75 ? "default" : "secondary"}>{scoreLabel}</Badge>
                   <Progress value={overallScore} className="w-full" />
-                  {overallScore < 50 && (
-                    <p className="text-[10px] text-muted-foreground text-center">{t("benchmarking.developmentPhaseHint")}</p>
-                  )}
+                   <p className="text-[10px] text-muted-foreground text-center">
+                     {t("benchmarking.startingPointHint", "Ihr Ausgangspunkt. Jede abgeschlossene Entscheidung verbessert diesen Score.")}
+                   </p>
                 </CardContent>
               </Card>
               <Card className="md:col-span-2">
@@ -131,10 +131,7 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
               </Card>
             </div>
 
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
-              <Info className="w-4 h-4 text-muted-foreground shrink-0" />
-              <p className="text-[11px] text-muted-foreground">{t("benchmarking.benchmarkDisclaimer")}</p>
-            </div>
+            {/* Disclaimer moved to page footer */}
 
             <CollapsibleSection title={t("benchmarking.comparisonCharts")} subtitle={t("benchmarking.comparisonChartsSub")} icon={<BarChart3 className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
               <Tabs defaultValue="radar">
@@ -144,7 +141,7 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                   <TabsTrigger value="detail">{t("benchmarking.detailTab")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="radar">
-                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="hsl(var(--border))" /><PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name={t("benchmarking.yourCompany")} dataKey={t("benchmarking.yourCompany")} stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.2} /><Radar name={t("benchmarking.industryAvg")} dataKey={t("benchmarking.industryAvg")} stroke="hsl(var(--muted-foreground))" fill="hsl(var(--muted-foreground))" fillOpacity={0.1} /><Radar name={t("benchmarking.top10")} dataKey={t("benchmarking.top10")} stroke="hsl(var(--success))" fill="hsl(var(--success))" fillOpacity={0.1} /><Legend /></RadarChart></ResponsiveContainer></div></CardContent></Card>
+                  <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><RadarChart data={radarData}><PolarGrid stroke="hsl(var(--border))" /><PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} /><PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} /><Radar name={t("benchmarking.yourCompany")} dataKey={t("benchmarking.yourCompany")} stroke="#1E3A5F" fill="#1E3A5F" fillOpacity={0.3} /><Radar name={t("benchmarking.industryAvg")} dataKey={t("benchmarking.industryAvg")} stroke="#94A3B8" fill="none" fillOpacity={0} strokeDasharray="5 5" /><Radar name={t("benchmarking.top10")} dataKey={t("benchmarking.top10")} stroke="#10B981" fill="none" fillOpacity={0} strokeWidth={2} /><Legend /></RadarChart></ResponsiveContainer></div></CardContent></Card>
                 </TabsContent>
                 <TabsContent value="bar">
                   <Card><CardContent className="pt-6"><div className="h-[400px]"><ResponsiveContainer width="100%" height="100%"><BarChart data={barData} layout="vertical" margin={{ left: 120 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" domain={[0, 100]} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={110} /><Tooltip /><Bar dataKey={t("benchmarking.yourCompany")} fill="hsl(var(--foreground))" radius={[0, 4, 4, 0]} /><Bar dataKey={t("benchmarking.industryAvg")} fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} /><Bar dataKey={t("benchmarking.top10")} fill="hsl(var(--success))" radius={[0, 4, 4, 0]} /><Legend /></BarChart></ResponsiveContainer></div></CardContent></Card>
@@ -167,18 +164,27 @@ const DecisionBenchmarking = ({ embedded }: { embedded?: boolean }) => {
                     const trend = getTrend(key, metrics[key]); if (trend.color !== "text-destructive") return null;
                     const hp = INDUSTRY_BENCHMARKS.highPerformance[key as MetricKey] as number; const gap = meta.lowerIsBetter ? metrics[key] - hp : hp - metrics[key];
                     const route = METRIC_IMPROVE_ROUTES[key];
-                    return (<div key={key} className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
-                      <div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-destructive" /><span className="font-medium text-sm">{meta.label}</span></div>
-                      <p className="text-xs text-muted-foreground mb-2">{gap > 0 ? t("benchmarking.gapToTop", { gap, suffix: meta.unit === "%" ? "pp" : ` ${meta.unit}` }) : t("benchmarking.nearBenchmark")}</p>
-                      {route && <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 text-primary" onClick={() => navigate(route)}>{t("benchmarking.howToImprove")} <ArrowRight className="w-3 h-3" /></Button>}
-                    </div>);
+                     return (<div key={key} className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                       <div className="flex items-center gap-2 mb-1"><Clock className="w-4 h-4 text-destructive" /><span className="font-medium text-sm">{meta.label}</span></div>
+                       <p className="text-xs text-muted-foreground mb-2">{gap > 0 ? t("benchmarking.gapToTop", { gap, suffix: meta.unit === "%" ? "pp" : ` ${meta.unit}` }) : t("benchmarking.nearBenchmark")}</p>
+                       {route ? (
+                         <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 text-primary" onClick={() => navigate(route)}>{t("benchmarking.howToImprove")} <ArrowRight className="w-3 h-3" /></Button>
+                       ) : (
+                         <TooltipProvider><UITooltip><TooltipTrigger asChild><span className="text-xs cursor-default" style={{ color: "#94A3B8" }}>{t("benchmarking.howToImprove")} →</span></TooltipTrigger><TooltipContent><p className="text-xs">{t("benchmarking.comingSoonTooltip", "Kommt bald — mehr Entscheidungen anlegen verbessert diesen Wert automatisch.")}</p></TooltipContent></UITooltip></TooltipProvider>
+                       )}
+                     </div>);
                   }).filter(Boolean)}
                   {Object.entries(METRIC_LABELS).every(([key]) => getTrend(key, metrics[key]).color !== "text-destructive") && (
                     <div className="p-3 rounded-lg border border-success/30 bg-success/5 col-span-full"><p className="text-sm text-success font-medium">{t("benchmarking.allAboveAvg")}</p></div>
                   )}
                 </div>
               </CardContent></Card>
-            </CollapsibleSection>
+             </CollapsibleSection>
+
+            {/* Disclaimer footer */}
+            <p className="text-center" style={{ fontSize: "11px", color: "#94A3B8" }}>
+              {t("benchmarking.benchmarkDisclaimer")}
+            </p>
           </>
         )}
       </div>
