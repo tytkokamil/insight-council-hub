@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import PredictiveSlaPanel from "@/components/decisions/PredictiveSlaWarning";
+import PredictiveSlaPanel, { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 import { formatCost } from "@/lib/formatters";
 import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
@@ -41,7 +41,7 @@ const EscalationEngine = () => {
   const [running, setRunning] = useState(false);
   const [lastResult, setLastResult] = useState<EngineResult | null>(null);
   const [showEngineConfirm, setShowEngineConfirm] = useState(false);
-
+  const { predictions: slaPredictions } = usePredictiveSla();
   const actionConfig: Record<string, { icon: any; label: string; color: string; bgColor: string }> = useMemo(() => ({
     escalation: { icon: AlertTriangle, label: t("escalationEngine.smartEscalation"), color: "text-destructive", bgColor: "bg-destructive/15" },
     auto_reassign: { icon: Users, label: "Auto-Reassign", color: "text-warning", bgColor: "bg-warning/15" },
@@ -314,6 +314,26 @@ const EscalationEngine = () => {
         }
       />
 
+      {/* ═══ ENGINE STATUS (moved before KPIs when not active) ═══ */}
+      {!engineStatus.active && (
+        <Card className="mb-6 border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <Rocket className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-sm font-semibold text-primary">{t("escalationEngine.engineOnboardingTitle")}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("escalationEngine.engineOnboardingDesc")}</p>
+                </div>
+              </div>
+              <Button size="sm" className="gap-1.5" onClick={() => navigate("/automation")}>
+                <Zap className="w-3.5 h-3.5" /> {t("escalationEngine.createFirstRule")}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* ═══ 1. GOVERNANCE SNAPSHOT ═══ */}
       <div className="mb-6">
         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("escalationEngine.govStatusLive")}</h2>
@@ -324,17 +344,17 @@ const EscalationEngine = () => {
             { label: t("escalationEngine.slaViolations7d"), value: govSnapshot.slaViolations, trend: null, icon: Target, color: govSnapshot.slaViolations > 0 ? "text-destructive" : "text-success" },
             { label: t("escalationEngine.autoReassigns"), value: govSnapshot.reassigns, trend: null, icon: Users, color: "text-warning" },
             { label: t("escalationEngine.reviewsSkipped"), value: govSnapshot.skipped, trend: null, icon: SkipForward, color: "text-muted-foreground" },
-            { label: t("escalationEngine.governanceScore"), value: govSnapshot.governanceScore, trend: govSnapshot.governanceScoreTrend, icon: Gauge, color: govSnapshot.governanceScore >= 70 ? "text-success" : govSnapshot.governanceScore >= 40 ? "text-warning" : "text-destructive", isScore: true },
-            { label: t("escalationEngine.costOfDelay"), value: formatCost(totalCostOfDelay), trend: null, icon: DollarSign, color: totalCostOfDelay > 0 ? "text-destructive" : "text-success", isCurrency: true },
+            { label: t("escalationEngine.governanceScore"), value: govSnapshot.governanceScore, trend: govSnapshot.governanceScoreTrend, icon: Gauge, color: govSnapshot.governanceScore >= 70 ? "text-success" : govSnapshot.governanceScore >= 40 ? "text-warning" : "text-destructive", isScore: true, highlight: "governance" as const },
+            { label: t("escalationEngine.costOfDelay"), value: formatCost(totalCostOfDelay), trend: null, icon: DollarSign, color: totalCostOfDelay > 0 ? "text-destructive" : "text-success", isCurrency: true, highlight: "cost" as const },
           ].map((kpi: any) => (
-            <Card key={kpi.label} className="relative overflow-hidden">
+            <Card key={kpi.label} className={`relative overflow-hidden ${kpi.highlight === "cost" ? "lg:col-span-1" : ""}`} style={kpi.highlight === "cost" ? { backgroundColor: "#FEF2F2" } : kpi.highlight === "governance" ? { backgroundColor: "#EFF6FF" } : undefined}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
                   <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.isScore || kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums`} style={kpi.highlight === "cost" ? { color: "#EF4444" } : kpi.highlight === "governance" ? { color: "#3B82F6" } : undefined}>{kpi.value}</span>
                   {kpi.trend !== null && kpi.trend !== 0 && (
                     <span className={`text-[10px] font-medium flex items-center gap-0.5 mb-0.5 ${kpi.trend > 0 ? "text-destructive" : "text-success"}`}>
                       {kpi.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -353,8 +373,8 @@ const EscalationEngine = () => {
         </div>
       </div>
 
-      {/* ═══ 2. ENGINE STATUS ═══ */}
-      {engineStatus.active ? (
+      {/* ═══ 2. ENGINE STATUS (active state) ═══ */}
+      {engineStatus.active && (
         <Card className="mb-6 border-success/30">
           <CardContent className="p-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
@@ -369,23 +389,6 @@ const EscalationEngine = () => {
                 <span>{t("escalationEngine.reviewSkips")}: <strong className="text-foreground">{engineStatus.reviewSkips}</strong></span>
                 <span>{t("escalationEngine.actions7d")}: <strong className="text-foreground">{engineStatus.recentActions}</strong></span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="mb-6 border-primary/30 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <Rocket className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="text-sm font-semibold text-primary">{t("escalationEngine.engineOnboardingTitle")}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{t("escalationEngine.engineOnboardingDesc")}</p>
-                </div>
-              </div>
-              <Button size="sm" className="gap-1.5" onClick={() => navigate("/automation")}>
-                <Zap className="w-3.5 h-3.5" /> {t("escalationEngine.createFirstRule")}
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -458,7 +461,16 @@ const EscalationEngine = () => {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-bold font-display tabular-nums">{Math.round(d.urgencyScore)}</p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <p className="text-lg font-bold font-display tabular-nums cursor-help">{Math.round(d.urgencyScore)}</p>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs text-xs">
+                            {t("escalationEngine.urgencyScoreTooltip", { defaultValue: "Urgency Score: Kombination aus Verzögerungskosten, Risiko, Überfälligkeit und Abhängigkeiten. Max: 300." })}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <p className="text-[10px] text-muted-foreground">{t("escalationEngine.urgency")}</p>
                     </div>
                   </div>
@@ -550,7 +562,14 @@ const EscalationEngine = () => {
       {/* ═══ TABS ═══ */}
       <Tabs defaultValue="predictive" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="predictive">{t("predictiveSla.title")}</TabsTrigger>
+          <TabsTrigger value="predictive" className="gap-1.5">
+            {t("predictiveSla.title")}
+            {slaPredictions.length > 0 ? (
+              <Badge variant="destructive" className="text-[9px] h-4 px-1.5 min-w-[18px]">{slaPredictions.length}</Badge>
+            ) : (
+              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+            )}
+          </TabsTrigger>
           <TabsTrigger value="sla">{t("escalationEngine.tabSla")}</TabsTrigger>
           <TabsTrigger value="escalations">{t("escalationEngine.tabEscalations", { count: activeEscalations.length })}</TabsTrigger>
           <TabsTrigger value="log">{t("escalationEngine.tabEscLog")}</TabsTrigger>
