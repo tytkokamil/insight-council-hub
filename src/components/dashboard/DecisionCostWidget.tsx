@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DollarSign, ChevronDown, ChevronUp, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
@@ -7,7 +7,8 @@ import { useTeamContext } from "@/hooks/useTeamContext";
 import ScoreMethodology from "@/components/shared/ScoreMethodology";
 import WidgetSkeleton from "./WidgetSkeleton";
 import CostItemPopover from "./cost/CostItemPopover";
-import { DEFAULT_COD_CONFIG, buildTeamConfigMap, calculateAllCosts, getConfidenceLevel } from "./cost/CostCalculationEngine";
+import LiveCodCounter from "@/components/shared/LiveCodCounter";
+import { DEFAULT_COD_CONFIG, buildTeamConfigMap, calculateAllCosts, getConfidenceLevel, calculateCod } from "./cost/CostCalculationEngine";
 import type { CodConfig } from "./cost/CostCalculationEngine";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,7 +109,19 @@ const DecisionCostWidget = () => {
       </CardHeader>
       <CardContent>
         <div className="flex items-end gap-2 mb-1">
-          <span className="font-display text-3xl font-bold tabular-nums text-destructive">{formatCost(totalCost)}</span>
+          <LiveCodCounter
+            baseCost={totalCost}
+            costPerSecond={openDecisions.reduce((sum, d) => {
+              const cfg = d.team_id && teamConfigMap[(d as any).team_id] ? teamConfigMap[(d as any).team_id] : orgDefaults;
+              return sum + (cfg.hourlyRate * 8 * cfg.persons * cfg.overhead) / 86400;
+            }, 0)}
+            createdAt={openDecisions[0]?.created_at || new Date().toISOString()}
+            size="lg"
+            dailyCost={openDecisions.reduce((sum, d) => {
+              const cfg = d.team_id && teamConfigMap[(d as any).team_id] ? teamConfigMap[(d as any).team_id] : orgDefaults;
+              return sum + cfg.hourlyRate * 8 * cfg.persons * cfg.overhead;
+            }, 0)}
+          />
           <span className={`text-[10px] font-medium mb-1 ${confidence.color}`}>
             {t("widgets.confidenceLabel")}: {confidence.label}
           </span>

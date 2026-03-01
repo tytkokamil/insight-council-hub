@@ -23,7 +23,8 @@ import DeleteDecisionDialog from "./DeleteDecisionDialog";
 import ShareDecisionDialog from "./ShareDecisionDialog";
 import ChangeReasonDialog from "@/components/audit/ChangeReasonDialog";
 import SignatureConfirmDialog from "@/components/audit/SignatureConfirmDialog";
-import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle, Lock } from "lucide-react";
+import { MessageSquare, GitPullRequest, Brain, History, Target, Users, GitBranch, Link2, Compass, Crosshair, Pencil, Trash2, AlertCircle, CheckSquare, Share2, Shield, FileText, AlertTriangle, Lock, DollarSign } from "lucide-react";
+import LiveCodCounter from "@/components/shared/LiveCodCounter";
 import { decisionTemplates } from "@/lib/decisionTemplates";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -317,6 +318,29 @@ const DecisionDetailDialog = ({ decision, open, onOpenChange, onUpdated }: Props
             </p>
           </div>
         )}
+
+        {/* Live Cost-of-Delay counter — only for open decisions with cost_per_day */}
+        {decision.cost_per_day > 0 && !["implemented", "rejected", "archived", "cancelled"].includes(status) && (() => {
+          const dailyCost = decision.cost_per_day;
+          const costPerSecond = dailyCost / 86400;
+          const daysOpen = (Date.now() - new Date(decision.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          const baseCost = Math.round(daysOpen * dailyCost);
+          return (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 border border-destructive/15 mt-2">
+              <DollarSign className="w-4 h-4 text-destructive shrink-0" />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{t("cod.totalDelayCost", "Verzögerungskosten")}:</span>
+                <LiveCodCounter
+                  baseCost={baseCost}
+                  costPerSecond={costPerSecond}
+                  createdAt={decision.created_at}
+                  size="md"
+                  dailyCost={dailyCost}
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex items-center gap-2 flex-wrap mt-2">
           <span className="text-xs text-muted-foreground">{t("decisions.statusLabel")}:</span>
