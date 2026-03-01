@@ -1792,6 +1792,7 @@ export type Database = {
           hide_pdf_branding: boolean
           id: string
           industry: string | null
+          onboarding_completed: boolean
           org_id: string | null
           progressive_override: boolean | null
           updated_at: string
@@ -1806,6 +1807,7 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          onboarding_completed?: boolean
           org_id?: string | null
           progressive_override?: boolean | null
           updated_at?: string
@@ -1820,6 +1822,7 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          onboarding_completed?: boolean
           org_id?: string | null
           progressive_override?: boolean | null
           updated_at?: string

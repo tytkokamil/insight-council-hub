@@ -59,6 +59,7 @@ const Roadmap = lazy(() => import("./pages/Roadmap"));
 const EmailAction = lazy(() => import("./pages/EmailAction"));
 const ExternalReview = lazy(() => import("./pages/ExternalReview"));
 const InternalAdmin = lazy(() => import("./pages/InternalAdmin"));
+const Welcome = lazy(() => import("./pages/Welcome"));
 
 // ── Wrappers ───────────────────────────────────────────
 
@@ -100,6 +101,7 @@ export const publicRoutes = (
 
 export const protectedRoutes = (
   <>
+    <Route path="/welcome" element={<P><Welcome /></P>} />
     <Route path="/dashboard" element={<P><Dashboard /></P>} />
     <Route path="/decisions" element={<P><Decisions /></P>} />
     <Route path="/decisions/:id" element={<P><DecisionDetail /></P>} />
