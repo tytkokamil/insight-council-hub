@@ -30,6 +30,7 @@ import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
 import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPanel";
+import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -366,6 +367,8 @@ const SettingsPage = () => {
                   </Button>
                 </div>
               </section>
+
+              <AccountDeletionPanel />
             </div>
           )}
 
