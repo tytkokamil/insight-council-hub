@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { industries, type Industry } from "@/lib/industries";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { seedIndustryData } from "@/lib/industrySeeder";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 interface IndustrySelectionScreenProps {
@@ -23,13 +24,15 @@ const IndustrySelectionScreen = ({ onComplete }: IndustrySelectionScreenProps) =
     const industry = industries.find(i => i.id === selected);
     setLoadingText(`Wir richten Decivio für ${industry?.name || "Sie"} ein...`);
 
+    // Save industry to profile
     await supabase
       .from("profiles")
       .update({ industry: selected } as any)
       .eq("user_id", user.id);
 
-    // Brief loading animation
-    await new Promise(r => setTimeout(r, 1500));
+    // Seed industry-specific templates and demo decisions
+    await seedIndustryData(user.id, selected);
+
     onComplete(selected);
   };
 
@@ -43,7 +46,8 @@ const IndustrySelectionScreen = ({ onComplete }: IndustrySelectionScreenProps) =
       .update({ industry: "allgemein" } as any)
       .eq("user_id", user.id);
 
-    await new Promise(r => setTimeout(r, 1000));
+    await seedIndustryData(user.id, "allgemein");
+
     onComplete("allgemein");
   };
 
