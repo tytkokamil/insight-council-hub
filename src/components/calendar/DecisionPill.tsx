@@ -86,7 +86,7 @@ const DecisionPill = memo(({ decision, draggingId, onDragStart, onDragEnd, onCli
           </div>
 
           {(decision.ai_risk_score > 0 || delayCost > 0 || isOverdue) && (
-            <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border">
+            <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border/40">
               {decision.ai_risk_score > 0 && (
                 <div className="text-xs">
                   <span className="text-muted-foreground">{t("cal.risk")}: </span>
@@ -108,7 +108,7 @@ const DecisionPill = memo(({ decision, draggingId, onDragStart, onDragEnd, onCli
 
           {decision.description && <p className="text-xs text-muted-foreground line-clamp-3">{decision.description}</p>}
 
-          <div className="space-y-1 pt-1 border-t border-border">
+          <div className="space-y-1 pt-1 border-t border-border/40">
             {assigneeName && (
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <User className="w-3 h-3 shrink-0" />

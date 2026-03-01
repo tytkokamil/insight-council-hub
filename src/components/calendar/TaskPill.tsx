@@ -64,7 +64,7 @@ const TaskPill = memo(({ task, profileMap }: TaskPillProps) => {
             <Badge variant="outline" className="text-[10px] capitalize">{task.priority}</Badge>
           </div>
           {assigneeName && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border/40">
               <User className="w-3 h-3" />
               <span>{assigneeName}</span>
             </div>
