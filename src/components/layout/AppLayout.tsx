@@ -19,6 +19,7 @@ import SidebarNav from "./SidebarNav";
 import SidebarFooter from "./SidebarFooter";
 import MobileHeader from "./MobileHeader";
 import TopBar from "./TopBar";
+import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
 
 /* ── Composed sidebar content ── */
 const SidebarContent = ({
@@ -185,6 +186,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14" : ""}`} role="main">
         {!isMobile && <TopBar collapsed={collapsed} />}
+        <FreemiumWarningBar />
         <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
           <AnimatePresence mode="wait">
             <motion.div
