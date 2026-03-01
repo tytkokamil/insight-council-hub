@@ -223,7 +223,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ GENERAL ═══════════════ */}
           {activeTab === "general" && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               {/* Profile Card */}
               <div className="settings-group">
                 <h2>{t("settings.profile")}</h2>
@@ -262,7 +262,7 @@ const SettingsPage = () => {
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.emailLabel")}</label>
                       <input type="email" value={user?.email || ""} disabled className={`${inputClass} opacity-50 cursor-not-allowed`} />
                     </div>
-                    <Button size="sm" variant="outline" onClick={handleSave} disabled={saving} className="w-fit gap-1.5">
+                    <Button size="sm" onClick={handleSave} disabled={saving} className="w-fit gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
                       {saved && <CheckCircle2 className="w-3 h-3" />}{saving ? t("settings.saving") : saved ? t("settings.saved") : t("settings.save")}
                     </Button>
                   </div>
@@ -281,7 +281,7 @@ const SettingsPage = () => {
                     { label: t("settings.wsDataLocation"), value: "EU", icon: Server },
                     { label: t("settings.wsRole"), value: roleLabels[userRole], icon: Shield },
                   ].map((item, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
+                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20 min-h-[90px] flex flex-col justify-center">
                       <div className="flex items-center gap-1.5 mb-1">
                         <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -372,7 +372,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ NOTIFICATIONS ═══════════════ */}
           {activeTab === "notifications" && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               <div className="settings-group">
                 <h2>{t("settings.notifChannels")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.digestDesc")}</p>
@@ -432,7 +432,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ SECURITY ═══════════════ */}
           {activeTab === "security" && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               {/* Security Health Card */}
               <div className="settings-group">
                 <h2>{t("settings.securityHealth")}</h2>
@@ -487,7 +487,7 @@ const SettingsPage = () => {
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.confirmPassword")}</label>
                     <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("settings.confirmPasswordPlaceholder")} className={inputClass} />
                   </div>
-                  <Button size="sm" variant="outline" onClick={handlePasswordChange} disabled={changingPassword || !newPassword}>
+                  <Button size="sm" onClick={handlePasswordChange} disabled={changingPassword || !newPassword} style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
                     {changingPassword ? t("settings.updating") : t("settings.changePassword")}
                   </Button>
                 </div>
@@ -497,7 +497,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ GOVERNANCE ═══════════════ */}
           {activeTab === "governance" && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               {/* Access Control Card */}
               <div className="settings-group">
                 <h2>{t("settings.accessControl")}</h2>
@@ -581,7 +581,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ AI ═══════════════ */}
           {activeTab === "ai" && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               <div className="settings-group">
                 <h2>{t("settings.aiUsage")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -591,7 +591,7 @@ const SettingsPage = () => {
                     { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
                     { label: t("settings.aiDataResidency"), value: "EU", icon: Server },
                   ].map((stat, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
+                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20 min-h-[90px] flex flex-col justify-center">
                       <div className="flex items-center gap-1.5 mb-1">
                         <stat.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -600,6 +600,15 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Data Residency — moved above provider selection for trust-first */}
+              <div className="p-4 rounded-lg border-l-4" style={{ backgroundColor: "hsl(214 100% 97%)", borderLeftColor: "hsl(217 91% 60%)" }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Shield className="w-4 h-4" style={{ color: "hsl(217 91% 60%)" }} />
+                  <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
               </div>
 
               <div className="settings-group">
@@ -639,7 +648,7 @@ const SettingsPage = () => {
                   </div>
                 )}
                 <div className="mt-4">
-                  <Button size="sm" variant="outline" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5">
+                  <Button size="sm" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
                     {savedAi && <CheckCircle2 className="w-3 h-3" />}{savingAi ? t("settings.saving") : savedAi ? t("settings.saved") : t("settings.save")}
                   </Button>
                 </div>
@@ -664,22 +673,13 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-border/30 pt-4 mt-4">
-                  <div className="p-3 rounded-lg bg-primary/[0.03] border border-primary/15">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Server className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
-                  </div>
-                </div>
               </div>
             </div>
           )}
 
           {/* ═══════════════ INTEGRATIONS (admin only) ═══════════════ */}
           {activeTab === "integrations" && isAdmin && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               <div className="settings-group">
                 <h2>E-Mail & Messaging</h2>
                 <InboundEmailPanel />
@@ -707,7 +707,7 @@ const SettingsPage = () => {
 
           {/* ═══════════════ ADMIN ═══════════════ */}
           {activeTab === "admin" && isAdmin && (
-            <div className="space-y-5">
+            <div className="space-y-8">
               {adminStats && (
                 <div className="settings-group">
                   <h2>{t("settings.adminOverview")}</h2>
@@ -720,7 +720,7 @@ const SettingsPage = () => {
                       { label: t("settings.adminSecurityScore"), value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
                       { label: t("settings.adminTeams"), value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
                     ].map((stat, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
+                      <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20 min-h-[90px] flex flex-col justify-center">
                         <div className="flex items-center gap-1.5 mb-1">
                           <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
                           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -739,14 +739,17 @@ const SettingsPage = () => {
                   {[
                     { label: t("settings.userManagement"), desc: t("settings.adminUserMgmtDesc", "Nutzer einladen, Rollen ändern"), icon: Users, path: "/admin/users" },
                     { label: t("settings.featureFlags"), desc: t("settings.adminFeatureFlagsDesc", "Module aktivieren & deaktivieren"), icon: Zap, path: "/admin/users?tab=config" },
+                    { label: t("settings.adminDataMgmt", "Daten & Demo"), desc: t("settings.adminDataMgmtDesc", "Demo-Daten laden, Daten zurücksetzen"), icon: Scale, path: "/admin/users?tab=data", badge: (adminStats?.totalDecisions ?? 0) < 5 ? "Empfohlen zum Start" : undefined },
                     { label: t("settings.rolePermsTitle", "Berechtigungen"), desc: t("settings.adminPermsDesc", "Rollen-Berechtigungen anpassen"), icon: Lock, path: "/admin/users?tab=config" },
-                    { label: t("settings.adminDataMgmt", "Daten & Demo"), desc: t("settings.adminDataMgmtDesc", "Demo-Daten laden, Daten zurücksetzen"), icon: Scale, path: "/admin/users?tab=data" },
                   ].map((item, i) => (
                     <button
                       key={i}
                       onClick={() => window.location.href = item.path}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-border/60 transition-all text-left group"
+                      className="relative flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-border/60 transition-all text-left group"
                     >
+                      {(item as any).badge && (
+                        <Badge className="absolute top-2 right-2 text-[10px] bg-success/10 text-success border-success/20">{(item as any).badge}</Badge>
+                      )}
                       <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                         <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
@@ -806,7 +809,7 @@ const PdfBrandingSection = () => {
         <div>
           <p className="text-sm">{t("settings.brandingHide")}</p>
           <p className="text-[11px] text-muted-foreground">{t("settings.brandingHideDesc")}</p>
-          {isFree && <p className="text-[10px] text-warning mt-1">{t("settings.brandingFreeHint")}</p>}
+          {isFree && <a href="/#pricing" className="text-[10px] text-warning mt-1 hover:underline cursor-pointer block">{t("settings.brandingFreeHint")} → Upgrade</a>}
         </div>
         <Switch checked={hide} onCheckedChange={toggle} disabled={isFree || !loaded} />
       </div>

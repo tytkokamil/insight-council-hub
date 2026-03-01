@@ -46,7 +46,7 @@ const AuditIntegrityPanel = () => {
       </h2>
       <p className="text-xs text-muted-foreground mb-3">{t("settings.auditIntegrityDesc")}</p>
 
-      <Button size="sm" variant="outline" onClick={verify} disabled={checking} className="gap-1.5 mb-3">
+      <Button size="sm" onClick={verify} disabled={checking} className="gap-1.5 mb-3" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
         {checking ? <Loader2 className="w-3 h-3 animate-spin" /> : <ShieldCheck className="w-3 h-3" />}
         {checking ? t("settings.auditChecking") : t("settings.auditVerifyButton")}
       </Button>

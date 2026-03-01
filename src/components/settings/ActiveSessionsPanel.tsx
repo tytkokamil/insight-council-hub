@@ -129,9 +129,13 @@ const ActiveSessionsPanel = () => {
                     <p className="text-sm font-medium truncate">
                       {session.device_info || parseUserAgent(session.user_agent)}
                     </p>
-                    {session.is_current && (
-                      <Badge className="text-[9px] bg-success/10 text-success border-success/20">
-                        {t("settings.currentSession")}
+                    {session.is_current ? (
+                      <Badge className="text-[9px]" style={{ backgroundColor: "hsl(160 84% 39% / 0.1)", color: "hsl(160 84% 39%)", borderColor: "hsl(160 84% 39% / 0.2)" }}>
+                        {t("settings.currentSession", "Diese Sitzung")}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[9px] text-muted-foreground">
+                        {t("settings.otherSession", "Andere Sitzung")}
                       </Badge>
                     )}
                   </div>
@@ -143,8 +147,8 @@ const ActiveSessionsPanel = () => {
               {!session.is_current && (
                 <Button
                   size="sm"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive shrink-0"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive shrink-0 gap-1 text-xs"
                   disabled={revoking === session.id}
                   onClick={() => revokeSession(session.id)}
                 >
@@ -153,6 +157,7 @@ const ActiveSessionsPanel = () => {
                   ) : (
                     <X className="w-3.5 h-3.5" />
                   )}
+                  {t("settings.revoke", "Widerrufen")}
                 </Button>
               )}
             </div>

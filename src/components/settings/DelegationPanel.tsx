@@ -151,7 +151,14 @@ const DelegationPanel = () => {
         )}
 
         {delegations.length === 0 && !showForm ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Keine Vertretungen eingerichtet.</p>
+          <div className="text-center py-6">
+            <UserCheck className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+            <p className="text-sm font-medium text-muted-foreground">Keine Urlaubsvertretung aktiv</p>
+            <p className="text-xs text-muted-foreground mt-1">Richte eine Vertretung ein, damit Reviews in deiner Abwesenheit bearbeitet werden.</p>
+            <Button size="sm" variant="outline" className="mt-3 gap-1.5 text-xs" onClick={() => setShowForm(true)}>
+              <Plus className="w-3 h-3" /> Vertretung einrichten
+            </Button>
+          </div>
         ) : (
           <div className="space-y-2">
             {delegations.map(d => (

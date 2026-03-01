@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, CheckCircle2, Save } from "lucide-react";
+import { Clock, CheckCircle2, Save, Plus } from "lucide-react";
 import { useTranslatedLabels } from "@/lib/labels";
 
 interface SlaConfig {
@@ -90,8 +90,11 @@ const SlaConfigPanel = () => {
     return (
       <div className="rounded-lg border border-border/60 p-6 text-center">
         <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
-        <p className="text-sm font-medium text-muted-foreground">{t("slaConfig.emptyTitle")}</p>
+        <p className="text-sm font-medium text-muted-foreground">{t("slaConfig.emptyTitle", "Noch keine SLA-Regeln konfiguriert")}</p>
         <p className="text-xs text-muted-foreground mt-1">{t("slaConfig.emptyDesc")}</p>
+        <Button size="sm" variant="outline" className="mt-3 gap-1.5 text-xs">
+          <Plus className="w-3 h-3" /> {t("slaConfig.createFirst", "Erste SLA-Regel erstellen")}
+        </Button>
       </div>
     );
   }
