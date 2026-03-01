@@ -68,15 +68,15 @@ const DecisionReviewCard = ({
           <p className="text-sm text-muted-foreground mb-4">{decision.description || t("meeting.noDescription")}</p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-            <div className="p-2.5 rounded-lg bg-muted/30 border border-border text-center">
+            <div className="p-2.5 rounded-lg bg-muted/30 border border-border/60 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("meeting.status")}</p>
               <p className="text-xs font-semibold">{statusLabels[decision.status]} ({daysInStatus}d)</p>
             </div>
-            <div className={`p-2.5 rounded-lg border text-center ${riskScore >= 60 ? "bg-destructive/10 border-destructive/20" : "bg-muted/30 border-border"}`}>
+            <div className={`p-2.5 rounded-lg border text-center ${riskScore >= 60 ? "bg-destructive/10 border-destructive/20" : "bg-muted/30 border-border/60"}`}>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("meeting.riskLabel")}</p>
               <p className={`text-xs font-semibold ${riskScore >= 60 ? "text-destructive" : ""}`}>{riskScore}%</p>
             </div>
-            <div className="p-2.5 rounded-lg bg-muted/30 border border-border text-center">
+            <div className="p-2.5 rounded-lg bg-muted/30 border border-border/60 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("meeting.impact")}</p>
               <p className="text-xs font-semibold">{impactScore}%</p>
             </div>
@@ -87,7 +87,7 @@ const DecisionReviewCard = ({
           </div>
 
           {decision.context && (
-            <div className="mb-4 p-3 rounded-lg bg-muted/30 border border-border">
+            <div className="mb-4 p-3 rounded-lg bg-muted/30 border border-border/60">
               <p className="text-xs font-semibold mb-1">{t("meeting.context")}</p>
               <p className="text-xs text-muted-foreground whitespace-pre-line">{decision.context}</p>
             </div>

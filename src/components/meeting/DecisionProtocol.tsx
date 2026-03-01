@@ -132,7 +132,7 @@ const DecisionProtocol = ({ decisions, votes, meetingNotes, profileMap, userId }
         {items.map(d => {
           const mn = meetingNotes[d.id] || { note: "", conditions: "", followups: "" };
           return (
-            <div key={d.id} className="p-3 rounded-lg border border-border bg-muted/10">
+            <div key={d.id} className="p-3 rounded-lg border border-border/60 bg-muted/10">
               <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-medium flex-1">{d.title}</p>
                 <Badge variant="outline" className="text-[10px]">{priorityLabels[d.priority]}</Badge>
@@ -160,19 +160,19 @@ const DecisionProtocol = ({ decisions, votes, meetingNotes, profileMap, userId }
       </div>
 
       <div className="grid grid-cols-4 gap-3">
-        <div className="border border-border rounded-lg p-4 text-center">
+        <div className="border border-border/60 rounded-lg p-4 text-center">
           <p className="text-2xl font-semibold text-success">{approved.length}</p>
           <p className="text-xs text-muted-foreground">{t("meeting.approved")}</p>
         </div>
-        <div className="border border-border rounded-lg p-4 text-center">
+        <div className="border border-border/60 rounded-lg p-4 text-center">
           <p className="text-2xl font-semibold text-destructive">{rejected.length}</p>
           <p className="text-xs text-muted-foreground">{t("meeting.rejected")}</p>
         </div>
-        <div className="border border-border rounded-lg p-4 text-center">
+        <div className="border border-border/60 rounded-lg p-4 text-center">
           <p className="text-2xl font-semibold text-warning">{deferred.length}</p>
           <p className="text-xs text-muted-foreground">{t("meeting.deferred")}</p>
         </div>
-        <div className="border border-border rounded-lg p-4 text-center">
+        <div className="border border-border/60 rounded-lg p-4 text-center">
           <p className="text-2xl font-semibold text-muted-foreground">{unvoted.length}</p>
           <p className="text-xs text-muted-foreground">{t("meeting.open")}</p>
         </div>
@@ -184,7 +184,7 @@ const DecisionProtocol = ({ decisions, votes, meetingNotes, profileMap, userId }
 
       {protocol && (
         <div className="relative">
-          <div className="p-4 rounded-lg bg-muted/30 border border-border">
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/60">
             <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{protocol}</pre>
           </div>
           <div className="absolute top-2 right-2 flex items-center gap-1">
@@ -196,7 +196,7 @@ const DecisionProtocol = ({ decisions, votes, meetingNotes, profileMap, userId }
       )}
 
       {extractedTasks.length > 0 && (
-        <div className="space-y-3 pt-2 border-t border-border">
+        <div className="space-y-3 pt-2 border-t border-border/40">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-semibold flex items-center gap-1.5">
               <ListTodo className="w-4 h-4 text-primary" /> {t("meeting.extractedTasks", { count: extractedTasks.length })}
@@ -208,7 +208,7 @@ const DecisionProtocol = ({ decisions, votes, meetingNotes, profileMap, userId }
           </div>
           <div className="space-y-1.5">
             {extractedTasks.map((tsk, i) => (
-              <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-border bg-muted/10">
+              <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/10">
                 <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                 <span className="text-xs flex-1">{tsk.title}</span>
                 <Badge variant="outline" className="text-[10px]">

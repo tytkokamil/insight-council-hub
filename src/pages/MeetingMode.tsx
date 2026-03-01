@@ -183,7 +183,7 @@ const MeetingMode = () => {
                       key={d.id}
                       onClick={() => toggleSelect(d.id)}
                       className={`w-full flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 p-4 rounded-lg border transition-colors text-left ${
-                        selectedIds.has(d.id) ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
+                        selectedIds.has(d.id) ? "border-primary bg-primary/5" : "border-border/60 hover:border-foreground/20"
                       }`}
                     >
                       <div className="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
