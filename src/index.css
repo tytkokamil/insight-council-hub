@@ -23,7 +23,7 @@ html {
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.025em;
-  color: hsl(228 15% 18%);
+  color: hsl(228 12% 32%);
 }
 .landing-page p {
   color: hsl(225 10% 42%);
