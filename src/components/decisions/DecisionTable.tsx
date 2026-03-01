@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { QualityScoreBadge } from "./DecisionQualityScore";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import LiveCodCounter from "@/components/shared/LiveCodCounter";
 import { PredictiveSlaInlineBadge, usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
@@ -186,6 +187,7 @@ const DecisionTable = ({
                     {/* Title + badges */}
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
+                        <QualityScoreBadge decision={decision} />
                         <p className="text-sm font-medium">{decision.title}</p>
                         <DecisionBadges meta={meta} t={t} />
                         <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />

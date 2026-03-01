@@ -19,6 +19,7 @@ import ApplyLearningPanel from "./ApplyLearningPanel";
 import TemplateBrowserModal from "./TemplateBrowserModal";
 import ContextualAINudges from "./ContextualAINudges";
 import AiSuggestionsPanel from "./AiSuggestionsPanel";
+import { calculateQualityScore, QualityScoreCircle, QualityScoreHints } from "./DecisionQualityScore";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
@@ -650,6 +651,17 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             {selectedTemplate && step === "form" && (
               <Badge variant="outline" className="text-[10px]">{categoryIcons[selectedTemplate.category]} {selectedTemplate.name}</Badge>
             )}
+            {step === "form" && (() => {
+              const { score } = calculateQualityScore({
+                title, description,
+                hasOptions: Object.values(extraFields).some(v => v.trim().length > 0),
+                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
+                hasDueDate: !!dueDate,
+                hasPriority: !!priority && priority !== "medium",
+                hasAttachment: false,
+              });
+              return <QualityScoreCircle score={score} size={36} strokeWidth={3} className="ml-auto" />;
+            })()}
           </DialogTitle>
         </DialogHeader>
 
@@ -827,6 +839,19 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               pinnedLessons={pinnedLessons}
               onPinnedChange={setPinnedLessons}
             />
+
+            {/* Quality Score Hints */}
+            {(() => {
+              const { score, missing } = calculateQualityScore({
+                title, description,
+                hasOptions: Object.values(extraFields).some(v => v.trim().length > 0),
+                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
+                hasDueDate: !!dueDate,
+                hasPriority: !!priority && priority !== "medium",
+                hasAttachment: false,
+              });
+              return <QualityScoreHints score={score} missing={missing} />;
+            })()}
 
             {validationErrors.length > 0 && (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
