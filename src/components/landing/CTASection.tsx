@@ -13,17 +13,17 @@ const CTASection = () => {
 
   return (
     <section ref={ref} className="py-28 relative overflow-hidden">
-      {/* Animated gradient orbs */}
+      {/* Premium animated gradient orbs */}
       <motion.div style={{ y: orbY, scale: orbScale }} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-primary/[0.04] blur-[120px]" />
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-accent-violet/[0.03] blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/[0.05] blur-[150px]" />
+        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-accent-violet/[0.04] blur-[100px]" />
         <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-accent-teal/[0.03] blur-[80px]" />
       </motion.div>
 
-      {/* Grid lines */}
-      <div className="absolute inset-0 opacity-[0.15]" style={{
-        backgroundImage: "radial-gradient(circle, hsl(var(--primary) / 0.15) 1px, transparent 1px)",
-        backgroundSize: "40px 40px",
+      {/* Subtle dot grid */}
+      <div className="absolute inset-0 opacity-[0.06]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(var(--primary) / 0.2) 1px, transparent 1px)",
+        backgroundSize: "48px 48px",
       }} />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10 text-center">
@@ -39,27 +39,27 @@ const CTASection = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.5, ease }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/[0.05] mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/15 bg-primary/[0.04] mb-10 shadow-sm"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-medium text-primary">14 Tage kostenlos · Keine Kreditkarte</span>
+            <span className="text-[11px] font-semibold text-primary">14 Tage kostenlos · Keine Kreditkarte</span>
           </motion.div>
 
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.1]">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]" style={{ color: 'hsl(228 15% 18%)' }}>
             Starten Sie heute.
             <br />
             <span className="bg-gradient-to-r from-primary via-accent-blue to-accent-violet bg-clip-text text-transparent">
               Erste Entscheidung in 3 Minuten.
             </span>
           </h2>
-          <p className="text-muted-foreground mb-10 text-base max-w-lg mx-auto">
+          <p className="mb-10 text-base max-w-lg mx-auto" style={{ color: 'hsl(225 10% 45%)' }}>
             Keine Installation. Kein IT-Projekt. Einfach registrieren, Branche wählen und loslegen.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-8 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden"
+              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground bg-gradient-to-b from-primary to-[hsl(214,52%,22%)] hover:from-primary/90 hover:to-[hsl(214,52%,20%)] px-9 py-4 rounded-xl shadow-[0_2px_16px_-4px_hsl(214_52%_25%/0.4)] hover:shadow-[0_4px_24px_-4px_hsl(214_52%_25%/0.5)] transition-all duration-300 overflow-hidden"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -67,7 +67,8 @@ const CTASection = () => {
             </Link>
             <a
               href="mailto:demo@decivio.com"
-              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium text-muted-foreground hover:text-foreground border border-border/60 hover:border-border px-7 py-3 rounded-xl transition-all"
+              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium border border-border/60 hover:border-border bg-white/60 backdrop-blur-sm px-7 py-3.5 rounded-xl transition-all hover:shadow-sm"
+              style={{ color: 'hsl(225 10% 40%)' }}
             >
               Demo buchen
             </a>
@@ -78,7 +79,7 @@ const CTASection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-x-5 gap-y-2"
+            className="mt-14 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           >
             {[
               "🇩🇪 Server in Deutschland",
@@ -86,7 +87,7 @@ const CTASection = () => {
               "📋 AVV inklusive",
               "🛡️ DSGVO-konform",
             ].map((item, i) => (
-              <span key={i} className="text-[11px] text-muted-foreground/50">{item}</span>
+              <span key={i} className="text-[11px] font-medium" style={{ color: 'hsl(225 10% 55%)' }}>{item}</span>
             ))}
           </motion.div>
         </motion.div>

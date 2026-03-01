@@ -58,7 +58,7 @@ const Navbar = () => {
               <Link to="/auth" className="text-[13px] text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors">
                 Einloggen
               </Link>
-              <Link to="/auth" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-primary-foreground bg-primary hover:bg-primary/90 px-5 py-2 rounded-lg shadow-md transition-all">
+              <Link to="/auth" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary-foreground bg-gradient-to-b from-primary to-[hsl(214,52%,22%)] hover:from-primary/90 hover:to-[hsl(214,52%,20%)] px-5 py-2.5 rounded-lg shadow-[0_1px_8px_-2px_hsl(214_52%_25%/0.3)] hover:shadow-[0_2px_12px_-3px_hsl(214_52%_25%/0.4)] transition-all duration-300">
                 Kostenlos starten <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

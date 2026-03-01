@@ -223,10 +223,10 @@ const SettingsPage = () => {
 
           {/* ═══════════════ GENERAL ═══════════════ */}
           {activeTab === "general" && (
-            <div className="space-y-8">
-              {/* Profile */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.profile")}</h2>
+            <div className="space-y-5">
+              {/* Profile Card */}
+              <div className="settings-group">
+                <h2>{t("settings.profile")}</h2>
                 <div className="space-y-4">
                   <div className="flex items-start gap-4">
                     <div className="relative group">
@@ -267,13 +267,11 @@ const SettingsPage = () => {
                     </Button>
                   </div>
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              {/* Workspace Info */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.workspace")}</h2>
+              {/* Workspace Info Card */}
+              <div className="settings-group">
+                <h2>{t("settings.workspace")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { label: t("settings.wsPlan"), value: orgPlan, icon: Zap },
@@ -283,7 +281,7 @@ const SettingsPage = () => {
                     { label: t("settings.wsDataLocation"), value: "EU", icon: Server },
                     { label: t("settings.wsRole"), value: roleLabels[userRole], icon: Shield },
                   ].map((item, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
                       <div className="flex items-center gap-1.5 mb-1">
                         <item.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{item.label}</span>
@@ -292,81 +290,82 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              {/* Appearance */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.appearance")}</h2>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
-                    <div>
-                      <p className="text-sm">{theme === "dark" ? t("settings.darkMode") : t("settings.lightMode")}</p>
-                      <p className="text-xs text-muted-foreground">{t("settings.switchTheme")}</p>
-                    </div>
-                  </div>
-                  <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
-                </div>
-              </section>
-
-              <hr className="border-border/40" />
-
-              {/* Language */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.language")}</h2>
-                <div className="space-y-3">
+              {/* Appearance & Language Card */}
+              <div className="settings-group">
+                <h2>{t("settings.appearance")} & {t("settings.language")}</h2>
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
+                      {theme === "dark" ? <Moon className="w-4 h-4 text-muted-foreground" /> : <Sun className="w-4 h-4 text-muted-foreground" />}
                       <div>
-                        <p className="text-sm">{t("settings.interfaceLanguage")}</p>
-                        <p className="text-xs text-muted-foreground">{t("settings.interfaceLanguageDesc")}</p>
+                        <p className="text-sm">{theme === "dark" ? t("settings.darkMode") : t("settings.lightMode")}</p>
+                        <p className="text-xs text-muted-foreground">{t("settings.switchTheme")}</p>
                       </div>
                     </div>
-                    <div className="flex items-center rounded-md border border-border/60 p-0.5">
-                      {[{ code: "de", label: t("settings.german") }, { code: "en", label: t("settings.english") }].map(lng => (
-                        <button key={lng.code} onClick={() => changeLanguage(lng.code)}
-                          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${i18n.language === lng.code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                          {lng.label}
-                        </button>
-                      ))}
+                    <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
+                  </div>
+
+                  <div className="border-t border-border/30 pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm">{t("settings.interfaceLanguage")}</p>
+                          <p className="text-xs text-muted-foreground">{t("settings.interfaceLanguageDesc")}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center rounded-md border border-border/60 p-0.5">
+                        {[{ code: "de", label: t("settings.german") }, { code: "en", label: t("settings.english") }].map(lng => (
+                          <button key={lng.code} onClick={() => changeLanguage(lng.code)}
+                            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${i18n.language === lng.code ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                            {lng.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
+              {/* Advanced Settings Card */}
+              <div className="settings-group">
+                <h2>Erweitert</h2>
+                <div className="space-y-4">
+                  <ProgressiveOverrideToggle user={user} />
+                  
+                  {isAdmin && (
+                    <>
+                      <div className="border-t border-border/30 pt-4">
+                        <TerminologyPanel />
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="border-t border-border/30 pt-4">
+                    <IndustryConfigSection />
+                  </div>
 
-              <ProgressiveOverrideToggle user={user} />
-
-              <hr className="border-border/40" />
-
-              {isAdmin && <TerminologyPanel />}
-              {isAdmin && <hr className="border-border/40" />}
-
-              <IndustryConfigSection />
-
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.onboarding")}</h2>
-                <p className="text-xs text-muted-foreground mb-3">{t("settings.onboardingDesc")}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
-                    <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={async () => {
-                    if (!user) return;
-                    await supabase.from("profiles").update({ onboarding_completed: false } as any).eq("user_id", user.id);
-                    toast({ title: "Onboarding zurückgesetzt", description: "Du wirst beim nächsten Laden zum Welcome-Wizard weitergeleitet." });
-                    setTimeout(() => window.location.reload(), 1000);
-                  }} className="gap-1.5">
-                    <RotateCcw className="w-3 h-3" />Onboarding zurücksetzen
-                  </Button>
+                  <div className="border-t border-border/30 pt-4">
+                    <h2 className="text-sm font-medium mb-3">{t("settings.onboarding")}</h2>
+                    <p className="text-xs text-muted-foreground mb-3">{t("settings.onboardingDesc")}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
+                        <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={async () => {
+                        if (!user) return;
+                        await supabase.from("profiles").update({ onboarding_completed: false } as any).eq("user_id", user.id);
+                        toast({ title: "Onboarding zurückgesetzt", description: "Du wirst beim nächsten Laden zum Welcome-Wizard weitergeleitet." });
+                        setTimeout(() => window.location.reload(), 1000);
+                      }} className="gap-1.5">
+                        <RotateCcw className="w-3 h-3" />Onboarding zurücksetzen
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </section>
+              </div>
 
               <AccountDeletionPanel />
             </div>
@@ -374,17 +373,15 @@ const SettingsPage = () => {
 
           {/* ═══════════════ NOTIFICATIONS ═══════════════ */}
           {activeTab === "notifications" && (
-            <div className="space-y-6">
-              <section>
-                <h2 className="text-sm font-medium mb-1">{t("settings.notifChannels")}</h2>
+            <div className="space-y-5">
+              <div className="settings-group">
+                <h2>{t("settings.notifChannels")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.digestDesc")}</p>
                 <NotificationMatrixPanel />
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.escalationPriority")}</h2>
+              <div className="settings-group">
+                <h2>{t("settings.escalationPriority")}</h2>
                 <div className="space-y-2">
                   {[
                     { level: t("settings.escCritical"), behavior: t("settings.escCriticalBehavior"), color: "text-destructive" },
@@ -392,7 +389,7 @@ const SettingsPage = () => {
                     { level: t("settings.escMedium"), behavior: t("settings.escMediumBehavior"), color: "text-muted-foreground" },
                     { level: t("settings.escLow"), behavior: t("settings.escLowBehavior"), color: "text-muted-foreground" },
                   ].map((esc, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/40 bg-muted/20">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className={`w-3.5 h-3.5 ${esc.color}`} />
                         <span className="text-sm font-medium">{esc.level}</span>
@@ -401,12 +398,10 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.execDigest")}</h2>
+              <div className="settings-group">
+                <h2>{t("settings.execDigest")}</h2>
                 <div className="space-y-2">
                   {[
                     { label: t("settings.execDigestDaily"), desc: t("settings.execDigestDailyDesc"), enabled: false },
@@ -422,28 +417,26 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
 
-              <hr className="border-border/40" />
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <WhatsAppSettingsPanel />
+                </div>
 
-              <WhatsAppSettingsPanel />
-
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-2">{t("settings.quietHours")}</h2>
-                <p className="text-xs text-muted-foreground">{t("settings.quietHoursDesc")}</p>
-              </section>
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <h2 className="text-sm font-medium mb-2">{t("settings.quietHours")}</h2>
+                  <p className="text-xs text-muted-foreground">{t("settings.quietHoursDesc")}</p>
+                </div>
+              </div>
             </div>
           )}
 
           {/* ═══════════════ SECURITY ═══════════════ */}
           {activeTab === "security" && (
-            <div className="space-y-6">
-              {/* Security Health */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.securityHealth")}</h2>
-                <div className="p-4 rounded-lg border border-border/60 bg-card">
+            <div className="space-y-5">
+              {/* Security Health Card */}
+              <div className="settings-group">
+                <h2>{t("settings.securityHealth")}</h2>
+                <div className="p-4 rounded-lg border border-border/40 bg-muted/20">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className={`w-5 h-5 ${securityScore >= 80 ? "text-success" : securityScore >= 60 ? "text-warning" : "text-destructive"}`} />
@@ -471,21 +464,20 @@ const SettingsPage = () => {
                     ))}
                   </div>
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
+              {/* Sessions & MFA Card */}
+              <div className="settings-group">
+                <h2>Authentifizierung</h2>
+                <ActiveSessionsPanel />
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <MfaSettingsPanel />
+                </div>
+              </div>
 
-              <ActiveSessionsPanel />
-
-              <hr className="border-border/40" />
-
-              <MfaSettingsPanel />
-
-              <hr className="border-border/40" />
-
-              {/* Password */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.changePassword")}</h2>
+              {/* Password Card */}
+              <div className="settings-group">
+                <h2>{t("settings.changePassword")}</h2>
                 <div className="space-y-3 max-w-sm">
                   <div>
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.newPassword")}</label>
@@ -499,18 +491,18 @@ const SettingsPage = () => {
                     {changingPassword ? t("settings.updating") : t("settings.changePassword")}
                   </Button>
                 </div>
-              </section>
+              </div>
             </div>
           )}
 
           {/* ═══════════════ GOVERNANCE ═══════════════ */}
           {activeTab === "governance" && (
-            <div className="space-y-6">
-              {/* Access Control */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.accessControl")}</h2>
+            <div className="space-y-5">
+              {/* Access Control Card */}
+              <div className="settings-group">
+                <h2>{t("settings.accessControl")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.accessControlDesc")}</p>
-                <div className="rounded-lg border border-border/60 overflow-hidden">
+                <div className="rounded-lg border border-border/40 overflow-hidden">
                   <div className="grid grid-cols-5 gap-0 bg-muted/30 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                     <div className="p-2.5">{t("settings.acAction")}</div>
                     <div className="p-2.5 text-center">Owner</div>
@@ -529,7 +521,7 @@ const SettingsPage = () => {
                     { action: t("settings.acRetention"), permissions: [true, true, false, false] },
                     { action: t("settings.acHardDelete"), permissions: [true, false, false, false] },
                   ].map((row, i) => (
-                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border/40 items-center">
+                    <div key={i} className="grid grid-cols-5 gap-0 border-t border-border/30 items-center">
                       <div className="p-2.5 text-xs">{row.action}</div>
                       {row.permissions.map((p, j) => (
                         <div key={j} className="p-2.5 text-center">
@@ -539,40 +531,30 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              {/* SLA */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.slaConfig")}</h2>
+              {/* SLA & Cost-of-Delay Card */}
+              <div className="settings-group">
+                <h2>{t("settings.slaConfig")} & Cost-of-Delay</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.slaConfigDesc")}</p>
                 <SlaConfigPanel />
-              </section>
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <h3 className="text-sm font-medium mb-3">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h3>
+                  <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
+                  <OrgCodDefaultsPanel />
+                </div>
+              </div>
 
-              <hr className="border-border/40" />
-
-              {/* Cost-of-Delay Defaults */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("cod.orgTitle", "Cost-of-Delay — Globale Defaults")}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{t("cod.orgDesc", "Diese Werte gelten für alle Teams ohne eigene Konfiguration.")}</p>
-                <OrgCodDefaultsPanel />
-              </section>
-
-              <hr className="border-border/40" />
-
-              {/* Delegation */}
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.delegation")}</h2>
+              {/* Delegation Card */}
+              <div className="settings-group">
+                <h2>{t("settings.delegation")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.delegationDesc")}</p>
                 <DelegationPanel />
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              {/* Compliance */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.compliance")}</h2>
+              {/* Compliance & Audit Card */}
+              <div className="settings-group">
+                <h2>{t("settings.compliance")}</h2>
                 <div className="space-y-2">
                   {[
                     { label: t("settings.compGdpr"), status: t("settings.compActive"), icon: ShieldCheck, color: "text-success" },
@@ -581,7 +563,7 @@ const SettingsPage = () => {
                     { label: t("settings.compEncryption"), status: "AES-256", icon: KeyRound, color: "text-success" },
                     { label: t("settings.compSoc2"), status: t("settings.compCompliant"), icon: Shield, color: "text-primary" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/60">
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-md border border-border/40 bg-muted/20">
                       <div className="flex items-center gap-2">
                         <item.icon className={`w-3.5 h-3.5 ${item.color}`} />
                         <span className="text-sm">{item.label}</span>
@@ -590,19 +572,18 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
-
-              <hr className="border-border/40" />
-
-              <AuditIntegrityPanel />
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <AuditIntegrityPanel />
+                </div>
+              </div>
             </div>
           )}
 
           {/* ═══════════════ AI ═══════════════ */}
           {activeTab === "ai" && (
-            <div className="space-y-6">
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.aiUsage")}</h2>
+            <div className="space-y-5">
+              <div className="settings-group">
+                <h2>{t("settings.aiUsage")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { label: t("settings.aiRequestsMonth"), value: aiProvider === "lovable" ? t("settings.aiIncludedInPlan", "Inklusive im Plan") : "–", icon: Zap },
@@ -610,7 +591,7 @@ const SettingsPage = () => {
                     { label: t("settings.aiModelLabel"), value: aiModel || "Auto", icon: Activity },
                     { label: t("settings.aiDataResidency"), value: "EU", icon: Server },
                   ].map((stat, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                    <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
                       <div className="flex items-center gap-1.5 mb-1">
                         <stat.icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -619,16 +600,14 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.aiProvider")}</h2>
+              <div className="settings-group">
+                <h2>{t("settings.aiProvider")}</h2>
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {AI_PROVIDERS.map((p) => (
                     <button key={p.id} onClick={() => { setAiProvider(p.id); setAiModel(p.models?.[0] || ""); }}
-                      className={`text-left p-3 rounded-md border transition-colors ${aiProvider === p.id ? "border-foreground" : "border-border/60 hover:border-foreground/30"}`}>
+                      className={`text-left p-3 rounded-lg border transition-all duration-200 ${aiProvider === p.id ? "border-primary/40 bg-primary/[0.03] shadow-sm" : "border-border/40 hover:border-border/60"}`}>
                       <div className="flex items-center gap-1.5 mb-0.5">
                         {p.id === "lovable" && <Sparkles className="w-3 h-3" />}
                         <span className="text-sm font-medium">{p.name}</span>
@@ -638,7 +617,7 @@ const SettingsPage = () => {
                   ))}
                 </div>
                 {aiProvider !== "lovable" && selectedProvider && (
-                  <div className="space-y-3 pt-4 border-t border-border/40">
+                  <div className="space-y-3 pt-4 border-t border-border/30">
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="text-xs font-medium text-muted-foreground">{t("settings.apiKey")}</label>
@@ -664,12 +643,10 @@ const SettingsPage = () => {
                     {savedAi && <CheckCircle2 className="w-3 h-3" />}{savingAi ? t("settings.saving") : savedAi ? t("settings.saved") : t("settings.save")}
                   </Button>
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.aiGovernanceScope")}</h2>
+              <div className="settings-group">
+                <h2>{t("settings.aiGovernanceScope")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.aiGovernanceScopeDesc")}</p>
                 <div className="space-y-2">
                   {[
@@ -687,32 +664,37 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
-              </section>
-
-              <hr className="border-border/40" />
-
-              <section>
-                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Server className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
+                <div className="border-t border-border/30 pt-4 mt-4">
+                  <div className="p-3 rounded-lg bg-primary/[0.03] border border-primary/15">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Server className="w-4 h-4 text-primary" />
+                      <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
                 </div>
-              </section>
+              </div>
             </div>
           )}
 
           {/* ═══════════════ INTEGRATIONS (admin only) ═══════════════ */}
           {activeTab === "integrations" && isAdmin && (
-            <div className="space-y-6">
-              <InboundEmailPanel />
-              <hr className="border-border/40" />
-              <TeamsIntegrationPanel />
-              <hr className="border-border/40" />
-              <WebhookSettingsPanel />
-              <hr className="border-border/40" />
-              <PdfBrandingSection />
+            <div className="space-y-5">
+              <div className="settings-group">
+                <h2>E-Mail & Messaging</h2>
+                <InboundEmailPanel />
+              </div>
+              <div className="settings-group">
+                <h2>Microsoft Teams</h2>
+                <TeamsIntegrationPanel />
+              </div>
+              <div className="settings-group">
+                <h2>Webhooks & API</h2>
+                <WebhookSettingsPanel />
+              </div>
+              <div className="settings-group">
+                <PdfBrandingSection />
+              </div>
             </div>
           )}
 
