@@ -177,7 +177,7 @@ const TemplateAnalyticsSection = ({ decisions }: Props) => {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-border text-xs text-muted-foreground">
+                  <tr className="border-b border-border/60 text-xs text-muted-foreground">
                     <th className="p-2 font-medium">Template</th>
                     <th className="p-2 font-medium text-right">Gesamt</th>
                     <th className="p-2 font-medium text-right">Umgesetzt</th>
