@@ -1,14 +1,17 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHelpButton from "@/components/shared/PageHelpButton";
-import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle, CheckSquare } from "lucide-react";
+import { Activity, Heart, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, XCircle, CheckSquare, Info } from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDecisions, useTeams } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 
 type Dimension = "team" | "category" | "priority" | "type";
 
@@ -37,6 +40,7 @@ interface UnifiedItem {
 
 const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: decisions = [], isLoading: loadingDec } = useDecisions();
   const { data: tasks = [], isLoading: loadingTasks } = useTasks();
   const { data: teams = [], isLoading: loadingTeams } = useTeams();
@@ -191,7 +195,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
-          { icon: Heart, label: t("healthHeatmap.healthIndex"), value: `${overallHealth}%`, color: overallHealth >= 60 ? "text-success" : "text-warning", hint: overallHealth < 40 ? t("healthHeatmap.lowScoreHint") : undefined },
+          { icon: Heart, label: t("healthHeatmap.healthIndex"), value: `${overallHealth}%`, color: overallHealth >= 60 ? "text-success" : "text-warning", hint: t("healthHeatmap.baseScoreHint", "Basis-Score — wächst mit jeder abgeschlossenen Entscheidung.") },
           { icon: CheckCircle2, label: t("healthHeatmap.completed"), value: `${completedItems}/${totalItems}`, color: "text-primary", sub: `${decisions.length} ${t("healthHeatmap.decisionsLabel")} • ${tasks.length} ${t("healthHeatmap.tasksLabel")}` },
           { icon: AlertTriangle, label: t("healthHeatmap.overdueLabel"), value: overdueItems, color: "text-destructive" },
           {
@@ -302,6 +306,17 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
             ))}
           </div>
         </div>
+
+        {/* Single-team hint */}
+        {teams.length === 1 && rowDim === "team" && (
+          <div className="flex items-center gap-2 mt-3 px-3 py-2 rounded-lg bg-muted/30 border border-border/50">
+            <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+            <p className="text-[11px] text-muted-foreground">
+              {t("healthHeatmap.singleTeamHint", "Die Heatmap zeigt Muster ab 2+ Teams.")}{" "}
+              <span className="text-primary cursor-pointer hover:underline" onClick={() => navigate("/teams")}>{t("healthHeatmap.addTeamsLink", "Teams unter Einstellungen → Teams hinzufügen.")}</span>
+            </p>
+          </div>
+        )}
       </CollapsibleSection>
 
       {(bestCell || worstCell) && (
@@ -320,7 +335,7 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
                 </div>
                 <p className="text-sm font-medium">{bestCell[1].label}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Health Score: {bestCell[1].healthScore}/100 • {bestCell[1].completed}/{bestCell[1].total} {t("healthHeatmap.completedOf")} • Ø {bestCell[1].avgDays}d
+                  {t("healthHeatmap.gesundheitsScore", "Gesundheits-Score")}: {bestCell[1].healthScore}/100 • {bestCell[1].completed}/{bestCell[1].total} {t("healthHeatmap.completedOf")} • Ø {bestCell[1].avgDays} {t("healthHeatmap.tage", "Tage")}
                 </p>
               </div>
             )}
@@ -332,13 +347,63 @@ const HealthHeatmap = ({ embedded }: { embedded?: boolean }) => {
                 </div>
                 <p className="text-sm font-medium">{worstCell[1].label}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Health Score: {worstCell[1].healthScore}/100 • {worstCell[1].overdueRate}% {t("healthHeatmap.overdueRate")}
+                  {t("healthHeatmap.gesundheitsScore", "Gesundheits-Score")}: {worstCell[1].healthScore}/100 • {worstCell[1].overdueRate}% {t("healthHeatmap.overdueRate")}
                 </p>
               </div>
             )}
           </div>
         </CollapsibleSection>
       )}
+
+      {/* Trend — letzte 30 Tage */}
+      <CollapsibleSection
+        title={t("healthHeatmap.trendTitle", "Trend — letzte 30 Tage")}
+        subtitle={t("healthHeatmap.trendSubtitle", "Gesundheits-Index über Zeit")}
+        icon={<TrendingUp className="w-4 h-4 text-muted-foreground" />}
+        defaultOpen={true}
+        className="mt-8"
+      >
+        {(() => {
+          // Build daily health data points for last 30 days
+          const now = Date.now();
+          const points: { date: string; score: number }[] = [];
+          for (let i = 29; i >= 0; i--) {
+            const dayEnd = now - i * 86400000;
+            const dayItems = items.filter(it => new Date(it.created_at).getTime() <= dayEnd);
+            const dayCompleted = dayItems.filter(it => it.completed_at && new Date(it.completed_at).getTime() <= dayEnd).length;
+            const score = dayItems.length > 0 ? Math.round((dayCompleted / dayItems.length) * 100) : 0;
+            if (dayItems.length > 0) {
+              const d = new Date(dayEnd);
+              points.push({ date: `${d.getDate()}.${d.getMonth() + 1}`, score });
+            }
+          }
+
+          if (points.length < 7) {
+            return (
+              <div className="rounded-lg border border-border bg-card p-8 text-center">
+                <p className="text-sm" style={{ color: "#94A3B8" }}>{t("healthHeatmap.trendNotEnoughData", "Mehr Daten in den nächsten Tagen verfügbar.")}</p>
+              </div>
+            );
+          }
+
+          return (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={points}>
+                      <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} width={30} />
+                      <RechartsTooltip formatter={(v: number) => [`${v}%`, t("healthHeatmap.gesundheitsScore", "Gesundheits-Score")]} />
+                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+      </CollapsibleSection>
     </Wrap>
   );
 };
