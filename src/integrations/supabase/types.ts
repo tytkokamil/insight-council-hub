@@ -1586,6 +1586,7 @@ export type Database = {
           gamification_enabled: boolean
           id: string
           mention_enabled: boolean
+          notification_matrix: Json
           review_requests: boolean
           status_change_enabled: boolean
           team_updates: boolean
@@ -1604,6 +1605,7 @@ export type Database = {
           gamification_enabled?: boolean
           id?: string
           mention_enabled?: boolean
+          notification_matrix?: Json
           review_requests?: boolean
           status_change_enabled?: boolean
           team_updates?: boolean
@@ -1622,6 +1624,7 @@ export type Database = {
           gamification_enabled?: boolean
           id?: string
           mention_enabled?: boolean
+          notification_matrix?: Json
           review_requests?: boolean
           status_change_enabled?: boolean
           team_updates?: boolean
