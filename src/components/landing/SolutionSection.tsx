@@ -1,4 +1,7 @@
 import { motion } from "framer-motion";
+import productDashboard from "@/assets/product-dashboard-frame.jpg";
+import productAnalytics from "@/assets/product-analytics-frame.jpg";
+import productGraph from "@/assets/product-graph-frame.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -9,6 +12,12 @@ const features = [
   { icon: "📋", title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. BaFin, ISO 9001, NIS2: Audit-ready.", tag: "Compliance", tagBg: "bg-accent text-accent-foreground", featured: false },
   { icon: "🔮", title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf dem historischen Verhalten Ihrer Reviewer.", tag: "KI-gestützt", tagBg: "bg-destructive/10 text-destructive", featured: false },
   { icon: "⬡", title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — branchenspezifisch und sofort nutzbar.", tag: "15 Branchen", tagBg: "bg-[hsl(263,85%,95%)] text-[hsl(263,85%,50%)]", featured: false },
+];
+
+const screenshots = [
+  { src: productDashboard, alt: "Decivio Dashboard mit Entscheidungsübersicht", label: "Dashboard" },
+  { src: productAnalytics, alt: "Decivio Analytics mit KPI-Auswertung", label: "Analytics" },
+  { src: productGraph, alt: "Decivio Entscheidungsgraph", label: "Abhängigkeiten" },
 ];
 
 const SolutionSection = () => (
@@ -30,7 +39,8 @@ const SolutionSection = () => (
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Feature cards */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-20">
         {features.map((f, i) => (
           <motion.div
             key={i}
@@ -53,6 +63,42 @@ const SolutionSection = () => (
           </motion.div>
         ))}
       </div>
+
+      {/* Product screenshots */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8, ease }}
+      >
+        <p className="text-center text-xs font-medium text-muted-foreground/60 uppercase tracking-[0.15em] mb-8">
+          Ein Blick in die Plattform
+        </p>
+        <div className="grid md:grid-cols-3 gap-4">
+          {screenshots.map((shot, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.6, ease }}
+              className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="aspect-[16/10] overflow-hidden">
+                <img
+                  src={shot.src}
+                  alt={shot.alt}
+                  loading="lazy"
+                  className="w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
+                />
+              </div>
+              <div className="px-4 py-3 border-t border-border">
+                <span className="text-xs font-medium text-muted-foreground">{shot.label}</span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
     </div>
   </section>
 );
