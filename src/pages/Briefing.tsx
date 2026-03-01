@@ -7,13 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppLayout from "@/components/layout/AppLayout";
 import { useToast } from "@/hooks/use-toast";
-// jsPDF loaded dynamically on export
 
 const priorityMap: Record<string, string> = {
   critical: "priorityCritical",
   high: "priorityHigh",
   medium: "priorityMedium",
   low: "priorityLow",
+};
+
+const BULLET_ICONS: Record<string, typeof AlertTriangle> = {
+  problem: AlertTriangle,
+  positive: CheckCircle2,
+  recommendation: Zap,
+};
+const BULLET_COLORS: Record<string, string> = {
+  problem: "text-destructive",
+  positive: "text-success",
+  recommendation: "text-primary",
 };
 
 const Briefing = ({ embedded }: { embedded?: boolean }) => {
@@ -31,6 +41,30 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
   const fetchBriefing = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
+      // Try daily_briefs table first
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: dailyBrief } = await supabase
+        .from("daily_briefs" as any)
+        .select("*")
+        .eq("brief_date", today)
+        .order("generated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (dailyBrief && !isRefresh) {
+        const db = dailyBrief as any;
+        setBriefing(db.content);
+        setCostSummary(db.cost_summary);
+        setMomentum(db.momentum_score);
+        setMomentumBreakdown(db.momentum_breakdown);
+        setStats(db.stats);
+        setLastUpdated(new Date(db.generated_at));
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
+      // Fallback/refresh: call ceo-briefing
       const { data, error } = await supabase.functions.invoke("ceo-briefing");
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -75,7 +109,6 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
     const doc = new jsPDF();
     let y = addPdfHeader(doc, t("briefing.subtitle", "Tägliche Entscheidungslage"), undefined, t("briefing.title"));
 
-    // KPIs
     doc.setFontSize(12);
     const kpis = [
       `${t("briefing.momentum")}: ${momentum ?? "—"}`,
@@ -86,15 +119,29 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
     kpis.forEach(k => { doc.text(k, 14, y); y += 6; });
     y += 4;
 
-    // Headline
     doc.setFontSize(14);
     const headlineLines = doc.splitTextToSize(briefing.headline || "", 180);
     doc.text(headlineLines, 14, y);
     y += headlineLines.length * 6 + 6;
 
     doc.setFontSize(10);
-    // Urgent actions
-    if (briefing.urgent_actions?.length) {
+
+    // Structured bullets
+    if (briefing.bullets?.length) {
+      doc.setFontSize(12);
+      doc.text("Key Points", 14, y); y += 7;
+      doc.setFontSize(10);
+      briefing.bullets.forEach((b: any, i: number) => {
+        const icon = b.type === "problem" ? "⚠️" : b.type === "positive" ? "✅" : "→";
+        const lines = doc.splitTextToSize(`${icon} ${b.text}`, 175);
+        doc.text(lines, 18, y);
+        y += lines.length * 5 + 2;
+      });
+      y += 4;
+    }
+
+    // Urgent actions (fallback)
+    if (!briefing.bullets && briefing.urgent_actions?.length) {
       doc.setFontSize(12);
       doc.text(t("briefing.urgentActions"), 14, y); y += 7;
       doc.setFontSize(10);
@@ -106,7 +153,6 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
       y += 4;
     }
 
-    // Recommendation
     if (briefing.recommendation) {
       doc.setFontSize(12);
       doc.text(t("briefing.recommendation"), 14, y); y += 7;
@@ -116,13 +162,12 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
       y += recLines.length * 5 + 6;
     }
 
-    // Cost breakdown
     if (costSummary?.top_costs?.length) {
       doc.setFontSize(12);
       doc.text(t("briefing.topDelayCosts"), 14, y); y += 7;
       doc.setFontSize(10);
       costSummary.top_costs.forEach((c: any) => {
-        doc.text(`${c.title} — ${formatCost(c.cost)} (${c.days} ${t("briefing.daysOpen")} · ${translatePriority(c.priority)})`, 18, y);
+        doc.text(`${c.title} — ${formatCost(c.cost_per_day || c.cost)}/Tag (${translatePriority(c.priority)})`, 18, y);
         y += 6;
       });
     }
@@ -158,7 +203,7 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
             <p className="text-muted-foreground text-sm">{today}</p>
             {lastUpdated && (
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                {t("briefing.lastUpdated", { time: formatLastUpdated() })}
+                Generiert um {formatLastUpdated()} Uhr
               </p>
             )}
           </div>
@@ -213,66 +258,97 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
               </CardContent></Card>
             </motion.div>
 
-            {/* Urgent Actions */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-              <Card className="border-destructive/30"><CardContent className="p-5">
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-destructive" /> {t("briefing.urgentActions")}
-                </h3>
-                <div className="space-y-2">
-                  {briefing.urgent_actions?.map((a: string, i: number) => (
-                    <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/5">
-                      <span className="text-destructive font-bold text-sm mt-0.5">{i + 1}.</span>
-                      <p className="text-sm">{a}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent></Card>
-            </motion.div>
+            {/* Structured Bullets */}
+            {briefing.bullets?.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <Card><CardContent className="p-5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-primary" /> Key Points
+                  </h3>
+                  <div className="space-y-2">
+                    {briefing.bullets.map((b: any, i: number) => {
+                      const Icon = BULLET_ICONS[b.type] || Zap;
+                      const color = BULLET_COLORS[b.type] || "text-muted-foreground";
+                      return (
+                        <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/20">
+                          <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${color}`} />
+                          <p className="text-sm">{b.text}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent></Card>
+              </motion.div>
+            )}
+
+            {/* Fallback: Urgent Actions (old format) */}
+            {!briefing.bullets && briefing.urgent_actions?.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                <Card className="border-destructive/30"><CardContent className="p-5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <AlertTriangle className="w-4 h-4 text-destructive" /> {t("briefing.urgentActions")}
+                  </h3>
+                  <div className="space-y-2">
+                    {briefing.urgent_actions.map((a: string, i: number) => (
+                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-destructive/5">
+                        <span className="text-destructive font-bold text-sm mt-0.5">{i + 1}.</span>
+                        <p className="text-sm">{a}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent></Card>
+              </motion.div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               {/* Wins */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex">
-                <Card className="flex-1"><CardContent className="p-5">
-                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <CheckCircle2 className="w-4 h-4 text-success" /> {t("briefing.positives")}
-                  </h3>
-                  <div className="space-y-2">
-                    {briefing.wins?.map((w: string, i: number) => (
-                      <p key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
-                        <span className="text-success mt-0.5">✓</span> {w}
-                      </p>
-                    ))}
-                  </div>
-                </CardContent></Card>
-              </motion.div>
+              {briefing.wins?.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="flex">
+                  <Card className="flex-1"><CardContent className="p-5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                      <CheckCircle2 className="w-4 h-4 text-success" /> {t("briefing.positives")}
+                    </h3>
+                    <div className="space-y-2">
+                      {briefing.wins.map((w: string, i: number) => (
+                        <p key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                          <span className="text-success mt-0.5">✓</span> {w}
+                        </p>
+                      ))}
+                    </div>
+                  </CardContent></Card>
+                </motion.div>
+              )}
 
               {/* Risks */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex">
-                <Card className="flex-1"><CardContent className="p-5">
-                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-                    <AlertTriangle className="w-4 h-4 text-warning" /> {t("briefing.risksInView")}
-                  </h3>
-                  <div className="space-y-2">
-                    {briefing.risks?.map((r: string, i: number) => (
-                      <p key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
-                        <span className="text-warning mt-0.5">⚠</span> {r}
-                      </p>
-                    ))}
-                  </div>
-                </CardContent></Card>
-              </motion.div>
+              {briefing.risks?.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="flex">
+                  <Card className="flex-1"><CardContent className="p-5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                      <AlertTriangle className="w-4 h-4 text-warning" /> {t("briefing.risksInView")}
+                    </h3>
+                    <div className="space-y-2">
+                      {briefing.risks.map((r: string, i: number) => (
+                        <p key={i} className="text-sm text-muted-foreground flex items-start gap-1.5">
+                          <span className="text-warning mt-0.5">⚠</span> {r}
+                        </p>
+                      ))}
+                    </div>
+                  </CardContent></Card>
+                </motion.div>
+              )}
             </div>
 
             {/* Recommendation */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
-              <Card className="bg-primary/5 border-primary/20"><CardContent className="p-5">
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
-                  <Zap className="w-4 h-4 text-primary" /> {t("briefing.recommendation")}
-                </h3>
-                <p className="text-sm">{briefing.recommendation}</p>
-              </CardContent></Card>
-            </motion.div>
+            {briefing.recommendation && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
+                <Card className="bg-primary/5 border-primary/20"><CardContent className="p-5">
+                  <h3 className="text-sm font-semibold flex items-center gap-2 mb-2">
+                    <Zap className="w-4 h-4 text-primary" /> {t("briefing.recommendation")}
+                  </h3>
+                  <p className="text-sm">{briefing.recommendation}</p>
+                </CardContent></Card>
+              </motion.div>
+            )}
 
             {/* Cost Breakdown */}
             {costSummary?.top_costs?.length > 0 && (
@@ -284,9 +360,13 @@ const Briefing = ({ embedded }: { embedded?: boolean }) => {
                       <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{c.title}</p>
-                          <p className="text-xs text-muted-foreground">{c.days} {t("briefing.daysOpen")} · {translatePriority(c.priority)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {c.cost_per_day ? `${formatCost(c.cost_per_day)}/Tag` : c.days ? `${c.days} ${t("briefing.daysOpen")}` : ""} · {translatePriority(c.priority)}
+                          </p>
                         </div>
-                        <span className="text-sm font-bold text-destructive shrink-0 ml-2">{formatCost(c.cost)}</span>
+                        <span className="text-sm font-bold text-destructive shrink-0 ml-2">
+                          {c.cost ? formatCost(c.cost) : c.cost_per_day ? `${formatCost(c.cost_per_day * 7)}/Wo` : "—"}
+                        </span>
                       </div>
                     ))}
                   </div>

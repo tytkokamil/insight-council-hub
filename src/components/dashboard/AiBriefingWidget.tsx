@@ -11,11 +11,24 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import { useAuth } from "@/hooks/useAuth";
+
+const BULLET_ICONS: Record<string, typeof AlertTriangle> = {
+  problem: AlertTriangle,
+  positive: CheckCircle2,
+  recommendation: Zap,
+};
+const BULLET_COLORS: Record<string, string> = {
+  problem: "text-destructive",
+  positive: "text-success",
+  recommendation: "text-primary",
+};
 
 const AiBriefingWidget = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { aiBriefAvailable, isFree } = useFreemiumLimits();
+  const { aiBriefAvailable } = useFreemiumLimits();
+  const { user } = useAuth();
 
   // Trigger 5 — Free plan: show blurred preview
   if (!aiBriefAvailable) {
@@ -47,20 +60,42 @@ const AiBriefingWidget = () => {
     );
   }
 
+  // Read from daily_briefs table (today's brief)
   const { data, isLoading, refetch, isRefetching } = useQuery({
-    queryKey: ["dashboard-briefing"],
+    queryKey: ["daily-brief-widget", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("ceo-briefing");
+      // First try daily_briefs table
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: brief } = await supabase
+        .from("daily_briefs" as any)
+        .select("*")
+        .eq("brief_date", today)
+        .order("generated_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (brief) {
+        return {
+          briefing: (brief as any).content,
+          momentum_score: (brief as any).momentum_score,
+          generated_at: (brief as any).generated_at,
+        };
+      }
+
+      // Fallback: call ceo-briefing for on-demand generation
+      const { data: fallback, error } = await supabase.functions.invoke("ceo-briefing");
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+      if (fallback?.error) throw new Error(fallback.error);
+      return fallback;
     },
     staleTime: 5 * 60 * 1000,
     retry: 1,
+    enabled: !!user,
   });
 
   const briefing = data?.briefing;
   const momentum = data?.momentum_score;
+  const generatedAt = data?.generated_at;
 
   if (isLoading) {
     return (
@@ -92,10 +127,10 @@ const AiBriefingWidget = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-semibold">{t("widgets.aiBriefing")}</h3>
+          <h3 className="text-sm font-semibold">✨ {t("widgets.aiBriefing")}</h3>
           {momentum != null && momentum > 0 && (
             <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-              momentum > 70 ? "bg-success/10 text-success" : momentum > 40 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+              momentum > 70 ? "bg-success/10 text-success" : momentum > 40 ? "bg-warning/10 text-warning" : "bg-destructive/10 text-destructive"
             }`}>
               {t("briefing.momentum")} {momentum}
             </span>
@@ -111,9 +146,27 @@ const AiBriefingWidget = () => {
         </div>
       </div>
 
+      {/* Headline */}
       <p className="text-sm font-medium">{briefing.headline}</p>
 
-      {briefing.urgent_actions?.length > 0 && (
+      {/* Structured Bullets with icons */}
+      {briefing.bullets?.length > 0 && (
+        <div className="space-y-1">
+          {briefing.bullets.slice(0, 4).map((b: any, i: number) => {
+            const Icon = BULLET_ICONS[b.type] || Zap;
+            const color = BULLET_COLORS[b.type] || "text-muted-foreground";
+            return (
+              <div key={i} className="flex items-start gap-1.5 text-xs">
+                <Icon className={`w-3 h-3 mt-0.5 shrink-0 ${color}`} />
+                <span className="text-muted-foreground">{b.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Fallback: urgent_actions for old format */}
+      {!briefing.bullets && briefing.urgent_actions?.length > 0 && (
         <div className="space-y-1">
           {briefing.urgent_actions.slice(0, 2).map((a: string, i: number) => (
             <div key={i} className="flex items-start gap-1.5 text-xs">
@@ -129,6 +182,13 @@ const AiBriefingWidget = () => {
           <Zap className="w-3 h-3 text-primary mt-0.5 shrink-0" />
           <span>{briefing.recommendation}</span>
         </div>
+      )}
+
+      {/* Footer with generation time */}
+      {generatedAt && (
+        <p className="text-[10px] text-muted-foreground/50 pt-1">
+          Generiert {new Date(generatedAt).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })} Uhr
+        </p>
       )}
     </div>
   );

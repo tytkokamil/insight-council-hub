@@ -394,6 +394,50 @@ export type Database = {
           },
         ]
       }
+      daily_briefs: {
+        Row: {
+          brief_date: string
+          content: Json
+          cost_summary: Json | null
+          generated_at: string
+          id: string
+          momentum_breakdown: Json | null
+          momentum_score: number
+          org_id: string
+          stats: Json | null
+        }
+        Insert: {
+          brief_date?: string
+          content?: Json
+          cost_summary?: Json | null
+          generated_at?: string
+          id?: string
+          momentum_breakdown?: Json | null
+          momentum_score?: number
+          org_id: string
+          stats?: Json | null
+        }
+        Update: {
+          brief_date?: string
+          content?: Json
+          cost_summary?: Json | null
+          generated_at?: string
+          id?: string
+          momentum_breakdown?: Json | null
+          momentum_score?: number
+          org_id?: string
+          stats?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_briefs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_retention_config: {
         Row: {
           auto_archive_days: number
