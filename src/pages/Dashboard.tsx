@@ -47,6 +47,7 @@ import EscalationWidget from "@/components/dashboard/EscalationWidget";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
 import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
+import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanner";
 
 type DashboardMode = "operational" | "executive" | "admin";
 
@@ -307,6 +308,8 @@ const Dashboard = () => {
               overdue={computed.overdue}
               teams={teams}
             />
+
+            <IndustryReminderBanner />
 
             {/* ═══ EXECUTIVE MODE ═══ */}
             {isExecutive && (
