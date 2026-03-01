@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.delete-team]
 verify_jwt = false
+
+[functions.daily-engine]
+verify_jwt = false
