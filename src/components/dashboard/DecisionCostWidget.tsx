@@ -14,7 +14,11 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCost } from "@/lib/formatters";
 
-const DecisionCostWidget = () => {
+interface DecisionCostWidgetProps {
+  heroMode?: boolean;
+}
+
+const DecisionCostWidget = ({ heroMode = false }: DecisionCostWidgetProps) => {
   const { t } = useTranslation();
   const { data: allDecisions = [], isLoading: decLoading } = useDecisions();
   const { data: teams = [], isLoading: teamLoading } = useTeams();
@@ -85,14 +89,18 @@ const DecisionCostWidget = () => {
   }
 
   return (
-    <Card>
+    <Card className={heroMode ? "border-destructive/20 bg-destructive/[0.02]" : ""}>
       <CardHeader className="pb-2">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center">
             <DollarSign className="w-4 h-4 text-destructive" />
           </div>
           <div className="flex items-center gap-1.5">
-            <CardTitle className="text-sm">{t("widgets.delayCost")}</CardTitle>
+            <CardTitle className="text-sm">
+              {heroMode
+                ? t("widgets.delayCostHeroLabel", { defaultValue: "Kosten durch offene Entscheidungen — heute" })
+                : t("widgets.delayCost")}
+            </CardTitle>
             <ScoreMethodology
               title={t("widgets.delayCost")}
               description={t("widgets.delayCostDesc")}
@@ -116,7 +124,7 @@ const DecisionCostWidget = () => {
               return sum + (cfg.hourlyRate * 8 * cfg.persons * cfg.overhead) / 86400;
             }, 0)}
             createdAt={openDecisions[0]?.created_at || new Date().toISOString()}
-            size="lg"
+            size={heroMode ? "hero" : "lg"}
             dailyCost={openDecisions.reduce((sum, d) => {
               const cfg = d.team_id && teamConfigMap[(d as any).team_id] ? teamConfigMap[(d as any).team_id] : orgDefaults;
               return sum + cfg.hourlyRate * 8 * cfg.persons * cfg.overhead;

@@ -353,7 +353,7 @@ const Dashboard = () => {
             />
 
             <IndustryReminderBanner />
-            <AnomalyCards bannersOnly className="mb-2" />
+            {!isExecutive && <AnomalyCards bannersOnly className="mb-2" />}
 
             {/* ═══ EXECUTIVE MODE ═══ */}
             {isExecutive && (
@@ -376,21 +376,26 @@ const Dashboard = () => {
                   </motion.div>
                 ) : (
                   <>
+                    {/* 2. Verzögerungskosten — Hero */}
                     <WidgetErrorBoundary>
-                      <DecisionQualityIndex />
+                      <DecisionCostWidget heroMode />
                     </WidgetErrorBoundary>
-                    <div className="widget-grid-2">
-                      <WidgetErrorBoundary>
-                        <DecisionCostWidget />
-                      </WidgetErrorBoundary>
-                      <WidgetErrorBoundary label="Portfolio Risk">
-                        <PortfolioRiskOverview decisions={decisions} risks={riskData} />
-                      </WidgetErrorBoundary>
-                    </div>
+
+                    {/* 3. KI Daily Brief */}
                     <WidgetErrorBoundary label="KI-Briefing">
                       <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
                         <AiBriefingWidget />
                       </Suspense>
+                    </WidgetErrorBoundary>
+
+                    {/* 4. Decision Quality Index */}
+                    <WidgetErrorBoundary>
+                      <DecisionQualityIndex />
+                    </WidgetErrorBoundary>
+
+                    {/* 5. Portfolio Risk Overview */}
+                    <WidgetErrorBoundary label="Portfolio Risk">
+                      <PortfolioRiskOverview decisions={decisions} risks={riskData} />
                     </WidgetErrorBoundary>
                   </>
                 )}
