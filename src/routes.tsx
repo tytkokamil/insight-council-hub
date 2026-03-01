@@ -57,6 +57,7 @@ const SubProcessors = lazy(() => import("./pages/SubProcessors"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const Contact = lazy(() => import("./pages/Contact"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const EmailAction = lazy(() => import("./pages/EmailAction"));
 const ExternalReview = lazy(() => import("./pages/ExternalReview"));
 const InternalAdmin = lazy(() => import("./pages/InternalAdmin"));
@@ -97,6 +98,7 @@ export const publicRoutes = (
     <Route path="/action" element={<L><EmailAction /></L>} />
     <Route path="/review/external" element={<L><ExternalReview /></L>} />
     <Route path="/contact" element={<L><Contact /></L>} />
+    <Route path="/docs" element={<L><HelpCenter /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
   </>
 );
