@@ -5,7 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-/** Generate a cryptographically random token */
 function generateToken(): string {
   const arr = new Uint8Array(32);
   crypto.getRandomValues(arr);
@@ -62,8 +61,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate two tokens (approve + reject), expiring in 7 days
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    // Generate two tokens (approve + reject), expiring in 72 hours
+    const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString();
     const approveToken = generateToken();
     const rejectToken = generateToken();
 
@@ -86,12 +85,11 @@ Deno.serve(async (req) => {
       },
     ]);
 
-    // Build the action URLs - use the frontend app URL
-    const appUrl = req.headers.get("origin") || `${supabaseUrl.replace(".supabase.co", ".lovable.app")}`;
-    // We'll use a simple approach: the frontend /action page handles this
-    const approveUrl = `${appUrl}/action?token=${approveToken}&action=approve`;
-    const rejectUrl = `${appUrl}/action?token=${rejectToken}&action=reject`;
-    const detailUrl = `${appUrl}/decisions/${decision_id}`;
+    // Build the action URLs — clean /approve/:token and /reject/:token paths
+    const origin = req.headers.get("origin") || "https://app.decivio.com";
+    const approveUrl = `${origin}/approve/${approveToken}`;
+    const rejectUrl = `${origin}/reject/${rejectToken}`;
+    const detailUrl = `${origin}/decisions/${decision_id}`;
 
     const shortDesc = decision.description
       ? decision.description.substring(0, 200) + (decision.description.length > 200 ? "…" : "")
@@ -101,7 +99,10 @@ Deno.serve(async (req) => {
       ? `<tr><td style="padding:12px 24px;font-size:14px;color:#e67e22;font-weight:600;">⏱ Cost-of-Delay: ${Number(decision.cost_per_day).toLocaleString("de-DE")} € / Tag</td></tr>`
       : "";
 
-    // Build HTML email
+    const weekCost = decision.cost_per_day
+      ? `<tr><td style="padding:0 24px 12px;font-size:12px;color:#a1a1aa;">Kosten bei weiterer Verzögerung: ${(Number(decision.cost_per_day) * 7).toLocaleString("de-DE")} € / Woche</td></tr>`
+      : "";
+
     const html = `
 <!DOCTYPE html>
 <html>
@@ -120,14 +121,15 @@ Deno.serve(async (req) => {
     <p style="margin:0;font-size:14px;color:#71717a;line-height:1.6;">${escapeHtml(shortDesc)}</p>
   </td></tr>
   ${costLine}
+  ${weekCost}
   <tr><td style="padding:16px 24px 24px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <td width="48%" align="center" style="padding-right:8px;">
-        <a href="${approveUrl}" style="display:block;padding:14px 20px;background-color:#22c55e;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;text-align:center;">✓ Genehmigen</a>
+        <a href="${approveUrl}" style="display:block;padding:16px 20px;background-color:#22c55e;color:#ffffff;text-decoration:none;border-radius:8px;font-size:18px;font-weight:700;text-align:center;">✓ GENEHMIGEN</a>
       </td>
       <td width="48%" align="center" style="padding-left:8px;">
-        <a href="${rejectUrl}" style="display:block;padding:14px 20px;background-color:#ef4444;color:#ffffff;text-decoration:none;border-radius:8px;font-size:16px;font-weight:600;text-align:center;">✗ Ablehnen</a>
+        <a href="${rejectUrl}" style="display:block;padding:16px 20px;background-color:#ef4444;color:#ffffff;text-decoration:none;border-radius:8px;font-size:18px;font-weight:700;text-align:center;">✗ ABLEHNEN</a>
       </td>
     </tr>
     </table>
@@ -138,8 +140,11 @@ Deno.serve(async (req) => {
   <tr><td style="padding:16px 24px;border-top:1px solid #e4e4e7;">
     <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center;">
       Hallo ${escapeHtml(profile?.full_name || "Reviewer")}, Sie wurden als Reviewer für diese Entscheidung eingetragen.
-      Die Aktions-Links sind 7 Tage gültig und können nur einmal verwendet werden.
+      Die Aktions-Links sind 72 Stunden gültig und können nur einmal verwendet werden.
     </p>
+  </td></tr>
+  <tr><td style="padding:8px 24px 16px;text-align:center;">
+    <a href="${origin}" style="font-size:10px;color:#a1a1aa;text-decoration:none;">Powered by Decivio — Decision Intelligence Platform</a>
   </td></tr>
 </table>
 </td></tr>
@@ -147,16 +152,14 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    // Send via Supabase Auth email (using admin API)
-    // We'll use a simple approach: insert a notification and log
-    // For actual email sending, we use the built-in Supabase email
-    const { error: emailError } = await supabase.auth.admin.generateLink({
+    // Send via Supabase Auth email (magic link as workaround for actual email)
+    await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: { redirectTo: detailUrl },
     });
 
-    // Also create an in-app notification
+    // In-app notification
     await supabase.from("notifications").insert({
       user_id: reviewer_id,
       title: "Review angefordert",
