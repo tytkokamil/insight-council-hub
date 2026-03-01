@@ -78,5 +78,8 @@ verify_jwt = false
 [functions.inbound-email]
 verify_jwt = false
 
+[functions.notify-teams]
+verify_jwt = false
+
 [functions.predictive-sla]
 verify_jwt = false
