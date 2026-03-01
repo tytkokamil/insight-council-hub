@@ -1,9 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { BarChart3, Shield, Brain, ArrowRight } from "lucide-react";
-import dashboardImg from "@/assets/product-dashboard-frame.jpg";
-import analyticsImg from "@/assets/product-analytics-frame.jpg";
-import graphImg from "@/assets/product-graph-frame.jpg";
+import { BarChart3, Shield, Brain } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -14,7 +11,6 @@ const screens = [
     label: "Live Dashboard",
     title: "Alle Entscheidungen. Ein Blick.",
     description: "Echtzeit Cost-of-Delay, SLA-Status, Eskalationen und KI-Empfehlungen — alles auf einen Blick.",
-    img: dashboardImg,
     accent: "bg-primary/10 text-primary",
     stats: [
       { label: "Offene Entscheidungen", value: "23" },
@@ -28,7 +24,6 @@ const screens = [
     label: "KI Analytics",
     title: "9 Analytics-Module. Null Blindflug.",
     description: "Decision DNA, Health Heatmap, Friction Map, Bottleneck Intelligence — powered by KI.",
-    img: analyticsImg,
     accent: "bg-accent-violet/10 text-accent-violet",
     stats: [
       { label: "Cycle Time Ø", value: "4,2 Tage" },
@@ -42,7 +37,6 @@ const screens = [
     label: "Audit Trail",
     title: "Kryptographisch. Unveränderbar.",
     description: "SHA-256 Hash-Kette, digitale Signaturen und versionierter Audit Trail — bereit für jeden Auditor.",
-    img: graphImg,
     accent: "bg-accent-teal/10 text-accent-teal",
     stats: [
       { label: "Hash-Kette", value: "SHA-256" },
@@ -52,12 +46,135 @@ const screens = [
   },
 ];
 
+/* Light-themed stylized mockup for each screen */
+const DashboardMockup = () => (
+  <div className="p-5 space-y-4">
+    {/* KPI row */}
+    <div className="grid grid-cols-3 gap-3">
+      {[
+        { label: "Approved", value: "12", color: "text-accent-teal" },
+        { label: "In Review", value: "5", color: "text-primary" },
+        { label: "Risk Score", value: "34%", color: "text-warning" },
+      ].map((kpi) => (
+        <div key={kpi.label} className="rounded-xl border border-border/40 bg-muted/20 p-3">
+          <div className={`text-xl font-bold font-mono ${kpi.color}`}>{kpi.value}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{kpi.label}</div>
+        </div>
+      ))}
+    </div>
+    {/* Chart placeholder */}
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-3">Decision Velocity</div>
+      <div className="flex items-end gap-1.5 h-20">
+        {[40, 65, 50, 80, 70, 95, 60, 85, 75, 90].map((h, i) => (
+          <div key={i} className="flex-1 rounded-t bg-primary/20 transition-all" style={{ height: `${h}%` }} />
+        ))}
+      </div>
+    </div>
+    {/* Table rows */}
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-4 space-y-2">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-2">Decisions</div>
+      {["Approved", "Review", "Draft"].map((status, i) => (
+        <div key={i} className="flex items-center gap-3 py-1.5">
+          <div className="w-2 h-2 rounded-full bg-primary/40" />
+          <div className="flex-1 h-2.5 rounded bg-muted/60" />
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+            status === "Approved" ? "bg-accent-teal/10 text-accent-teal" :
+            status === "Review" ? "bg-primary/10 text-primary" :
+            "bg-muted text-muted-foreground"
+          }`}>{status}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const AnalyticsMockup = () => (
+  <div className="p-5 space-y-4">
+    <div className="grid grid-cols-2 gap-3">
+      {[
+        { label: "Decision DNA", value: "Pattern erkannt" },
+        { label: "Health Score", value: "87%" },
+      ].map((item) => (
+        <div key={item.label} className="rounded-xl border border-border/40 bg-muted/20 p-3">
+          <div className="text-[10px] text-muted-foreground mb-1">{item.label}</div>
+          <div className="text-sm font-semibold text-foreground/80">{item.value}</div>
+        </div>
+      ))}
+    </div>
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-3">Friction Map</div>
+      <div className="space-y-2">
+        {[
+          { label: "Review Phase", w: "85%" },
+          { label: "Approval", w: "45%" },
+          { label: "Implementation", w: "30%" },
+        ].map((bar) => (
+          <div key={bar.label} className="space-y-1">
+            <div className="text-[10px] text-muted-foreground">{bar.label}</div>
+            <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+              <div className="h-full rounded-full bg-accent-violet/30" style={{ width: bar.w }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-3">Bottleneck Intelligence</div>
+      <div className="flex gap-2">
+        {[60, 35, 80, 45, 70].map((v, i) => (
+          <div key={i} className="flex-1 text-center">
+            <div className="mx-auto w-8 h-8 rounded-full border-2 border-accent-violet/20 flex items-center justify-center text-[10px] font-mono text-foreground/60">{v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const AuditMockup = () => (
+  <div className="p-5 space-y-4">
+    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-3">Audit Trail</div>
+      <div className="space-y-3">
+        {[
+          { action: "Decision approved", hash: "a3f8…c2d1", time: "vor 2h" },
+          { action: "Review submitted", hash: "7b2e…9f4a", time: "vor 5h" },
+          { action: "Status changed", hash: "d1c4…3e7b", time: "vor 1d" },
+        ].map((entry, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-accent-teal/50" />
+            <div className="flex-1">
+              <div className="text-[11px] text-foreground/70">{entry.action}</div>
+              <div className="text-[9px] font-mono text-muted-foreground/50">{entry.hash}</div>
+            </div>
+            <span className="text-[10px] text-muted-foreground/50">{entry.time}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+        <div className="text-[10px] text-muted-foreground mb-1">Hash-Algorithmus</div>
+        <div className="text-sm font-semibold font-mono text-foreground/80">SHA-256</div>
+      </div>
+      <div className="rounded-xl border border-border/40 bg-muted/20 p-3">
+        <div className="text-[10px] text-muted-foreground mb-1">Integrität</div>
+        <div className="text-sm font-semibold text-accent-teal">Verifiziert ✓</div>
+      </div>
+    </div>
+  </div>
+);
+
+const mockups = [DashboardMockup, AnalyticsMockup, AuditMockup];
+
 const ProductShowcase = () => {
   const [active, setActive] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const imgY = useTransform(scrollYProgress, [0, 1], [40, -40]);
   const current = screens[active];
+  const MockupComponent = mockups[active];
 
   return (
     <section ref={sectionRef} id="product" className="py-24 relative overflow-hidden">
@@ -135,12 +252,12 @@ const ProductShowcase = () => {
                 </div>
               </div>
 
-              {/* Image side */}
+              {/* Mockup side */}
               <motion.div
                 style={{ y: imgY }}
                 className="order-1 lg:order-2"
               >
-                <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-white shadow-[var(--shadow-xl)] group">
+                <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[var(--shadow-xl)]">
                   {/* Browser chrome */}
                   <div className="px-4 py-2.5 border-b border-border/40 flex items-center gap-2 bg-muted/30">
                     <div className="flex gap-1.5">
@@ -152,16 +269,7 @@ const ProductShowcase = () => {
                       <span className="text-[10px] text-muted-foreground/50 font-mono">app.decivio.com</span>
                     </div>
                   </div>
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={current.img}
-                      alt={current.label}
-                      className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
-                      loading="lazy"
-                    />
-                    {/* Subtle gradient overlay at bottom */}
-                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/60 to-transparent" />
-                  </div>
+                  <MockupComponent />
                 </div>
               </motion.div>
             </div>
