@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import UserAvatar from "@/components/shared/UserAvatar";
-import { UserPlus, Trash2, Mail, Clock, Check, Users, Shield, Eye, UserCog } from "lucide-react";
+import { UserPlus, Trash2, Mail, Clock, Check, Users, Shield, Eye, UserCog, Lock, Crown } from "lucide-react";
 import { toast } from "sonner";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 
 interface Props {
   teamId: string;
@@ -31,6 +32,7 @@ const TEAM_ROLE_STYLES: Record<string, string> = {
 const TeamOverviewTab = ({ teamId, teamName }: Props) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { teamsAvailable } = useFreemiumLimits();
   const [members, setMembers] = useState<any[]>([]);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -92,6 +94,10 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
   const sendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
+    if (!teamsAvailable) {
+      toast.error(t("freemium.inviteLockedDesc"));
+      return;
+    }
     setInviting(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-team-invite", {

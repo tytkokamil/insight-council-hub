@@ -5068,5 +5068,14 @@
       "team": "Team"
     }
   },
-  "_end": true
+  "_end": true,
+  "freemium": {
+    "decisionLimitTitle": "Decision limit reached",
+    "decisionLimitDesc": "You've reached the {{count}} decisions of the Free plan. Upgrade to Starter for unlimited decisions.",
+    "teamsLockedTitle": "Teams available from Starter",
+    "teamsLockedDesc": "Teams, invitations, and collaboration are available starting from the Starter plan.",
+    "upgradeCta": "Upgrade now",
+    "inviteLockedTitle": "Invitations available from Starter",
+    "inviteLockedDesc": "Team invitations are not available on the Free plan. Upgrade to Starter."
+  }
 }
