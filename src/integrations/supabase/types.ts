@@ -2487,6 +2487,101 @@ export type Database = {
           },
         ]
       }
+      teams_integration_config: {
+        Row: {
+          channel_name: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          notify_escalation: boolean
+          notify_new_decision: boolean
+          notify_review_request: boolean
+          notify_sla_violation: boolean
+          org_id: string
+          updated_at: string
+          webhook_url: string
+        }
+        Insert: {
+          channel_name?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_escalation?: boolean
+          notify_new_decision?: boolean
+          notify_review_request?: boolean
+          notify_sla_violation?: boolean
+          org_id: string
+          updated_at?: string
+          webhook_url: string
+        }
+        Update: {
+          channel_name?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notify_escalation?: boolean
+          notify_new_decision?: boolean
+          notify_review_request?: boolean
+          notify_sla_violation?: boolean
+          org_id?: string
+          updated_at?: string
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_integration_config_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams_notification_log: {
+        Row: {
+          created_at: string
+          decision_id: string | null
+          error_message: string | null
+          id: string
+          notification_type: string
+          org_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id?: string | null
+          error_message?: string | null
+          id?: string
+          notification_type: string
+          org_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string | null
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          org_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_notification_log_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_notification_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       terminology: {
         Row: {
           created_at: string
