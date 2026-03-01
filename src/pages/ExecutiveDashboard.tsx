@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
+import PageHeader from "@/components/shared/PageHeader";
 import PageHelpButton from "@/components/shared/PageHelpButton";
 import { Card, CardContent } from "@/components/ui/card";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
@@ -248,10 +249,9 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
   if (!metrics) {
     return (
       <Wrap>
-        <div className="mb-8">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("executiveDash.subtitle")}</p>
-          <h1 className="text-xl font-bold">{t("executiveDash.pageTitle")}</h1>
-        </div>
+        {!embedded && (
+          <PageHeader title={t("executiveDash.pageTitle")} subtitle={t("executiveDash.subtitle")} role="intelligence" />
+        )}
         <EmptyAnalysisState icon={Target} title={t("executiveDash.noDataTitle")} description={t("executiveDash.noDataDesc")} hint={t("executiveDash.noDataHint")} />
       </Wrap>
     );
@@ -262,42 +262,41 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
 
   return (
     <Wrap>
-      <div className="space-y-8">
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("executiveDash.strategicAnalysis")}</p>
-            <h1 className="text-xl font-bold">{t("executiveDash.pageTitle")}</h1>
+      <div className="section-gap-lg">
+        {/* ── Header (only standalone) ── */}
+        {!embedded && (
+          <div className="flex items-center justify-between">
+            <PageHeader title={t("executiveDash.pageTitle")} subtitle={t("executiveDash.strategicAnalysis")} role="intelligence" />
+            <div className="flex items-center gap-2">
+              <PageHelpButton title={t("executiveDash.pageTitle")} description={t("executiveDash.helpDesc")} />
+              <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
+                setExporting(true);
+                try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.boardPackExportedTitle"), description: t("executiveDash.boardPackExportedDesc") }); }
+                catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
+                setExporting(false);
+              }} className="gap-2">
+                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+                PDF Report
+              </Button>
+              <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
+                setExporting(true);
+                try {
+                  const data = await fetchBoardReportData();
+                  const profileMap: Record<string, string> = {};
+                  data.profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || t("taskDetail.unknown"); });
+                  const decExport = data.decisions.map((d: any) => ({ ...d, team_name: data.teams.find((t: any) => t.id === d.team_id)?.name, assignee_name: profileMap[d.assignee_id] || "—", creator_name: profileMap[d.created_by] || "—" }));
+                  const taskExport = data.tasks.map((t: any) => ({ ...t, assignee_name: profileMap[t.assignee_id] || "—" }));
+                  exportFullReportExcel(decExport, taskExport);
+                  toast({ title: t("executiveDash.exported"), description: t("executiveDash.excelReportDesc") });
+                } catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
+                setExporting(false);
+              }} className="gap-2">
+                <FileDown className="w-3.5 h-3.5" />
+                Excel Report
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <PageHelpButton title={t("executiveDash.pageTitle")} description={t("executiveDash.helpDesc")} />
-            <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
-              setExporting(true);
-              try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.boardPackExportedTitle"), description: t("executiveDash.boardPackExportedDesc") }); }
-              catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
-              setExporting(false);
-            }} className="gap-2">
-              {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
-              PDF Report
-            </Button>
-            <Button size="sm" variant="outline" disabled={exporting} onClick={async () => {
-              setExporting(true);
-              try {
-                const data = await fetchBoardReportData();
-                const profileMap: Record<string, string> = {};
-                data.profiles.forEach((p: any) => { profileMap[p.user_id] = p.full_name || t("taskDetail.unknown"); });
-                const decExport = data.decisions.map((d: any) => ({ ...d, team_name: data.teams.find((t: any) => t.id === d.team_id)?.name, assignee_name: profileMap[d.assignee_id] || "—", creator_name: profileMap[d.created_by] || "—" }));
-                const taskExport = data.tasks.map((t: any) => ({ ...t, assignee_name: profileMap[t.assignee_id] || "—" }));
-                exportFullReportExcel(decExport, taskExport);
-                toast({ title: t("executiveDash.exported"), description: t("executiveDash.excelReportDesc") });
-              } catch { toast({ title: t("executiveDash.error"), description: t("executiveDash.exportFailed"), variant: "destructive" }); }
-              setExporting(false);
-            }} className="gap-2">
-              <FileDown className="w-3.5 h-3.5" />
-              Excel Report
-            </Button>
-          </div>
-        </div>
+        )}
 
         {/* ── 1. EXECUTIVE SNAPSHOT ── */}
         <div>

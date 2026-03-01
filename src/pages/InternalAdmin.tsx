@@ -128,7 +128,7 @@ const InternalAdmin = () => {
     return (
       <div className="flex items-center gap-1.5 mt-1">
         <Progress value={unit === "min" ? Math.max(0, 100 - (value / target) * 100) : Math.min(100, (value / target) * 100)} className="h-1.5 flex-1" />
-        <Badge variant="outline" className={`text-[9px] ${met ? "text-emerald-600 border-emerald-300" : "text-amber-600 border-amber-300"}`}>
+        <Badge variant="outline" className={`text-[9px] ${met ? "text-success border-success/30" : "text-warning border-warning/30"}`}>
           Ziel: {target}{unit}
         </Badge>
       </div>
@@ -137,9 +137,9 @@ const InternalAdmin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 section-gap-lg">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ShieldCheck className="w-5 h-5 text-primary" />
@@ -157,7 +157,7 @@ const InternalAdmin = () => {
         </div>
 
         {error && (
-          <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 mb-6">
+          <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
             <p className="text-xs text-destructive">{error}</p>
           </div>
         )}
@@ -173,7 +173,7 @@ const InternalAdmin = () => {
         {metrics && (
           <>
             {/* Revenue Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="border-primary/20">
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-2">
@@ -215,8 +215,9 @@ const InternalAdmin = () => {
             </div>
 
             {/* Registrations Row */}
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Registrierungen</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Registrierungen</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Heute", value: metrics.registrations.today, icon: Users },
                 { label: "Diese Woche", value: metrics.registrations.week, icon: Users },
@@ -234,10 +235,12 @@ const InternalAdmin = () => {
                 </Card>
               ))}
             </div>
+            </div>
 
             {/* Engagement Metrics */}
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement & Retention</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement & Retention</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-1.5 mb-1">
@@ -302,9 +305,11 @@ const InternalAdmin = () => {
                 </CardContent>
               </Card>
             </div>
+            </div>
 
             {/* Product Metrics */}
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Produkt</h2>
+            <div>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Produkt</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-4">
@@ -326,6 +331,7 @@ const InternalAdmin = () => {
                   <p className="text-xl font-bold">{metrics.totalDecisions.toLocaleString("de-DE")}</p>
                 </CardContent>
               </Card>
+            </div>
             </div>
           </>
         )}
