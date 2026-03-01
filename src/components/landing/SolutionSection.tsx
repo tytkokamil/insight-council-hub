@@ -1,24 +1,15 @@
 import { motion } from "framer-motion";
 import { Timer, MousePointerClick, Bot, ShieldCheck, LineChart, LayoutTemplate } from "lucide-react";
-import productDashboard from "@/assets/product-dashboard-frame.jpg";
-import productAnalytics from "@/assets/product-analytics-frame.jpg";
-import productGraph from "@/assets/product-graph-frame.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const features = [
-  { icon: Timer, title: "Echtzeit Cost-of-Delay", desc: "Wie ein Taxi-Meter: Sie sehen buchstäblich wie viel Geld jede offene Entscheidung kostet — jede Sekunde.", tag: "● Live-Berechnung", tagBg: "bg-warning/10 text-warning", featured: true },
-  { icon: MousePointerClick, title: "One-Click Approval", desc: "Reviewer genehmigen direkt aus der E-Mail — ohne Login. Ein Klick. Aktion dokumentiert. Audit Trail aktualisiert.", tag: "Neu", tagBg: "bg-primary/10 text-primary", featured: false },
-  { icon: Bot, title: "KI Daily Brief", desc: "Jeden Morgen um 07:30 Uhr: Brief mit den 3 kritischsten Entscheidungen, SLA-Warnungen und Economic Exposure.", tag: "KI-gestützt", tagBg: "bg-success/10 text-success", featured: false },
-  { icon: ShieldCheck, title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. BaFin, ISO 9001, NIS2: Audit-ready.", tag: "Compliance", tagBg: "bg-accent text-accent-foreground", featured: false },
-  { icon: LineChart, title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf dem historischen Verhalten Ihrer Reviewer.", tag: "KI-gestützt", tagBg: "bg-destructive/10 text-destructive", featured: false },
-  { icon: LayoutTemplate, title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — branchenspezifisch und sofort nutzbar.", tag: "15 Branchen", tagBg: "bg-primary/5 text-primary", featured: false },
-];
-
-const screenshots = [
-  { src: productDashboard, alt: "Decivio Dashboard mit Entscheidungsübersicht", label: "Dashboard" },
-  { src: productAnalytics, alt: "Decivio Analytics mit KPI-Auswertung", label: "Analytics" },
-  { src: productGraph, alt: "Decivio Entscheidungsgraph", label: "Abhängigkeiten" },
+  { icon: Timer, title: "Echtzeit Cost-of-Delay", desc: "Wie ein Taxi-Meter: Sie sehen wie viel Geld jede offene Entscheidung kostet — jede Sekunde.", tag: "Live", color: "text-warning bg-warning/8" },
+  { icon: MousePointerClick, title: "One-Click Approval", desc: "Reviewer genehmigen direkt aus der E-Mail — ohne Login. Ein Klick, dokumentiert.", tag: "Neu", color: "text-primary bg-primary/8" },
+  { icon: Bot, title: "KI Daily Brief", desc: "Jeden Morgen: Die 3 kritischsten Entscheidungen, SLA-Warnungen und Economic Exposure.", tag: "KI", color: "text-accent-teal bg-accent/50" },
+  { icon: ShieldCheck, title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. Audit-ready.", tag: "Compliance", color: "text-accent-violet bg-accent-violet/8" },
+  { icon: LineChart, title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf historischem Verhalten.", tag: "KI", color: "text-destructive bg-destructive/8" },
+  { icon: LayoutTemplate, title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — sofort nutzbar.", tag: "15 Branchen", color: "text-muted-foreground bg-muted" },
 ];
 
 const SolutionSection = () => (
@@ -40,68 +31,27 @@ const SolutionSection = () => (
         </p>
       </motion.div>
 
-      {/* Feature cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-20">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((f, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.08, duration: 0.6, ease }}
-            className={`group relative p-6 rounded-2xl border bg-card transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
-              f.featured
-                ? "border-primary/30 shadow-[0_0_20px_-8px_hsl(217,91%,53%/0.15)]"
-                : "border-border hover:border-primary/20"
-            }`}
+            transition={{ delay: i * 0.06, duration: 0.5, ease }}
+            className="group p-6 rounded-2xl border border-border/60 bg-white/60 backdrop-blur-sm hover:border-border hover:shadow-sm transition-all duration-300"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                <f.icon className="w-4.5 h-4.5 text-foreground/70" />
+              <div className="w-9 h-9 rounded-xl bg-muted/60 flex items-center justify-center">
+                <f.icon className="w-[18px] h-[18px] text-foreground/60" />
               </div>
-              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${f.tagBg}`}>{f.tag}</span>
+              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${f.color}`}>{f.tag}</span>
             </div>
-            <h3 className="text-[15px] font-bold text-foreground mb-2">{f.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            <h3 className="text-[15px] font-semibold text-foreground mb-2">{f.title}</h3>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">{f.desc}</p>
           </motion.div>
         ))}
       </div>
-
-      {/* Product screenshots */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.8, ease }}
-      >
-        <p className="text-center text-xs font-medium text-muted-foreground/60 uppercase tracking-[0.15em] mb-8">
-          Ein Blick in die Plattform
-        </p>
-        <div className="grid md:grid-cols-3 gap-4">
-          {screenshots.map((shot, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6, ease }}
-              className="group rounded-xl border border-border bg-card overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="aspect-[16/10] overflow-hidden">
-                <img
-                  src={shot.src}
-                  alt={shot.alt}
-                  loading="lazy"
-                  className="w-full h-full object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
-                />
-              </div>
-              <div className="px-4 py-3 border-t border-border">
-                <span className="text-xs font-medium text-muted-foreground">{shot.label}</span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
     </div>
   </section>
 );
