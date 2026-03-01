@@ -581,7 +581,7 @@ const DecisionDetail = () => {
           <Separator />
 
           {/* ═══ DISCUSSION & AUDIT TRAIL TABS ═══ */}
-          <DecisionThreadTabs decisionId={decision.id} />
+          <DecisionThreadTabs decisionId={decision.id} decision={decision} dateFnsLocale={dateFnsLocale} tl={tl} />
 
           <Separator />
 
@@ -791,7 +791,9 @@ const DecisionDetail = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="sticky bottom-0 z-10 mt-8 -mx-4 px-4 py-3 bg-background/80 backdrop-blur-lg border-t border-border flex items-center gap-2 flex-wrap">
+          className="sticky bottom-0 z-10 mt-8 -mx-4 px-6 py-3 bg-background border-t flex items-center gap-2 flex-wrap"
+          style={{ borderTopColor: "#E2E8F0" }}
+        >
           {decision.status === "draft" && (
             <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("review")}>
               <PlayCircle className="w-3.5 h-3.5" /> {t("decisionDetail.startReview")}
@@ -860,7 +862,7 @@ const DecisionDetail = () => {
 };
 
 /* ────────────────── Decision Thread Tabs ────────────────── */
-const DecisionThreadTabs = ({ decisionId }: { decisionId: string }) => {
+const DecisionThreadTabs = ({ decisionId, decision, dateFnsLocale, tl }: { decisionId: string; decision?: any; dateFnsLocale?: any; tl?: any }) => {
   const { t } = useTranslation();
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["comment-count", decisionId],
@@ -888,8 +890,22 @@ const DecisionThreadTabs = ({ decisionId }: { decisionId: string }) => {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="details">
-        {/* Details content is rendered outside tabs in the main layout */}
-        <p className="text-sm text-muted-foreground py-4 text-center">{t("decisionDetail.detailsAbove")}</p>
+        {decision && dateFnsLocale && tl ? (
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 py-4 text-xs">
+            <MetaRow label={t("decisionDetail.metaCreated")} value={format(new Date(decision.created_at), "dd.MM.yyyy HH:mm", { locale: dateFnsLocale })} />
+            <MetaRow label={t("decisionDetail.metaUpdated")} value={format(new Date(decision.updated_at), "dd.MM.yyyy HH:mm", { locale: dateFnsLocale })} />
+            {decision.due_date && (
+              <MetaRow label={t("decisionDetail.metaDue")} value={format(new Date(decision.due_date), "dd.MM.yyyy", { locale: dateFnsLocale })} />
+            )}
+            <MetaRow label={t("decisionDetail.metaCategory")} value={tl.categoryLabels[decision.category]} />
+            <MetaRow label={t("decisionDetail.metaPriority")} value={tl.priorityLabels[decision.priority]} />
+            {decision.implemented_at && (
+              <MetaRow label={t("decisionDetail.metaImplemented")} value={format(new Date(decision.implemented_at), "dd.MM.yyyy", { locale: dateFnsLocale })} />
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("decisionDetail.detailsAbove")}</p>
+        )}
       </TabsContent>
       <TabsContent value="discussion">
         <DiscussionPanel decisionId={decisionId} />
