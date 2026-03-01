@@ -28,6 +28,7 @@ import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
 import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
+import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -415,61 +416,9 @@ const SettingsPage = () => {
           {activeTab === "notifications" && (
             <div className="space-y-6">
               <section>
-                <h2 className="text-sm font-medium mb-4">{t("settings.notifChannels")}</h2>
-                <div className="space-y-1">
-                  {([
-                    { key: "review_requests" as const, label: t("settings.reviewRequests"), desc: t("settings.reviewRequestsDesc") },
-                    { key: "escalations" as const, label: t("settings.escalations"), desc: t("settings.escalationsDesc") },
-                    { key: "team_updates" as const, label: t("settings.teamUpdates"), desc: t("settings.teamUpdatesDesc") },
-                    { key: "mention_enabled" as const, label: t("settings.mentions"), desc: t("settings.mentionsDesc") },
-                    { key: "deadline_enabled" as const, label: t("settings.deadlines"), desc: t("settings.deadlinesDesc") },
-                    { key: "status_change_enabled" as const, label: t("settings.statusChanges"), desc: t("settings.statusChangesDesc") },
-                  ]).map((item) => (
-                    <div key={item.key} className="flex items-center justify-between py-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm">{item.label}</p>
-                          <Badge variant="outline" className="text-[10px]">In-App</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <Switch checked={notifPrefs[item.key] as boolean} onCheckedChange={() => handleNotifToggle(item.key)} />
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <hr className="border-border" />
-
-              {/* Digest Frequency */}
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.digestTitle")}</h2>
-                <p className="text-xs text-muted-foreground mb-3">{t("settings.digestDesc")}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {([
-                    { value: "instant", label: t("settings.digestInstant"), desc: t("settings.digestInstantDesc") },
-                    { value: "daily", label: t("settings.digestDaily"), desc: t("settings.digestDailyDesc") },
-                    { value: "weekly", label: t("settings.digestWeekly"), desc: t("settings.digestWeeklyDesc") },
-                    { value: "off", label: t("settings.digestOff"), desc: t("settings.digestOffDesc") },
-                  ]).map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={async () => {
-                        const updated = { ...notifPrefs, digest_frequency: opt.value };
-                        setNotifPrefs(updated);
-                        if (user) await supabase.from("notification_preferences").upsert({ user_id: user.id, ...updated }, { onConflict: "user_id" });
-                      }}
-                      className={`p-3 rounded-lg border text-left transition-colors ${
-                        notifPrefs.digest_frequency === opt.value
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-border hover:border-muted-foreground/30"
-                      }`}
-                    >
-                      <p className="text-sm font-medium">{opt.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{opt.desc}</p>
-                    </button>
-                  ))}
-                </div>
+                <h2 className="text-sm font-medium mb-1">{t("settings.notifChannels")}</h2>
+                <p className="text-xs text-muted-foreground mb-4">{t("settings.digestDesc")}</p>
+                <NotificationMatrixPanel />
               </section>
 
               <hr className="border-border" />
@@ -497,7 +446,7 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
-              {/* Digest Options */}
+              {/* Executive Digest Options */}
               <section>
                 <h2 className="text-sm font-medium mb-3">{t("settings.execDigest")}</h2>
                 <div className="space-y-2">
