@@ -183,7 +183,7 @@ const InboundEmailPanel = () => {
         </div>
 
         {/* Info box */}
-        <div className="p-3 rounded-lg border border-border bg-muted/30">
+        <div className="p-3 rounded-lg border border-border/60 bg-muted/30">
           <div className="flex items-start gap-2">
             <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
             <div className="text-[11px] text-muted-foreground space-y-1">

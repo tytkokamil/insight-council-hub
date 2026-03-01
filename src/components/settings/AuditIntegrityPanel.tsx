@@ -74,19 +74,19 @@ const AuditIntegrityPanel = () => {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-            <div className="p-2 rounded-md border border-border bg-background">
+            <div className="p-2 rounded-md border border-border/60 bg-background">
               <p className="text-[9px] text-muted-foreground uppercase">{t("settings.auditTotalEntries")}</p>
               <p className="text-sm font-semibold">{result.total}</p>
             </div>
-            <div className="p-2 rounded-md border border-border bg-background">
+            <div className="p-2 rounded-md border border-border/60 bg-background">
               <p className="text-[9px] text-muted-foreground uppercase">{t("settings.auditHashedEntries")}</p>
               <p className="text-sm font-semibold">{result.hashed_entries}</p>
             </div>
-            <div className="p-2 rounded-md border border-border bg-background">
+            <div className="p-2 rounded-md border border-border/60 bg-background">
               <p className="text-[9px] text-muted-foreground uppercase">{t("settings.auditVerified")}</p>
               <p className="text-sm font-semibold">{result.verified}</p>
             </div>
-            <div className="p-2 rounded-md border border-border bg-background">
+            <div className="p-2 rounded-md border border-border/60 bg-background">
               <p className="text-[9px] text-muted-foreground uppercase">{t("settings.auditStatus")}</p>
               <Badge variant="outline" className={`text-[9px] ${result.valid ? "text-success border-success/30" : "text-destructive border-destructive/30"}`}>
                 {result.valid ? t("settings.auditStatusOk") : t("settings.auditStatusFailed")}
@@ -95,7 +95,7 @@ const AuditIntegrityPanel = () => {
           </div>
 
           {result.last_hash && (
-            <div className="p-2 rounded-md border border-border bg-muted/30">
+            <div className="p-2 rounded-md border border-border/60 bg-muted/30">
               <p className="text-[9px] text-muted-foreground uppercase mb-1">{t("settings.auditLastHash")}</p>
               <code className="text-[10px] font-mono text-foreground/80 break-all">{result.last_hash}</code>
             </div>

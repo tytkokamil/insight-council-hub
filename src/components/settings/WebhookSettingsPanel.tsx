@@ -197,7 +197,7 @@ const WebhookSettingsPanel = () => {
       {endpoints.length > 0 && (
         <div className="space-y-2 mb-4">
           {endpoints.map(ep => (
-            <div key={ep.id} className="border border-border rounded-lg overflow-hidden">
+            <div key={ep.id} className="border border-border/60 rounded-lg overflow-hidden">
               {/* Header row */}
               <div className="flex items-center gap-2 p-3">
                 <Switch checked={ep.enabled} onCheckedChange={(v) => toggleEndpoint(ep.id, v)} />
@@ -215,7 +215,7 @@ const WebhookSettingsPanel = () => {
 
               {/* Expanded details */}
               {expandedId === ep.id && (
-                <div className="border-t border-border p-3 space-y-3 bg-muted/20">
+                <div className="border-t border-border/60 p-3 space-y-3 bg-muted/20">
                   {/* Secret */}
                   <SecretDisplay secret={ep.secret_token} t={t} />
 
@@ -305,7 +305,7 @@ const WebhookSettingsPanel = () => {
       )}
 
       {/* Payload info */}
-      <div className="mt-4 p-3 rounded-lg border border-border bg-muted/30">
+      <div className="mt-4 p-3 rounded-lg border border-border/60 bg-muted/30">
         <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("settings.webhookPayloadInfo")}</p>
         <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap">{`{
   "event": "decision.created",

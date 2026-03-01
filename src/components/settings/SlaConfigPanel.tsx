@@ -88,7 +88,7 @@ const SlaConfigPanel = () => {
 
   if (configs.length === 0) {
     return (
-      <div className="rounded-lg border border-border p-6 text-center">
+      <div className="rounded-lg border border-border/60 p-6 text-center">
         <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-40" />
         <p className="text-sm font-medium text-muted-foreground">{t("slaConfig.emptyTitle")}</p>
         <p className="text-xs text-muted-foreground mt-1">{t("slaConfig.emptyDesc")}</p>
@@ -116,7 +116,7 @@ const SlaConfigPanel = () => {
       </div>
 
       {/* Config table */}
-      <div className="rounded-lg border border-border overflow-hidden">
+      <div className="rounded-lg border border-border/60 overflow-hidden">
         <div className="grid grid-cols-5 gap-0 bg-muted/50 text-xs font-medium text-muted-foreground">
           <div className="p-2.5">{t("slaConfig.priority")}</div>
           <div className="p-2.5 text-center">{t("slaConfig.warnHours")}</div>
@@ -125,7 +125,7 @@ const SlaConfigPanel = () => {
           <div className="p-2.5 text-center">{t("slaConfig.reassignDays")}</div>
         </div>
         {categoryConfigs.map(config => (
-          <div key={config.id} className="grid grid-cols-5 gap-0 border-t border-border items-center">
+          <div key={config.id} className="grid grid-cols-5 gap-0 border-t border-border/60 items-center">
             <div className="p-2.5">
               <span className="text-sm font-medium">{tl.priorityLabels[config.priority] || config.priority}</span>
             </div>

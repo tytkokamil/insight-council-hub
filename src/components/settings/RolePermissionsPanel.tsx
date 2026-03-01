@@ -207,7 +207,7 @@ const RolePermissionsPanel = () => {
       )}
 
       {dirty && canEditRole && (
-        <div className="flex items-center gap-3 pt-3 border-t border-border">
+        <div className="flex items-center gap-3 pt-3 border-t border-border/60">
           <Button size="sm" onClick={handleSave} disabled={saving} className="gap-1.5">
             {saving ? <span className="animate-spin">⏳</span> : <CheckCircle2 className="w-3.5 h-3.5" />}
             {t("settings.save")}

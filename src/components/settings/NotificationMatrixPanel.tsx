@@ -137,7 +137,7 @@ const NotificationMatrixPanel = () => {
       </div>
 
       {/* Matrix Table */}
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto rounded-lg border border-border/60">
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-muted/50">
@@ -151,7 +151,7 @@ const NotificationMatrixPanel = () => {
           </thead>
           <tbody>
             {EVENTS.map((evt, i) => (
-              <tr key={evt.key} className={`border-t border-border ${i % 2 === 0 ? "" : "bg-muted/20"}`}>
+              <tr key={evt.key} className={`border-t border-border/60 ${i % 2 === 0 ? "" : "bg-muted/20"}`}>
                 <td className="p-2.5">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm">{t(`notifMatrix.evt_${evt.key}`)}</span>

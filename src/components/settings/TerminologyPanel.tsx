@@ -125,7 +125,7 @@ const TerminologyPanel = () => {
                   <button
                     key={s}
                     onClick={() => setValues(prev => ({ ...prev, [def.key]: s }))}
-                    className="text-[10px] px-2 py-0.5 rounded-full border border-border bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                    className="text-[10px] px-2 py-0.5 rounded-full border border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
                   >
                     {s}
                   </button>

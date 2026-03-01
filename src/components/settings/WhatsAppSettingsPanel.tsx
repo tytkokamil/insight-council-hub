@@ -129,7 +129,7 @@ const WhatsAppSettingsPanel = () => {
             <Switch checked={enabled} onCheckedChange={toggleEnabled} />
           </div>
 
-          <div className="p-3 rounded-lg border border-border bg-muted/30">
+          <div className="p-3 rounded-lg border border-border/60 bg-muted/30">
             <p className="text-xs font-medium mb-1.5">{t("settings.whatsappEventsTitle")}</p>
             <ul className="space-y-1">
               {[

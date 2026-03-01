@@ -81,7 +81,7 @@ const DelegationPanel = () => {
     setLoading(false);
   };
 
-  const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
+  const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
 
   return (
     <div className="space-y-6">
@@ -117,7 +117,7 @@ const DelegationPanel = () => {
         </div>
 
         {showForm && (
-          <div className="p-4 rounded-lg bg-muted/30 border border-border space-y-3 mb-4">
+          <div className="p-4 rounded-lg bg-muted/30 border border-border/60 space-y-3 mb-4">
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">Vertreter*in</label>
               <select value={delegateId} onChange={e => setDelegateId(e.target.value)} className={inputClass}>
