@@ -257,13 +257,15 @@ const RiskRegister = () => {
               { label: t("risk.noOwner"), value: snapshot.unowned, icon: Users, color: snapshot.unowned > 0 ? "text-destructive" : "text-success", isWarning: snapshot.unowned > 0 },
               { label: t("risk.noMitigation"), value: snapshot.noMitigation, icon: Shield, color: snapshot.noMitigation > 0 ? "text-warning" : "text-success" },
             ].map((kpi: any) => (
-              <Card key={kpi.label} className={kpi.isWarning ? "border-destructive/30" : ""}>
+            <Card key={kpi.label} className={kpi.isWarning ? "border-destructive/30" : ""}>
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
                     <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                   </div>
-                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.isCurrency ? kpi.color : ""}`}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.isCurrency ? kpi.color : ""}`}>
+                    {kpi.isCurrency ? kpi.value : (kpi.value === 0 && risks.filter(r => r.status !== "closed").length === 0) ? "—" : kpi.value}
+                  </span>
                 </CardContent>
               </Card>
             ))}
@@ -306,7 +308,7 @@ const RiskRegister = () => {
                        ↑ {t("risk.likelihood")}
                      </span>
                    </div>
-                  <div className="flex-1">
+                  <div className="flex-1 relative">
                     <div className="grid grid-cols-5 gap-1">
                       {[5, 4, 3, 2, 1].map(likelihood =>
                         [1, 2, 3, 4, 5].map(impact => {
@@ -315,36 +317,51 @@ const RiskRegister = () => {
                           const count = cellRisks.length;
                           const cellExposure = cellRisks.reduce((s, r) => s + riskExposure(r), 0);
                           const isActive = heatmapFilter?.l === likelihood && heatmapFilter?.i === impact;
-                          const bg = score >= 16 ? "bg-destructive/80 text-destructive-foreground" : score >= 12 ? "bg-destructive/40 text-destructive" : score >= 9 ? "bg-warning/50 text-warning" : score >= 4 ? "bg-warning/20 text-warning" : "bg-primary/10 text-primary";
+                          const hasNoRisks = snapshot.active === 0;
+                          const bg = hasNoRisks
+                            ? "bg-muted/30 text-muted-foreground"
+                            : score >= 16 ? "bg-destructive/80 text-destructive-foreground" : score >= 12 ? "bg-destructive/40 text-destructive" : score >= 9 ? "bg-warning/50 text-warning" : score >= 4 ? "bg-warning/20 text-warning" : "bg-primary/10 text-primary";
 
-                          const displayValue = heatmapView === "count" ? (count > 0 ? count : "") : heatmapView === "score" ? score : (cellExposure > 0 ? formatCost(cellExposure) : "");
+                          const displayValue = hasNoRisks ? "" : heatmapView === "count" ? (count > 0 ? count : "") : heatmapView === "score" ? score : (cellExposure > 0 ? formatCost(cellExposure) : "");
 
                           return (
                             <Tooltip key={`${likelihood}-${impact}`}>
                               <TooltipTrigger asChild>
                                 <div
                                   className={`aspect-square rounded-md flex flex-col items-center justify-center cursor-pointer transition-all hover:ring-2 hover:ring-foreground/20 ${bg} ${isActive ? "ring-2 ring-primary" : ""}`}
-                                  onClick={() => setHeatmapFilter(isActive ? null : { l: likelihood, i: impact })}
+                                  onClick={() => !hasNoRisks && setHeatmapFilter(isActive ? null : { l: likelihood, i: impact })}
                                 >
                                   {displayValue ? (
                                     <span className={`${heatmapView === "economic" ? "text-[9px]" : "text-sm"} font-bold`}>{displayValue}</span>
-                                  ) : (
+                                  ) : !hasNoRisks ? (
                                     <span className="text-[10px] opacity-30">{score}</span>
-                                  )}
+                                  ) : null}
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-[220px]">
-                                <p className="text-xs font-semibold">W:{likelihood} × A:{impact} = {score}</p>
-                                <p className="text-[10px] text-muted-foreground">{t("risk.risksCount", { count })} • {formatCost(cellExposure)} {t("risk.exposure")}</p>
-                                {cellRisks.slice(0, 3).map(r => (
-                                  <p key={r.id} className="text-[10px] truncate mt-0.5">• {r.title}</p>
-                                ))}
-                              </TooltipContent>
+                              {!hasNoRisks && (
+                                <TooltipContent side="top" className="max-w-[220px]">
+                                  <p className="text-xs font-semibold">W:{likelihood} × A:{impact} = {score}</p>
+                                  <p className="text-[10px] text-muted-foreground">{t("risk.risksCount", { count })} • {formatCost(cellExposure)} {t("risk.exposure")}</p>
+                                  {cellRisks.slice(0, 3).map(r => (
+                                    <p key={r.id} className="text-[10px] truncate mt-0.5">• {r.title}</p>
+                                  ))}
+                                </TooltipContent>
+                              )}
                             </Tooltip>
                           );
                         })
                       )}
                     </div>
+                    {snapshot.active === 0 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/80 rounded-lg">
+                        <Shield className="w-8 h-8 text-muted-foreground/40 mb-2" />
+                        <p className="text-sm font-semibold text-muted-foreground">{t("risk.emptyHeatmapTitle", "Noch keine Risiken erfasst")}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 max-w-[200px] text-center">{t("risk.emptyHeatmapDesc", "Füge dein erstes Risiko hinzu um die Heatmap zu aktivieren.")}</p>
+                        <Button size="sm" className="mt-3 gap-1.5" onClick={() => { resetForm(); setEditRisk(null); setShowCreate(true); }}>
+                          <Plus className="w-3.5 h-3.5" /> {t("risk.newRisk")}
+                        </Button>
+                      </div>
+                    )}
                     <p className="text-[10px] text-muted-foreground font-medium text-center mt-2">{t("risk.impact")} →</p>
                   </div>
                 </div>
@@ -360,7 +377,12 @@ const RiskRegister = () => {
                   <Target className="w-3.5 h-3.5 text-destructive" /> {t("risk.topDrivers")}
                 </h3>
                 {riskDrivers.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">{t("risk.noDriverLinks")}</p>
+                  <div className="text-center py-4">
+                    <p className="text-xs text-muted-foreground">{t("risk.noDriverLinksCta", "Verknüpfe Risiken mit Entscheidungen um Economic Exposure zu berechnen.")}</p>
+                    <Link to="/decisions" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2">
+                      <ArrowRight className="w-3 h-3" /> {t("risk.linkFirstDecision", "Erste Entscheidung verknüpfen")}
+                    </Link>
+                  </div>
                 ) : (
                   <>
                     <p className="text-[10px] text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: t("risk.driversContribute", { count: riskDrivers.length, pct: topDriversPercent }) }} />
