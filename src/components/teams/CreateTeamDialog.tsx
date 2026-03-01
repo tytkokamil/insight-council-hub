@@ -46,11 +46,11 @@ const CreateTeamDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setLoading(false);
   };
 
-  const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
+  const inputClass = "w-full h-10 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border max-w-md">
+      <DialogContent className="glass-card border-border/60 max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">{t("team.newTeam")}</DialogTitle>
         </DialogHeader>

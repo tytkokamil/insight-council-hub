@@ -258,7 +258,7 @@ const TeamImportTab = ({ teamId }: Props) => {
             className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
               isDragging
                 ? "border-primary bg-primary/5 scale-[1.01]"
-                : "border-border hover:border-primary/50 hover:bg-muted/20"
+                : "border-border/60 hover:border-primary/50 hover:bg-muted/20"
             }`}
           >
             <input
@@ -292,7 +292,7 @@ const TeamImportTab = ({ teamId }: Props) => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/10">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border/60 bg-muted/10">
             <div className="flex items-center gap-3">
               <FileSpreadsheet className="w-5 h-5 text-primary" />
               <div>
@@ -306,7 +306,7 @@ const TeamImportTab = ({ teamId }: Props) => {
             </Button>
           </div>
 
-          <div className="rounded-lg border border-border p-4">
+          <div className="rounded-lg border border-border/60 p-4">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-primary" />
               {t("teamImport.howItWorks")}
@@ -379,14 +379,14 @@ const TeamImportTab = ({ teamId }: Props) => {
               <div
                 key={i}
                 className={`rounded-lg border p-4 transition-all ${
-                  d.selected ? "border-primary/30 bg-background" : "border-border bg-muted/20 opacity-60"
+                  d.selected ? "border-primary/30 bg-background" : "border-border/60 bg-muted/20 opacity-60"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => toggleDecision(i)}
                     className={`mt-1 w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                      d.selected ? "bg-primary border-primary text-primary-foreground" : "border-border"
+                      d.selected ? "bg-primary border-primary text-primary-foreground" : "border-border/60"
                     }`}
                   >
                     {d.selected && <Check className="w-3 h-3" />}

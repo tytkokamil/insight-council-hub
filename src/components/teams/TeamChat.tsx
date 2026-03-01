@@ -389,7 +389,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
           <img
             src={msg.file_url}
             alt={msg.file_name || t("teamChat.image")}
-            className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border"
+            className="max-w-[240px] max-h-[180px] rounded-lg object-cover border border-border/60"
           />
         </a>
       );
@@ -399,7 +399,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
         href={msg.file_url}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-lg bg-muted/40 border border-border hover:bg-muted/60 transition-colors max-w-[240px]"
+        className="flex items-center gap-2 mt-1.5 px-3 py-2 rounded-lg bg-muted/40 border border-border/60 hover:bg-muted/60 transition-colors max-w-[240px]"
       >
         <File className="w-4 h-4 text-primary shrink-0" />
         <span className="text-xs truncate">{msg.file_name || t("teamChat.file")}</span>
@@ -478,7 +478,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
 
       {/* Linked decision preview */}
       {linkedDecisionId && (
-        <div className="px-4 py-2 border-t border-border bg-primary/5 flex items-center gap-2">
+        <div className="px-4 py-2 border-t border-border/60 bg-primary/5 flex items-center gap-2">
           <Link2 className="w-4 h-4 text-primary shrink-0" />
           <span className="text-xs font-medium text-primary truncate flex-1">
             {decisions[linkedDecisionId] || t("teamChat.decision")}
@@ -491,7 +491,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
 
       {/* File preview */}
       {selectedFile && (
-        <div className="px-4 py-2 border-t border-border bg-muted/30 flex items-center gap-2">
+        <div className="px-4 py-2 border-t border-border/60 bg-muted/30 flex items-center gap-2">
           {filePreview ? (
             <img src={filePreview} alt={t("teamChat.preview")} className="w-10 h-10 rounded object-cover" />
           ) : (
@@ -507,11 +507,11 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
       )}
 
       {/* Input */}
-      <div className="border-t border-border px-4 py-3 relative">
+      <div className="border-t border-border/60 px-4 py-3 relative">
         {showLinkMenu && (
           <div
             ref={linkMenuRef}
-            className="absolute bottom-full left-4 right-4 mb-1 bg-popover border border-border rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-50"
+            className="absolute bottom-full left-4 right-4 mb-1 bg-popover border border-border/60 rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-50"
           >
             {filteredDecisions.length === 0 ? (
               <div className="px-3 py-2 text-xs text-muted-foreground">
@@ -531,7 +531,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
                 </button>
               ))
             )}
-            <div className="px-3 py-1.5 border-t border-border text-[10px] text-muted-foreground">
+            <div className="px-3 py-1.5 border-t border-border/40 text-[10px] text-muted-foreground">
               {t("teamChat.navHint")}
             </div>
           </div>
@@ -554,7 +554,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             <Paperclip className="w-4 h-4" />
           </Button>
           {mentionQuery !== null && filteredMentionProfiles.length > 0 && (
-            <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden z-50">
+            <div className="absolute bottom-full left-0 right-0 mb-1 bg-popover border border-border/60 rounded-lg shadow-lg overflow-hidden z-50">
               <p className="text-[10px] text-muted-foreground px-3 pt-2 pb-1 font-semibold uppercase tracking-wider">{t("teamChat.mentionPeople")}</p>
               {filteredMentionProfiles.map((p, i) => (
                 <button
@@ -581,7 +581,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={t("teamChat.placeholder")}
-            className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+            className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border/60 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
           />
           <Button
             onClick={handleSend}

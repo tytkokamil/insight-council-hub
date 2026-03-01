@@ -25,8 +25,8 @@ const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
 const TEAM_ROLE_STYLES: Record<string, string> = {
   admin: "bg-destructive/10 text-destructive border-destructive/20",
   lead: "bg-primary/10 text-primary border-primary/20",
-  member: "bg-muted text-muted-foreground border-border",
-  viewer: "bg-muted/50 text-muted-foreground/60 border-border",
+  member: "bg-muted text-muted-foreground border-border/60",
+  viewer: "bg-muted/50 text-muted-foreground/60 border-border/60",
 };
 
 const TeamOverviewTab = ({ teamId, teamName }: Props) => {
@@ -147,17 +147,17 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
+        <div className="p-4 rounded-lg bg-muted/30 border border-border/60 text-center">
           <Users className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{members.length}</p>
           <p className="text-[10px] text-muted-foreground">{t("team.members")}</p>
         </div>
-        <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
+        <div className="p-4 rounded-lg bg-muted/30 border border-border/60 text-center">
           <Clock className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{pendingInvites.length}</p>
           <p className="text-[10px] text-muted-foreground">{t("team.pending")}</p>
         </div>
-        <div className="p-4 rounded-lg bg-muted/30 border border-border text-center">
+        <div className="p-4 rounded-lg bg-muted/30 border border-border/60 text-center">
           <Check className="w-5 h-5 mx-auto text-muted-foreground mb-1" />
           <p className="text-2xl font-bold">{decisionCount}</p>
           <p className="text-[10px] text-muted-foreground">{t("team.decisions")}</p>
@@ -179,7 +179,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
 
       {/* Invite */}
       {isLeadOrAdmin && (
-        <div className="rounded-lg border border-border p-4">
+        <div className="rounded-lg border border-border/60 p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
             <Mail className="w-4 h-4 text-muted-foreground" />
             {t("team.inviteByEmail")}
@@ -190,7 +190,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder={t("team.emailPlaceholder")}
-              className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
+              className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
               required
             />
             <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5">
@@ -203,14 +203,14 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
 
       {/* Pending invitations */}
       {pendingInvites.length > 0 && (
-        <div className="rounded-lg border border-dashed border-border p-4">
+        <div className="rounded-lg border border-dashed border-border/60 p-4">
           <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-muted-foreground">
             <Clock className="w-4 h-4" />
             {t("team.pendingInvites")} ({pendingInvites.length})
           </h3>
           <div className="space-y-2">
             {pendingInvites.map((inv) => (
-              <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border">
+              <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-border/60">
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span className="text-sm flex-1 truncate">{inv.email}</span>
                 {isLeadOrAdmin && (
@@ -225,7 +225,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
       )}
 
       {/* Members */}
-      <div className="rounded-lg border border-border p-4">
+      <div className="rounded-lg border border-border/60 p-4">
         <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
           <Check className="w-4 h-4 text-muted-foreground" />
           {t("team.membersCount", { count: members.length })}

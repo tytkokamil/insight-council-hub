@@ -113,7 +113,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
     <div className="space-y-6">
 
       {/* SECTION 1: Team Health Overview */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
         <div className={cn(
           "px-5 py-4 flex items-center justify-between",
           healthLevel === "critical" && "bg-destructive/5",
@@ -139,7 +139,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 border-t border-border divide-x divide-border">
+        <div className="grid grid-cols-2 md:grid-cols-5 border-t border-border/60 divide-x divide-border/60">
           {[
             { label: t("teamCmd.slaCompliance"), value: `${slaCompliance}%`, color: slaCompliance === 100 ? "text-success" : slaCompliance >= 80 ? "text-warning" : "text-destructive", icon: Shield },
             { label: t("teamCmd.escalations"), value: escalatedDecisions.length, color: escalatedDecisions.length > 0 ? "text-destructive" : "text-muted-foreground", icon: Zap },
@@ -157,8 +157,8 @@ const TeamCommandCenter = ({ teamId }: Props) => {
       </div>
 
       {/* SECTION 2: Active Decisions */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <Flame className="w-4 h-4 text-primary" />
             {t("teamCmd.activeDecisions")}
@@ -168,7 +168,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
             {t("teamCmd.showAll")} <ArrowRight className="w-3 h-3" />
           </Button>
         </div>
-        <div className="divide-y divide-border">
+        <div className="divide-y divide-border/60">
           {openDecisions.length === 0 ? (
             <div className="px-5 py-8 text-center">
               <CheckCircle className="w-8 h-8 text-success mx-auto mb-2 opacity-50" />
@@ -249,8 +249,8 @@ const TeamCommandCenter = ({ teamId }: Props) => {
       </div>
 
       {/* SECTION 3: Execution Status (Tasks) */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+        <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <CheckSquare className="w-4 h-4 text-primary" />
             {t("teamCmd.executionStatus")}
@@ -260,7 +260,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border border-b border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-border/60 border-b border-border/60">
           <div className="px-4 py-3 text-center">
             <p className="text-xl font-bold text-primary">{openTasks.length}</p>
             <p className="text-[10px] text-muted-foreground">{t("teamCmd.openTasks")}</p>
@@ -345,8 +345,8 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         {(() => {
           const hasGoals = goals.length > 0;
           return (
-            <div className={cn("rounded-xl border overflow-hidden", hasGoals ? "border-success/30 bg-success/[0.02]" : "border-border bg-card")}>
-              <div className={cn("px-5 py-3 border-b flex items-center justify-between", hasGoals ? "border-success/20" : "border-border")}>
+            <div className={cn("rounded-xl border overflow-hidden", hasGoals ? "border-success/30 bg-success/[0.02]" : "border-border/60 bg-card")}>
+              <div className={cn("px-5 py-3 border-b flex items-center justify-between", hasGoals ? "border-success/20" : "border-border/60")}>
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Target className={cn("w-4 h-4", hasGoals ? "text-success" : "text-primary")} />
                   {t("teamCmd.strategicGoals")}
@@ -369,7 +369,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                   </Button>
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/60">
                   {goals.slice(0, 4).map((g) => {
                     const progress = g.target_value ? Math.round((g.current_value / g.target_value) * 100) : 0;
                     return (
@@ -397,8 +397,8 @@ const TeamCommandCenter = ({ teamId }: Props) => {
         })()}
 
         {/* SECTION 5: Learnings & Trends */}
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border">
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-border/60">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" />
               {t("teamCmd.learnings")}
@@ -413,7 +413,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
               <p className="text-xs text-muted-foreground mt-1">{t("teamCmd.noLearningsHint")}</p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/60">
               {lessons.length >= 2 && (
                 <div className="px-5 py-3 bg-primary/5 flex items-start gap-2">
                   <Brain className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -454,8 +454,8 @@ const TeamCommandCenter = ({ teamId }: Props) => {
 
       {/* Open Risks */}
       {risks.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-border/60 flex items-center justify-between">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-destructive" />
               {t("teamCmd.openRisksSection")}
@@ -465,7 +465,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
               {t("teamCmd.riskRegister")} <ArrowRight className="w-3 h-3" />
             </Button>
           </div>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border/60">
             {risks.slice(0, 4).map((r) => {
               const score = r.risk_score || r.likelihood * r.impact;
               return (
@@ -488,15 +488,15 @@ const TeamCommandCenter = ({ teamId }: Props) => {
 
       {/* Open Reviews */}
       {reviews.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="px-5 py-3 border-b border-border">
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="px-5 py-3 border-b border-border/60">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4 text-warning" />
               {t("teamCmd.openReviews")}
               <Badge variant="secondary" className="text-[10px]">{reviews.length}</Badge>
             </h3>
           </div>
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border/60">
             {reviews.slice(0, 4).map((r) => (
               <div
                 key={r.id}
