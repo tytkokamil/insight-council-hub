@@ -150,7 +150,7 @@ const TopBar = memo(({ collapsed }: TopBarProps) => {
                 ref={searchRef}
                 type="text"
                 placeholder={t("topBar.searchPlaceholder", { defaultValue: "Entscheidung suchen..." })}
-                className="w-56 h-8 px-3 pr-8 rounded-lg bg-muted/50 border border-border text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
+                className="w-56 h-8 px-3 pr-8 rounded-lg bg-muted/50 border border-border/60 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/40 transition-all"
                 onBlur={() => {
                   setTimeout(() => setSearchOpen(false), 200);
                 }}
