@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import AppLayout from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Users, MessageCircle, Settings, BarChart3, Trash2, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,6 +31,7 @@ const TeamDetail = () => {
   const [loading, setLoading] = useState(true);
   const [isTeamAdmin, setIsTeamAdmin] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -105,26 +107,28 @@ const TeamDetail = () => {
         </div>
 
         <Tabs defaultValue={initialTab} onValueChange={(v) => { searchParams.set("tab", v); setSearchParams(searchParams, { replace: true }); }}>
-          <TabsList>
-            <TabsTrigger value="command" className="gap-1.5">
-              <BarChart3 className="w-3.5 h-3.5" />
-              {t("teamDetail.commandCenter")}
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              {t("teamDetail.members")}
-            </TabsTrigger>
-            <TabsTrigger value="chat" className="gap-1.5">
-              <MessageCircle className="w-3.5 h-3.5" />
-              {t("teamDetail.chat")}
-            </TabsTrigger>
-            {isTeamAdmin && (
-              <TabsTrigger value="settings" className="gap-1.5">
-                <Settings className="w-3.5 h-3.5" />
-                {t("teamDetail.settings")}
+          <div className="sticky top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+            <TabsList>
+              <TabsTrigger value="command" className="gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5" />
+                {t("teamDetail.commandCenter")}
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger value="overview" className="gap-1.5">
+                <Users className="w-3.5 h-3.5" />
+                {t("teamDetail.members")}
+              </TabsTrigger>
+              <TabsTrigger value="chat" className="gap-1.5">
+                <MessageCircle className="w-3.5 h-3.5" />
+                {t("teamDetail.chat")}
+              </TabsTrigger>
+              {isTeamAdmin && (
+                <TabsTrigger value="settings" className="gap-1.5">
+                  <Settings className="w-3.5 h-3.5" />
+                  {t("teamDetail.settings")}
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
           <TabsContent value="command" className="mt-6">
             <TeamCommandCenter teamId={team.id} />
@@ -184,46 +188,62 @@ const TeamDetail = () => {
                   <p className="text-xs text-destructive/80 mb-4 font-medium">
                     {t("teamDetail.deleteTeamWarning")}
                   </p>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="gap-1.5" disabled={deleting}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                        {t("teamDetail.deleteTeam")}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>{t("teamDetail.deleteTeam")}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          {t("teamDetail.deleteTeamConfirm", { name: team.name })}
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          disabled={deleting}
-                          onClick={async () => {
-                            setDeleting(true);
-                            try {
-                              const { data, error } = await supabase.functions.invoke("delete-team", {
-                                body: { teamId: team.id },
-                              });
-                              if (error) throw error;
-                              if (data?.error) throw new Error(data.error);
-                              toast.success(t("teamDetail.deleteTeamSuccess"));
-                              navigate("/teams");
-                            } catch (err: any) {
-                              toast.error(t("teamDetail.deleteTeamError"), { description: err.message });
-                              setDeleting(false);
-                            }
-                          }}
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Teamname eingeben um zu bestätigen:</label>
+                      <Input
+                        placeholder={team.name}
+                        value={deleteConfirmName}
+                        onChange={e => setDeleteConfirmName(e.target.value)}
+                        className="max-w-xs h-8 text-sm"
+                      />
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={`gap-1.5 ${deleteConfirmName === team.name ? "text-destructive border-destructive/40 hover:bg-destructive/10" : ""}`}
+                          disabled={deleting || deleteConfirmName !== team.name}
                         >
-                          {deleting ? "..." : t("teamDetail.deleteTeam")}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {t("teamDetail.deleteTeam")}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>{t("teamDetail.deleteTeam")}</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {t("teamDetail.deleteTeamConfirm", { name: team.name })}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={deleting}
+                            onClick={async () => {
+                              setDeleting(true);
+                              try {
+                                const { data, error } = await supabase.functions.invoke("delete-team", {
+                                  body: { teamId: team.id },
+                                });
+                                if (error) throw error;
+                                if (data?.error) throw new Error(data.error);
+                                toast.success(t("teamDetail.deleteTeamSuccess"));
+                                navigate("/teams");
+                              } catch (err: any) {
+                                toast.error(t("teamDetail.deleteTeamError"), { description: err.message });
+                                setDeleting(false);
+                              }
+                            }}
+                          >
+                            {deleting ? "..." : t("teamDetail.deleteTeam")}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </div>
             </TabsContent>

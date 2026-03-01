@@ -439,10 +439,10 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             const isOwn = msg.user_id === user?.id;
             return (
               <div key={msg.id} className={`flex gap-2.5 group ${isOwn ? "flex-row-reverse" : ""}`}>
-                <UserAvatar avatarUrl={profiles[msg.user_id]?.avatar} fullName={profiles[msg.user_id]?.name} size="sm" />
+                {!isOwn && <UserAvatar avatarUrl={profiles[msg.user_id]?.avatar} fullName={profiles[msg.user_id]?.name} size="sm" />}
                 <div className={`max-w-[70%] ${isOwn ? "text-right" : ""}`}>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[11px] font-medium">{getProfileName(msg.user_id)}</span>
+                  <div className={`flex items-center gap-2 mb-0.5 ${isOwn ? "justify-end" : ""}`}>
+                    {!isOwn && <span className="text-[11px] font-medium">{getProfileName(msg.user_id)}</span>}
                     <span className="text-[10px] text-muted-foreground">
                       {format(new Date(msg.created_at), "HH:mm", { locale: dateFnsLocale })}
                     </span>
@@ -457,8 +457,8 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
                   </div>
                   {msg.content && !(msg.file_url && msg.content === msg.file_name) && (
                     <div className={`inline-block px-3 py-2 rounded-xl text-sm ${
-                      isOwn ? "bg-primary text-primary-foreground" : "bg-muted/60"
-                    }`}>
+                      isOwn ? "text-white" : ""
+                    }`} style={isOwn ? { backgroundColor: "#1E3A5F", color: "white" } : { backgroundColor: "#F1F5F9" }}>
                       <RenderMentionContent content={msg.content} isOwn={isOwn} />
                     </div>
                   )}
@@ -580,14 +580,15 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             value={newMessage}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={t("teamChat.placeholder")}
-            className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border/60 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+            placeholder="Nachricht schreiben... @ erwähnen · /entscheidung verknüpfen · /aufgabe erstellen"
+            className="flex-1 h-10 px-3 rounded-lg bg-muted/50 border border-border/60 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-xs"
           />
           <Button
             onClick={handleSend}
             disabled={(!newMessage.trim() && !selectedFile && !linkedDecisionId) || sending}
             size="icon"
             className="h-10 w-10 shrink-0"
+            style={{ backgroundColor: "#1E3A5F" }}
           >
             <Send className="w-4 h-4" />
           </Button>
