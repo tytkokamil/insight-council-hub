@@ -17,7 +17,7 @@ html {
   --lp-card: 0 0% 100%;
   --lp-primary: 217 91% 53%;
   background: hsl(var(--lp-bg));
-  color: hsl(228 12% 18%);
+  color: hsl(228 12% 30%);
   font-family: 'Inter', 'DM Sans', sans-serif;
 }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
