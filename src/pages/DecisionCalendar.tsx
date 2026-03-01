@@ -38,6 +38,8 @@ import { exportDecisionsAsICS } from "@/components/calendar/exportICS";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TaskPill from "@/components/calendar/TaskPill";
 import CalendarSummaryBar from "@/components/calendar/CalendarSummaryBar";
+import { usePredictiveSla, getPredictedViolationDates } from "@/components/decisions/PredictiveSlaWarning";
+import { useReviews } from "@/hooks/useDecisions";
 
 const DecisionCalendar = () => {
   const { t, i18n } = useTranslation();
@@ -58,6 +60,9 @@ const DecisionCalendar = () => {
   const { data: profiles } = useProfiles();
   const [slaConfigs, setSlaConfigs] = useState<any[]>([]);
   const [complianceEvents, setComplianceEvents] = useState<any[]>([]);
+  const { data: calReviews = [] } = useReviews();
+  const { predictions: slaPredictions } = usePredictiveSla(decisions ?? [], calReviews);
+  const predictedViolationDates = useMemo(() => getPredictedViolationDates(slaPredictions), [slaPredictions]);
   const queryClient = useQueryClient();
 
   // Load SLA configs and compliance events
@@ -342,6 +347,7 @@ const DecisionCalendar = () => {
                   decisionsByDate={decisionsByDate}
                   slaConfigs={slaConfigs}
                   complianceByDate={complianceByDate}
+                  predictedViolationDates={predictedViolationDates}
                   {...sharedDragProps}
                 />
               )}

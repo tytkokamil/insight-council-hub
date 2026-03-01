@@ -1,36 +1,95 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, TrendingUp, Zap } from "lucide-react";
+import { Clock, AlertTriangle, TrendingUp, Zap, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { differenceInDays, addDays, format } from "date-fns";
+import { de, enUS } from "date-fns/locale";
 
-interface Prediction {
+/* ── Types ── */
+export interface PredictiveSlaEntry {
   decision_id: string;
   decision_title: string;
-  reviewer_id: string;
-  reviewer_name: string;
-  avg_response_hours: number;
   due_date: string;
-  predicted_completion_date: string;
-  predicted_delay_hours: number;
-  sla_deadline_hours: number;
-  risk_level: "warning" | "critical";
+  remaining_days: number;
+  predicted_violation_date: string;
+  avg_review_duration: number;
+  recommendation: string;
 }
 
-/** Small inline warning badge for decision table rows */
+const DEFAULT_EARLY_WARNING_DAYS = 2;
+const DEFAULT_AVG_REVIEW_DURATION = 2; // days
+const BUFFER_MULTIPLIER = 1.5;
+
+/* ── Hook: compute predictions from decisions + reviews (frontend only) ── */
+export const usePredictiveSla = (
+  decisions: any[] = [],
+  reviews: any[] = [],
+  earlyWarningDays?: number,
+) => {
+  const storedThreshold = typeof window !== "undefined" ? parseInt(localStorage.getItem("sla-early-warning-days") || "2") : 2;
+  const warningThreshold = earlyWarningDays ?? storedThreshold;
+
+  const predictions = useMemo<PredictiveSlaEntry[]>(() => {
+    const now = new Date();
+
+    // Calculate average review duration from historical data
+    const completedReviews = reviews.filter(r => r.reviewed_at && r.created_at);
+    let avgReviewDuration = DEFAULT_AVG_REVIEW_DURATION;
+    if (completedReviews.length >= 3) {
+      const durations = completedReviews.map(r =>
+        (new Date(r.reviewed_at).getTime() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      avgReviewDuration = durations.reduce((s, d) => s + d, 0) / durations.length;
+    }
+
+    const threshold = Math.max(avgReviewDuration * BUFFER_MULTIPLIER, warningThreshold);
+
+    const openDecisions = decisions.filter(d =>
+      d.due_date &&
+      !["implemented", "rejected", "archived", "cancelled"].includes(d.status)
+    );
+
+    const results: PredictiveSlaEntry[] = [];
+
+    for (const d of openDecisions) {
+      const dueDate = new Date(d.due_date);
+      const remainingDays = differenceInDays(dueDate, now);
+
+      // Only warn if deadline is in the future but within threshold
+      if (remainingDays > 0 && remainingDays <= threshold) {
+        const violationDate = addDays(now, remainingDays);
+
+        results.push({
+          decision_id: d.id,
+          decision_title: d.title,
+          due_date: d.due_date,
+          remaining_days: remainingDays,
+          predicted_violation_date: violationDate.toISOString(),
+          avg_review_duration: Math.round(avgReviewDuration * 10) / 10,
+          recommendation: remainingDays <= 1
+            ? "Review heute zuweisen"
+            : `Review in den nächsten ${Math.max(1, Math.floor(remainingDays - avgReviewDuration))} Tagen starten`,
+        });
+      }
+    }
+
+    return results.sort((a, b) => a.remaining_days - b.remaining_days);
+  }, [decisions, reviews, warningThreshold]);
+
+  return { predictions, avgReviewDuration: DEFAULT_AVG_REVIEW_DURATION };
+};
+
+/* ── Inline badge for decision table rows (clock icon) ── */
 export const PredictiveSlaInlineBadge = ({ decisionId, predictions }: {
   decisionId: string;
-  predictions: Prediction[];
+  predictions: PredictiveSlaEntry[];
 }) => {
   const { t } = useTranslation();
   const match = predictions.find(p => p.decision_id === decisionId);
   if (!match) return null;
-
-  const delayDays = Math.round(match.predicted_delay_hours / 24 * 10) / 10;
-  const isCritical = match.risk_level === "critical";
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -38,20 +97,16 @@ export const PredictiveSlaInlineBadge = ({ decisionId, predictions }: {
         <TooltipTrigger asChild>
           <Badge
             variant="outline"
-            className={`text-[9px] h-4 px-1 gap-0.5 cursor-help ${
-              isCritical
-                ? "bg-destructive/20 text-destructive border-destructive/30"
-                : "bg-warning/20 text-warning border-warning/30"
-            }`}
+            className="text-[9px] h-4 px-1 gap-0.5 cursor-help bg-warning/20 text-warning border-warning/30"
           >
-            <AlertTriangle className="w-2.5 h-2.5" />
-            {t("predictiveSla.badge")}
+            <Clock className="w-2.5 h-2.5" />
+            SLA
           </Badge>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs max-w-64">
-          {t("predictiveSla.tooltipDelay", {
-            name: match.reviewer_name,
-            days: delayDays,
+          {t("predictiveSla.inlineTooltip", {
+            days: match.remaining_days,
+            defaultValue: `SLA-Verletzung in ${match.remaining_days} Tagen prognostiziert`,
           })}
         </TooltipContent>
       </Tooltip>
@@ -59,68 +114,26 @@ export const PredictiveSlaInlineBadge = ({ decisionId, predictions }: {
   );
 };
 
-/** Full panel for Decision Control / Process Hub showing all predicted violations */
-export const PredictiveSlaPanel = () => {
-  const { t } = useTranslation();
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPredictions = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("predictive-sla");
-        if (error) throw error;
-        setPredictions(data?.predictions || []);
-      } catch (e) {
-        console.error("Predictive SLA fetch failed:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPredictions();
-  }, []);
-
-  const handleEscalate = async (decisionId: string) => {
-    const { error } = await supabase
-      .from("decisions")
-      .update({
-        escalation_level: 2,
-        last_escalated_at: new Date().toISOString(),
-      })
-      .eq("id", decisionId);
-
-    if (!error) {
-      toast.success(t("predictiveSla.escalated"));
-      setPredictions(prev => prev.filter(p => p.decision_id !== decisionId));
-    } else {
-      toast.error(t("predictiveSla.escalateError"));
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="rounded-lg border border-border p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="w-4 h-4 text-warning" />
-          <h3 className="text-sm font-semibold">{t("predictiveSla.title")}</h3>
-        </div>
-        <div className="space-y-2">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-12 rounded bg-muted/30 animate-pulse" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+/* ── Full panel for Decision Control / Process Hub ── */
+export const PredictiveSlaPanel = ({ decisions = [], reviews = [] }: {
+  decisions?: any[];
+  reviews?: any[];
+}) => {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const dateFnsLocale = i18n.language === "de" ? de : enUS;
+  const { predictions } = usePredictiveSla(decisions, reviews);
 
   if (predictions.length === 0) {
     return (
       <div className="rounded-lg border border-border p-4">
         <div className="flex items-center gap-2 mb-2">
           <TrendingUp className="w-4 h-4 text-success" />
-          <h3 className="text-sm font-semibold">{t("predictiveSla.title")}</h3>
+          <h3 className="text-sm font-semibold">{t("predictiveSla.title", "Predictive SLA Warnings")}</h3>
         </div>
-        <p className="text-xs text-muted-foreground">{t("predictiveSla.allClear")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t("predictiveSla.allClear", "Keine SLA-Verletzungen prognostiziert — alle Entscheidungen im Zeitplan.")}
+        </p>
       </div>
     );
   }
@@ -129,78 +142,58 @@ export const PredictiveSlaPanel = () => {
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="w-4 h-4 text-warning" />
-        <h3 className="text-sm font-semibold">{t("predictiveSla.title")}</h3>
+        <h3 className="text-sm font-semibold">{t("predictiveSla.title", "Predictive SLA Warnings")}</h3>
         <Badge variant="outline" className="text-[10px] bg-warning/10 text-warning border-warning/20">
           {predictions.length}
         </Badge>
       </div>
 
       <div className="space-y-2">
-        {predictions.slice(0, 10).map(p => {
-          const delayDays = Math.round(p.predicted_delay_hours / 24 * 10) / 10;
-          const isCritical = p.risk_level === "critical";
-
-          return (
-            <div
-              key={`${p.decision_id}-${p.reviewer_id}`}
-              className={`rounded-lg border p-3 ${
-                isCritical
-                  ? "border-destructive/20 bg-destructive/5"
-                  : "border-warning/20 bg-warning/5"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{p.decision_title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t("predictiveSla.reviewerDelay", {
-                      name: p.reviewer_name,
-                      avgHours: p.avg_response_hours,
-                    })}
-                  </p>
-                  <p className={`text-xs font-medium mt-1 ${isCritical ? "text-destructive" : "text-warning"}`}>
-                    {t("predictiveSla.predictedDelay", { days: delayDays })}
-                  </p>
+        {predictions.map(p => (
+          <div
+            key={p.decision_id}
+            className="rounded-lg border border-warning/20 bg-warning/5 p-3"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{p.decision_title}</p>
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                  <span className="font-medium text-warning">
+                    {p.remaining_days} {p.remaining_days === 1 ? "Tag" : "Tage"} verbleibend
+                  </span>
+                  <span>·</span>
+                  <span>
+                    Verletzung am {format(new Date(p.predicted_violation_date), "dd.MM.yyyy", { locale: dateFnsLocale })}
+                  </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs gap-1 shrink-0 border-warning/40 text-warning hover:bg-warning/10"
-                  onClick={() => handleEscalate(p.decision_id)}
-                >
-                  <Zap className="w-3 h-3" />
-                  {t("predictiveSla.escalateNow")}
-                </Button>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  💡 {p.recommendation}
+                </p>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1 shrink-0 border-warning/40 text-warning hover:bg-warning/10"
+                onClick={() => navigate(`/decisions/${p.decision_id}`)}
+              >
+                <UserPlus className="w-3 h-3" />
+                Reviewer zuweisen →
+              </Button>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-/** Hook to fetch predictions for use in decision table */
-export const usePredictiveSla = () => {
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPredictions = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("predictive-sla");
-        if (error) throw error;
-        setPredictions(data?.predictions || []);
-      } catch (e) {
-        console.error("Predictive SLA fetch failed:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPredictions();
-  }, []);
-
-  return { predictions, loading };
+/* ── Helper: get predicted violation dates for calendar ── */
+export const getPredictedViolationDates = (predictions: PredictiveSlaEntry[]): Set<string> => {
+  const dates = new Set<string>();
+  for (const p of predictions) {
+    dates.add(format(new Date(p.due_date), "yyyy-MM-dd"));
+  }
+  return dates;
 };
 
 export default PredictiveSlaPanel;

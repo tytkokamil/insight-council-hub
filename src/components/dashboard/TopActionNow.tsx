@@ -9,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { PredictiveSlaEntry } from "@/components/decisions/PredictiveSlaWarning";
 
 interface TopAction {
-  urgency: "critical" | "warning" | "info" | "success";
+  urgency: "critical" | "warning" | "info" | "success" | "predictive";
   icon: typeof AlertTriangle;
   title: string;
   description: string;
@@ -25,65 +26,91 @@ interface Props {
   pendingReviews: any[];
   blockedTasks: any[];
   hasData?: boolean;
+  slaPredictions?: PredictiveSlaEntry[];
 }
 
-const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasData = true }: Props) => {
+const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasData = true, slaPredictions = [] }: Props) => {
   const [seedingDemo, setSeedingDemo] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const action = useMemo<TopAction | null>(() => {
+  const actions = useMemo<TopAction[]>(() => {
+    const items: TopAction[] = [];
+
     if (escalated.length > 0) {
       const maxLevel = Math.max(...escalated.map(d => d.escalation_level || 0));
       if (maxLevel >= 2) {
-        return {
+        items.push({
           urgency: "critical",
           icon: ShieldAlert,
           title: t("widgets.escalationsNeedAction", { count: escalated.length }),
           description: t("widgets.highestLevel", { level: maxLevel, title: escalated[0]?.title?.slice(0, 50) }),
           path: "/engine",
           actionLabel: t("widgets.resolveEscalation"),
-        };
+        });
       }
     }
 
     if (overdue.length > 0) {
       const critical = overdue.filter(d => d.priority === "critical" || d.priority === "high");
       const target = critical[0] || overdue[0];
-      return {
+      items.push({
         urgency: "warning",
         icon: Clock,
         title: t("widgets.overdueDecisions", { count: overdue.length }),
         description: t("widgets.mostUrgent", { title: target?.title?.slice(0, 50) }),
         path: `/decisions/${target?.id}`,
         actionLabel: t("widgets.decideNow"),
-      };
+      });
+    }
+
+    // Predictive SLA warnings — orange, between overdue and reviews
+    if (slaPredictions.length > 0) {
+      const minDays = Math.min(...slaPredictions.map(p => p.remaining_days));
+      const maxDays = Math.max(...slaPredictions.map(p => p.remaining_days));
+      const range = minDays === maxDays ? `${minDays}` : `${minDays}–${maxDays}`;
+      items.push({
+        urgency: "predictive",
+        icon: Clock,
+        title: t("predictiveSla.topActionTitle", {
+          count: slaPredictions.length,
+          defaultValue: `⏰ ${slaPredictions.length} Entscheidungen drohen SLA zu verletzen`,
+        }),
+        description: t("predictiveSla.topActionDesc", {
+          range,
+          defaultValue: `— in ${range} Tagen`,
+        }),
+        path: "/process",
+        actionLabel: t("predictiveSla.topActionCta", { defaultValue: "Prüfen" }),
+      });
     }
 
     if (pendingReviews.length > 0) {
-      return {
+      items.push({
         urgency: "info",
         icon: Eye,
         title: t("widgets.reviewsWaiting", { count: pendingReviews.length }),
         description: t("widgets.reviewsDelay"),
         path: pendingReviews[0]?.decision_id ? `/decisions/${pendingReviews[0].decision_id}` : "/decisions",
         actionLabel: t("widgets.startReview"),
-      };
+      });
     }
 
     if (blockedTasks.length > 0) {
-      return {
+      items.push({
         urgency: "info",
         icon: Link2,
         title: t("widgets.tasksBlocked", { count: blockedTasks.length }),
         description: t("widgets.blockedDesc"),
         path: "/tasks",
         actionLabel: t("widgets.resolveBlocks"),
-      };
+      });
     }
 
-    return null;
-  }, [overdue, escalated, pendingReviews, blockedTasks, t]);
+    return items;
+  }, [overdue, escalated, pendingReviews, blockedTasks, slaPredictions, t]);
+
+  const action = actions[0] || null;
 
   const handleSeedDemo = async () => {
     setSeedingDemo(true);
@@ -147,6 +174,14 @@ const TopActionNow = ({ overdue, escalated, pendingReviews, blockedTasks, hasDat
       iconColor: "text-destructive",
       titleColor: "text-destructive",
       pulse: true,
+    },
+    predictive: {
+      border: "border-warning/25",
+      bg: "bg-warning/[0.05]",
+      iconBg: "bg-warning/15",
+      iconColor: "text-warning",
+      titleColor: "text-warning",
+      pulse: false,
     },
     warning: {
       border: "border-warning/25",

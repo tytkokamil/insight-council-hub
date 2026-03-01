@@ -34,6 +34,7 @@ interface MonthViewProps {
   profileMap?: Record<string, string>;
   slaConfigs?: SlaConfig[];
   complianceByDate?: Record<string, any[]>;
+  predictedViolationDates?: Set<string>;
 }
 
 const PRIORITY_MULTIPLIER: Record<string, number> = {
@@ -78,7 +79,7 @@ function getWeekMomentum(weekDecisions: any[]): "green" | "yellow" | "red" | nul
 const MonthView = memo(({
   monthDays, currentDate, decisionsByDate, tasksByDate = {}, complianceByDate = {},
   dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
-  slaConfigs = [],
+  slaConfigs = [], predictedViolationDates = new Set(),
 }: MonthViewProps) => {
   const { t, i18n } = useTranslation();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
@@ -124,6 +125,7 @@ const MonthView = memo(({
           const isDropTarget = dragOverDate === dateKey;
           const riskLevel = getDayRiskLevel(dayDecisions);
           const delayCost = getDayDelayCost(dayDecisions);
+          const isPredictedViolation = predictedViolationDates.has(dateKey);
           const hasSLAViolation = dayDecisions.some((d) => {
             // Dynamic SLA check using sla_configs
             if (slaConfigs.length > 0) {
@@ -153,6 +155,7 @@ const MonthView = memo(({
                   isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
                   riskLevel === "danger" && "bg-destructive/5",
                   riskLevel === "warn" && "bg-warning/5",
+                  isPredictedViolation && !hasSLAViolation && "ring-2 ring-inset ring-warning/50",
                 )}
               >
                 <div className="flex items-center justify-between mb-1">
