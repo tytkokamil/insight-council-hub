@@ -686,13 +686,15 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             {step === "form" && (() => {
               const { score } = calculateQualityScore({
                 title, description,
-                hasOptions: Object.values(extraFields).some(v => v.trim().length > 0),
-                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
-                hasDueDate: !!dueDate,
+                hasCategory: !!category,
                 hasPriority: !!priority && priority !== "medium",
-                hasAttachment: false,
+                hasDueDate: !!dueDate,
+                hasSla: !!dueDate,
+                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
+                hasRiskAssessment: false,
+                hasBudgetInfo: Object.values(extraFields).some(v => v.toLowerCase().includes("budget") || v.toLowerCase().includes("kosten")),
               });
-              return <QualityScoreCircle score={score} size={36} strokeWidth={3} className="ml-auto" />;
+              return <QualityScoreCircle score={score} size={42} strokeWidth={3.5} showLabel className="ml-auto" />;
             })()}
           </DialogTitle>
         </DialogHeader>
@@ -721,22 +723,22 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             />
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.titleLabel")}</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("newDecision.titlePlaceholder")} className={inputClass} required />
+              <input id="qs-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("newDecision.titlePlaceholder")} className={inputClass} required />
             </div>
             <div>
               <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.descriptionLabel")}</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("newDecision.descriptionPlaceholder")} className={`${inputClass} h-24 resize-none py-2`} />
+              <textarea id="qs-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t("newDecision.descriptionPlaceholder")} className={`${inputClass} h-24 resize-none py-2`} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.categoryLabel")}</label>
-                <select value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputClass}>
+                <select id="qs-category" value={category} onChange={(e) => handleCategoryChange(e.target.value)} className={inputClass}>
                   {categories.map((c) => (<option key={c} value={c} className="bg-card">{tl.categoryLabels[c]}</option>))}
                 </select>
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.priorityLabel")}</label>
-                <select value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
+                <select id="qs-priority" value={priority} onChange={(e) => handlePriorityChange(e.target.value)} className={inputClass}>
                   {priorities.map((p) => (<option key={p} value={p} className="bg-card">{tl.priorityLabels[p]}</option>))}
                 </select>
               </div>
@@ -744,7 +746,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">{t("newDecision.dueDateLabel")}</label>
-                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
+                <input id="qs-duedate" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputClass} />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">
@@ -857,33 +859,52 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
             {(() => {
               const { score, missing } = calculateQualityScore({
                 title, description,
-                hasOptions: Object.values(extraFields).some(v => v.trim().length > 0),
-                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
-                hasDueDate: !!dueDate,
+                hasCategory: !!category,
                 hasPriority: !!priority && priority !== "medium",
-                hasAttachment: false,
+                hasDueDate: !!dueDate,
+                hasSla: !!dueDate,
+                hasReviewer: !!selectedReviewFlow && selectedReviewFlow.steps.length > 0,
+                hasRiskAssessment: false,
+                hasBudgetInfo: Object.values(extraFields).some(v => v.toLowerCase().includes("budget") || v.toLowerCase().includes("kosten")),
               });
-              return <QualityScoreHints score={score} missing={missing} />;
+              return (
+                <>
+                  <QualityScoreHints score={score} missing={missing} />
+
+                  {validationErrors.length > 0 && (
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">{t("newDecision.validationMissing")}</p>
+                        <ul className="mt-1 space-y-0.5">
+                          {validationErrors.map(e => <li key={e}>• {e}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {error && <p className="text-destructive text-sm">{error}</p>}
+                  {renderLimitBanner()}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>{t("newDecision.cancel")}</Button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button type="submit" disabled={loading || !title.trim() || isDecisionLimitReached}>
+                            {loading ? t("newDecision.creating") : t("newDecision.create")}
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      {score < 40 && (
+                        <TooltipContent side="top" className="text-xs max-w-64">
+                          Entscheidungsqualität zu niedrig — bitte Beschreibung und Reviewer ergänzen.
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </div>
+                </>
+              );
             })()}
-
-            {validationErrors.length > 0 && (
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium">{t("newDecision.validationMissing")}</p>
-                  <ul className="mt-1 space-y-0.5">
-                    {validationErrors.map(e => <li key={e}>• {e}</li>)}
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {error && <p className="text-destructive text-sm">{error}</p>}
-            {renderLimitBanner()}
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>{t("newDecision.cancel")}</Button>
-              <Button type="submit" disabled={loading || !title.trim() || isDecisionLimitReached}>{loading ? t("newDecision.creating") : t("newDecision.create")}</Button>
-            </div>
             </form>
 
             {/* Right column: AI Assistant Sidebar (desktop only) */}
