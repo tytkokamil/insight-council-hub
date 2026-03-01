@@ -329,44 +329,43 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              {/* Advanced Settings Card */}
+              {/* Feature Overrides */}
               <div className="settings-group">
-                <h2>Erweitert</h2>
-                <div className="space-y-4">
-                  <ProgressiveOverrideToggle user={user} />
-                  
-                  {isAdmin && (
-                    <>
-                      <div className="border-t border-border/30 pt-4">
-                        <TerminologyPanel />
-                      </div>
-                    </>
-                  )}
-                  
-                  <div className="border-t border-border/30 pt-4">
-                    <IndustryConfigSection />
-                  </div>
+                <h2>Feature-Freischaltung</h2>
+                <ProgressiveOverrideToggle user={user} />
+              </div>
 
-                  <div className="border-t border-border/30 pt-4">
-                    <h2 className="text-sm font-medium mb-3">{t("settings.onboarding")}</h2>
-                    <p className="text-xs text-muted-foreground mb-3">{t("settings.onboardingDesc")}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
-                        <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={async () => {
-                        if (!user) return;
-                        await supabase.from("profiles").update({ onboarding_completed: false } as any).eq("user_id", user.id);
-                        toast({ title: "Onboarding zurückgesetzt", description: "Du wirst beim nächsten Laden zum Welcome-Wizard weitergeleitet." });
-                        setTimeout(() => window.location.reload(), 1000);
-                      }} className="gap-1.5">
-                        <RotateCcw className="w-3 h-3" />Onboarding zurücksetzen
-                      </Button>
-                    </div>
+              {/* Branche & Terminologie */}
+              <div className="settings-group">
+                <h2>Branche & Terminologie</h2>
+                <IndustryConfigSection />
+                {isAdmin && (
+                  <div className="border-t border-border/30 pt-4 mt-4">
+                    <TerminologyPanel />
                   </div>
+                )}
+              </div>
+
+              {/* Onboarding */}
+              <div className="settings-group">
+                <h2>{t("settings.onboarding")}</h2>
+                <p className="text-xs text-muted-foreground mb-3">{t("settings.onboardingDesc")}</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { if (user) { localStorage.removeItem(`onboarding_done_${user.id}`); window.location.href = "/dashboard"; } }} className="gap-1.5">
+                    <RotateCcw className="w-3 h-3" />{t("settings.restartTour")}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={async () => {
+                    if (!user) return;
+                    await supabase.from("profiles").update({ onboarding_completed: false } as any).eq("user_id", user.id);
+                    toast({ title: "Onboarding zurückgesetzt", description: "Du wirst beim nächsten Laden zum Welcome-Wizard weitergeleitet." });
+                    setTimeout(() => window.location.reload(), 1000);
+                  }} className="gap-1.5">
+                    <RotateCcw className="w-3 h-3" />Onboarding zurücksetzen
+                  </Button>
                 </div>
               </div>
 
+              {/* Danger Zone */}
               <AccountDeletionPanel />
             </div>
           )}
@@ -400,7 +399,7 @@ const SettingsPage = () => {
                 </div>
               </div>
 
-              <div className="settings-group">
+               <div className="settings-group">
                 <h2>{t("settings.execDigest")}</h2>
                 <div className="space-y-2">
                   {[
@@ -417,15 +416,16 @@ const SettingsPage = () => {
                     </div>
                   ))}
                 </div>
+              </div>
 
-                <div className="border-t border-border/30 pt-4 mt-4">
-                  <WhatsAppSettingsPanel />
-                </div>
+              <div className="settings-group">
+                <h2>Messaging-Kanäle</h2>
+                <WhatsAppSettingsPanel />
+              </div>
 
-                <div className="border-t border-border/30 pt-4 mt-4">
-                  <h2 className="text-sm font-medium mb-2">{t("settings.quietHours")}</h2>
-                  <p className="text-xs text-muted-foreground">{t("settings.quietHoursDesc")}</p>
-                </div>
+              <div className="settings-group">
+                <h2>{t("settings.quietHours")}</h2>
+                <p className="text-xs text-muted-foreground">{t("settings.quietHoursDesc")}</p>
               </div>
             </div>
           )}
@@ -707,10 +707,10 @@ const SettingsPage = () => {
 
           {/* ═══════════════ ADMIN ═══════════════ */}
           {activeTab === "admin" && isAdmin && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {adminStats && (
-                <section>
-                  <h2 className="text-sm font-medium mb-3">{t("settings.adminOverview")}</h2>
+                <div className="settings-group">
+                  <h2>{t("settings.adminOverview")}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {[
                       { label: t("settings.adminActiveUsers"), value: adminStats.totalUsers, icon: Users, color: "text-primary" },
@@ -720,7 +720,7 @@ const SettingsPage = () => {
                       { label: t("settings.adminSecurityScore"), value: `${securityScore}%`, icon: ShieldCheck, color: securityScore >= 80 ? "text-success" : "text-warning" },
                       { label: t("settings.adminTeams"), value: teamMemberships.length, icon: Building2, color: "text-muted-foreground" },
                     ].map((stat, i) => (
-                      <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                      <div key={i} className="p-3 rounded-lg border border-border/40 bg-muted/20">
                         <div className="flex items-center gap-1.5 mb-1">
                           <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
                           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -729,13 +729,11 @@ const SettingsPage = () => {
                       </div>
                     ))}
                   </div>
-                </section>
+                </div>
               )}
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-3">{t("settings.adminTools", "Administration")}</h2>
+              <div className="settings-group">
+                <h2>{t("settings.adminTools", "Administration")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.adminToolsDesc", "Erweiterte Verwaltungsfunktionen findest du in der Admin-Konsole.")}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {[
@@ -747,9 +745,9 @@ const SettingsPage = () => {
                     <button
                       key={i}
                       onClick={() => window.location.href = item.path}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-card hover:bg-muted/30 hover:border-muted-foreground/30 transition-all text-left group"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-border/60 transition-all text-left group"
                     >
-                      <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
+                      <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
                         <item.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -760,16 +758,14 @@ const SettingsPage = () => {
                     </button>
                   ))}
                 </div>
-              </section>
+              </div>
 
-              <hr className="border-border/40" />
-
-              <section>
-                <h2 className="text-sm font-medium mb-2">{t("settings.roles")}</h2>
-                <p className="text-xs text-muted-foreground mb-3">
+              <div className="settings-group">
+                <h2>{t("settings.roles")}</h2>
+                <p className="text-xs text-muted-foreground">
                   {t("settings.yourRole")} <Badge variant="outline" className="ml-1 text-[10px] font-normal">{roleLabels[userRole]}</Badge>
                 </p>
-              </section>
+              </div>
             </div>
           )}
         </motion.div>
