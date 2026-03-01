@@ -383,11 +383,15 @@ const Dashboard = () => {
                       <WidgetErrorBoundary>
                         <DecisionCostWidget />
                       </WidgetErrorBoundary>
-                      <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                      <WidgetErrorBoundary label="Portfolio Risk">
+                        <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                      </WidgetErrorBoundary>
                     </div>
-                    <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
-                      <AiBriefingWidget />
-                    </Suspense>
+                    <WidgetErrorBoundary label="KI-Briefing">
+                      <Suspense fallback={<Skeleton className="h-64 w-full rounded-lg" />}>
+                        <AiBriefingWidget />
+                      </Suspense>
+                    </WidgetErrorBoundary>
                   </>
                 )}
               </>
@@ -398,7 +402,9 @@ const Dashboard = () => {
               <>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                   <div className="lg:col-span-2">
-                    <StuckDecisionAnalyzer decisions={decisions} reviews={contextReviews} dependencies={allDependencies} teams={teams} />
+                    <WidgetErrorBoundary label="Stuck Decision Analyzer">
+                      <StuckDecisionAnalyzer decisions={decisions} reviews={contextReviews} dependencies={allDependencies} teams={teams} />
+                    </WidgetErrorBoundary>
                   </div>
                   <div className="space-y-4">
                     <WidgetErrorBoundary>
@@ -464,7 +470,9 @@ const Dashboard = () => {
                           <WidgetErrorBoundary>
                             <DecisionCostWidget />
                           </WidgetErrorBoundary>
-                          <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                          <WidgetErrorBoundary label="Portfolio Risk">
+                            <PortfolioRiskOverview decisions={decisions} risks={riskData} />
+                          </WidgetErrorBoundary>
                         </div>
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                           <div className="lg:col-span-2">
@@ -514,9 +522,11 @@ const Dashboard = () => {
                           </div>
                           <DecisionRadar />
                         </div>
-                        <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
-                          <AiBriefingWidget />
-                        </Suspense>
+                        <WidgetErrorBoundary label="KI-Briefing">
+                          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+                            <AiBriefingWidget />
+                          </Suspense>
+                        </WidgetErrorBoundary>
                       </motion.div>
                     )}
                   </AnimatePresence>
