@@ -82,7 +82,7 @@ const Teams = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
             >
-              <Card className="hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 transition-all duration-200 cursor-pointer group" onClick={() => navigate(`/teams/${team.id}`)}>
+              <Card className="hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 transition-all duration-200 cursor-pointer group border-border/60" onClick={() => navigate(`/teams/${team.id}`)}>
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
