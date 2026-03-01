@@ -413,7 +413,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     { label: t("analytics.medianTTD"), value: d.medianDuration > 0 ? `${d.medianDuration}d` : "—", icon: Clock },
     { label: t("analytics.slaCompliance"), value: `${d.slaRate}%`, icon: Shield, color: d.slaRate < 80 ? "text-destructive" : d.slaRate < 90 ? "text-warning" : "text-success", trend: trendArrow(d.slaRate, d.prevSlaRate) },
     { label: t("analytics.overdueRate"), value: `${d.overdueRate}%`, icon: AlertTriangle, color: d.overdueRate > 20 ? "text-destructive" : d.overdueRate > 10 ? "text-warning" : undefined, trend: trendArrow(d.overdueRate, d.prevOverdueRate, true) },
-    { label: t("analytics.costOfDelay"), value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive" },
+    { label: t("analytics.costOfDelay"), value: `€${d.costOfDelay.toLocaleString()}`, icon: DollarSign, color: "text-destructive", isCod: true },
     { label: t("analytics.qualityIndex"), value: d.qualityIndex, icon: GaugeCircle, color: d.qualityIndex >= 75 ? "text-success" : d.qualityIndex >= 50 ? "text-warning" : "text-destructive" },
     { label: t("analytics.implementationRate"), value: `${d.implRate}%`, icon: CheckCircle2, color: d.implRate >= 70 ? "text-success" : d.implRate >= 40 ? "text-warning" : "text-destructive", trend: trendArrow(d.implRate, d.prevImplRate) },
   ];
@@ -422,26 +422,43 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
     <div className="section-gap-lg">
       {/* SECTION 1: Executive Summary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 stagger-children">
-        {kpis.map((kpi, i) => (
-          <Card key={i} className="card-interactive border-border/60">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <div className="w-5 h-5 rounded bg-muted/40 flex items-center justify-center">
-                  <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
+        {kpis.map((kpi, i) => {
+          const isCod = (kpi as any).isCod;
+          return (
+            <Card
+              key={i}
+              className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2" : ""}`}
+              style={isCod ? { backgroundColor: "#FEF2F2" } : undefined}
+            >
+              <CardContent className="p-3">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <div className="w-5 h-5 rounded bg-muted/40 flex items-center justify-center">
+                    <kpi.icon className={`w-3 h-3 ${kpi.color || "text-muted-foreground"}`} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                 </div>
-                <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className={`text-xl font-bold tabular-nums ${kpi.color || ""}`}>{kpi.value}</span>
-                {(kpi as any).trend && (
-                  <span className={`${(kpi as any).trend.color}`}>
-                    {(() => { const TIcon = (kpi as any).trend.icon; return <TIcon className="w-3 h-3" />; })()}
+                <div className="flex items-center gap-1">
+                  <span
+                    className={`font-bold tabular-nums ${kpi.color || ""}`}
+                    style={isCod ? { fontSize: "28px" } : { fontSize: "20px" }}
+                  >
+                    {kpi.value}
                   </span>
+                  {(kpi as any).trend && (
+                    <span className={`${(kpi as any).trend.color}`}>
+                      {(() => { const TIcon = (kpi as any).trend.icon; return <TIcon className="w-3 h-3" />; })()}
+                    </span>
+                  )}
+                </div>
+                {isCod && (
+                  <p className="text-[11px] font-medium mt-0.5" style={{ color: "#EF4444" }}>
+                    {t("analytics.costsToday", "Kosten heute")}
+                  </p>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* SECTION 2: Insight Bar */}
@@ -491,8 +508,17 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   <Tooltip content={<CustomTooltip />} />
                   <Area type="monotone" dataKey={t("analyticsPage.created")} stroke={COLORS.primary} fill="url(#gCreated)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                   <Area type="monotone" dataKey={t("analyticsPage.implemented")} stroke={COLORS.success} fill="url(#gResolved)" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Area type="monotone" dataKey={t("analyticsPage.rejected")} stroke={COLORS.destructive} fill="none" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
-                  <Area type="monotone" dataKey={t("analyticsPage.backlog")} stroke={COLORS.muted} fill="none" strokeWidth={1} strokeDasharray="2 2" dot={false} />
+                  {/* Break-even reference line: average of created values */}
+                  {(() => {
+                    const createdKey = t("analyticsPage.created");
+                    const implKey = t("analyticsPage.implemented");
+                    const avgCreated = d.weekData.length > 0
+                      ? Math.round(d.weekData.reduce((sum: number, w: any) => sum + (w[createdKey] || 0), 0) / d.weekData.length)
+                      : 0;
+                    return avgCreated > 0 ? (
+                      <Line type="monotone" dataKey={() => avgCreated} stroke="#94A3B8" strokeWidth={1} strokeDasharray="6 4" dot={false} name={t("analytics.breakeven", "Break-even")} />
+                    ) : null;
+                  })()}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -500,8 +526,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                {[
                  { label: t("analytics.created"), color: COLORS.primary },
                  { label: t("analytics.implemented"), color: COLORS.success },
-                 { label: t("analytics.rejected"), color: COLORS.destructive },
-                 { label: t("analytics.backlog"), color: COLORS.muted },
+                 { label: t("analytics.breakeven", "Break-even"), color: "#94A3B8" },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
@@ -519,7 +544,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
          subtitle={t("analytics.bottleneckSub")}
          icon={<Activity className="w-4 h-4 text-warning" />}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${teams.length > 2 ? "lg:grid-cols-2" : ""} gap-4`}>
           {/* Where Time is Lost */}
           <Card className="border-border/60">
              <CardHeader className="pb-2">
@@ -556,50 +581,52 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
             </CardContent>
           </Card>
 
-          {/* Status × Team Heatmap */}
-          <Card className="border-border/60">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{t("analyticsPage.statusTeamHeatmap")}</CardTitle>
-            </CardHeader>
-            <CardContent className="pb-4">
-              {d.heatmapData.length > 0 && teams.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead>
-                       <tr className="border-b border-border/60">
-                         <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
-                        {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => (
-                          <th key={s} className="text-center py-2 px-2 font-medium text-muted-foreground">{s}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {teams.map((team: any) => (
-                        <tr key={team.id} className="border-b border-border/20">
-                          <td className="py-2 px-2 font-medium truncate max-w-[120px]">{team.name}</td>
-                          {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => {
-                            const cell = d.heatmapData.find(h => h.team === team.name && h.status === s);
-                            const count = cell?.count ?? 0;
-                            const days = cell?.medianDays ?? 0;
-                            const bg = count === 0 ? "bg-muted/20" : days > 14 ? "bg-destructive/20 text-destructive" : days > 7 ? "bg-warning/20 text-warning" : "bg-success/20 text-success";
-                            return (
-                              <td key={s} className="text-center py-2 px-2">
-                                <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-medium ${bg}`}>
-                                  {count > 0 ? `${count} (${days}d)` : "—"}
-                                </span>
-                              </td>
-                            );
-                          })}
+          {/* Status × Team Heatmap — only show if more than 2 teams */}
+          {teams.length > 2 && (
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">{t("analyticsPage.statusTeamHeatmap")}</CardTitle>
+              </CardHeader>
+              <CardContent className="pb-4">
+                {d.heatmapData.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                         <tr className="border-b border-border/60">
+                           <th className="text-left py-2 px-2 font-medium text-muted-foreground">Team</th>
+                          {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => (
+                            <th key={s} className="text-center py-2 px-2 font-medium text-muted-foreground">{s}</th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.createTeamsForHeatmap")}</p>
-              )}
-            </CardContent>
-          </Card>
+                      </thead>
+                      <tbody>
+                        {teams.map((team: any) => (
+                          <tr key={team.id} className="border-b border-border/20">
+                            <td className="py-2 px-2 font-medium truncate max-w-[120px]">{team.name}</td>
+                            {[t("analyticsPage.draftStatus"), t("analyticsPage.reviewStatus"), t("analyticsPage.approvedStatus"), t("analyticsPage.implementedStatus")].map(s => {
+                              const cell = d.heatmapData.find(h => h.team === team.name && h.status === s);
+                              const count = cell?.count ?? 0;
+                              const days = cell?.medianDays ?? 0;
+                              const bg = count === 0 ? "bg-muted/20" : days > 14 ? "bg-destructive/20 text-destructive" : days > 7 ? "bg-warning/20 text-warning" : "bg-success/20 text-success";
+                              return (
+                                <td key={s} className="text-center py-2 px-2">
+                                  <span className={`inline-flex items-center justify-center rounded px-1.5 py-0.5 text-[10px] font-medium ${bg}`}>
+                                    {count > 0 ? `${count} (${days}d)` : "—"}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground text-center py-8">{t("analyticsPage.createTeamsForHeatmap")}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </CollapsibleSection>
 
@@ -808,15 +835,26 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
               {d.goalAlignment.length > 0 ? (
                 <div className="space-y-3">
                   {d.goalAlignment.map((goal: any) => {
-                    const healthBg = goal.health === "critical" ? "bg-destructive/15 text-destructive" : goal.health === "at_risk" ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
-                    const healthLabel = goal.health === "critical" ? t("analyticsPage.healthCritical") : goal.health === "at_risk" ? t("analyticsPage.healthAtRisk") : t("analyticsPage.healthStable");
+                    const hasNoData = goal.linkedCount === 0;
+                    const healthBg = hasNoData
+                      ? ""
+                      : goal.health === "critical" ? "bg-destructive/15 text-destructive" : goal.health === "at_risk" ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
+                    const healthLabel = hasNoData
+                      ? t("analyticsPage.healthNoData", "Keine Daten")
+                      : goal.health === "critical" ? t("analyticsPage.healthCritical") : goal.health === "at_risk" ? t("analyticsPage.healthAtRisk") : t("analyticsPage.healthStable");
                     return (
                       <div key={goal.id} className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs font-medium truncate">{goal.title}</p>
                           <p className="text-[10px] text-muted-foreground">{goal.linkedCount} {t("analyticsPage.decisions")}</p>
                         </div>
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}>{healthLabel}</Badge>
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}
+                          style={hasNoData ? { color: "#94A3B8", borderColor: "#94A3B8" } : undefined}
+                        >
+                          {healthLabel}
+                        </Badge>
                       </div>
                     );
                   })}
