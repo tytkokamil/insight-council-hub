@@ -58,9 +58,11 @@ export type Database = {
           decision_id: string
           field_name: string | null
           id: string
+          integrity_hash: string | null
           new_value: string | null
           old_value: string | null
           org_id: string | null
+          previous_hash: string | null
           signature_method: string | null
           signed_at: string | null
           signed_by: string | null
@@ -73,9 +75,11 @@ export type Database = {
           decision_id: string
           field_name?: string | null
           id?: string
+          integrity_hash?: string | null
           new_value?: string | null
           old_value?: string | null
           org_id?: string | null
+          previous_hash?: string | null
           signature_method?: string | null
           signed_at?: string | null
           signed_by?: string | null
@@ -88,9 +92,11 @@ export type Database = {
           decision_id?: string
           field_name?: string | null
           id?: string
+          integrity_hash?: string | null
           new_value?: string | null
           old_value?: string | null
           org_id?: string | null
+          previous_hash?: string | null
           signature_method?: string | null
           signed_at?: string | null
           signed_by?: string | null

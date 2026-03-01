@@ -25,6 +25,7 @@ import WhatsAppSettingsPanel from "@/components/settings/WhatsAppSettingsPanel";
 import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
 import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
+import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
 import { useToast } from "@/hooks/use-toast";
@@ -798,6 +799,11 @@ const SettingsPage = () => {
                   ))}
                 </div>
               </section>
+
+              <hr className="border-border" />
+
+              {/* Audit Trail Integrity */}
+              <AuditIntegrityPanel />
             </div>
           )}
 
