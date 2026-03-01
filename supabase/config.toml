@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.decision-suggestions]
 verify_jwt = false
+
+[functions.detect-anomalies]
+verify_jwt = false

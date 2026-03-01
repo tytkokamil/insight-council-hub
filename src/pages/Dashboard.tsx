@@ -48,6 +48,7 @@ import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
 import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
 import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanner";
+import AnomalyCards from "@/components/shared/AnomalyCards";
 
 type DashboardMode = "operational" | "executive" | "admin";
 
@@ -310,6 +311,7 @@ const Dashboard = () => {
             />
 
             <IndustryReminderBanner />
+            <AnomalyCards bannersOnly className="mb-2" />
 
             {/* ═══ EXECUTIVE MODE ═══ */}
             {isExecutive && (
