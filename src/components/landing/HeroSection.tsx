@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductTourModal from "./ProductTourModal";
@@ -24,12 +24,12 @@ const LiveCounter = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: 0.7, duration: 0.8, ease }}
       className="max-w-lg mx-auto mt-10 mb-10"
     >
-      <div className="relative rounded-2xl border border-border bg-card p-6 overflow-hidden shadow-md">
+      <div className="relative rounded-2xl border border-border bg-card p-6 overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300">
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent" />
 
         <div className="flex items-center gap-2 mb-3">
@@ -54,6 +54,11 @@ const LiveCounter = () => {
 
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
+  const gridY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+  const glowScale = useTransform(scrollYProgress, [0, 1], [1, 1.3]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 40]);
 
   const trustItems = [
     "✓ Keine Kreditkarte",
@@ -63,16 +68,18 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
-      {/* Grid pattern */}
-      <div className="absolute inset-0 opacity-[0.4]" style={{
-        backgroundImage: "linear-gradient(hsl(225 16% 88% / 0.6) 1px, transparent 1px), linear-gradient(90deg, hsl(225 16% 88% / 0.6) 1px, transparent 1px)",
-        backgroundSize: "60px 60px",
-      }} />
-      {/* Radial blue glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none" />
+    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
+      {/* Parallax grid */}
+      <motion.div style={{ y: gridY }} className="absolute inset-0 opacity-[0.4]" >
+        <div className="absolute inset-0" style={{
+          backgroundImage: "linear-gradient(hsl(225 16% 88% / 0.6) 1px, transparent 1px), linear-gradient(90deg, hsl(225 16% 88% / 0.6) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }} />
+      </motion.div>
+      {/* Parallax glow */}
+      <motion.div style={{ scale: glowScale }} className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/[0.06] rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="container relative z-10 mx-auto px-4">
+      <motion.div style={{ y: contentY }} className="container relative z-10 mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
           <motion.div
@@ -108,7 +115,6 @@ const HeroSection = () => {
             Decivio macht sichtbar was bisher unsichtbar war — und sorgt dafür dass Entscheidungen schneller, dokumentierter und compliance-konform getroffen werden.
           </motion.p>
 
-          {/* Live Counter */}
           <LiveCounter />
 
           {/* CTAs */}
@@ -120,15 +126,15 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all"
+              className="group inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >
-              Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4" />
+              Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </Link>
             <button
               onClick={() => setShowTour(true)}
-              className="inline-flex items-center justify-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 px-8 py-3.5 rounded-xl transition-all"
+              className="group inline-flex items-center justify-center gap-2 text-[15px] font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 px-8 py-3.5 rounded-xl hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
             >
-              <Play className="w-4 h-4" /> Demo ansehen
+              <Play className="w-4 h-4 group-hover:scale-110 transition-transform" /> Demo ansehen
             </button>
           </motion.div>
 
@@ -140,11 +146,19 @@ const HeroSection = () => {
             className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           >
             {trustItems.map((item, i) => (
-              <span key={i} className="text-[12px] text-muted-foreground/70">{item}</span>
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3 + i * 0.1, duration: 0.5, ease }}
+                className="text-[12px] text-muted-foreground/70"
+              >
+                {item}
+              </motion.span>
             ))}
           </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       <ProductTourModal open={showTour} onOpenChange={setShowTour} />
     </section>
