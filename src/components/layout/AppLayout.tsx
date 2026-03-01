@@ -18,6 +18,7 @@ import SidebarHeader from "./SidebarHeader";
 import SidebarNav from "./SidebarNav";
 import SidebarFooter from "./SidebarFooter";
 import MobileHeader from "./MobileHeader";
+import TopBar from "./TopBar";
 
 /* ── Composed sidebar content ── */
 const SidebarContent = ({
@@ -182,8 +183,9 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </aside>
       )}
 
-      <main id="main-content" className={`flex-1 overflow-auto ${isMobile ? "pt-14" : ""}`} role="main">
-        <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto">
+      <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14" : ""}`} role="main">
+        {!isMobile && <TopBar collapsed={collapsed} />}
+        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
