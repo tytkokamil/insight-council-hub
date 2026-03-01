@@ -14,6 +14,7 @@ import {
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
   Server, ChevronRight, Gift, Plug, Scale
 } from "lucide-react";
+import SubNav from "@/components/shared/SubNav";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
@@ -196,18 +197,16 @@ const SettingsPage = () => {
   const selectedProvider = AI_PROVIDERS.find((p) => p.id === aiProvider);
   const inputClass = "w-full h-9 px-3 rounded-md bg-background border border-input text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring/20 transition-colors";
 
-  const tabs: { key: SettingsTab; label: string; icon: React.ElementType; show?: boolean }[] = [
-    { key: "general", label: t("settings.general"), icon: User },
-    { key: "notifications", label: t("settings.notifications"), icon: Bell },
-    { key: "security", label: t("settings.security"), icon: Shield },
-    { key: "governance", label: "Governance", icon: Scale },
-    { key: "ai", label: t("settings.ai"), icon: Brain },
-    { key: "integrations", label: "Integrationen", icon: Plug, show: isAdmin },
-    { key: "referral", label: t("settings.referral"), icon: Gift },
-    { key: "admin", label: t("settings.admin"), icon: Settings2, show: isAdmin },
+  const tabs = [
+    { key: "general" as SettingsTab, label: t("settings.general"), icon: User },
+    { key: "notifications" as SettingsTab, label: t("settings.notifications"), icon: Bell },
+    { key: "security" as SettingsTab, label: t("settings.security"), icon: Shield },
+    { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
+    { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
+    ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),
+    { key: "referral" as SettingsTab, label: t("settings.referral"), icon: Gift },
+    ...(isAdmin ? [{ key: "admin" as SettingsTab, label: t("settings.admin"), icon: Settings2 }] : []),
   ];
-
-  const visibleTabs = tabs.filter(t => t.show !== false);
 
   return (
     <AppLayout>
@@ -217,23 +216,7 @@ const SettingsPage = () => {
           <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
         </div>
 
-        <div className="flex items-center gap-1 border-b border-border/60 mb-6 overflow-x-auto scrollbar-none -mx-1 px-1">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap ${
-                activeTab === tab.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <tab.icon className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{tab.label}</span>
-              {activeTab === tab.key && (
-                <motion.div layoutId="settings-tab" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />
-              )}
-            </button>
-          ))}
-        </div>
+        <SubNav<SettingsTab> items={tabs} active={activeTab} onChange={setActiveTab} layoutId="settings-tab" />
 
         <motion.div key={activeTab} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.15 }}>
 
