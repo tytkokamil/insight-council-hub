@@ -14,7 +14,7 @@ import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import { useDecisions, useTeams, useFilteredDependencies, useFilteredReviews } from "@/hooks/useDecisions";
 import { useTasks } from "@/hooks/useTasks";
 import { motion } from "framer-motion";
-import AiInsightPanel from "@/components/shared/AiInsightPanel";
+// AiInsightPanel removed — already on Process Intelligence
 import { useToast } from "@/hooks/use-toast";
 
 interface Trait { id: string; label: string; description: string; score: number; sentiment: "positive" | "negative" | "neutral"; icon: any; insight: string; }
@@ -97,7 +97,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
       const catDurations = catImpl.filter(d => d.implemented_at).map(d => (new Date(d.implemented_at!).getTime() - new Date(d.created_at).getTime()) / 86400000);
       const catEsc = catDecs.filter(d => (d.escalation_level || 0) > 0).length;
       return { category: cat, label: t(catLabelKeys[cat] || cat), avgDays: catDurations.length > 0 ? Math.round(catDurations.reduce((a, b) => a + b, 0) / catDurations.length) : 0, total: catDecs.length, implementRate: catDecs.length > 0 ? Math.round((catImpl.length / catDecs.length) * 100) : 0, escalationRate: catDecs.length > 0 ? Math.round((catEsc / catDecs.length) * 100) : 0 };
-    }).filter(p => p.total > 0).sort((a, b) => b.total - a.total);
+    }).filter(p => p.total >= 2).sort((a, b) => b.total - a.total);
     setCategoryProfiles(profiles);
 
     const negTraits = computedTraits.filter(tr => tr.sentiment === "negative");
@@ -189,33 +189,40 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
 
       <CollapsibleSection title={t("decisionDna.traitsTitle")} subtitle={t("decisionDna.traitsSub", { count: traits.length })} icon={<Dna className="w-4 h-4 text-muted-foreground" />} defaultOpen={true} className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {traits.map((trait) => (
-            <Card key={trait.id} className={`border ${sentimentBg(trait.sentiment)}`}>
-              <CardContent className="p-4">
+          {traits.map((trait) => {
+            const noData = isInsufficientData(trait);
+            return (
+              <Card key={trait.id} className={`border ${noData ? "border-border" : sentimentBg(trait.sentiment)}`} style={noData ? { backgroundColor: "#F8FAFC" } : undefined}>
+                <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${sentimentColor(trait.sentiment)}`}><trait.icon className="w-4 h-4" /></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{trait.label}</p>
-                    <p className="text-[10px] text-muted-foreground">{trait.description}</p>
-                  </div>
-                  <span className={`text-xl font-bold tabular-nums ${sentimentColor(trait.sentiment)}`}>{trait.score}</span>
-                </div>
-                {isInsufficientData(trait) ? (
-                  <div className="flex items-center gap-1.5 py-1.5 px-2 rounded bg-muted/30 text-xs text-muted-foreground">
-                    <Info className="w-3 h-3 shrink-0" />
-                    {t("decisionDna.insufficientData")}
-                  </div>
-                ) : (
-                  <>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
-                      <div className={`h-full rounded-full ${scoreBarColor(trait.score)}`} style={{ width: `${trait.score}%` }} />
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${noData ? "text-muted-foreground" : sentimentColor(trait.sentiment)}`}><trait.icon className="w-4 h-4" /></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold">{trait.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{trait.description}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{trait.insight}</p>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                    {!noData && <span className={`text-xl font-bold tabular-nums ${sentimentColor(trait.sentiment)}`}>{trait.score}</span>}
+                  </div>
+                  {noData ? (
+                    <div className="space-y-1.5">
+                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ color: "#94A3B8", backgroundColor: "hsl(215 20% 65% / 0.12)" }}>
+                        {t("decisionDna.moreDataNeeded", "Mehr Daten nötig")}
+                      </span>
+                      <a href="/decisions" className="flex items-center gap-1 text-[11px] text-primary hover:underline" onClick={(e) => { e.preventDefault(); window.location.href = "/decisions"; }}>
+                        <ArrowRight className="w-3 h-3" /> {t("decisionDna.createDecisionCta", "Entscheidung anlegen")}
+                      </a>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-2">
+                        <div className={`h-full rounded-full ${scoreBarColor(trait.score)}`} style={{ width: `${trait.score}%` }} />
+                      </div>
+                      <p className="text-xs text-muted-foreground">{trait.insight}</p>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </CollapsibleSection>
 
@@ -238,6 +245,9 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
                   );
                 })}
               </div>
+              {categoryProfiles.length < 3 && (
+                <p className="text-xs text-muted-foreground mt-3 text-center">{t("decisionDna.moreCategoriesHint", "Mehr Kategorien erscheinen ab 2+ Entscheidungen je Kategorie.")}</p>
+              )}
             </CardContent>
           </Card>
         ) : (
@@ -251,20 +261,9 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
         )}
       </CollapsibleSection>
 
-      <AiInsightPanel
-        type="dna"
-        context={{
-          archetype: overallArchetype,
-          archetypeDescription,
-          traits: traits.map(tr => ({ label: tr.label, score: tr.score, sentiment: tr.sentiment, insight: tr.insight })),
-          categoryProfiles,
-          strengths: traits.filter(tr => tr.sentiment === "positive").length,
-          weaknesses: traits.filter(tr => tr.sentiment === "negative").length,
-        }}
-        className="mb-8"
-      />
+      {/* KI-Tiefenanalyse removed — already on Process Intelligence */}
 
-      <CollapsibleSection title={t("decisionDna.recommendations")} subtitle={t("decisionDna.recommendationsSub")} icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={false}>
+      <CollapsibleSection title={t("decisionDna.recommendations")} subtitle={t("decisionDna.recommendationsSub")} icon={<ArrowRight className="w-4 h-4 text-muted-foreground" />} defaultOpen={true}>
         <div className="space-y-2">
           {traits.filter(tr => tr.sentiment === "negative").map((trait) => (
             <Card key={trait.id}>
