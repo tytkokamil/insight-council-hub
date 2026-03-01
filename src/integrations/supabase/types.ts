@@ -415,6 +415,47 @@ export type Database = {
         }
         Relationships: []
       }
+      decision_attachments: {
+        Row: {
+          created_at: string
+          decision_id: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          decision_id: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          decision_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_attachments_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       decision_dependencies: {
         Row: {
           created_at: string
@@ -1212,6 +1253,95 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      inbound_email_config: {
+        Row: {
+          allowed_domains: string[]
+          created_at: string
+          email_prefix: string
+          enabled: boolean
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_domains?: string[]
+          created_at?: string
+          email_prefix?: string
+          enabled?: boolean
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_domains?: string[]
+          created_at?: string
+          email_prefix?: string
+          enabled?: boolean
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_email_config_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inbound_email_log: {
+        Row: {
+          ai_extraction: Json | null
+          created_at: string
+          decision_id: string | null
+          error_message: string | null
+          from_email: string
+          id: string
+          org_id: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          ai_extraction?: Json | null
+          created_at?: string
+          decision_id?: string | null
+          error_message?: string | null
+          from_email: string
+          id?: string
+          org_id: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          ai_extraction?: Json | null
+          created_at?: string
+          decision_id?: string | null
+          error_message?: string | null
+          from_email?: string
+          id?: string
+          org_id?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inbound_email_log_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inbound_email_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kpi_definitions: {
         Row: {
