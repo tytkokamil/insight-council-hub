@@ -30,8 +30,8 @@ const TestimonialsSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center max-w-xl mx-auto mb-14"
       >
-        <p className="text-xs font-semibold text-[hsl(217,91%,60%)] mb-4 tracking-[0.2em] uppercase">Stimmen</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">Was unsere Kunden sagen</h2>
+        <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Stimmen</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">Was unsere Kunden sagen</h2>
       </motion.div>
 
       <div className="grid md:grid-cols-3 gap-5">
@@ -42,18 +42,18 @@ const TestimonialsSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6, ease }}
-            className="relative p-7 rounded-2xl border border-white/[0.06] bg-[hsl(216,40%,11%)] flex flex-col"
+            className="relative p-7 rounded-2xl border border-border bg-card flex flex-col hover:shadow-md transition-all"
           >
-            <p className="text-sm text-[hsl(215,20%,65%)] leading-[1.8] mb-6 flex-1">„{t.quote}"</p>
-            <div className="pt-5 border-t border-white/[0.06]">
-              <div className="text-sm font-semibold text-white">{t.name}</div>
-              <div className="text-xs text-[hsl(215,16%,47%)]">{t.role}</div>
+            <p className="text-sm text-muted-foreground leading-[1.8] mb-6 flex-1">„{t.quote}"</p>
+            <div className="pt-5 border-t border-border">
+              <div className="text-sm font-semibold text-foreground">{t.name}</div>
+              <div className="text-xs text-muted-foreground">{t.role}</div>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <p className="text-center text-[11px] text-[hsl(215,16%,47%)]/60 mt-8 italic">
+      <p className="text-center text-[11px] text-muted-foreground/60 mt-8 italic">
         * Repräsentative Nutzungsszenarien basierend auf Produkttests
       </p>
     </div>

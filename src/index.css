@@ -8,20 +8,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
 
-/* Landing page dark theme override */
+/* Landing page light theme */
 .landing-page {
-  --lp-bg: 222 47% 6%;
-  --lp-card: 216 40% 11%;
-  --lp-primary: 217 91% 60%;
+  --lp-bg: 225 20% 98%;
+  --lp-card: 0 0% 100%;
+  --lp-primary: 217 91% 53%;
   --lp-amber: 38 92% 50%;
-  --lp-green: 160 60% 45%;
-  --lp-red: 0 84% 60%;
+  --lp-green: 160 60% 40%;
+  --lp-red: 0 84% 55%;
   --lp-teal: 175 84% 32%;
-  --lp-violet: 263 85% 58%;
-  --lp-text: 0 0% 100%;
-  --lp-text-muted: 215 20% 65%;
-  --lp-text-faint: 215 16% 47%;
-  --lp-border: 0 0% 100% / 0.06;
+  --lp-violet: 263 85% 50%;
+  --lp-text: 228 12% 18%;
+  --lp-text-muted: 215 14% 46%;
+  --lp-text-faint: 215 12% 62%;
+  --lp-border: 225 16% 88%;
   background: hsl(var(--lp-bg));
   color: hsl(var(--lp-text));
   font-family: 'DM Sans', 'Inter', sans-serif;

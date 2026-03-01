@@ -76,11 +76,11 @@ const PricingSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center max-w-2xl mx-auto mb-14"
       >
-        <p className="text-xs font-semibold text-[hsl(217,91%,60%)] mb-4 tracking-[0.2em] uppercase">Preise</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
+        <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Preise</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
           Transparente Preise. Kein Versteckspiel.
         </h2>
-        <p className="text-[hsl(215,20%,65%)] leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed">
           Alle Pläne mit 14 Tagen kostenloser Testphase. Keine Kreditkarte nötig.
         </p>
       </motion.div>
@@ -97,50 +97,50 @@ const PricingSection = () => (
               transition={{ delay: i * 0.1, duration: 0.7, ease }}
               className={`relative flex flex-col rounded-2xl border p-7 transition-all ${
                 plan.highlighted
-                  ? "border-[hsl(217,91%,60%)]/30 bg-[hsl(216,40%,11%)] shadow-[0_0_40px_-10px_hsl(217,91%,60%/0.2)] scale-[1.03]"
-                  : "border-white/[0.06] bg-[hsl(216,40%,11%)]"
+                  ? "border-primary/30 bg-card shadow-lg scale-[1.03]"
+                  : "border-border bg-card hover:shadow-md"
               }`}
             >
               {plan.highlighted && (
-                <span className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-[10px] font-bold bg-[hsl(217,91%,60%)] text-white mb-4 tracking-wide">
+                <span className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-[10px] font-bold bg-primary text-primary-foreground mb-4 tracking-wide">
                   <Sparkles className="w-3 h-3" /> Empfohlen
                 </span>
               )}
 
-              <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+              <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
               <div className="flex items-baseline gap-1 mt-2 mb-1">
-                <span className="text-3xl font-bold text-white tabular-nums">{plan.price}</span>
-                {plan.period && <span className="text-sm text-[hsl(215,16%,47%)]">{plan.period}</span>}
+                <span className="text-3xl font-bold text-foreground tabular-nums">{plan.price}</span>
+                {plan.period && <span className="text-sm text-muted-foreground">{plan.period}</span>}
               </div>
-              <p className="text-sm text-[hsl(215,20%,65%)] mb-6">{plan.desc}</p>
+              <p className="text-sm text-muted-foreground mb-6">{plan.desc}</p>
 
               {isMailto ? (
-                <a href={plan.ctaLink} className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-white/[0.1] text-white text-sm font-semibold hover:bg-white/[0.04] transition-colors mb-6">
+                <a href={plan.ctaLink} className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-border text-foreground text-sm font-semibold hover:bg-muted transition-colors mb-6">
                   {plan.cta} <ArrowRight className="w-3.5 h-3.5" />
                 </a>
               ) : (
                 <Link to={plan.ctaLink} className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all mb-6 ${
                   plan.highlighted
-                    ? "bg-[hsl(217,91%,60%)] text-white hover:bg-[hsl(217,91%,55%)] shadow-[0_0_20px_-4px_hsl(217,91%,60%/0.4)]"
-                    : "border border-white/[0.1] text-white hover:bg-white/[0.04]"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
+                    : "border border-border text-foreground hover:bg-muted"
                 }`}>
                   {plan.cta} <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               )}
 
               {plan.hint && (
-                <p className="text-[11px] text-[hsl(215,16%,47%)] text-center -mt-4 mb-5 italic">{plan.hint}</p>
+                <p className="text-[11px] text-muted-foreground text-center -mt-4 mb-5 italic">{plan.hint}</p>
               )}
 
               <ul className="space-y-2.5 flex-1">
                 {plan.features.map((f, fi) => (
                   <li key={fi} className="flex items-start gap-2.5 text-[13px]">
                     {f.included ? (
-                      <Check className="w-3.5 h-3.5 text-[hsl(175,84%,32%)] shrink-0 mt-0.5" />
+                      <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                     ) : (
-                      <X className="w-3.5 h-3.5 text-[hsl(215,16%,47%)]/40 shrink-0 mt-0.5" />
+                      <X className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0 mt-0.5" />
                     )}
-                    <span className={f.included ? "text-[hsl(215,20%,65%)]" : "text-[hsl(215,16%,47%)]/40 line-through"}>
+                    <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/40 line-through"}>
                       {f.label}
                     </span>
                   </li>
