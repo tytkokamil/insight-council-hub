@@ -78,6 +78,7 @@ export default {
   			'accent-violet': 'hsl(var(--accent-violet))',
   			'accent-rose': 'hsl(var(--accent-rose))',
   			'accent-amber': 'hsl(var(--accent-amber))',
+  			neutral: 'hsl(var(--neutral))',
   		},
   		borderRadius: {
   			lg: 'var(--radius)',
