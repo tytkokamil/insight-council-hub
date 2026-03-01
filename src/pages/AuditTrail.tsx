@@ -460,7 +460,7 @@ const AuditTrail = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {logs.length > 0 && <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -473,20 +473,29 @@ const AuditTrail = () => {
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <div className="flex items-end gap-3">
-                <span className={`text-4xl font-bold ${stabilityScore >= 75 ? "text-success" : stabilityScore >= 50 ? "text-warning" : "text-destructive"}`}>{stabilityScore}</span>
-                <div className="flex-1">
-                  <div className="h-2.5 rounded-full bg-muted overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${stabilityScore}%` }} transition={{ duration: 1 }}
-                      className={`h-full rounded-full ${stabilityScore >= 75 ? "bg-success" : stabilityScore >= 50 ? "bg-warning" : "bg-destructive"}`} />
+              {logs.length >= 10 ? (
+                <>
+                  <div className="flex items-end gap-3">
+                    <span className={`text-4xl font-bold ${stabilityScore >= 75 ? "text-success" : stabilityScore >= 50 ? "text-warning" : "text-destructive"}`}>{stabilityScore}</span>
+                    <div className="flex-1">
+                      <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${stabilityScore}%` }} transition={{ duration: 1 }}
+                          className={`h-full rounded-full ${stabilityScore >= 75 ? "bg-success" : stabilityScore >= 50 ? "bg-warning" : "bg-destructive"}`} />
+                      </div>
+                    </div>
                   </div>
+                  <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
+                    <p>{t("auditTrail.overridesImpact", { points: kpis.overrides * 8 })}</p>
+                    <p>{t("auditTrail.escalationsImpact", { points: Math.min(kpis.escalations * 2, 20) })}</p>
+                    <p>{t("auditTrail.slaImpact", { points: kpis.slaViolations * 6 })}</p>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <span className="text-4xl font-bold text-muted-foreground">—</span>
+                  <p className="text-xs text-muted-foreground mt-2">{t("auditTrail.scoreMinEntries", { defaultValue: "Score verfügbar ab 10 Einträgen." })}</p>
                 </div>
-              </div>
-              <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
-                <p>{t("auditTrail.overridesImpact", { points: kpis.overrides * 8 })}</p>
-                <p>{t("auditTrail.escalationsImpact", { points: Math.min(kpis.escalations * 2, 20) })}</p>
-                <p>{t("auditTrail.slaImpact", { points: kpis.slaViolations * 6 })}</p>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -528,7 +537,7 @@ const AuditTrail = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div>}
 
         {governanceFlags.length > 0 && (
           <Card className="border-warning/30 bg-warning/5">
@@ -603,11 +612,20 @@ const AuditTrail = () => {
             </Button>
           )}
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-background">
-            <Shield className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium">{t("auditTrail.compliance")}</span>
-            <Switch checked={complianceMode} onCheckedChange={setComplianceMode} />
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-background">
+                  <Shield className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-xs font-medium">{t("auditTrail.compliance")}</span>
+                  <Switch checked={complianceMode} onCheckedChange={setComplianceMode} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs">
+                <p>{t("auditTrail.complianceTooltip", { defaultValue: "Zeigt nur compliance-relevante Ereignisse: Genehmigungen, Ablehnungen, Eskalationen und manuelle Overrides." })}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <Button variant={groupByDecision ? "default" : "outline"} size="sm" className="h-9 gap-1.5 text-xs" onClick={() => setGroupByDecision(!groupByDecision)}>
             <Layers className="w-3.5 h-3.5" /> {t("auditTrail.groupByDecision")}
@@ -632,9 +650,8 @@ const AuditTrail = () => {
         ) : filtered.length === 0 ? (
           <EmptyAnalysisState
             icon={History}
-            title={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet")}
-            description={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged")}
-            hint={t("auditTrail.emptyHint", { defaultValue: "Jede Änderung an Entscheidungen wird automatisch und revisionssicher protokolliert." })}
+            title={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.noEntries") : t("auditTrail.noAuditYet", { defaultValue: "Noch keine Audit-Einträge" })}
+            description={search || actionFilter !== "all" || complianceMode || dateFrom || dateTo ? t("auditTrail.tryOtherFilters") : t("auditTrail.autoLogged", { defaultValue: "Jede Änderung an Entscheidungen wird automatisch und revisionssicher protokolliert." })}
           />
         ) : (
           <>
