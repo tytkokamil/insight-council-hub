@@ -35,8 +35,8 @@ const WeekView = memo(({
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card">
-      <div className="grid grid-cols-7 border-b border-border">
+    <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
+      <div className="grid grid-cols-7 border-b border-border/60">
         {weekDays.map((day, idx) => {
           const today = isToday(day);
           const dateKey = format(day, "yyyy-MM-dd");
@@ -47,7 +47,7 @@ const WeekView = memo(({
           );
 
           return (
-            <div key={idx} className={cn("px-3 py-3 text-center border-r border-border last:border-r-0", today && "bg-primary/5")}>
+            <div key={idx} className={cn("px-3 py-3 text-center border-r border-border/40 last:border-r-0", today && "bg-primary/5")}>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                 {format(day, "EEEE", { locale: dateFnsLocale })}
               </p>
@@ -86,7 +86,7 @@ const WeekView = memo(({
               onDragLeave={onDragLeave}
               onDrop={(e) => onDrop(e as unknown as DragEvent, dateKey)}
               className={cn(
-                "min-h-[300px] border-r border-border last:border-r-0 p-2 transition-all duration-150",
+                "min-h-[300px] border-r border-border/40 last:border-r-0 p-2 transition-all duration-150",
                 today && "bg-primary/5",
                 isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
                 (hasEscalated || (hasCritical && hasOverdue)) && "bg-destructive/5",

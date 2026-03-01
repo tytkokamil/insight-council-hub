@@ -74,8 +74,8 @@ const DayView = memo(({
   }, [dayDecisions, dayTasks]);
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card">
-      <div className={cn("px-4 py-4 border-b border-border", today && "bg-primary/5")}>
+    <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
+      <div className={cn("px-4 py-4 border-b border-border/60", today && "bg-primary/5")}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -130,7 +130,7 @@ const DayView = memo(({
           const slotTasks = slottedTasks[key] ?? [];
           const total = slotDecisions.length + slotTasks.length;
           return (
-            <div key={key} className="border-b border-border last:border-b-0">
+            <div key={key} className="border-b border-border/40 last:border-b-0">
               <div className="flex items-center gap-2.5 px-4 py-2 bg-muted/30">
                 <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-semibold text-foreground">{label}</span>
