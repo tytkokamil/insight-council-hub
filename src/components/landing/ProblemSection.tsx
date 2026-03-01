@@ -1,38 +1,142 @@
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Mail, Users, FileSearch } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const ProblemSection = () => {
-  const { t } = useTranslation();
+/* Problem visual: live incrementing exposure counter */
+const DAILY_RATE = 1960;
+const PER_SECOND_RATE = DAILY_RATE / 86400;
 
-  const problems = [
-    { icon: Mail, title: t("landing.problem.emailTitle"), description: t("landing.problem.emailDesc"), stat: t("landing.problem.emailStat"), statLabel: t("landing.problem.emailStatLabel") },
-    { icon: Users, title: t("landing.problem.responsibilityTitle"), description: t("landing.problem.responsibilityDesc"), stat: t("landing.problem.responsibilityStat"), statLabel: t("landing.problem.responsibilityStatLabel") },
-    { icon: FileSearch, title: t("landing.problem.auditTitle"), description: t("landing.problem.auditDesc"), stat: t("landing.problem.auditStat"), statLabel: t("landing.problem.auditStatLabel") },
-  ];
+const problems = [
+  { icon: "⏳", title: "Reviewer reagieren nicht", desc: "Im Durchschnitt warten Entscheidungen 4,2 Tage auf eine einfache Genehmigung — niemand misst das." },
+  { icon: "📧", title: "Entscheidungen per E-Mail", desc: "Kein Audit Trail, kein SLA, kein Verantwortlicher. E-Mails verschwinden im Posteingang." },
+  { icon: "🔍", title: "Compliance-Lücken", desc: "NIS2, ISO 9001, IATF 16949 — all das erfordert dokumentierte Entscheidungsprozesse. Die meisten haben sie nicht." },
+  { icon: "💸", title: "Unsichtbare Kosten", desc: "Eine Entscheidung die 5 Personen à €120/h blockiert kostet €4.800 pro Woche. Das sieht keiner." },
+];
+
+const dashboardItems = [
+  { title: "Cloud-Migration AWS → Azure", priority: "bg-[hsl(0,84%,60%)]", status: "Eskaliert", statusColor: "text-[hsl(0,84%,60%)]", cost: 10240, live: true },
+  { title: "Investitionsfreigabe CNC-Maschine", priority: "bg-[hsl(38,92%,50%)]", status: "SLA läuft heute ab", statusColor: "text-[hsl(38,92%,50%)]", cost: 285000, live: false },
+  { title: "Lieferantenwechsel Hydraulik", priority: "bg-[hsl(38,92%,50%)]", status: "Überfällig", statusColor: "text-[hsl(38,92%,50%)]", cost: 6800, live: true },
+  { title: "Make-or-Buy Steuerungsplatine", priority: "bg-[hsl(215,16%,47%)]", status: "Offen", statusColor: "text-[hsl(215,16%,47%)]", cost: null, live: false },
+];
+
+const LiveCost = ({ base, live }: { base: number; live: boolean }) => {
+  const [value, setValue] = useState(base);
+  const start = useRef(Date.now());
+
+  useEffect(() => {
+    if (!live) return;
+    const id = setInterval(() => {
+      const elapsed = (Date.now() - start.current) / 1000;
+      setValue(base + elapsed * PER_SECOND_RATE);
+    }, 100);
+    return () => clearInterval(id);
+  }, [base, live]);
+
+  if (!live && base === null) return <span className="text-[hsl(215,16%,47%)]">–</span>;
+  const formatted = value >= 100000
+    ? `€${(value / 1000).toFixed(0)}k`
+    : `€${value.toLocaleString("de-DE", { maximumFractionDigits: 0 })}`;
+
+  return <span className={live ? "text-[hsl(38,92%,50%)]" : "text-[hsl(38,92%,50%)]"}>{formatted}</span>;
+};
+
+const ProblemSection = () => {
+  const [totalExposure, setTotalExposure] = useState(17040);
+  const start = useRef(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const elapsed = (Date.now() - start.current) / 1000;
+      setTotalExposure(17040 + elapsed * (DAILY_RATE / 86400) * 2);
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <section className="py-28 relative">
-      <div className="container mx-auto px-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease }} className="text-center max-w-xl mx-auto mb-16">
-          <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">{t("landing.problem.label")}</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{t("landing.problem.title")}</h2>
+    <section id="problem" className="py-24 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, ease }}
+          className="text-center max-w-2xl mx-auto mb-16"
+        >
+          <p className="text-xs font-semibold text-[hsl(217,91%,60%)] mb-4 tracking-[0.2em] uppercase">Das Problem</p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
+            Was in jedem Mittelständler täglich passiert — unbemerkt.
+          </h2>
+          <p className="text-[hsl(215,20%,65%)] leading-relaxed">
+            Entscheidungen bleiben offen. Reviewer reagieren nicht. Projekte warten. Niemand sieht was es kostet.
+          </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
-          {problems.map((problem, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.1, duration: 0.5, ease }} className="group p-6 rounded-2xl border border-border/50 bg-card/50 hover:bg-card hover:border-accent-rose/20 transition-all duration-300">
-              <problem.icon className="w-5 h-5 text-accent-rose/60 mb-4" />
-              <h3 className="text-[15px] font-semibold mb-2">{problem.title}</h3>
-              <p className="text-sm text-muted-foreground/70 leading-relaxed mb-4">{problem.description}</p>
-              <div className="pt-3 border-t border-border/30">
-                <span className="text-xl font-bold text-accent-rose">{problem.stat}</span>
-                <span className="block text-[10px] text-muted-foreground/50 mt-0.5">{problem.statLabel}</span>
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Left: Problem cards */}
+          <div className="space-y-3">
+            {problems.map((p, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.5, ease }}
+                className="group flex items-start gap-4 p-5 rounded-xl border border-[hsl(0,84%,60%)]/20 bg-[hsl(0,84%,60%)]/[0.03] hover:translate-x-1 transition-transform duration-200 cursor-default"
+              >
+                <span className="text-2xl shrink-0 mt-0.5">{p.icon}</span>
+                <div>
+                  <h3 className="text-[15px] font-semibold text-white mb-1">{p.title}</h3>
+                  <p className="text-sm text-[hsl(215,20%,65%)] leading-relaxed">{p.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Right: Dashboard preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.8, ease }}
+            className="rounded-2xl border border-white/[0.06] bg-[hsl(216,40%,11%)] overflow-hidden"
+          >
+            <div className="px-5 py-3 border-b border-white/[0.06] flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-white/[0.08]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-white/[0.08]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-white/[0.08]" />
               </div>
-            </motion.div>
-          ))}
+              <div className="flex-1 flex justify-center">
+                <span className="text-[11px] text-[hsl(215,16%,47%)] font-mono px-3 py-0.5 rounded bg-white/[0.03]">
+                  Offene Entscheidungen
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 space-y-2">
+              {dashboardItems.map((item, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.04] bg-white/[0.02]">
+                  <div className={`w-1 h-8 rounded-full ${item.priority}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">{item.title}</p>
+                    <p className={`text-[11px] ${item.statusColor}`}>{item.status}</p>
+                  </div>
+                  <div className="text-sm font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-[hsl(215,16%,47%)]">–</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="px-5 py-3 border-t border-white/[0.06] flex items-center justify-between">
+              <span className="text-xs text-[hsl(215,16%,47%)]">Economic Exposure</span>
+              <span className="text-lg font-bold text-[hsl(38,92%,50%)] tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                €{totalExposure.toLocaleString("de-DE", { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
