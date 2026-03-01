@@ -117,7 +117,7 @@ const ActiveSessionsPanel = () => {
             <div
               key={session.id}
               className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                session.is_current ? "border-primary/30 bg-primary/5" : "border-border"
+                session.is_current ? "border-primary/30 bg-primary/5" : "border-border/60"
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">

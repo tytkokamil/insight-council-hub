@@ -60,7 +60,7 @@ const IndustryConfigSection = () => {
       <h2 className="text-sm font-medium mb-3">Branchen-Konfiguration</h2>
 
       {current ? (
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card mb-3">
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-card mb-3">
           <span className="text-2xl">{current.icon}</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">{current.name}</p>
@@ -98,7 +98,7 @@ const IndustryConfigSection = () => {
                   className={`relative text-left p-3 rounded-lg border-2 transition-all duration-150 ${
                     isSelected
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/40 hover:bg-muted/30"
+                      : "border-border/60 hover:border-primary/40 hover:bg-muted/30"
                   }`}
                 >
                   {isSelected && (

@@ -167,7 +167,7 @@ const MfaSettingsPanel = () => {
       <p className="text-xs text-muted-foreground">{t("mfa.description")}</p>
 
       {/* TOTP */}
-      <div className="p-4 rounded-lg border border-border">
+      <div className="p-4 rounded-lg border border-border/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -194,7 +194,7 @@ const MfaSettingsPanel = () => {
       </div>
 
       {/* Email OTP */}
-      <div className="p-4 rounded-lg border border-border">
+      <div className="p-4 rounded-lg border border-border/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-accent/50 flex items-center justify-center">
@@ -229,7 +229,7 @@ const MfaSettingsPanel = () => {
 
       {/* Backup Codes */}
       {(totpEnabled || emailOtpEnabled) && (
-        <div className="p-4 rounded-lg border border-border">
+        <div className="p-4 rounded-lg border border-border/60">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
@@ -279,7 +279,7 @@ const MfaSettingsPanel = () => {
             <DialogDescription>{t("mfa.scanQr")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {totpQr && <div className="flex justify-center"><img src={totpQr} alt="TOTP QR Code" className="w-48 h-48 rounded-lg border border-border" /></div>}
+            {totpQr && <div className="flex justify-center"><img src={totpQr} alt="TOTP QR Code" className="w-48 h-48 rounded-lg border border-border/60" /></div>}
             {totpSecret && (
               <div className="flex items-center gap-2 p-2 rounded-md bg-muted text-xs font-mono">
                 <span className="flex-1 break-all">{totpSecret}</span>

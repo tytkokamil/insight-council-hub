@@ -91,7 +91,7 @@ const ReferralPanel = () => {
       <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
         <p className="text-[10px] text-muted-foreground mb-1.5">{t("settings.referralYourLink")}</p>
         <div className="flex items-center gap-2">
-          <code className="flex-1 text-xs font-mono bg-background px-3 py-2 rounded-md border border-border truncate">
+          <code className="flex-1 text-xs font-mono bg-background px-3 py-2 rounded-md border border-border/60 truncate">
             {isLoading ? "..." : referralLink}
           </code>
           <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={copyLink} disabled={!referralCode}>
@@ -102,12 +102,12 @@ const ReferralPanel = () => {
       </div>
 
       {/* Commission Info */}
-      <div className="p-3 rounded-lg border border-border bg-card">
+      <div className="p-3 rounded-lg border border-border/60 bg-card">
         <h3 className="text-xs font-medium mb-2">{t("settings.referralCommission")}</h3>
         <p className="text-[11px] text-muted-foreground mb-3">{t("settings.referralCommissionDesc")}</p>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(COMMISSIONS).filter(([k]) => k === "starter" || k === "pro").map(([key, val]) => (
-            <div key={key} className="p-2 rounded-md border border-border bg-muted/30">
+            <div key={key} className="p-2 rounded-md border border-border/60 bg-muted/30">
               <p className="text-[10px] text-muted-foreground">{val.label}</p>
               <p className="text-sm font-semibold">€{val.amount.toFixed(2)}</p>
               <p className="text-[9px] text-muted-foreground">{t("settings.referralPerCustomer")}</p>
@@ -125,7 +125,7 @@ const ReferralPanel = () => {
           { label: t("settings.referralPending"), value: pendingReferrals, icon: Clock, color: "text-warning" },
           { label: t("settings.referralEarnings"), value: `€${releasedTotal.toFixed(2)}`, icon: DollarSign, color: "text-success" },
         ].map((stat, i) => (
-          <div key={i} className="p-3 rounded-lg border border-border bg-card">
+          <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
             <div className="flex items-center gap-1 mb-1">
               <stat.icon className={`w-3 h-3 ${stat.color}`} />
               <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
@@ -150,7 +150,7 @@ const ReferralPanel = () => {
           <h3 className="text-xs font-medium mb-2">{t("settings.referralHistory")}</h3>
           <div className="space-y-1">
             {conversions.slice(0, 10).map((c: any) => (
-              <div key={c.id} className="flex items-center justify-between p-2 rounded-md border border-border text-xs">
+              <div key={c.id} className="flex items-center justify-between p-2 rounded-md border border-border/60 text-xs">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">{c.referred_email || "—"}</span>
                   <Badge variant="outline" className="text-[9px]">
