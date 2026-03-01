@@ -1,108 +1,195 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Minus, ArrowRight, Sparkles, ChevronDown } from "lucide-react";
+import { Check, Minus, ArrowRight, Sparkles, ChevronDown, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-interface PlanFeature { label: string; included: boolean; }
+interface PlanFeature {
+  label: string;
+  included: boolean;
+  divider?: string;
+}
+
 interface Plan {
-  name: string; monthly: number | null; annual: number | null;
-  desc: string; highlighted: boolean; cta: string; ctaLink: string; hint?: string;
+  name: string;
+  monthly: number | null;
+  annual: number | null;
+  desc: string;
+  highlighted: boolean;
+  cta: string;
+  ctaLink: string;
+  hint?: string;
   features: PlanFeature[];
+  badge?: string;
 }
 
 const plans: Plan[] = [
   {
-    name: "Free", monthly: 0, annual: 0,
-    desc: "Für Einzelpersonen die Decivio kennenlernen wollen. Keine Kreditkarte.",
-    highlighted: false, cta: "Kostenlos starten", ctaLink: "/auth",
+    name: "Free",
+    monthly: 0,
+    annual: 0,
+    desc: "Zum Kennenlernen. Keine Kreditkarte.",
+    highlighted: false,
+    cta: "Kostenlos starten",
+    ctaLink: "/auth",
     features: [
       { label: "1 Nutzer", included: true },
       { label: "10 Entscheidungen", included: true },
       { label: "30 Tage Audit Trail", included: true },
-      { label: "Basis-Templates", included: true },
+      { label: "3 Standard-Templates", included: true },
       { label: "Basis-Benachrichtigungen", included: true },
       { label: "Kein Team", included: false },
       { label: "Kein KI Daily Brief", included: false },
-      { label: "Kein SLA-System", included: false },
-      { label: "Decivio Branding auf Exports", included: false },
+      { label: "Keine Branchen-Templates", included: false },
+      { label: "Keine Compliance", included: false },
     ],
   },
   {
-    name: "Starter", monthly: 49, annual: 490,
-    desc: "Für kleine Teams die Entscheidungen strukturiert dokumentieren wollen.",
-    highlighted: false, cta: "14 Tage kostenlos testen", ctaLink: "/auth",
+    name: "Starter",
+    monthly: 59,
+    annual: 588,
+    desc: "Für kleine Teams die strukturiert arbeiten wollen.",
+    highlighted: false,
+    cta: "14 Tage kostenlos testen",
+    ctaLink: "/auth",
     features: [
-      { label: "Bis 5 Nutzer", included: true },
+      { label: "Bis 8 Nutzer", included: true },
       { label: "Unbegrenzte Entscheidungen", included: true },
       { label: "1 Jahr Audit Trail", included: true },
-      { label: "Alle Branchen-Templates (15)", included: true },
+      { label: "Alle 15 Branchen-Templates", included: true },
       { label: "SLA-System & Eskalationen", included: true },
-      { label: "E-Mail Benachrichtigungen", included: true },
-      { label: "Rollen & Berechtigungen", included: true },
+      { label: "One-Click Approval via E-Mail", included: true },
+      { label: "Externe Reviewer", included: true },
+      { label: "Risk Register", included: true },
+      { label: "Meeting Mode", included: true },
+      { label: "5 Automation Rules", included: true },
+      { label: "1 Compliance Framework", included: true },
       { label: "Kein KI Daily Brief", included: false },
-      { label: "Kein Analytics Hub", included: false },
-      { label: "Kein Predictive SLA", included: false },
-      { label: "Kein Webhook", included: false },
+      { label: "Keine Analytics", included: false },
+      { label: "Kein CoD Echtzeitzähler", included: false },
     ],
   },
   {
-    name: "Professional", monthly: 149, annual: 1490,
-    desc: "Für Teams die Entscheidungen beschleunigen und Compliance nachweisen müssen.",
-    highlighted: true, cta: "14 Tage kostenlos testen", ctaLink: "/auth",
-    hint: "= weniger als 2 Stunden vermiedene Verzögerung pro Monat",
+    name: "Professional",
+    monthly: 149,
+    annual: 1488,
+    desc: "Vollständige Decision Intelligence für den Mittelstand.",
+    highlighted: true,
+    cta: "14 Tage kostenlos testen →",
+    ctaLink: "/auth",
+    hint: "ROI nach weniger als 2 Stunden vermiedener Verzögerung",
+    badge: "Empfohlen",
     features: [
       { label: "Bis 25 Nutzer", included: true },
-      { label: "Alles aus Starter", included: true },
+      { label: "Unlimitierter Audit Trail (SHA-256 gesichert)", included: true },
+      { label: "", included: true, divider: "Alles aus Starter, plus:" },
       { label: "KI Daily Brief täglich 07:30 Uhr", included: true },
-      { label: "Echtzeit Cost-of-Delay Zähler", included: true },
-      { label: "Predictive SLA Warnings", included: true },
+      { label: "Echtzeit Cost-of-Delay Zähler (live)", included: true },
+      { label: "KI-Analyse & CoPilot pro Entscheidung", included: true },
       { label: "Anomalie-Erkennung (KI)", included: true },
-      { label: "Analytics Hub", included: true },
-      { label: "One-Click Approval via E-Mail", included: true },
-      { label: "Compliance-Kalender", included: true },
-      { label: "Webhooks & Microsoft Teams", included: true },
-      { label: "PDF ohne Decivio Branding", included: true },
-      { label: "Unlimitierter Audit Trail", included: true },
+      { label: "Alle Analytics-Module (9 Module)", included: true },
+      { label: "Executive Hub & Board Reports", included: true },
+      { label: "Alle Compliance Frameworks (NIS2, ISO, IATF, GMP, MaRisk)", included: true },
+      { label: "Strategy Layer", included: true },
+      { label: "Knowledge Base & Lessons Learned", included: true },
+      { label: "War Room & What-If Simulator", included: true },
+      { label: "Webhooks & MS Teams", included: true },
+      { label: "Unbegrenzte Automation Rules", included: true },
+      { label: "PDF-Export ohne Branding", included: true },
     ],
   },
   {
-    name: "Enterprise", monthly: 499, annual: null,
-    desc: "Für Unternehmen mit komplexen Compliance-Anforderungen und mehr als 25 Nutzern.",
-    highlighted: false, cta: "Gespräch vereinbaren", ctaLink: "mailto:sales@decivio.com",
+    name: "Enterprise",
+    monthly: null,
+    annual: null,
+    desc: "Für Unternehmen mit komplexen Anforderungen und 25+ Nutzern.",
+    highlighted: false,
+    cta: "Gespräch vereinbaren",
+    ctaLink: "mailto:sales@decivio.com",
     features: [
       { label: "Unbegrenzte Nutzer", included: true },
       { label: "Alles aus Professional", included: true },
       { label: "SSO / SAML", included: true },
-      { label: "Custom Branding (eigenes Logo)", included: true },
-      { label: "Dedicated Success Manager", included: true },
-      { label: "SLA-Garantie 99,9% Uptime", included: true },
+      { label: "Custom Branding", included: true },
       { label: "On-Premise Option", included: true },
-      { label: "Individuelle Integrationen", included: true },
-      { label: "Kryptographischer Audit Trail", included: true },
-      { label: "Prioritäts-Support", included: true },
+      { label: "Dedicated Success Manager", included: true },
+      { label: "SLA-Garantie 99,9%", included: true },
+      { label: "Admin-Konsole & Feature Flags", included: true },
+      { label: "Onboarding-Workshop (remote)", included: true },
+      { label: "Prioritäts-Support (< 4h)", included: true },
     ],
   },
 ];
 
-const comparisonFeatures = [
-  { label: "Nutzer", values: ["1", "5", "25", "Unbegrenzt"] },
-  { label: "Entscheidungen", values: ["10", "∞", "∞", "∞"] },
-  { label: "Audit Trail", values: ["30 Tage", "1 Jahr", "Unbegrenzt", "Unbegrenzt"] },
-  { label: "Branchen-Templates", values: ["Basis", "Alle (15)", "Alle (15)", "Alle (15)"] },
-  { label: "SLA-System", values: [false, true, true, true] },
-  { label: "Rollen & Berechtigungen", values: [false, true, true, true] },
-  { label: "KI Daily Brief", values: [false, false, true, true] },
-  { label: "Cost-of-Delay Zähler", values: [false, false, true, true] },
-  { label: "Predictive SLA", values: [false, false, true, true] },
-  { label: "Analytics Hub", values: [false, false, true, true] },
-  { label: "Compliance-Kalender", values: [false, false, true, true] },
-  { label: "Webhooks & Teams", values: [false, false, true, true] },
-  { label: "SSO / SAML", values: [false, false, false, true] },
-  { label: "Custom Branding", values: [false, false, false, true] },
-  { label: "Dedicated Success Manager", values: [false, false, false, true] },
-  { label: "Prioritäts-Support", values: [false, false, false, true] },
+const comparisonCategories = [
+  {
+    category: "Entscheidungen",
+    rows: [
+      { label: "Nutzer", values: ["1", "8", "25", "Unbegrenzt"] },
+      { label: "Entscheidungen", values: ["10", "∞", "∞", "∞"] },
+      { label: "Teams", values: ["—", "3", "∞", "∞"] },
+      { label: "Aufgaben", values: ["20", "∞", "∞", "∞"] },
+      { label: "Branchen-Templates", values: ["3 Basis", "Alle (15)", "Alle (15)", "Alle (15)"] },
+    ],
+  },
+  {
+    category: "Teams & Zusammenarbeit",
+    rows: [
+      { label: "Rollen & Berechtigungen", values: [false, true, true, true] },
+      { label: "Meeting Mode / Decision Room", values: [false, true, true, true] },
+      { label: "Team Chat", values: [false, true, true, true] },
+      { label: "Externe Reviewer", values: [false, true, true, true] },
+      { label: "One-Click Approval (E-Mail)", values: [false, true, true, true] },
+    ],
+  },
+  {
+    category: "Compliance & Audit",
+    rows: [
+      { label: "Audit Trail", values: ["30 Tage", "1 Jahr", "Unbegrenzt", "Unbegrenzt"] },
+      { label: "Kryptographisch (SHA-256)", values: [false, false, true, true] },
+      { label: "SLA-System & Eskalationen", values: [false, true, true, true] },
+      { label: "Compliance Frameworks", values: ["—", "1", "Alle", "Alle"] },
+      { label: "Risk Register", values: [false, true, true, true] },
+      { label: "Automation Rules", values: ["—", "5", "∞", "∞"] },
+    ],
+  },
+  {
+    category: "KI & Analytics",
+    rows: [
+      { label: "KI Daily Brief", values: [false, false, true, true] },
+      { label: "KI-Analyse & CoPilot", values: [false, false, true, true] },
+      { label: "Cost-of-Delay Zähler (live)", values: [false, false, true, true] },
+      { label: "Anomalie-Erkennung", values: [false, false, true, true] },
+      { label: "Analytics Hub (9 Module)", values: [false, false, true, true] },
+      { label: "Executive Hub & Board Reports", values: [false, false, true, true] },
+      { label: "Strategy Layer", values: [false, false, true, true] },
+      { label: "What-If Simulator", values: [false, false, true, true] },
+      { label: "Predictive Timeline", values: [false, false, true, true] },
+    ],
+  },
+  {
+    category: "Integrationen",
+    rows: [
+      { label: "E-Mail Benachrichtigungen", values: [true, true, true, true] },
+      { label: "WhatsApp", values: [false, true, true, true] },
+      { label: "Webhooks", values: [false, false, true, true] },
+      { label: "Microsoft Teams", values: [false, false, true, true] },
+      { label: "Inbound E-Mail", values: [false, false, true, true] },
+      { label: "Individuelle Integrationen", values: [false, false, false, true] },
+    ],
+  },
+  {
+    category: "Support & Sicherheit",
+    rows: [
+      { label: "SSO / SAML", values: [false, false, false, true] },
+      { label: "Custom Branding", values: [false, false, false, true] },
+      { label: "Dedicated Success Manager", values: [false, false, false, true] },
+      { label: "On-Premise Option", values: [false, false, false, true] },
+      { label: "Prioritäts-Support (< 4h)", values: [false, false, false, true] },
+      { label: "PDF ohne Branding", values: [false, false, true, true] },
+    ],
+  },
 ];
 
 const PricingSection = () => {
@@ -122,7 +209,7 @@ const PricingSection = () => {
         >
           <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Preise</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
-            Transparente Preise. Kein Versteckspiel.
+            Transparent. Fair. Skalierbar.
           </h2>
           <p className="text-muted-foreground leading-relaxed">
             Alle Pläne mit 14 Tagen kostenloser Testphase. Keine Kreditkarte nötig.
@@ -146,7 +233,7 @@ const PricingSection = () => {
                 annual ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Jährlich <span className="text-[10px] opacity-75">(2 Monate gratis)</span>
+              Jährlich <span className="text-[10px] opacity-75">(spare 2 Monate)</span>
             </button>
           </div>
         </div>
@@ -155,9 +242,12 @@ const PricingSection = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto items-stretch">
           {plans.map((plan, i) => {
             const isMailto = plan.ctaLink.startsWith("mailto:");
-            const perMonth = annual && plan.annual !== null
-              ? Math.round(plan.annual / 12)
-              : plan.monthly;
+            const perMonth =
+              plan.monthly === null
+                ? null
+                : annual && plan.annual !== null
+                ? Math.round(plan.annual / 12)
+                : plan.monthly;
 
             return (
               <motion.div
@@ -172,9 +262,15 @@ const PricingSection = () => {
                     : "border-border/60 bg-white/80 hover:border-border hover:shadow-sm"
                 }`}
               >
-                {plan.highlighted && (
+                {plan.badge && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[10px] font-semibold bg-primary text-primary-foreground tracking-wide">
-                    <Sparkles className="w-3 h-3" /> Empfohlen
+                    <Sparkles className="w-3 h-3" /> {plan.badge}
+                  </span>
+                )}
+
+                {plan.monthly === null && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-accent-amber/10 text-accent-amber border border-accent-amber/20 tracking-wide w-fit mb-2">
+                    <Crown className="w-3 h-3" /> Enterprise
                   </span>
                 )}
 
@@ -205,7 +301,14 @@ const PricingSection = () => {
                 </div>
 
                 {annual && plan.annual !== null && plan.annual > 0 && (
-                  <p className="text-[11px] text-muted-foreground/60 mb-1">€{plan.annual} / Jahr</p>
+                  <p className="text-[11px] text-muted-foreground/60 mb-1">
+                    €{plan.annual} / Jahr abgerechnet
+                  </p>
+                )}
+                {!annual && plan.monthly !== null && plan.monthly > 0 && annual === false && plan.annual !== null && (
+                  <p className="text-[11px] text-success/80 mb-1">
+                    Spare €{(plan.monthly * 12) - plan.annual} / Jahr mit jährlicher Zahlung
+                  </p>
                 )}
 
                 <p className="text-[13px] text-muted-foreground mb-5 leading-relaxed">{plan.desc}</p>
@@ -222,11 +325,11 @@ const PricingSection = () => {
                     to={plan.ctaLink}
                     className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-medium transition-all mb-2 ${
                       plan.highlighted
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.4)]"
                         : "border border-border/60 text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    {plan.cta} <ArrowRight className="w-3.5 h-3.5" />
+                    {plan.cta} {!plan.cta.includes("→") && <ArrowRight className="w-3.5 h-3.5" />}
                   </Link>
                 )}
 
@@ -236,18 +339,31 @@ const PricingSection = () => {
                 {!plan.hint && <div className="mb-4" />}
 
                 <ul className="space-y-2 flex-1">
-                  {plan.features.map((f, fi) => (
-                    <li key={fi} className="flex items-start gap-2.5 text-[13px]">
-                      {f.included ? (
-                        <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
-                      ) : (
-                        <Minus className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
-                      )}
-                      <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/40"}>
-                        {f.label}
-                      </span>
-                    </li>
-                  ))}
+                  {plan.features.map((f, fi) => {
+                    if (f.divider) {
+                      return (
+                        <li key={fi} className="pt-2 pb-1">
+                          <div className="border-t border-border/40 pt-2">
+                            <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                              {f.divider}
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={fi} className="flex items-start gap-2.5 text-[13px]">
+                        {f.included ? (
+                          <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                        ) : (
+                          <Minus className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
+                        )}
+                        <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/40"}>
+                          {f.label}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </motion.div>
             );
@@ -256,9 +372,13 @@ const PricingSection = () => {
 
         {/* Trust row */}
         <div className="flex flex-wrap items-center justify-center gap-6 mt-10 mb-6">
-          {["🔒 Keine versteckten Kosten", "↕ Jederzeit upgraden oder kündigen", "🇩🇪 Server in Deutschland"].map((t, i) => (
-            <span key={i} className="text-[12px] text-muted-foreground/60">{t}</span>
-          ))}
+          {["🔒 Keine versteckten Kosten", "↕ Jederzeit kündigen", "🇩🇪 Server in Deutschland"].map(
+            (t, i) => (
+              <span key={i} className="text-[12px] text-muted-foreground/60">
+                {t}
+              </span>
+            )
+          )}
         </div>
 
         {/* Comparison toggle */}
@@ -268,7 +388,9 @@ const PricingSection = () => {
             className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors"
           >
             Alle Features vergleichen
-            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${tableOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`w-4 h-4 transition-transform duration-300 ${tableOpen ? "rotate-180" : ""}`}
+            />
           </button>
         </div>
 
@@ -285,30 +407,51 @@ const PricingSection = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/60">
-                      <th className="text-left py-3 px-4 text-muted-foreground font-medium text-[13px]">Feature</th>
+                      <th className="text-left py-3 px-4 text-muted-foreground font-medium text-[13px]">
+                        Feature
+                      </th>
                       {plans.map((p) => (
-                        <th key={p.name} className={`text-center py-3 px-4 font-semibold text-[13px] ${p.highlighted ? "text-primary" : "text-foreground"}`}>
+                        <th
+                          key={p.name}
+                          className={`text-center py-3 px-4 font-semibold text-[13px] ${
+                            p.highlighted ? "text-primary" : "text-foreground"
+                          }`}
+                        >
                           {p.name}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {comparisonFeatures.map((row, ri) => (
-                      <tr key={ri} className="border-b border-border/30">
-                        <td className="py-2.5 px-4 text-muted-foreground text-[13px]">{row.label}</td>
-                        {row.values.map((val, vi) => (
-                          <td key={vi} className="text-center py-2.5 px-4">
-                            {val === true ? (
-                              <Check className="w-4 h-4 text-success mx-auto" />
-                            ) : val === false ? (
-                              <Minus className="w-4 h-4 text-muted-foreground/25 mx-auto" />
-                            ) : (
-                              <span className="text-[13px] text-foreground">{val}</span>
-                            )}
+                    {comparisonCategories.map((cat) => (
+                      <>
+                        <tr key={`cat-${cat.category}`}>
+                          <td
+                            colSpan={5}
+                            className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider"
+                          >
+                            {cat.category}
                           </td>
+                        </tr>
+                        {cat.rows.map((row, ri) => (
+                          <tr key={`${cat.category}-${ri}`} className="border-b border-border/30">
+                            <td className="py-2.5 px-4 text-muted-foreground text-[13px]">
+                              {row.label}
+                            </td>
+                            {row.values.map((val, vi) => (
+                              <td key={vi} className="text-center py-2.5 px-4">
+                                {val === true ? (
+                                  <Check className="w-4 h-4 text-success mx-auto" />
+                                ) : val === false ? (
+                                  <Minus className="w-4 h-4 text-muted-foreground/25 mx-auto" />
+                                ) : (
+                                  <span className="text-[13px] text-foreground">{val}</span>
+                                )}
+                              </td>
+                            ))}
+                          </tr>
                         ))}
-                      </tr>
+                      </>
                     ))}
                   </tbody>
                 </table>
