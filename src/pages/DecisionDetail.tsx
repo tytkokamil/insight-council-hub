@@ -44,6 +44,7 @@ import StakeholderAlignmentPanel from "@/components/decisions/StakeholderAlignme
 import DependenciesPanel from "@/components/decisions/DependenciesPanel";
 import PostImplementationReview from "@/components/decisions/PostImplementationReview";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
+import ArchiveSummaryBox from "@/components/decisions/ArchiveSummaryBox";
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
@@ -291,6 +292,9 @@ const DecisionDetail = () => {
       <Button variant="ghost" size="sm" className="gap-1.5 mb-4 -ml-2 text-muted-foreground hover:text-foreground" onClick={() => navigate("/decisions")}>
         <ArrowLeft className="w-4 h-4" /> {t("decisionDetail.backToDecisions")}
       </Button>
+
+      {/* ═══════════ ARCHIVE SUMMARY (auto for decisions > 90 days) ═══════════ */}
+      <ArchiveSummaryBox decision={decision} />
 
       {/* ═══════════ 1. HEADER SECTION ═══════════ */}
       <div className="mb-6">

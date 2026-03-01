@@ -12,7 +12,7 @@ import {
   ChevronRight, FileText, Filter, BarChart3, Eye, EyeOff, BookOpen, Target,
   TrendingDown, CalendarDays, Users, DollarSign, Activity, CheckCircle2, XCircle,
   Zap, Lock, Unlock, ChevronDown, X, FileJson, FileSpreadsheet, ClipboardList,
-  Timer, ShieldCheck, ArrowRight, Info, AlertCircle
+  Timer, ShieldCheck, ArrowRight, Info, AlertCircle, Sparkles, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
@@ -50,6 +50,8 @@ const ArchivePage = () => {
   const [risksLinked, setRisksLinked] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [nlpSearching, setNlpSearching] = useState(false);
+  const [nlpFilters, setNlpFilters] = useState<any>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOrgOwner, setIsOrgOwner] = useState(false);
@@ -140,10 +142,29 @@ const ArchivePage = () => {
   const currentList = tab === "trash" ? deleted : archived;
   const filtered = useMemo(() => {
     let list = currentList;
-    if (search.trim()) {
+
+    // NLP filter mode
+    if (nlpFilters) {
+      const f = nlpFilters;
+      if (f.keywords?.length > 0) {
+        list = list.filter(d => {
+          const text = `${d.title} ${d.description || ""}`.toLowerCase();
+          return f.keywords.some((kw: string) => text.includes(kw.toLowerCase()));
+        });
+      }
+      if (f.category) list = list.filter(d => d.category === f.category);
+      if (f.year) list = list.filter(d => new Date(d.created_at).getFullYear() === f.year);
+      if (f.status_filter) list = list.filter(d => d.status === f.status_filter);
+      // person_name: search in title/description as proxy
+      if (f.person_name) {
+        const pn = f.person_name.toLowerCase();
+        list = list.filter(d => `${d.title} ${d.description || ""}`.toLowerCase().includes(pn));
+      }
+    } else if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(d => d.title.toLowerCase().includes(q));
     }
+
     if (filterCategory !== "all") list = list.filter(d => d.category === filterCategory);
     if (filterPriority !== "all") list = list.filter(d => d.priority === filterPriority);
     if (filterRisk !== "all") {
@@ -152,7 +173,7 @@ const ArchivePage = () => {
       if (filterRisk === "low") list = list.filter(d => (d.ai_risk_score || 0) < 8);
     }
     return list;
-  }, [currentList, search, filterCategory, filterPriority, filterRisk]);
+  }, [currentList, search, nlpFilters, filterCategory, filterPriority, filterRisk]);
 
   // Archive analytics
   const analytics = useMemo(() => {
@@ -405,8 +426,44 @@ const ArchivePage = () => {
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("archivePage.searchArchive")} className={`${inputClass} pl-9`} />
+            <input
+              value={search}
+              onChange={e => { setSearch(e.target.value); setNlpFilters(null); }}
+              onKeyDown={async (e) => {
+                if (e.key === "Enter" && search.length > 10) {
+                  setNlpSearching(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("archive-intelligence", {
+                      body: { type: "search", query: search },
+                    });
+                    if (!error && data?.filters) setNlpFilters(data.filters);
+                  } catch {} finally { setNlpSearching(false); }
+                }
+              }}
+              placeholder="Suche im Archiv — natürliche Sprache möglich (z.B. 'Cloud-Migration 2023')"
+              className={`${inputClass} pl-9 ${nlpFilters ? "border-primary/50" : ""}`}
+            />
+            {nlpSearching && <Loader2 className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" />}
           </div>
+          <Button
+            size="sm"
+            variant={nlpFilters ? "default" : "outline"}
+            className="gap-1.5 shrink-0"
+            disabled={nlpSearching || search.length < 5}
+            onClick={async () => {
+              if (nlpFilters) { setNlpFilters(null); return; }
+              setNlpSearching(true);
+              try {
+                const { data, error } = await supabase.functions.invoke("archive-intelligence", {
+                  body: { type: "search", query: search },
+                });
+                if (!error && data?.filters) setNlpFilters(data.filters);
+              } catch {} finally { setNlpSearching(false); }
+            }}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            {nlpFilters ? "KI-Filter aktiv ✕" : "KI-Suche"}
+          </Button>
           <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setShowFilters(!showFilters)}>
             <Filter className="w-3.5 h-3.5" /> {t("archivePage.filter")} {showFilters ? "▲" : "▼"}
           </Button>
