@@ -124,7 +124,7 @@ const NotificationMatrixPanel = () => {
       {/* Preset Buttons */}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-muted-foreground font-medium mr-1">{t("notifMatrix.presets")}:</span>
-        <Button size="sm" variant="outline" onClick={() => applyPreset("all")} className="gap-1 h-7 text-xs">
+        <Button size="sm" onClick={() => applyPreset("all")} className="gap-1 h-7 text-xs" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
           <Bell className="w-3 h-3" /> {t("notifMatrix.presetAll")}
         </Button>
         <Button size="sm" variant="outline" onClick={() => applyPreset("critical")} className="gap-1 h-7 text-xs">

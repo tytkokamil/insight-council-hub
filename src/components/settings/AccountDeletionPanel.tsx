@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ const AccountDeletionPanel = () => {
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [open, setOpen] = useState(false);
+  const [understood, setUnderstood] = useState(false);
 
   const handleDelete = async () => {
     if (!user || confirmText !== "DELETE") return;
@@ -42,7 +44,6 @@ const AccountDeletionPanel = () => {
         return;
       }
 
-      // Sign out locally
       await supabase.auth.signOut();
       window.location.href = "/";
     } catch (err: any) {
@@ -59,7 +60,7 @@ const AccountDeletionPanel = () => {
     "w-full h-9 px-3 rounded-md bg-background border border-input text-sm focus:border-destructive focus:outline-none focus:ring-1 focus:ring-destructive/20 transition-colors";
 
   return (
-    <section className="mt-8 pt-6 border-t-2 border-destructive/20">
+    <section className="mt-12 pt-8" style={{ borderTop: "1px dashed hsl(0 86% 82%)" }}>
       <div className="flex items-center gap-2 mb-2">
         <AlertTriangle className="w-4 h-4 text-destructive" />
         <h2 className="text-sm font-medium text-destructive">Danger Zone</h2>
@@ -68,9 +69,25 @@ const AccountDeletionPanel = () => {
         Die Löschung deines Accounts ist unwiderruflich. Alle deine Entscheidungen, Aufgaben, Teams und persönlichen Daten werden permanent gelöscht (DSGVO Art. 17).
       </p>
 
+      <label className="flex items-start gap-2 mb-4 cursor-pointer">
+        <Checkbox
+          checked={understood}
+          onCheckedChange={(v) => setUnderstood(v === true)}
+          className="mt-0.5"
+        />
+        <span className="text-xs text-muted-foreground leading-relaxed">
+          Ich verstehe, dass diese Aktion nicht rückgängig gemacht werden kann.
+        </span>
+      </label>
+
       <AlertDialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setConfirmText(""); }}>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" size="sm" className="gap-2">
+          <Button
+            variant="destructive"
+            size="sm"
+            className="gap-2"
+            disabled={!understood}
+          >
             <Trash2 className="w-3.5 h-3.5" />
             Account dauerhaft löschen
           </Button>

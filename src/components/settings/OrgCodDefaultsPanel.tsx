@@ -95,15 +95,18 @@ const OrgCodDefaultsPanel = () => {
         </div>
       </div>
 
-      <div className="p-3 rounded-lg bg-muted/30 border border-border/60">
+      <div className="p-3 rounded-lg border" style={{ backgroundColor: "hsl(214 100% 97%)", borderColor: "hsl(217 91% 60% / 0.2)" }}>
         <div className="flex items-start gap-2">
-          <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "hsl(217 91% 60%)" }} />
           <div className="text-[11px] text-muted-foreground space-y-1">
-            <p>
-              {t("cod.orgDefaultDesc", "Diese Werte gelten als Fallback für alle Teams ohne eigene Konfiguration.")}
+            <p className="font-medium text-foreground" style={{ color: "hsl(217 91% 60%)" }}>
+              {t("cod.example", "Beispiel")}:
             </p>
             <p>
-              {t("cod.example", "Beispiel")}: {exampleDays} {t("cod.days", "Tage")} × {values.cod_hourly_rate}€ × 8h × {values.cod_persons} × {values.cod_overhead_factor}x = <span className="font-semibold text-foreground">{formatCurrency(exampleCost)}</span>
+              {values.cod_hourly_rate}€ × 8h × {values.cod_persons} × {values.cod_overhead_factor}x = <span className="font-semibold text-foreground">{formatCurrency(values.cod_hourly_rate * 8 * values.cod_persons * values.cod_overhead_factor)}</span> {t("cod.perDay", "pro Tag")}
+            </p>
+            <p className="text-muted-foreground/70">
+              {t("cod.orgDefaultDesc", "Diese Werte gelten als Fallback für alle Teams ohne eigene Konfiguration.")}
             </p>
           </div>
         </div>

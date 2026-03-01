@@ -20,7 +20,7 @@ interface SubNavProps<T extends string = string> {
  */
 const SubNav = <T extends string>({ items, active, onChange, layoutId = "subnav" }: SubNavProps<T>) => {
   return (
-    <nav className="flex flex-wrap items-center gap-1 border-b border-border/60 mb-6 pb-px">
+    <nav className="flex flex-wrap items-center gap-1 border-b border-border/60 mb-6 pb-px sticky top-0 z-30 bg-background/95 backdrop-blur-sm -mx-1 px-1 pt-1">
       {items.map((item) => {
         const isActive = active === item.key;
         return (

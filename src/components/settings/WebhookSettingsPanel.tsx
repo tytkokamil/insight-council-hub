@@ -289,7 +289,7 @@ const WebhookSettingsPanel = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={createEndpoint} disabled={saving || !formUrl.trim()} className="gap-1.5">
+            <Button onClick={createEndpoint} disabled={saving || !formUrl.trim()} className="gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
               {saving && <Loader2 className="w-3 h-3 animate-spin" />}
               {t("settings.webhookCreate")}
             </Button>
@@ -304,10 +304,28 @@ const WebhookSettingsPanel = () => {
         </Button>
       )}
 
-      {/* Payload info */}
-      <div className="mt-4 p-3 rounded-lg border border-border/60 bg-muted/30">
-        <p className="text-[10px] font-medium text-muted-foreground mb-1">{t("settings.webhookPayloadInfo")}</p>
-        <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap">{`{
+      {/* Payload info — collapsible */}
+      <PayloadInfoCollapsible t={t} />
+    </section>
+  );
+};
+
+// ── Payload collapsible ──
+
+const PayloadInfoCollapsible = ({ t }: { t: any }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-4">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+      >
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        {t("settings.webhookPayloadToggle", "Payload-Format anzeigen")}
+      </button>
+      {open && (
+        <div className="mt-2 p-3 rounded-lg border border-border/60 bg-muted/30">
+          <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap">{`{
   "event": "decision.created",
   "timestamp": "2026-03-01T12:00:00Z",
   "organization_id": "uuid",
@@ -317,9 +335,10 @@ const WebhookSettingsPanel = () => {
     "duration_days"
   }
 }`}</pre>
-        <p className="text-[9px] text-muted-foreground mt-1.5 italic">{t("settings.webhookHmacInfo")}</p>
-      </div>
-    </section>
+          <p className="text-[9px] text-muted-foreground mt-1.5 italic">{t("settings.webhookHmacInfo")}</p>
+        </div>
+      )}
+    </div>
   );
 };
 
