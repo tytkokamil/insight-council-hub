@@ -1,4 +1,4 @@
-import { BarChart3, Zap, Brain, GitBranch, Target } from "lucide-react";
+import { FileText, Zap, Brain, GitBranch, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -13,13 +13,11 @@ const DecisionEmptyState = ({ onNewDecision }: DecisionEmptyStateProps) => {
 
   return (
     <EmptyAnalysisState
-      icon={BarChart3}
-      title={t("decisions.noDecisions")}
-      description={t("decisions.noDecisionsDesc")}
-      ctaLabel={t("decisions.createFirst")}
+      icon={FileText}
+      title={t("decisions.emptyTitle", { defaultValue: "Ihre erste Entscheidung wartet" })}
+      description={t("decisions.emptyDesc", { defaultValue: "Teams die Entscheidungen dokumentieren lösen sie 40% schneller. Legen Sie jetzt los." })}
+      ctaLabel={t("decisions.createFirst", { defaultValue: "Erste Entscheidung erstellen →" })}
       onCtaClick={onNewDecision}
-      motivation={t("decisions.emptyMotivation", { defaultValue: "Unternehmen mit systematischer Entscheidungsanalyse treffen 40% bessere strategische Entscheidungen und reduzieren Fehlentscheidungen um 28%." })}
-      hint={t("decisions.emptyHint", { defaultValue: "Treibe Entscheidungen bis zur Implementierung, um Prognosen und ROI-Daten zu erhalten." })}
       features={[
         { icon: Brain, label: t("decisions.featureAi", { defaultValue: "KI-Analyse" }), desc: t("decisions.featureAiDesc", { defaultValue: "Automatische Risiko- und Impact-Bewertung" }) },
         { icon: GitBranch, label: t("decisions.featureDeps", { defaultValue: "Abhängigkeiten" }), desc: t("decisions.featureDepsDesc", { defaultValue: "Entscheidungen verknüpfen und Auswirkungen verfolgen" }) },
@@ -27,7 +25,7 @@ const DecisionEmptyState = ({ onNewDecision }: DecisionEmptyStateProps) => {
       ]}
       quickActions={[
         {
-          label: t("decisions.loadDemo"),
+          label: t("decisions.loadDemo", { defaultValue: "Demo-Daten laden" }),
           icon: Zap,
           onClick: async () => {
             toast.info(t("decisions.demoCreating"));
