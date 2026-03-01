@@ -8,15 +8,14 @@ export const fetchDecisions = async (selectedTeamId: string | null) => {
   let query = supabase
     .from("decisions")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (selectedTeamId) {
     // Team mode: only decisions belonging to this team
     query = query.eq("team_id", selectedTeamId);
-  } else {
-    // Personal mode: only decisions without a team (personal workspace)
-    query = query.is("team_id", null);
   }
+  // Personal mode (null): RLS handles visibility — show all accessible decisions
 
   const { data, error } = await query;
   if (error) throw error;
