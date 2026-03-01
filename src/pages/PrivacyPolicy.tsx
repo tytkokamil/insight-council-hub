@@ -77,11 +77,12 @@ const PrivacyPolicy = () => (
             <h2 className="text-foreground text-lg font-semibold">10. Auftragsverarbeiter</h2>
             <p>Folgende Auftragsverarbeiter werden eingesetzt:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Supabase Inc.</strong> — Datenbank & Authentifizierung (EU-Region)</li>
-              <li><strong>Vercel Inc.</strong> — Hosting & CDN (EU Edge)</li>
-              <li><strong>Resend</strong> — Transaktionale E-Mails</li>
+              <li><strong>Supabase Inc.</strong> — Datenbank & Authentifizierung (EU-Region Frankfurt)</li>
+              <li><strong>Lovable Technologies</strong> — Plattform-Infrastruktur & Hosting (EU)</li>
+              <li><strong>Google LLC</strong> — KI-Verarbeitung (Gemini API), nur bei Nutzung von KI-Features</li>
+              <li><strong>OpenAI LLC</strong> — KI-Verarbeitung (GPT API), optional</li>
             </ul>
-            <p>Alle Auftragsverarbeiter unterliegen Art. 28 DSGVO-konformen Vereinbarungen.</p>
+            <p>Alle Auftragsverarbeiter unterliegen Art. 28 DSGVO-konformen Vereinbarungen. Eine vollständige Liste finden Sie in unserer <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link>.</p>
           </section>
 
           <section>
