@@ -72,13 +72,20 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                     isDone
                       ? isTerminal && i === currentIdx
                         ? isCancelled ? "bg-muted-foreground/40" : isRejected ? "bg-destructive/40" : "bg-accent-foreground/40"
-                        : "bg-primary"
-                      : "bg-muted"
+                        : ""
+                      : ""
                   }`}
+                  style={{
+                    transformOrigin: "left",
+                    ...(isDone && !(isTerminal && i === currentIdx)
+                      ? { backgroundColor: "#10B981" }
+                      : !isDone
+                        ? { backgroundImage: "repeating-linear-gradient(90deg, #94A3B8 0, #94A3B8 6px, transparent 6px, transparent 12px)", opacity: 0.4 }
+                        : {}),
+                  }}
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: i * 0.1, duration: 0.3 }}
-                  style={{ transformOrigin: "left" }}
                 />
               )}
 
@@ -87,7 +94,7 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                   <motion.div
                     className={`relative shrink-0 flex items-center justify-center rounded-full transition-colors ${
                       isDone
-                        ? "w-7 h-7 bg-primary text-primary-foreground"
+                        ? "w-7 h-7"
                         : isStopPoint
                           ? isCancelled
                             ? "w-7 h-7 bg-muted-foreground/20 text-muted-foreground border-2 border-muted-foreground/40"
@@ -95,9 +102,18 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                               ? "w-7 h-7 bg-destructive/20 text-destructive border-2 border-destructive/40"
                               : "w-7 h-7 bg-accent/30 text-accent-foreground border-2 border-accent/50"
                           : isCurrent
-                            ? "w-7 h-7 border-2 border-primary bg-primary/10 text-primary"
-                            : "w-6 h-6 border-2 border-muted bg-background text-muted-foreground/40"
+                            ? "w-7 h-7"
+                            : "w-6 h-6 border-2 bg-background"
                     }`}
+                    style={
+                      isDone
+                        ? { backgroundColor: "#10B981", color: "white" }
+                        : isCurrent && !isTerminal
+                          ? { backgroundColor: "#3B82F6", color: "white" }
+                          : isFuture
+                            ? { borderColor: "#94A3B8", color: "#94A3B8" }
+                            : undefined
+                    }
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: i * 0.1 + 0.15, type: "spring", stiffness: 300, damping: 20 }}
@@ -108,7 +124,7 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                     {isStopPoint && isSuperseded && <Replace className="w-3.5 h-3.5" />}
                     {isCurrent && !isTerminal && (
                       <motion.div
-                        className="w-2 h-2 rounded-full bg-primary"
+                        className="w-2.5 h-2.5 rounded-full bg-white"
                         animate={{ scale: [1, 1.3, 1] }}
                         transition={{ repeat: Infinity, duration: 2 }}
                       />
@@ -139,7 +155,7 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                 <TooltipContent side="bottom" className="text-xs">
                   <p className="font-semibold">{stage.label}</p>
                   {isDone && <p className="text-muted-foreground">{t("lifecycle.completed")}</p>}
-                  {isCurrent && !isTerminal && <p className="text-primary">{t("lifecycle.currentStatus")}</p>}
+                  {isCurrent && !isTerminal && <p style={{ color: "#3B82F6" }}>{t("lifecycle.currentStatus")}</p>}
                   {isStopPoint && isCancelled && <p className="text-muted-foreground">{decision.cancelled_at ? t("lifecycle.cancelledAt", { date: format(new Date(decision.cancelled_at), "dd.MM.yy", { locale: dateFnsLocale }) }) : t("lifecycle.cancelled")}</p>}
                   {isStopPoint && isRejected && <p className="text-destructive">{t("lifecycle.rejected")}</p>}
                   {isStopPoint && isSuperseded && <p className="text-accent-foreground">{t("lifecycle.superseded")}</p>}
@@ -156,11 +172,15 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
         {STAGES.map((stage, i) => {
           const isDone = i < currentIdx || (i === currentIdx && decision.status === "implemented");
           const isCurrent = i === currentIdx && !isDone;
+          const isFuture = i > currentIdx;
           return (
             <div key={stage.key} className={`flex-1 last:flex-none text-center ${i === 0 ? "text-left" : i === STAGES.length - 1 ? "text-right" : ""}`}>
-              <p className={`text-[10px] font-medium leading-tight ${
-                isDone ? "text-primary" : isCurrent ? (isTerminal ? "text-muted-foreground" : "text-foreground") : "text-muted-foreground/50"
-              }`}>
+              <p className={`text-[10px] leading-tight ${
+                isDone ? "font-medium" : isCurrent ? (isTerminal ? "text-muted-foreground font-semibold" : "font-semibold") : "font-medium"
+              }`}
+              style={
+                isDone ? { color: "#10B981" } : isCurrent && !isTerminal ? { color: "#3B82F6", fontWeight: 600 } : isFuture ? { opacity: 0.5, color: "#94A3B8" } : undefined
+              }>
                 {stage.label}
               </p>
             </div>
