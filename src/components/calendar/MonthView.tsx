@@ -105,15 +105,14 @@ const MonthView = memo(({
 
   return (
     <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
-      <div className="grid grid-cols-[28px_repeat(7,1fr)] border-b border-border/60">
-        <div className="px-1 py-2.5" />
+      <div className="grid grid-cols-7 border-b border-border/60">
         {weekdayHeaders.map((day) => (
           <div key={day} className="px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             {day}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-[28px_repeat(7,1fr)]">
+      <div className="grid grid-cols-7">
         {monthDays.map((day, idx) => {
           const dateKey = format(day, "yyyy-MM-dd");
           const dayDecisions = decisionsByDate[dateKey] ?? [];
@@ -142,38 +141,6 @@ const MonthView = memo(({
           const momentum = weekMomentums[weekIdx];
 
           return (
-            <>
-              {isFirstInWeek && (
-                <div className="row-span-1 flex flex-col items-center justify-center gap-0.5 border-b border-r border-border/40 px-0.5">
-                  {momentum && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex flex-col items-center gap-0.5">
-                          <div className={cn(
-                            "w-2.5 h-2.5 rounded-full",
-                            momentum === "green" && "bg-success",
-                            momentum === "yellow" && "bg-warning",
-                            momentum === "red" && "bg-destructive animate-pulse",
-                          )} />
-                          <span className={cn(
-                            "text-[7px] font-semibold leading-none",
-                            momentum === "green" && "text-success",
-                            momentum === "yellow" && "text-warning",
-                            momentum === "red" && "text-destructive",
-                          )}>
-                            {momentum === "green" ? "OK" : momentum === "yellow" ? "!!" : "⚠"}
-                          </span>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="text-xs max-w-[180px]">
-                        {momentum === "green" && t("cal.weekGood")}
-                        {momentum === "yellow" && t("cal.weekHigh")}
-                        {momentum === "red" && t("cal.weekCritical")}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-              )}
               <div
                 key={idx}
                 onDragOver={(e) => onDragOver(e as unknown as DragEvent, dateKey)}
@@ -241,7 +208,6 @@ const MonthView = memo(({
                   )}
                 </div>
               </div>
-            </>
           );
         })}
       </div>

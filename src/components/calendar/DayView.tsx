@@ -1,26 +1,22 @@
 import { memo, DragEvent, useMemo } from "react";
 import { format, isToday, differenceInCalendarDays } from "date-fns";
 import { de, enUS } from "date-fns/locale";
-import { Sunrise, Sun, CloudSun, Moon, AlertTriangle, DollarSign, Zap, TrendingUp } from "lucide-react";
+import { AlertTriangle, DollarSign, Zap, TrendingUp, CalendarOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
 import type { Task } from "@/hooks/useTasks";
 import { useTranslation } from "react-i18next";
+import { Badge } from "@/components/ui/badge";
 
 const PRIORITY_MULTIPLIER: Record<string, number> = { critical: 4, high: 2.5, medium: 1.5, low: 1 };
 
-function distributeBySlot(decisions: any[]) {
-  const slots: Record<string, any[]> = { morning: [], midday: [], afternoon: [], evening: [] };
-  for (const d of decisions) {
-    const hour = new Date(d.created_at).getHours();
-    if (hour < 12) slots.morning.push(d);
-    else if (hour < 14) slots.midday.push(d);
-    else if (hour < 18) slots.afternoon.push(d);
-    else slots.evening.push(d);
-  }
-  return slots;
-}
+const PRIORITY_DOT_COLOR: Record<string, string> = {
+  critical: "bg-destructive",
+  high: "bg-warning",
+  medium: "bg-primary",
+  low: "bg-muted-foreground/50",
+};
 
 interface DayViewProps {
   day: Date;
@@ -37,6 +33,16 @@ interface DayViewProps {
   profileMap?: Record<string, string>;
 }
 
+const STATUS_STYLES: Record<string, string> = {
+  draft: "bg-muted text-muted-foreground",
+  proposed: "bg-primary/20 text-primary",
+  review: "bg-warning/20 text-warning",
+  approved: "bg-success/20 text-success",
+  rejected: "bg-destructive/20 text-destructive",
+  implemented: "bg-success/20 text-success",
+  archived: "bg-muted text-muted-foreground",
+};
+
 const DayView = memo(({
   day, decisionsByDate, tasksByDate = {},
   dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
@@ -44,22 +50,11 @@ const DayView = memo(({
   const { t, i18n } = useTranslation();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
 
-  const TIME_SLOTS = [
-    { key: "morning", label: t("cal.morning"), subtitle: t("cal.morningSub"), icon: Sunrise },
-    { key: "midday", label: t("cal.midday"), subtitle: t("cal.middaySub"), icon: Sun },
-    { key: "afternoon", label: t("cal.afternoon"), subtitle: t("cal.afternoonSub"), icon: CloudSun },
-    { key: "evening", label: t("cal.evening"), subtitle: t("cal.eveningSub"), icon: Moon },
-  ] as const;
-
   const dateKey = format(day, "yyyy-MM-dd");
   const dayDecisions = decisionsByDate[dateKey] ?? [];
   const dayTasks = tasksByDate[dateKey] ?? [];
   const today = isToday(day);
   const isDropTarget = dragOverDate === dateKey;
-  
-
-  const slotted = useMemo(() => distributeBySlot(dayDecisions), [dayDecisions]);
-  const slottedTasks = useMemo(() => distributeBySlot(dayTasks), [dayTasks]);
 
   const summary = useMemo(() => {
     const critical = dayDecisions.filter((d) => d.priority === "critical" || d.priority === "high").length;
@@ -72,6 +67,21 @@ const DayView = memo(({
     }
     return { total: dayDecisions.length, tasks: dayTasks.length, critical, escalated, delayCost };
   }, [dayDecisions, dayTasks]);
+
+  // Merge decisions and tasks into a single sorted list
+  const allItems = useMemo(() => {
+    const items: Array<{ type: "decision" | "task"; data: any; sortTime: number }> = [];
+    for (const d of dayDecisions) {
+      items.push({ type: "decision", data: d, sortTime: new Date(d.created_at).getTime() });
+    }
+    for (const t of dayTasks) {
+      items.push({ type: "task", data: t, sortTime: new Date(t.created_at).getTime() });
+    }
+    items.sort((a, b) => a.sortTime - b.sortTime);
+    return items;
+  }, [dayDecisions, dayTasks]);
+
+  const hasItems = allItems.length > 0;
 
   return (
     <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
@@ -123,39 +133,76 @@ const DayView = memo(({
         onDragOver={(e) => onDragOver(e as unknown as DragEvent, dateKey)}
         onDragLeave={onDragLeave}
         onDrop={(e) => onDrop(e as unknown as DragEvent, dateKey)}
-        className={cn("transition-all duration-150", isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40")}
+        className={cn(
+          "transition-all duration-150 px-4 py-3",
+          isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
+        )}
       >
-        {TIME_SLOTS.map(({ key, label, subtitle, icon: Icon }) => {
-          const slotDecisions = slotted[key] ?? [];
-          const slotTasks = slottedTasks[key] ?? [];
-          const total = slotDecisions.length + slotTasks.length;
-          return (
-            <div key={key} className="border-b border-border/40 last:border-b-0">
-              <div className="flex items-center gap-2.5 px-4 py-2 bg-muted/30">
-                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">{label}</span>
-                <span className="text-[10px] text-muted-foreground">{subtitle}</span>
-                {total > 0 && (
-                  <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">{total}</span>
-                )}
-              </div>
-              <div className="min-h-[80px] px-4 py-2">
-                {total > 0 ? (
-                  <div className="space-y-1">
-                    {slotDecisions.map((decision) => (
-                      <DecisionPill key={decision.id} decision={decision} draggingId={draggingId} onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onDecisionClick} profileMap={profileMap} showTime />
-                    ))}
-                    {slotTasks.map((task) => (
-                      <TaskPill key={task.id} task={task as Task} profileMap={profileMap} />
-                    ))}
+        {hasItems ? (
+          <div className="space-y-1.5">
+            {allItems.map((item) => {
+              if (item.type === "decision") {
+                const d = item.data;
+                const cod = d.cost_per_day ? Number(d.cost_per_day) : 0;
+                const codWeekly = cod * 7;
+                return (
+                  <div
+                    key={d.id}
+                    className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer border border-border/30"
+                    onClick={() => onDecisionClick(d.id)}
+                    draggable
+                    onDragStart={(e) => onDragStart(e as unknown as DragEvent, d.id)}
+                    onDragEnd={onDragEnd}
+                  >
+                    <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", PRIORITY_DOT_COLOR[d.priority] || "bg-muted-foreground/50")} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{d.title}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold", STATUS_STYLES[d.status] || "bg-muted text-muted-foreground")}>
+                        {d.status}
+                      </span>
+                      {codWeekly > 0 && (
+                        <span className="text-[11px] font-semibold text-destructive">
+                          ⏱ {codWeekly >= 1000 ? `${(codWeekly / 1000).toFixed(1)}k` : codWeekly.toFixed(0)}€/Wo
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("cal.allDay", "Ganztägig")}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground/30 text-center py-4">—</p>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                );
+              } else {
+                const task = item.data as Task;
+                return (
+                  <div
+                    key={task.id}
+                    className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-muted/40 transition-colors border border-border/30"
+                  >
+                    <div className={cn("w-2.5 h-2.5 rounded-full shrink-0", PRIORITY_DOT_COLOR[task.priority] || "bg-muted-foreground/50")} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{task.title}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5">
+                        {task.status}
+                      </Badge>
+                      <span className="text-[11px] text-muted-foreground">
+                        {t("cal.allDay", "Ganztägig")}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/40">
+            <CalendarOff className="w-10 h-10 mb-2" />
+            <p className="text-sm">{t("cal.noDeadlines", "Keine Deadlines für diesen Tag")}</p>
+          </div>
+        )}
       </div>
     </div>
   );

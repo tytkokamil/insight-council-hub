@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { priorityColor, statusDot } from "./CalendarConstants";
 import { useTranslation } from "react-i18next";
@@ -34,6 +34,10 @@ const CalendarLegend = memo(() => {
       <span className="ml-4 font-semibold flex items-center gap-1">
         <CheckSquare className="w-3 h-3" />
         {t("cal.legendTask")}
+      </span>
+      <span className="ml-4 font-semibold flex items-center gap-1">
+        <DollarSign className="w-3 h-3 text-destructive" />
+        {t("cal.legendCod", "CoD: Cost of Delay aktiv")}
       </span>
     </div>
   );
