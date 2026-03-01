@@ -16,6 +16,7 @@ import Footer from "@/components/landing/Footer";
 import ScrollProgress from "@/components/landing/ScrollProgress";
 import StickyCTA from "@/components/landing/StickyCTA";
 import BackToTop from "@/components/landing/BackToTop";
+import ComparisonSection from "@/components/landing/ComparisonSection";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -95,6 +96,7 @@ const Index = () => {
           <LogoBar />
           <ProblemSection />
           <SolutionSection />
+          <ComparisonSection />
           <IndustriesSection />
           <ComplianceSection />
           <ROICalculatorSection />
