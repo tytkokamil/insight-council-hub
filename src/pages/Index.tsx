@@ -9,9 +9,13 @@ import IndustriesSection from "@/components/landing/IndustriesSection";
 import ComplianceSection from "@/components/landing/ComplianceSection";
 import ROICalculatorSection from "@/components/landing/ROICalculatorSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
+import FAQSection from "@/components/landing/FAQSection";
 import PricingSection from "@/components/landing/PricingSection";
 import CTASection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
+import ScrollProgress from "@/components/landing/ScrollProgress";
+import StickyCTA from "@/components/landing/StickyCTA";
+import BackToTop from "@/components/landing/BackToTop";
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -83,6 +87,7 @@ const Index = () => {
         <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
       </Helmet>
       <div className="landing-page min-h-screen">
+        <ScrollProgress />
         <Navbar />
         <main>
           <HeroSection />
@@ -94,10 +99,13 @@ const Index = () => {
           <ComplianceSection />
           <ROICalculatorSection />
           <TestimonialsSection />
+          <FAQSection />
           <PricingSection />
           <CTASection />
         </main>
         <Footer />
+        <StickyCTA />
+        <BackToTop />
       </div>
     </>
   );

@@ -14,6 +14,7 @@ const Navbar = () => {
     { label: "Branchen", href: "#industries" },
     { label: "Compliance", href: "#compliance" },
     { label: "Preise", href: "#pricing" },
+    { label: "FAQ", href: "#faq" },
   ];
 
   useEffect(() => {
