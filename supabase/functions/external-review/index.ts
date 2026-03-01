@@ -5,11 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-/**
- * External Review Edge Function
- * Handles: GET (validate token + fetch decision), POST (submit review action)
- * No authentication required — token IS the auth.
- */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -49,11 +44,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── SEND INVITE (fire-and-forget from frontend) ──
+    if (action === "send_invite") {
+      // For now just log — actual email sending would use a mail provider
+      console.log(`[external-review] Invite sent to ${tokenData.reviewer_email} for decision ${tokenData.decision_id}`);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── GET: Fetch decision data ──
     if (action === "get") {
       const { data: decision } = await supabase
         .from("decisions")
-        .select("id, title, description, status, priority, category, due_date, created_at")
+        .select("id, title, description, context, status, priority, category, due_date, created_at, cost_per_day")
         .eq("id", tokenData.decision_id)
         .single();
 
@@ -69,7 +73,7 @@ Deno.serve(async (req) => {
         .select("id, file_name, file_url, file_type, file_size")
         .eq("decision_id", decision.id);
 
-      // Get comments (public ones only)
+      // Get comments
       const { data: comments } = await supabase
         .from("comments")
         .select("id, content, created_at, user_id, type")
@@ -86,11 +90,21 @@ Deno.serve(async (req) => {
       (profiles || []).forEach(p => { nameMap[p.user_id] = p.full_name || "Unbekannt"; });
 
       // Get creator name
-      const { data: creatorProfile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", (await supabase.from("decisions").select("created_by").eq("id", decision.id).single()).data?.created_by || "")
+      const { data: creatorDecision } = await supabase
+        .from("decisions")
+        .select("created_by")
+        .eq("id", decision.id)
         .single();
+
+      let creatorName = "Unbekannt";
+      if (creatorDecision?.created_by) {
+        const { data: creatorProfile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", creatorDecision.created_by)
+          .single();
+        creatorName = creatorProfile?.full_name || "Unbekannt";
+      }
 
       const enrichedComments = (comments || []).map(c => ({
         ...c,
@@ -105,7 +119,8 @@ Deno.serve(async (req) => {
         token_status: tokenData.status,
         already_acted: tokenData.status !== "pending",
         action_taken: tokenData.action_taken,
-        creator_name: creatorProfile?.full_name || "Unbekannt",
+        acted_at: tokenData.acted_at,
+        creator_name: creatorName,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -120,6 +135,8 @@ Deno.serve(async (req) => {
       }
 
       const feedback = body.feedback || null;
+      const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+      const userAgent = req.headers.get("user-agent") || "unknown";
 
       // Update token
       await supabase
@@ -132,13 +149,21 @@ Deno.serve(async (req) => {
         })
         .eq("id", tokenData.id);
 
-      // Audit log
+      // Audit log with source tracking
       await supabase.from("audit_logs").insert({
         decision_id: tokenData.decision_id,
         user_id: tokenData.invited_by,
-        action: action === "approve" ? "decision_approved" : "decision_rejected",
+        action: action === "approve" ? "review.approved" : "review.rejected",
         field_name: "external_review",
-        new_value: `${tokenData.reviewer_name} (extern) hat ${action === "approve" ? "genehmigt" : "abgelehnt"}${feedback ? ": " + feedback : ""}`,
+        new_value: JSON.stringify({
+          reviewer: tokenData.reviewer_name,
+          reviewer_email: tokenData.reviewer_email,
+          source: "external_review_portal",
+          action,
+          ip_address: ipAddress,
+          user_agent: userAgent.substring(0, 200),
+          feedback: feedback || null,
+        }),
       });
 
       // Notify the decision creator
@@ -172,7 +197,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Insert comment with the inviter's user_id (marked as external)
       await supabase.from("comments").insert({
         decision_id: tokenData.decision_id,
         user_id: tokenData.invited_by,

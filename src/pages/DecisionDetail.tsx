@@ -900,7 +900,7 @@ const DecisionDetail = () => {
         <>
           <EditDecisionDialog decision={decision} open={showEdit} onOpenChange={setShowEdit} onUpdated={invalidate} />
           <DeleteDecisionDialog decision={decision} open={showDelete} onOpenChange={setShowDelete} onDeleted={() => { invalidate(); navigate("/decisions"); }} />
-          <InviteExternalReviewerDialog decisionId={decision.id} decisionTitle={decision.title} open={showExternalInvite} onOpenChange={setShowExternalInvite} />
+          <InviteExternalReviewerDialog decisionId={decision.id} decisionTitle={decision.title} dueDate={decision.due_date} open={showExternalInvite} onOpenChange={setShowExternalInvite} onInvited={invalidate} />
         </>
       )}
 
