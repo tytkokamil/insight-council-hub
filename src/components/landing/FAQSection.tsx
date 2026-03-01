@@ -53,7 +53,7 @@ const FAQSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center mb-12"
       >
-        <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">
+        <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase" style={{ color: 'hsl(220 45% 50%)' }}>
           FAQ
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">

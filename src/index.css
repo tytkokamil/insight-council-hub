@@ -11,22 +11,25 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Landing page light theme */
+/* Landing page light theme — soft & elegant */
 .landing-page {
   --lp-bg: 225 20% 98%;
   --lp-card: 0 0% 100%;
-  --lp-primary: 217 91% 53%;
+  --lp-primary: 220 60% 50%;
+  --lp-heading: 220 14% 36%;
+  --lp-body: 220 10% 50%;
+  --lp-muted: 220 10% 60%;
   background: hsl(var(--lp-bg));
-  color: hsl(228 12% 30%);
+  color: hsl(var(--lp-body));
   font-family: 'Inter', 'DM Sans', sans-serif;
 }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.025em;
-  color: hsl(228 12% 32%);
+  color: hsl(var(--lp-heading));
 }
 .landing-page p {
-  color: hsl(225 10% 42%);
+  color: hsl(var(--lp-body));
 }
 
 
