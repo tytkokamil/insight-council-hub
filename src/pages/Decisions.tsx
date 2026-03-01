@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
 import NewDecisionDialog from "@/components/decisions/NewDecisionDialog";
@@ -47,6 +47,7 @@ const Decisions = () => {
   const invalidate = useInvalidateDecisions();
   const profileMap = buildProfileMap(profiles);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { selectedTeamId } = useTeamContext();
   const { user } = useAuth();
   const teamMap: Record<string, string> = {};
@@ -118,6 +119,15 @@ const Decisions = () => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 250);
     return () => clearTimeout(t);
   }, [searchQuery]);
+
+  // Auto-open new decision dialog from onboarding
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      searchParams.delete("create");
+      setSearchParams(searchParams, { replace: true });
+      setShowNewDialog(true);
+    }
+  }, [searchParams, setSearchParams]);
 
   // ── Chip counts ──
   const chipCounts = useMemo(() => {

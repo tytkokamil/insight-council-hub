@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
@@ -66,6 +66,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { mode, setMode, shouldShowAdvanced, decisionCount, implementedCount } = useGuidedMode();
   const { role: userRole, can, isExecutive: isExecRole, isAdmin: isAdminRole } = usePermissions();
 
@@ -121,6 +122,16 @@ const Dashboard = () => {
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, [navigate]);
+
+  // Handle ?newDecision=true from onboarding
+  useEffect(() => {
+    if (searchParams.get("newDecision") === "true") {
+      searchParams.delete("newDecision");
+      setSearchParams(searchParams, { replace: true });
+      // Small delay to let dashboard render, then redirect to decisions with create flag
+      setTimeout(() => navigate("/decisions?create=true", { replace: true }), 500);
+    }
+  }, [searchParams, setSearchParams, navigate]);
 
   const personalDecisions = allDecisions.filter(
     (d) => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id
