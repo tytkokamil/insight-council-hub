@@ -98,17 +98,17 @@ const DecisionFilterBar = ({
   };
 
   return (
-    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-3 space-y-3">
+    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md pb-3 space-y-2.5 -mx-1 px-1">
       {/* Row 1: Search + Filter Button */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
           <input
             type="text"
             placeholder={t("decisions.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
+            className="w-full h-9 pl-9 pr-4 rounded-lg bg-muted/40 border border-border/60 text-sm placeholder:text-muted-foreground/50 focus:border-primary/50 focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all"
           />
         </div>
         <Popover open={filterOpen} onOpenChange={setFilterOpen}>

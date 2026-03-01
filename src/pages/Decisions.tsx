@@ -243,26 +243,26 @@ const Decisions = () => {
             <>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-4 h-4" /> {t("common.export")}</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5"><Download className="w-3.5 h-3.5" /> {t("common.export")}</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => { exportDecisionsExcel(prepareExport()); toast.success("Excel exportiert"); }} className="gap-2"><FileText className="w-4 h-4" /> Excel (.xlsx)</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { exportCSV(prepareExport()); toast.success(t("decisions.csvExported")); }} className="gap-2"><FileText className="w-4 h-4" /> CSV</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => exportPDF(prepareExport())} className="gap-2"><FileText className="w-4 h-4" /> PDF</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { exportDecisionsExcel(prepareExport()); toast.success("Excel exportiert"); }} className="gap-2"><FileText className="w-3.5 h-3.5" /> Excel (.xlsx)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { exportCSV(prepareExport()); toast.success(t("decisions.csvExported")); }} className="gap-2"><FileText className="w-3.5 h-3.5" /> CSV</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportPDF(prepareExport())} className="gap-2"><FileText className="w-3.5 h-3.5" /> PDF</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5"><FileUp className="w-4 h-4" /> {t("common.import")}</Button>
+              <Button variant="outline" size="sm" onClick={() => setShowImport(true)} className="gap-1.5"><FileUp className="w-3.5 h-3.5" /> {t("common.import")}</Button>
             </>
           ) : undefined
         }
         primaryAction={
           decisions.length > 0 ? (
-            <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-4 h-4" /> {t("decisions.newButton")}</Button>
+            <Button size="sm" onClick={() => setShowNewDialog(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> {t("decisions.newButton")}</Button>
           ) : undefined
         }
       />
-      {!selectedTeamId && (
-        <p className="text-xs text-muted-foreground -mt-3 mb-2">{t("common.personalHint")}</p>
+      {!selectedTeamId && decisions.length > 0 && (
+        <p className="text-[11px] text-muted-foreground/60 -mt-3 mb-2">{t("common.personalHint")}</p>
       )}
 
       {decisions.length === 0 ? (

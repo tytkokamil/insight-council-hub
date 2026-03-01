@@ -145,11 +145,11 @@ const DecisionTable = ({
   const { predictions } = usePredictiveSla();
 
   return (
-    <Card className="overflow-hidden cmd-card-elevated">
+    <Card className="overflow-hidden border-border/60">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-border bg-muted/20">
+            <tr className="border-b border-border/60 bg-muted/30">
               <th className="p-3 w-10">
                 <Checkbox checked={selectedIds.size === decisions.length && decisions.length > 0} onCheckedChange={onToggleSelectAll} />
               </th>
@@ -177,7 +177,7 @@ const DecisionTable = ({
                 return (
                   <tr
                     key={decision.id}
-                    className={`border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-all duration-150 ${isSelected ? "bg-primary/5" : ""}`}
+                    className={`border-b border-border/20 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors duration-100 ${isSelected ? "bg-primary/[0.04]" : ""}`}
                     onClick={() => onPreview(decision)}
                   >
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
