@@ -60,8 +60,35 @@ const TemplateEditor = () => {
   const [localDraft, setLocalDraft] = useState<DbTemplate | null>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    health: true, fields: true, approval: true, rules: false, governance: false, automation: false, analytics: false, versions: false,
+    health: true, fields: true, approval: true, rules: false, governance: false, automation: false, analytics: true, versions: false,
   });
+  const [sidebarSort, setSidebarSort] = useState<"score-asc" | "score-desc" | "az">("score-asc");
+
+  // Refs for scrolling health check items
+  const fieldsRef = useRef<HTMLDivElement>(null);
+  const approvalRef = useRef<HTMLDivElement>(null);
+  const rulesRef = useRef<HTMLDivElement>(null);
+  const governanceRef = useRef<HTMLDivElement>(null);
+
+  const healthCheckScrollMap: Record<string, { ref: React.RefObject<HTMLDivElement>; section: string }> = useMemo(() => ({
+    [t("templateEditor.healthCheckFields")]: { ref: fieldsRef, section: "fields" },
+    [t("templateEditor.healthCheckRisk")]: { ref: fieldsRef, section: "fields" },
+    [t("templateEditor.healthCheckRoi")]: { ref: fieldsRef, section: "fields" },
+    [t("templateEditor.healthCheckApproval")]: { ref: approvalRef, section: "approval" },
+    [t("templateEditor.healthCheckSla")]: { ref: fieldsRef, section: "fields" },
+    [t("templateEditor.healthCheckRules")]: { ref: rulesRef, section: "rules" },
+    [t("templateEditor.healthCheckGov")]: { ref: governanceRef, section: "governance" },
+    [t("templateEditor.healthCheckDesc")]: { ref: fieldsRef, section: "fields" },
+  }), [t]);
+
+  const handleHealthCheckClick = (label: string) => {
+    const target = healthCheckScrollMap[label];
+    if (!target) return;
+    setExpandedSections(prev => ({ ...prev, [target.section]: true }));
+    setTimeout(() => {
+      target.ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+  };
 
   const fieldTypes = useMemo(() => [
     { value: "text", label: t("templateEditor.fieldTypeText") },
@@ -387,7 +414,7 @@ const TemplateEditor = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
         {/* ─── Sidebar ─── */}
         <Card>
-          <CardContent className="p-3 space-y-1">
+           <CardContent className="p-3 space-y-1">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Templates ({isLoading ? "…" : templates.length})
@@ -396,10 +423,27 @@ const TemplateEditor = () => {
                 <Plus className="w-3.5 h-3.5" />
               </Button>
             </div>
+            {/* Sort toggle */}
+            <div className="flex gap-1 mb-2">
+              {([["score-asc", "Score ↑"], ["score-desc", "Score ↓"], ["az", "A–Z"]] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setSidebarSort(key)}
+                  className={`text-[10px] px-2 py-0.5 rounded-md transition-colors ${sidebarSort === key ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted/50"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-lg" />)
             ) : (
-              templates.map(tmpl => {
+              [...templates].sort((a, b) => {
+                if (sidebarSort === "az") return a.name.localeCompare(b.name);
+                const scoreA = computeHealthScore(a, t).score;
+                const scoreB = computeHealthScore(b, t).score;
+                return sidebarSort === "score-asc" ? scoreA - scoreB : scoreB - scoreA;
+              }).map(tmpl => {
                 const h = computeHealthScore(tmpl, t);
                 return (
                   <button
@@ -439,7 +483,7 @@ const TemplateEditor = () => {
 
         {/* ─── Editor ─── */}
         {localDraft ? (
-          <motion.div key={localDraft.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+          <motion.div key={localDraft.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 pb-20 relative">
 
             {/* ── 1. Template Health Score ── */}
             <Card className="border-primary/20">
@@ -455,37 +499,41 @@ const TemplateEditor = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Button variant="ghost" size="sm" onClick={handleExportTemplate} className="gap-1 text-xs text-muted-foreground">
+                    <Button variant="outline" size="sm" onClick={handleExportTemplate} className="gap-1 text-xs">
                       <Download className="w-3.5 h-3.5" /> Export
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1 text-xs text-muted-foreground">
-                      <Copy className="w-3.5 h-3.5" /> {t("templateEditor.duplicate")}
                     </Button>
                     {!localDraft.is_system && (
                       <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleteTemplate.isPending} className="gap-1 text-xs text-destructive/70 hover:text-destructive">
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     )}
-                    <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs">
-                      {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      {t("templateEditor.save")}
-                    </Button>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {healthData?.checks.map((c, i) => (
-                    <div key={i} className="flex items-center gap-1.5 text-[11px]">
-                      {c.ok ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-destructive/60 shrink-0" />}
-                      <span className={c.ok ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
-                    </div>
+                    c.ok ? (
+                      <div key={i} className="flex items-center gap-1.5 text-[11px]">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span className="text-foreground">{c.label}</span>
+                      </div>
+                    ) : (
+                      <Tooltip key={i}>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => handleHealthCheckClick(c.label)}
+                            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer text-left"
+                          >
+                            <XCircle className="w-3.5 h-3.5 text-destructive/60 shrink-0" />
+                            <span className="underline decoration-dashed underline-offset-2">{c.label}</span>
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top">
+                          <p className="text-xs">Klicken um zu ergänzen →</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )
                   ))}
                 </div>
-                {healthData && healthData.score < 60 && (
-                  <div className="mt-3 p-2.5 rounded-lg bg-destructive/5 border border-destructive/20 flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-xs text-destructive/80">{t("templateEditor.healthWarning")}</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -542,7 +590,7 @@ const TemplateEditor = () => {
             </Card>
 
             {/* ── 2. Pflichtfelder ── */}
-            <Card>
+            <Card ref={fieldsRef}>
               <CardContent className="p-5">
                 <SectionHeader label={t("templateEditor.requiredFields")} sectionKey="fields" count={localDraft.required_fields.length} icon={Target} />
                 {expandedSections.fields && (
@@ -631,7 +679,7 @@ const TemplateEditor = () => {
             </Card>
 
             {/* ── 3. Governance-Regeln ── */}
-            <Card>
+            <Card ref={governanceRef}>
               <CardContent className="p-5">
                 <SectionHeader label={t("templateEditor.govRules")} sectionKey="governance" icon={Shield} />
                 {expandedSections.governance && (
@@ -649,7 +697,7 @@ const TemplateEditor = () => {
             </Card>
 
             {/* ── 4. Freigabe-Schritte ── */}
-            <Card>
+            <Card ref={approvalRef}>
               <CardContent className="p-5">
                 <SectionHeader label={t("templateEditor.approvalSteps")} sectionKey="approval" count={localDraft.approval_steps.length} icon={CheckCircle2} />
                 {expandedSections.approval && (
@@ -707,7 +755,7 @@ const TemplateEditor = () => {
             </Card>
 
             {/* ── 5. Bedingte Regeln ── */}
-            <Card>
+            <Card ref={rulesRef}>
               <CardContent className="p-5">
                 <SectionHeader label={t("templateEditor.conditionalRules")} sectionKey="rules" count={localDraft.conditional_rules?.length || 0} icon={AlertTriangle} />
                 {expandedSections.rules && (
@@ -890,7 +938,7 @@ const TemplateEditor = () => {
                     {templateAnalytics.total === 0 ? (
                       <div className="text-center py-6">
                         <BarChart3 className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                        <p className="text-xs text-muted-foreground">{t("templateEditor.noDecisionsYet")}</p>
+                        <p className="text-xs text-muted-foreground">Noch nicht verwendet — wird nach erster Nutzung befüllt.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -952,6 +1000,17 @@ const TemplateEditor = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* ── Sticky Save Footer ── */}
+            <div className="sticky bottom-0 left-0 right-0 bg-background border-t border-[hsl(214_32%_91%)] px-6 py-3 flex items-center justify-end gap-2 z-10 -mx-0">
+              <Button variant="outline" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1.5 text-xs">
+                <Copy className="w-3.5 h-3.5" /> {t("templateEditor.duplicate")}
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs" style={{ backgroundColor: "#1E3A5F" }}>
+                {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                {t("templateEditor.save")}
+              </Button>
+            </div>
 
           </motion.div>
         ) : (
