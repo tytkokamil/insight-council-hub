@@ -1,29 +1,97 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Crown } from "lucide-react";
+import { ArrowRight, Crown, Sparkles, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-/** Feature descriptions for the upgrade modal */
-const FEATURE_INFO: Record<string, { titleKey: string; descKey: string }> = {
-  executive:    { titleKey: "upgrade.executiveTitle",    descKey: "upgrade.executiveDesc" },
-  analytics:    { titleKey: "upgrade.analyticsTitle",    descKey: "upgrade.analyticsDesc" },
-  bottlenecks:  { titleKey: "upgrade.bottlenecksTitle",  descKey: "upgrade.bottlenecksDesc" },
-  audit:        { titleKey: "upgrade.auditTitle",        descKey: "upgrade.auditDesc" },
-  engine:       { titleKey: "upgrade.engineTitle",       descKey: "upgrade.engineDesc" },
-  calendar:     { titleKey: "upgrade.calendarTitle",     descKey: "upgrade.calendarDesc" },
-  risks:        { titleKey: "upgrade.risksTitle",        descKey: "upgrade.risksDesc" },
-  teams:        { titleKey: "upgrade.teamsTitle",        descKey: "upgrade.teamsDesc" },
-  dashboard:    { titleKey: "upgrade.dashboardTitle",    descKey: "upgrade.dashboardDesc" },
-  decisions:    { titleKey: "upgrade.decisionsTitle",    descKey: "upgrade.decisionsDesc" },
-  tasks:        { titleKey: "upgrade.tasksTitle",        descKey: "upgrade.tasksDesc" },
+/** Feature descriptions with bullet points for the upgrade modal */
+const FEATURE_INFO: Record<string, {
+  titleKey: string;
+  descKey: string;
+  bullets?: string[];
+  priceHint?: string;
+  addonHint?: string;
+}> = {
+  executive: {
+    titleKey: "upgrade.executiveTitle",
+    descKey: "upgrade.executiveDesc",
+    bullets: ["Board-Ready KPIs auf einen Blick", "Portfolio Risk Übersicht", "KI-gestütztes Executive Briefing"],
+  },
+  analytics: {
+    titleKey: "upgrade.analyticsTitle",
+    descKey: "upgrade.analyticsDesc",
+    bullets: ["9 Analytics-Module", "Health Heatmap & Friction Map", "Decision DNA & Pattern Engine"],
+  },
+  bottlenecks: {
+    titleKey: "upgrade.bottlenecksTitle",
+    descKey: "upgrade.bottlenecksDesc",
+    bullets: ["Engpässe automatisch erkennen", "Prozess-Optimierung", "Echtzeit-Monitoring"],
+  },
+  audit: {
+    titleKey: "upgrade.auditTitle",
+    descKey: "upgrade.auditDesc",
+    bullets: ["SHA-256 kryptographische Sicherung", "Lückenlose Hash-Kette", "Unbegrenzte Aufbewahrung"],
+  },
+  engine: {
+    titleKey: "upgrade.engineTitle",
+    descKey: "upgrade.engineDesc",
+  },
+  calendar: {
+    titleKey: "upgrade.calendarTitle",
+    descKey: "upgrade.calendarDesc",
+  },
+  risks: {
+    titleKey: "upgrade.risksTitle",
+    descKey: "upgrade.risksDesc",
+  },
+  teams: {
+    titleKey: "upgrade.teamsTitle",
+    descKey: "upgrade.teamsDesc",
+  },
+  dashboard: {
+    titleKey: "upgrade.dashboardTitle",
+    descKey: "upgrade.dashboardDesc",
+  },
+  decisions: {
+    titleKey: "upgrade.decisionsTitle",
+    descKey: "upgrade.decisionsDesc",
+  },
+  tasks: {
+    titleKey: "upgrade.tasksTitle",
+    descKey: "upgrade.tasksDesc",
+  },
+  aiBrief: {
+    titleKey: "upgrade.aiBriefTitle",
+    descKey: "upgrade.aiBriefDesc",
+    bullets: [
+      "Die 3 kritischsten offenen Entscheidungen",
+      "Aktuelle Verzögerungskosten (Cost-of-Delay)",
+      "Konkrete Handlungsempfehlung",
+    ],
+    priceHint: "Ab €149/Monat",
+  },
+  compliance: {
+    titleKey: "upgrade.complianceTitle",
+    descKey: "upgrade.complianceDesc",
+    bullets: [
+      "Alle Frameworks: NIS2, ISO 9001, IATF, GMP, MaRisk",
+      "Automatische Compliance-Termine",
+      "Audit-Vorbereitung",
+    ],
+    addonHint: "Oder: Zusätzliches Framework für €19/Monat hinzubuchen",
+  },
 };
 
 const PLAN_DISPLAY: Record<string, string> = {
   starter: "Starter",
   pro: "Professional",
-  business: "Business",
   enterprise: "Enterprise",
+};
+
+const PLAN_PRICE: Record<string, string> = {
+  starter: "€59",
+  pro: "€149",
+  enterprise: "ab €499",
 };
 
 interface FeatureUpgradeModalProps {
@@ -41,10 +109,11 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
   const info = FEATURE_INFO[featureKey];
   const title = info ? t(info.titleKey, { defaultValue: featureLabel }) : featureLabel;
   const description = info
-    ? t(info.descKey, { defaultValue: t("upgrade.genericDesc", { feature: featureLabel }) })
+    ? t(info.descKey, { defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` })
     : t("upgrade.genericDesc", { feature: featureLabel, defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` });
 
   const planName = PLAN_DISPLAY[minPlan] || "Professional";
+  const planPrice = PLAN_PRICE[minPlan] || "€149";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -66,6 +135,18 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
           </DialogDescription>
         </DialogHeader>
 
+        {/* Bullet points if available */}
+        {info?.bullets && (
+          <ul className="space-y-2 py-2">
+            {info.bullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-sm">
+                <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                <span className="text-muted-foreground">{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
         <div className="flex flex-col gap-2 pt-2">
           <Button
             onClick={() => {
@@ -74,13 +155,36 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
             }}
             className="w-full gap-2"
           >
-            {t("upgrade.cta", { defaultValue: "Jetzt upgraden" })}
-            <ArrowRight className="w-4 h-4" />
+            <Sparkles className="w-4 h-4" />
+            {t("upgrade.ctaWithPlan", {
+              plan: planName,
+              price: planPrice,
+              defaultValue: `Auf ${planName} upgraden — ${planPrice}/Monat`,
+            })}
           </Button>
+
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onOpenChange(false);
+              navigate("/#pricing");
+            }}
+            className="w-full text-xs text-primary hover:text-primary/80"
+          >
+            {t("upgrade.trial", { defaultValue: "Oder 14 Tage kostenlos testen" })}
+            <ArrowRight className="w-3 h-3 ml-1" />
+          </Button>
+
+          {info?.addonHint && (
+            <p className="text-[11px] text-muted-foreground/60 text-center pt-1">
+              {info.addonHint}
+            </p>
+          )}
+
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="w-full text-muted-foreground"
+            className="w-full text-muted-foreground text-xs"
           >
             {t("upgrade.later", { defaultValue: "Später" })}
           </Button>
