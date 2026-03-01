@@ -349,6 +349,12 @@
     "webhookPayloadInfo": "Payload format:",
     "webhookHmacInfo": "Signed with HMAC-SHA256 in header X-Decivio-Signature"
   },
+  "externalReview": {
+    "expiredTitle": "Link expired",
+    "expiredDesc": "This review link is no longer valid (30-day limit).",
+    "invalidTitle": "Invalid link",
+    "invalidDesc": "Please use the link from the invitation email."
+  },
   "common": {
     "skipToContent": "Skip to content",
     "openNav": "Open navigation",
@@ -432,6 +438,19 @@
     "critical": "Critical"
   },
   "decisions": {
+    "externalInviteTitle": "Invite External Reviewer",
+    "externalInviteDesc": "Generate a secure one-time link for a reviewer without a Decivio account.",
+    "externalForDecision": "For decision:",
+    "externalName": "Reviewer name",
+    "externalNamePlaceholder": "e.g. Dr. Jane Smith",
+    "externalEmail": "Email address",
+    "externalGenerate": "Generate link",
+    "externalLinkReady": "Invitation link created!",
+    "externalShareLink": "Share link (via email or chat):",
+    "externalLinkHint": "The reviewer can comment, approve or reject without an account. Link expires after 30 days.",
+    "externalDone": "Done",
+    "externalInviteCreated": "External review link created.",
+    "externalInviteFailed": "Could not create link.",
     "title": "Decisions",
     "subtitle": "{{total}} decisions",
     "countShown": "{{total}} decisions · {{shown}} shown",

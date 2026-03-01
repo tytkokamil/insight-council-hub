@@ -1,0 +1,348 @@
+import { useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  CheckCircle2, XCircle, FileText, Paperclip, MessageSquare, Clock,
+  Loader2, AlertTriangle, ShieldCheck, ExternalLink
+} from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { de } from "date-fns/locale";
+import decivioLogo from "@/assets/decivio-logo.png";
+
+const priorityConfig: Record<string, { label: string; class: string }> = {
+  critical: { label: "Kritisch", class: "bg-destructive/10 text-destructive border-destructive/30" },
+  high: { label: "Hoch", class: "bg-orange-500/10 text-orange-600 border-orange-500/30" },
+  medium: { label: "Mittel", class: "bg-primary/10 text-primary border-primary/30" },
+  low: { label: "Niedrig", class: "bg-muted text-muted-foreground border-border" },
+};
+
+interface DecisionData {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  priority: string;
+  category: string;
+  due_date: string | null;
+  created_at: string;
+}
+
+interface Attachment {
+  id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string | null;
+  file_size: number | null;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  author_name: string;
+}
+
+const ExternalReviewPage = () => {
+  const [params] = useSearchParams();
+  const token = params.get("token");
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [decision, setDecision] = useState<DecisionData | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [reviewerName, setReviewerName] = useState("");
+  const [creatorName, setCreatorName] = useState("");
+  const [alreadyActed, setAlreadyActed] = useState(false);
+  const [actionTaken, setActionTaken] = useState<string | null>(null);
+
+  const [feedback, setFeedback] = useState("");
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [actionDone, setActionDone] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!token) {
+      setError("Kein Token vorhanden. Bitte verwenden Sie den Link aus der Einladungs-E-Mail.");
+      setLoading(false);
+      return;
+    }
+    loadReview();
+  }, [token]);
+
+  const loadReview = async () => {
+    setLoading(true);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke("external-review", {
+        body: { action: "get", token },
+      });
+      if (fnErr) throw fnErr;
+      if (data?.error) {
+        setError(data.error === "expired" ? "Dieser Link ist abgelaufen (30-Tage-Limit)." : data.message || "Ungültiger Link.");
+        setLoading(false);
+        return;
+      }
+      setDecision(data.decision);
+      setAttachments(data.attachments || []);
+      setComments(data.comments || []);
+      setReviewerName(data.reviewer?.name || "");
+      setCreatorName(data.creator_name || "");
+      setAlreadyActed(data.already_acted);
+      setActionTaken(data.action_taken);
+    } catch {
+      setError("Fehler beim Laden der Entscheidung.");
+    }
+    setLoading(false);
+  };
+
+  const submitAction = async (action: "approve" | "reject") => {
+    setSubmitting(true);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke("external-review", {
+        body: { action, token, feedback: feedback.trim() || null },
+      });
+      if (fnErr) throw fnErr;
+      if (data?.error) throw new Error(data.message);
+      setActionDone(action);
+      setAlreadyActed(true);
+      setActionTaken(action);
+    } catch {
+      // show inline
+    }
+    setSubmitting(false);
+  };
+
+  const submitComment = async () => {
+    if (!newComment.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      await supabase.functions.invoke("external-review", {
+        body: { action: "comment", token, content: newComment.trim() },
+      });
+      setComments([...comments, {
+        id: crypto.randomUUID(),
+        content: `[Extern: ${reviewerName}] ${newComment.trim()}`,
+        created_at: new Date().toISOString(),
+        author_name: `${reviewerName} (extern)`,
+      }]);
+      setNewComment("");
+    } catch { /* ignore */ }
+    setCommentSubmitting(false);
+  };
+
+  // ── Error / Loading states ──
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md text-center space-y-4">
+          <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
+          <h1 className="text-lg font-semibold">Zugriff nicht möglich</h1>
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!decision) return null;
+
+  const prio = priorityConfig[decision.priority] || priorityConfig.medium;
+
+  return (
+    <div className="min-h-screen bg-muted/30">
+      {/* Header */}
+      <header className="bg-background border-b border-border px-4 py-3">
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <span className="text-xs text-muted-foreground">
+              Externes Review — Eingeladen als <strong className="text-foreground">{reviewerName}</strong>
+            </span>
+          </div>
+          <Badge variant="outline" className="text-[9px]">Einmal-Link • 30 Tage</Badge>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {/* Decision card */}
+        <div className="bg-background rounded-xl border border-border p-6 space-y-4">
+          {/* Title + meta */}
+          <div>
+            <div className="flex items-start gap-2 mb-2">
+              <Badge variant="outline" className={`text-[10px] shrink-0 ${prio.class}`}>{prio.label}</Badge>
+              <Badge variant="outline" className="text-[10px] shrink-0">{decision.category}</Badge>
+            </div>
+            <h1 className="text-xl font-bold text-foreground leading-tight">{decision.title}</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Erstellt von <strong>{creatorName}</strong> • {formatDistanceToNow(new Date(decision.created_at), { addSuffix: true, locale: de })}
+              {decision.due_date && (
+                <> • Deadline: <strong>{new Date(decision.due_date).toLocaleDateString("de-DE")}</strong></>
+              )}
+            </p>
+          </div>
+
+          {/* Description */}
+          {decision.description && (
+            <div className="prose prose-sm max-w-none text-foreground/90">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed">{decision.description}</p>
+            </div>
+          )}
+
+          {/* Attachments */}
+          {attachments.length > 0 && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <Paperclip className="w-3 h-3" /> Anhänge ({attachments.length})
+              </h3>
+              <div className="space-y-1">
+                {attachments.map(att => (
+                  <a
+                    key={att.id}
+                    href={att.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-xs text-primary hover:underline py-1"
+                  >
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    {att.file_name}
+                    {att.file_size && <span className="text-muted-foreground">({(att.file_size / 1024).toFixed(0)} KB)</span>}
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comments */}
+          {comments.length > 0 && (
+            <div>
+              <h3 className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+                <MessageSquare className="w-3 h-3" /> Kommentare ({comments.length})
+              </h3>
+              <div className="space-y-2">
+                {comments.map(c => (
+                  <div key={c.id} className="bg-muted/50 rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-medium">{c.author_name}</span>
+                      <span className="text-[9px] text-muted-foreground">
+                        {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: de })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-foreground/80">{c.content}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Add comment */}
+        <div className="bg-background rounded-xl border border-border p-4">
+          <h3 className="text-xs font-medium mb-2">Kommentar hinzufügen</h3>
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Ihr Kommentar..."
+            className="mb-2 text-sm"
+            rows={3}
+            maxLength={5000}
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={submitComment}
+            disabled={commentSubmitting || !newComment.trim()}
+            className="gap-1.5"
+          >
+            {commentSubmitting && <Loader2 className="w-3 h-3 animate-spin" />}
+            Kommentar senden
+          </Button>
+        </div>
+
+        {/* Action section */}
+        <div className="bg-background rounded-xl border border-border p-6">
+          {alreadyActed || actionDone ? (
+            <div className="text-center space-y-2">
+              {(actionTaken === "approve" || actionDone === "approve") ? (
+                <>
+                  <CheckCircle2 className="w-10 h-10 text-primary mx-auto" />
+                  <h2 className="text-lg font-semibold">Genehmigt</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Sie haben diese Entscheidung genehmigt. Der Ersteller wurde benachrichtigt.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-10 h-10 text-destructive mx-auto" />
+                  <h2 className="text-lg font-semibold">Abgelehnt</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Sie haben diese Entscheidung abgelehnt. Der Ersteller wurde benachrichtigt.
+                  </p>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              <h3 className="text-sm font-medium mb-3">Ihre Entscheidung</h3>
+              <Textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Optionales Feedback oder Begründung..."
+                className="mb-4 text-sm"
+                rows={3}
+                maxLength={5000}
+              />
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => submitAction("approve")}
+                  disabled={submitting}
+                  className="flex-1 gap-2"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  Genehmigen
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => submitAction("reject")}
+                  disabled={submitting}
+                  className="flex-1 gap-2"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                  Ablehnen
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Viral footer */}
+        <footer className="text-center py-8 space-y-2">
+          <div className="flex items-center justify-center gap-2 opacity-50 hover:opacity-80 transition-opacity">
+            <img src={decivioLogo} alt="Decivio" className="h-5" />
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Diese Entscheidung wurde mit{" "}
+            <a href="https://decivio.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+              Decivio
+            </a>{" "}
+            erstellt — Entscheidungsmanagement für Teams.
+          </p>
+        </footer>
+      </main>
+    </div>
+  );
+};
+
+export default ExternalReviewPage;
