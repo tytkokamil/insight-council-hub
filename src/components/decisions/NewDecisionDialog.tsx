@@ -27,6 +27,7 @@ import { Crown, Lock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useTranslatedLabels } from "@/lib/labels";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import DecisionLimitModal from "@/components/upgrade/DecisionLimitModal";
 
 interface Props {
   open: boolean;
@@ -49,6 +50,14 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const { selectedTeamId } = useTeamContext();
   const { templates: dbTemplates } = useTemplates();
   const { isDecisionLimitReached, decisionCount, maxDecisions, isFree } = useFreemiumLimits();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+
+  // Show limit modal when dialog opens and limit is reached
+  useEffect(() => {
+    if (open && isDecisionLimitReached) {
+      setShowLimitModal(true);
+    }
+  }, [open, isDecisionLimitReached]);
 
   // Convert DB templates to DecisionTemplate interface for the UI
   const availableTemplates: DecisionTemplate[] = useMemo(
@@ -670,6 +679,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
       <DialogContent className="glass-card border-border max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
@@ -935,6 +945,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         )}
       </DialogContent>
     </Dialog>
+
+    <DecisionLimitModal open={showLimitModal} onOpenChange={setShowLimitModal} />
+    </>
   );
 };
 

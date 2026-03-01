@@ -11,6 +11,8 @@ import { BarChart3, TrendingUp, PieChart, Users, FileDown, Loader2 } from "lucid
 import { useDecisions } from "@/hooks/useDecisions";
 import { fetchBoardReportData, generateBoardReport } from "@/lib/generateBoardReport";
 import { useToast } from "@/hooks/use-toast";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import FeatureGateBanner from "@/components/upgrade/FeatureGateBanner";
 
 const Analytics = lazy(() => import("./Analytics"));
 
@@ -24,6 +26,7 @@ const AnalyticsHub = () => {
   const [exporting, setExporting] = useState(false);
   const { toast } = useToast();
   const { data: decisions = [], isLoading } = useDecisions();
+  const { analyticsAvailable } = useFreemiumLimits();
   const hasEnoughData = decisions.length >= MIN_DECISIONS_FOR_ANALYTICS;
 
   const handleExport = async () => {
@@ -77,7 +80,17 @@ const AnalyticsHub = () => {
         }
       />
 
-      {!isLoading && !hasEnoughData ? (
+      {!analyticsAvailable && <FeatureGateBanner planName="Professional" price="149€/mo" />}
+
+      {!analyticsAvailable ? (
+        <div className="opacity-50 pointer-events-none">
+          <EmptyAnalysisState
+            icon={BarChart3}
+            title={t("analytics.notEnoughData")}
+            description="Analytics ist ab dem Professional Plan verfügbar."
+          />
+        </div>
+      ) : !isLoading && !hasEnoughData ? (
         <EmptyAnalysisState
           icon={BarChart3}
           title={t("analytics.notEnoughData")}

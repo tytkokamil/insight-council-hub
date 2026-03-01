@@ -4,16 +4,48 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles, Loader2, AlertTriangle, CheckCircle2, Zap,
-  ArrowRight, RefreshCw,
+  ArrowRight, RefreshCw, Lock,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 
 const AiBriefingWidget = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { aiBriefAvailable, isFree } = useFreemiumLimits();
+
+  // Trigger 5 — Free plan: show blurred preview
+  if (!aiBriefAvailable) {
+    return (
+      <div className="border border-border rounded-lg p-5 space-y-3 relative">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-muted-foreground/40" />
+          <h3 className="text-sm font-semibold text-muted-foreground/60">{t("widgets.aiBriefing")}</h3>
+        </div>
+        <div className="space-y-2 opacity-50 blur-[2px] select-none pointer-events-none">
+          <p className="text-sm font-medium">[Gesperrt] Engpass bei Schlüsselprojekten…</p>
+          <div className="flex items-start gap-1.5 text-xs">
+            <AlertTriangle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
+            <span className="text-muted-foreground">3 Entscheidungen überschreiten SLA um 5+ Tage</span>
+          </div>
+          <div className="flex items-start gap-1.5 p-2 rounded-md bg-primary/5 text-xs">
+            <Zap className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+            <span>Priorisiere Budget-Review für Q2 Planung</span>
+          </div>
+        </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 rounded-lg">
+          <Lock className="w-5 h-5 text-muted-foreground mb-1" />
+          <p className="text-xs font-medium text-muted-foreground">KI Daily Brief ab Professional</p>
+          <Button variant="ghost" size="sm" className="mt-1 text-xs h-7 gap-1 text-primary" onClick={() => navigate("/upgrade")}>
+            Upgrade <ArrowRight className="w-3 h-3" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["dashboard-briefing"],
