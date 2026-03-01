@@ -28,8 +28,8 @@ const TEAM_ROLE_KEYS: Record<string, string> = {
 const TEAM_ROLE_STYLES: Record<string, string> = {
   admin: "bg-destructive/10 text-destructive border-destructive/20",
   lead: "bg-primary/10 text-primary border-primary/20",
-  member: "bg-muted text-muted-foreground border-border",
-  viewer: "bg-muted/50 text-muted-foreground/60 border-border",
+  member: "bg-muted text-muted-foreground border-border/60",
+  viewer: "bg-muted/50 text-muted-foreground/60 border-border/60",
 };
 
 const TEAM_ROLE_ICONS: Record<string, typeof Shield> = {
@@ -133,11 +133,11 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
 
   if (!team) return null;
 
-  const inputClass = "w-full h-9 px-3 rounded-lg bg-muted/50 border border-border focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm";
+  const inputClass = "w-full h-9 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass-card border-border max-w-lg">
+      <DialogContent className="glass-card border-border/60 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">{team.name}</DialogTitle>
           <p className="text-sm text-muted-foreground">{team.description || t("team.noDescription")}</p>
@@ -186,7 +186,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
                     {t("team.pendingInvites")} ({pendingInvites.length})
                   </h3>
                   {pendingInvites.map((inv) => (
-                    <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border">
+                    <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/20 border border-dashed border-border/60">
                       <Mail className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm flex-1 truncate">{inv.email}</span>
                       {isLeadOrAdmin && (
@@ -200,7 +200,7 @@ const ManageTeamDialog = ({ team, open, onOpenChange, onUpdated }: Props) => {
               )}
 
               {/* Current members */}
-              <div className="space-y-2 border-t border-border pt-3">
+              <div className="space-y-2 border-t border-border/60 pt-3">
                 <h3 className="text-sm font-medium flex items-center gap-2">
                   <Check className="w-3.5 h-3.5" />
                   {t("team.membersCount", { count: members.length })}
