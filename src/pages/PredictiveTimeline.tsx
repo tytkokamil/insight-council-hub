@@ -6,7 +6,7 @@ import { Calendar, Clock, AlertTriangle, Activity, TrendingUp, ChevronDown, Chev
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
-import AiInsightPanel from "@/components/shared/AiInsightPanel";
+
 import { differenceInDays, addDays, format, max as dateMax, min as dateMin } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -234,20 +234,28 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border">
                 <p className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}
+                  {atRisk === filteredDecisions.length && filteredDecisions.length > 0 ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-1 cursor-default">
+                          <AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent><p className="text-xs max-w-xs">{t("predictive.allAtRiskHint", "Hohe Quote bei wenig Daten normal — Prognose verbessert sich ab 10+ Entscheidungen.")}</p></TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <><AlertTriangle className="w-3 h-3 text-warning" /> {t("predictive.atRisk")}</>
+                  )}
                 </p>
                 <p className={`text-xl font-bold tabular-nums ${atRisk > filteredDecisions.length * 0.5 ? "text-destructive" : atRisk > 0 ? "text-warning" : "text-success"}`}>{atRisk}</p>
               </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="p-3 rounded-lg bg-muted/30 border border-border cursor-default">
-                    <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
-                    <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{avgConfidence < 50 ? t("predictive.lowConfidenceHint") : avgConfidence < 70 ? t("predictive.medConfidenceHint") : t("predictive.highConfidenceHint")}</p>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent><p className="text-xs max-w-xs">{t("predictive.confidenceTooltip")}</p></TooltipContent>
-              </Tooltip>
+              <div className="p-3 rounded-lg bg-muted/30 border border-border cursor-default">
+                <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
+                <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
+                <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>
+                  {t("predictive.confidenceGrowHint", "Steigt automatisch mit mehr abgeschlossenen Entscheidungen.")}
+                </p>
+              </div>
             </div>
 
             <CollapsibleSection
@@ -305,10 +313,22 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                         </TooltipContent>
                       </Tooltip>
                       <div className="flex-1 relative h-full px-1">
+                        {/* Past shading */}
                         <div
-                          className="absolute top-0 bottom-0 w-px bg-primary/40 z-10"
-                          style={{ left: `${todayPosition}%` }}
+                          className="absolute top-0 bottom-0 z-[5] pointer-events-none"
+                          style={{ left: 0, width: `${todayPosition}%`, backgroundColor: "rgba(59,130,246,0.03)" }}
                         />
+                        {/* Today line */}
+                        <div
+                          className="absolute top-0 bottom-0 z-10"
+                          style={{ left: `${todayPosition}%`, width: "2px", backgroundColor: "#3B82F6" }}
+                        />
+                        <span
+                          className="absolute z-10 font-bold"
+                          style={{ left: `${todayPosition}%`, top: "-2px", transform: "translateX(-50%)", fontSize: "11px", color: "#3B82F6" }}
+                        >
+                          {t("predictive.legendToday", "Heute")}
+                        </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div
@@ -361,25 +381,12 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               <div className="flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-80 rounded" /> {t("predictive.legendElapsed")}</span>
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-30 rounded" /> {t("predictive.legendForecast")}</span>
-                <span className="flex items-center gap-1"><div className="w-px h-3 bg-primary/40" /> {t("predictive.legendToday")}</span>
+                <span className="flex items-center gap-1"><div className="h-3" style={{ width: "2px", backgroundColor: "#3B82F6" }} /> {t("predictive.legendToday")}</span>
                 <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> {t("predictive.legendWarning")}</span>
               </div>
             </div>
             </CollapsibleSection>
 
-            <AiInsightPanel
-              type="pattern"
-              context={{
-                analysisType: "predictive_timeline",
-                openDecisions: filteredDecisions.length,
-                avgPredictedDays: avgPredicted,
-                atRiskCount: atRisk,
-                avgConfidence,
-                topRisks: sorted.filter(d => d.warning).slice(0, 5).map(d => ({
-                  title: d.title, warning: d.warning, remainingDays: d.predictedDaysLeft, confidencePercent: d.confidence
-                })),
-              }}
-            />
           </>
         )}
       </div>
