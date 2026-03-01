@@ -210,7 +210,7 @@ const SettingsPage = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-xl font-bold tracking-tight">{t("settings.pageTitle")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
