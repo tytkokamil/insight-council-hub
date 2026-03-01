@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Timer, MousePointerClick, Bot, ShieldCheck, LineChart, LayoutTemplate } from "lucide-react";
 import productDashboard from "@/assets/product-dashboard-frame.jpg";
 import productAnalytics from "@/assets/product-analytics-frame.jpg";
 import productGraph from "@/assets/product-graph-frame.jpg";
@@ -6,12 +7,12 @@ import productGraph from "@/assets/product-graph-frame.jpg";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const features = [
-  { icon: "⏱", title: "Echtzeit Cost-of-Delay", desc: "Wie ein Taxi-Meter: Sie sehen buchstäblich wie viel Geld jede offene Entscheidung kostet — jede Sekunde.", tag: "● Live-Berechnung", tagBg: "bg-warning/10 text-warning", featured: true },
-  { icon: "✓", title: "One-Click Approval", desc: "Reviewer genehmigen direkt aus der E-Mail — ohne Login. Ein Klick. Aktion dokumentiert. Audit Trail aktualisiert.", tag: "Neu", tagBg: "bg-primary/10 text-primary", featured: false },
-  { icon: "🤖", title: "KI Daily Brief", desc: "Jeden Morgen um 07:30 Uhr: Brief mit den 3 kritischsten Entscheidungen, SLA-Warnungen und Economic Exposure.", tag: "KI-gestützt", tagBg: "bg-success/10 text-success", featured: false },
-  { icon: "📋", title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. BaFin, ISO 9001, NIS2: Audit-ready.", tag: "Compliance", tagBg: "bg-accent text-accent-foreground", featured: false },
-  { icon: "🔮", title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf dem historischen Verhalten Ihrer Reviewer.", tag: "KI-gestützt", tagBg: "bg-destructive/10 text-destructive", featured: false },
-  { icon: "⬡", title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — branchenspezifisch und sofort nutzbar.", tag: "15 Branchen", tagBg: "bg-[hsl(263,85%,95%)] text-[hsl(263,85%,50%)]", featured: false },
+  { icon: Timer, title: "Echtzeit Cost-of-Delay", desc: "Wie ein Taxi-Meter: Sie sehen buchstäblich wie viel Geld jede offene Entscheidung kostet — jede Sekunde.", tag: "● Live-Berechnung", tagBg: "bg-warning/10 text-warning", featured: true },
+  { icon: MousePointerClick, title: "One-Click Approval", desc: "Reviewer genehmigen direkt aus der E-Mail — ohne Login. Ein Klick. Aktion dokumentiert. Audit Trail aktualisiert.", tag: "Neu", tagBg: "bg-primary/10 text-primary", featured: false },
+  { icon: Bot, title: "KI Daily Brief", desc: "Jeden Morgen um 07:30 Uhr: Brief mit den 3 kritischsten Entscheidungen, SLA-Warnungen und Economic Exposure.", tag: "KI-gestützt", tagBg: "bg-success/10 text-success", featured: false },
+  { icon: ShieldCheck, title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. BaFin, ISO 9001, NIS2: Audit-ready.", tag: "Compliance", tagBg: "bg-accent text-accent-foreground", featured: false },
+  { icon: LineChart, title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf dem historischen Verhalten Ihrer Reviewer.", tag: "KI-gestützt", tagBg: "bg-destructive/10 text-destructive", featured: false },
+  { icon: LayoutTemplate, title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — branchenspezifisch und sofort nutzbar.", tag: "15 Branchen", tagBg: "bg-primary/5 text-primary", featured: false },
 ];
 
 const screenshots = [
@@ -55,7 +56,9 @@ const SolutionSection = () => (
             }`}
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-2xl">{f.icon}</span>
+              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                <f.icon className="w-4.5 h-4.5 text-foreground/70" />
+              </div>
               <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${f.tagBg}`}>{f.tag}</span>
             </div>
             <h3 className="text-[15px] font-bold text-foreground mb-2">{f.title}</h3>

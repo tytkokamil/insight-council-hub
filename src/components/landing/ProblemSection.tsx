@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { Clock, Mail, Search, TrendingDown } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const DAILY_RATE = 5 * 120 * 8 * 3 / 5; // 5 decisions, €120/h, 8h, 3 persons, per decision = €2,880
+const DAILY_RATE = 5 * 120 * 8 * 3 / 5;
 const PER_SECOND_RATE = DAILY_RATE / 86400;
 
 const problems = [
-  { icon: "⏳", title: "Reviewer reagieren nicht", desc: "Im Durchschnitt warten Entscheidungen 4,2 Tage auf eine einfache Genehmigung — niemand misst das." },
-  { icon: "📧", title: "Entscheidungen per E-Mail", desc: "Kein Audit Trail, kein SLA, kein Verantwortlicher. E-Mails verschwinden im Posteingang." },
-  { icon: "🔍", title: "Compliance-Lücken", desc: "NIS2, ISO 9001, IATF 16949 — all das erfordert dokumentierte Entscheidungsprozesse. Die meisten haben sie nicht." },
-  { icon: "💸", title: "Unsichtbare Kosten", desc: "Eine Entscheidung die 5 Personen à €120/h blockiert kostet €4.800 pro Woche. Das sieht keiner." },
+  { icon: Clock, title: "Reviewer reagieren nicht", desc: "Im Durchschnitt warten Entscheidungen 4,2 Tage auf eine einfache Genehmigung — niemand misst das." },
+  { icon: Mail, title: "Entscheidungen per E-Mail", desc: "Kein Audit Trail, kein SLA, kein Verantwortlicher. E-Mails verschwinden im Posteingang." },
+  { icon: Search, title: "Compliance-Lücken", desc: "NIS2, ISO 9001, IATF 16949 — all das erfordert dokumentierte Entscheidungsprozesse. Die meisten haben sie nicht." },
+  { icon: TrendingDown, title: "Unsichtbare Kosten", desc: "Eine Entscheidung die 5 Personen à €120/h blockiert kostet €4.800 pro Woche. Das sieht keiner." },
 ];
 
 const dashboardItems = [
@@ -82,16 +83,11 @@ const ProblemSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5, ease }}
-                whileHover={{ x: 4, scale: 1.01 }}
-                className="group flex items-start gap-4 p-5 rounded-xl border border-destructive/20 bg-destructive/[0.03] hover:bg-destructive/[0.06] hover:border-destructive/30 hover:shadow-sm cursor-default transition-colors duration-200"
+                className="group flex items-start gap-4 p-5 rounded-xl border border-destructive/20 bg-destructive/[0.03] hover:bg-destructive/[0.06] hover:border-destructive/30 transition-colors duration-200"
               >
-                <motion.span
-                  className="text-2xl shrink-0 mt-0.5"
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  {p.icon}
-                </motion.span>
+                <div className="w-9 h-9 rounded-lg bg-destructive/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <p.icon className="w-4 h-4 text-destructive" />
+                </div>
                 <div>
                   <h3 className="text-[15px] font-semibold text-foreground mb-1">{p.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
@@ -106,8 +102,7 @@ const ProblemSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            whileHover={{ y: -2 }}
-            className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+            className="rounded-2xl border border-border bg-card overflow-hidden shadow-lg"
           >
             <div className="px-5 py-3 border-b border-border flex items-center gap-2">
               <div className="flex gap-1.5">
@@ -130,8 +125,7 @@ const ProblemSection = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.4 + i * 0.08, duration: 0.4, ease }}
-                  whileHover={{ scale: 1.01, backgroundColor: "hsl(var(--muted) / 0.5)" }}
-                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30 transition-colors"
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30"
                 >
                   <div className={`w-1 h-8 rounded-full ${item.priority}`} />
                   <div className="flex-1 min-w-0">
