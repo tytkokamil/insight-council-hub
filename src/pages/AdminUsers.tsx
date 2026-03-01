@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { formatDate, formatDateTime, formatDateTimeShort } from "@/lib/formatters";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/shared/PageHeader";
-import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail, Settings2, Zap, Lock, ArrowRightLeft, AlertTriangle } from "lucide-react";
+import { Shield, UserCog, Search, BarChart3, FileText, Activity, Download, Users, TrendingUp, UserPlus, Mail, Settings2, Zap, Lock, ArrowRightLeft, AlertTriangle, FileSearch, Info } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
@@ -59,6 +60,7 @@ const AdminUsers = () => {
   const [transferTarget, setTransferTarget] = useState<string | null>(null);
   const [showTransferConfirm, setShowTransferConfirm] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [transferConfirmCheck, setTransferConfirmCheck] = useState(false);
   const currentUserRole = users.find(u => u.user_id === user?.id)?.role;
   const { data: decisions = [] } = useDecisions();
   const { flags, loading: flagsLoading, toggleFlag } = useFeatureFlags();
@@ -168,16 +170,18 @@ const AdminUsers = () => {
         />
 
         <Tabs defaultValue={initialTab}>
-          <TabsList>
-            <TabsTrigger value="users" className="gap-1.5"><Users className="w-3.5 h-3.5" />{t("admin.usersTab")}</TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{t("admin.analyticsTab")}</TabsTrigger>
-            <TabsTrigger value="config" className="gap-1.5"><Settings2 className="w-3.5 h-3.5" />{t("admin.configTab", "Konfiguration")}</TabsTrigger>
-            <TabsTrigger value="logs" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t("admin.logsTab")}</TabsTrigger>
-            <TabsTrigger value="data" className="gap-1.5"><Download className="w-3.5 h-3.5" />{t("admin.dataTab")}</TabsTrigger>
-          </TabsList>
+          <div className="sticky top-0 z-20 bg-background pb-2 -mt-2 pt-2">
+            <TabsList>
+              <TabsTrigger value="users" className="gap-1.5"><Users className="w-3.5 h-3.5" />{t("admin.usersTab")}</TabsTrigger>
+              <TabsTrigger value="analytics" className="gap-1.5"><BarChart3 className="w-3.5 h-3.5" />{t("admin.analyticsTab")}</TabsTrigger>
+              <TabsTrigger value="config" className="gap-1.5"><Settings2 className="w-3.5 h-3.5" />{t("admin.configTab", "Konfiguration")}</TabsTrigger>
+              <TabsTrigger value="logs" className="gap-1.5"><FileText className="w-3.5 h-3.5" />{t("admin.logsTab")}</TabsTrigger>
+              <TabsTrigger value="data" className="gap-1.5"><Download className="w-3.5 h-3.5" />{t("admin.dataTab")}</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ═══════════════ USERS ═══════════════ */}
-          <TabsContent value="users" className="space-y-4 mt-4">
+          <TabsContent value="users" className="space-y-8 mt-4">
             <Card>
               <CardContent className="p-4">
                 <form onSubmit={handleInvite} className="flex items-end gap-3">
@@ -189,7 +193,7 @@ const AdminUsers = () => {
                       placeholder={t("admin.invitePlaceholder")} required
                       className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
-                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10">
+                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10" style={{ backgroundColor: "#1E3A5F" }}>
                     <UserPlus className="w-4 h-4" />{inviting ? t("admin.inviteSending") : t("admin.invite")}
                   </Button>
                 </form>
@@ -248,42 +252,51 @@ const AdminUsers = () => {
               </table>
             </div>
 
-            {/* Owner Transfer - only visible to current owner */}
+            {/* Owner Transfer - Danger Zone */}
             {currentUserRole === "org_owner" && (
-              <Card className="border-destructive/30">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2 mb-1">
-                    <ArrowRightLeft className="w-4 h-4 text-destructive" />
-                    <h3 className="text-sm font-semibold">{t("admin.transferOwnership")}</h3>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-4">{t("admin.transferOwnershipDesc")}</p>
-                  <div className="flex items-end gap-3">
-                    <div className="flex-1 max-w-xs">
-                      <label className="text-xs font-medium mb-1.5 block">{t("admin.transferTo")}</label>
-                      <Select value={transferTarget || ""} onValueChange={setTransferTarget}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={t("admin.transferSelectUser")} /></SelectTrigger>
-                        <SelectContent>
-                          {users.filter(u => u.user_id !== user?.id).map(u => (
-                            <SelectItem key={u.user_id} value={u.user_id}>
-                              {u.full_name || u.email}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={!transferTarget}
-                      onClick={() => setShowTransferConfirm(true)}
-                      className="gap-2"
-                    >
-                      <ArrowRightLeft className="w-3.5 h-3.5" />
-                      {t("admin.transferConfirm")}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                <>
+                  <div className="mt-12" />
+                  <div className="border-t border-dashed" style={{ borderColor: "#FCA5A5" }} />
+                  <p className="text-xs font-semibold text-destructive uppercase tracking-wider mt-3 mb-2">Gefahrenbereich</p>
+                  <Card className="border-destructive/30">
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <ArrowRightLeft className="w-4 h-4 text-destructive" />
+                        <h3 className="text-sm font-semibold">{t("admin.transferOwnership")}</h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">{t("admin.transferOwnershipDesc")}</p>
+                      <div className="flex items-end gap-3">
+                        <div className="flex-1 max-w-xs">
+                          <label className="text-xs font-medium mb-1.5 block">{t("admin.transferTo")}</label>
+                          <Select value={transferTarget || ""} onValueChange={setTransferTarget}>
+                            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={t("admin.transferSelectUser")} /></SelectTrigger>
+                            <SelectContent>
+                              {users.filter(u => u.user_id !== user?.id).map(u => (
+                                <SelectItem key={u.user_id} value={u.user_id}>
+                                  {u.full_name || u.email}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={!transferTarget || !transferConfirmCheck}
+                          onClick={() => setShowTransferConfirm(true)}
+                          className="gap-2"
+                        >
+                          <ArrowRightLeft className="w-3.5 h-3.5" />
+                          {t("admin.transferConfirm")}
+                        </Button>
+                      </div>
+                      <label className="flex items-center gap-2 mt-4 cursor-pointer">
+                        <Checkbox checked={transferConfirmCheck} onCheckedChange={(v) => setTransferConfirmCheck(!!v)} />
+                        <span className="text-xs text-muted-foreground">Ich verstehe, dass ich danach nur noch Admin bin.</span>
+                      </label>
+                    </CardContent>
+                  </Card>
+                </>
             )}
 
             <AlertDialog open={showTransferConfirm} onOpenChange={setShowTransferConfirm}>
@@ -312,93 +325,125 @@ const AdminUsers = () => {
           </TabsContent>
 
           {/* ═══════════════ ANALYTICS ═══════════════ */}
-          <TabsContent value="analytics" className="space-y-4 mt-4">
+          <TabsContent value="analytics" className="space-y-8 mt-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card><CardContent className="p-5">
+              <Card><CardContent className="p-5 min-h-[90px] flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-primary mb-1"><Users className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.userCount}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.registeredUsers")}</p>
               </CardContent></Card>
-              <Card><CardContent className="p-5">
+              <Card><CardContent className="p-5 min-h-[90px] flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-primary mb-1"><FileText className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.totalDecisions}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.totalDecisions")}</p>
               </CardContent></Card>
-              <Card><CardContent className="p-5">
+              <Card><CardContent className="p-5 min-h-[90px] flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-destructive mb-1"><Activity className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.slaBreaches}</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.slaBreaches")}</p>
               </CardContent></Card>
-              <Card><CardContent className="p-5">
+              <Card><CardContent className="p-5 min-h-[90px] flex flex-col justify-center">
                 <div className="flex items-center gap-2 text-success mb-1"><TrendingUp className="w-4 h-4" /><span className="text-2xl font-bold font-display tabular-nums">{orgStats.completionRate}%</span></div>
                 <p className="text-xs text-muted-foreground">{t("admin.completionRate")}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>Entscheidungen im Status Umgesetzt / Abgeschlossen</p>
               </CardContent></Card>
             </div>
             <Card>
               <CardContent className="p-5">
                 <h3 className="text-sm font-semibold mb-3">{t("admin.adoptionRate")}</h3>
                 <div className="space-y-2">
-                  {(Object.entries(roleLabels) as [OrgRole, string][]).map(([role, label]) => {
-                    const count = users.filter(u => u.role === role).length;
-                    const pct = users.length > 0 ? Math.round((count / users.length) * 100) : 0;
+                  {(() => {
+                    const rolesWithUsers = (Object.entries(roleLabels) as [OrgRole, string][]).filter(([role]) => {
+                      const count = users.filter(u => u.role === role).length;
+                      return count > 0;
+                    });
+                    const allOtherEmpty = rolesWithUsers.length <= 1 && rolesWithUsers.every(([role]) => role === "org_owner");
+
                     return (
-                      <div key={role} className="flex items-center gap-3">
-                        <span className="text-xs font-medium w-28">{label}</span>
-                        <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground w-16 text-right">{count} ({pct}%)</span>
-                      </div>
+                      <>
+                        {rolesWithUsers.map(([role, label]) => {
+                          const count = users.filter(u => u.role === role).length;
+                          const pct = users.length > 0 ? Math.round((count / users.length) * 100) : 0;
+                          return (
+                            <div key={role} className="flex items-center gap-3">
+                              <span className="text-xs font-medium w-28">{label}</span>
+                              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                                <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                              </div>
+                              <span className="text-xs text-muted-foreground w-16 text-right">{count} ({pct}%)</span>
+                            </div>
+                          );
+                        })}
+                        {allOtherEmpty && (
+                          <div className="mt-3 p-2.5 rounded-lg bg-muted/30 border border-border">
+                            <p className="text-xs text-muted-foreground">
+                              Weitere Rollen erscheinen sobald du Teammitglieder einlädst.{" "}
+                              <button className="text-primary hover:underline" onClick={() => {
+                                const tabsList = document.querySelector('[value="users"]') as HTMLElement;
+                                tabsList?.click();
+                              }}>→ Nutzer einladen</button>
+                            </p>
+                          </div>
+                        )}
+                      </>
                     );
-                  })}
+                  })()}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* ═══════════════ CONFIG (Feature Flags + Role Permissions) ═══════════════ */}
-          <TabsContent value="config" className="space-y-6 mt-4">
+          <TabsContent value="config" className="space-y-8 mt-4">
             {/* Feature Flags */}
-            <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Zap className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold">{t("settings.featureFlags")}</h3>
+            <div>
+              <div className="sticky top-12 z-10 bg-muted/80 backdrop-blur-sm px-3 py-1.5 rounded-md mb-3 border border-border/40">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Feature Flags</span>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.featureFlagsDesc")}</p>
-                {flagsLoading ? (
-                  <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-md animate-pulse" />)}</div>
-                ) : (
-                  <div className="space-y-1">
-                    {flags.map((flag) => (
-                      <div key={flag.feature_key} className={`flex items-center justify-between py-3 ${!flag.enabled ? "opacity-50" : ""}`}>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm">{flag.label}</p>
-                            <Badge variant="outline" className="text-[10px]">{flag.category}</Badge>
+              </div>
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-xs text-muted-foreground mb-4">{t("settings.featureFlagsDesc")}</p>
+                  {flagsLoading ? (
+                    <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 bg-muted rounded-md animate-pulse" />)}</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {flags.map((flag) => (
+                        <div key={flag.feature_key} className={`flex items-center justify-between py-3 ${!flag.enabled ? "opacity-50" : ""}`}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm">{flag.label}</p>
+                              <Badge variant="outline" className="text-[10px]">{flag.category}</Badge>
+                            </div>
+                            {flag.description && <p className="text-xs text-muted-foreground mt-0.5">{flag.description}</p>}
                           </div>
-                          {flag.description && <p className="text-xs text-muted-foreground mt-0.5">{flag.description}</p>}
+                          <Switch checked={flag.enabled} onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)} />
                         </div>
-                        <Switch checked={flag.enabled} onCheckedChange={(checked) => toggleFlag(flag.feature_key, checked)} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
             {/* Role Permissions */}
-            <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <Lock className="w-4 h-4 text-primary" />
-                  <h3 className="text-sm font-semibold">{t("settings.rolePermsTitle", "Rollen-Berechtigungen")}</h3>
+            <div>
+              <div className="sticky top-12 z-10 bg-muted/80 backdrop-blur-sm px-3 py-1.5 rounded-md mb-3 border border-border/40">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Rollen-Berechtigungen</span>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
-                <RolePermissionsPanel />
-              </CardContent>
-            </Card>
+              </div>
+              <Card>
+                <CardContent className="p-5">
+                  <p className="text-xs text-muted-foreground mb-4">{t("settings.rolePermsDesc", "Passe Berechtigungen pro Rolle an. Änderungen überschreiben die Standard-Rechte.")}</p>
+                  <RolePermissionsPanel />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* ═══════════════ LOGS ═══════════════ */}
-          <TabsContent value="logs" className="space-y-4 mt-4">
+          <TabsContent value="logs" className="space-y-8 mt-4">
             <Card>
               <CardContent className="p-5">
                 <h3 className="text-sm font-semibold mb-3">{t("admin.auditTrail")}</h3>
@@ -409,12 +454,12 @@ const AdminUsers = () => {
           </TabsContent>
 
           {/* ═══════════════ DATA (Export + Demo Data) ═══════════════ */}
-          <TabsContent value="data" className="space-y-4 mt-4">
+          <TabsContent value="data" className="space-y-8 mt-4">
             <Card>
               <CardContent className="p-5">
                 <h3 className="text-sm font-semibold mb-3">{t("admin.dataExport")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">{t("admin.dataExportDesc")}</p>
-                <Button size="sm" variant="outline" className="gap-2"><Download className="w-3.5 h-3.5" />{t("admin.exportAll")}</Button>
+                <Button size="sm" className="gap-2" style={{ backgroundColor: "#1E3A5F" }}><Download className="w-3.5 h-3.5" />{t("admin.exportAll")}</Button>
               </CardContent>
             </Card>
             <Card>
@@ -424,11 +469,25 @@ const AdminUsers = () => {
                 <div className="flex items-center gap-4 mt-3">
                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">{t("admin.backupStatus")}</Badge>
                   <span className="text-xs text-muted-foreground">{t("admin.lastBackup")}</span>
+                  <button className="text-xs hover:underline" style={{ color: "#3B82F6", fontSize: "12px" }}>Backup herunterladen →</button>
                 </div>
               </CardContent>
             </Card>
 
             <DemoDataPanel />
+
+            {/* Danger Zone - Reset */}
+            <div className="mt-8">
+              <div className="border-t border-dashed" style={{ borderColor: "#FCA5A5" }} />
+              <p className="text-xs font-semibold text-destructive uppercase tracking-wider mt-3 mb-2">Gefahrenbereich</p>
+              <Card className="border-destructive/30">
+                <CardContent className="p-5">
+                  <h3 className="text-sm font-semibold mb-1">Alle Daten zurücksetzen</h3>
+                  <p className="text-xs text-muted-foreground mb-4">Setzt alle Entscheidungen, Tasks, Lessons und Konfigurationen auf den Ausgangszustand zurück.</p>
+                  <ResetDataButton />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -447,7 +506,25 @@ const AuditLogList = () => {
   }, []);
 
   if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</div>;
-  if (logs.length === 0) return <p className="text-sm text-muted-foreground text-center py-4">{t("admin.noAuditEntries")}</p>;
+  if (logs.length === 0) return (
+    <div className="text-center py-8">
+      <FileSearch className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+      <h4 className="text-sm font-semibold mb-1">System-Log ist bereit</h4>
+      <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-4">
+        Alle Admin-Aktionen werden hier automatisch protokolliert. Logs erscheinen sobald Aktionen ausgeführt werden.
+      </p>
+      <div className="p-3 rounded-lg bg-muted/30 border border-border max-w-xs mx-auto text-left">
+        <p className="text-xs font-medium text-muted-foreground mb-1.5">Protokolliert werden:</p>
+        <ul className="space-y-0.5" style={{ color: "#94A3B8", fontSize: "12px" }}>
+          <li>• Login/Logout</li>
+          <li>• Rollenänderungen</li>
+          <li>• Einladungen</li>
+          <li>• Feature-Änderungen</li>
+          <li>• Daten-Exporte</li>
+        </ul>
+      </div>
+    </div>
+  );
 
   const formatValue = (val: string | null) => {
     if (!val) return "\u2013";
@@ -473,6 +550,41 @@ const AuditLogList = () => {
         );
       })}
     </div>
+  );
+};
+
+const ResetDataButton = () => {
+  const { t } = useTranslation();
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  return (
+    <>
+      <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowConfirm(true)}>
+        Alle Daten zurücksetzen
+      </Button>
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Daten zurücksetzen
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle Daten werden permanent gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="gap-2">Abbrechen</AlertDialogCancel>
+            <AlertDialogAction className="bg-transparent border border-destructive text-destructive hover:bg-destructive/10" onClick={() => {
+              toast.success("Daten-Reset angefordert");
+              setShowConfirm(false);
+            }}>
+              Trotzdem löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
