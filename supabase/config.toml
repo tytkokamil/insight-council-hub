@@ -74,3 +74,9 @@ verify_jwt = false
 
 [functions.whatsapp-webhook]
 verify_jwt = false
+
+[functions.inbound-email]
+verify_jwt = false
+
+[functions.predictive-sla]
+verify_jwt = false
