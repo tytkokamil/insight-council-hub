@@ -1403,6 +1403,9 @@ export type Database = {
           updated_at: string
           user_id: string
           watchlist_enabled: boolean
+          whatsapp_enabled: boolean
+          whatsapp_phone: string | null
+          whatsapp_verified: boolean
         }
         Insert: {
           created_at?: string
@@ -1418,6 +1421,9 @@ export type Database = {
           updated_at?: string
           user_id: string
           watchlist_enabled?: boolean
+          whatsapp_enabled?: boolean
+          whatsapp_phone?: string | null
+          whatsapp_verified?: boolean
         }
         Update: {
           created_at?: string
@@ -1433,6 +1439,9 @@ export type Database = {
           updated_at?: string
           user_id?: string
           watchlist_enabled?: boolean
+          whatsapp_enabled?: boolean
+          whatsapp_phone?: string | null
+          whatsapp_verified?: boolean
         }
         Relationships: []
       }
@@ -2451,6 +2460,36 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_verifications: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          used?: boolean
           user_id?: string
         }
         Relationships: []
