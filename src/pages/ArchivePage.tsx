@@ -12,8 +12,10 @@ import {
   ChevronRight, FileText, Filter, BarChart3, Eye, EyeOff, BookOpen, Target,
   TrendingDown, CalendarDays, Users, DollarSign, Activity, CheckCircle2, XCircle,
   Zap, Lock, Unlock, ChevronDown, X, FileJson, FileSpreadsheet, ClipboardList,
-  Timer, ShieldCheck, ArrowRight, Info, AlertCircle, Sparkles, Loader2
+  Timer, ShieldCheck, ArrowRight, Info, AlertCircle, Sparkles, Loader2, MoreVertical
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
@@ -56,6 +58,7 @@ const ArchivePage = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOrgOwner, setIsOrgOwner] = useState(false);
   const [selectedDecision, setSelectedDecision] = useState<any>(null);
+  const [lessonsDecision, setLessonsDecision] = useState<any>(null);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Filters
@@ -128,6 +131,10 @@ const ArchivePage = () => {
         }, 0) / archived.length)
       : 0;
 
+    const avgImpact = archivedCount > 0
+      ? Math.round(archived.reduce((s, d) => s + (d.actual_impact_score || d.ai_impact_score || 0), 0) / archivedCount)
+      : 0;
+
     return {
       archivedCount,
       avgArchiveDays,
@@ -135,6 +142,7 @@ const ArchivePage = () => {
       withRiskPercent: archivedCount > 0 ? Math.round((withRisk.length / archivedCount) * 100) : 0,
       withLessonsCount: withLessons.length,
       implementedCount: implementedDecisions.length,
+      avgImpact,
     };
   }, [archived, allDecisions, lessonsData, risksLinked]);
 
@@ -269,23 +277,29 @@ const ArchivePage = () => {
 
   // ── KPI Bar ──
   const renderKpiBar = () => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-      {[
-        { label: t("archivePage.kpiArchived"), value: kpis.archivedCount, icon: Archive, color: "text-primary" },
-        { label: t("archivePage.kpiAvgDays"), value: `${kpis.avgArchiveDays}d`, icon: Timer, color: "text-muted-foreground" },
-        { label: t("archivePage.kpiLessons"), value: `${kpis.docRate}%`, icon: BookOpen, color: kpis.docRate >= 70 ? "text-success" : kpis.docRate >= 40 ? "text-warning" : "text-destructive" },
-        { label: t("archivePage.kpiWithRisk"), value: `${kpis.withRiskPercent}%`, icon: AlertTriangle, color: "text-warning" },
-        { label: t("archivePage.kpiInTrash"), value: deleted.length, icon: Trash2, color: "text-muted-foreground" },
-        { label: t("archivePage.kpiImplemented"), value: kpis.implementedCount, icon: CheckCircle2, color: "text-success" },
-      ].map((kpi, i) => (
-        <div key={i} className="p-3 rounded-lg border border-border bg-card">
-          <div className="flex items-center gap-1.5 mb-1">
-            <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+      {(() => {
+        const baseKpis = [
+          { label: t("archivePage.kpiArchived"), value: kpis.archivedCount, icon: Archive, color: "text-primary" },
+          { label: t("archivePage.kpiAvgDays"), value: `${kpis.avgArchiveDays}d`, icon: Timer, color: "text-muted-foreground" },
+          { label: t("archivePage.kpiLessons"), value: `${kpis.docRate}%`, icon: BookOpen, color: kpis.docRate >= 70 ? "text-success" : kpis.docRate >= 40 ? "text-warning" : "text-destructive" },
+          // Conditional: "Mit Risiko" vs "Ø Impact Score"
+          kpis.archivedCount >= 10
+            ? { label: t("archivePage.kpiWithRisk"), value: `${kpis.withRiskPercent}%`, icon: AlertTriangle, color: "text-warning" }
+            : { label: "Ø Impact Score", value: kpis.avgImpact, icon: Target, color: "text-primary" },
+          { label: t("archivePage.kpiInTrash"), value: deleted.length, icon: Trash2, color: "text-muted-foreground" },
+          { label: t("archivePage.kpiImplemented"), value: kpis.implementedCount, icon: CheckCircle2, color: "text-success" },
+        ];
+        return baseKpis.map((kpi, i) => (
+          <div key={i} className="p-3 rounded-lg border border-border bg-card min-h-[90px] flex flex-col justify-center">
+            <div className="flex items-center gap-1.5 mb-1">
+              <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
+            </div>
+            <p className="text-lg font-semibold tracking-tight">{kpi.value}</p>
           </div>
-          <p className="text-lg font-semibold tracking-tight">{kpi.value}</p>
-        </div>
-      ))}
+        ));
+      })()}
     </div>
   );
 
@@ -447,8 +461,9 @@ const ArchivePage = () => {
           </div>
           <Button
             size="sm"
-            variant={nlpFilters ? "default" : "outline"}
             className="gap-1.5 shrink-0"
+            style={nlpFilters ? undefined : { backgroundColor: "#1E3A5F" }}
+            variant={nlpFilters ? "default" : undefined}
             disabled={nlpSearching || search.length < 5}
             onClick={async () => {
               if (nlpFilters) { setNlpFilters(null); return; }
@@ -530,8 +545,11 @@ const ArchivePage = () => {
                 className={`group p-3.5 rounded-lg border transition-all cursor-pointer ${
                   selectedIds.has(d.id)
                     ? "border-primary/30 bg-primary/5"
-                    : "border-border hover:border-border/80 hover:bg-muted/20"
+                    : "border-border hover:border-border/80"
                 }`}
+                style={{ backgroundColor: selectedIds.has(d.id) ? undefined : undefined }}
+                onMouseEnter={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "#F8FAFC"; }}
+                onMouseLeave={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
                 onClick={() => { setSelectedDecision(d); loadAuditLogs(d.id); }}
               >
                 <div className="flex items-start gap-3">
@@ -557,9 +575,19 @@ const ArchivePage = () => {
                         <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Risk {d.ai_risk_score}</Badge>
                       )}
                       {hasLessons && (
-                        <Badge className="text-[10px] bg-success/10 text-success border-success/20">
-                          <BookOpen className="w-2.5 h-2.5 mr-0.5" />Lessons
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              className="text-[10px] bg-success/10 text-success border-success/20 cursor-pointer hover:bg-success/20 transition-colors"
+                              onClick={(e) => { e.stopPropagation(); setLessonsDecision(d); }}
+                            >
+                              <BookOpen className="w-2.5 h-2.5 mr-0.5" />Lessons
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <p className="text-xs">Lessons & Erkenntnisse ansehen →</p>
+                          </TooltipContent>
+                        </Tooltip>
                       )}
                     </div>
                     <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
@@ -568,9 +596,29 @@ const ArchivePage = () => {
                       {d.actual_impact_score && <span>Impact: {d.actual_impact_score}</span>}
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => { e.stopPropagation(); handleRestore(d.id); }}>
-                    <RotateCcw className="w-3 h-3" /> {t("archivePage.restore")}
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
+                      <DropdownMenuItem onClick={() => { setSelectedDecision(d); loadAuditLogs(d.id); }}>
+                        <Eye className="w-3.5 h-3.5 mr-2" /> Öffnen
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setLessonsDecision(d)}>
+                        <BookOpen className="w-3.5 h-3.5 mr-2" /> Lessons ansehen
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleRestore(d.id)}>
+                        <RotateCcw className="w-3.5 h-3.5 mr-2" /> Wiederherstellen
+                      </DropdownMenuItem>
+                      {isAdmin && (
+                        <DropdownMenuItem className="text-destructive" onClick={() => handlePermanentDelete(d.id)}>
+                          <Trash2 className="w-3.5 h-3.5 mr-2" /> Endgültig löschen
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             );
@@ -587,14 +635,25 @@ const ArchivePage = () => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: t("archivePage.avgDaysToArchive"), value: `${kpis.avgArchiveDays}d` },
-              { label: t("archivePage.lessonsQuote"), value: `${analytics.lessonsQuote}%` },
-              { label: t("archivePage.totalImpact"), value: analytics.totalImpact },
-              { label: t("archivePage.reopenRate"), value: `${analytics.reopenCount}` },
+              { label: t("archivePage.avgDaysToArchive"), value: `${kpis.avgArchiveDays}d`, tooltip: "" },
+              { label: t("archivePage.lessonsQuote"), value: `${analytics.lessonsQuote}%`, tooltip: "" },
+              { label: t("archivePage.totalImpact"), value: `${analytics.totalImpact} Punkte`, tooltip: "Kombinierter Qualitäts- und Wirkungsscore aller archivierten Entscheidungen (0–100 pro Entscheidung)." },
+              { label: t("archivePage.reopenRate"), value: `${analytics.reopenCount}`, tooltip: "" },
             ].map((a, i) => (
               <div key={i}>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{a.label}</p>
-                <p className="text-base font-semibold">{a.value}</p>
+                {a.tooltip ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <p className="text-base font-semibold cursor-help">{a.value}</p>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs">
+                      <p className="text-xs">{a.tooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <p className="text-base font-semibold">{a.value}</p>
+                )}
               </div>
             ))}
           </div>
@@ -879,6 +938,49 @@ const ArchivePage = () => {
         <>
           <div className="fixed inset-0 bg-background/50 z-40" onClick={() => { setSelectedDecision(null); setAuditLogs([]); }} />
           {renderDetailDrawer()}
+        </>
+      )}
+
+      {/* Lessons Drawer */}
+      {lessonsDecision && (
+        <>
+          <div className="fixed inset-0 bg-background/50 z-40" onClick={() => setLessonsDecision(null)} />
+          <motion.div
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+            className="fixed inset-y-0 right-0 w-full max-w-md bg-card border-l border-border shadow-xl z-50 overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-sm font-semibold flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-success" /> Lessons & Erkenntnisse
+                </h2>
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setLessonsDecision(null)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <h3 className="text-base font-semibold mb-4">{lessonsDecision.title}</h3>
+              {(() => {
+                const lessons = lessonsData.filter(l => l.decision_id === lessonsDecision.id);
+                return lessons.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Keine Lessons für diese Entscheidung dokumentiert.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {lessons.map(l => (
+                      <div key={l.id} className="p-3 rounded-md border border-border bg-muted/20">
+                        <p className="text-sm font-medium mb-1">{l.key_takeaway}</p>
+                        {l.what_went_well && <p className="text-xs text-success">✓ {l.what_went_well}</p>}
+                        {l.what_went_wrong && <p className="text-xs text-destructive">✗ {l.what_went_wrong}</p>}
+                        {l.recommendations && <p className="text-xs text-muted-foreground mt-1">→ {l.recommendations}</p>}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          </motion.div>
         </>
       )}
     </AppLayout>
