@@ -53,7 +53,7 @@ interface GroupedNotifications {
   items: Notification[];
 }
 
-const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
+const NotificationCenter = ({ collapsed, position = "sidebar" }: { collapsed: boolean; position?: "sidebar" | "topbar" }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
@@ -217,8 +217,10 @@ const NotificationCenter = ({ collapsed }: { collapsed: boolean }) => {
             transition={{ duration: 0.15 }}
             role="dialog"
             aria-label={t("notif.title")}
-            className="fixed bottom-16 z-[100] w-96 max-h-[520px] rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col"
-            style={{ left: collapsed ? 64 : 248, boxShadow: 'var(--shadow-elevated)' }}
+            className={`absolute z-[100] w-96 max-h-[520px] rounded-xl border border-border/60 bg-card overflow-hidden flex flex-col ${
+              position === "topbar" ? "top-full right-0 mt-2" : "bottom-full left-0 mb-2"
+            }`}
+            style={{ boxShadow: 'var(--shadow-elevated, 0 8px 30px rgba(0,0,0,0.12))' }}
           >
             <div className="px-4 py-3 border-b border-border/60 bg-card">
               <div className="flex items-center justify-between mb-2">
