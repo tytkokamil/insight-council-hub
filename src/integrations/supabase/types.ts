@@ -290,6 +290,104 @@ export type Database = {
           },
         ]
       }
+      compliance_config: {
+        Row: {
+          config: Json
+          created_at: string
+          enabled: boolean
+          framework: string
+          id: string
+          next_audit_date: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          framework: string
+          id?: string
+          next_audit_date?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          framework?: string
+          id?: string
+          next_audit_date?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_config_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_events: {
+        Row: {
+          auto_create_decision: boolean
+          created_at: string
+          decision_id: string | null
+          description: string | null
+          event_date: string
+          event_type: string
+          framework: string
+          id: string
+          org_id: string
+          recurrence: string | null
+          title: string
+        }
+        Insert: {
+          auto_create_decision?: boolean
+          created_at?: string
+          decision_id?: string | null
+          description?: string | null
+          event_date: string
+          event_type?: string
+          framework: string
+          id?: string
+          org_id: string
+          recurrence?: string | null
+          title: string
+        }
+        Update: {
+          auto_create_decision?: boolean
+          created_at?: string
+          decision_id?: string | null
+          description?: string | null
+          event_date?: string
+          event_type?: string
+          framework?: string
+          id?: string
+          org_id?: string
+          recurrence?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_events_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       data_retention_config: {
         Row: {
           auto_archive_days: number

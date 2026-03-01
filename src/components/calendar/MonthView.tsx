@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
 import DecisionPill from "./DecisionPill";
 import TaskPill from "./TaskPill";
+import CompliancePill from "./CompliancePill";
 import type { Task } from "@/hooks/useTasks";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
@@ -32,6 +33,7 @@ interface MonthViewProps {
   onDecisionClick: (id: string) => void;
   profileMap?: Record<string, string>;
   slaConfigs?: SlaConfig[];
+  complianceByDate?: Record<string, any[]>;
 }
 
 const PRIORITY_MULTIPLIER: Record<string, number> = {
@@ -74,7 +76,7 @@ function getWeekMomentum(weekDecisions: any[]): "green" | "yellow" | "red" | nul
 }
 
 const MonthView = memo(({
-  monthDays, currentDate, decisionsByDate, tasksByDate = {},
+  monthDays, currentDate, decisionsByDate, tasksByDate = {}, complianceByDate = {},
   dragOverDate, draggingId, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop, onDecisionClick, profileMap,
   slaConfigs = [],
 }: MonthViewProps) => {
@@ -116,7 +118,8 @@ const MonthView = memo(({
           const dateKey = format(day, "yyyy-MM-dd");
           const dayDecisions = decisionsByDate[dateKey] ?? [];
           const dayTasks = tasksByDate[dateKey] ?? [];
-          const totalItems = dayDecisions.length + dayTasks.length;
+          const dayCompliance = complianceByDate[dateKey] ?? [];
+          const totalItems = dayDecisions.length + dayTasks.length + dayCompliance.length;
           const inMonth = isSameMonth(day, currentDate);
           const today = isToday(day);
           const isDropTarget = dragOverDate === dateKey;
@@ -222,10 +225,13 @@ const MonthView = memo(({
                   </div>
                 </div>
                 <div className="space-y-0.5">
-                  {dayDecisions.slice(0, 3).map((decision) => (
+                  {dayCompliance.map((ev: any) => (
+                    <CompliancePill key={ev.id} event={ev} />
+                  ))}
+                  {dayDecisions.slice(0, Math.max(0, 3 - dayCompliance.length)).map((decision) => (
                     <DecisionPill key={decision.id} decision={decision} draggingId={draggingId} onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={onDecisionClick} profileMap={profileMap} />
                   ))}
-                  {dayTasks.slice(0, Math.max(0, 3 - dayDecisions.length)).map((task) => (
+                  {dayTasks.slice(0, Math.max(0, 3 - dayDecisions.length - dayCompliance.length)).map((task) => (
                     <TaskPill key={task.id} task={task} profileMap={profileMap} />
                   ))}
                   {totalItems > 3 && (

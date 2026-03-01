@@ -3,11 +3,16 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import IndustrySelectionScreen from "@/components/onboarding/IndustrySelectionScreen";
+import ComplianceOnboarding from "@/components/onboarding/ComplianceOnboarding";
+
+const REGULATED_INDUSTRIES = ["pharma", "finanzen", "energie", "healthcare", "automotive", "versicherungen", "lebensmittel", "maschinenbau"];
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const [industryChecked, setIndustryChecked] = useState(false);
   const [needsIndustry, setNeedsIndustry] = useState(false);
+  const [showCompliance, setShowCompliance] = useState(false);
+  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -38,7 +43,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (needsIndustry) {
     return (
       <IndustrySelectionScreen
-        onComplete={() => setNeedsIndustry(false)}
+        onComplete={(industryId) => {
+          setSelectedIndustry(industryId);
+          // Show compliance step for regulated industries
+          if (REGULATED_INDUSTRIES.includes(industryId)) {
+            setShowCompliance(true);
+          }
+          setNeedsIndustry(false);
+        }}
+      />
+    );
+  }
+
+  if (showCompliance && selectedIndustry) {
+    return (
+      <ComplianceOnboarding
+        industry={selectedIndustry}
+        onComplete={() => setShowCompliance(false)}
+        onSkip={() => setShowCompliance(false)}
       />
     );
   }
