@@ -18,7 +18,7 @@ import {
 import ApplyLearningPanel from "./ApplyLearningPanel";
 import TemplateBrowserModal from "./TemplateBrowserModal";
 import ContextualAINudges from "./ContextualAINudges";
-import AiSuggestionsPanel from "./AiSuggestionsPanel";
+import AiAssistantSidebar from "./AiAssistantSidebar";
 import { calculateQualityScore, QualityScoreCircle, QualityScoreHints } from "./DecisionQualityScore";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -671,7 +671,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetForm(); onOpenChange(v); }}>
-      <DialogContent className="glass-card border-border max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="glass-card border-border max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-xl flex items-center gap-2">
             {step === "form" && selectedTemplate && (
@@ -698,7 +698,9 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
         </DialogHeader>
 
         {step === "template" ? renderTemplateStep() : (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 mt-2">
+            {/* Left column: Form */}
+            <form onSubmit={handleSubmit} className="space-y-4" id="new-decision-form">
             {/* Template Browser Button */}
             {!selectedTemplate && (
               <Button
@@ -842,27 +844,6 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               hasStakeholders={!!teamId && allApprovalSteps.length > 0}
             />
 
-            {/* AI Suggestions Panel */}
-            <AiSuggestionsPanel
-              title={title}
-              description={description}
-              category={category}
-              priority={priority}
-              onApplyTitle={(t) => setTitle(t)}
-              onApplyTemplate={(templateName) => {
-                const match = availableTemplates.find(tpl =>
-                  tpl.name.toLowerCase().includes(templateName.toLowerCase()) ||
-                  templateName.toLowerCase().includes(tpl.name.toLowerCase())
-                );
-                if (match) applyTemplate(match);
-              }}
-              onApplySlaDays={(days) => {
-                const due = new Date();
-                due.setDate(due.getDate() + days);
-                setDueDate(due.toISOString().split("T")[0]);
-              }}
-            />
-
             {/* Apply Learning Panel */}
             <ApplyLearningPanel
               title={title}
@@ -903,7 +884,33 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
               <Button type="button" variant="ghost" onClick={() => { resetForm(); onOpenChange(false); }}>{t("newDecision.cancel")}</Button>
               <Button type="submit" disabled={loading || !title.trim() || isDecisionLimitReached}>{loading ? t("newDecision.creating") : t("newDecision.create")}</Button>
             </div>
-          </form>
+            </form>
+
+            {/* Right column: AI Assistant Sidebar (desktop only) */}
+            <div className="hidden lg:block">
+              <AiAssistantSidebar
+                title={title}
+                description={description}
+                category={category}
+                priority={priority}
+                onApplyTitle={(t) => setTitle(t)}
+                onApplyCategory={(c) => handleCategoryChange(c)}
+                onApplyPriority={(p) => handlePriorityChange(p)}
+                onApplyTemplate={(templateName) => {
+                  const match = availableTemplates.find(tpl =>
+                    tpl.name.toLowerCase().includes(templateName.toLowerCase()) ||
+                    templateName.toLowerCase().includes(tpl.name.toLowerCase())
+                  );
+                  if (match) applyTemplate(match);
+                }}
+                onApplySlaDays={(days) => {
+                  const due = new Date();
+                  due.setDate(due.getDate() + days);
+                  setDueDate(due.toISOString().split("T")[0]);
+                }}
+              />
+            </div>
+          </div>
         )}
       </DialogContent>
     </Dialog>

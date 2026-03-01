@@ -18,20 +18,30 @@ serve(async (req) => {
 Antworte IMMER mit genau diesem JSON-Format (keine Markdown, kein Code-Block, nur reines JSON):
 {
   "improvedTitle": "Ein klarerer, präziserer Titel",
+  "suggestedCategory": "strategic|budget|hr|technical|operational|marketing",
+  "suggestedPriority": "low|medium|high|critical",
   "suggestedTemplate": "Name einer passenden Vorlage aus: Budget-Freigabe, Strategische Entscheidung, HR-Entscheidung, Technische Architektur, Operative Entscheidung, Marketing-Kampagne",
   "suggestedReviewers": ["Rolle 1", "Rolle 2"],
   "suggestedSlaDays": 7,
   "riskLevel": "low|medium|high",
-  "riskReason": "Kurze Begründung der Risiko-Einschätzung"
+  "riskReason": "Kurze Begründung der Risiko-Einschätzung",
+  "risks": ["Risiko 1", "Risiko 2"],
+  "affectedTeams": ["Team 1", "Team 2"],
+  "similarDecisions": ["Ähnliche Entscheidung 1", "Ähnliche Entscheidung 2"]
 }
 
 Regeln:
 - improvedTitle: Klar, präzise, handlungsorientiert formuliert
+- suggestedCategory: Die passendste Kategorie basierend auf dem Titel/Beschreibung
+- suggestedPriority: "low", "medium", "high" oder "critical" basierend auf Dringlichkeit
 - suggestedTemplate: Eine der genannten Vorlagen, die am besten passt
 - suggestedReviewers: 1-3 Rollen-Vorschläge basierend auf dem Entscheidungstyp
 - suggestedSlaDays: Realistische Dauer je nach Komplexität (3-30 Tage)
 - riskLevel: "low", "medium" oder "high" basierend auf Titel/Beschreibung
-- riskReason: 1 Satz warum diese Einschätzung`;
+- riskReason: 1 Satz warum diese Einschätzung
+- risks: 1-3 konkrete Risiken die bei dieser Entscheidung bestehen (nur wenn Beschreibung vorhanden)
+- affectedTeams: 1-3 Teams/Abteilungen die betroffen sein könnten (nur wenn Beschreibung vorhanden)
+- similarDecisions: 1-2 Beispiele für ähnliche Entscheidungen aus der Praxis (generische Beispielnamen)`;
 
     const userPrompt = `Titel: "${title}"${description ? `\nBeschreibung: "${description}"` : ""}${category ? `\nKategorie: ${category}` : ""}${priority ? `\nPriorität: ${priority}` : ""}`;
 
@@ -71,7 +81,6 @@ Regeln:
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || "";
 
-    // Parse JSON from response (handle possible markdown wrapping)
     let suggestions;
     try {
       const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
