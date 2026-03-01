@@ -79,7 +79,7 @@ const HeroSection = () => {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
+    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-12">
       {/* Soft ambient background */}
       <motion.div style={{ scale: bgScale, opacity: bgOpacity }} className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,25%,96%)] via-background to-transparent" />

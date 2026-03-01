@@ -55,7 +55,7 @@ const ProblemSection = () => {
   }, []);
 
   return (
-    <section id="problem" className="py-24 relative bg-gradient-to-b from-muted/20 via-transparent to-transparent">
+    <section id="problem" className="py-24 relative">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
