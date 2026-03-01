@@ -104,8 +104,8 @@ const MonthView = memo(({
   }, [monthDays, decisionsByDate]);
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card">
-      <div className="grid grid-cols-[28px_repeat(7,1fr)] border-b border-border">
+    <div className="border border-border/60 rounded-xl overflow-hidden bg-card">
+      <div className="grid grid-cols-[28px_repeat(7,1fr)] border-b border-border/60">
         <div className="px-1 py-2.5" />
         {weekdayHeaders.map((day) => (
           <div key={day} className="px-2 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -144,7 +144,7 @@ const MonthView = memo(({
           return (
             <>
               {isFirstInWeek && (
-                <div className="row-span-1 flex flex-col items-center justify-center gap-0.5 border-b border-r border-border px-0.5">
+                <div className="row-span-1 flex flex-col items-center justify-center gap-0.5 border-b border-r border-border/40 px-0.5">
                   {momentum && (
                     <Tooltip>
                       <TooltipTrigger>
@@ -180,7 +180,7 @@ const MonthView = memo(({
                 onDragLeave={onDragLeave}
                 onDrop={(e) => onDrop(e as unknown as DragEvent, dateKey)}
                 className={cn(
-                  "min-h-[100px] md:min-h-[120px] border-b border-r border-border p-1.5 transition-all duration-150 relative",
+                  "min-h-[100px] md:min-h-[120px] border-b border-r border-border/40 p-1.5 transition-all duration-150 relative",
                   !inMonth && "bg-muted/30",
                   today && "bg-primary/5 ring-1 ring-inset ring-primary/20",
                   isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",

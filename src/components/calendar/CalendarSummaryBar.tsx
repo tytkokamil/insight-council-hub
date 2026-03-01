@@ -66,7 +66,7 @@ const CalendarSummaryBar = memo(({ decisions, tasks, currentDate, viewMode }: Ca
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl border border-border/60 bg-card">
         <div className="text-xs font-semibold text-muted-foreground mr-2">{label}</div>
         <div className="flex items-center gap-1.5 text-xs">
           <TrendingUp className="w-3.5 h-3.5 text-primary" />

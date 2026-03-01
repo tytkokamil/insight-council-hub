@@ -291,7 +291,7 @@ const DecisionCalendar = () => {
             type="single"
             value={viewMode}
             onValueChange={(v) => v && setViewMode(v as ViewMode)}
-            className="border border-border rounded-lg"
+            className="border border-border/60 rounded-lg"
           >
             <ToggleGroupItem value="month" aria-label={t("calendar.monthView")} className="px-2.5 py-1.5 text-xs gap-1">
               <LayoutGrid className="w-3.5 h-3.5" />
@@ -377,8 +377,8 @@ const DecisionCalendar = () => {
               />
             )}
             {unscheduledTasks.length > 0 && (
-              <div className="border border-border rounded-xl bg-card overflow-hidden">
-                <div className="px-3 py-2.5 border-b border-border flex items-center gap-2">
+              <div className="border border-border/60 rounded-xl bg-card overflow-hidden">
+                <div className="px-3 py-2.5 border-b border-border/60 flex items-center gap-2">
                   <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs font-semibold text-muted-foreground">{t("calendar.unscheduledTasks")}</span>
                   <span className="ml-auto text-[10px] text-muted-foreground bg-muted rounded-full px-1.5 py-0.5">
