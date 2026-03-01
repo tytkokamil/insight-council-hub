@@ -6,7 +6,7 @@ import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
 import AiInsightPanel from "@/components/shared/AiInsightPanel";
-import AnomalyCards from "@/components/shared/AnomalyCards";
+// AnomalyCards removed — already in Dashboard
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Radar, Flame, Activity, Shield, Users, Clock, TrendingUp, TrendingDown,
@@ -27,7 +27,8 @@ interface FrictionMetric { category: string; reworkRate: number; rejectionRate: 
 interface TeamInteraction { teamA: string; teamB: string; teamAName: string; teamBName: string; handoffTime: number; orgAvgHandoff: number; sharedCount: number; }
 interface ActionableRec { title: string; description: string; impact: string; timeSaved: string; costSaved: string; route?: string; severity: string; }
 
-const statusLabelsStatic: Record<string, string> = { draft: "Draft", proposed: "Proposed", review: "Review", approved: "Approved", implemented: "Implemented" };
+const statusLabelsMap: Record<string, string> = { draft: "Entwurf", proposed: "Vorschlag", review: "Review", approved: "Genehmigt", implemented: "Umgesetzt" };
+const reviewStepLabel = (step: number) => `Review Schritt ${step}`;
 const categoryLabelsStatic: Record<string, string> = { strategic: "Strategic", budget: "Budget", hr: "HR", technical: "Technical", operational: "Operational", marketing: "Marketing", general: "General" };
 
 const ProcessHub = () => {
@@ -98,7 +99,7 @@ const ProcessHub = () => {
       const avg = Math.round(stat.totalDays / stat.count * 10) / 10;
       const exp = expectedDays[s] || 5;
       const delta = Math.round((avg - exp) * 10) / 10;
-      sBottlenecks.push({ status: statusLabelsStatic[s] || s, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
+      sBottlenecks.push({ status: statusLabelsMap[s] || s, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
     });
     // Add review steps
     Object.entries(reviewStepStats).forEach(([stepKey, stat]) => {
@@ -106,7 +107,9 @@ const ProcessHub = () => {
       const avg = Math.round(stat.totalDays / stat.count * 10) / 10;
       const exp = 5;
       const delta = Math.round((avg - exp) * 10) / 10;
-      sBottlenecks.push({ status: stepKey, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
+      const stepNum = parseInt(stepKey.replace("Review Step ", ""), 10);
+      const label = reviewStepLabel(isNaN(stepNum) ? 1 : stepNum);
+      sBottlenecks.push({ status: label, avgDays: avg, expectedDays: exp, delta, slaRisk: delta > exp ? "critical" : delta > exp * 0.5 ? "watch" : "ok", count: stat.count });
     });
     setStatusBottlenecks(sBottlenecks.sort((a, b) => b.delta - a.delta));
 
@@ -417,10 +420,7 @@ const ProcessHub = () => {
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════ */}
-      {/* 1b) ANOMALY DETECTION */}
-      {/* ═══════════════════════════════════════ */}
-      <AnomalyCards className="mb-8" />
+      {/* Anomaly block removed — exists in Dashboard already */}
 
       {/* ═══════════════════════════════════════ */}
       {/* 2) BOTTLENECK INTELLIGENCE */}
@@ -469,8 +469,8 @@ const ProcessHub = () => {
           </CardContent>
         </Card>
 
-        {/* Person Capacity */}
-        {personCapacity.length > 0 && (
+        {/* Person Capacity — only show if more than 2 reviewers */}
+        {personCapacity.length > 2 && (
           <div className="mt-4">
             <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">{t("process.reviewLoad")}</h4>
             <div className="space-y-2">
@@ -675,49 +675,69 @@ const ProcessHub = () => {
         defaultOpen={true}
       >
         <div className="space-y-2">
-          {recommendations.map((rec, i) => (
-            <Card
-              key={i}
-              className={`cursor-pointer transition-colors hover:border-foreground/20 ${
-                rec.severity === "high" ? "border-destructive/25" : rec.severity === "medium" ? "border-warning/25" : ""
-              }`}
-              onClick={() => rec.route && navigate(rec.route)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold ${
-                    rec.severity === "high" ? "bg-destructive/15 text-destructive" :
-                    rec.severity === "medium" ? "bg-warning/15 text-warning" :
-                    "bg-success/15 text-success"
-                  }`}>{i + 1}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <p className="text-sm font-semibold">{rec.title}</p>
-                      <span className={`text-[10px] px-1.5 py-0 rounded font-medium ${
-                        rec.severity === "high" ? "bg-destructive/10 text-destructive" :
-                        rec.severity === "medium" ? "bg-warning/10 text-warning" :
-                        "bg-muted/30 text-muted-foreground"
-                      }`}>Impact: {rec.impact}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">{rec.description}</p>
-                    <div className="flex items-center gap-4 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {rec.timeSaved}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <TrendingDown className="w-3 h-3" /> {rec.costSaved}
-                      </span>
-                      {rec.route && (
-                        <span className="text-[10px] text-primary flex items-center gap-1">
-                          <ArrowRight className="w-3 h-3" /> {t("process.open")}
-                        </span>
+          {recommendations.map((rec, i) => {
+            // Find a related decision for the link
+            const relatedDecision = (() => {
+              if (rec.route === "/decisions") {
+                return decisions.find(d => d.due_date && new Date(d.due_date).getTime() > Date.now() && new Date(d.due_date).getTime() < Date.now() + 5 * 86400000 && !["approved", "implemented"].includes(d.status));
+              }
+              return decisions.find(d => !["implemented", "rejected", "archived"].includes(d.status));
+            })();
+
+            return (
+              <Card
+                key={i}
+                className={`cursor-pointer transition-colors hover:border-foreground/20 ${
+                  rec.severity === "high" ? "border-destructive/25" : rec.severity === "medium" ? "border-warning/25" : ""
+                }`}
+                onClick={() => rec.route && navigate(rec.route)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-sm font-bold ${
+                      rec.severity === "high" ? "bg-destructive/15 text-destructive" :
+                      rec.severity === "medium" ? "bg-warning/15 text-warning" :
+                      "bg-success/15 text-success"
+                    }`}>{i + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="text-sm font-semibold">{rec.title}</p>
+                        <span className={`text-[10px] px-1.5 py-0 rounded font-medium ${
+                          rec.severity === "high" ? "bg-destructive/10 text-destructive" :
+                          rec.severity === "medium" ? "bg-warning/10 text-warning" :
+                          "bg-muted/30 text-muted-foreground"
+                        }`}>Impact: {rec.impact}</span>
+                      </div>
+                      {relatedDecision && (
+                        <div
+                          className="flex items-center gap-1 mb-0.5 cursor-pointer hover:underline"
+                          style={{ fontSize: "11px", color: "#64748B" }}
+                          onClick={(e) => { e.stopPropagation(); navigate(`/decisions/${relatedDecision.id}`); }}
+                        >
+                          <ArrowRight className="w-3 h-3" />
+                          <span className="truncate max-w-[250px]">{relatedDecision.title}</span>
+                        </div>
                       )}
+                      <p className="text-xs text-muted-foreground">{rec.description}</p>
+                      <div className="flex items-center gap-4 mt-1.5">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {rec.timeSaved}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <TrendingDown className="w-3 h-3" /> {rec.costSaved}
+                        </span>
+                        {rec.route && (
+                          <span className="text-[10px] text-primary flex items-center gap-1">
+                            <ArrowRight className="w-3 h-3" /> {t("process.open")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </CollapsibleSection>
     </AppLayout>
