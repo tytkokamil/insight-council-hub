@@ -205,7 +205,7 @@ const ComplianceOnboarding = ({ industry, onComplete, onSkip }: ComplianceOnboar
               className={`p-4 rounded-xl border-2 transition-all ${
                 enabled[fw.key]
                   ? "border-destructive/40 bg-destructive/5"
-                  : "border-border"
+                  : "border-border/60"
               }`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -242,7 +242,7 @@ const ComplianceOnboarding = ({ industry, onComplete, onSkip }: ComplianceOnboar
         </div>
       </div>
 
-      <div className="fixed bottom-0 inset-x-0 bg-background/80 backdrop-blur-lg border-t border-border px-4 py-4">
+      <div className="fixed bottom-0 inset-x-0 bg-background/80 backdrop-blur-lg border-t border-border/60 px-4 py-4">
         <div className="max-w-xl mx-auto flex items-center justify-between gap-3">
           <button
             onClick={onSkip}

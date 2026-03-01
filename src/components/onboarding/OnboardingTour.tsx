@@ -101,7 +101,7 @@ const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
       <AnimatePresence>
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onComplete} />
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+           <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden">
             <button onClick={onComplete} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label={t("onboarding.skip")}>
               <X className="w-4 h-4" />
             </button>
@@ -123,7 +123,7 @@ const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
                 <motion.div key={`opts-${q.id}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="space-y-2">
                   {q.options.map((opt) => (
                     <button key={opt.value} onClick={() => handleContextAnswer(q.id, opt.value)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${answers[q.id] === opt.value ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40 hover:bg-primary/5 text-foreground"}`}>
+                      className={`w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium ${answers[q.id] === opt.value ? "border-primary bg-primary/10 text-primary" : "border-border/60 hover:border-primary/40 hover:bg-primary/5 text-foreground"}`}>
                       {opt.label}
                     </button>
                   ))}
@@ -145,7 +145,7 @@ const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onComplete} />
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="relative w-full max-w-md bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden">
           <button onClick={onComplete} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-lg hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label={t("onboarding.tourEnd")}>
             <X className="w-4 h-4" />
           </button>
