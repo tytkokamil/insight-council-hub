@@ -80,8 +80,8 @@ const DiffViewer = ({ oldText, newText }: Props) => {
   }
 
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border flex items-center gap-2">
+    <div className="rounded-lg border border-border/60 overflow-hidden">
+      <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border/60 flex items-center gap-2">
         {t("audit.diffTitle")}
       </div>
       <div className="p-3 text-xs font-mono leading-relaxed whitespace-pre-wrap break-words">

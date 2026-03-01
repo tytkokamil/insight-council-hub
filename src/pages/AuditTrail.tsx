@@ -359,7 +359,7 @@ const AuditTrail = () => {
             <Icon className={`w-3.5 h-3.5 ${config.color}`} />
           </div>
 
-          <div className={`flex-1 min-w-0 border rounded-xl p-3.5 group-hover:border-primary/20 transition-colors ${override ? "border-destructive/30 bg-destructive/5" : "border-border bg-card"}`}>
+          <div className={`flex-1 min-w-0 border rounded-xl p-3.5 group-hover:border-primary/20 transition-colors ${override ? "border-destructive/30 bg-destructive/5" : "border-border/60 bg-card"}`}>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <UserAvatar avatarUrl={log.profiles?.avatar_url || null} fullName={log.profiles?.full_name} size="sm" />
@@ -585,7 +585,7 @@ const AuditTrail = () => {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 flex" align="start">
-              <div className="p-2 border-r border-border">
+              <div className="p-2 border-r border-border/60">
                 <p className="text-[10px] font-semibold text-muted-foreground px-3 pt-1 mb-1">{t("auditTrail.from")}</p>
                 <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} locale={dateFnsLocale}
                   className={cn("p-3 pointer-events-auto")} disabled={(d) => dateTo ? d > dateTo : false} />
@@ -603,7 +603,7 @@ const AuditTrail = () => {
             </Button>
           )}
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-background">
             <Shield className="w-3.5 h-3.5 text-primary" />
             <span className="text-xs font-medium">{t("auditTrail.compliance")}</span>
             <Switch checked={complianceMode} onCheckedChange={setComplianceMode} />
@@ -618,7 +618,7 @@ const AuditTrail = () => {
           </Badge>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/60 text-[11px] text-muted-foreground">
           <Shield className="w-3.5 h-3.5 shrink-0" />
           <span>{t("auditTrail.immutableNotice")}</span>
         </div>
@@ -726,7 +726,7 @@ const AuditTrail = () => {
               {selectedLog.change_reason && (
                 <div className="text-xs">
                   <p className="text-muted-foreground mb-0.5">{t("audit.reasonLabel")}</p>
-                  <div className="p-2 rounded-lg bg-muted/30 border border-border italic">
+                  <div className="p-2 rounded-lg bg-muted/30 border border-border/60 italic">
                     <MessageSquare className="w-3 h-3 inline mr-1 text-muted-foreground" />
                     „{selectedLog.change_reason}"
                   </div>
@@ -751,8 +751,8 @@ const AuditTrail = () => {
               {selectedLog.old_value && selectedLog.new_value && selectedLog.old_value.length > 30 && selectedLog.new_value.length > 30 ? (
                 <DiffViewer oldText={selectedLog.old_value} newText={selectedLog.new_value} />
               ) : (selectedLog.old_value || selectedLog.new_value) && (
-                <div className="rounded-lg border border-border overflow-hidden">
-                  <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
+                <div className="rounded-lg border border-border/60 overflow-hidden">
+                  <div className="bg-muted/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border/60">
                     {t("auditTrail.beforeAfter")}
                   </div>
                   <div className="grid grid-cols-2 divide-x divide-border">
@@ -768,7 +768,7 @@ const AuditTrail = () => {
                 </div>
               )}
 
-              <div className="rounded-lg border border-border p-3 bg-muted/20 text-[10px] text-muted-foreground space-y-1">
+              <div className="rounded-lg border border-border/60 p-3 bg-muted/20 text-[10px] text-muted-foreground space-y-1">
                 <p>Log-ID: <span className="font-mono">{selectedLog.id}</span></p>
                 <p>Decision-ID: <span className="font-mono">{selectedLog.decision_id}</span></p>
                 <p>User-ID: <span className="font-mono">{selectedLog.user_id}</span></p>
