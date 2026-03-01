@@ -1,21 +1,19 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 const Navbar = () => {
-  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const navItems = [
-    { label: t("landing.nav.product"), href: "#features" },
-    { label: t("landing.nav.pricing"), href: "#pricing" },
-    { label: t("landing.nav.useCases"), href: "#use-cases" },
-    { label: t("landing.nav.about"), href: "#testimonials" },
+    { label: "Das Problem", href: "#problem" },
+    { label: "Lösung", href: "#solution" },
+    { label: "Branchen", href: "#industries" },
+    { label: "Compliance", href: "#compliance" },
+    { label: "Preise", href: "#pricing" },
   ];
 
   useEffect(() => {
@@ -31,51 +29,42 @@ const Navbar = () => {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed top-0 left-0 right-0 z-50"
     >
-      <div className={`mx-auto max-w-5xl px-4 transition-all duration-500 ${scrolled ? "mt-3" : "mt-5"}`}>
-        <div className={`rounded-2xl transition-all duration-500 ${
-          scrolled
-            ? "bg-background/80 backdrop-blur-2xl border border-border/40 shadow-lg shadow-foreground/[0.02]"
-            : "bg-transparent border border-transparent"
-        }`}>
-          <div className="px-5">
-            <div className="flex items-center justify-between h-14">
-              <Link to="/" className="flex items-center gap-2.5 group">
-                <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-md" />
-                <span className="font-semibold text-[15px] tracking-tight">Decivio</span>
-              </Link>
+      <div className={`transition-all duration-500 border-b ${
+        scrolled
+          ? "bg-[hsl(222,47%,6%)]/80 backdrop-blur-2xl border-white/[0.06]"
+          : "bg-transparent border-transparent"
+      }`}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-2.5">
+              <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-md" />
+              <span className="font-semibold text-[15px] tracking-tight text-white">Decivio</span>
+            </Link>
 
-              <div className="hidden md:flex items-center gap-0.5">
-                {navItems.map(item => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="text-[13px] text-muted-foreground/70 hover:text-foreground px-3.5 py-1.5 rounded-lg transition-colors duration-200"
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
-
-              <div className="hidden md:flex items-center gap-2">
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm" className="rounded-lg text-muted-foreground/70 hover:text-foreground text-[13px]">
-                    {t("landing.nav.login")}
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button size="sm" className="rounded-full text-[13px] px-5">
-                    {t("landing.nav.startFree")}
-                  </Button>
-                </Link>
-              </div>
-
-              <button
-                className="md:hidden p-2 rounded-lg hover:bg-muted/30 transition-colors"
-                onClick={() => setIsOpen(!isOpen)}
-              >
-                {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
+            <div className="hidden md:flex items-center gap-1">
+              {navItems.map(item => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-[13px] text-[hsl(215,20%,65%)] hover:text-white px-3.5 py-1.5 rounded-lg transition-colors duration-200"
+                >
+                  {item.label}
+                </a>
+              ))}
             </div>
+
+            <div className="hidden md:flex items-center gap-3">
+              <Link to="/auth" className="text-[13px] text-[hsl(215,20%,65%)] hover:text-white px-3 py-1.5 transition-colors">
+                Einloggen
+              </Link>
+              <Link to="/auth" className="inline-flex items-center gap-1.5 text-[13px] font-medium text-white bg-[hsl(217,91%,60%)] hover:bg-[hsl(217,91%,55%)] px-5 py-2 rounded-lg shadow-[0_0_20px_-4px_hsl(217,91%,60%/0.4)] transition-all">
+                Kostenlos starten <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <button className="md:hidden p-2 text-white" onClick={() => setIsOpen(!isOpen)}>
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
       </div>
@@ -86,22 +75,17 @@ const Navbar = () => {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-xl">
+            <div className="rounded-2xl bg-[hsl(216,40%,11%)]/95 backdrop-blur-2xl border border-white/[0.06] p-5 space-y-1">
               {navItems.map(item => (
-                <a key={item.label} href={item.href} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-lg hover:bg-muted/30 transition-colors">
+                <a key={item.label} href={item.href} onClick={() => setIsOpen(false)} className="block text-sm text-[hsl(215,20%,65%)] hover:text-white px-4 py-2.5 rounded-lg transition-colors">
                   {item.label}
                 </a>
               ))}
-              <div className="pt-4 mt-3 border-t border-border/30 space-y-2">
-                <Link to="/auth">
-                  <Button variant="ghost" className="w-full rounded-lg">{t("landing.nav.login")}</Button>
-                </Link>
-                <Link to="/auth">
-                  <Button className="w-full rounded-full">{t("landing.nav.startFree")}</Button>
-                </Link>
+              <div className="pt-4 mt-3 border-t border-white/[0.06] space-y-2">
+                <Link to="/auth" className="block text-center text-sm text-white py-2">Einloggen</Link>
+                <Link to="/auth" className="block text-center text-sm font-medium text-white bg-[hsl(217,91%,60%)] py-2.5 rounded-lg">Kostenlos starten</Link>
               </div>
             </div>
           </motion.div>

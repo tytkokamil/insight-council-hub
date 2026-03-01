@@ -1,161 +1,157 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { getPlans } from "./pricing/PricingData";
-import PricingCard from "./pricing/PricingCard";
-import PricingTrust from "./pricing/PricingTrust";
-import PricingValue from "./pricing/PricingValue";
-import PricingFAQ from "./pricing/PricingFAQ";
-import PricingCTA from "./pricing/PricingCTA";
-import PricingROICalculator from "./pricing/PricingROICalculator";
-import PricingAddons from "./pricing/PricingAddons";
+import { Check, X, ArrowRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const PricingSection = () => {
-  const { t } = useTranslation();
-  const [annual, setAnnual] = useState(false);
-  const plans = getPlans(t);
+const plans = [
+  {
+    name: "Free",
+    price: "€0",
+    period: "/Monat",
+    desc: "Für Einzelpersonen und erste Tests.",
+    highlighted: false,
+    cta: "Kostenlos starten",
+    ctaLink: "/auth",
+    features: [
+      { label: "1 Nutzer", included: true },
+      { label: "10 Entscheidungen", included: true },
+      { label: "30 Tage Audit Trail", included: true },
+      { label: "Basis-Vorlagen", included: true },
+      { label: "Kein Team", included: false },
+      { label: "Kein KI Daily Brief", included: false },
+      { label: "Kein SLA-System", included: false },
+    ],
+  },
+  {
+    name: "Professional",
+    price: "€149",
+    period: "/Monat",
+    desc: "Für Teams die Entscheidungen professionell managen.",
+    highlighted: true,
+    cta: "14 Tage kostenlos testen",
+    ctaLink: "/auth",
+    hint: "= weniger als 1,5 Stunden vermiedene Verzögerung/Monat",
+    features: [
+      { label: "Bis 25 Nutzer", included: true },
+      { label: "Unbegrenzte Entscheidungen", included: true },
+      { label: "Vollständiger Audit Trail", included: true },
+      { label: "KI Daily Brief täglich", included: true },
+      { label: "SLA & Eskalationen", included: true },
+      { label: "Branchen-Templates", included: true },
+      { label: "One-Click Approval", included: true },
+      { label: "Predictive SLA", included: true },
+      { label: "Compliance-Kalender", included: true },
+      { label: "Anomalie-Erkennung", included: true },
+      { label: "Webhooks & Teams", included: true },
+    ],
+  },
+  {
+    name: "Enterprise",
+    price: "Individuell",
+    period: "",
+    desc: "Für Unternehmen mit besonderen Anforderungen.",
+    highlighted: false,
+    cta: "Kontakt aufnehmen",
+    ctaLink: "mailto:sales@decivio.com",
+    features: [
+      { label: "Unbegrenzte Nutzer", included: true },
+      { label: "Alles aus Professional", included: true },
+      { label: "SSO/SAML", included: true },
+      { label: "Custom Branding", included: true },
+      { label: "Dedicated Success Manager", included: true },
+      { label: "SLA-Garantie 99,9%", included: true },
+      { label: "On-Premise Option", included: true },
+    ],
+  },
+];
 
-  return (
-    <section id="pricing" className="py-24 relative overflow-hidden">
-      {/* Ambient background orbs */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <motion.div
-          className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/[0.03] rounded-full blur-[120px]"
-          animate={{ x: [0, 40, 0], y: [0, -30, 0] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-violet/[0.04] rounded-full blur-[100px]"
-          animate={{ x: [0, -30, 0], y: [0, 40, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-accent-teal/[0.02] rounded-full blur-[140px]"
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-        {/* Floating dots */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full bg-primary/20"
-            style={{ left: `${15 + i * 15}%`, top: `${20 + (i % 3) * 25}%` }}
-            animate={{ y: [0, -20, 0], opacity: [0.2, 0.5, 0.2] }}
-            transition={{ duration: 4 + i, repeat: Infinity, delay: i * 0.7 }}
-          />
-        ))}
-      </div>
+const PricingSection = () => (
+  <section id="pricing" className="py-24 relative">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7, ease }}
+        className="text-center max-w-2xl mx-auto mb-14"
+      >
+        <p className="text-xs font-semibold text-[hsl(217,91%,60%)] mb-4 tracking-[0.2em] uppercase">Preise</p>
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">
+          Transparente Preise. Kein Versteckspiel.
+        </h2>
+        <p className="text-[hsl(215,20%,65%)] leading-relaxed">
+          Alle Pläne mit 14 Tagen kostenloser Testphase. Keine Kreditkarte nötig.
+        </p>
+      </motion.div>
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, ease }}
-          className="text-center max-w-2xl mx-auto mb-12"
-        >
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease }}
-            className="text-xs font-medium text-muted-foreground mb-4 tracking-[0.2em] uppercase"
-          >
-            {t("landing.pricing.label")}
-          </motion.p>
-          <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold tracking-tight mb-5 leading-[1.15]">
-            {t("landing.pricing.title")}{" "}
-            <span className="gradient-text">{t("landing.pricing.titleHighlight")}</span>
-          </h2>
-          <p className="text-muted-foreground leading-relaxed text-[15px]">
-            {t("landing.pricing.subtitle")}
-            <br className="hidden sm:block" />
-            {t("landing.pricing.subtitleLine2")}
-          </p>
-        </motion.div>
-
-        {/* Billing toggle */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.15, duration: 0.5, ease }}
-          className="flex items-center justify-center gap-3 mb-14"
-        >
-          <span
-            className={`text-sm font-medium transition-colors duration-300 ${
-              !annual ? "text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            {t("landing.pricing.monthly")}
-          </span>
-          <button
-            onClick={() => setAnnual(!annual)}
-            className={`relative w-14 h-7 rounded-full transition-all duration-400 ${
-              annual
-                ? "bg-primary shadow-[0_0_12px_-2px_hsl(var(--primary)/0.4)]"
-                : "bg-muted hover:bg-muted-foreground/20"
-            }`}
-            aria-label={t("landing.pricing.switchBilling")}
-          >
+      <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch">
+        {plans.map((plan, i) => {
+          const isMailto = plan.ctaLink.startsWith("mailto:");
+          return (
             <motion.div
-              className="absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow-sm"
-              animate={{ x: annual ? 28 : 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            />
-          </button>
-          <span
-            className={`text-sm font-medium transition-colors duration-300 ${
-              annual ? "text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            {t("landing.pricing.annually")}
-          </span>
-          {annual && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8, x: -8 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              className="ml-1 px-3 py-1 rounded-full text-[10px] font-bold bg-accent-teal/10 text-accent-teal border border-accent-teal/20 shadow-[0_0_12px_-4px_hsl(var(--accent-teal)/0.3)]"
+              key={plan.name}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1, duration: 0.7, ease }}
+              className={`relative flex flex-col rounded-2xl border p-7 transition-all ${
+                plan.highlighted
+                  ? "border-[hsl(217,91%,60%)]/30 bg-[hsl(216,40%,11%)] shadow-[0_0_40px_-10px_hsl(217,91%,60%/0.2)] scale-[1.03]"
+                  : "border-white/[0.06] bg-[hsl(216,40%,11%)]"
+              }`}
             >
-              {t("landing.pricing.annualBadge")}
-            </motion.span>
-          )}
-        </motion.div>
+              {plan.highlighted && (
+                <span className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full text-[10px] font-bold bg-[hsl(217,91%,60%)] text-white mb-4 tracking-wide">
+                  <Sparkles className="w-3 h-3" /> Empfohlen
+                </span>
+              )}
 
-        {/* Plan cards */}
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5 max-w-7xl mx-auto items-stretch">
-          {plans.map((plan, i) => (
-            <PricingCard key={plan.name} plan={plan} annual={annual} index={i} />
-          ))}
-        </div>
+              <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+              <div className="flex items-baseline gap-1 mt-2 mb-1">
+                <span className="text-3xl font-bold text-white tabular-nums">{plan.price}</span>
+                {plan.period && <span className="text-sm text-[hsl(215,16%,47%)]">{plan.period}</span>}
+              </div>
+              <p className="text-sm text-[hsl(215,20%,65%)] mb-6">{plan.desc}</p>
 
-        {/* Divider */}
-        <div className="my-20 flex items-center gap-4 max-w-2xl mx-auto">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-          <span className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-widest">Add-ons</span>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-        </div>
+              {isMailto ? (
+                <a href={plan.ctaLink} className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-white/[0.1] text-white text-sm font-semibold hover:bg-white/[0.04] transition-colors mb-6">
+                  {plan.cta} <ArrowRight className="w-3.5 h-3.5" />
+                </a>
+              ) : (
+                <Link to={plan.ctaLink} className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all mb-6 ${
+                  plan.highlighted
+                    ? "bg-[hsl(217,91%,60%)] text-white hover:bg-[hsl(217,91%,55%)] shadow-[0_0_20px_-4px_hsl(217,91%,60%/0.4)]"
+                    : "border border-white/[0.1] text-white hover:bg-white/[0.04]"
+                }`}>
+                  {plan.cta} <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
 
-        <PricingAddons />
-        <PricingTrust />
+              {plan.hint && (
+                <p className="text-[11px] text-[hsl(215,16%,47%)] text-center -mt-4 mb-5 italic">{plan.hint}</p>
+              )}
 
-        {/* Divider */}
-        <div className="my-20 flex items-center gap-4 max-w-2xl mx-auto">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-          <span className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-widest">ROI</span>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-        </div>
-
-        <PricingROICalculator />
-        <PricingValue />
-        <PricingFAQ />
-        <PricingCTA />
+              <ul className="space-y-2.5 flex-1">
+                {plan.features.map((f, fi) => (
+                  <li key={fi} className="flex items-start gap-2.5 text-[13px]">
+                    {f.included ? (
+                      <Check className="w-3.5 h-3.5 text-[hsl(175,84%,32%)] shrink-0 mt-0.5" />
+                    ) : (
+                      <X className="w-3.5 h-3.5 text-[hsl(215,16%,47%)]/40 shrink-0 mt-0.5" />
+                    )}
+                    <span className={f.included ? "text-[hsl(215,20%,65%)]" : "text-[hsl(215,16%,47%)]/40 line-through"}>
+                      {f.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          );
+        })}
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 export default PricingSection;
