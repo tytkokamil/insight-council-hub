@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductTourModal from "./ProductTourModal";
@@ -8,6 +8,68 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const DAILY_COST = 5 * 120 * 8 * 3;
 const PER_SECOND = DAILY_COST / 86400;
+
+const ROTATING_WORDS = [
+  { text: "echtes Geld.", color: "text-warning" },
+  { text: "verlorene Zeit.", color: "text-destructive" },
+  { text: "Compliance-Risiko.", color: "text-accent-rose" },
+  { text: "verpasste Chancen.", color: "text-accent-violet" },
+];
+
+const RotatingWord = () => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setIndex(i => (i + 1) % ROTATING_WORDS.length), 2800);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <span className="inline-block relative h-[1.15em] overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={index}
+          initial={{ y: 40, opacity: 0, rotateX: -40 }}
+          animate={{ y: 0, opacity: 1, rotateX: 0 }}
+          exit={{ y: -40, opacity: 0, rotateX: 40 }}
+          transition={{ duration: 0.5, ease }}
+          className={`absolute left-0 whitespace-nowrap ${ROTATING_WORDS[index].color}`}
+          style={{ perspective: "600px" }}
+        >
+          {ROTATING_WORDS[index].text}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+};
+
+/* Floating particles */
+const Particles = () => {
+  const particles = useRef(
+    Array.from({ length: 40 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 3 + 1,
+      delay: Math.random() * 4,
+      duration: Math.random() * 6 + 6,
+    }))
+  ).current;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map(p => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-full bg-primary/[0.08]"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
+          animate={{ y: [0, -30, 0], opacity: [0.3, 0.8, 0.3] }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const LiveCounter = () => {
   const [value, setValue] = useState(0);
@@ -29,15 +91,17 @@ const LiveCounter = () => {
       transition={{ delay: 0.6, duration: 0.8, ease }}
       className="max-w-md mx-auto mt-10 mb-10"
     >
-      <div className="relative rounded-2xl border border-border/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="relative rounded-2xl border border-border/60 bg-white/80 backdrop-blur-sm p-5 shadow-sm overflow-hidden group hover:border-warning/30 transition-colors duration-500">
+        {/* Shimmer effect on hover */}
+        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-warning/[0.04] to-transparent" />
+        <div className="flex items-center gap-2 mb-2 relative">
           <div className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
           <span className="text-[11px] text-muted-foreground">Simulierte Verzögerungskosten heute</span>
         </div>
-        <div className="text-3xl md:text-4xl font-bold text-warning tabular-nums tracking-tight font-mono">
+        <div className="text-3xl md:text-4xl font-bold text-warning tabular-nums tracking-tight font-mono relative">
           €{value.toFixed(2)}
         </div>
-        <p className="text-[10px] text-muted-foreground/60 mt-2">
+        <p className="text-[10px] text-muted-foreground/60 mt-2 relative">
           5 offene Entscheidungen · €120/h · 8h/Tag · 3 Personen
         </p>
       </div>
@@ -49,35 +113,44 @@ const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
-  const contentY = useTransform(scrollYProgress, [0, 1], [0, 40]);
+  const contentY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
     <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
-      {/* Soft gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-[hsl(225,20%,98%)] to-transparent" />
+      {/* Animated mesh gradient background */}
+      <motion.div style={{ scale: bgScale, opacity: bgOpacity }} className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-[hsl(225,20%,98%)] to-transparent" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-accent-violet/[0.03] blur-[100px]" />
+        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] rounded-full bg-warning/[0.03] blur-[80px]" />
+      </motion.div>
       
       {/* Subtle dot grid */}
-      <div className="absolute inset-0 opacity-[0.3]" style={{
+      <div className="absolute inset-0 opacity-[0.25]" style={{
         backgroundImage: "radial-gradient(circle, hsl(225 16% 78% / 0.4) 1px, transparent 1px)",
         backgroundSize: "32px 32px",
       }} />
+
+      <Particles />
 
       <motion.div style={{ y: contentY }} className="container relative z-10 mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
           {/* Badge */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 16, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.7, ease }}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border/60 bg-white/70 backdrop-blur-sm mb-8"
           >
-            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-medium text-muted-foreground tracking-wide">
               Decision Governance Platform
             </span>
           </motion.div>
 
-          {/* Headline */}
+          {/* Headline with rotating word */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -87,7 +160,7 @@ const HeroSection = () => {
             Jede offene Entscheidung
             <br />
             kostet Ihr Unternehmen{" "}
-            <span className="text-warning">echtes Geld.</span>
+            <RotatingWord />
           </motion.h1>
 
           {/* Subline */}
@@ -111,9 +184,13 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-7 py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200"
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-7 py-3 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
             >
-              Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              <span className="relative z-10 flex items-center gap-2">
+                Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+              {/* Glow pulse on CTA */}
+              <div className="absolute inset-0 bg-gradient-to-r from-primary via-accent-blue to-primary bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite] opacity-0 group-hover:opacity-30 transition-opacity" />
             </Link>
             <button
               onClick={() => setShowTour(true)}
