@@ -13,7 +13,7 @@ const logos = [
 ];
 
 const LogoBar = () => (
-  <section className="py-10 relative">
+  <section className="py-8 relative">
     <div className="max-w-4xl mx-auto px-4 sm:px-6">
       <motion.div
         initial={{ opacity: 0 }}
@@ -21,21 +21,21 @@ const LogoBar = () => (
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease }}
       >
-        <p className="text-center text-[11px] text-muted-foreground/50 uppercase tracking-[0.15em] mb-6">
+        <p className="text-center text-[10px] text-muted-foreground/40 uppercase tracking-[0.2em] mb-5 font-medium">
           Vertraut von Unternehmen aus dem Mittelstand
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
           {logos.map((logo, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.05, duration: 0.5, ease }}
-              className="flex items-center gap-2 text-muted-foreground/35"
+              transition={{ delay: i * 0.06, duration: 0.5, ease }}
+              className="flex items-center gap-2 text-muted-foreground/30 hover:text-muted-foreground/50 transition-colors duration-300"
             >
               <logo.icon className="w-4 h-4" />
-              <span className="text-[13px] font-medium">{logo.name}</span>
+              <span className="text-[12px] font-medium">{logo.name}</span>
             </motion.div>
           ))}
         </div>

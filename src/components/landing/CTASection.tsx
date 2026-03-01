@@ -48,7 +48,7 @@ const CTASection = () => {
           <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]">
             Starten Sie heute.
             <br />
-            <span className="bg-gradient-to-r from-[hsl(220,45%,50%)] via-[hsl(240,35%,55%)] to-[hsl(200,40%,48%)] bg-clip-text text-transparent">
+            <span style={{ color: 'hsl(220 45% 50%)' }}>
               Erste Entscheidung in 3 Minuten.
             </span>
           </h2>

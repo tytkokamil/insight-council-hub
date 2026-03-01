@@ -16,6 +16,9 @@ import Footer from "@/components/landing/Footer";
 import ScrollProgress from "@/components/landing/ScrollProgress";
 import StickyCTA from "@/components/landing/StickyCTA";
 import BackToTop from "@/components/landing/BackToTop";
+import VideoSection from "@/components/landing/VideoSection";
+import ComparisonSection from "@/components/landing/ComparisonSection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
 
 
 
@@ -109,15 +112,18 @@ const Index = () => {
         <main>
           <HeroSection />
           <LogoBar />
+          <VideoSection />
           <ProblemSection />
           <SolutionSection />
-          <MetricsShowcase />
           <ProductShowcase />
+          <MetricsShowcase />
+          <ComparisonSection />
           <IndustriesSection />
           <ComplianceSection />
+          <TestimonialsSection />
           <ROICalculatorSection />
-          <FAQSection />
           <PricingSection />
+          <FAQSection />
           <CTASection />
         </main>
         <Footer />

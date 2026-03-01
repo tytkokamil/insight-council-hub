@@ -54,13 +54,13 @@ const StatsSection = () => {
 
   return (
     <section className="py-20 relative">
-      <div className="absolute inset-0 bg-muted/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/15 via-transparent to-transparent" />
       <div className="container mx-auto px-4 relative z-10 space-y-10">
         <div className="text-center">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground/40 font-medium mb-6">{t("landing.stats.socialProof")}</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/35 font-medium mb-6">{t("landing.stats.socialProof")}</p>
           <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
             {industries.map((ind, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5, ease }} className="flex items-center gap-2 text-muted-foreground/30">
+              <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5, ease }} className="flex items-center gap-2 text-muted-foreground/25 hover:text-muted-foreground/45 transition-colors duration-300">
                 <ind.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{ind.label}</span>
               </motion.div>
@@ -68,13 +68,13 @@ const StatsSection = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-3xl mx-auto bg-border/30 rounded-2xl overflow-hidden border border-border/30">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border/30" style={{ background: 'hsl(220 20% 92% / 0.3)' }}>
           {metrics.map((stat, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="bg-card text-center p-6">
-              <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display text-primary">
+            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="bg-white/80 text-center p-6">
+              <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display" style={{ color: 'hsl(220 45% 50%)' }}>
                 {stat.value}
               </div>
-              <div className="text-[11px] text-muted-foreground/60 font-medium">{stat.label}</div>
+              <div className="text-[11px] text-muted-foreground/50 font-medium">{stat.label}</div>
             </motion.div>
           ))}
         </div>
