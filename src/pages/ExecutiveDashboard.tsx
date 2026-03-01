@@ -31,7 +31,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
-const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
+const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border) / 0.6)", borderRadius: "8px", color: "hsl(var(--foreground))", fontSize: 12 };
 
 /* ── Trend Arrow ── */
 const TrendBadge = ({ value, suffix = "", invert = false }: { value: number; suffix?: string; invert?: boolean }) => {
@@ -348,7 +348,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                         if (!payload?.[0]) return null;
                         const d = payload[0].payload;
                         return (
-                          <div className="rounded-lg border border-border bg-card px-3 py-2 text-xs shadow-lg">
+                          <div className="rounded-lg border border-border/60 bg-card px-3 py-2 text-xs shadow-lg">
                             <p className="font-semibold">{d.metric}: {d.value}%</p>
                             <p className="text-muted-foreground mt-0.5">{d.explanation}</p>
                           </div>
@@ -372,7 +372,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                     {metrics.healthScore >= 75 ? t("executiveDash.healthStable") : metrics.healthScore >= 50 ? t("executiveDash.healthWatch") : t("executiveDash.healthCritical")}
                   </p>
                 </div>
-                <div className="w-full space-y-1.5 text-xs mt-4 pt-4 border-t border-border">
+                <div className="w-full space-y-1.5 text-xs mt-4 pt-4 border-t border-border/60">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("executiveDash.drivers")}</p>
                   {metrics.radarData.map(r => (
                     <div key={r.metric} className="flex justify-between">
@@ -401,7 +401,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border">
+                       <tr className="border-b border-border/60">
                         <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thTitle")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thRisk")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thDelay")}</th>
@@ -486,7 +486,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                 </div>
               </div>
               {metrics.topCostDrivers.length > 0 && (
-                <div className="space-y-2.5 pt-3 border-t border-border">
+                <div className="space-y-2.5 pt-3 border-t border-border/60">
                   <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{t("executiveDash.topCostDrivers")}</p>
                   {metrics.topCostDrivers.map((d, i) => (
                     <div key={d.id} className="flex items-center justify-between">
@@ -563,7 +563,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-2 pt-3 border-t border-border">
+                  <div className="flex items-center gap-2 pt-3 border-t border-border/60">
                     <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={async () => {
                       setExporting(true);
                       try { const data = await fetchBoardReportData(); generateBoardReport(data); toast({ title: t("executiveDash.pdfExported") }); }
@@ -608,7 +608,7 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border">
+                      <tr className="border-b border-border/60">
                         <th className="text-left py-3 px-4 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thTeam")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thRisk")}</th>
                         <th className="text-center py-3 px-2 font-medium text-muted-foreground text-[10px] uppercase tracking-wider">{t("executiveDash.thSla")}</th>
