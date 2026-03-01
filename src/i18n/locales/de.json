@@ -1636,7 +1636,15 @@
     "noLinksHint": "Verknüpfe diese Entscheidung mit Aufgaben oder anderen Entscheidungen.",
     "typeBlocks": "blockiert",
     "typeInfluences": "beeinflusst",
-    "typeRequires": "benötigt"
+    "typeRequires": "benötigt",
+    "aiSuggest": "KI-Vorschläge",
+    "aiSuggestHint": "Abhängigkeiten automatisch erkennen",
+    "aiLoading": "Abhängigkeiten werden analysiert…",
+    "aiNoSuggestions": "Keine Abhängigkeiten erkannt.",
+    "aiConfidence": "{{value}}% Konfidenz",
+    "aiAccept": "Übernehmen",
+    "aiDismiss": "Verwerfen",
+    "aiSuggested": "KI-Vorschläge ({{count}})"
   },
   "table": {
     "overdue": "Überfällig",

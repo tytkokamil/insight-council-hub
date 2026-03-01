@@ -1635,7 +1635,15 @@
     "noLinksHint": "Link this decision to tasks or other decisions.",
     "typeBlocks": "blocks",
     "typeInfluences": "influences",
-    "typeRequires": "requires"
+    "typeRequires": "requires",
+    "aiSuggest": "AI Suggestions",
+    "aiSuggestHint": "Detect dependencies automatically",
+    "aiLoading": "Analyzing dependencies…",
+    "aiNoSuggestions": "No dependencies detected.",
+    "aiConfidence": "{{value}}% confidence",
+    "aiAccept": "Accept",
+    "aiDismiss": "Dismiss",
+    "aiSuggested": "AI-suggested ({{count}})"
   },
   "table": {
     "overdue": "Overdue",

@@ -3,14 +3,24 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeams } from "@/hooks/useDecisions";
-import { GitBranch, Plus, Trash2, ArrowRight, CheckSquare, Lightbulb, Users } from "lucide-react";
+import { GitBranch, Plus, Trash2, ArrowRight, CheckSquare, Lightbulb, Users, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface Props {
   decisionId: string;
 }
 
 type EntityType = "decision" | "task";
+
+interface AiSuggestion {
+  decision_id: string;
+  title: string;
+  status: string;
+  dependency_type: "blocks" | "requires" | "influences";
+  confidence: number;
+  reason: string;
+}
 
 const DependenciesPanel = ({ decisionId }: Props) => {
   const { t } = useTranslation();
@@ -25,6 +35,11 @@ const DependenciesPanel = ({ decisionId }: Props) => {
   const [entityType, setEntityType] = useState<EntityType>("task");
   const [depType, setDepType] = useState<"blocks" | "influences" | "requires">("requires");
   const [loading, setLoading] = useState(false);
+
+  // AI suggestions state
+  const [aiSuggestions, setAiSuggestions] = useState<AiSuggestion[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiRequested, setAiRequested] = useState(false);
 
   const fetchData = async () => {
     const { data: depsOut } = await supabase
@@ -116,6 +131,42 @@ const DependenciesPanel = ({ decisionId }: Props) => {
     await fetchData();
   };
 
+  // AI: fetch suggestions
+  const fetchAiSuggestions = async () => {
+    setAiLoading(true);
+    setAiRequested(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("similarity-score", {
+        body: { decisionId, mode: "dependencies" },
+      });
+      if (error) throw error;
+      setAiSuggestions(data?.suggestions || []);
+    } catch (e) {
+      console.error("AI suggestions error:", e);
+      toast.error(t("dependencies.aiNoSuggestions"));
+      setAiSuggestions([]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // AI: accept a suggestion
+  const acceptSuggestion = async (s: AiSuggestion) => {
+    if (!user) return;
+    await supabase.from("decision_dependencies").insert({
+      source_decision_id: decisionId,
+      target_decision_id: s.decision_id,
+      dependency_type: s.dependency_type,
+      created_by: user.id,
+    });
+    setAiSuggestions(prev => prev.filter(x => x.decision_id !== s.decision_id));
+    await fetchData();
+  };
+
+  const dismissSuggestion = (id: string) => {
+    setAiSuggestions(prev => prev.filter(x => x.decision_id !== id));
+  };
+
   const existingTargetIds = new Set([
     ...dependencies.filter(d => d.target_decision_id).map(d => d.target_decision_id),
     ...dependencies.filter(d => d.target_task_id).map(d => d.target_task_id),
@@ -144,8 +195,12 @@ const DependenciesPanel = ({ decisionId }: Props) => {
       ? <CheckSquare className="w-3 h-3 text-accent-foreground" />
       : <Lightbulb className="w-3 h-3 text-primary" />;
 
+  // Filter out already-linked suggestions
+  const filteredSuggestions = aiSuggestions.filter(s => !existingTargetIds.has(s.decision_id));
+
   return (
     <div className="space-y-4">
+      {/* Manual add */}
       <div className="space-y-2">
         <label className="text-sm font-medium flex items-center gap-2">
           <GitBranch className="w-4 h-4" />
@@ -174,6 +229,69 @@ const DependenciesPanel = ({ decisionId }: Props) => {
         </div>
       </div>
 
+      {/* AI Suggestions button */}
+      <div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchAiSuggestions}
+          disabled={aiLoading}
+          className="gap-2"
+        >
+          {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          {t("dependencies.aiSuggest")}
+        </Button>
+        {!aiRequested && (
+          <p className="text-xs text-muted-foreground mt-1">{t("dependencies.aiSuggestHint")}</p>
+        )}
+      </div>
+
+      {/* AI loading */}
+      {aiLoading && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/30 border border-border/50">
+          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">{t("dependencies.aiLoading")}</span>
+        </div>
+      )}
+
+      {/* AI suggestions list */}
+      {!aiLoading && filteredSuggestions.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            {t("dependencies.aiSuggested", { count: filteredSuggestions.length })}
+          </h4>
+          {filteredSuggestions.map((s) => (
+            <div key={s.decision_id} className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+              <Lightbulb className="w-3 h-3 text-primary flex-shrink-0" />
+              <span className="text-[10px] uppercase tracking-wider text-primary/70 w-20 flex-shrink-0">
+                {typeLabel[s.dependency_type]}
+              </span>
+              {statusDot(s.status)}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm truncate block">{s.title}</span>
+                <span className="text-[10px] text-muted-foreground block truncate">{s.reason}</span>
+              </div>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary shrink-0">
+                {t("dependencies.aiConfidence", { value: s.confidence })}
+              </span>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-success" onClick={() => acceptSuggestion(s)}>
+                <Check className="w-3.5 h-3.5" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground" onClick={() => dismissSuggestion(s.decision_id)}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* AI: no results */}
+      {!aiLoading && aiRequested && filteredSuggestions.length === 0 && (
+        <p className="text-xs text-muted-foreground text-center py-2">{t("dependencies.aiNoSuggestions")}</p>
+      )}
+
+      {/* Outgoing dependencies */}
       {dependencies.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">
@@ -202,6 +320,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
         </div>
       )}
 
+      {/* Incoming dependencies */}
       {dependents.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-muted-foreground">
@@ -227,7 +346,7 @@ const DependenciesPanel = ({ decisionId }: Props) => {
         </div>
       )}
 
-      {dependencies.length === 0 && dependents.length === 0 && (
+      {dependencies.length === 0 && dependents.length === 0 && !aiRequested && (
         <div className="text-center py-6 text-muted-foreground">
           <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-40" />
           <p className="text-sm">{t("dependencies.noLinks")}</p>
