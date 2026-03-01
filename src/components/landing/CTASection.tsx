@@ -45,7 +45,7 @@ const CTASection = () => {
             <span className="text-[11px] font-semibold text-primary">14 Tage kostenlos · Keine Kreditkarte</span>
           </motion.div>
 
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]" style={{ color: 'hsl(228 15% 18%)' }}>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]" style={{ color: 'hsl(228 12% 32%)' }}>
             Starten Sie heute.
             <br />
             <span className="bg-gradient-to-r from-primary via-accent-blue to-accent-violet bg-clip-text text-transparent">

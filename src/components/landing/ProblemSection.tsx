@@ -65,7 +65,7 @@ const ProblemSection = () => {
           className="text-center max-w-2xl mx-auto mb-16"
         >
           <p className="text-xs font-semibold text-primary mb-4 tracking-[0.2em] uppercase">Das Problem</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ color: 'hsl(228 15% 18%)' }}>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4" style={{ color: 'hsl(228 12% 32%)' }}>
             Was in jedem Mittelständler täglich passiert — unbemerkt.
           </h2>
           <p className="leading-relaxed" style={{ color: 'hsl(225 10% 45%)' }}>
@@ -89,7 +89,7 @@ const ProblemSection = () => {
                   <p.icon className="w-4 h-4 text-destructive/60" />
                 </div>
                 <div>
-                  <h3 className="text-[14px] font-semibold mb-1" style={{ color: 'hsl(228 15% 20%)' }}>{p.title}</h3>
+                  <h3 className="text-[14px] font-semibold mb-1" style={{ color: 'hsl(228 12% 34%)' }}>{p.title}</h3>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'hsl(225 10% 48%)' }}>{p.desc}</p>
                 </div>
               </motion.div>

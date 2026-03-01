@@ -158,7 +158,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
             className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6"
-            style={{ color: 'hsl(228 15% 18%)' }}
+            style={{ color: 'hsl(228 12% 32%)' }}
           >
             Jede offene Entscheidung
             <br />
