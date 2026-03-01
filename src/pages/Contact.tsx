@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { HelmetProvider, Helmet } from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 import { Send, CheckCircle2, Loader2, ArrowLeft, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +55,7 @@ const Contact = () => {
     "w-full h-10 px-3 rounded-md bg-background border border-input text-sm focus:border-foreground focus:outline-none focus:ring-1 focus:ring-ring/20 transition-colors";
 
   return (
-    <HelmetProvider>
+    <>
       <Helmet>
         <title>Kontakt — Decivio Support</title>
         <meta name="description" content="Kontaktiere das Decivio Support-Team. Wir helfen dir bei Fragen zu Features, Account oder Technik." />
@@ -158,7 +158,7 @@ const Contact = () => {
           </motion.div>
         </main>
       </div>
-    </HelmetProvider>
+    </>
   );
 };
 
