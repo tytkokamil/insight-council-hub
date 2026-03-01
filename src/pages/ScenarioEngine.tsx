@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   FlaskConical, AlertTriangle, Clock, DollarSign, TrendingDown,
-  Play, Loader2, Users, GitBranch, Zap, ChevronRight, Download, Info,
+  Play, Loader2, Users, GitBranch, Zap, ChevronRight, Download, Info, Sparkles,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
 import CollapsibleSection from "@/components/dashboard/CollapsibleSection";
-import AiInsightPanel from "@/components/shared/AiInsightPanel";
+
 import { useDecisions, useFilteredDependencies, useTeams } from "@/hooks/useDecisions";
 
 type DelayImpact = {
@@ -266,7 +266,15 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                     <CardContent className="pt-4 text-center">
                       <p className="text-xs font-medium text-muted-foreground mb-2">{t("scenarioEngine.avgRiskIncrease")}</p>
                       <AlertTriangle className="w-5 h-5 mx-auto text-warning mb-1" />
-                      <div className="text-2xl font-bold">{result.avgRiskIncrease}%</div>
+                      <div className="text-2xl font-bold">
+                        {(() => {
+                          const baseRisk = Math.max(0, result.avgRiskIncrease - delayWeeks * 5);
+                          return `${baseRisk}% → ${result.avgRiskIncrease}%`;
+                        })()}
+                      </div>
+                      <p className="mt-1" style={{ fontSize: "11px", color: "#64748B" }}>
+                        {t("scenarioEngine.riskDelayContext", { weeks: delayWeeks, defaultValue: `bei ${delayWeeks} Wochen Verzögerung` })}
+                      </p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -286,17 +294,15 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                 </div>
 
                 {result.aiInsights && (
-                  <Card className="border-border bg-muted/5">
-                    <CardContent className="pt-4">
-                      <div className="flex items-start gap-3">
-                        <FlaskConical className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium mb-1">{t("scenarioEngine.aiRecommendation")}</p>
-                          <p className="text-sm text-muted-foreground">{result.aiInsights}</p>
-                        </div>
+                  <div className="rounded-lg p-4" style={{ borderLeft: "4px solid #3B82F6", backgroundColor: "#EFF6FF" }}>
+                    <div className="flex items-start gap-3">
+                      <Sparkles className="w-5 h-5 mt-0.5 shrink-0" style={{ color: "#3B82F6" }} />
+                      <div>
+                        <p className="text-sm font-bold mb-1" style={{ color: "#3B82F6" }}>{t("scenarioEngine.aiRecommendation")}</p>
+                        <p className="text-sm text-muted-foreground">{result.aiInsights}</p>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div>
                 )}
 
                 <CollapsibleSection
@@ -328,6 +334,9 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
+                        <p className="text-center mt-1" style={{ fontSize: "11px", color: "#94A3B8" }}>
+                          {t("scenarioEngine.chartExplanation", "Linke Achse: kumulative Kosten in € | Rechte Achse: Risikoniveau in %")}
+                        </p>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -481,21 +490,6 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                   </Button>
                 </div>
 
-                <AiInsightPanel
-                  type="bottleneck"
-                  context={{
-                    analysisType: "scenario_simulation",
-                    delayWeeks,
-                    totalCost: result.totalCost,
-                    avgRiskIncrease: result.avgRiskIncrease,
-                    criticalCount: result.criticalCount,
-                    cascadeTotal: result.impacts.reduce((s, i) => s + i.cascadeCount, 0),
-                    monteCarlo: result.monteCarlo,
-                    topImpacts: result.impacts.slice(0, 5).map(i => ({
-                      title: i.decision.title, priority: i.decision.priority, totalCost: i.totalCost, riskIncrease: i.riskIncrease, cascadeCount: i.cascadeCount
-                    })),
-                  }}
-                />
               </>
             )}
           </>
