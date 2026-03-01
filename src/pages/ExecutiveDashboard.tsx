@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/shared/PageHeader";
@@ -43,6 +43,60 @@ const TrendBadge = ({ value, suffix = "", invert = false }: { value: number; suf
       {value > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
       {value > 0 ? "+" : ""}{value}{suffix}
     </span>
+  );
+};
+
+/* ── Hero CoD Counter ── */
+const HeroCodCounter = ({ totalCost, openCount, openDecisions, teams, t }: {
+  totalCost: number; openCount: number; openDecisions: any[]; teams: any[]; t: any;
+}) => {
+  const [sessionAccrued, setSessionAccrued] = useState(0);
+  const startRef = useRef(Date.now());
+
+  const costPerSecond = useMemo(() => {
+    return openDecisions.reduce((sum: number, d: any) => {
+      const team = teams.find((t: any) => t.id === d.team_id);
+      const rate = team?.hourly_rate || 85;
+      const persons = team?.cod_persons || 3;
+      const overhead = Number(team?.cod_overhead_factor) || 1.5;
+      return sum + (rate * 8 * persons * overhead) / 86400;
+    }, 0);
+  }, [openDecisions, teams]);
+
+  useEffect(() => {
+    if (costPerSecond <= 0) return;
+    const tick = () => {
+      if (document.visibilityState === "visible") {
+        setSessionAccrued((Date.now() - startRef.current) / 1000 * costPerSecond);
+      }
+    };
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [costPerSecond]);
+
+  const liveCost = totalCost + sessionAccrued;
+
+  if (openCount === 0) return null;
+
+  return (
+    <Card className="border-destructive/20 bg-destructive/[0.03]">
+      <CardContent className="p-6 text-center">
+        <p className="text-5xl font-bold tabular-nums font-display" style={{ color: "#EF4444" }}>
+          {Math.round(liveCost).toLocaleString("de-DE")} €
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          {t("executiveDash.heroCodSubtitle", {
+            count: openCount,
+            defaultValue: `Kosten durch ${openCount} offene Entscheidungen — heute`,
+          })}
+        </p>
+        {sessionAccrued > 0.5 && (
+          <p className="text-xs mt-1.5" style={{ color: "#EF4444" }}>
+            ↑ {sessionAccrued.toFixed(2)}€ in dieser Sitzung
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
@@ -327,6 +381,15 @@ const ExecutiveDashboard = ({ embedded }: { embedded?: boolean }) => {
             ))}
           </div>
         </div>
+
+        {/* ── HERO COD COUNTER ── */}
+        <HeroCodCounter
+          totalCost={metrics.totalOpportunityCost}
+          openCount={metrics.openDecisions.length}
+          openDecisions={metrics.openDecisions}
+          teams={teams}
+          t={t}
+        />
 
         {/* ── 2. RISK RADAR + HEALTH SCORE ── */}
         <div>
