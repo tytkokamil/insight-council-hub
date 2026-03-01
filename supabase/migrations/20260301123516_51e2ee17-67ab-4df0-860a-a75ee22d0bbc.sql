@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS hide_pdf_branding boolean NOT NULL DEFAULT false;

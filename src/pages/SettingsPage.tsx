@@ -25,6 +25,7 @@ import WhatsAppSettingsPanel from "@/components/settings/WhatsAppSettingsPanel";
 import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
 import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
+import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -874,6 +875,11 @@ const SettingsPage = () => {
 
               <hr className="border-border" />
 
+              {/* PDF Branding */}
+              <PdfBrandingSection />
+
+              <hr className="border-border" />
+
               {/* Roles Info */}
               <section>
                 <h2 className="text-sm font-medium mb-2">{t("settings.roles")}</h2>
@@ -886,6 +892,46 @@ const SettingsPage = () => {
         </motion.div>
       </div>
     </AppLayout>
+  );
+};
+
+const PdfBrandingSection = () => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { isFree } = useFreemiumLimits();
+  const [hide, setHide] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").select("hide_pdf_branding").eq("user_id", user.id).single().then(({ data }) => {
+        setHide((data as any)?.hide_pdf_branding ?? false);
+        setLoaded(true);
+      });
+    }
+  }, [user]);
+
+  const toggle = async (val: boolean) => {
+    setHide(val);
+    if (user) await supabase.from("profiles").update({ hide_pdf_branding: val } as any).eq("user_id", user.id);
+  };
+
+  return (
+    <section>
+      <h2 className="text-sm font-medium mb-2 flex items-center gap-2">
+        <FileText className="w-4 h-4 text-muted-foreground" />
+        {t("settings.brandingTitle")}
+      </h2>
+      <p className="text-xs text-muted-foreground mb-3">{t("settings.brandingDesc")}</p>
+      <div className="flex items-center justify-between p-3 rounded-lg border border-border">
+        <div>
+          <p className="text-sm">{t("settings.brandingHide")}</p>
+          <p className="text-[11px] text-muted-foreground">{t("settings.brandingHideDesc")}</p>
+          {isFree && <p className="text-[10px] text-warning mt-1">{t("settings.brandingFreeHint")}</p>}
+        </div>
+        <Switch checked={hide} onCheckedChange={toggle} disabled={isFree || !loaded} />
+      </div>
+    </section>
   );
 };
 

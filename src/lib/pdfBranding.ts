@@ -63,14 +63,31 @@ export function addPdfHeader(
   return headerH + 10;
 }
 
+export interface PdfBrandingOptions {
+  /** Whether to show Decivio branding line. Defaults to true. */
+  showBranding?: boolean;
+  /** Custom confidential text override */
+  confidentialText?: string;
+}
+
 /**
  * Add consistent footer to all pages of the document.
  * Call this AFTER all content has been added.
+ * 
+ * Branding behavior:
+ * - Free plan: always shown, prominent
+ * - Starter/Pro: shown by default, can be disabled via settings
+ * - Enterprise: fully removable
  */
-export function addPdfFooter(doc: any, confidentialText?: string) {
+export function addPdfFooter(doc: any, optionsOrText?: string | PdfBrandingOptions) {
+  const opts: PdfBrandingOptions = typeof optionsOrText === "string"
+    ? { confidentialText: optionsOrText }
+    : optionsOrText ?? {};
+
+  const showBranding = opts.showBranding !== false;
   const pageCount = doc.getNumberOfPages();
   const pw = doc.internal.pageSize.getWidth();
-  const label = confidentialText || (i18n.language === "de"
+  const label = opts.confidentialText || (i18n.language === "de"
     ? "Decivio · Vertraulich"
     : "Decivio · Confidential");
 
@@ -80,19 +97,29 @@ export function addPdfFooter(doc: any, confidentialText?: string) {
 
     // Separator line
     doc.setDrawColor(200, 200, 200);
-    doc.line(14, ph - 14, pw - 14, ph - 14);
+    doc.line(14, ph - 18, pw - 14, ph - 18);
 
     // Left: brand + confidential
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(150, 150, 150);
-    doc.text(label, 14, ph - 8);
+    doc.text(label, 14, ph - 12);
 
     // Right: page number
     const pageLabel = i18n.language === "de"
       ? `Seite ${i} von ${pageCount}`
       : `Page ${i} of ${pageCount}`;
-    doc.text(pageLabel, pw - 14, ph - 8, { align: "right" });
+    doc.text(pageLabel, pw - 14, ph - 12, { align: "right" });
+
+    // Branding line
+    if (showBranding) {
+      doc.setFontSize(8);
+      doc.setTextColor(170, 170, 170);
+      const brandText = i18n.language === "de"
+        ? "Erstellt mit Decivio — Decision Governance Platform | decivio.com"
+        : "Created with Decivio — Decision Governance Platform | decivio.com";
+      doc.text(brandText, pw / 2, ph - 6, { align: "center" });
+    }
   }
 }
 
