@@ -5056,5 +5056,19 @@
     "escalated": "Entscheidung wurde eskaliert",
     "escalateError": "Eskalation fehlgeschlagen"
   },
+  "terminology": {
+    "title": "Sprache & Terminologie",
+    "description": "Passen Sie die Begriffe an Ihre Organisation an. Änderungen gelten überall in der Anwendung.",
+    "reset": "Standard wiederherstellen",
+    "resetDone": "Terminologie auf Standard zurückgesetzt",
+    "labels": {
+      "decision": "Entscheidung",
+      "reviewer": "Reviewer",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "open": "Offen",
+      "team": "Team"
+    }
+  },
   "_end": true
 }

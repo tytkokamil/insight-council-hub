@@ -20,6 +20,7 @@ import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
 import ActiveSessionsPanel from "@/components/settings/ActiveSessionsPanel";
 import OrgCodDefaultsPanel from "@/components/settings/OrgCodDefaultsPanel";
 import IndustryConfigSection from "@/components/settings/IndustryConfigSection";
+import TerminologyPanel from "@/components/settings/TerminologyPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -382,6 +383,11 @@ const SettingsPage = () => {
               </section>
 
               <hr className="border-border" />
+
+              {/* Terminology */}
+              {isAdmin && <TerminologyPanel />}
+
+              {isAdmin && <hr className="border-border" />}
 
               <IndustryConfigSection />
 
