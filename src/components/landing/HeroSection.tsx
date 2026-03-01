@@ -25,34 +25,36 @@ const RotatingWord = () => {
   }, []);
 
   return (
-    <span className="inline-block relative h-[1.15em] overflow-hidden align-bottom" style={{ minWidth: "5ch" }}>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={index}
-          initial={{ y: 40, opacity: 0, rotateX: -40 }}
-          animate={{ y: 0, opacity: 1, rotateX: 0 }}
-          exit={{ y: -40, opacity: 0, rotateX: 40 }}
-          transition={{ duration: 0.5, ease }}
-          className={`absolute left-0 whitespace-nowrap ${ROTATING_WORDS[index].color}`}
-          style={{ perspective: "600px" }}
-        >
-          {ROTATING_WORDS[index].text}
-        </motion.span>
-      </AnimatePresence>
-    </span>
+    <>
+      <br />
+      <span className="inline-block relative h-[1.2em] overflow-hidden align-bottom w-full">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={index}
+            initial={{ y: "100%", opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: "-100%", opacity: 0 }}
+            transition={{ duration: 0.45, ease }}
+            className={`absolute left-0 right-0 text-center whitespace-nowrap ${ROTATING_WORDS[index].color}`}
+          >
+            {ROTATING_WORDS[index].text}
+          </motion.span>
+        </AnimatePresence>
+      </span>
+    </>
   );
 };
 
 /* Floating particles */
 const Particles = () => {
   const particles = useRef(
-    Array.from({ length: 40 }, (_, i) => ({
+    Array.from({ length: 12 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
+      size: Math.random() * 2.5 + 1,
       delay: Math.random() * 4,
-      duration: Math.random() * 6 + 6,
+      duration: Math.random() * 6 + 8,
     }))
   ).current;
 
@@ -61,9 +63,9 @@ const Particles = () => {
       {particles.map(p => (
         <motion.div
           key={p.id}
-          className="absolute rounded-full bg-primary/[0.08]"
+          className="absolute rounded-full bg-primary/[0.06]"
           style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
-          animate={{ y: [0, -30, 0], opacity: [0.3, 0.8, 0.3] }}
+          animate={{ y: [0, -20, 0], opacity: [0.2, 0.5, 0.2] }}
           transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
         />
       ))}
@@ -119,17 +121,16 @@ const HeroSection = () => {
 
   return (
     <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-24 pb-16">
-      {/* Animated mesh gradient background */}
+      {/* Clean background */}
       <motion.div style={{ scale: bgScale, opacity: bgOpacity }} className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-[hsl(225,20%,98%)] to-transparent" />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-accent-violet/[0.03] blur-[100px]" />
-        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] rounded-full bg-warning/[0.03] blur-[80px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,30%,96%)] via-background to-transparent" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/[0.03] blur-[120px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent-violet/[0.02] blur-[100px]" />
       </motion.div>
       
       {/* Subtle dot grid */}
-      <div className="absolute inset-0 opacity-[0.25]" style={{
-        backgroundImage: "radial-gradient(circle, hsl(225 16% 78% / 0.4) 1px, transparent 1px)",
+      <div className="absolute inset-0 opacity-[0.12]" style={{
+        backgroundImage: "radial-gradient(circle, hsl(225 16% 70% / 0.3) 1px, transparent 1px)",
         backgroundSize: "32px 32px",
       }} />
 
@@ -155,11 +156,12 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6 text-foreground"
+            className="text-[clamp(2rem,5vw,4.2rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6"
+            style={{ color: "hsl(228 12% 12%)" }}
           >
             Jede offene Entscheidung
             <br />
-            kostet Ihr Unternehmen{" "}
+            kostet Ihr Unternehmen
             <RotatingWord />
           </motion.h1>
 
