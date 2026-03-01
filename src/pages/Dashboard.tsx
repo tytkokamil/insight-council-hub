@@ -49,6 +49,8 @@ import GamificationWidget from "@/components/dashboard/GamificationWidget";
 import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
 import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanner";
 import AnomalyCards from "@/components/shared/AnomalyCards";
+import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
+import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
 
 type DashboardMode = "operational" | "executive" | "admin";
 
@@ -78,7 +80,10 @@ const Dashboard = () => {
     return isExecRole ? "executive" : "operational";
   });
   const [showDeepDive, setShowDeepDive] = useState(false);
+  const [prevDecisionCount, setPrevDecisionCount] = useState<number | null>(null);
 
+  // Guided mode: simplified dashboard for new users
+  const isGuidedMode = decisionCount < 3;
   const toggleDashboardMode = useCallback((m: DashboardMode) => {
     setDashboardMode(m);
     localStorage.setItem("dashboard-mode", m);
@@ -128,10 +133,17 @@ const Dashboard = () => {
     if (searchParams.get("newDecision") === "true") {
       searchParams.delete("newDecision");
       setSearchParams(searchParams, { replace: true });
-      // Small delay to let dashboard render, then redirect to decisions with create flag
       setTimeout(() => navigate("/decisions?create=true", { replace: true }), 500);
     }
   }, [searchParams, setSearchParams, navigate]);
+
+  // Detect transition from guided → full dashboard at 3 decisions
+  useEffect(() => {
+    if (prevDecisionCount !== null && prevDecisionCount < 3 && decisionCount >= 3) {
+      toast.success("Das vollständige Dashboard ist jetzt freigeschaltet 🎉", { duration: 4000 });
+    }
+    setPrevDecisionCount(decisionCount);
+  }, [decisionCount, prevDecisionCount]);
 
   const personalDecisions = allDecisions.filter(
     (d) => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id
@@ -275,6 +287,25 @@ const Dashboard = () => {
         {/* ═══ MAIN DASHBOARD ═══ */}
         {!isLoading && (
           <>
+            {/* ═══ GUIDED MODE for new users (< 3 decisions) ═══ */}
+            {isGuidedMode && (
+              <div className="space-y-6">
+                <WelcomeBanner firstName={firstName} />
+
+                <OnboardingChecklist
+                  hasTeam={teams.length > 0}
+                  hasDecision={decisions.length > 0}
+                  hasReview={contextReviews.length > 0}
+                  hasTemplate={decisions.some(d => !!d.template_used)}
+                />
+
+                <CodPreviewWidget />
+              </div>
+            )}
+
+            {/* ═══ FULL DASHBOARD (>= 3 decisions) ═══ */}
+            {!isGuidedMode && (
+              <>
             {/* ═══ 1. TOP ACTION NOW ═══ */}
             <TopActionNow
               overdue={computed.overdue}
@@ -491,6 +522,8 @@ const Dashboard = () => {
                   </AnimatePresence>
                 </div>
               </>
+            )}
+            </>
             )}
           </>
         )}
