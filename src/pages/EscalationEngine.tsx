@@ -280,18 +280,20 @@ const EscalationEngine = () => {
         help={{ title: t("escalationEngine.title"), description: t("escalationEngine.help") }}
         primaryAction={
           <div className="flex items-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={() => navigate("/war-room")} className="gap-1.5 text-xs">
-                    <Shield className="w-3.5 h-3.5" /> {t("escalationEngine.warRoom")}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[200px] text-xs">
-                  {t("escalationEngine.warRoomTooltip")}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {activeEscalations.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" variant="outline" onClick={() => navigate("/war-room")} className="gap-1.5 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                      <Shield className="w-3.5 h-3.5" /> {t("escalationEngine.warRoom")}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[200px] text-xs">
+                    {t("escalationEngine.warRoomTooltip")}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <AlertDialog open={showEngineConfirm} onOpenChange={setShowEngineConfirm}>
               <AlertDialogTrigger asChild>
                 <Button size="sm" disabled={running} className="gap-1.5">
