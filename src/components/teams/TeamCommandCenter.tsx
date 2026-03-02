@@ -130,13 +130,20 @@ const TeamCommandCenter = ({ teamId }: Props) => {
               </p>
             </div>
           </div>
-          {totalDelayCost > 0 && (
-            <div className="flex items-center gap-1.5 text-sm">
-              <DollarSign className="w-4 h-4 text-destructive" />
-              <span className="font-bold text-destructive">{formatCost(totalDelayCost)}</span>
-              <span className="text-xs text-muted-foreground">{t("teamCmd.delayRisk")}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {escalatedDecisions.length > 0 && (
+              <Button size="sm" variant="outline" className="text-xs gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => navigate("/war-room")}>
+                <Zap className="w-3 h-3" /> War Room
+              </Button>
+            )}
+            {totalDelayCost > 0 && (
+              <div className="flex items-center gap-1.5 text-sm">
+                <DollarSign className="w-4 h-4 text-destructive" />
+                <span className="font-bold text-destructive">{formatCost(totalDelayCost)}</span>
+                <span className="text-xs text-muted-foreground">{t("teamCmd.delayRisk")}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 border-t border-border/60 divide-x divide-border/60">

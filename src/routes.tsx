@@ -63,6 +63,7 @@ const ExternalReview = lazy(() => import("./pages/ExternalReview"));
 const InternalAdmin = lazy(() => import("./pages/InternalAdmin"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
+const WarRoom = lazy(() => import("./pages/WarRoom"));
 
 // ── Wrappers ───────────────────────────────────────────
 
@@ -151,6 +152,7 @@ export const protectedRoutes = (
     <Route path="/meeting" element={<P><MeetingMode /></P>} />
     <Route path="/process" element={<P><ProcessHub /></P>} />
     <Route path="/upgrade" element={<P><UpgradePage /></P>} />
+    <Route path="/war-room" element={<P><WarRoom /></P>} />
   </>
 );
 

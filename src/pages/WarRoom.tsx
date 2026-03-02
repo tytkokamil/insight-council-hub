@@ -1,299 +1,390 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import AppLayout from "@/components/layout/AppLayout";
-import PageHelpButton from "@/components/shared/PageHelpButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import {
-  Shield, AlertTriangle, Clock, TrendingUp, Users, Zap,
-  ChevronRight, Activity, Target, Flame, ArrowUpRight, Lock,
-} from "lucide-react";
-import { format, differenceInDays } from "date-fns";
-import { de, enUS } from "date-fns/locale";
 import { useDecisions, useFilteredDependencies, useFilteredNotifications } from "@/hooks/useDecisions";
+import { useNavigate } from "react-router-dom";
+import { formatCost } from "@/lib/formatters";
+import { differenceInDays, differenceInCalendarDays, format } from "date-fns";
+import { de, enUS } from "date-fns/locale";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Zap, Clock, AlertTriangle, Users, Send, Bell,
+  ArrowUpRight, Flame, Activity, MessageSquare, Shield,
+  UserMinus, CalendarPlus, ChevronUp, ExternalLink,
+} from "lucide-react";
 import AnalysisPageSkeleton from "@/components/shared/AnalysisPageSkeleton";
 
-interface CriticalDecision {
-  id: string;
-  title: string;
-  priority: string;
-  category: string;
-  status: string;
-  created_at: string;
-  due_date: string | null;
-  ai_risk_score: number | null;
-  ai_impact_score: number | null;
-  escalation_level: number | null;
-  daysOpen: number;
-  overdue: boolean;
-  urgencyScore: number;
-}
-
-interface SystemicRisk {
-  type: "bottleneck" | "escalation" | "stale" | "quality";
-  severity: "critical" | "high" | "medium";
-  title: string;
-  detail: string;
-  metric: string;
-}
+const PRIORITY_WEIGHT: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+const HOURLY_RATE = 85;
+const PERSONS = 3;
+const HOURS_PER_DAY = 2;
 
 const WarRoom = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [checkingAdmin, setCheckingAdmin] = useState(true);
+  const navigate = useNavigate();
+  const qc = useQueryClient();
   const dateFnsLocale = i18n.language === "de" ? de : enUS;
 
   const { data: allDecisions = [], isLoading: loadingDec } = useDecisions();
   const { data: allDeps = [], isLoading: loadingDeps } = useFilteredDependencies();
   const { data: allNotifications = [], isLoading: loadingNotif } = useFilteredNotifications();
-  const loading = loadingDec || loadingDeps || loadingNotif || checkingAdmin;
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("user_roles").select("role").eq("user_id", user.id).single().then(({ data }) => {
-      setIsAdmin(data?.role === "org_owner" || data?.role === "org_admin");
-      setCheckingAdmin(false);
-    });
-  }, [user]);
+  // Latest comments for escalated decisions
+  const { data: latestComments = [] } = useQuery({
+    queryKey: ["war-room-comments"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("comments")
+        .select("decision_id, content, created_at, user_id")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      return data ?? [];
+    },
+    staleTime: 15_000,
+  });
 
-  const escalationNotifications = useMemo(() =>
-    allNotifications.filter(n => n.type === "escalation"), [allNotifications]);
+  const { data: profiles = [] } = useQuery({
+    queryKey: ["profiles-map"],
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("user_id, full_name");
+      return data ?? [];
+    },
+    staleTime: 120_000,
+  });
 
-  const priorityMap: Record<string, string> = {
-    critical: t("warRoom.priorityCritical"), high: t("warRoom.priorityHigh"),
-    medium: t("warRoom.priorityMedium"), low: t("warRoom.priorityLow"),
-  };
-  const categoryMap: Record<string, string> = {
-    strategic: t("warRoom.catStrategic"), budget: t("warRoom.catBudget"),
-    hr: t("warRoom.catHr"), technical: t("warRoom.catTechnical"),
-    operational: t("warRoom.catOperational"), marketing: t("warRoom.catMarketing"),
-  };
-  const statusMap: Record<string, string> = {
-    draft: t("warRoom.statusDraft"), review: t("warRoom.statusReview"), approved: t("warRoom.statusApproved"),
-  };
+  const profileMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    profiles.forEach(p => { m[p.user_id] = p.full_name || "Unbekannt"; });
+    return m;
+  }, [profiles]);
 
-  const { criticals, risks, stats } = useMemo(() => {
-    if (!isAdmin || allDecisions.length === 0) {
-      return {
-        criticals: [] as CriticalDecision[],
-        risks: [] as SystemicRisk[],
-        stats: { total: 0, open: 0, avgDays: 0, implementedThisMonth: 0, rejectedThisMonth: 0, escalations: 0 },
-      };
-    }
+  const loading = loadingDec || loadingDeps || loadingNotif;
+  const now = new Date();
 
-    const now = new Date();
-    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const open = allDecisions.filter(d => !["implemented", "rejected"].includes(d.status));
-    const implemented = allDecisions.filter(d => d.status === "implemented" && new Date(d.created_at) >= thisMonth);
-    const rejected = allDecisions.filter(d => d.status === "rejected" && new Date(d.created_at) >= thisMonth);
-    const durations = open.map(d => differenceInDays(now, new Date(d.created_at)));
-    const avgDays = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : 0;
-
-    const computedStats = {
-      total: allDecisions.length, open: open.length, avgDays,
-      implementedThisMonth: implemented.length, rejectedThisMonth: rejected.length,
-      escalations: escalationNotifications.filter(n => new Date(n.created_at) >= thisMonth).length,
-    };
-
-    const priorityWeight: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
-    const scored = open.map(d => {
+  // Escalated decisions
+  const escalated = useMemo(() => {
+    const open = allDecisions.filter(d =>
+      !["implemented", "rejected", "cancelled", "archived"].includes(d.status) &&
+      (d.escalation_level || 0) >= 1
+    );
+    return open.map(d => {
       const daysOpen = differenceInDays(now, new Date(d.created_at));
       const overdue = d.due_date ? new Date(d.due_date) < now : false;
-      const riskWeight = (d.ai_risk_score || 0) / 20;
+      const daysOverdue = overdue && d.due_date ? differenceInCalendarDays(now, new Date(d.due_date)) : 0;
+      const cod = overdue ? daysOverdue * PERSONS * HOURS_PER_DAY * HOURLY_RATE * (PRIORITY_WEIGHT[d.priority] || 1) : (d.cost_per_day || 0) * daysOpen;
       const urgencyScore =
-        (priorityWeight[d.priority] || 1) * 25 + (overdue ? 30 : 0) +
-        Math.min(daysOpen, 30) * 1.5 + riskWeight * 10 + (d.escalation_level || 0) * 15;
-      return { ...d, daysOpen, overdue, urgencyScore } as CriticalDecision;
-    });
-    scored.sort((a, b) => b.urgencyScore - a.urgencyScore);
+        (PRIORITY_WEIGHT[d.priority] || 1) * 20 +
+        (overdue ? 30 : 0) +
+        Math.min(daysOpen, 30) * 1.5 +
+        ((d.ai_risk_score || 0) / 20) * 15 +
+        (d.escalation_level || 0) * 20;
+      const lastComment = latestComments.find(c => c.decision_id === d.id);
+      return { ...d, daysOpen, overdue, daysOverdue, cod, urgencyScore, lastComment };
+    }).sort((a, b) => b.urgencyScore - a.urgencyScore);
+  }, [allDecisions, latestComments, now]);
 
-    const detectedRisks: SystemicRisk[] = [];
-    const stale = open.filter(d => differenceInDays(now, new Date(d.created_at)) > 14 && ["draft", "review"].includes(d.status));
-    if (stale.length > 0) {
-      detectedRisks.push({
-        type: "stale", severity: stale.length > 3 ? "critical" : stale.length > 1 ? "high" : "medium",
-        title: t("warRoom.riskStale"), detail: t("warRoom.riskStaleDetail", { count: stale.length }), metric: t("warRoom.riskStaleMetric", { count: stale.length }),
+  // Live activity feed from notifications
+  const activityFeed = useMemo(() => {
+    return allNotifications
+      .filter(n => {
+        const escIds = new Set(escalated.map(e => e.id));
+        return n.decision_id && escIds.has(n.decision_id);
+      })
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 30);
+  }, [allNotifications, escalated]);
+
+  // Live CoD ticker
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setTick(t => t + 1), 3000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const totalCod = useMemo(() => {
+    return escalated.reduce((s, d) => s + d.cod, 0) + tick * 0.01; // subtle tick
+  }, [escalated, tick]);
+
+  // Quick actions
+  const handleNotifyAll = async () => {
+    if (!user) return;
+    const reviewerIds = new Set<string>();
+    for (const d of escalated) {
+      const { data } = await supabase.from("decision_reviews").select("reviewer_id").eq("decision_id", d.id);
+      data?.forEach(r => reviewerIds.add(r.reviewer_id));
+    }
+    for (const uid of reviewerIds) {
+      await supabase.from("notifications").insert({
+        user_id: uid,
+        title: "⚡ War Room – Sofortige Aufmerksamkeit erforderlich",
+        message: `${escalated.length} eskalierte Entscheidungen erfordern deine Review.`,
+        type: "escalation",
       });
     }
+    toast.success(t("warRoom.notifiedAll", { defaultValue: `${reviewerIds.size} Reviewer benachrichtigt` }));
+  };
 
-    const recentEscalations = escalationNotifications.filter(n => differenceInDays(now, new Date(n.created_at)) <= 7).length;
-    if (recentEscalations > 2) {
-      detectedRisks.push({
-        type: "escalation", severity: recentEscalations > 5 ? "critical" : "high",
-        title: t("warRoom.riskEscalation"), detail: t("warRoom.riskEscalationDetail", { count: recentEscalations }), metric: t("warRoom.riskEscalationMetric", { count: recentEscalations }),
-      });
-    }
+  const handleEscalate = async (decisionId: string) => {
+    const dec = escalated.find(d => d.id === decisionId);
+    if (!dec) return;
+    await supabase.from("decisions").update({
+      escalation_level: (dec.escalation_level || 0) + 1,
+      last_escalated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", decisionId);
+    qc.invalidateQueries({ queryKey: ["decisions"] });
+    toast.success("Eskalationsstufe erhöht");
+  };
 
-    const blockedIds = new Set(allDeps.map(d => d.target_decision_id));
-    const blockedOpen = open.filter(d => blockedIds.has(d.id));
-    if (blockedOpen.length > 1) {
-      detectedRisks.push({
-        type: "bottleneck", severity: blockedOpen.length > 3 ? "critical" : "high",
-        title: t("warRoom.riskBottleneck"), detail: t("warRoom.riskBottleneckDetail", { count: blockedOpen.length }), metric: t("warRoom.riskBottleneckMetric", { count: blockedOpen.length }),
-      });
-    }
+  const handleExtendSla = async (decisionId: string) => {
+    const dec = escalated.find(d => d.id === decisionId);
+    if (!dec) return;
+    const newDue = new Date();
+    newDue.setDate(newDue.getDate() + 3);
+    await supabase.from("decisions").update({
+      due_date: newDue.toISOString().split("T")[0],
+      updated_at: new Date().toISOString(),
+    }).eq("id", decisionId);
+    qc.invalidateQueries({ queryKey: ["decisions"] });
+    toast.success("SLA um 3 Tage verlängert");
+  };
 
-    const recentTotal = allDecisions.filter(d => new Date(d.created_at) >= thisMonth).length;
-    const rejRate = recentTotal > 0 ? (rejected.length / recentTotal) * 100 : 0;
-    if (rejRate > 30 && recentTotal >= 3) {
-      detectedRisks.push({
-        type: "quality", severity: rejRate > 50 ? "critical" : "high",
-        title: t("warRoom.riskQuality"), detail: t("warRoom.riskQualityDetail", { rate: Math.round(rejRate) }), metric: `${Math.round(rejRate)}%`,
-      });
-    }
+  const handleResolve = async (decisionId: string) => {
+    await supabase.from("decisions").update({
+      escalation_level: 0,
+      updated_at: new Date().toISOString(),
+    }).eq("id", decisionId);
+    qc.invalidateQueries({ queryKey: ["decisions"] });
+    toast.success("Eskalation aufgelöst");
+  };
 
-    if (detectedRisks.length === 0) {
-      detectedRisks.push({
-        type: "quality", severity: "medium",
-        title: t("warRoom.noRisks"), detail: t("warRoom.noRisksDetail"), metric: t("warRoom.noRisksMetric"),
-      });
-    }
+  const priorityLabel: Record<string, string> = { critical: "Kritisch", high: "Hoch", medium: "Mittel", low: "Niedrig" };
+  const priorityColor = (p: string) =>
+    p === "critical" ? "bg-red-500/20 text-red-400" : p === "high" ? "bg-amber-500/20 text-amber-400" : "bg-slate-500/20 text-slate-400";
 
-    return { criticals: scored.slice(0, 5), risks: detectedRisks, stats: computedStats };
-  }, [allDecisions, allDeps, escalationNotifications, isAdmin, t]);
-
-  const severityColor = (s: string) =>
-    s === "critical" ? "border-destructive bg-destructive/10" : s === "high" ? "border-warning bg-warning/10" : "border-border bg-muted/30";
-  const severityTextColor = (s: string) =>
-    s === "critical" ? "text-destructive" : s === "high" ? "text-warning" : "text-muted-foreground";
-  const priorityBadge = (p: string) =>
-    p === "critical" ? "bg-destructive/20 text-destructive" : p === "high" ? "bg-warning/20 text-warning" : p === "medium" ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground";
+  if (loading) {
+    return (
+      <AppLayout>
+        <AnalysisPageSkeleton cards={4} sections={2} />
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-[0.15em] mb-1">{t("warRoom.commandCenter")}</p>
-            <h1 className="font-display text-xl font-bold">{t("warRoom.title")}</h1>
-            <p className="text-sm text-muted-foreground mt-1">{format(new Date(), "dd. MMMM yyyy, HH:mm", { locale: dateFnsLocale })} {t("warRoom.timeLabel")}</p>
+      <div className="min-h-screen -m-4 md:-m-6 lg:-m-8 p-4 md:p-6 lg:p-8" style={{ background: "#0F172A" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-red-500" />
+              <h1 className="text-xl font-bold text-white tracking-tight">WAR ROOM</h1>
+            </div>
+            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+              {escalated.length} {escalated.length === 1 ? "Aktive Eskalation" : "Aktive Eskalationen"}
+            </Badge>
           </div>
-          <PageHelpButton title={t("warRoom.helpTitle")} description={t("warRoom.helpDesc")} />
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Verzögerungskosten</p>
+              <p className="text-lg font-bold text-red-400 tabular-nums font-mono">
+                {formatCost(Math.round(totalCod))}
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs" onClick={() => navigate(-1)}>
+              Zurück
+            </Button>
+          </div>
         </div>
 
-        {loading ? (
-          <AnalysisPageSkeleton cards={6} sections={2} />
-        ) : isAdmin === false ? (
+        {escalated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Lock className="w-12 h-12 text-muted-foreground mb-4 opacity-40" />
-            <h2 className="text-lg font-semibold mb-2">{t("warRoom.accessRestricted")}</h2>
-            <p className="text-sm text-muted-foreground max-w-md">{t("warRoom.accessRestrictedDesc")}</p>
+            <Shield className="w-12 h-12 text-emerald-500/40 mb-4" />
+            <h2 className="text-lg font-semibold text-white mb-2">Keine aktiven Eskalationen</h2>
+            <p className="text-sm text-slate-400 max-w-md">
+              Alle Entscheidungen laufen innerhalb der SLA-Grenzen. Der War Room wird automatisch aktiv, sobald Eskalationen auftreten.
+            </p>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {[
-                { label: t("warRoom.total"), value: stats.total, icon: Target, color: "text-primary" },
-                { label: t("warRoom.open"), value: stats.open, icon: Clock, color: "text-warning" },
-                { label: t("warRoom.avgDaysOpen"), value: stats.avgDays, icon: TrendingUp, color: "text-muted-foreground" },
-                { label: t("warRoom.implementedMonth"), value: stats.implementedThisMonth, icon: Zap, color: "text-success" },
-                { label: t("warRoom.rejectedMonth"), value: stats.rejectedThisMonth, icon: AlertTriangle, color: "text-destructive" },
-                { label: t("warRoom.escalationsMonth"), value: stats.escalations, icon: Flame, color: "text-destructive" },
-              ].map((s) => (
-                <div key={s.label} className="p-3 rounded-lg bg-muted/30 border border-border">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <s.icon className={`w-3.5 h-3.5 ${s.color}`} />
-                    <span className="text-[10px] text-muted-foreground">{s.label}</span>
-                  </div>
-                  <p className="text-xl font-bold font-display tabular-nums">{s.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid lg:grid-cols-5 gap-6">
-              <div className="lg:col-span-3 space-y-3">
-                <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-destructive" /> {t("warRoom.topCritical")}
-                </h2>
-                <div className="space-y-2">
-                  {criticals.map((d, i) => (
-                    <div key={d.id} className={`p-4 rounded-lg border ${d.overdue ? "border-destructive/50 bg-destructive/5" : "border-border bg-muted/20"}`}>
-                      <div className="flex items-start justify-between gap-3">
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* LEFT: Critical Decisions */}
+            <div className="lg:col-span-3 space-y-3">
+              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Flame className="w-3.5 h-3.5 text-red-500" />
+                Eskalierte Entscheidungen ({escalated.length})
+              </h2>
+              <ScrollArea className="h-[calc(100vh-220px)]">
+                <div className="space-y-3 pr-3">
+                  {escalated.map((d) => (
+                    <div key={d.id} className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 hover:border-red-500/30 transition-colors">
+                      <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityBadge(d.priority)}`}>
-                              {priorityMap[d.priority] || d.priority}
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityColor(d.priority)}`}>
+                              {priorityLabel[d.priority] || d.priority}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              {categoryMap[d.category] || d.category}
-                            </span>
+                            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[9px]">
+                              <Zap className="w-2.5 h-2.5 mr-0.5" /> Stufe {d.escalation_level}
+                            </Badge>
                             {d.overdue && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">{t("warRoom.overdue")}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
+                                {d.daysOverdue}d überfällig
+                              </span>
                             )}
                           </div>
-                          <p className="text-sm font-medium truncate">{d.title}</p>
-                          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-muted-foreground">
-                            <span>{t("warRoom.daysOpen", { count: d.daysOpen })}</span>
-                            {d.ai_risk_score != null && <span>{t("warRoom.risk", { score: d.ai_risk_score })}</span>}
-                            {d.escalation_level != null && d.escalation_level > 0 && (
-                              <span className="text-destructive">{t("warRoom.escalationLevel", { level: d.escalation_level })}</span>
+                          <p className="text-sm font-medium text-white truncate cursor-pointer hover:text-blue-400 transition-colors"
+                            onClick={() => navigate(`/decisions/${d.id}`)}>
+                            {d.title}
+                          </p>
+                          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-slate-500">
+                            <span>{d.daysOpen}d offen</span>
+                            <span className="text-slate-600">•</span>
+                            <span>{t(`status.${d.status}`, { defaultValue: d.status })}</span>
+                            {d.ai_risk_score != null && (
+                              <>
+                                <span className="text-slate-600">•</span>
+                                <span className={d.ai_risk_score >= 60 ? "text-red-400" : "text-amber-400"}>
+                                  Risiko {d.ai_risk_score}%
+                                </span>
+                              </>
                             )}
-                            <span>{statusMap[d.status] || d.status}</span>
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-lg font-bold font-display tabular-nums text-foreground">{Math.round(d.urgencyScore)}</p>
-                          <p className="text-[10px] text-muted-foreground">{t("warRoom.urgency")}</p>
+                          <p className="text-lg font-bold tabular-nums text-red-400 font-mono">
+                            {formatCost(Math.round(d.cod))}
+                          </p>
+                          <p className="text-[9px] text-slate-500">CoD</p>
+                          <p className="text-xs font-semibold text-slate-400 mt-1">{Math.round(d.urgencyScore)}</p>
+                          <p className="text-[9px] text-slate-500">Urgency</p>
                         </div>
+                      </div>
+
+                      {/* Last comment */}
+                      {d.lastComment && (
+                        <div className="mb-3 px-3 py-2 rounded bg-slate-900/50 border border-slate-700/40">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <MessageSquare className="w-3 h-3 text-slate-500" />
+                            <span className="text-[10px] text-slate-500">
+                              {profileMap[d.lastComment.user_id] || "Unbekannt"} •{" "}
+                              {format(new Date(d.lastComment.created_at), "dd.MM. HH:mm", { locale: dateFnsLocale })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400 truncate">{d.lastComment.content}</p>
+                        </div>
+                      )}
+
+                      {/* Quick Actions */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-slate-700 text-slate-300 hover:bg-slate-700 gap-1"
+                          onClick={() => navigate(`/decisions/${d.id}`)}>
+                          <UserMinus className="w-3 h-3" /> Reviewer ersetzen
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-slate-700 text-slate-300 hover:bg-slate-700 gap-1"
+                          onClick={() => handleExtendSla(d.id)}>
+                          <CalendarPlus className="w-3 h-3" /> SLA verlängern
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-red-500/30 text-red-400 hover:bg-red-500/10 gap-1"
+                          onClick={() => handleEscalate(d.id)}>
+                          <ChevronUp className="w-3 h-3" /> Eskalieren
+                        </Button>
+                        <Button size="sm" className="h-7 text-[10px] bg-emerald-600/80 hover:bg-emerald-600 text-white gap-1"
+                          onClick={() => handleResolve(d.id)}>
+                          <Shield className="w-3 h-3" /> Lösen
+                        </Button>
                       </div>
                     </div>
                   ))}
-                  {criticals.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground text-sm">{t("warRoom.noCritical")}</div>
-                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* RIGHT: Action Center */}
+            <div className="lg:col-span-2 space-y-4">
+              {/* Quick Actions */}
+              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" /> Schnellaktionen
+                </h3>
+                <div className="space-y-2">
+                  <Button className="w-full justify-start gap-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                    onClick={handleNotifyAll}>
+                    <Bell className="w-3.5 h-3.5 text-amber-400" /> Alle Reviewer benachrichtigen
+                  </Button>
+                  <Button className="w-full justify-start gap-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                    onClick={() => navigate("/meeting")}>
+                    <Users className="w-3.5 h-3.5 text-blue-400" /> Notfall-Review-Runde starten
+                  </Button>
+                  <Button className="w-full justify-start gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs h-9"
+                    onClick={async () => {
+                      for (const d of escalated) {
+                        await supabase.from("decisions").update({
+                          escalation_level: Math.max((d.escalation_level || 0) + 1, 3),
+                          last_escalated_at: new Date().toISOString(),
+                        }).eq("id", d.id);
+                      }
+                      qc.invalidateQueries({ queryKey: ["decisions"] });
+                      toast.success("Externe Eskalation ausgelöst");
+                    }}>
+                    <ExternalLink className="w-3.5 h-3.5" /> Externe Eskalation auslösen
+                  </Button>
                 </div>
               </div>
 
-              <div className="lg:col-span-2 space-y-3">
-                <h2 className="text-sm font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-warning" /> {t("warRoom.systemicRisks")}
-                </h2>
-                <div className="space-y-2">
-                  {risks.map((r, i) => (
-                    <div key={i} className={`p-4 rounded-lg border ${severityColor(r.severity)}`}>
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className={`text-xs font-semibold ${severityTextColor(r.severity)}`}>{r.title}</p>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 font-medium ${
-                          r.severity === "critical" ? "bg-destructive/20 text-destructive" : r.severity === "high" ? "bg-warning/20 text-warning" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {r.severity}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{r.detail}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <ArrowUpRight className={`w-3 h-3 ${severityTextColor(r.severity)}`} />
-                        <span className={`text-xs font-medium ${severityTextColor(r.severity)}`}>{r.metric}</span>
-                      </div>
+              {/* Live Activity Feed */}
+              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-green-400 animate-pulse" /> Live Activity Feed
+                </h3>
+                <ScrollArea className="h-[280px]">
+                  <div className="space-y-2 pr-2">
+                    {activityFeed.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-4">Keine Aktivität</p>
+                    ) : (
+                      activityFeed.map((n) => (
+                        <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-slate-700/30 last:border-0">
+                          <span className="text-[10px] text-slate-600 shrink-0 tabular-nums font-mono mt-0.5">
+                            {format(new Date(n.created_at), "HH:mm", { locale: dateFnsLocale })}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs text-slate-300 leading-relaxed">{n.message || n.title}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </ScrollArea>
+              </div>
+
+              {/* Escalation Summary */}
+              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+                  Eskalations-Übersicht
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Stufe 1", value: escalated.filter(d => d.escalation_level === 1).length, color: "text-amber-400" },
+                    { label: "Stufe 2", value: escalated.filter(d => d.escalation_level === 2).length, color: "text-orange-400" },
+                    { label: "Stufe 3+", value: escalated.filter(d => (d.escalation_level || 0) >= 3).length, color: "text-red-400" },
+                    { label: "Überfällig", value: escalated.filter(d => d.overdue).length, color: "text-red-400" },
+                  ].map(s => (
+                    <div key={s.label} className="text-center py-2 rounded bg-slate-900/50">
+                      <p className={`text-lg font-bold tabular-nums ${s.color}`}>{s.value}</p>
+                      <p className="text-[10px] text-slate-500">{s.label}</p>
                     </div>
                   ))}
-                </div>
-
-                <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                  <h3 className="text-xs font-semibold flex items-center gap-1.5 mb-3">
-                    <Activity className="w-3.5 h-3.5 text-primary" /> {t("warRoom.systemPulse")}
-                  </h3>
-                  <div className="space-y-2">
-                    {[
-                      { label: t("warRoom.decisionLoad"), value: stats.open, max: Math.max(stats.total, 1), color: stats.open > 10 ? "bg-destructive" : stats.open > 5 ? "bg-warning" : "bg-success" },
-                      { label: t("warRoom.implementationRate"), value: stats.implementedThisMonth, max: Math.max(stats.implementedThisMonth + stats.rejectedThisMonth + stats.open, 1), color: "bg-primary" },
-                    ].map((bar) => (
-                      <div key={bar.label}>
-                        <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                          <span>{bar.label}</span>
-                          <span>{bar.value}/{bar.max}</span>
-                        </div>
-                        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div className={`h-full rounded-full ${bar.color} transition-all`} style={{ width: `${Math.min((bar.value / bar.max) * 100, 100)}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </AppLayout>
