@@ -73,7 +73,6 @@ const Index = () => {
         <main>
           <HeroSection />
           <LogoBar />
-          <VideoSection />
           <SectionDivider />
           <ProblemSection />
           <SolutionSection />
