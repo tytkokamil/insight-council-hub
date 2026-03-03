@@ -16,6 +16,7 @@ const Teams = lazy(() => import("./pages/Teams"));
 const Briefing = lazy(() => import("./pages/Briefing"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const DecisionGraph = lazy(() => import("./pages/DecisionGraph"));
+const Templates = lazy(() => import("./pages/Templates"));
 const BottleneckIntelligence = lazy(() => import("./pages/BottleneckIntelligence"));
 const OpportunityCostRadar = lazy(() => import("./pages/OpportunityCostRadar"));
 const PredictiveTimeline = lazy(() => import("./pages/PredictiveTimeline"));

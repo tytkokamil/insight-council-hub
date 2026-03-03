@@ -70,6 +70,12 @@ const Particles = () => {
   );
 };
 
+const STATS = [
+  { value: "4,2", suffix: " Tage", label: "Ø Entscheidungsdauer" },
+  { value: "€47k", suffix: "/Monat", label: "Ø unsichtbare Kosten" },
+  { value: "73", suffix: "%", label: "schnellere Freigaben" },
+];
+
 const HeroSection = () => {
   const [showTour, setShowTour] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -83,9 +89,9 @@ const HeroSection = () => {
       {/* Soft ambient background */}
       <motion.div style={{ scale: bgScale, opacity: bgOpacity }} className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(220,25%,96%)] via-background to-transparent" />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-[hsl(220,50%,70%,0.05)] blur-[140px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(250,40%,70%,0.04)] blur-[120px]" />
-        <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full bg-[hsl(180,35%,65%,0.03)] blur-[100px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-[hsl(220,50%,70%,0.06)] blur-[140px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[hsl(250,40%,70%,0.05)] blur-[120px]" />
+        <div className="absolute top-1/3 right-1/3 w-[300px] h-[300px] rounded-full bg-[hsl(180,35%,65%,0.04)] blur-[100px]" />
       </motion.div>
       
       {/* Very subtle dot grid */}
@@ -173,6 +179,23 @@ const HeroSection = () => {
               <span key={i} className="text-[11px] font-medium" style={{ color: 'hsl(220 12% 58%)' }}>
                 <span className="mr-1" style={{ color: 'hsl(160 40% 50%)' }}>✓</span> {item}
               </span>
+            ))}
+          </motion.div>
+
+          {/* Stats row */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2, duration: 0.8, ease }}
+            className="mt-12 grid grid-cols-3 gap-4 max-w-md mx-auto"
+          >
+            {STATS.map((stat, i) => (
+              <div key={i} className="text-center">
+                <p className="text-xl md:text-2xl font-bold tabular-nums" style={{ color: 'hsl(220 45% 42%)' }}>
+                  {stat.value}<span className="text-sm font-semibold text-muted-foreground">{stat.suffix}</span>
+                </p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5">{stat.label}</p>
+              </div>
             ))}
           </motion.div>
         </div>

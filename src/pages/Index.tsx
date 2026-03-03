@@ -1,25 +1,29 @@
+import { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import LogoBar from "@/components/landing/LogoBar";
-import ProblemSection from "@/components/landing/ProblemSection";
-import SolutionSection from "@/components/landing/SolutionSection";
-import MetricsShowcase from "@/components/landing/MetricsShowcase";
-import ProductShowcase from "@/components/landing/ProductShowcase";
-import IndustriesSection from "@/components/landing/IndustriesSection";
-import ComplianceSection from "@/components/landing/ComplianceSection";
-import ROICalculatorSection from "@/components/landing/ROICalculatorSection";
-import FAQSection from "@/components/landing/FAQSection";
-import PricingSection from "@/components/landing/PricingSection";
-import CTASection from "@/components/landing/CTASection";
-import Footer from "@/components/landing/Footer";
 import ScrollProgress from "@/components/landing/ScrollProgress";
-import StickyCTA from "@/components/landing/StickyCTA";
-import BackToTop from "@/components/landing/BackToTop";
-import VideoSection from "@/components/landing/VideoSection";
-import ComparisonSection from "@/components/landing/ComparisonSection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import SectionDivider from "@/components/landing/SectionDivider";
+import Footer from "@/components/landing/Footer";
+
+// Lazy load below-fold sections for better initial load
+const ProblemSection = lazy(() => import("@/components/landing/ProblemSection"));
+const SolutionSection = lazy(() => import("@/components/landing/SolutionSection"));
+const ProductShowcase = lazy(() => import("@/components/landing/ProductShowcase"));
+const MetricsShowcase = lazy(() => import("@/components/landing/MetricsShowcase"));
+const ComparisonSection = lazy(() => import("@/components/landing/ComparisonSection"));
+const IndustriesSection = lazy(() => import("@/components/landing/IndustriesSection"));
+const ComplianceSection = lazy(() => import("@/components/landing/ComplianceSection"));
+const TestimonialsSection = lazy(() => import("@/components/landing/TestimonialsSection"));
+const ROICalculatorSection = lazy(() => import("@/components/landing/ROICalculatorSection"));
+const PricingSection = lazy(() => import("@/components/landing/PricingSection"));
+const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
+const CTASection = lazy(() => import("@/components/landing/CTASection"));
+const StickyCTA = lazy(() => import("@/components/landing/StickyCTA"));
+const BackToTop = lazy(() => import("@/components/landing/BackToTop"));
+
+const SectionFallback = () => <div className="py-24" />;
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -74,26 +78,30 @@ const Index = () => {
           <HeroSection />
           <LogoBar />
           <SectionDivider />
-          <ProblemSection />
-          <SolutionSection />
-          <SectionDivider />
-          <ProductShowcase />
-          <MetricsShowcase />
-          <SectionDivider />
-          <ComparisonSection />
-          <IndustriesSection />
-          <ComplianceSection />
-          <SectionDivider />
-          <TestimonialsSection />
-          <ROICalculatorSection />
-          <SectionDivider />
-          <PricingSection />
-          <FAQSection />
-          <CTASection />
+          <Suspense fallback={<SectionFallback />}>
+            <ProblemSection />
+            <SolutionSection />
+            <SectionDivider />
+            <ProductShowcase />
+            <MetricsShowcase />
+            <SectionDivider />
+            <ComparisonSection />
+            <IndustriesSection />
+            <ComplianceSection />
+            <SectionDivider />
+            <TestimonialsSection />
+            <ROICalculatorSection />
+            <SectionDivider />
+            <PricingSection />
+            <FAQSection />
+            <CTASection />
+          </Suspense>
         </main>
         <Footer />
-        <StickyCTA />
-        <BackToTop />
+        <Suspense fallback={null}>
+          <StickyCTA />
+          <BackToTop />
+        </Suspense>
       </div>
     </>
   );
