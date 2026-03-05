@@ -11,7 +11,14 @@ interface Props {
 
 const WelcomeStep = ({ userName, onNext, slideAnim }: Props) => (
   <motion.div key="s1" {...slideAnim} className="w-full max-w-md text-center">
-    <img src={decivioLogo} alt="Decivio" className="w-20 h-20 rounded-2xl mx-auto mb-6 shadow-lg" />
+    <motion.img
+      src={decivioLogo}
+      alt="Decivio"
+      className="w-20 h-20 rounded-2xl mx-auto mb-6 shadow-lg"
+      initial={{ scale: 0.6, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
+    />
     <h1 className="text-2xl font-bold text-foreground mb-2">
       Willkommen, {userName}! 👋
     </h1>
@@ -21,6 +28,7 @@ const WelcomeStep = ({ userName, onNext, slideAnim }: Props) => (
     <Button
       size="lg"
       onClick={onNext}
+      autoFocus
       className="w-full max-w-xs mx-auto gap-2 h-12 text-sm font-semibold"
     >
       Los geht's <ArrowRight className="w-4 h-4" />
