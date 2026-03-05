@@ -55,7 +55,7 @@ const FAQSection = () => (
         transition={{ duration: 0.7, ease }}
         className="text-center mb-12"
       >
-        <p className="text-[11px] font-medium mb-4 tracking-[0.2em] uppercase" style={{ color: 'hsl(220 45% 50%)' }}>
+        <p className="text-[11px] font-medium mb-4 tracking-[0.2em] uppercase text-primary">
           FAQ
         </p>
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
@@ -63,18 +63,18 @@ const FAQSection = () => (
         </h2>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.1, duration: 0.6, ease }}
-      >
-        <Accordion type="single" collapsible className="space-y-2.5">
-          {faqs.map((faq, i) => (
+      <Accordion type="single" collapsible className="space-y-2.5">
+        {faqs.map((faq, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-30px" }}
+            transition={{ delay: i * 0.04, duration: 0.5, ease }}
+          >
             <AccordionItem
-              key={i}
               value={`faq-${i}`}
-              className="rounded-xl border border-border/30 bg-white/70 backdrop-blur-sm px-6 data-[state=open]:bg-white data-[state=open]:border-border/50 data-[state=open]:shadow-[0_4px_20px_-8px_hsl(220,20%,50%,0.06)] transition-all duration-300"
+              className="rounded-xl border border-border/30 bg-white/70 backdrop-blur-sm px-6 data-[state=open]:bg-white data-[state=open]:border-primary/20 data-[state=open]:shadow-[0_4px_20px_-8px_hsl(var(--primary)/0.08)] transition-all duration-300"
             >
               <AccordionTrigger className="text-[14px] font-semibold text-left hover:no-underline py-5 text-foreground/90 hover:text-foreground transition-colors">
                 {faq.q}
@@ -83,9 +83,9 @@ const FAQSection = () => (
                 {faq.a}
               </AccordionContent>
             </AccordionItem>
-          ))}
-        </Accordion>
-      </motion.div>
+          </motion.div>
+        ))}
+      </Accordion>
     </div>
   </section>
 );

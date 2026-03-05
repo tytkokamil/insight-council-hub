@@ -17,6 +17,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   const updateActive = useCallback(() => {
     const sections = navItems
@@ -35,10 +36,22 @@ const Navbar = () => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
       updateActive();
+      // Calculate scroll progress
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(docHeight > 0 ? Math.min(window.scrollY / docHeight, 1) : 0);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [updateActive]);
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const el = document.querySelector(href);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    setIsOpen(false);
+  };
 
   return (
     <motion.nav
@@ -49,13 +62,19 @@ const Navbar = () => {
     >
       <div className={`transition-all duration-500 border-b ${
         scrolled
-          ? "bg-white/75 backdrop-blur-2xl border-border/40 shadow-[0_1px_8px_-3px_hsl(220,20%,50%,0.06)]"
+          ? "bg-white/80 backdrop-blur-2xl border-border/40 shadow-[0_1px_8px_-3px_hsl(220,20%,50%,0.08)]"
           : "bg-transparent border-transparent"
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2.5">
-              <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-md" />
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <motion.img
+                src={decivioLogo}
+                alt="Decivio"
+                className="w-7 h-7 rounded-md"
+                whileHover={{ rotate: -8, scale: 1.08 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              />
               <span className="font-semibold text-[15px] tracking-tight text-foreground">Decivio</span>
             </Link>
 
@@ -66,6 +85,7 @@ const Navbar = () => {
                   <a
                     key={item.label}
                     href={item.href}
+                    onClick={(e) => handleSmoothScroll(e, item.href)}
                     className={`relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200 ${
                       isActive
                         ? "text-foreground font-medium"
@@ -76,8 +96,7 @@ const Navbar = () => {
                     {isActive && (
                       <motion.div
                         layoutId="nav-active"
-                        className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full"
-                        style={{ background: 'hsl(220 45% 50%)' }}
+                        className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full bg-primary"
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
@@ -92,13 +111,12 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/auth"
-                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-300 hover:shadow-[0_4px_16px_-4px_hsl(220,50%,40%,0.4)]"
-                style={{
-                  background: 'linear-gradient(to bottom, hsl(220 50% 48%), hsl(220 50% 40%))',
-                  boxShadow: '0 1px 8px -2px hsl(220 50% 40% / 0.3)',
-                }}
+                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary-foreground px-5 py-2.5 rounded-lg bg-primary transition-all duration-300 hover:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] overflow-hidden"
               >
-                Kostenlos starten <ArrowRight className="w-3.5 h-3.5" />
+                <span className="relative z-10 flex items-center gap-1.5">
+                  Kostenlos starten
+                  <ArrowRight className="w-3.5 h-3.5 group-hover/cta:translate-x-0.5 transition-transform duration-200" />
+                </span>
               </Link>
             </div>
 
@@ -107,6 +125,17 @@ const Navbar = () => {
             </button>
           </div>
         </div>
+
+        {/* Scroll progress bar */}
+        {scrolled && (
+          <motion.div
+            className="h-[2px] bg-primary/30 origin-left"
+            style={{ scaleX: scrollProgress }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
       </div>
 
       <AnimatePresence>
@@ -119,7 +148,16 @@ const Navbar = () => {
           >
             <div className="rounded-2xl bg-white/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
               {navItems.map(item => (
-                <a key={item.label} href={item.href} onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground px-4 py-2.5 rounded-lg transition-colors">
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => handleSmoothScroll(e, item.href)}
+                  className={`block text-sm px-4 py-2.5 rounded-lg transition-colors ${
+                    activeSection === item.href
+                      ? "text-foreground font-medium bg-primary/5"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
                   {item.label}
                 </a>
               ))}
