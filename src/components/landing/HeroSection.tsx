@@ -42,33 +42,25 @@ const RotatingWord = () => {
   );
 };
 
-/* Floating particles — very subtle */
-const Particles = () => {
-  const particles = useRef(
-    Array.from({ length: 10 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 2 + 1,
-      delay: Math.random() * 4,
-      duration: Math.random() * 6 + 10,
-    }))
-  ).current;
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map(p => (
-        <motion.div
-          key={p.id}
-          className="absolute rounded-full bg-[hsl(220,40%,70%,0.08)]"
-          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size }}
-          animate={{ y: [0, -15, 0], opacity: [0.15, 0.35, 0.15] }}
-          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-    </div>
-  );
-};
+/* CSS-only floating particles for zero JS overhead */
+const Particles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    {[...Array(6)].map((_, i) => (
+      <div
+        key={i}
+        className="absolute rounded-full bg-[hsl(220,40%,70%,0.07)] animate-float-particle"
+        style={{
+          left: `${15 + i * 14}%`,
+          top: `${20 + (i % 3) * 25}%`,
+          width: `${2 + (i % 3)}px`,
+          height: `${2 + (i % 3)}px`,
+          animationDelay: `${i * 1.5}s`,
+          animationDuration: `${10 + i * 2}s`,
+        }}
+      />
+    ))}
+  </div>
+);
 
 const STATS = [
   { value: "4,2", suffix: " Tage", label: "Ø Entscheidungsdauer" },

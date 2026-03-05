@@ -124,6 +124,10 @@ export default {
 				from: { opacity: '0', transform: 'translateY(8px)' },
 				to: { opacity: '1', transform: 'translateY(0)' }
 			},
+			'float-particle': {
+				'0%, 100%': { transform: 'translateY(0)', opacity: '0.15' },
+				'50%': { transform: 'translateY(-18px)', opacity: '0.35' }
+			},
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -135,6 +139,7 @@ export default {
   			'scale-in': 'scale-in 0.3s ease-out',
 			shimmer: 'shimmer 1.5s ease-in-out infinite',
 			'stagger-in': 'stagger-in 0.3s ease-out both',
+			'float-particle': 'float-particle 12s ease-in-out infinite',
   		},
   		boxShadow: {
   			'2xs': 'var(--shadow-2xs)',

@@ -32,11 +32,12 @@ const IndustryStep = ({ selectedIndustry, onSelect, slideAnim }: Props) => (
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
             onClick={() => onSelect(ind.id)}
-            className={`relative p-5 rounded-xl border-2 transition-all text-center ${
+            className={`relative p-5 rounded-xl border-2 transition-all text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
               selected
-                ? "border-primary bg-primary/10"
-                : "border-border hover:border-primary/40 bg-card"
+                ? "border-primary bg-primary/10 shadow-sm"
+                : "border-border hover:border-primary/40 hover:shadow-sm bg-card"
             }`}
+            aria-pressed={selected}
           >
             {selected && (
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-2 right-2">
