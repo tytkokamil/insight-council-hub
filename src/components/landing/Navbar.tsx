@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -18,31 +18,48 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [scrollProgress, setScrollProgress] = useState(0);
+  const activeSectionRef = useRef("");
 
-  const updateActive = useCallback(() => {
-    const sections = navItems
+  // Use IntersectionObserver instead of scroll-based section detection
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    const sectionEls = navItems
       .map(item => document.querySelector(item.href))
       .filter(Boolean) as HTMLElement[];
 
-    let current = "";
-    for (const section of sections) {
-      const rect = section.getBoundingClientRect();
-      if (rect.top <= 120) current = `#${section.id}`;
-    }
-    setActiveSection(current);
+    sectionEls.forEach((section) => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            activeSectionRef.current = `#${section.id}`;
+            setActiveSection(`#${section.id}`);
+          }
+        },
+        { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      );
+      observer.observe(section);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach(o => o.disconnect());
   }, []);
 
+  // Lightweight scroll listener only for scrolled state + progress bar
   useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      setScrolled(window.scrollY > 20);
-      updateActive();
-      // Calculate scroll progress
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-      setScrollProgress(docHeight > 0 ? Math.min(window.scrollY / docHeight, 1) : 0);
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 20);
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        setScrollProgress(docHeight > 0 ? Math.min(window.scrollY / docHeight, 1) : 0);
+        ticking = false;
+      });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [updateActive]);
+  }, []);
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -58,7 +75,7 @@ const Navbar = () => {
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50"
+      className="fixed top-0 left-0 right-0 z-50 will-change-transform"
     >
       <div className={`transition-all duration-500 border-b ${
         scrolled
@@ -74,6 +91,9 @@ const Navbar = () => {
                 className="w-7 h-7 rounded-md"
                 whileHover={{ rotate: -8, scale: 1.08 }}
                 transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                loading="eager"
+                width={28}
+                height={28}
               />
               <span className="font-semibold text-[15px] tracking-tight text-foreground">Decivio</span>
             </Link>
@@ -128,12 +148,9 @@ const Navbar = () => {
 
         {/* Scroll progress bar */}
         {scrolled && (
-          <motion.div
-            className="h-[2px] bg-primary/30 origin-left"
-            style={{ scaleX: scrollProgress }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+          <div
+            className="h-[2px] bg-primary/30 origin-left will-change-transform"
+            style={{ transform: `scaleX(${scrollProgress})` }}
           />
         )}
       </div>

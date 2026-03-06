@@ -262,12 +262,13 @@ const PricingSection = () => {
                 key={plan.name}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.6, ease }}
                 className={`relative flex flex-col rounded-2xl border p-6 transition-all duration-300 ${
                   plan.highlighted
-                    ? "border-primary/30 bg-white shadow-[0_0_30px_-10px_hsl(var(--primary)/0.12)] scale-[1.02] z-10"
-                    : "border-border/60 bg-white/80 hover:border-border hover:shadow-sm"
+                    ? "border-primary/30 bg-white shadow-[0_0_30px_-10px_hsl(var(--primary)/0.12)] scale-[1.02] z-10 ring-1 ring-primary/10"
+                    : "border-border/60 bg-white/80 hover:border-border hover:shadow-md"
                 }`}
               >
                 {plan.badge && (
