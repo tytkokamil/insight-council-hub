@@ -218,7 +218,7 @@ const PricingSection = () => {
 
         {/* Toggle */}
         <div className="flex items-center justify-center mb-12">
-          <div className="inline-flex items-center rounded-xl border border-border/60 bg-white/60 backdrop-blur-sm p-1">
+          <div className="relative inline-flex items-center rounded-xl border border-border/60 bg-white/60 backdrop-blur-sm p-1">
             <button
               onClick={() => setAnnual(false)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -233,8 +233,16 @@ const PricingSection = () => {
                 annual ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Jährlich <span className="text-[10px] opacity-75">(spare 2 Monate)</span>
+              Jährlich
             </button>
+            {/* Savings badge */}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="absolute -top-3 -right-3 px-2 py-0.5 rounded-full text-[9px] font-bold bg-success text-success-foreground shadow-sm"
+            >
+              −17%
+            </motion.span>
           </div>
         </div>
 
@@ -254,12 +262,13 @@ const PricingSection = () => {
                 key={plan.name}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.6, ease }}
                 className={`relative flex flex-col rounded-2xl border p-6 transition-all duration-300 ${
                   plan.highlighted
-                    ? "border-primary/30 bg-white shadow-[0_0_30px_-10px_hsl(var(--primary)/0.12)] scale-[1.02] z-10"
-                    : "border-border/60 bg-white/80 hover:border-border hover:shadow-sm"
+                    ? "border-primary/30 bg-white shadow-[0_0_30px_-10px_hsl(var(--primary)/0.12)] scale-[1.02] z-10 ring-1 ring-primary/10"
+                    : "border-border/60 bg-white/80 hover:border-border hover:shadow-md"
                 }`}
               >
                 {plan.badge && (
