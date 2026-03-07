@@ -87,6 +87,7 @@ const Index = () => {
             <MetricsShowcase />
             <SectionDivider />
             <ComparisonSection />
+            <AIShowcaseSection />
             <IndustriesSection />
             <ComplianceSection />
             <SectionDivider />
