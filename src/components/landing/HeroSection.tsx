@@ -216,23 +216,6 @@ const HeroSection = () => {
         </div>
       </motion.div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.8, duration: 0.8 }}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10"
-      >
-        <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          className="flex flex-col items-center gap-1 cursor-pointer"
-          onClick={() => document.getElementById("problem")?.scrollIntoView({ behavior: "smooth" })}
-        >
-          <span className="text-[10px] text-muted-foreground/40 tracking-wider uppercase">Mehr erfahren</span>
-          <ChevronDown className="w-4 h-4 text-muted-foreground/30" />
-        </motion.div>
-      </motion.div>
 
       <ProductTourModal open={showTour} onOpenChange={setShowTour} />
     </section>
