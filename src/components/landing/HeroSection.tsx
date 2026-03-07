@@ -80,7 +80,7 @@ const HeroSection = () => {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-12">
+    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-24">
       <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0">
         <GridBackground />
       </motion.div>
