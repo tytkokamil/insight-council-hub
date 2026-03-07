@@ -105,7 +105,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.9, ease }}
-            className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-extrabold tracking-[-0.04em] leading-[1.05] mb-6"
+            className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6"
           >
             <motion.span
               initial={{ opacity: 0 }}
@@ -221,7 +221,7 @@ const HeroSection = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.8, duration: 0.8 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10"
       >
         <motion.div
           animate={{ y: [0, 6, 0] }}
