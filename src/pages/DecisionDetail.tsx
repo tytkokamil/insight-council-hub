@@ -115,7 +115,7 @@ const DetailKpiPanel = ({ riskScore, decision, isActive, computed, slaRemaining,
     return () => clearInterval(iv);
   }, [isActive, costPerSecond, weeklyRate]);
 
-  const codColor = liveWeeklyCost > 1000 ? "#EF4444" : liveWeeklyCost >= 500 ? "#F59E0B" : "#64748B";
+  const codColor = liveWeeklyCost > 1000 ? "hsl(var(--destructive))" : liveWeeklyCost >= 500 ? "hsl(var(--warning))" : "hsl(var(--muted-foreground))";
 
   const kpis = [
     { label: "Risk", value: `${riskScore}%`, icon: AlertTriangle, color: riskScore > 60 ? "text-destructive" : riskScore > 40 ? "text-warning" : "text-success", bg: riskScore > 60 ? "bg-destructive/10" : riskScore > 40 ? "bg-warning/10" : "bg-success/10" },

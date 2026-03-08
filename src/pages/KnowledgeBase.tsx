@@ -928,7 +928,7 @@ const KnowledgeBase = () => {
 
                     <Dialog open={lessonOpen} onOpenChange={setLessonOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant={selectedLessons.length === 0 ? "default" : "outline"} className="w-full" style={selectedLessons.length === 0 ? { backgroundColor: "#1E3A5F" } : undefined}>
+                        <Button size="sm" variant={selectedLessons.length === 0 ? "default" : "outline"} className="w-full">
                           <Plus className="w-4 h-4 mr-1" /> {t("knowledge.addLesson")}
                         </Button>
                       </DialogTrigger>

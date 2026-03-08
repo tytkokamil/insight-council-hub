@@ -381,7 +381,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               <div className="flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-80 rounded" /> {t("predictive.legendElapsed")}</span>
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-30 rounded" /> {t("predictive.legendForecast")}</span>
-                <span className="flex items-center gap-1"><div className="h-3" style={{ width: "2px", backgroundColor: "#3B82F6" }} /> {t("predictive.legendToday")}</span>
+                <span className="flex items-center gap-1"><div className="h-3" style={{ width: "2px", backgroundColor: "hsl(var(--primary))" }} /> {t("predictive.legendToday")}</span>
                 <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> {t("predictive.legendWarning")}</span>
               </div>
             </div>

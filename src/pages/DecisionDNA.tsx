@@ -204,7 +204,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                   {noData ? (
                     <div className="space-y-1.5">
-                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ color: "#94A3B8", backgroundColor: "hsl(215 20% 65% / 0.12)" }}>
+                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium text-muted-foreground bg-muted/50">
                         {t("decisionDna.moreDataNeeded", "Mehr Daten nötig")}
                       </span>
                       <a href="/decisions" className="flex items-center gap-1 text-[11px] text-primary hover:underline" onClick={(e) => { e.preventDefault(); window.location.href = "/decisions"; }}>

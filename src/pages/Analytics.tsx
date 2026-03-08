@@ -451,7 +451,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   )}
                 </div>
                 {isCod && (
-                  <p className="text-[11px] font-medium mt-0.5" style={{ color: "#EF4444" }}>
+                  <p className="text-[11px] font-medium mt-0.5 text-destructive">
                     {t("analytics.costsToday", "Kosten heute")}
                   </p>
                 )}

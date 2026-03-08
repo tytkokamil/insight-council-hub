@@ -312,7 +312,7 @@ const DecisionGraph = () => {
                   <span className="text-muted-foreground">{t("graph.influencesLabel")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-0.5 rounded" style={{ background: "#1e3a5f" }} />
+                  <div className="w-6 h-0.5 bg-primary rounded" />
                   <span className="text-muted-foreground">{t("graph.requiresLabel")}</span>
                 </div>
               </div>
