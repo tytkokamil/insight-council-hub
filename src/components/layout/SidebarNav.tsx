@@ -400,9 +400,30 @@ const SidebarNav = memo(({
     setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // Determine nav groups based on role
+  // Determine nav groups based on role and progressive level
   const isFullRole = userRole === "org_owner" || userRole === "org_admin" || userRole === "org_lead";
-  const navGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
+  const baseGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
+
+  // Apply progressive level filtering
+  const navGroups = useMemo(() => {
+    if (progressiveLevel >= 3) return baseGroups;
+
+    const allowedPaths = progressiveLevel === 1 ? LEVEL_1_PATHS : LEVEL_2_PATHS;
+
+    return baseGroups
+      .map(group => {
+        const filteredItems = group.items.filter(item => {
+          if (isSubGroup(item)) {
+            // Show sub-groups only at level 3 (or if any child path is allowed)
+            return item.children.some(c => allowedPaths.has(c.path));
+          }
+          return allowedPaths.has(item.path);
+        });
+        if (filteredItems.length === 0) return null;
+        return { ...group, items: filteredItems };
+      })
+      .filter(Boolean) as NavGroupDef[];
+  }, [baseGroups, progressiveLevel]);
 
   return (
     <>
