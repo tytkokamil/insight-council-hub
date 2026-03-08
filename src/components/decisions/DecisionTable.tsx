@@ -190,6 +190,14 @@ const DecisionTable = ({
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <QualityScoreBadge decision={decision} />
+                        {decision.confidential && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Lock className="w-3.5 h-3.5 text-destructive/70 shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">{t("decisions.confidentialLabel")}</TooltipContent>
+                          </Tooltip>
+                        )}
                         <p className="text-sm font-medium">{decision.title}</p>
                         <DecisionBadges meta={meta} t={t} />
                         <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />
