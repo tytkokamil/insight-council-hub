@@ -108,28 +108,34 @@ export const useFreemiumLimits = (): FreemiumLimits => {
   const { user } = useAuth();
   const { data: decisions = [] } = useDecisions();
 
-  const { data: orgPlan } = useQuery({
+  const { data: orgData } = useQuery({
     queryKey: ["org-plan", user?.id],
     queryFn: async () => {
-      if (!user) return "free";
+      if (!user) return { plan: "free", subscription_status: "active" };
       const { data: profile } = await supabase
         .from("profiles")
         .select("org_id")
         .eq("user_id", user.id)
         .single();
-      if (!profile?.org_id) return "free";
+      if (!profile?.org_id) return { plan: "free", subscription_status: "active" };
       const { data: org } = await supabase
         .from("organizations")
-        .select("plan")
+        .select("plan, subscription_status")
         .eq("id", profile.org_id)
         .single();
-      return org?.plan || "free";
+      return {
+        plan: org?.plan || "free",
+        subscription_status: (org as any)?.subscription_status || "active",
+      };
     },
     enabled: !!user,
     staleTime: 5 * 60_000,
   });
 
-  const plan = orgPlan || "free";
+  // During trial, grant Professional-level access
+  const rawPlan = orgData?.plan || "free";
+  const subscriptionStatus = orgData?.subscription_status || "active";
+  const plan = subscriptionStatus === "trialing" ? "pro" : rawPlan;
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 
   const userDecisionCount = useMemo(() => {
