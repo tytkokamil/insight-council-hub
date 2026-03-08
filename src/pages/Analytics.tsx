@@ -427,7 +427,6 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           return (
             <Card
               key={i}
-              className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2" : ""}`}
               className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2 bg-destructive/[0.04]" : ""}`}
             >
               <CardContent className="p-3">

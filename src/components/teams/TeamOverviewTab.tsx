@@ -195,7 +195,7 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
               className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
               required
             />
-            <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5" style={{ backgroundColor: "#1E3A5F" }}>
+            <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
               <UserPlus className="w-3.5 h-3.5" />
               {inviting ? "..." : t("team.invite")}
             </Button>
