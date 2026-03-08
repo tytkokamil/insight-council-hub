@@ -45,7 +45,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "governance" | "integrations" | "billing" | "referral" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "sso" | "governance" | "integrations" | "billing" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
