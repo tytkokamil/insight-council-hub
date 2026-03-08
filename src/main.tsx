@@ -3,6 +3,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./i18n";
+import { initConsent } from "@/lib/cookieConsent";
+
+// Apply stored cookie consent (loads Plausible if analytics accepted)
+initConsent();
 
 // Initialize Sentry before rendering
 const dsn = import.meta.env.VITE_SENTRY_DSN;

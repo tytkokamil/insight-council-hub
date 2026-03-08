@@ -1,7 +1,9 @@
 /**
- * Plausible Analytics — DSGVO-konform, kein Cookie-Banner nötig.
- * Wrapper für typsichere Custom Events.
+ * Plausible Analytics — DSGVO-konform, consent-basiert.
+ * Plausible wird nur geladen wenn der Nutzer Analytics-Cookies akzeptiert hat.
  */
+
+import { isAnalyticsAllowed } from "@/lib/cookieConsent";
 
 type PlausibleEventProps = Record<string, string | number | boolean>;
 
@@ -12,7 +14,7 @@ declare global {
 }
 
 export function track(event: string, props?: PlausibleEventProps): void {
-  if (typeof window !== "undefined" && window.plausible) {
+  if (typeof window !== "undefined" && window.plausible && isAnalyticsAllowed()) {
     window.plausible(event, props ? { props } : undefined);
   }
 }
