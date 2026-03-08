@@ -9,7 +9,7 @@ const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(3);
 
-  useEffect(() => { (async () => { try { const { data } = await supabase.from("founding_customer_slots").select("claimed_slots").limit(1).single(); if (data) setRemaining(20 - (data.claimed_slots ?? 17)); } catch {} })(); }, []);
+  useEffect(() => { (async () => { try { const { data } = await supabase.from("founding_customer_slots").select("claimed_slots").limit(1).maybeSingle(); if (data) setRemaining(20 - (data.claimed_slots ?? 17)); } catch {} })(); }, []);
 
   const faqs = [
     { q: "Was ist Decivio — und was unterscheidet es von Monday oder Jira?", a: "Monday.com und Jira sind Projektmanagement-Tools. Decivio löst ein anderes Problem: Wer entscheidet was, wann, warum — und was kostet es wenn die Entscheidung nicht fällt?" },

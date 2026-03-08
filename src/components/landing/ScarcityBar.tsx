@@ -18,7 +18,7 @@ const ScarcityBar = () => {
           .from("founding_customer_slots")
           .select("claimed_slots, total_slots")
           .limit(1)
-          .single();
+          .maybeSingle();
         if (data) setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
       } catch {}
     };

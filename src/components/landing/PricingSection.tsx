@@ -23,7 +23,7 @@ const PricingSection = memo(() => {
   const [claimed, setClaimed] = useState(TOTAL_SLOTS);
 
   useEffect(() => {
-    (async () => { try { const { data } = await supabase.from("founding_customer_slots").select("claimed_slots").limit(1).single(); if (data) setClaimed(data.claimed_slots ?? TOTAL_SLOTS); } catch {} })();
+    (async () => { try { const { data } = await supabase.from("founding_customer_slots").select("claimed_slots").limit(1).maybeSingle(); if (data) setClaimed(data.claimed_slots ?? TOTAL_SLOTS); } catch {} })();
   }, []);
 
   const remaining = TOTAL_SLOTS - claimed;
