@@ -731,3 +731,55 @@ html {
 .number-tick {
   animation: number-tick 0.3s ease-out;
 }
+
+/* ── Mobile Responsive Refinements (320–428px) ── */
+@media (max-width: 428px) {
+  /* Tighter padding on small screens */
+  .settings-group {
+    padding: 1rem;
+  }
+
+  /* Decision table: make rows touch-friendly */
+  table tbody td {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  /* KPI cards: ensure minimum touch target */
+  .kpi-card {
+    min-height: 80px;
+  }
+
+  /* Approval page large buttons */
+  .approval-btn {
+    min-height: 60px;
+    font-size: 1rem;
+  }
+
+  /* Safe area for bottom nav */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* ── Touch feedback for mobile approval ── */
+@keyframes approval-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+.approval-press {
+  animation: approval-pulse 0.15s ease-out;
+}
+
+/* ── Success checkmark glow ── */
+@keyframes success-glow {
+  0% { box-shadow: 0 0 0 0 hsl(var(--success) / 0.4); }
+  70% { box-shadow: 0 0 0 20px hsl(var(--success) / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(var(--success) / 0); }
+}
+
+.success-glow {
+  animation: success-glow 1.5s ease-out;
+}
