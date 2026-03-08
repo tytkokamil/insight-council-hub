@@ -207,6 +207,7 @@ const SettingsPage = () => {
     { key: "notifications" as SettingsTab, label: t("settings.notifications"), icon: Bell },
     { key: "security" as SettingsTab, label: t("settings.security"), icon: Shield },
     ...(isAdmin ? [{ key: "sso" as SettingsTab, label: "SSO", icon: KeyRound }] : []),
+    ...(isAdmin ? [{ key: "branding" as SettingsTab, label: "Branding", icon: Palette }] : []),
     { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
     { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
     ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),

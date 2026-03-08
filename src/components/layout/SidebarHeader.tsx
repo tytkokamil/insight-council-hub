@@ -4,6 +4,7 @@ import { Sun, Moon, PanelLeftClose, PanelLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import decivioLogo from "@/assets/decivio-logo.png";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 interface SidebarHeaderProps {
   collapsed: boolean;
@@ -21,13 +22,17 @@ const SidebarHeader = memo(({
   onNavigate,
 }: SidebarHeaderProps) => {
   const { t } = useTranslation();
+  const branding = useBranding();
+  const logoSrc = branding.logoUrl || decivioLogo;
+  const appName = branding.companyName || "Decivio";
+
   return (
     <div className={`flex items-center ${collapsed ? "flex-col gap-1 px-1.5 py-2" : "justify-between px-3"} h-auto min-h-[48px] border-b border-border/40`}>
       <Link to="/dashboard" className={`flex items-center gap-2 overflow-hidden ${collapsed ? "justify-center" : ""}`} onClick={onNavigate}>
-        <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded shrink-0" />
+        <img src={logoSrc} alt={appName} className="w-6 h-6 rounded shrink-0 object-contain" />
         {!collapsed && (
           <span className="font-medium text-[13px] tracking-tight whitespace-nowrap text-foreground">
-            Decivio
+            {appName}
           </span>
         )}
       </Link>

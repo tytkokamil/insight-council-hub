@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Sun, Moon, Menu } from "lucide-react";
 import decivioLogo from "@/assets/decivio-logo.png";
 import { useTranslation } from "react-i18next";
+import { useBranding } from "@/hooks/useBranding";
 
 interface MobileHeaderProps {
   theme: string;
@@ -11,6 +12,9 @@ interface MobileHeaderProps {
 
 const MobileHeader = ({ theme, toggleTheme, onMenuOpen }: MobileHeaderProps) => {
   const { t } = useTranslation();
+  const branding = useBranding();
+  const logoSrc = branding.logoUrl || decivioLogo;
+  const appName = branding.companyName || "Decivio";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 h-12 bg-background/80 backdrop-blur-lg border-b border-border/40 flex items-center justify-between px-3" role="banner">
@@ -22,8 +26,8 @@ const MobileHeader = ({ theme, toggleTheme, onMenuOpen }: MobileHeaderProps) => 
         <Menu className="w-4.5 h-4.5" />
       </button>
       <Link to="/dashboard" className="flex items-center gap-2" aria-label={t("common.home")}>
-        <img src={decivioLogo} alt="Decivio" className="w-6 h-6 rounded" />
-        <span className="font-semibold text-[13px] text-foreground tracking-tight">Decivio</span>
+        <img src={logoSrc} alt={appName} className="w-6 h-6 rounded object-contain" />
+        <span className="font-semibold text-[13px] text-foreground tracking-tight">{appName}</span>
       </Link>
       <button
         onClick={toggleTheme}
