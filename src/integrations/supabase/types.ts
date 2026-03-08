@@ -3100,6 +3100,16 @@ export type Database = {
       }
       get_org_role: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      get_velocity_score: {
+        Args: { _org_id?: string; _user_id?: string }
+        Returns: {
+          avg_days: number
+          grade: string
+          industry_avg_days: number
+          percentile: number
+          score: number
+        }[]
+      }
       has_min_role: {
         Args: { _min_role: string; _user_id: string }
         Returns: boolean
