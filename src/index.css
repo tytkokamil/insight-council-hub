@@ -8,19 +8,136 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Landing page — uses global tokens, override heading colors for richer feel */
+/* Landing page — uses global tokens, Syne for hero headlines */
 .landing-page {
   background: hsl(var(--background));
   color: hsl(var(--muted-foreground));
   font-family: 'Inter', 'DM Sans', sans-serif;
 }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
-  font-family: 'Inter', system-ui, sans-serif;
-  letter-spacing: -0.025em;
+  font-family: 'Syne', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.03em;
   color: hsl(var(--foreground));
 }
 .landing-page p {
   color: hsl(var(--muted-foreground));
+}
+
+/* ── Aurora background effect ── */
+@keyframes aurora-shift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  25% { transform: translate(3%, -2%) rotate(1deg) scale(1.02); }
+  50% { transform: translate(-2%, 3%) rotate(-1deg) scale(0.98); }
+  75% { transform: translate(1%, -1%) rotate(0.5deg) scale(1.01); }
+}
+
+.aurora-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora-bg::before,
+.aurora-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.06;
+  animation: aurora-shift 20s ease-in-out infinite;
+}
+.aurora-bg::before {
+  width: 60%;
+  height: 60%;
+  top: -20%;
+  left: -10%;
+  background: conic-gradient(from 180deg, hsl(var(--primary)), hsl(var(--accent-violet)), hsl(var(--accent-teal)), hsl(var(--primary)));
+}
+.aurora-bg::after {
+  width: 50%;
+  height: 50%;
+  bottom: -15%;
+  right: -10%;
+  background: conic-gradient(from 0deg, hsl(var(--accent-blue)), hsl(var(--accent-rose)), hsl(var(--accent-amber)), hsl(var(--accent-blue)));
+  animation-delay: -10s;
+  animation-duration: 25s;
+}
+
+.dark .aurora-bg::before,
+.dark .aurora-bg::after {
+  opacity: 0.1;
+}
+
+/* ── Cursor glow ── */
+.cursor-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.04), transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+  will-change: left, top;
+}
+.dark .cursor-glow {
+  background: radial-gradient(circle, hsl(var(--primary) / 0.08), transparent 70%);
+}
+
+/* ── Glass ultra ── */
+.glass-ultra {
+  background: hsl(var(--card) / 0.6);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid hsl(var(--border) / 0.3);
+}
+.dark .glass-ultra {
+  background: hsl(var(--card) / 0.4);
+  border-color: hsl(var(--border) / 0.2);
+}
+
+/* ── Magnetic hover for cards ── */
+.magnetic-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+.magnetic-card:hover {
+  box-shadow: 0 20px 60px -15px hsl(var(--primary) / 0.12), 0 0 0 1px hsl(var(--primary) / 0.08);
+}
+.dark .magnetic-card:hover {
+  box-shadow: 0 20px 60px -15px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.15);
+}
+
+/* ── Shimmer text effect ── */
+.shimmer-text {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--foreground)) 35%,
+    hsl(var(--primary)) 50%,
+    hsl(var(--foreground)) 65%
+  );
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 4s ease-in-out infinite;
+}
+
+@keyframes shimmer-text {
+  0%, 100% { background-position: 100% 50%; }
+  50% { background-position: 0% 50%; }
+}
+
+/* ── Orbital animation for CoD ticker ── */
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.orbit-ring {
+  animation: orbit 30s linear infinite;
+}
+.orbit-ring-reverse {
+  animation: orbit 20s linear infinite reverse;
 }
 
 

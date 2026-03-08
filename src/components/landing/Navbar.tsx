@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -20,7 +20,6 @@ const Navbar = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const activeSectionRef = useRef("");
 
-  // Use IntersectionObserver instead of scroll-based section detection
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
     const sectionEls = navItems
@@ -44,7 +43,6 @@ const Navbar = () => {
     return () => observers.forEach(o => o.disconnect());
   }, []);
 
-  // Lightweight scroll listener only for scrolled state + progress bar
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -64,9 +62,7 @@ const Navbar = () => {
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
     const el = document.querySelector(href);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     setIsOpen(false);
   };
 
@@ -79,7 +75,7 @@ const Navbar = () => {
     >
       <div className={`transition-all duration-500 border-b ${
         scrolled
-          ? "bg-background/80 backdrop-blur-2xl border-border/40 shadow-sm"
+          ? "glass-ultra shadow-sm border-border/20"
           : "bg-transparent border-transparent"
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -131,7 +127,7 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/auth"
-                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary-foreground px-5 py-2.5 rounded-lg bg-primary transition-all duration-300 hover:shadow-[0_4px_16px_-4px_hsl(var(--primary)/0.4)] overflow-hidden"
+                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary-foreground px-5 py-2.5 rounded-lg bg-primary transition-all duration-300 hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Kostenlos starten
@@ -146,10 +142,9 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Scroll progress bar */}
         {scrolled && (
           <div
-            className="h-[2px] bg-primary/30 origin-left will-change-transform"
+            className="h-[2px] bg-primary/40 origin-left will-change-transform"
             style={{ transform: `scaleX(${scrollProgress})` }}
           />
         )}
@@ -163,7 +158,7 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -4 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
+            <div className="rounded-2xl glass-ultra p-5 space-y-1 shadow-elevated">
               {navItems.map(item => (
                 <a
                   key={item.label}

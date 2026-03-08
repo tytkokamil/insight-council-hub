@@ -37,15 +37,16 @@ const SolutionSection = () => (
         </p>
       </motion.div>
 
-      {/* Hero feature card */}
+      {/* Hero feature card — Cost-of-Delay */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease }}
-        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm hover:bg-card hover:border-accent-amber/30 hover:shadow-card-hover transition-all duration-500 mb-4"
+        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm magnetic-card mb-4 overflow-hidden"
       >
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        {/* Ambient gradient on hover */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.03] via-transparent to-accent-amber/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         <div className="relative flex flex-col md:flex-row items-start gap-6">
           <div className="w-14 h-14 rounded-2xl bg-accent-amber/8 flex items-center justify-center shrink-0">
             <Timer className="w-7 h-7 text-accent-amber" />
@@ -53,26 +54,33 @@ const SolutionSection = () => (
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
               <h3 className="text-xl font-bold">Echtzeit Cost-of-Delay</h3>
-              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full text-accent-amber bg-accent-amber/10">Live</span>
+              <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full text-accent-amber bg-accent-amber/10 flex items-center gap-1">
+                <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1 h-1 rounded-full bg-accent-amber inline-block" />
+                Live
+              </span>
             </div>
             <p className="text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
               Wie ein Taxi-Meter für Ihre Entscheidungen: Sie sehen in Echtzeit wie viel Geld jede offene Entscheidung Ihr Unternehmen kostet — jede Sekunde. Das ändert Prioritäten.
             </p>
           </div>
-          {/* Animated ticker preview */}
+          {/* Live ticker */}
           <motion.div
-            className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-border/30 bg-muted/10"
+            className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.03]"
             whileHover={{ scale: 1.03 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
           >
-            <div className="w-2 h-2 rounded-full bg-accent-amber animate-pulse" />
-            <span className="font-mono text-lg font-bold tabular-nums text-primary">€12.847</span>
+            <motion.div
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 1, repeat: Infinity }}
+              className="w-2 h-2 rounded-full bg-destructive"
+            />
+            <span className="font-mono text-lg font-bold tabular-nums text-destructive">€12.847</span>
             <span className="text-[10px] text-muted-foreground/50 ml-1">/ heute</span>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Remaining feature cards — bento grid */}
+      {/* Bento feature grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {features.map((f, i) => {
           const colors = accentMap[f.accent] || accentMap.primary;
@@ -83,9 +91,10 @@ const SolutionSection = () => (
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.5, ease }}
-              whileHover={{ y: -3 }}
-              className="group relative p-6 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm hover:bg-card hover:border-border/50 hover:shadow-card-hover transition-all duration-500"
+              className="magnetic-card group relative p-6 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm cursor-default overflow-hidden"
             >
+              {/* Hover gradient */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center transition-colors duration-500`}>
