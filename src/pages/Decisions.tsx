@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { SortField, SortDir } from "@/components/decisions/DecisionTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import DecisionsPageSkeleton from "@/components/decisions/DecisionsPageSkeleton";
 import { Plus, Download, FileText, FileUp } from "lucide-react";
 import QueryErrorRetry from "@/components/shared/QueryErrorRetry";
