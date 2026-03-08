@@ -37,6 +37,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [dueDate, setDueDate] = useState("");
   const [changeReason, setChangeReason] = useState("");
   const [confidential, setConfidential] = useState(false);
+  const [confidentialViewerIds, setConfidentialViewerIds] = useState<string[]>([]);
 
   const CATEGORY_OPTIONS: { value: DecisionCategory; label: string }[] = [
     { value: "strategic", label: t("decisions.edit.strategic") },
