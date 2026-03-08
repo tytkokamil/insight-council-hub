@@ -461,7 +461,6 @@ const ArchivePage = () => {
           </div>
           <Button
             size="sm"
-            className="gap-1.5 shrink-0"
             className={`gap-1.5 shrink-0 ${!nlpFilters ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
             variant={nlpFilters ? "default" : undefined}
             disabled={nlpSearching || search.length < 5}
