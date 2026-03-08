@@ -223,7 +223,7 @@ const HeroSection = () => {
                 transition={{ delay: 1.2 + i * 0.1, duration: 0.5 }}
                 className="text-[11px] font-medium text-muted-foreground/70"
               >
-                <span className="mr-1 text-emerald-500">✓</span> {item}
+                <span className="mr-1 text-success">✓</span> {item}
               </motion.span>
             ))}
           </motion.div>
