@@ -35,6 +35,7 @@ import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPan
 import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
+import BrandingPanel from "@/components/settings/BrandingPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -46,7 +47,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "sso" | "governance" | "integrations" | "billing" | "referral" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "sso" | "branding" | "governance" | "integrations" | "billing" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
@@ -207,6 +208,7 @@ const SettingsPage = () => {
     { key: "notifications" as SettingsTab, label: t("settings.notifications"), icon: Bell },
     { key: "security" as SettingsTab, label: t("settings.security"), icon: Shield },
     ...(isAdmin ? [{ key: "sso" as SettingsTab, label: "SSO", icon: KeyRound }] : []),
+    ...(isAdmin ? [{ key: "branding" as SettingsTab, label: "Branding", icon: Palette }] : []),
     { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
     { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
     ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),
@@ -518,6 +520,22 @@ const SettingsPage = () => {
                 isEnterprise={orgPlan.toLowerCase() === "enterprise"}
                 onUpgrade={() => window.location.href = "/upgrade"}
               />
+            </div>
+          )}
+
+          {/* ═══════════════ BRANDING ═══════════════ */}
+          {activeTab === "branding" && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Palette className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold">Custom Branding</h2>
+                  <p className="text-xs text-muted-foreground">White-Label-Einstellungen für Ihre Organisation</p>
+                </div>
+              </div>
+              <BrandingPanel />
             </div>
           )}
 

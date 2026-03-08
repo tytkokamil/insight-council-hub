@@ -2219,6 +2219,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          branding: Json | null
           created_at: string
           dunning_last_sent_at: string | null
           dunning_step: number
@@ -2241,6 +2242,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          branding?: Json | null
           created_at?: string
           dunning_last_sent_at?: string | null
           dunning_step?: number
@@ -2263,6 +2265,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          branding?: Json | null
           created_at?: string
           dunning_last_sent_at?: string | null
           dunning_step?: number
