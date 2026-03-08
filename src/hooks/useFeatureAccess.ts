@@ -32,7 +32,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   analytics: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Analytics Hub",
     description: "9 Analytics-Module für datengetriebene Entscheidungsoptimierung.",
     bullets: [
