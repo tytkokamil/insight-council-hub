@@ -8,7 +8,7 @@ import type { PdfBrandingOptions } from "@/lib/pdfBranding";
  * Returns PdfBrandingOptions based on plan + user settings.
  * 
  * Free: always branded (prominent, non-removable)
- * Starter/Pro: branded by default, toggle in settings
+ * Starter/Professional: branded by default, toggle in settings
  * Enterprise: fully removable
  */
 export const usePdfBranding = (): PdfBrandingOptions => {
