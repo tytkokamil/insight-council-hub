@@ -12,7 +12,7 @@ import {
   User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
   RotateCcw, Clock, Sun, Moon, Globe, Activity, Users, Lock, Zap,
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
-  Server, ChevronRight, Gift, Plug, Scale
+  Server, ChevronRight, Gift, Plug, Scale, CreditCard
 } from "lucide-react";
 import SubNav from "@/components/shared/SubNav";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
@@ -32,6 +32,7 @@ import ReferralPanel from "@/components/settings/ReferralPanel";
 import PublicDashboardLinks from "@/components/dashboard/PublicDashboardLinks";
 import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPanel";
 import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
+import BillingPanel from "@/components/settings/BillingPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -43,7 +44,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "governance" | "integrations" | "referral" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "governance" | "integrations" | "billing" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
@@ -206,6 +207,7 @@ const SettingsPage = () => {
     { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
     { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
     ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),
+    { key: "billing" as SettingsTab, label: "Abrechnung", icon: CreditCard },
     { key: "referral" as SettingsTab, label: t("settings.referral"), icon: Gift },
     ...(isAdmin ? [{ key: "admin" as SettingsTab, label: t("settings.admin"), icon: Settings2 }] : []),
   ];
@@ -714,6 +716,9 @@ const SettingsPage = () => {
               </div>
             </div>
           )}
+
+          {/* ═══════════════ BILLING ═══════════════ */}
+          {activeTab === "billing" && <BillingPanel />}
 
           {/* ═══════════════ REFERRAL ═══════════════ */}
           {activeTab === "referral" && (
