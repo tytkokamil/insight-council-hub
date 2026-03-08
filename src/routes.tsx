@@ -102,8 +102,10 @@ export const publicRoutes = (
     <Route path="/privacy" element={<L><PrivacyPolicy /></L>} />
     <Route path="/terms" element={<L><TermsOfService /></L>} />
     <Route path="/imprint" element={<L><Imprint /></L>} />
-    <Route path="/avv" element={<L><DataProcessingAgreement /></L>} />
-    <Route path="/ai-policy" element={<L><AiDataPolicy /></L>} />
+    <Route path="/dpa" element={<L><DataProcessingAgreement /></L>} />
+    <Route path="/ai-data-policy" element={<L><AiDataPolicy /></L>} />
+    <Route path="/avv" element={<Navigate to="/dpa" replace />} />
+    <Route path="/ai-policy" element={<Navigate to="/ai-data-policy" replace />} />
     <Route path="/sub-processors" element={<L><SubProcessors /></L>} />
     <Route path="/changelog" element={<L><Changelog /></L>} />
     <Route path="/roadmap" element={<L><Roadmap /></L>} />
