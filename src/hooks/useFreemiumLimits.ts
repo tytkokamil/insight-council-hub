@@ -82,25 +82,25 @@ const PLAN_LIMITS: Record<string, {
   customBranding: boolean;
 }> = {
   free: {
-    maxDecisions: 10, maxUsers: 1, maxTeams: 1, maxAutomationRules: 0, maxComplianceFrameworks: 0,
+    maxDecisions: 10, maxUsers: 1, maxTeams: 1, maxAutomationRules: 0, maxTemplates: 3, maxComplianceFrameworks: 0,
     teams: false, aiBrief: false, sla: false, automations: false, analytics: false,
     executive: false, liveCod: false, aiAnalysis: false, strategy: false, webhooks: false,
     branding: true, auditDays: 30, cryptoAudit: false, sso: false, customBranding: false,
   },
   starter: {
-    maxDecisions: null, maxUsers: 8, maxTeams: 3, maxAutomationRules: 5, maxComplianceFrameworks: 1,
+    maxDecisions: null, maxUsers: 8, maxTeams: 3, maxAutomationRules: 5, maxTemplates: null, maxComplianceFrameworks: 1,
     teams: true, aiBrief: false, sla: true, automations: true, analytics: false,
     executive: false, liveCod: false, aiAnalysis: false, strategy: false, webhooks: false,
     branding: true, auditDays: 365, cryptoAudit: false, sso: false, customBranding: false,
   },
   pro: {
-    maxDecisions: null, maxUsers: 25, maxTeams: null, maxAutomationRules: null, maxComplianceFrameworks: null,
+    maxDecisions: null, maxUsers: 25, maxTeams: null, maxAutomationRules: null, maxTemplates: null, maxComplianceFrameworks: null,
     teams: true, aiBrief: true, sla: true, automations: true, analytics: true,
     executive: true, liveCod: true, aiAnalysis: true, strategy: true, webhooks: true,
     branding: false, auditDays: null, cryptoAudit: true, sso: false, customBranding: false,
   },
   enterprise: {
-    maxDecisions: null, maxUsers: null, maxTeams: null, maxAutomationRules: null, maxComplianceFrameworks: null,
+    maxDecisions: null, maxUsers: null, maxTeams: null, maxAutomationRules: null, maxTemplates: null, maxComplianceFrameworks: null,
     teams: true, aiBrief: true, sla: true, automations: true, analytics: true,
     executive: true, liveCod: true, aiAnalysis: true, strategy: true, webhooks: true,
     branding: false, auditDays: null, cryptoAudit: true, sso: true, customBranding: true,
