@@ -66,6 +66,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
 const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
+const DemoMode = lazy(() => import("./pages/DemoMode"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
