@@ -204,6 +204,7 @@ const AiInsightPanel = ({ type, context, className = "" }: AiInsightPanelProps) 
         <AiExplainabilityBadge
           confidence={insights?.confidence}
           factors={insights?.deep_patterns?.slice(0, 2).map((p: any) => p.title) || insights?.strengths?.slice(0, 2) || insights?.root_causes?.slice(0, 2).map((rc: any) => rc.cause)}
+          sourceType={type === "pattern" ? "pattern" : type === "dna" ? "benchmark" : "data"}
         />
 
         <AiFeedbackButton context={`intelligence-${type}`} />

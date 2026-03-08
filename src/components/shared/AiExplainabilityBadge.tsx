@@ -1,11 +1,15 @@
-import { ShieldCheck, ShieldAlert, AlertTriangle, Info, Database } from "lucide-react";
+import { ShieldCheck, ShieldAlert, AlertTriangle, Info, Database, BarChart3, Search, Zap, Globe, Brain } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
+
+export type AiSourceType = "data" | "pattern" | "rule" | "benchmark" | "llm";
 
 interface AiExplainabilityBadgeProps {
   confidence?: number | string | null;
   factors?: string[];
   dataPoints?: number | null;
+  sourceType?: AiSourceType;
+  explanation?: string | null;
   className?: string;
 }
 
@@ -23,26 +27,53 @@ const getLevel = (confidence: number | string | null | undefined): "high" | "med
   return "medium";
 };
 
-const AiExplainabilityBadge = ({ confidence, factors, dataPoints, className = "" }: AiExplainabilityBadgeProps) => {
+const SOURCE_CONFIG: Record<AiSourceType, { icon: typeof BarChart3; labelKey: string; descKey: string }> = {
+  data: { icon: BarChart3, labelKey: "shared.aiSourceData", descKey: "shared.aiSourceDataDesc" },
+  pattern: { icon: Search, labelKey: "shared.aiSourcePattern", descKey: "shared.aiSourcePatternDesc" },
+  rule: { icon: Zap, labelKey: "shared.aiSourceRule", descKey: "shared.aiSourceRuleDesc" },
+  benchmark: { icon: Globe, labelKey: "shared.aiSourceBenchmark", descKey: "shared.aiSourceBenchmarkDesc" },
+  llm: { icon: Brain, labelKey: "shared.aiSourceLlm", descKey: "shared.aiSourceLlmDesc" },
+};
+
+const AiExplainabilityBadge = ({ confidence, factors, dataPoints, sourceType, explanation, className = "" }: AiExplainabilityBadgeProps) => {
   const { t } = useTranslation();
 
   const level = getLevel(confidence);
   const CONFIG = {
-    high: { label: t("shared.aiConfidenceHigh"), color: "text-success border-success/30 bg-success/10", Icon: ShieldCheck },
-    medium: { label: t("shared.aiConfidenceMedium"), color: "text-warning border-warning/30 bg-warning/10", Icon: ShieldAlert },
-    low: { label: t("shared.aiConfidenceLow"), color: "text-destructive border-destructive/30 bg-destructive/10", Icon: AlertTriangle },
+    high: { label: t("shared.aiConfidenceHigh"), color: "text-success border-success/30 bg-success/10", Icon: ShieldCheck, dotColor: "bg-success" },
+    medium: { label: t("shared.aiConfidenceMedium"), color: "text-warning border-warning/30 bg-warning/10", Icon: ShieldAlert, dotColor: "bg-warning" },
+    low: { label: t("shared.aiConfidenceLow"), color: "text-destructive border-destructive/30 bg-destructive/10", Icon: AlertTriangle, dotColor: "bg-muted-foreground/40" },
   };
 
-  const { label, color, Icon } = CONFIG[level];
+  const { label, color, Icon, dotColor } = CONFIG[level];
   const numericConfidence = typeof confidence === "number" ? confidence : null;
+  const source = sourceType ? SOURCE_CONFIG[sourceType] : null;
+  const SourceIcon = source?.icon;
+
+  const confidenceTooltip = level === "high"
+    ? t("shared.aiConfidenceHighTooltip")
+    : level === "medium"
+    ? t("shared.aiConfidenceMediumTooltip")
+    : t("shared.aiConfidenceLowTooltip");
 
   return (
     <div className={`rounded-lg border p-4 space-y-2.5 ${color} ${className}`}>
+      {/* Header: confidence + data points */}
       <div className="flex items-center gap-2.5">
         <Icon className="w-5 h-5 shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">{label}</span>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="flex items-center gap-1.5 text-sm font-semibold cursor-help">
+                  <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0 animate-pulse`} />
+                  {label}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p className="text-xs">{confidenceTooltip}</p>
+              </TooltipContent>
+            </Tooltip>
             {numericConfidence !== null && (
               <span className="text-xs font-mono opacity-80">{numericConfidence}%</span>
             )}
@@ -60,6 +91,30 @@ const AiExplainabilityBadge = ({ confidence, factors, dataPoints, className = ""
         )}
       </div>
 
+      {/* Source type badge */}
+      {source && SourceIcon && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full bg-background/50 border border-current/10 cursor-help">
+              <SourceIcon className="w-3 h-3" />
+              <span className="font-medium">{t(source.labelKey)}</span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <p className="text-xs">{t(source.descKey)}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+
+      {/* Explanation text */}
+      {explanation && (
+        <div className="flex items-start gap-1.5 pt-1">
+          <Info className="w-3 h-3 mt-0.5 shrink-0 opacity-70" />
+          <p className="text-[11px] leading-relaxed opacity-80">{explanation}</p>
+        </div>
+      )}
+
+      {/* Top factors */}
       {factors && factors.length > 0 && (
         <div className="space-y-1">
           <p className="text-[10px] font-medium flex items-center gap-1 opacity-70">

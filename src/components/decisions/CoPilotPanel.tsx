@@ -170,7 +170,7 @@ const CoPilotPanel = ({ decision }: { decision: any }) => {
             </div>
           </div>
 
-          <AiExplainabilityBadge confidence={result.confidence} factors={result.rejection_reasons?.slice(0, 3)} />
+          <AiExplainabilityBadge confidence={result.confidence} factors={result.rejection_reasons?.slice(0, 3)} sourceType="data" />
           <AiFeedbackButton context="copilot" />
         </div>
       ) : (
