@@ -77,10 +77,12 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const prefetch = usePrefetchOnHover();
   const { role: userRole, isAdmin } = usePermissions();
   const { shortcutsOpen, setShortcutsOpen } = useKeyboardShortcuts();
+  const { isTrialing, isTrialExpired, trialDaysLeft } = useTrialStatus();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [trialModalDismissed, setTrialModalDismissed] = useState(false);
 
   useEffect(() => {
     if (user && !localStorage.getItem(`onboarding_done_${user.id}`)) {
