@@ -18,8 +18,8 @@ export const useDecisions = () => {
   return useQuery({
     queryKey: [...DECISIONS_KEY, selectedTeamId],
     queryFn: () => fetchDecisions(selectedTeamId),
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
@@ -47,8 +47,8 @@ export const useDependencies = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
 export const useReviews = () =>
@@ -59,8 +59,8 @@ export const useReviews = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+    staleTime: 2 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
 /** Dependencies filtered to only include those where both source and target are in the current decision set */
