@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
+import KeyboardShortcutsModal, { useKeyboardShortcuts } from "./KeyboardShortcutsModal";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrefetchOnHover } from "@/hooks/usePrefetch";
@@ -72,6 +73,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const isMobile = useIsMobile();
   const prefetch = usePrefetchOnHover();
   const { role: userRole, isAdmin } = usePermissions();
+  const { shortcutsOpen, setShortcutsOpen } = useKeyboardShortcuts();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -209,6 +211,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       {isMobile && <MobileBottomNav />}
       <QuickCaptureButton />
       <CommandPalette />
+      <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
     </div>
   );
