@@ -37,6 +37,7 @@ import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
 import BrandingPanel from "@/components/settings/BrandingPanel";
+import ApiKeysPanel from "@/components/settings/ApiKeysPanel";
 import DataRetentionPanel from "@/components/settings/DataRetentionPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
