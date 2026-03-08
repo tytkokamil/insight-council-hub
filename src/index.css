@@ -324,6 +324,12 @@ html {
     @apply space-y-6;
   }
 
+  /* Empty state – centered card with illustration */
+  .empty-state-card {
+    @apply bg-card border border-border/50 rounded-xl p-8 text-center;
+    box-shadow: var(--shadow-card);
+  }
+
   /* KPI card – consistent sizing across all pages */
   .kpi-card {
     @apply p-4 rounded-xl border border-border/60 bg-card min-h-[90px] flex flex-col justify-center transition-all duration-200;
@@ -395,13 +401,13 @@ html {
     box-shadow: var(--shadow-card);
   }
   .settings-group + .settings-group {
-    @apply mt-4;
+    @apply mt-5;
   }
   .settings-group h2 {
-    @apply text-sm font-semibold mb-4 tracking-tight;
+    @apply text-sm font-semibold mb-4 tracking-tight flex items-center gap-2;
   }
-  .settings-group h2:first-child {
-    @apply flex items-center gap-2;
+  .settings-group h2 svg {
+    @apply w-4 h-4 text-muted-foreground;
   }
 
   /* Section divider – softer than hr */

@@ -58,8 +58,8 @@ const SidebarFooter = memo(({
 
   return (
     <>
-      <div className="px-2 py-2 border-t border-border/40">
-        <div className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-foreground/[0.04] transition-colors">
+      <div className="mt-auto px-2 py-2 border-t border-border/40">
+        <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors">
           <UserAvatar avatarUrl={avatarUrl} fullName={user?.user_metadata?.full_name} email={user?.email} />
           {!collapsed && (
             <>
