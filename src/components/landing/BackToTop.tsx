@@ -20,8 +20,7 @@ const BackToTop = () => {
           exit={{ scale: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-20 md:bottom-6 right-20 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-colors"
-          style={{ background: "#1E293B", color: "#F1F5F9" }}
+          className="fixed bottom-20 md:bottom-6 right-20 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-colors bg-card border border-border text-foreground hover:border-destructive/40"
           aria-label="Nach oben scrollen"
         >
           <ChevronUp className="w-5 h-5" />

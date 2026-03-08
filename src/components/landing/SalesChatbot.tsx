@@ -29,21 +29,19 @@ const SalesChatbot = () => {
             initial={{ opacity: 0, scale: 0.9, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            className="mb-4 rounded-xl p-5 w-[300px] shadow-2xl"
-            style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}
+            className="mb-4 rounded-xl p-5 w-[300px] shadow-[var(--shadow-elevated)] bg-card border border-border"
           >
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-semibold" style={{ color: "#0F172A" }}>Decivio-Assistent</span>
-              <button onClick={() => setOpen(false)} aria-label="Schließen"><X className="w-4 h-4" style={{ color: "#94A3B8" }} /></button>
+              <span className="text-sm font-semibold text-foreground">Decivio-Assistent</span>
+              <button onClick={() => setOpen(false)} aria-label="Schließen"><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
-            <p className="text-sm mb-4" style={{ color: "#64748B" }}>
+            <p className="text-sm mb-4 text-muted-foreground">
               Hallo! Ich bin der Decivio-Assistent. Womit kann ich helfen?
             </p>
             <div className="space-y-2">
               {quickReplies.map((qr, i) => (
                 <button key={i} onClick={() => handleQuickReply(qr)}
-                  className="w-full text-left text-xs py-2 px-3 rounded-lg transition-colors hover:bg-gray-50"
-                  style={{ border: "1px solid #E2E8F0", color: "#0F172A" }}>
+                  className="w-full text-left text-xs py-2 px-3 rounded-lg transition-colors border border-border text-foreground hover:bg-muted">
                   {qr.label}
                 </button>
               ))}
@@ -53,10 +51,9 @@ const SalesChatbot = () => {
       </AnimatePresence>
 
       <button onClick={() => setOpen(!open)}
-        className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105"
-        style={{ background: "#EF4444" }}
+        className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 bg-destructive"
         aria-label="Chat öffnen">
-        {open ? <X className="w-6 h-6 text-white" /> : <MessageCircle className="w-6 h-6 text-white" />}
+        {open ? <X className="w-6 h-6 text-destructive-foreground" /> : <MessageCircle className="w-6 h-6 text-destructive-foreground" />}
       </button>
     </div>
   );
