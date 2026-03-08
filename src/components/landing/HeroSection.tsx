@@ -117,7 +117,7 @@ const STATS = [
 ];
 
 const HeroSection = () => {
-  const [showTour, setShowTour] = useState(false);
+  const { isEnabled } = useFeatureFlags();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 80]);
