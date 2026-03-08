@@ -548,7 +548,7 @@ const ArchivePage = () => {
                     : "border-border hover:border-border/80"
                 }`}
                 style={{ backgroundColor: selectedIds.has(d.id) ? undefined : undefined }}
-                onMouseEnter={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "#F8FAFC"; }}
+                onMouseEnter={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "hsl(var(--muted) / 0.3)"; }}
                 onMouseLeave={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
                 onClick={() => { setSelectedDecision(d); loadAuditLogs(d.id); }}
               >

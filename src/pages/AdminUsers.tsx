@@ -256,7 +256,7 @@ const AdminUsers = () => {
             {currentUserRole === "org_owner" && (
                 <>
                   <div className="mt-12" />
-                  <div className="border-t border-dashed" style={{ borderColor: "#FCA5A5" }} />
+                  <div className="border-t border-dashed border-destructive/40" />
                   <p className="text-xs font-semibold text-destructive uppercase tracking-wider mt-3 mb-2">Gefahrenbereich</p>
                   <Card className="border-destructive/30">
                     <CardContent className="p-5">

@@ -850,7 +850,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                         <Badge
                           variant="outline"
                           className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}
-                          style={hasNoData ? { color: "#94A3B8", borderColor: "#94A3B8" } : undefined}
+                          style={hasNoData ? { color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--muted-foreground))" } : undefined}
                         >
                           {healthLabel}
                         </Badge>

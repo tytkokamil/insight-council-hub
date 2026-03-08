@@ -322,8 +322,7 @@ const Strategy = () => {
         <div className="mb-8">
           <button
             onClick={() => setShowCreate(true)}
-            className="text-xs hover:underline transition-colors"
-            style={{ color: "#64748B", fontSize: "12px" }}
+            className="text-xs hover:underline transition-colors text-muted-foreground"
           >
             ＋ Weiteres Ziel-Template übernehmen
           </button>
