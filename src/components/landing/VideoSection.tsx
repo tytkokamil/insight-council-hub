@@ -50,7 +50,7 @@ const VideoSection = () => {
               </div>
             </div>
           </div>
-          <p className="text-center text-[11px] text-muted-foreground/45 mt-3">
+          <p className="text-center text-[11px] text-muted-foreground mt-3">
             30-Sekunden-Überblick: So funktioniert Decivio
           </p>
         </motion.div>

@@ -460,7 +460,7 @@ const PricingSection = () => {
                             ))}
                           </tr>
                         ))}
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
