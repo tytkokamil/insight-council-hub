@@ -2414,11 +2414,13 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           decision_count: number | null
+          email_reengagement_opt_out: boolean | null
           full_name: string | null
           hide_pdf_branding: boolean
           id: string
           industry: string | null
           last_seen: string | null
+          last_seen_at: string | null
           nps_last_shown: string | null
           nps_score: number | null
           nps_shown_count: number | null
@@ -2426,6 +2428,9 @@ export type Database = {
           org_id: string | null
           preferred_login: string | null
           progressive_override: boolean | null
+          reengagement_14d_sent: boolean | null
+          reengagement_30d_sent: boolean | null
+          reengagement_7d_sent: boolean | null
           updated_at: string
           user_id: string
           view_mode: string | null
@@ -2434,11 +2439,13 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           decision_count?: number | null
+          email_reengagement_opt_out?: boolean | null
           full_name?: string | null
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
           last_seen?: string | null
+          last_seen_at?: string | null
           nps_last_shown?: string | null
           nps_score?: number | null
           nps_shown_count?: number | null
@@ -2446,6 +2453,9 @@ export type Database = {
           org_id?: string | null
           preferred_login?: string | null
           progressive_override?: boolean | null
+          reengagement_14d_sent?: boolean | null
+          reengagement_30d_sent?: boolean | null
+          reengagement_7d_sent?: boolean | null
           updated_at?: string
           user_id: string
           view_mode?: string | null
@@ -2454,11 +2464,13 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           decision_count?: number | null
+          email_reengagement_opt_out?: boolean | null
           full_name?: string | null
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
           last_seen?: string | null
+          last_seen_at?: string | null
           nps_last_shown?: string | null
           nps_score?: number | null
           nps_shown_count?: number | null
@@ -2466,6 +2478,9 @@ export type Database = {
           org_id?: string | null
           preferred_login?: string | null
           progressive_override?: boolean | null
+          reengagement_14d_sent?: boolean | null
+          reengagement_30d_sent?: boolean | null
+          reengagement_7d_sent?: boolean | null
           updated_at?: string
           user_id?: string
           view_mode?: string | null
