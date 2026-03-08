@@ -310,7 +310,7 @@ const PricingSection = () => {
                 </div>
 
                 {annual && plan.annual !== null && plan.annual > 0 && (
-                  <p className="text-[11px] text-muted-foreground/60 mb-1">
+                  <p className="text-[11px] text-muted-foreground mb-1">
                     €{plan.annual} / Jahr abgerechnet
                   </p>
                 )}
