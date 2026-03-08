@@ -35,7 +35,8 @@ const testimonials = [
     initials: "TB",
     metric: "30s",
     metricLabel: "für den Tagesüberblick",
-    accentColor: "hsl(250 35% 55%)",
+    accentClass: "text-accent-violet",
+    accentBg: "bg-accent-violet/12",
   },
   {
     quote: "Decivio hat unsere Entscheidungsprozesse komplett transparent gemacht. Die Compliance-Dokumentation läuft jetzt automatisch.",
