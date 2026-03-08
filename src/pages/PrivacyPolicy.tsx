@@ -5,6 +5,16 @@ import { ArrowLeft, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CookieSettingsModal from "@/components/shared/CookieSettingsModal";
 
+const CookieSettingsButton = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>Cookie-Einstellungen ändern</Button>
+      <CookieSettingsModal open={open} onOpenChange={setOpen} />
+    </>
+  );
+};
+
 const PrivacyPolicy = () => (
   <>
     <Helmet>
