@@ -26,9 +26,8 @@ const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden"
+      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-[hsl(222,47%,4%)]"
       aria-label="Hero"
-      style={{ background: "#030712" }}
     >
       {/* Animated grid overlay */}
       <div
