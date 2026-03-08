@@ -63,6 +63,7 @@ const PLAN_LIMITS: Record<string, {
   maxUsers: number | null;
   maxTeams: number | null;
   maxAutomationRules: number | null;
+  maxTemplates: number | null;
   maxComplianceFrameworks: number | null;
   teams: boolean;
   aiBrief: boolean;
