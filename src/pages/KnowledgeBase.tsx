@@ -68,8 +68,8 @@ interface LessonRow {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 const TAG_COLORS = [
-  "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#14b8a6",
+  "hsl(var(--primary))", "hsl(var(--warning))", "hsl(var(--success))", "hsl(var(--destructive))", "hsl(var(--accent-violet))",
+  "hsl(var(--accent-rose))", "hsl(var(--accent-teal))", "hsl(var(--accent-amber))", "hsl(var(--accent-blue))", "hsl(var(--accent-teal))",
 ];
 
 const Highlight = ({ text, query }: { text: string; query: string }) => {
