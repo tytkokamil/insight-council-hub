@@ -71,6 +71,8 @@ const PainOnboarding = lazy(() => import("./pages/PainOnboarding"));
 const CodCalculatorWidget = lazy(() => import("./pages/CodCalculatorWidget"));
 const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -115,6 +117,8 @@ export const publicRoutes = (
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
+    <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
+    <Route path="/vs/:slug" element={<L><CompetitorComparison /></L>} />
   </>
 );
 

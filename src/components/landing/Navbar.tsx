@@ -18,6 +18,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [inDarkHero, setInDarkHero] = useState(true);
   const activeSectionRef = useRef("");
 
   useEffect(() => {
@@ -49,9 +50,11 @@ const Navbar = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 20);
+        const sy = window.scrollY;
+        setScrolled(sy > 20);
+        setInDarkHero(sy < window.innerHeight * 0.85);
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-        setScrollProgress(docHeight > 0 ? Math.min(window.scrollY / docHeight, 1) : 0);
+        setScrollProgress(docHeight > 0 ? Math.min(sy / docHeight, 1) : 0);
         ticking = false;
       });
     };
@@ -66,6 +69,9 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
+  // Dark navbar styles when in hero
+  const isDark = inDarkHero;
+
   return (
     <motion.nav
       initial={{ opacity: 0, y: -10 }}
@@ -73,11 +79,22 @@ const Navbar = () => {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="fixed top-0 left-0 right-0 z-50 will-change-transform"
     >
-      <div className={`transition-all duration-500 border-b ${
-        scrolled
-          ? "glass-ultra shadow-sm border-border/20"
-          : "bg-transparent border-transparent"
-      }`}>
+      <div
+        className="transition-all duration-500 border-b"
+        style={
+          isDark
+            ? {
+                background: scrolled ? "rgba(3,7,18,0.8)" : "transparent",
+                backdropFilter: scrolled ? "blur(12px)" : "none",
+                borderColor: scrolled ? "rgba(255,255,255,0.06)" : "transparent",
+              }
+            : {
+                background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
+                backdropFilter: scrolled ? "blur(12px)" : "none",
+                borderColor: scrolled ? "hsl(var(--border) / 0.2)" : "transparent",
+              }
+        }
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2.5 group">
@@ -90,8 +107,14 @@ const Navbar = () => {
                 loading="eager"
                 width={28}
                 height={28}
+                style={isDark ? { filter: "brightness(10)" } : {}}
               />
-              <span className="font-semibold text-[15px] tracking-tight text-foreground">Decivio</span>
+              <span
+                className="font-semibold text-[15px] tracking-tight"
+                style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+              >
+                Decivio
+              </span>
             </Link>
 
             <div className="hidden md:flex items-center gap-0.5">
@@ -102,17 +125,20 @@ const Navbar = () => {
                     key={item.label}
                     href={item.href}
                     onClick={(e) => handleSmoothScroll(e, item.href)}
-                    className={`relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200 ${
-                      isActive
-                        ? "text-foreground font-medium"
-                        : "text-muted-foreground/70 hover:text-foreground"
-                    }`}
+                    className="relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200"
+                    style={{
+                      color: isDark
+                        ? isActive ? "#fff" : "rgba(255,255,255,0.6)"
+                        : isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.7)",
+                      fontWeight: isActive ? 500 : 400,
+                    }}
                   >
                     {item.label}
                     {isActive && (
                       <motion.div
                         layoutId="nav-active"
-                        className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full bg-primary"
+                        className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full"
+                        style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
@@ -122,12 +148,19 @@ const Navbar = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <Link to="/auth" className="text-[13px] text-muted-foreground/70 hover:text-foreground px-3 py-1.5 transition-colors">
+              <Link
+                to="/auth"
+                className="text-[13px] px-3 py-1.5 transition-colors"
+                style={{
+                  color: isDark ? "rgba(255,255,255,0.6)" : "hsl(var(--muted-foreground) / 0.7)",
+                }}
+              >
                 Einloggen
               </Link>
               <Link
                 to="/auth"
-                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-primary-foreground px-5 py-2.5 rounded-lg bg-primary transition-all duration-300 hover:shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] overflow-hidden"
+                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-300 overflow-hidden"
+                style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Kostenlos starten
@@ -136,16 +169,23 @@ const Navbar = () => {
               </Link>
             </div>
 
-            <button className="md:hidden p-2 text-foreground" onClick={() => setIsOpen(!isOpen)}>
+            <button
+              className="md:hidden p-2"
+              style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+              onClick={() => setIsOpen(!isOpen)}
+            >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-      {scrolled && (
+        {scrolled && (
           <div
-            className="h-[2px] bg-primary/30 origin-left will-change-transform transition-transform duration-150"
-            style={{ transform: `scaleX(${scrollProgress})` }}
+            className="h-[2px] origin-left will-change-transform transition-transform duration-150"
+            style={{
+              background: isDark ? "rgba(239,68,68,0.4)" : "hsl(var(--primary) / 0.3)",
+              transform: `scaleX(${scrollProgress})`,
+            }}
             role="progressbar"
             aria-valuenow={Math.round(scrollProgress * 100)}
             aria-valuemin={0}
@@ -163,24 +203,32 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -4 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl glass-ultra p-5 space-y-1 shadow-elevated">
+            <div
+              className="rounded-2xl p-5 space-y-1 shadow-lg"
+              style={{
+                background: isDark ? "rgba(3,7,18,0.95)" : "hsl(var(--background) / 0.95)",
+                backdropFilter: "blur(16px)",
+                border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}`,
+              }}
+            >
               {navItems.map(item => (
                 <a
                   key={item.label}
                   href={item.href}
                   onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className={`block text-sm px-4 py-2.5 rounded-lg transition-colors ${
-                    activeSection === item.href
-                      ? "text-foreground font-medium bg-primary/5"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className="block text-sm px-4 py-2.5 rounded-lg transition-colors"
+                  style={{
+                    color: isDark
+                      ? activeSection === item.href ? "#fff" : "rgba(255,255,255,0.6)"
+                      : activeSection === item.href ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                  }}
                 >
                   {item.label}
                 </a>
               ))}
-              <div className="pt-4 mt-3 border-t border-border/30 space-y-2">
-                <Link to="/auth" className="block text-center text-sm text-foreground py-2">Einloggen</Link>
-                <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground bg-primary py-2.5 rounded-lg">Kostenlos starten</Link>
+              <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}` }}>
+                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}>Einloggen</Link>
+                <Link to="/auth" className="block text-center text-sm font-medium text-white py-2.5 rounded-lg" style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}>Kostenlos starten</Link>
               </div>
             </div>
           </motion.div>

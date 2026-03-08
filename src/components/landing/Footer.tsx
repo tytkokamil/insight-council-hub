@@ -26,6 +26,13 @@ const footerLinks = {
     { label: "Frameworks", href: "#compliance" },
     { label: "Sub-Processors", to: "/sub-processors" },
   ],
+  vergleiche: [
+    { label: "Decivio vs. Monday", to: "/vs/monday" },
+    { label: "Decivio vs. Jira", to: "/vs/jira" },
+    { label: "Decivio vs. Excel", to: "/vs/excel" },
+    { label: "Decivio vs. SAP", to: "/vs/sap" },
+    { label: "Decivio vs. Kissflow", to: "/vs/kissflow" },
+  ],
 };
 
 const FooterLink = ({ item }: { item: { label: string; to?: string; href?: string } }) => {
@@ -40,7 +47,7 @@ const Footer = () => (
     <div className="absolute inset-0 bg-gradient-to-b from-muted/20 to-muted/40 pointer-events-none" />
 
     <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
         {/* Brand column — spans 2 cols */}
         <div className="col-span-2">
           <Link to="/" className="flex items-center gap-2.5 mb-4 group">
@@ -94,6 +101,16 @@ const Footer = () => (
               Kostenlos starten <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
+        </nav>
+
+        {/* Vergleiche */}
+        <nav aria-label="Vergleiche">
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Vergleiche</h4>
+          <ul className="space-y-2.5">
+            {footerLinks.vergleiche.map(l => (
+              <li key={l.label}><FooterLink item={l} /></li>
+            ))}
+          </ul>
         </nav>
       </div>
 

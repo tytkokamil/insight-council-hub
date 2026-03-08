@@ -68,6 +68,11 @@ html {
   opacity: 0.1;
 }
 
+/* ── Dark hero grid animation ── */
+@keyframes gridMove {
+  to { background-position: 60px 60px; }
+}
+
 /* ── Cursor glow ── */
 .cursor-glow {
   position: fixed;
