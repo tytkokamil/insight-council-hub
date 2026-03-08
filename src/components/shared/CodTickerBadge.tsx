@@ -74,7 +74,7 @@ const CodTickerBadge = ({ collapsed }: CodTickerBadgeProps) => {
         : "text-muted-foreground";
 
   const bgColor = isAllDone
-    ? "bg-emerald-500/10"
+    ? "bg-success/10"
     : weeklyCod > 5000
       ? "bg-destructive/10"
       : weeklyCod > 1000
