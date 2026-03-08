@@ -103,11 +103,13 @@ const SettingsPage = () => {
       if (profileRes.data) {
         setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null);
         if (profileRes.data.org_id) {
-          const { data: orgData } = await supabase.from("organizations").select("plan").eq("id", profileRes.data.org_id).maybeSingle();
+          setOrgId(profileRes.data.org_id);
+          const { data: orgData } = await supabase.from("organizations").select("plan, ai_model_preference").eq("id", profileRes.data.org_id).maybeSingle();
           if (orgData?.plan) {
             const planMap: Record<string, string> = { free: "Free", starter: "Starter", professional: "Professional", enterprise: "Enterprise" };
             setOrgPlan(planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1));
           }
+          if (orgData?.ai_model_preference) setOrgModelPref(orgData.ai_model_preference);
         }
       }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
