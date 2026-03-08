@@ -202,7 +202,7 @@ const LockedNavItem = ({
   minPlan: string;
 }) => {
   const { t } = useTranslation();
-  const badge = PLAN_BADGE[minPlan] || "Pro";
+  const badge = PLAN_BADGE[minPlan] || "Professional";
   return (
     <button
       onClick={() => onUpgradeClick(item.featureKey || "", t(item.label), minPlan)}
