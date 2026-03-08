@@ -14,6 +14,7 @@ const footerLinks = {
     { label: "Changelog", to: "/changelog" },
     { label: "Roadmap", to: "/roadmap" },
     { label: "Founding Program", to: "/founding" },
+    { label: "KI-Demo", to: "/ai-demo" },
   ],
   unternehmen: [
     { label: "Datenschutz", to: "/privacy" },

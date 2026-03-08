@@ -334,6 +334,11 @@ const InternalAdmin = () => {
               </Card>
             </div>
             </div>
+
+            {/* Outbound Email Engine */}
+            <div className="mt-10 pt-8 border-t border-border/40">
+              <OutboundEmailEngine />
+            </div>
           </>
         )}
       </div>
