@@ -255,7 +255,7 @@ const DecisionTable = ({
                           {decision.due_date ? format(new Date(decision.due_date), "dd.MM.yy", { locale: de }) : "—"}
                         </span>
                         {meta.cost > 0 && (
-                          <span className="text-[11px] font-medium" style={{ color: "#EF4444" }}>
+                          <span className="text-[11px] font-medium text-destructive">
                             ⏱ {meta.cost >= 1000 ? `${(meta.cost / 1000).toFixed(1)}k` : Math.round(meta.cost)}€/Wo
                           </span>
                         )}
