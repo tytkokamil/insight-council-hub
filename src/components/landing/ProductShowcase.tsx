@@ -318,7 +318,7 @@ const ProductShowcase = () => {
                       className="p-3 rounded-xl border border-border/50 bg-card/60"
                     >
                       <div className="text-lg font-bold tabular-nums font-mono text-foreground">{stat.value}</div>
-                      <div className="text-[10px] text-muted-foreground/60 mt-0.5">{stat.label}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
