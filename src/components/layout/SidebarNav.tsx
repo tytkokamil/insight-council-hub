@@ -86,8 +86,8 @@ const GOVERNANCE_GROUP: NavGroupDef = {
       children: [
         { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
         { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
-        { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
-        { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_lead" },
+        { icon: Zap, label: "nav.automations", path: "/automation-rules", minRole: "org_admin" },
+        { icon: History, label: "nav.auditTrail", path: "/audit-trail", featureKey: "audit", minRole: "org_lead" },
       ],
     } as NavSubGroup,
   ],
