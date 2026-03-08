@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Users, Flame, X } from "lucide-react";
+import { Clock, Flame, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
-const LAUNCH_DATE = new Date("2026-04-01T00:00:00+02:00");
+const FALLBACK_DEADLINE = "2026-04-30T23:59:59+02:00";
 const FALLBACK_CLAIMED = 17;
 const TOTAL_SLOTS = 20;
 
-function getTimeLeft() {
-  const diff = Math.max(0, LAUNCH_DATE.getTime() - Date.now());
+function getTimeLeft(deadline: Date) {
+  const diff = Math.max(0, deadline.getTime() - Date.now());
   const d = Math.floor(diff / 86_400_000);
   const h = Math.floor((diff % 86_400_000) / 3_600_000);
   const m = Math.floor((diff % 3_600_000) / 60_000);
@@ -17,30 +17,33 @@ function getTimeLeft() {
   return { d, h, m, s, total: diff };
 }
 
-function fakeViewers() {
-  const base = 14;
-  const minute = new Date().getMinutes();
-  return base + (minute % 7);
-}
-
 const ScarcityBar = () => {
-  const [time, setTime] = useState(getTimeLeft);
-  const [viewers] = useState(fakeViewers);
+  const [deadline, setDeadline] = useState(() => new Date(FALLBACK_DEADLINE));
+  const [time, setTime] = useState(() => getTimeLeft(new Date(FALLBACK_DEADLINE)));
   const [dismissed, setDismissed] = useState(false);
   const [visible, setVisible] = useState(false);
   const [claimed, setClaimed] = useState<number>(FALLBACK_CLAIMED);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const deadlineRef = useRef(deadline);
 
-  // Fetch live slot data
+  // Keep ref in sync
+  useEffect(() => { deadlineRef.current = deadline; }, [deadline]);
+
+  // Fetch live slot data + deadline from DB
   useEffect(() => {
     const fetchSlots = async () => {
       const { data } = await supabase
         .from("founding_customer_slots")
-        .select("claimed_slots, total_slots")
+        .select("claimed_slots, total_slots, deadline")
         .limit(1)
         .single();
       if (data) {
         setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
+        if (data.deadline) {
+          const dbDeadline = new Date(data.deadline);
+          setDeadline(dbDeadline);
+          setTime(getTimeLeft(dbDeadline));
+        }
       }
     };
     fetchSlots();
@@ -52,8 +55,12 @@ const ScarcityBar = () => {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "founding_customer_slots" },
         (payload) => {
-          const newClaimed = (payload.new as any)?.claimed_slots;
-          if (typeof newClaimed === "number") setClaimed(newClaimed);
+          const row = payload.new as any;
+          if (typeof row?.claimed_slots === "number") setClaimed(row.claimed_slots);
+          if (row?.deadline) {
+            const dbDeadline = new Date(row.deadline);
+            setDeadline(dbDeadline);
+          }
         }
       )
       .subscribe();
@@ -68,7 +75,7 @@ const ScarcityBar = () => {
   }, []);
 
   useEffect(() => {
-    timerRef.current = setInterval(() => setTime(getTimeLeft()), 1000);
+    timerRef.current = setInterval(() => setTime(getTimeLeft(deadlineRef.current)), 1000);
     return () => clearInterval(timerRef.current);
   }, []);
 
@@ -109,21 +116,13 @@ const ScarcityBar = () => {
               </>
             ) : (
               <>
-                {/* Countdown */}
+                {/* Countdown — persistent, from DB deadline */}
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
                   Early-Access endet in{" "}
                   <span className="font-mono font-bold tabular-nums">
                     {time.d}T {String(time.h).padStart(2, "0")}:{String(time.m).padStart(2, "0")}:{String(time.s).padStart(2, "0")}
                   </span>
-                </span>
-
-                <span className="w-px h-3.5 bg-white/30" />
-
-                {/* Live viewers */}
-                <span className="inline-flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5" />
-                  <span className="font-bold">{viewers}</span> sehen sich gerade Decivio an
                 </span>
 
                 <span className="w-px h-3.5 bg-white/30" />

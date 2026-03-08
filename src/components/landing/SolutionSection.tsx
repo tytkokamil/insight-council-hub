@@ -1,5 +1,42 @@
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Timer, MousePointerClick, Bot, ShieldCheck, LineChart, LayoutTemplate } from "lucide-react";
+
+// €47k/Monat Branchendurchschnitt → pro Tag
+const DAILY_COST = 47000 / 30;
+const PER_SECOND = DAILY_COST / 86400;
+
+const LiveCodTicker = () => {
+  const [value, setValue] = useState(0);
+  const start = useRef(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => {
+      const elapsed = (Date.now() - start.current) / 1000;
+      // Show accumulated cost "today" starting from a realistic base
+      const hoursToday = new Date().getHours() + new Date().getMinutes() / 60;
+      const baseCost = (hoursToday / 24) * DAILY_COST;
+      setValue(baseCost + elapsed * PER_SECOND);
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <motion.div
+      className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.03]"
+      whileHover={{ scale: 1.03 }}
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+    >
+      <motion.div
+        animate={{ opacity: [1, 0.3, 1] }}
+        transition={{ duration: 1, repeat: Infinity }}
+        className="w-2 h-2 rounded-full bg-destructive"
+      />
+      <span className="font-mono text-lg font-bold tabular-nums text-destructive">
+        €{value.toLocaleString("de-DE", { maximumFractionDigits: 0 })}
+      </span>
+      <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
+    </motion.div>
+  );
+};
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -63,20 +100,8 @@ const SolutionSection = () => (
               Wie ein Taxi-Meter für Ihre Entscheidungen: Sie sehen in Echtzeit wie viel Geld jede offene Entscheidung Ihr Unternehmen kostet — jede Sekunde. Das ändert Prioritäten.
             </p>
           </div>
-          {/* Live ticker */}
-          <motion.div
-            className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.03]"
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          >
-            <motion.div
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-destructive"
-            />
-            <span className="font-mono text-lg font-bold tabular-nums text-destructive">€12.847</span>
-            <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
-          </motion.div>
+          {/* Live ticker — real-time calculation */}
+          <LiveCodTicker />
         </div>
       </motion.div>
 
