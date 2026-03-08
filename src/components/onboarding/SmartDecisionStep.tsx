@@ -111,7 +111,7 @@ const SmartDecisionStep = ({ onCreateDecision, loading, slideAnim }: Props) => {
         <Textarea
           value={freeText}
           onChange={(e) => setFreeText(e.target.value)}
-          placeholder="z.B. „Sollen wir das ERP-System auf SAP S/4HANA migrieren? Budget ~500k, Timeline Q3""
+          placeholder="z.B. Sollen wir das ERP-System auf SAP S/4HANA migrieren? Budget ca. 500k, Timeline Q3"
           className="min-h-[80px] resize-none"
           autoFocus
         />
