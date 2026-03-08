@@ -78,6 +78,7 @@ const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
 const AiDemo = lazy(() => import("./pages/AiDemo"));
 const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
 const LiveDemo = lazy(() => import("./pages/LiveDemo"));
+const RoiReport = lazy(() => import("./pages/RoiReport"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -226,6 +227,7 @@ export const publicRoutes = (
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/demo" element={<L><DemoMode /></L>} />
     <Route path="/demo/live" element={<L><LiveDemo /></L>} />
+    <Route path="/roi-report" element={<P><RoiReport /></P>} />
     
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
