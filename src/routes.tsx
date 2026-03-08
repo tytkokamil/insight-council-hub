@@ -71,6 +71,8 @@ const PainOnboarding = lazy(() => import("./pages/PainOnboarding"));
 const CodCalculatorWidget = lazy(() => import("./pages/CodCalculatorWidget"));
 const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
