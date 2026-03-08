@@ -127,6 +127,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         priority,
         due_date: dueDate || null,
         confidential,
+        confidential_viewer_ids: confidential ? confidentialViewerIds : [],
         owner_id: ownerId || undefined,
       } as any)
       .eq("id", decision.id);
