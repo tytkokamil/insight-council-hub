@@ -463,6 +463,87 @@ Deno.serve(async (req) => {
     for (const org of orgs) {
       try {
         // ───────────────────────────────────────────────
+        // STEP 0: Data Retention — Auto-Archive & Cleanup
+        // ───────────────────────────────────────────────
+        const { data: orgConfig } = await supabase
+          .from("organizations")
+          .select("data_retention_config")
+          .eq("id", org.id)
+          .single();
+
+        const retention = orgConfig?.data_retention_config as any || {};
+        const archiveMonths = retention.archive_after_months ?? 24;
+        const deleteArchivedMonths = retention.delete_archived_months ?? null;
+        const notifDeleteDays = retention.notification_delete_days ?? 90;
+
+        // Auto-archive implemented decisions older than threshold
+        const archiveCutoff = new Date(Date.now() - archiveMonths * 30 * 86400000).toISOString();
+        const { data: toArchive } = await supabase
+          .from("decisions")
+          .select("id")
+          .eq("org_id", org.id)
+          .eq("status", "implemented")
+          .is("deleted_at", null)
+          .is("archived_at", null)
+          .lt("updated_at", archiveCutoff);
+
+        if (toArchive && toArchive.length > 0) {
+          const ids = toArchive.map(d => d.id);
+          await supabase
+            .from("decisions")
+            .update({ status: "archived", archived_at: new Date().toISOString() })
+            .in("id", ids);
+
+          // Notify org admins
+          const { data: adminRoles } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .eq("org_id", org.id)
+            .in("role", ["org_admin", "org_owner"]);
+
+          if (adminRoles) {
+            for (const admin of adminRoles) {
+              await supabase.from("notifications").insert({
+                user_id: admin.user_id,
+                org_id: org.id,
+                type: "retention",
+                title: `${ids.length} Entscheidungen automatisch archiviert`,
+                message: `${ids.length} abgeschlossene Entscheidungen wurden gemäß Ihrer Aufbewahrungsrichtlinie (${archiveMonths} Monate) archiviert.`,
+              });
+            }
+          }
+          console.log(`[retention] Archived ${ids.length} decisions for org ${org.id}`);
+        }
+
+        // Delete archived decisions past deletion threshold
+        if (deleteArchivedMonths !== null) {
+          const deleteCutoff = new Date(Date.now() - deleteArchivedMonths * 30 * 86400000).toISOString();
+          const { data: toDelete } = await supabase
+            .from("decisions")
+            .select("id")
+            .eq("org_id", org.id)
+            .eq("status", "archived")
+            .is("deleted_at", null)
+            .lt("archived_at", deleteCutoff);
+
+          if (toDelete && toDelete.length > 0) {
+            await supabase
+              .from("decisions")
+              .update({ deleted_at: new Date().toISOString() })
+              .in("id", toDelete.map(d => d.id));
+            console.log(`[retention] Soft-deleted ${toDelete.length} archived decisions for org ${org.id}`);
+          }
+        }
+
+        // Delete old notifications
+        const notifCutoff = new Date(Date.now() - notifDeleteDays * 86400000).toISOString();
+        await supabase
+          .from("notifications")
+          .delete()
+          .eq("org_id", org.id)
+          .eq("read", true)
+          .lt("created_at", notifCutoff);
+        // ───────────────────────────────────────────────
         // STEP 1: Calculate Cost-of-Delay for open decisions
         // ───────────────────────────────────────────────
         const { data: openDecisions } = await supabase
