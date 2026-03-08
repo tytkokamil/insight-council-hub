@@ -296,6 +296,18 @@ const Dashboard = () => {
               </Suspense>
             )}
 
+            {/* ═══ POST-DECISION INVITE PROMPT ═══ */}
+            {decisions.length > 0 && decisions.length <= 2 && teams.length === 0 && (
+              <Suspense fallback={null}>
+                <PostDecisionInvitePrompt
+                  decisionId={decisions[0]?.id}
+                  decisionTitle={decisions[0]?.title}
+                  costPerDay={decisions[0]?.cost_per_day}
+                  isFirstDecision={decisions.length === 1}
+                />
+              </Suspense>
+            )}
+
             {/* ═══ GUIDED MODE for new users (< 3 decisions) ═══ */}
             {isGuidedMode && (
               <div className="space-y-6">
