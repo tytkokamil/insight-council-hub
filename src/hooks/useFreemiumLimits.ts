@@ -93,7 +93,7 @@ const PLAN_LIMITS: Record<string, {
     executive: false, liveCod: false, aiAnalysis: false, strategy: false, webhooks: false,
     branding: true, auditDays: 365, cryptoAudit: false, sso: false, customBranding: false,
   },
-  pro: {
+  professional: {
     maxDecisions: null, maxUsers: 25, maxTeams: null, maxAutomationRules: null, maxTemplates: null, maxComplianceFrameworks: null,
     teams: true, aiBrief: true, sla: true, automations: true, analytics: true,
     executive: true, liveCod: true, aiAnalysis: true, strategy: true, webhooks: true,
