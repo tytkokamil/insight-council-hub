@@ -18,6 +18,7 @@ import SidebarHeader from "./SidebarHeader";
 import SidebarNav from "./SidebarNav";
 import SidebarFooter from "./SidebarFooter";
 import MobileHeader from "./MobileHeader";
+import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
 
