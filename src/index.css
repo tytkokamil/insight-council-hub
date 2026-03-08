@@ -8,25 +8,19 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Landing page light theme — soft & elegant */
+/* Landing page — uses global tokens, override heading colors for richer feel */
 .landing-page {
-  --lp-bg: 225 20% 98%;
-  --lp-card: 0 0% 100%;
-  --lp-primary: 220 60% 50%;
-  --lp-heading: 220 14% 36%;
-  --lp-body: 220 10% 50%;
-  --lp-muted: 220 10% 60%;
-  background: hsl(var(--lp-bg));
-  color: hsl(var(--lp-body));
+  background: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
   font-family: 'Inter', 'DM Sans', sans-serif;
 }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4 {
   font-family: 'Inter', system-ui, sans-serif;
   letter-spacing: -0.025em;
-  color: hsl(var(--lp-heading));
+  color: hsl(var(--foreground));
 }
 .landing-page p {
-  color: hsl(var(--lp-body));
+  color: hsl(var(--muted-foreground));
 }
 
 
