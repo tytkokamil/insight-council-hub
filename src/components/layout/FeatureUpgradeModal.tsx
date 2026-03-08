@@ -97,9 +97,9 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
             <ArrowRight className="w-3 h-3 ml-1" />
           </Button>
 
-          {info?.addonHint && (
+          {featureKey === "compliance" && (
             <p className="text-[11px] text-muted-foreground/60 text-center pt-1">
-              {info.addonHint}
+              Oder: Zusätzliches Framework für €19/Monat hinzubuchen
             </p>
           )}
 
