@@ -138,7 +138,7 @@ const PublicDashboardLinks = () => {
                   className="h-7 w-7 shrink-0"
                   onClick={() => copyUrl(link.token, link.id)}
                 >
-                  {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedId === link.id ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
                 <Button
                   variant="ghost"
