@@ -66,7 +66,7 @@ const InlineTicker = () => {
         transition={{ duration: 1.2, repeat: Infinity }}
         className="w-2 h-2 rounded-full bg-destructive"
       />
-      <span className="text-xs font-mono uppercase tracking-[0.15em] text-muted-foreground/60">
+      <span className="text-xs font-mono uppercase tracking-[0.15em] text-muted-foreground">
         Kosten seit Sie hier sind
       </span>
       <span className="text-lg font-mono font-bold tabular-nums text-destructive">
