@@ -102,7 +102,16 @@ const Footer = () => (
             </Link>
           </div>
         </nav>
-      </div>
+
+        {/* Vergleiche */}
+        <nav aria-label="Vergleiche">
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Vergleiche</h4>
+          <ul className="space-y-2.5">
+            {footerLinks.vergleiche.map(l => (
+              <li key={l.label}><FooterLink item={l} /></li>
+            ))}
+          </ul>
+        </nav>
 
       {/* Bottom bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/20 gap-3">
