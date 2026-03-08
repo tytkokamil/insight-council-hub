@@ -57,7 +57,7 @@ const StatsSection = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-muted/15 via-transparent to-transparent" />
       <div className="container mx-auto px-4 relative z-10 space-y-10">
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/35 font-medium mb-6">{t("landing.stats.socialProof")}</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-medium mb-6">{t("landing.stats.socialProof")}</p>
           <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
             {industries.map((ind, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5, ease }} className="flex items-center gap-2 text-muted-foreground/25 hover:text-muted-foreground/45 transition-colors duration-300">
