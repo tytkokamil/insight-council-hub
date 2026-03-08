@@ -178,7 +178,7 @@ const DecisionTable = ({
                   <tr
                     key={decision.id}
                     className={`border-b border-border/20 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors duration-100 ${isSelected ? "bg-primary/[0.04]" : ""}`}
-                    style={meta.isOverdue ? { borderLeft: "3px solid rgba(239, 68, 68, 0.6)" } : undefined}
+                    style={meta.isOverdue ? { borderLeft: "3px solid hsl(var(--destructive) / 0.6)" } : undefined}
                     onClick={() => onPreview(decision)}
                   >
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
