@@ -253,7 +253,7 @@ const SubGroupItem = ({
 
   if (isSubGroupLocked) {
     const minPlan = getMinPlan(subGroupFeatureKey || "");
-    const badge = PLAN_BADGE[minPlan] || "Pro";
+    const badge = PLAN_BADGE[minPlan] || "Professional";
     if (collapsed) return null;
     return (
       <button
