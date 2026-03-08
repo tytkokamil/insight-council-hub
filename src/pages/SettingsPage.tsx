@@ -668,7 +668,7 @@ const SettingsPage = () => {
                   </div>
                 )}
                 <div className="mt-4">
-                  <Button size="sm" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                  <Button size="sm" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground">
                     {savedAi && <CheckCircle2 className="w-3 h-3" />}{savingAi ? t("settings.saving") : savedAi ? t("settings.saved") : t("settings.save")}
                   </Button>
                 </div>
