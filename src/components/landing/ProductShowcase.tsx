@@ -217,7 +217,7 @@ const AuditMockup = () => (
             <div className="w-1.5 h-1.5 rounded-full bg-accent-teal/50" />
             <div className="flex-1">
               <div className="text-[11px] text-foreground/70">{entry.action}</div>
-              <div className="text-[9px] font-mono text-muted-foreground/50">{entry.hash}</div>
+              <div className="text-[9px] font-mono text-muted-foreground">{entry.hash}</div>
             </div>
             <span className="text-[10px] text-muted-foreground/50">{entry.time}</span>
           </motion.div>
