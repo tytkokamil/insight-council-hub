@@ -36,12 +36,23 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("review_delegations")
-      .select("delegator_id")
+      .select("delegator_id, scope, scope_value")
       .eq("delegate_id", user.id)
       .eq("active", true)
       .lte("start_date", today)
       .gte("end_date", today);
-    if (data) setDelegationsForMe(data.map(d => d.delegator_id));
+    if (data) {
+      // Filter by scope: match all, or category/team if applicable
+      const validDelegatorIds = data
+        .filter(d => {
+          if (d.scope === "all") return true;
+          if (d.scope === "category" && decision.category === d.scope_value) return true;
+          if (d.scope === "team" && decision.team_id === d.scope_value) return true;
+          return false;
+        })
+        .map(d => d.delegator_id);
+      setDelegationsForMe(validDelegatorIds);
+    }
   };
 
   const fetchExternalReviews = async () => {
