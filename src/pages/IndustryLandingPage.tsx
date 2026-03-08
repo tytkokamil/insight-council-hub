@@ -1,12 +1,103 @@
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Quote } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Quote, ChevronDown, Building2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
 import { getIndustryLanding, industryLandings } from "@/lib/industryLandings";
 import NotFound from "./NotFound";
+import { Slider } from "@/components/ui/slider";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+/* ── ROI Calculator ─────────────────────────────────── */
+const IndustryRoiCalculator = ({ preset }: { preset: { people: number; hourlyRate: number; delayDays: number; openDecisions: number } }) => {
+  const [people, setPeople] = useState(preset.people);
+  const [rate, setRate] = useState(preset.hourlyRate);
+  const [days, setDays] = useState(preset.delayDays);
+  const [decisions, setDecisions] = useState(preset.openDecisions);
+
+  const monthlyCost = useMemo(() => Math.round(rate * 8 * people * decisions * days / 4.3), [rate, people, decisions, days]);
+  const savings = useMemo(() => Math.round(monthlyCost * 0.55), [monthlyCost]);
+
+  return (
+    <div className="rounded-2xl border border-border/40 bg-background p-6 md:p-8">
+      <h3 className="text-lg font-bold mb-6">ROI-Rechner für Ihre Branche</h3>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Betroffene Personen pro Entscheidung</span>
+              <span className="font-semibold">{people}</span>
+            </div>
+            <Slider value={[people]} onValueChange={([v]) => setPeople(v)} min={1} max={10} step={1} />
+          </div>
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Ø Stundensatz (€)</span>
+              <span className="font-semibold">€{rate}</span>
+            </div>
+            <Slider value={[rate]} onValueChange={([v]) => setRate(v)} min={40} max={200} step={5} />
+          </div>
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Verzögerung in Tagen</span>
+              <span className="font-semibold">{days} Tage</span>
+            </div>
+            <Slider value={[days]} onValueChange={([v]) => setDays(v)} min={1} max={20} step={1} />
+          </div>
+          <div>
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Offene Entscheidungen</span>
+              <span className="font-semibold">{decisions}</span>
+            </div>
+            <Slider value={[decisions]} onValueChange={([v]) => setDecisions(v)} min={1} max={30} step={1} />
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center text-center">
+          <p className="text-sm text-muted-foreground mb-2">Monatliche Verzögerungskosten</p>
+          <p className="text-3xl md:text-4xl font-bold text-destructive mb-4">
+            €{monthlyCost.toLocaleString("de-DE")}
+          </p>
+          <div className="w-full h-px bg-border my-4" />
+          <p className="text-sm text-muted-foreground mb-2">Einsparung mit Decivio (55%)</p>
+          <p className="text-2xl md:text-3xl font-bold text-primary">
+            €{savings.toLocaleString("de-DE")}<span className="text-base font-normal text-muted-foreground">/Monat</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-3">
+            ROI: {Math.round(savings / 149)}x vs. Professional Plan (€149/Monat)
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── FAQ Accordion ──────────────────────────────────── */
+const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-border/40 last:border-0">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full py-4 flex items-center justify-between text-left"
+      >
+        <span className="font-medium text-sm pr-4">{question}</span>
+        <ChevronDown className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="pb-4 text-sm text-muted-foreground leading-relaxed"
+        >
+          {answer}
+        </motion.div>
+      )}
+    </div>
+  );
+};
+
+/* ── Main Page ──────────────────────────────────────── */
 const IndustryLandingPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const industry = getIndustryLanding(slug || "");
@@ -14,6 +105,17 @@ const IndustryLandingPage = () => {
   if (!industry) return <NotFound />;
 
   const Icon = industry.icon;
+  const ctaUrl = `/auth?branche=${industry.slug}`;
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": industry.faqs.map(f => ({
+      "@type": "Question",
+      "name": f.question,
+      "acceptedAnswer": { "@type": "Answer", "text": f.answer },
+    })),
+  };
 
   return (
     <>
@@ -22,7 +124,15 @@ const IndustryLandingPage = () => {
         <meta name="description" content={industry.metaDescription} />
         <meta property="og:title" content={industry.metaTitle} />
         <meta property="og:description" content={industry.metaDescription} />
+        <meta property="og:image" content="https://decivio.com/og-image.png" />
+        <meta property="og:url" content={`https://decivio.com/branchen/${industry.slug}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="de_DE" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={industry.metaTitle} />
+        <meta name="twitter:description" content={industry.metaDescription} />
         <link rel="canonical" href={`https://decivio.com/branchen/${industry.slug}`} />
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
@@ -35,7 +145,7 @@ const IndustryLandingPage = () => {
                 Alle Branchen
               </Link>
               <Link
-                to="/auth"
+                to={ctaUrl}
                 className="text-sm font-medium px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Kostenlos testen
@@ -76,16 +186,25 @@ const IndustryLandingPage = () => {
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
                 {industry.headline}
               </h1>
+
+              {/* Hero Pain — the big stat */}
+              <div className="rounded-xl border border-destructive/20 bg-destructive/[0.04] p-4 mb-6 max-w-2xl">
+                <p className="text-base md:text-lg font-medium text-destructive flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" />
+                  {industry.heroPain}
+                </p>
+              </div>
+
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mb-8">
                 {industry.subheadline}
               </p>
 
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to="/auth"
+                  to={ctaUrl}
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
                 >
-                  Kostenlos starten — keine Kreditkarte
+                  {industry.ctaLabel} <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link
                   to="/contact"
@@ -95,6 +214,21 @@ const IndustryLandingPage = () => {
                 </Link>
               </div>
             </motion.div>
+          </div>
+        </section>
+
+        {/* Logo Bar */}
+        <section className="py-8 border-y border-border/30 bg-muted/20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <p className="text-xs text-muted-foreground text-center mb-4">Vertrauen von Unternehmen wie</p>
+            <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+              {industry.logoBar.map(name => (
+                <div key={name} className="flex items-center gap-2 text-muted-foreground/60">
+                  <Building2 className="w-4 h-4" />
+                  <span className="text-sm font-medium">{name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -121,9 +255,7 @@ const IndustryLandingPage = () => {
         {/* Pain Points */}
         <section className="py-16 md:py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8">
-              Kennen Sie das?
-            </h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-8">Kennen Sie das?</h2>
             <div className="grid md:grid-cols-3 gap-4">
               {industry.painPoints.map((pain, i) => (
                 <motion.div
@@ -149,7 +281,7 @@ const IndustryLandingPage = () => {
             <h2 className="text-2xl md:text-3xl font-bold mb-8">
               So nutzen {industry.name}-Unternehmen Decivio
             </h2>
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
               {industry.useCases.map((uc, i) => (
                 <motion.div
                   key={i}
@@ -172,15 +304,26 @@ const IndustryLandingPage = () => {
           </div>
         </section>
 
-        {/* Testimonial */}
+        {/* ROI Calculator */}
         <section className="py-16 md:py-20">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6">
+            <p className="text-xs font-semibold mb-3 tracking-[0.2em] uppercase text-primary">ROI Berechnung</p>
+            <h2 className="text-2xl md:text-3xl font-bold mb-8">
+              Was kosten verzögerte Entscheidungen in Ihrem {industry.name}-Unternehmen?
+            </h2>
+            <IndustryRoiCalculator preset={industry.roiPreset} />
+          </div>
+        </section>
+
+        {/* Testimonial */}
+        <section className="py-16 md:py-20 bg-muted/30">
           <div className="max-w-3xl mx-auto px-4 sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, ease }}
-              className="p-8 rounded-2xl border border-border/40 bg-muted/20 relative"
+              className="p-8 rounded-2xl border border-border/40 bg-background relative"
             >
               <Quote className="w-8 h-8 text-primary/20 absolute top-6 left-6" />
               <blockquote className="text-lg leading-relaxed mb-4 pl-6">
@@ -200,6 +343,18 @@ const IndustryLandingPage = () => {
           </div>
         </section>
 
+        {/* FAQ */}
+        <section className="py-16 md:py-20">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6">
+            <h2 className="text-2xl md:text-3xl font-bold mb-8">Häufige Fragen — {industry.name}</h2>
+            <div className="rounded-2xl border border-border/40 bg-background p-6">
+              {industry.faqs.map((faq, i) => (
+                <FaqItem key={i} question={faq.question} answer={faq.answer} />
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* CTA */}
         <section className="py-16 md:py-20 bg-primary text-primary-foreground">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
@@ -211,10 +366,10 @@ const IndustryLandingPage = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Link
-                to="/auth"
+                to={ctaUrl}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-background text-foreground font-medium hover:bg-background/90 transition-colors"
               >
-                Jetzt kostenlos starten <ArrowRight className="w-4 h-4" />
+                {industry.ctaLabel} <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/contact"
