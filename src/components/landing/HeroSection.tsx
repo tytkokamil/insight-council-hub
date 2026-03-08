@@ -21,15 +21,15 @@ const RotatingWord = () => {
   }, []);
 
   return (
-    <span className="inline-block relative h-[1.15em] overflow-hidden align-bottom">
+    <span className="inline-flex relative overflow-hidden align-bottom" style={{ minWidth: "6ch", height: "1.15em" }}>
       <AnimatePresence mode="wait">
         <motion.span
           key={index}
-          initial={{ y: "100%", opacity: 0, filter: "blur(6px)" }}
-          animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-          exit={{ y: "-100%", opacity: 0, filter: "blur(6px)" }}
-          transition={{ duration: 0.45, ease }}
-          className={`absolute left-0 whitespace-nowrap ${ROTATING_WORDS[index].color}`}
+          initial={{ y: "100%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: "-100%", opacity: 0 }}
+          transition={{ duration: 0.4, ease }}
+          className={`absolute left-0 top-0 whitespace-nowrap ${ROTATING_WORDS[index].color}`}
         >
           {ROTATING_WORDS[index].text}
         </motion.span>
