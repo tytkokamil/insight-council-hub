@@ -218,7 +218,7 @@ export async function callAI(
   tools?: any[],
   toolChoice?: any,
 ): Promise<{ data: any; response: Response | null }> {
-  const userId = extractUserIdFromAuth(req);
+  const userId = await extractUserIdFromAuth(req);
   const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
   const provider = settings.provider;
