@@ -1,287 +1,437 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, FileText, BarChart3, ArrowRight, Play, Shield, Zap, Clock, TrendingUp, AlertTriangle, CheckCircle2, Eye } from "lucide-react";
+import {
+  ArrowRight, Eye, FileText, AlertTriangle, Clock, TrendingUp,
+  Shield, Zap, Brain, ChevronRight, Users, Check, X as XIcon,
+  BarChart3, Sparkles, Target, Star,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import { DEMO_DECISIONS as AUTO_D, DEMO_ORG as AUTO_O, DEMO_KPIS as AUTO_K } from "@/data/demo-automotive";
-import { DEMO_DECISIONS as MASCH_D, DEMO_ORG as MASCH_O, DEMO_KPIS as MASCH_K } from "@/data/demo-maschinenbau";
-import { DEMO_DECISIONS as PHARMA_D, DEMO_ORG as PHARMA_O, DEMO_KPIS as PHARMA_K } from "@/data/demo-pharma";
-import { DEMO_DECISIONS as IT_D, DEMO_ORG as IT_O, DEMO_KPIS as IT_K } from "@/data/demo-it";
-import { DEMO_DECISIONS as FIN_D, DEMO_ORG as FIN_O, DEMO_KPIS as FIN_K } from "@/data/demo-finance";
+import { DEMO_DECISIONS, DEMO_ORG, DEMO_KPIS, type DemoDecision } from "@/data/demo-showcase";
 
-const INDUSTRIES: Record<string, { decisions: any[]; org: any; kpis: any }> = {
-  automotive: { decisions: AUTO_D, org: AUTO_O, kpis: AUTO_K },
-  maschinenbau: { decisions: MASCH_D, org: MASCH_O, kpis: MASCH_K },
-  pharma: { decisions: PHARMA_D, org: PHARMA_O, kpis: PHARMA_K },
-  it: { decisions: IT_D, org: IT_O, kpis: IT_K },
-  finanzen: { decisions: FIN_D, org: FIN_O, kpis: FIN_K },
+/* ── Live CoD Ticker ── */
+const useLiveCod = (baseDailyCod: number) => {
+  const [extra, setExtra] = useState(0);
+  const startRef = useRef(Date.now());
+  const rafRef = useRef<number>();
+
+  useEffect(() => {
+    startRef.current = Date.now();
+    const tick = () => {
+      const elapsed = (Date.now() - startRef.current) / 1000;
+      const costPerSecond = baseDailyCod / (8 * 3600); // 8h workday
+      setExtra(elapsed * costPerSecond);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [baseDailyCod]);
+
+  return extra;
 };
 
-const INDUSTRY_PILLS = [
-  { key: "automotive", label: "Automotive", icon: "🏭" },
-  { key: "maschinenbau", label: "Maschinenbau", icon: "⚙️" },
-  { key: "pharma", label: "Pharma", icon: "💊" },
-  { key: "it", label: "IT", icon: "💻" },
-  { key: "finanzen", label: "Finanzen", icon: "🏦" },
-];
-
-type DemoTab = "dashboard" | "decisions" | "analytics";
-
-const statusColors: Record<string, string> = {
+/* ── Status / Priority helpers ── */
+const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
-  in_review: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400",
-  approved: "bg-primary/15 text-primary",
-  implemented: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  review: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  approved: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
+  implemented: "bg-primary/15 text-primary",
 };
-
-const statusLabels: Record<string, string> = { draft: "Entwurf", in_review: "In Prüfung", approved: "Genehmigt", implemented: "Umgesetzt" };
+const priorityStyles: Record<string, string> = {
+  critical: "bg-destructive/15 text-destructive",
+  high: "bg-orange-500/15 text-orange-700 dark:text-orange-400",
+  medium: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  low: "bg-muted text-muted-foreground",
+};
 const priorityLabels: Record<string, string> = { critical: "Kritisch", high: "Hoch", medium: "Mittel", low: "Niedrig" };
 
+/* ── Decision Detail Modal ── */
+const DecisionDetailModal = ({ decision, open, onClose }: { decision: DemoDecision | null; open: boolean; onClose: () => void }) => {
+  const [showAi, setShowAi] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const triggerAi = useCallback(() => {
+    setAiLoading(true);
+    setTimeout(() => { setAiLoading(false); setShowAi(true); }, 1500);
+  }, []);
+
+  if (!decision) return null;
+  const d = decision;
+  const ai = d.aiAnalysis;
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge className={priorityStyles[d.priority]}>{priorityLabels[d.priority]}</Badge>
+            <Badge className={statusStyles[d.status]}>{d.statusLabel}</Badge>
+            {d.dueDate && (
+              <Badge variant="outline" className={d.dueStatus.includes("überfällig") ? "text-destructive border-destructive/40" : ""}>
+                <Clock className="w-3 h-3 mr-1" />{d.dueStatus}
+              </Badge>
+            )}
+          </div>
+          <DialogTitle className="text-lg mt-2">{d.title}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Description */}
+          <div>
+            <p className="text-sm text-muted-foreground">{d.description}</p>
+            {d.context && <p className="text-xs text-muted-foreground/70 mt-2 italic">{d.context}</p>}
+          </div>
+
+          {/* KPIs row */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">CoD / Tag</p>
+              <p className="text-lg font-bold text-destructive">€{d.costPerDay.toLocaleString("de-DE")}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Tage offen</p>
+              <p className="text-lg font-bold">{d.daysOpen}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Health</p>
+              <div className="flex items-center gap-2 mt-1">
+                <Progress value={d.health} className="flex-1 h-2" />
+                <span className={`text-sm font-bold ${d.health < 50 ? "text-destructive" : d.health < 70 ? "text-amber-600" : "text-emerald-600"}`}>{d.health}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Reviewers */}
+          {d.reviewers.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Reviewer</p>
+              <div className="space-y-2">
+                {d.reviewers.map((r, i) => (
+                  <div key={i} className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary">{r.avatar}</div>
+                    <div className="flex-1">
+                      <p className="font-medium">{r.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{r.role}</p>
+                    </div>
+                    {r.status === "approved" ? (
+                      <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"><Check className="w-3 h-3 mr-1" />Genehmigt</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground"><Clock className="w-3 h-3 mr-1" />Ausstehend</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* AI Analysis */}
+          {!showAi && !aiLoading && (
+            <Button onClick={triggerAi} variant="outline" className="w-full gap-2">
+              <Brain className="w-4 h-4" />
+              KI-Analyse starten
+              <Sparkles className="w-3 h-3 text-primary" />
+            </Button>
+          )}
+
+          {aiLoading && (
+            <div className="p-6 rounded-lg border border-primary/20 bg-primary/[0.02] text-center">
+              <div className="w-8 h-8 mx-auto mb-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <p className="text-sm text-muted-foreground">KI analysiert Entscheidung…</p>
+            </div>
+          )}
+
+          <AnimatePresence>
+            {showAi && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-4">
+                {/* AI Summary */}
+                <div className="p-4 rounded-lg border border-primary/20 bg-primary/[0.02]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Brain className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-semibold text-primary uppercase tracking-wider">KI-Analyse</span>
+                  </div>
+                  <p className="text-sm text-foreground">{ai.summary}</p>
+                  <div className="flex gap-4 mt-3">
+                    <div className="flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="text-xs">Risiko: <strong>{ai.riskScore}/100</strong></span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-xs">Impact: <strong>{ai.impactScore}/100</strong></span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risks */}
+                <div>
+                  <p className="text-xs font-semibold text-destructive mb-2 uppercase tracking-wider">Identifizierte Risiken</p>
+                  <ul className="space-y-1.5">
+                    {ai.risks.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Recommendations */}
+                <div>
+                  <p className="text-xs font-semibold text-emerald-600 mb-2 uppercase tracking-wider">Empfehlungen</p>
+                  <ul className="space-y-1.5">
+                    {ai.recommendations.map((r, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                        <span className="text-muted-foreground">{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Options */}
+                <div>
+                  <p className="text-xs font-semibold text-primary mb-2 uppercase tracking-wider">Handlungsoptionen</p>
+                  <div className="grid gap-3">
+                    {ai.options.map((opt, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-border/60 bg-card">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold">Option {i + 1}: {opt.title}</p>
+                          <Badge variant="outline" className="text-[10px]">{opt.roi}</Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <p className="font-medium text-emerald-600 mb-1">Pro</p>
+                            {opt.pros.map((p, j) => <p key={j} className="text-muted-foreground">+ {p}</p>)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-destructive mb-1">Contra</p>
+                            {opt.cons.map((c, j) => <p key={j} className="text-muted-foreground">– {c}</p>)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/50 text-center pt-2">
+                  Demo-Analyse — In der echten App powered by Gemini & GPT-5
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/* ════════════════════════════════════════════
+   MAIN DEMO PAGE
+   ════════════════════════════════════════════ */
 const DemoMode = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const industryParam = searchParams.get("industry") || "automotive";
-  const [industry, setIndustry] = useState(INDUSTRIES[industryParam] ? industryParam : "automotive");
-  const [tab, setTab] = useState<DemoTab>("dashboard");
-  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
+  const totalDailyCod = DEMO_DECISIONS.filter(d => d.status !== "approved" && d.status !== "implemented")
+    .reduce((s, d) => s + d.costPerDay, 0);
+  const liveExtra = useLiveCod(totalDailyCod);
+  const [selectedDecision, setSelectedDecision] = useState<DemoDecision | null>(null);
 
-  const { decisions: rawDecisions, org, kpis } = INDUSTRIES[industry];
-  const decisions = useMemo(() => rawDecisions.map(d => ({ ...d, status: localStatuses[d.id] || d.status })), [rawDecisions, localStatuses]);
-
-  const switchIndustry = (key: string) => {
-    setIndustry(key);
-    setLocalStatuses({});
-    setSearchParams({ industry: key }, { replace: true });
-  };
-
-  const updateStatus = (id: string, newStatus: string) => {
-    setLocalStatuses(prev => ({ ...prev, [id]: newStatus }));
-  };
-
-  const tabs: { key: DemoTab; label: string; icon: React.ElementType }[] = [
-    { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { key: "decisions", label: "Entscheidungen", icon: FileText },
-    { key: "analytics", label: "Analytics", icon: BarChart3 },
-  ];
-
-  const totalCod = decisions.filter(d => d.status !== "approved" && d.status !== "implemented").reduce((s, d) => s + d.costPerDay, 0);
+  const kpis = DEMO_KPIS;
+  const openDecisions = DEMO_DECISIONS.filter(d => d.status !== "implemented");
 
   return (
     <>
       <Helmet>
-        <title>Decivio Demo – Interaktive Produktvorschau | {org.industry}</title>
-        <meta name="description" content={`Erleben Sie Decivio für ${org.industry} ohne Registrierung. Interaktive Demo mit realistischen Business-Szenarien.`} />
+        <title>Decivio Demo — Interaktive Produktvorschau | Maschinenbau</title>
+        <meta name="description" content="Erleben Sie Decivio live mit realistischen Business-Daten. Keine Registrierung nötig. Interaktive Demo für Maschinenbau." />
       </Helmet>
 
       <div className="min-h-screen bg-background">
-        {/* Demo Banner */}
-        <div className="sticky top-0 z-50 px-4 py-2.5 flex items-center justify-between text-sm" style={{ background: "#F59E0B", color: "#1E293B" }}>
+        {/* ── Sticky Demo Banner ── */}
+        <div className="sticky top-0 z-50 bg-amber-500 text-slate-900 px-4 py-2.5 flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
             <span className="font-semibold">Demo-Modus</span>
-            <span className="hidden sm:inline opacity-70">— {org.name} ({org.industry})</span>
+            <span className="hidden sm:inline opacity-70">— Echte Daten nach Registrierung</span>
           </div>
-
-          <div className="hidden md:flex items-center gap-1.5">
-            {INDUSTRY_PILLS.map(p => (
-              <button
-                key={p.key}
-                onClick={() => switchIndustry(p.key)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${industry === p.key ? "bg-[#1E293B] text-white" : "bg-white/50 hover:bg-white/80 text-[#1E293B]"}`}
-              >
-                {p.icon} {p.label}
-              </button>
-            ))}
-          </div>
-
           <Link to="/auth">
-            <Button size="sm" className="gap-1.5 h-7 text-xs" style={{ background: "#1E3A5F", color: "white" }}>
-              Mit eigenen Daten starten — kostenlos
+            <Button size="sm" className="gap-1.5 h-7 text-xs bg-slate-900 text-white hover:bg-slate-800">
+              Kostenlos starten
               <ArrowRight className="w-3 h-3" />
             </Button>
           </Link>
         </div>
 
-        {/* Mobile industry selector */}
-        <div className="md:hidden flex gap-1.5 overflow-x-auto px-4 py-2 bg-muted/30">
-          {INDUSTRY_PILLS.map(p => (
-            <button key={p.key} onClick={() => switchIndustry(p.key)} className={`px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition-all ${industry === p.key ? "bg-primary text-primary-foreground" : "bg-card border border-border text-muted-foreground"}`}>
-              {p.icon} {p.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="max-w-[1200px] mx-auto px-4 py-6">
-          {/* CoD Ticker */}
-          <div className="mb-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-destructive font-medium uppercase tracking-wider">Cost of Delay — diese Woche</p>
-                <p className="text-3xl font-bold text-destructive tabular-nums mt-1">€{totalCod.toLocaleString("de-DE")}<span className="text-sm font-normal text-destructive/60">/Woche</span></p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">{decisions.filter(d => d.status !== "approved" && d.status !== "implemented").length} offene Entscheidungen</p>
-                <p className="text-xs text-destructive font-medium">€{(totalCod * 52).toLocaleString("de-DE")}/Jahr</p>
-              </div>
+        <div className="max-w-[1200px] mx-auto px-4 py-6 space-y-6">
+          {/* ── Org Header ── */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h1 className="text-xl font-bold">{DEMO_ORG.name}</h1>
+              <p className="text-xs text-muted-foreground">{DEMO_ORG.industry} · {DEMO_ORG.employees} Mitarbeiter</p>
             </div>
+            <Badge variant="outline" className="text-primary border-primary/30">Professional Plan</Badge>
           </div>
 
-          {/* Tab bar */}
-          <nav className="flex gap-1 border-b border-border/60 mb-6 pb-px">
-            {tabs.map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium transition-colors relative rounded-t-md ${tab === t.key ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                <t.icon className="w-4 h-4" />
-                {t.label}
-                {tab === t.key && <motion.div layoutId="demo-tab" className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />}
-              </button>
+          {/* ── Live CoD Hero Ticker ── */}
+          <Card className="border-destructive/30 bg-destructive/[0.04]">
+            <CardContent className="p-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <p className="text-[10px] text-destructive font-semibold uppercase tracking-wider mb-1">Economic Exposure — Live</p>
+                  <p className="text-4xl md:text-5xl font-bold text-destructive tabular-nums">
+                    €{(kpis.economicExposure + liveExtra).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-destructive/60 mt-1">
+                    +€{liveExtra.toFixed(2)} seit Seitenaufruf · €{totalDailyCod.toLocaleString("de-DE")}/Tag
+                  </p>
+                </div>
+                <div className="text-right space-y-1">
+                  <p className="text-xs text-muted-foreground">{openDecisions.length} offene Entscheidungen</p>
+                  <p className="text-xs text-destructive font-medium">€{(totalDailyCod * 365).toLocaleString("de-DE")}/Jahr potenzielle Kosten</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── KPI Grid ── */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Offene Entscheidungen", value: kpis.openDecisions, icon: FileText, color: "text-foreground" },
+              { label: "SLA-Einhaltung", value: `${kpis.slaCompliance}%`, icon: Shield, color: kpis.slaCompliance < 80 ? "text-amber-600" : "text-emerald-600" },
+              { label: "Ausstehende Reviews", value: kpis.pendingReviews, icon: Users, color: "text-foreground" },
+              { label: "Ø Entscheidungszeit", value: `${kpis.avgDecisionDays}d`, icon: Clock, color: "text-foreground" },
+            ].map((kpi, i) => (
+              <Card key={i}>
+                <CardContent className="p-3 md:p-4">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <kpi.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{kpi.label}</span>
+                  </div>
+                  <p className={`text-2xl font-bold ${kpi.color}`}>{kpi.value}</p>
+                </CardContent>
+              </Card>
             ))}
-          </nav>
+          </div>
 
-          <AnimatePresence mode="wait">
-            {/* Dashboard Tab */}
-            {tab === "dashboard" && (
-              <motion.div key="dash" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {[
-                    { label: "Entscheidungen", value: kpis.openDecisions + kpis.implementedThisMonth, icon: FileText },
-                    { label: "Aktiv", value: kpis.openDecisions, icon: Zap },
-                    { label: "Überfällig", value: kpis.overdue, icon: AlertTriangle, alert: true },
-                    { label: "Ø Tage", value: kpis.avgDecisionDays, icon: Clock },
-                    { label: "Quality Score", value: `${kpis.qualityScore}/100`, icon: Shield },
-                    { label: "Velocity", value: `${kpis.velocityScore}/100`, icon: TrendingUp },
-                  ].map((kpi, i) => (
-                    <Card key={i}><CardContent className="p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <kpi.icon className={`w-3.5 h-3.5 ${kpi.alert ? "text-destructive" : "text-muted-foreground"}`} />
-                        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{kpi.label}</span>
-                      </div>
-                      <p className={`text-xl font-bold ${kpi.alert ? "text-destructive" : "text-foreground"}`}>{kpi.value}</p>
-                    </CardContent></Card>
-                  ))}
-                </div>
-
-                <Card>
-                  <CardHeader className="pb-2"><CardTitle className="text-sm">Aktuelle Entscheidungen</CardTitle></CardHeader>
-                  <CardContent className="p-0">
-                    <div className="divide-y divide-border">
-                      {decisions.filter(d => d.status !== "implemented").map(d => (
-                        <div key={d.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setTab("decisions")}>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{d.title}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="outline" className={`text-[10px] ${statusColors[d.status]}`}>{statusLabels[d.status] || d.status}</Badge>
-                              <Badge variant="outline" className="text-[10px]">{priorityLabels[d.priority]}</Badge>
-                              <span className="text-[10px] text-muted-foreground">{d.daysOpen}d offen</span>
-                            </div>
-                          </div>
-                          <div className="text-right shrink-0">
-                            <div className="flex items-center gap-1.5">
-                              <Progress value={d.health} className="w-16 h-1.5" />
-                              <span className={`text-xs font-medium ${d.health < 50 ? "text-destructive" : d.health < 70 ? "text-yellow-600" : "text-emerald-600"}`}>{d.health}%</span>
-                            </div>
-                            {d.costPerDay > 0 && <p className="text-[10px] text-destructive mt-0.5">€{d.costPerDay.toLocaleString("de-DE")}/Tag</p>}
-                          </div>
+          {/* ── Decisions Table ── */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" />
+                Aktive Entscheidungen
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {DEMO_DECISIONS.map(d => {
+                  const isOverdue = d.dueStatus.includes("überfällig");
+                  return (
+                    <div
+                      key={d.id}
+                      onClick={() => setSelectedDecision(d)}
+                      className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer ${isOverdue ? "border-l-[3px] border-l-destructive" : ""}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{d.title}</p>
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                          <Badge className={`text-[10px] ${statusStyles[d.status]}`}>{d.statusLabel}</Badge>
+                          <Badge className={`text-[10px] ${priorityStyles[d.priority]}`}>{priorityLabels[d.priority]}</Badge>
+                          <span className="text-[10px] text-muted-foreground">{d.owner}</span>
+                          {isOverdue && <span className="text-[10px] text-destructive font-medium">{d.dueStatus}</span>}
                         </div>
-                      ))}
+                      </div>
+                      <div className="text-right shrink-0 hidden sm:block">
+                        {d.costPerDay > 0 && (
+                          <p className="text-xs text-destructive font-semibold">€{d.costPerDay.toLocaleString("de-DE")}/Tag</p>
+                        )}
+                        <div className="flex items-center gap-1.5 mt-1 justify-end">
+                          <Progress value={d.health} className="w-16 h-1.5" />
+                          <span className={`text-[10px] font-medium ${d.health < 50 ? "text-destructive" : d.health < 70 ? "text-amber-600" : "text-emerald-600"}`}>{d.health}%</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Decisions Tab */}
-            {tab === "decisions" && (
-              <motion.div key="dec" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-                {decisions.map(d => (
-                  <Card key={d.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="text-sm font-semibold">{d.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">{d.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline" className={statusColors[d.status]}>{statusLabels[d.status] || d.status}</Badge>
-                            <Badge variant="outline" className="text-[10px]">{priorityLabels[d.priority]}</Badge>
-                            <Badge variant="outline" className="text-[10px]">{d.category}</Badge>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0 space-y-1">
-                          <Progress value={d.health} className="w-20 h-1.5" />
-                          <p className="text-[10px] text-muted-foreground">Health: {d.health}%</p>
-                          {d.costPerDay > 0 && <p className="text-[10px] text-destructive font-medium">€{d.costPerDay.toLocaleString("de-DE")}/Tag</p>}
-                        </div>
-                      </div>
-                      {/* Status change buttons */}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
-                        <span className="text-[10px] text-muted-foreground mr-1">Status ändern:</span>
-                        {["draft", "in_review", "approved", "implemented"].map(s => (
-                          <button key={s} onClick={() => updateStatus(d.id, s)} className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${d.status === s ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
-                            {statusLabels[s]}
-                          </button>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+          {/* ── Analytics Teaser ── */}
+          <div className="grid md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-5 text-center">
+                <Shield className="w-7 h-7 mx-auto text-primary mb-2" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Decision Quality</p>
+                <p className="text-3xl font-bold text-primary">{kpis.qualityScore}<span className="text-sm text-muted-foreground">/100</span></p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5 text-center">
+                <TrendingUp className="w-7 h-7 mx-auto text-emerald-500 mb-2" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Velocity Score</p>
+                <p className="text-3xl font-bold text-emerald-600">{kpis.velocityScore}<span className="text-sm text-muted-foreground">/100</span></p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5 text-center">
+                <BarChart3 className="w-7 h-7 mx-auto text-amber-500 mb-2" />
+                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Diesen Monat umgesetzt</p>
+                <p className="text-3xl font-bold">{kpis.implementedThisMonth}</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* ── Feature Highlights ── */}
+          <Card className="border-primary/20 bg-primary/[0.02]">
+            <CardContent className="p-6">
+              <h2 className="text-base font-semibold mb-4">Was Sie gerade gesehen haben</h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { icon: Zap, label: "Live Cost-of-Delay Ticker", desc: "Sehen Sie in Echtzeit, was verzögerte Entscheidungen kosten" },
+                  { icon: Brain, label: "KI-Analyse & Copilot", desc: "Automatische Risikobewertung und Handlungsoptionen" },
+                  { icon: Users, label: "Review-Workflows", desc: "Multi-Step Genehmigungsprozesse mit Deadline-Tracking" },
+                  { icon: Star, label: "Decision Quality Score", desc: "Objektive Bewertung jeder Entscheidung" },
+                ].map((f, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-card border border-border/40">
+                    <f.icon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">{f.label}</p>
+                      <p className="text-xs text-muted-foreground">{f.desc}</p>
+                    </div>
+                  </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
 
-                {/* Blocked action: New Decision */}
-                <Card className="border-dashed border-primary/30 bg-primary/[0.02]">
-                  <CardContent className="p-6 text-center">
-                    <p className="text-sm text-muted-foreground mb-3">Im Demo-Modus können keine neuen Entscheidungen angelegt werden.</p>
-                    <Link to="/auth">
-                      <Button className="gap-1.5">Mit echten Daten starten <ArrowRight className="w-4 h-4" /></Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {/* Analytics Tab */}
-            {tab === "analytics" && (
-              <motion.div key="ana" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-6">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Card><CardContent className="p-6 text-center">
-                    <Shield className="w-8 h-8 mx-auto text-primary mb-3" />
-                    <h3 className="font-semibold mb-1">Decision Quality Index</h3>
-                    <p className="text-4xl font-bold text-primary">{kpis.qualityScore}<span className="text-lg text-muted-foreground">/100</span></p>
-                  </CardContent></Card>
-                  <Card><CardContent className="p-6 text-center">
-                    <TrendingUp className="w-8 h-8 mx-auto text-emerald-500 mb-3" />
-                    <h3 className="font-semibold mb-1">Velocity Score</h3>
-                    <p className="text-4xl font-bold text-emerald-600">{kpis.velocityScore}<span className="text-lg text-muted-foreground">/100</span></p>
-                  </CardContent></Card>
-                  <Card><CardContent className="p-6 text-center">
-                    <AlertTriangle className="w-8 h-8 mx-auto text-destructive mb-3" />
-                    <h3 className="font-semibold mb-1">Cost of Delay</h3>
-                    <p className="text-4xl font-bold text-destructive">€{totalCod.toLocaleString("de-DE")}<span className="text-lg text-muted-foreground">/Wo</span></p>
-                  </CardContent></Card>
-                </div>
-
-                <Card className="border-dashed border-primary/30 bg-primary/[0.02]">
-                  <CardContent className="p-8 text-center">
-                    <p className="text-sm text-muted-foreground mb-4">Vollständige Analytics mit KI-Insights, Heatmaps und Benchmarking verfügbar nach Registrierung.</p>
-                    <Link to="/auth">
-                      <Button className="gap-1.5">Jetzt kostenlos starten <ArrowRight className="w-4 h-4" /></Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* CTA Footer */}
-          <div className="mt-12 text-center pb-8">
-            <p className="text-muted-foreground text-sm mb-4">Überzeugt? Starten Sie in unter 2 Minuten.</p>
+          {/* ── CTA Footer ── */}
+          <div className="py-12 text-center space-y-4">
+            <h2 className="text-xl font-bold">Bereit für echte Daten?</h2>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              Erstellen Sie Ihr Konto in unter 2 Minuten. 14 Tage kostenlos testen — keine Kreditkarte nötig.
+            </p>
             <Link to="/auth">
-              <Button size="lg" className="gap-2">Kostenlos registrieren <ArrowRight className="w-4 h-4" /></Button>
+              <Button size="lg" className="gap-2">
+                Kostenlos registrieren
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </Link>
+            <p className="text-xs text-muted-foreground/50">Ihre Demo-Daten werden nicht gespeichert</p>
           </div>
         </div>
       </div>
+
+      {/* Decision Detail Modal */}
+      <DecisionDetailModal
+        decision={selectedDecision}
+        open={!!selectedDecision}
+        onClose={() => setSelectedDecision(null)}
+      />
     </>
   );
 };
