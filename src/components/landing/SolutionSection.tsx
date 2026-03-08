@@ -63,20 +63,8 @@ const SolutionSection = () => (
               Wie ein Taxi-Meter für Ihre Entscheidungen: Sie sehen in Echtzeit wie viel Geld jede offene Entscheidung Ihr Unternehmen kostet — jede Sekunde. Das ändert Prioritäten.
             </p>
           </div>
-          {/* Live ticker */}
-          <motion.div
-            className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.03]"
-            whileHover={{ scale: 1.03 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-          >
-            <motion.div
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-destructive"
-            />
-            <span className="font-mono text-lg font-bold tabular-nums text-destructive">€12.847</span>
-            <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
-          </motion.div>
+          {/* Live ticker — real-time calculation */}
+          <LiveCodTicker />
         </div>
       </motion.div>
 
