@@ -458,7 +458,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
                   {msg.content && !(msg.file_url && msg.content === msg.file_name) && (
                     <div className={`inline-block px-3 py-2 rounded-xl text-sm ${
                       isOwn ? "text-white" : ""
-                    }`} style={isOwn ? { backgroundColor: "#1E3A5F", color: "white" } : { backgroundColor: "#F1F5F9" }}>
+                    } ${isOwn ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                       <RenderMentionContent content={msg.content} isOwn={isOwn} />
                     </div>
                   )}
@@ -587,8 +587,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             onClick={handleSend}
             disabled={(!newMessage.trim() && !selectedFile && !linkedDecisionId) || sending}
             size="icon"
-            className="h-10 w-10 shrink-0"
-            style={{ backgroundColor: "#1E3A5F" }}
+            className="h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Send className="w-4 h-4" />
           </Button>

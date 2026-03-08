@@ -1006,7 +1006,7 @@ const TemplateEditor = () => {
               <Button variant="outline" size="sm" onClick={handleDuplicate} disabled={createTemplate.isPending} className="gap-1.5 text-xs">
                 <Copy className="w-3.5 h-3.5" /> {t("templateEditor.duplicate")}
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs" style={{ backgroundColor: "#1E3A5F" }}>
+              <Button size="sm" onClick={handleSave} disabled={updateTemplate.isPending} className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
                 {updateTemplate.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 {t("templateEditor.save")}
               </Button>

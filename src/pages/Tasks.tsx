@@ -555,10 +555,9 @@ const Tasks = () => {
                               <Link
                                 to={`/decisions/${taskDecisionMap[task.id].decisionId}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1 mt-0.5 hover:underline"
-                                style={{ fontSize: "11px", color: "#64748B" }}
+                                className="flex items-center gap-1 mt-0.5 hover:underline text-[11px] text-muted-foreground"
                               >
-                                <LinkIcon className="w-3 h-3" style={{ color: "#64748B" }} />
+                                <LinkIcon className="w-3 h-3 text-muted-foreground" />
                                 {taskDecisionMap[task.id].decisionTitle}
                               </Link>
                             )}
@@ -578,7 +577,7 @@ const Tasks = () => {
                           </td>
                           <td className="p-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span> : <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span>}</span>
+                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || <span className="text-[11px] text-muted-foreground">{t("tasksPage.unassigned", "Nicht zugewiesen")}</span> : <span className="text-[11px] text-muted-foreground">{t("tasksPage.unassigned", "Nicht zugewiesen")}</span>}</span>
                               {task.assignee_id && (
                                 <QuickMessageButton
                                   teamId={task.team_id}
@@ -591,7 +590,7 @@ const Tasks = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className={`text-xs ${!isOverdue ? "text-muted-foreground" : ""}`} style={isOverdue ? { color: "#EF4444", fontWeight: 500 } : undefined}>
+                            <span className={`text-xs ${!isOverdue ? "text-muted-foreground" : "text-destructive font-medium"}`}>
                               {task.due_date ? format(new Date(task.due_date), "dd.MM.yy", { locale: dateFnsLocale }) : "—"}
                               {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
                             </span>

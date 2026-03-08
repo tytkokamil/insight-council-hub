@@ -180,26 +180,26 @@ const WarRoom = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-screen -m-4 md:-m-6 lg:-m-8 p-4 md:p-6 lg:p-8" style={{ background: "#0F172A" }}>
+      <div className="min-h-screen -m-4 md:-m-6 lg:-m-8 p-4 md:p-6 lg:p-8 bg-background dark:bg-[hsl(222_47%_11%)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-red-500" />
-              <h1 className="text-xl font-bold text-white tracking-tight">WAR ROOM</h1>
+              <Zap className="w-5 h-5 text-destructive" />
+              <h1 className="text-xl font-bold text-foreground tracking-tight">WAR ROOM</h1>
             </div>
-            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+            <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-xs">
               {escalated.length} {escalated.length === 1 ? "Aktive Eskalation" : "Aktive Eskalationen"}
             </Badge>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Verzögerungskosten</p>
-              <p className="text-lg font-bold text-red-400 tabular-nums font-mono">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Verzögerungskosten</p>
+              <p className="text-lg font-bold text-destructive tabular-nums font-mono">
                 {formatCost(Math.round(totalCod))}
               </p>
             </div>
-            <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs" onClick={() => navigate(-1)}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => navigate(-1)}>
               Zurück
             </Button>
           </div>
@@ -207,9 +207,9 @@ const WarRoom = () => {
 
         {escalated.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <Shield className="w-12 h-12 text-emerald-500/40 mb-4" />
-            <h2 className="text-lg font-semibold text-white mb-2">Keine aktiven Eskalationen</h2>
-            <p className="text-sm text-slate-400 max-w-md">
+            <Shield className="w-12 h-12 text-success/40 mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">Keine aktiven Eskalationen</h2>
+            <p className="text-sm text-muted-foreground max-w-md">
               Alle Entscheidungen laufen innerhalb der SLA-Grenzen. Der War Room wird automatisch aktiv, sobald Eskalationen auftreten.
             </p>
           </div>
@@ -217,41 +217,41 @@ const WarRoom = () => {
           <div className="grid lg:grid-cols-5 gap-6">
             {/* LEFT: Critical Decisions */}
             <div className="lg:col-span-3 space-y-3">
-              <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Flame className="w-3.5 h-3.5 text-red-500" />
+              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                <Flame className="w-3.5 h-3.5 text-destructive" />
                 Eskalierte Entscheidungen ({escalated.length})
               </h2>
               <ScrollArea className="h-[calc(100vh-220px)]">
                 <div className="space-y-3 pr-3">
                   {escalated.map((d) => (
-                    <div key={d.id} className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4 hover:border-red-500/30 transition-colors">
+                    <div key={d.id} className="rounded-lg border border-border bg-card/50 p-4 hover:border-destructive/30 transition-colors">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${priorityColor(d.priority)}`}>
                               {priorityLabel[d.priority] || d.priority}
                             </span>
-                            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[9px]">
+                            <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-[9px]">
                               <Zap className="w-2.5 h-2.5 mr-0.5" /> Stufe {d.escalation_level}
                             </Badge>
                             {d.overdue && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400">
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive">
                                 {d.daysOverdue}d überfällig
                               </span>
                             )}
                           </div>
-                          <p className="text-sm font-medium text-white truncate cursor-pointer hover:text-blue-400 transition-colors"
+                          <p className="text-sm font-medium text-foreground truncate cursor-pointer hover:text-primary transition-colors"
                             onClick={() => navigate(`/decisions/${d.id}`)}>
                             {d.title}
                           </p>
-                          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-slate-500">
+                          <div className="flex items-center gap-4 mt-1.5 text-[10px] text-muted-foreground">
                             <span>{d.daysOpen}d offen</span>
-                            <span className="text-slate-600">•</span>
+                            <span className="text-muted-foreground/60">•</span>
                             <span>{t(`status.${d.status}`, { defaultValue: d.status })}</span>
                             {d.ai_risk_score != null && (
                               <>
-                                <span className="text-slate-600">•</span>
-                                <span className={d.ai_risk_score >= 60 ? "text-red-400" : "text-amber-400"}>
+                                <span className="text-muted-foreground/60">•</span>
+                                <span className={d.ai_risk_score >= 60 ? "text-destructive" : "text-warning"}>
                                   Risiko {d.ai_risk_score}%
                                 </span>
                               </>
@@ -259,44 +259,44 @@ const WarRoom = () => {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-lg font-bold tabular-nums text-red-400 font-mono">
+                          <p className="text-lg font-bold tabular-nums text-destructive font-mono">
                             {formatCost(Math.round(d.cod))}
                           </p>
-                          <p className="text-[9px] text-slate-500">CoD</p>
-                          <p className="text-xs font-semibold text-slate-400 mt-1">{Math.round(d.urgencyScore)}</p>
-                          <p className="text-[9px] text-slate-500">Urgency</p>
+                          <p className="text-[9px] text-muted-foreground">CoD</p>
+                          <p className="text-xs font-semibold text-muted-foreground mt-1">{Math.round(d.urgencyScore)}</p>
+                          <p className="text-[9px] text-muted-foreground">Urgency</p>
                         </div>
                       </div>
 
                       {/* Last comment */}
                       {d.lastComment && (
-                        <div className="mb-3 px-3 py-2 rounded bg-slate-900/50 border border-slate-700/40">
+                        <div className="mb-3 px-3 py-2 rounded bg-muted/30 border border-border/40">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <MessageSquare className="w-3 h-3 text-slate-500" />
-                            <span className="text-[10px] text-slate-500">
+                            <MessageSquare className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">
                               {profileMap[d.lastComment.user_id] || "Unbekannt"} •{" "}
                               {format(new Date(d.lastComment.created_at), "dd.MM. HH:mm", { locale: dateFnsLocale })}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-400 truncate">{d.lastComment.content}</p>
+                          <p className="text-xs text-muted-foreground truncate">{d.lastComment.content}</p>
                         </div>
                       )}
 
                       {/* Quick Actions */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-slate-700 text-slate-300 hover:bg-slate-700 gap-1"
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1"
                           onClick={() => navigate(`/decisions/${d.id}`)}>
                           <UserMinus className="w-3 h-3" /> Reviewer ersetzen
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-slate-700 text-slate-300 hover:bg-slate-700 gap-1"
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1"
                           onClick={() => handleExtendSla(d.id)}>
                           <CalendarPlus className="w-3 h-3" /> SLA verlängern
                         </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-red-500/30 text-red-400 hover:bg-red-500/10 gap-1"
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] border-destructive/30 text-destructive hover:bg-destructive/10 gap-1"
                           onClick={() => handleEscalate(d.id)}>
                           <ChevronUp className="w-3 h-3" /> Eskalieren
                         </Button>
-                        <Button size="sm" className="h-7 text-[10px] bg-emerald-600/80 hover:bg-emerald-600 text-white gap-1"
+                        <Button size="sm" className="h-7 text-[10px] bg-success/80 hover:bg-success text-success-foreground gap-1"
                           onClick={() => handleResolve(d.id)}>
                           <Shield className="w-3 h-3" /> Lösen
                         </Button>
@@ -310,20 +310,20 @@ const WarRoom = () => {
             {/* RIGHT: Action Center */}
             <div className="lg:col-span-2 space-y-4">
               {/* Quick Actions */}
-              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-500" /> Schnellaktionen
+              <div className="rounded-lg border border-border bg-card/50 p-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-warning" /> Schnellaktionen
                 </h3>
                 <div className="space-y-2">
-                  <Button className="w-full justify-start gap-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  <Button className="w-full justify-start gap-2 bg-muted/50 hover:bg-muted text-foreground text-xs h-9"
                     onClick={handleNotifyAll}>
-                    <Bell className="w-3.5 h-3.5 text-amber-400" /> Alle Reviewer benachrichtigen
+                    <Bell className="w-3.5 h-3.5 text-warning" /> Alle Reviewer benachrichtigen
                   </Button>
-                  <Button className="w-full justify-start gap-2 bg-slate-700/50 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  <Button className="w-full justify-start gap-2 bg-muted/50 hover:bg-muted text-foreground text-xs h-9"
                     onClick={() => navigate("/meeting")}>
-                    <Users className="w-3.5 h-3.5 text-blue-400" /> Notfall-Review-Runde starten
+                    <Users className="w-3.5 h-3.5 text-primary" /> Notfall-Review-Runde starten
                   </Button>
-                  <Button className="w-full justify-start gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs h-9"
+                  <Button className="w-full justify-start gap-2 bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 text-xs h-9"
                     onClick={async () => {
                       for (const d of escalated) {
                         await supabase.from("decisions").update({
@@ -340,22 +340,22 @@ const WarRoom = () => {
               </div>
 
               {/* Live Activity Feed */}
-              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                  <Activity className="w-3.5 h-3.5 text-green-400 animate-pulse" /> Live Activity Feed
+              <div className="rounded-lg border border-border bg-card/50 p-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-success animate-pulse" /> Live Activity Feed
                 </h3>
                 <ScrollArea className="h-[280px]">
                   <div className="space-y-2 pr-2">
                     {activityFeed.length === 0 ? (
-                      <p className="text-xs text-slate-500 text-center py-4">Keine Aktivität</p>
+                      <p className="text-xs text-muted-foreground text-center py-4">Keine Aktivität</p>
                     ) : (
                       activityFeed.map((n) => (
-                        <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-slate-700/30 last:border-0">
-                          <span className="text-[10px] text-slate-600 shrink-0 tabular-nums font-mono mt-0.5">
+                        <div key={n.id} className="flex items-start gap-2 py-1.5 border-b border-border/30 last:border-0">
+                          <span className="text-[10px] text-muted-foreground/60 shrink-0 tabular-nums font-mono mt-0.5">
                             {format(new Date(n.created_at), "HH:mm", { locale: dateFnsLocale })}
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs text-slate-300 leading-relaxed">{n.message || n.title}</p>
+                            <p className="text-xs text-foreground/80 leading-relaxed">{n.message || n.title}</p>
                           </div>
                         </div>
                       ))
@@ -365,20 +365,20 @@ const WarRoom = () => {
               </div>
 
               {/* Escalation Summary */}
-              <div className="rounded-lg border border-slate-700/60 bg-slate-800/50 p-4">
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+              <div className="rounded-lg border border-border bg-card/50 p-4">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
                   Eskalations-Übersicht
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: "Stufe 1", value: escalated.filter(d => d.escalation_level === 1).length, color: "text-amber-400" },
-                    { label: "Stufe 2", value: escalated.filter(d => d.escalation_level === 2).length, color: "text-orange-400" },
-                    { label: "Stufe 3+", value: escalated.filter(d => (d.escalation_level || 0) >= 3).length, color: "text-red-400" },
-                    { label: "Überfällig", value: escalated.filter(d => d.overdue).length, color: "text-red-400" },
+                    { label: "Stufe 1", value: escalated.filter(d => d.escalation_level === 1).length, color: "text-warning" },
+                    { label: "Stufe 2", value: escalated.filter(d => d.escalation_level === 2).length, color: "text-warning" },
+                    { label: "Stufe 3+", value: escalated.filter(d => (d.escalation_level || 0) >= 3).length, color: "text-destructive" },
+                    { label: "Überfällig", value: escalated.filter(d => d.overdue).length, color: "text-destructive" },
                   ].map(s => (
-                    <div key={s.label} className="text-center py-2 rounded bg-slate-900/50">
+                    <div key={s.label} className="text-center py-2 rounded bg-muted/30">
                       <p className={`text-lg font-bold tabular-nums ${s.color}`}>{s.value}</p>
-                      <p className="text-[10px] text-slate-500">{s.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{s.label}</p>
                     </div>
                   ))}
                 </div>
