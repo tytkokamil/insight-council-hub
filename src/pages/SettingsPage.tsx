@@ -27,6 +27,7 @@ import WhatsAppSettingsPanel from "@/components/settings/WhatsAppSettingsPanel";
 import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
 import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
+import CalendarSyncPanel from "@/components/settings/CalendarSyncPanel";
 import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
