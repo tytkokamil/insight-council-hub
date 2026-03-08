@@ -391,13 +391,17 @@ html {
 
   /* Settings group card – wraps related sections */
   .settings-group {
-    @apply bg-card rounded-xl border border-border/60 p-6;
+    @apply bg-card rounded-xl border border-border/50 p-6;
+    box-shadow: var(--shadow-card);
   }
   .settings-group + .settings-group {
     @apply mt-4;
   }
   .settings-group h2 {
-    @apply text-sm font-semibold mb-4;
+    @apply text-sm font-semibold mb-4 tracking-tight;
+  }
+  .settings-group h2:first-child {
+    @apply flex items-center gap-2;
   }
 
   /* Section divider – softer than hr */
