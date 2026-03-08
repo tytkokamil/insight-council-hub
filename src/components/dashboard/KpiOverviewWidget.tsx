@@ -1,17 +1,17 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  FileText, AlertTriangle, CheckCircle2, ListChecks,
-  Users, TrendingUp, TrendingDown, Minus,
+  FileText, AlertTriangle, Clock, Gauge,
+  TrendingUp, TrendingDown, Minus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useDecisions, useTeams } from "@/hooks/useDecisions";
-import { useTasks } from "@/hooks/useTasks";
+import { useDecisions } from "@/hooks/useDecisions";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
 import { useTranslation } from "react-i18next";
+import { differenceInDays } from "date-fns";
 
-/** Tiny SVG sparkline – no external dependency */
+/** Tiny SVG sparkline */
 const Sparkline = ({ data, color }: { data: number[]; color: string }) => {
   if (data.length < 2) return null;
   const max = Math.max(...data, 1);
@@ -57,8 +57,6 @@ const resolveColor = (colorClass: string) => {
 const KpiOverviewWidget = () => {
   const { t } = useTranslation();
   const { data: allDecisions = [] } = useDecisions();
-  const { data: allTasks = [] } = useTasks();
-  const { data: teams = [] } = useTeams();
   const { user } = useAuth();
   const { selectedTeamId } = useTeamContext();
 
@@ -66,137 +64,150 @@ const KpiOverviewWidget = () => {
 
   const kpis = useMemo(() => {
     const decisions = isPersonal
-      ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id)
+      ? allDecisions.filter(d => d.created_by === user?.id || d.assignee_id === user?.id || d.owner_id === user?.id)
       : allDecisions;
-    const tasks = isPersonal
-      ? allTasks.filter(t => t.created_by === user?.id || t.assignee_id === user?.id)
-      : allTasks;
 
     const now = new Date();
     const weekMs = 7 * 86400000;
+    const active = decisions.filter(d => !["implemented", "rejected", "archived", "cancelled"].includes(d.status));
 
+    // Weekly snapshots for sparklines
     const weeks = Array.from({ length: 4 }, (_, i) => {
       const start = new Date(now.getTime() - (4 - i) * weekMs);
       const end = new Date(now.getTime() - (3 - i) * weekMs);
       return { start, end };
     });
 
-    const openDecisionsPerWeek = weeks.map(w => {
-      return decisions.filter(d => {
+    // 1. Offene Entscheidungen
+    const openCount = active.length;
+    const openPerWeek = weeks.map(w =>
+      decisions.filter(d => {
         const created = new Date(d.created_at);
         if (created > w.end) return false;
-        const implemented = d.implemented_at ? new Date(d.implemented_at) : null;
-        if (implemented && implemented <= w.end) return false;
-        if (d.status === "rejected") {
-          const updated = new Date(d.updated_at);
-          if (updated <= w.end) return false;
-        }
+        if (d.implemented_at && new Date(d.implemented_at) <= w.end) return false;
+        if (["rejected", "archived", "cancelled"].includes(d.status) && new Date(d.updated_at) <= w.end) return false;
         return true;
-      }).length;
-    });
+      }).length
+    );
+    const openPrevWeek = openPerWeek[2];
+    const openTrend = openCount > openPrevWeek ? "up" : openCount < openPrevWeek ? "down" : "neutral";
 
-    const overdueTasksPerWeek = weeks.map(w => {
-      return tasks.filter(t => {
-        if (!t.due_date) return false;
-        const due = new Date(t.due_date);
+    // 2. Überfällige Entscheidungen
+    const overdueDecisions = active.filter(d => d.due_date && new Date(d.due_date) < now);
+    const overdueCount = overdueDecisions.length;
+    const overduePerWeek = weeks.map(w =>
+      decisions.filter(d => {
+        if (!d.due_date) return false;
+        const due = new Date(d.due_date);
         if (due >= w.end) return false;
-        const created = new Date(t.created_at);
+        const created = new Date(d.created_at);
         if (created > w.end) return false;
-        const completed = t.completed_at ? new Date(t.completed_at) : null;
-        if (completed && completed <= w.end) return false;
+        if (d.implemented_at && new Date(d.implemented_at) <= w.end) return false;
         return true;
-      }).length;
+      }).length
+    );
+
+    // 3. Ø Entscheidungszeit (in Tagen)
+    const implemented = decisions.filter(d => d.status === "implemented" && d.implemented_at);
+    const avgDays = implemented.length > 0
+      ? Math.round(implemented.reduce((sum, d) => sum + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / implemented.length)
+      : 0;
+    const recentImpl = implemented.filter(d => new Date(d.implemented_at!) >= new Date(now.getTime() - 30 * 86400000));
+    const olderImpl = implemented.filter(d => {
+      const implDate = new Date(d.implemented_at!);
+      return implDate < new Date(now.getTime() - 30 * 86400000) && implDate >= new Date(now.getTime() - 60 * 86400000);
+    });
+    const recentAvg = recentImpl.length > 0
+      ? recentImpl.reduce((sum, d) => sum + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / recentImpl.length
+      : avgDays;
+    const olderAvg = olderImpl.length > 0
+      ? olderImpl.reduce((sum, d) => sum + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / olderImpl.length
+      : recentAvg;
+    // For decision time, lower is better → inverted trend
+    const timeTrend = recentAvg < olderAvg ? "down" : recentAvg > olderAvg ? "up" : "neutral";
+    const avgPerWeek = weeks.map(w => {
+      const wImpl = implemented.filter(d => new Date(d.implemented_at!) >= w.start && new Date(d.implemented_at!) < w.end);
+      return wImpl.length > 0
+        ? Math.round(wImpl.reduce((s, d) => s + differenceInDays(new Date(d.implemented_at!), new Date(d.created_at)), 0) / wImpl.length)
+        : avgDays;
     });
 
-    const completedPerWeek = weeks.map(w => {
-      return [
-        ...decisions.filter(d => d.implemented_at && new Date(d.implemented_at) >= w.start && new Date(d.implemented_at) < w.end),
-        ...tasks.filter(t => t.completed_at && new Date(t.completed_at) >= w.start && new Date(t.completed_at) < w.end),
-      ].length;
-    });
-
-    const activityPerWeek = weeks.map(w => {
-      return [
-        ...decisions.filter(d => new Date(d.created_at) >= w.start && new Date(d.created_at) < w.end),
-        ...tasks.filter(t => new Date(t.created_at) >= w.start && new Date(t.created_at) < w.end),
-      ].length;
-    });
-
-    const currentWeek = 3;
-    const prevWeek = 2;
-
-    const trend = (current: number, previous: number) => {
-      if (current > previous) return "up";
-      if (current < previous) return "down";
-      return "neutral";
-    };
-
-    const openNow = openDecisionsPerWeek[currentWeek];
-    const openPrev = openDecisionsPerWeek[prevWeek];
-    const overdueNow = overdueTasksPerWeek[currentWeek];
-    const completedNow = completedPerWeek[currentWeek];
-    const completedPrev = completedPerWeek[prevWeek];
-    const activityNow = activityPerWeek[currentWeek];
-    const activityPrev = activityPerWeek[prevWeek];
+    // 4. Decision Quality Index (0-100)
+    const escalated = active.filter(d => (d.escalation_level || 0) >= 1).length;
+    const overdue = active.filter(d => d.due_date && new Date(d.due_date) < now).length;
+    const total = decisions.length;
+    const healthRatio = total > 0 ? Math.max(0, 1 - (escalated * 0.15 + overdue * 0.1)) : 0;
+    const successful = implemented.filter(d => d.outcome_type === "successful" || d.outcome_type === "partial").length;
+    const successRatio = implemented.length > 0 ? successful / implemented.length : 0;
+    const dqi = Math.round(Math.min(100, (healthRatio * 50 + successRatio * 50)));
+    const dqiPerWeek = weeks.map(() => dqi); // simplified
 
     return [
       {
         label: t("kpiOverview.openDecisions"),
-        value: openNow,
+        value: openCount,
+        displayValue: `${openCount}`,
         icon: FileText,
         color: "text-primary",
         bg: "bg-primary/10",
-        trend: trend(openNow, openPrev),
-        trendLabel: openNow > openPrev ? t("kpiOverview.increase") : openNow < openPrev ? t("kpiOverview.decrease") : t("kpiOverview.stable"),
-        sparkData: openDecisionsPerWeek,
+        trend: openTrend,
+        trendLabel: openTrend === "up"
+          ? `↑ +${openCount - openPrevWeek} ${t("kpiOverview.vsLastWeek", { defaultValue: "vs. Vorwoche" })}`
+          : openTrend === "down"
+            ? `↓ ${openCount - openPrevWeek} ${t("kpiOverview.vsLastWeek", { defaultValue: "vs. Vorwoche" })}`
+            : t("kpiOverview.stable", { defaultValue: "Stabil" }),
+        trendIsNegative: openTrend === "up", // more open = bad
+        sparkData: openPerWeek,
       },
       {
-        label: t("kpiOverview.overdueTasks"),
-        value: overdueNow,
+        label: t("kpiOverview.overdueDecisions", { defaultValue: "Überfällige Entscheidungen" }),
+        value: overdueCount,
+        displayValue: `${overdueCount}`,
         icon: AlertTriangle,
-        color: overdueNow > 0 ? "text-destructive" : "text-success",
-        bg: overdueNow > 0 ? "bg-destructive/10" : "bg-success/10",
-        trend: overdueNow > 0 ? "up" as const : "neutral" as const,
-        trendLabel: overdueNow === 0 ? t("kpiOverview.allOnTrack") : t("kpiOverview.urgent", { count: overdueNow }),
-        sparkData: overdueTasksPerWeek,
+        color: overdueCount > 0 ? "text-destructive" : "text-success",
+        bg: overdueCount > 0 ? "bg-destructive/10" : "bg-success/10",
+        trend: overdueCount > 0 ? "up" as const : "neutral" as const,
+        trendLabel: overdueCount === 0
+          ? t("kpiOverview.allOnTrack", { defaultValue: "Alle im Zeitplan" })
+          : t("kpiOverview.urgentDecisions", { defaultValue: "Sofort handeln", count: overdueCount }),
+        trendIsNegative: overdueCount > 0,
+        sparkData: overduePerWeek,
       },
       {
-        label: t("kpiOverview.completedWeek"),
-        value: completedNow,
-        icon: CheckCircle2,
-        color: "text-success",
-        bg: "bg-success/10",
-        trend: trend(completedNow, completedPrev),
-        trendLabel: completedNow > completedPrev ? `+${completedNow - completedPrev} ${t("kpiOverview.vsLastWeek")}` : completedNow < completedPrev ? `${completedNow - completedPrev} ${t("kpiOverview.vsLastWeek")}` : t("kpiOverview.sameAsLastWeek"),
-        sparkData: completedPerWeek,
+        label: t("kpiOverview.avgDecisionTime", { defaultValue: "Ø Entscheidungszeit" }),
+        value: avgDays,
+        displayValue: `${avgDays} ${t("common.days", { defaultValue: "Tage" })}`,
+        icon: Clock,
+        color: avgDays > 14 ? "text-destructive" : avgDays > 7 ? "text-warning" : "text-success",
+        bg: avgDays > 14 ? "bg-destructive/10" : avgDays > 7 ? "bg-warning/10" : "bg-success/10",
+        trend: timeTrend,
+        trendLabel: timeTrend === "down"
+          ? t("kpiOverview.gettingFaster", { defaultValue: "Wird schneller" })
+          : timeTrend === "up"
+            ? t("kpiOverview.gettingSlower", { defaultValue: "Wird langsamer" })
+            : t("kpiOverview.stable", { defaultValue: "Stabil" }),
+        trendIsNegative: timeTrend === "up", // slower = bad
+        sparkData: avgPerWeek,
       },
       {
-        label: isPersonal ? t("kpiOverview.activityWeek") : t("kpiOverview.teamActivityWeek"),
-        value: activityNow,
-        icon: isPersonal ? ListChecks : Users,
-        color: "text-accent-foreground",
-        bg: "bg-accent/30",
-        trend: trend(activityNow, activityPrev),
-        trendLabel: activityNow > activityPrev ? t("kpiOverview.moreActivity") : activityNow < activityPrev ? t("kpiOverview.lessActivity") : t("kpiOverview.stable"),
-        sparkData: activityPerWeek,
+        label: "Decision Quality Index",
+        value: dqi,
+        displayValue: `${dqi}/100`,
+        icon: Gauge,
+        color: dqi >= 70 ? "text-success" : dqi >= 45 ? "text-warning" : "text-destructive",
+        bg: dqi >= 70 ? "bg-success/10" : dqi >= 45 ? "bg-warning/10" : "bg-destructive/10",
+        trend: "neutral" as const,
+        trendLabel: dqi >= 70 ? t("coreKpi.strong", { defaultValue: "Stark" }) : dqi >= 45 ? t("coreKpi.moderate", { defaultValue: "Moderat" }) : t("coreKpi.critical", { defaultValue: "Kritisch" }),
+        trendIsNegative: dqi < 45,
+        sparkData: dqiPerWeek,
       },
     ];
-  }, [allDecisions, allTasks, teams, user, isPersonal, selectedTeamId, t]);
+  }, [allDecisions, user, isPersonal, selectedTeamId, t]);
 
   const TrendIcon = ({ trend }: { trend: string }) => {
     if (trend === "up") return <TrendingUp className="w-3 h-3" />;
     if (trend === "down") return <TrendingDown className="w-3 h-3" />;
     return <Minus className="w-3 h-3" />;
-  };
-
-  const trendColor = (trend: string, index: number) => {
-    if (index === 1) {
-      return trend === "up" ? "text-destructive" : trend === "down" ? "text-success" : "text-muted-foreground";
-    }
-    if (index === 2 || index === 3) {
-      return trend === "up" ? "text-success" : trend === "down" ? "text-destructive" : "text-muted-foreground";
-    }
-    return "text-muted-foreground";
   };
 
   return (
@@ -208,7 +219,7 @@ const KpiOverviewWidget = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: i * 0.05 }}
         >
-          <Card className="h-full hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 border-border/80">
+          <Card className="h-full min-h-[90px] hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-200 border-border/80">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-medium text-muted-foreground">{kpi.label}</span>
@@ -217,10 +228,10 @@ const KpiOverviewWidget = () => {
                 </div>
               </div>
               <div className="flex items-end justify-between mb-1">
-                <p className="text-2xl font-bold">{kpi.value}</p>
+                <p className={`text-2xl font-bold tabular-nums ${kpi.color}`}>{kpi.displayValue}</p>
                 <Sparkline data={kpi.sparkData} color={resolveColor(kpi.color)} />
               </div>
-              <div className={`flex items-center gap-1 ${trendColor(kpi.trend, i)}`}>
+              <div className={`flex items-center gap-1 ${kpi.trendIsNegative ? "text-destructive" : kpi.trend === "down" && !kpi.trendIsNegative ? "text-success" : "text-muted-foreground"}`}>
                 <TrendIcon trend={kpi.trend} />
                 <span className="text-[11px]">{kpi.trendLabel}</span>
               </div>
