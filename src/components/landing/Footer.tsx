@@ -47,7 +47,7 @@ const Footer = () => (
             <img src={decivioLogo} alt="Decivio Logo" className="w-7 h-7 rounded-md" width={28} height={28} loading="lazy" />
             <span className="font-semibold text-[15px] text-foreground tracking-tight">Decivio</span>
           </Link>
-          <p className="text-[13px] text-muted-foreground/50 leading-relaxed max-w-[260px] mb-6">
+          <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[260px] mb-6">
             Decision Governance Platform für den Mittelstand. Machen Sie jede Entscheidung sichtbar, messbar und compliant.
           </p>
           {/* Newsletter signup hint */}
