@@ -226,9 +226,9 @@ const Navbar = () => {
                   {item.label}
                 </a>
               ))}
-              <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}` }}>
-                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}>Einloggen</Link>
-                <Link to="/auth" className="block text-center text-sm font-medium text-white py-2.5 rounded-lg" style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}>Kostenlos starten</Link>
+              <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}` }}>
+                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}>Einloggen</Link>
+                <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground py-2.5 rounded-lg" style={{ background: "hsl(var(--primary))" }}>Kostenlos starten</Link>
               </div>
             </div>
           </motion.div>
