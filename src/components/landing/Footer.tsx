@@ -59,7 +59,7 @@ const Footer = () => (
 
         {/* Produkt */}
         <nav aria-label="Produkt">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Produkt</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Produkt</h4>
           <ul className="space-y-2.5">
             {footerLinks.produkt.map(l => (
               <li key={l.label}><FooterLink item={l} /></li>
