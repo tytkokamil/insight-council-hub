@@ -259,7 +259,7 @@ const HeroSection = () => {
         </div>
       </motion.div>
 
-      <ProductTourModal open={showTour} onOpenChange={setShowTour} />
+      {/* A/B test: secondary CTA variant controlled by feature flag "hero_cta_variant" */}
     </section>
   );
 };
