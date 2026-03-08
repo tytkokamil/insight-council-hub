@@ -142,10 +142,15 @@ const Navbar = () => {
           </div>
         </div>
 
-        {scrolled && (
+      {scrolled && (
           <div
-            className="h-[2px] bg-primary/40 origin-left will-change-transform"
+            className="h-[2px] bg-primary/30 origin-left will-change-transform transition-transform duration-150"
             style={{ transform: `scaleX(${scrollProgress})` }}
+            role="progressbar"
+            aria-valuenow={Math.round(scrollProgress * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Seitenfortschritt"
           />
         )}
       </div>
