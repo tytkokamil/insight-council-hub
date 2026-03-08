@@ -100,7 +100,7 @@ const PricingCard = ({ plan, annual, index }: PricingCardProps) => {
         )}
 
         {/* Enterprise crown */}
-        {plan.monthlyPrice === 499 && (
+        {plan.name === "Enterprise" && (
           <motion.div
             className="mb-3"
             initial={{ opacity: 0, scale: 0.8 }}

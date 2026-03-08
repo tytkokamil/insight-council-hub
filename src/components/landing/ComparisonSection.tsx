@@ -22,7 +22,10 @@ type Score = true | false | "partial";
 
 const tools: { name: string; scores: Score[]; highlighted?: boolean }[] = [
   { name: "Excel / E-Mail", scores: [false, false, false, false, false, false, false, false, false, false] },
-  { name: "Jira / Monday", scores: [false, false, false, true, false, "partial", false, false, "partial", false] },
+  { name: "Jira / ClickUp", scores: [false, false, false, true, false, "partial", false, false, "partial", false] },
+  { name: "SAP / ERP", scores: [false, "partial", false, true, "partial", false, false, false, "partial", false] },
+  { name: "Kissflow", scores: [false, false, false, "partial", "partial", "partial", false, false, false, false] },
+  { name: "Consulting", scores: [false, false, "partial", false, true, false, "partial", false, false, false] },
   { name: "Decivio", scores: [true, true, true, true, true, true, true, true, true, true], highlighted: true },
 ];
 
@@ -73,7 +76,7 @@ const ComparisonSection = () => {
     <section id="comparison" className="py-24 relative">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-transparent to-muted/10" />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -96,10 +99,10 @@ const ComparisonSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.1, duration: 0.7, ease }}
-          className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-sm overflow-hidden shadow-sm"
+          className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-sm overflow-x-auto shadow-sm"
         >
           {/* Header */}
-          <div className="grid grid-cols-[1fr_repeat(3,90px)] md:grid-cols-[1fr_repeat(3,140px)] items-center border-b border-border/30 px-5 py-4 bg-muted/30">
+          <div className="grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center border-b border-border/30 px-5 py-4 bg-muted/30">
             <div className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider">Funktion</div>
             {tools.map((tool, ti) => (
               <div key={tool.name} className="text-center">
@@ -130,7 +133,7 @@ const ComparisonSection = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04, duration: 0.4, ease }}
-              className={`grid grid-cols-[1fr_repeat(3,90px)] md:grid-cols-[1fr_repeat(3,140px)] items-center px-5 py-3.5 group ${
+              className={`grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-5 py-3.5 group ${
                 i < criteria.length - 1 ? "border-b border-border/15" : ""
               } hover:bg-primary/[0.02] transition-colors`}
             >
@@ -150,7 +153,7 @@ const ComparisonSection = () => {
           ))}
 
           {/* Score summary row */}
-          <div className="grid grid-cols-[1fr_repeat(3,90px)] md:grid-cols-[1fr_repeat(3,140px)] items-center px-5 py-4 border-t border-border/30 bg-muted/20">
+          <div className="grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-5 py-4 border-t border-border/30 bg-muted/20">
             <span className="text-[12px] font-semibold text-muted-foreground">Abdeckung</span>
             {tools.map((tool, ti) => (
               <div key={ti} className="text-center">
