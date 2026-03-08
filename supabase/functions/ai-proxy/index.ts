@@ -38,6 +38,28 @@ async function getUserAiSettings(userId: string): Promise<AiSettings> {
   return data || { provider: "lovable", api_key: null, model: null };
 }
 
+async function getOrgModelPreference(userId: string): Promise<string> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const client = createClient(supabaseUrl, serviceKey);
+  
+  const { data: profile } = await client
+    .from("profiles")
+    .select("org_id")
+    .eq("user_id", userId)
+    .single();
+  
+  if (!profile?.org_id) return "auto";
+  
+  const { data: org } = await client
+    .from("organizations")
+    .select("ai_model_preference")
+    .eq("id", profile.org_id)
+    .single();
+  
+  return (org as any)?.ai_model_preference || "auto";
+}
+
 async function extractUserIdFromAuth(req: Request): Promise<string | null> {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) return null;
@@ -55,12 +77,28 @@ async function extractUserIdFromAuth(req: Request): Promise<string | null> {
   }
 }
 
-async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: any) {
+async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: any, orgModelPref?: string, taskType?: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+  // Resolve model based on org preference
+  let model = "google/gemini-3-flash-preview";
+  if (orgModelPref === "flash") {
+    model = "google/gemini-2.5-flash";
+  } else if (orgModelPref === "pro") {
+    model = "google/gemini-2.5-pro";
+  } else if (orgModelPref === "auto") {
+    // Auto: use pro for heavy analysis, flash for everything else
+    const heavyTasks = ["analyze-decision", "daily-brief", "ceo-briefing", "intelligence-analyze"];
+    if (taskType && heavyTasks.includes(taskType)) {
+      model = "google/gemini-2.5-pro";
+    } else {
+      model = "google/gemini-2.5-flash";
+    }
+  }
+
   const body: any = {
-    model: "google/gemini-3-flash-preview",
+    model,
     messages,
   };
   if (tools) body.tools = tools;
@@ -75,7 +113,7 @@ async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: a
     body: JSON.stringify(body),
   });
 
-  return response;
+  return { response, modelUsed: model };
 }
 
 async function callOpenAI(apiKey: string, model: string, messages: any[], tools?: any[], toolChoice?: any) {
@@ -217,7 +255,8 @@ export async function callAI(
   messages: any[],
   tools?: any[],
   toolChoice?: any,
-): Promise<{ data: any; response: Response | null }> {
+  taskType?: string,
+): Promise<{ data: any; response: Response | null; modelUsed?: string }> {
   const userId = await extractUserIdFromAuth(req);
   const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
@@ -226,6 +265,7 @@ export async function callAI(
   const apiKey = settings.api_key || "";
 
   let response: Response;
+  let modelUsed = model;
 
   switch (provider) {
     case "openai":
@@ -240,8 +280,12 @@ export async function callAI(
       if (!apiKey) throw new Error("Google API-Key nicht konfiguriert. Bitte in Settings eingeben.");
       response = await callGoogle(apiKey, model, messages, tools, toolChoice);
       break;
-    default:
-      response = await callLovableGateway(messages, tools, toolChoice);
+    default: {
+      // Get org model preference
+      const orgPref = userId ? await getOrgModelPreference(userId) : "auto";
+      const result = await callLovableGateway(messages, tools, toolChoice, orgPref, taskType);
+      response = result.response;
+      modelUsed = result.modelUsed;
       if (response.status === 429) {
         return {
           data: null,
@@ -259,10 +303,15 @@ export async function callAI(
         };
       }
       break;
+    }
   }
 
   const data = await normalizeResponse(provider, response);
-  return { data, response: null };
+  // Attach model info to response data
+  if (data && typeof data === "object") {
+    data._model_used = modelUsed;
+  }
+  return { data, response: null, modelUsed };
 }
 
 // Simple in-memory rate limiter

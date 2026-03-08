@@ -80,6 +80,8 @@ const SettingsPage = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [savingAi, setSavingAi] = useState(false);
   const [savedAi, setSavedAi] = useState(false);
+  const [orgModelPref, setOrgModelPref] = useState("auto");
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   const [userRole, setUserRole] = useState<string>("org_member");
   const [teamMemberships, setTeamMemberships] = useState<any[]>([]);
@@ -101,11 +103,13 @@ const SettingsPage = () => {
       if (profileRes.data) {
         setFullName(profileRes.data.full_name || ""); setAvatarUrl(profileRes.data.avatar_url || null);
         if (profileRes.data.org_id) {
-          const { data: orgData } = await supabase.from("organizations").select("plan").eq("id", profileRes.data.org_id).maybeSingle();
+          setOrgId(profileRes.data.org_id);
+          const { data: orgData } = await supabase.from("organizations").select("plan, ai_model_preference").eq("id", profileRes.data.org_id).maybeSingle();
           if (orgData?.plan) {
             const planMap: Record<string, string> = { free: "Free", starter: "Starter", professional: "Professional", enterprise: "Enterprise" };
             setOrgPlan(planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1));
           }
+          if (orgData?.ai_model_preference) setOrgModelPref(orgData.ai_model_preference);
         }
       }
       if (aiRes.data) { setAiProvider(aiRes.data.provider || "lovable"); setAiApiKey(aiRes.data.api_key || ""); setAiModel(aiRes.data.model || ""); }
@@ -727,6 +731,30 @@ const SettingsPage = () => {
                   </Button>
                 </div>
               </div>
+
+              {/* Org-level model preference (admin only) */}
+              {(userRole === "org_admin" || userRole === "org_owner") && (
+                <div className="settings-group">
+                  <h2>{t("settings.aiOrgModel")}</h2>
+                  <p className="text-xs text-muted-foreground mb-3">{t("settings.aiOrgModelDesc")}</p>
+                  <select
+                    value={orgModelPref}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      setOrgModelPref(val);
+                      if (orgId) {
+                        await supabase.from("organizations").update({ ai_model_preference: val } as any).eq("id", orgId);
+                        toast({ title: t("settings.saved") });
+                      }
+                    }}
+                    className={inputClass}
+                  >
+                    <option value="auto">{t("settings.aiModelAuto")}</option>
+                    <option value="flash">{t("settings.aiModelFlash")}</option>
+                    <option value="pro">{t("settings.aiModelPro")}</option>
+                  </select>
+                </div>
+              )}
 
               <div className="settings-group">
                 <h2>{t("settings.aiGovernanceScope")}</h2>

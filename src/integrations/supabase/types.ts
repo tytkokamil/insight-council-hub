@@ -2222,6 +2222,7 @@ export type Database = {
       }
       organizations: {
         Row: {
+          ai_model_preference: string
           branding: Json | null
           created_at: string
           data_retention_config: Json
@@ -2246,6 +2247,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_model_preference?: string
           branding?: Json | null
           created_at?: string
           data_retention_config?: Json
@@ -2270,6 +2272,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_model_preference?: string
           branding?: Json | null
           created_at?: string
           data_retention_config?: Json
