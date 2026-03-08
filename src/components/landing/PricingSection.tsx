@@ -343,7 +343,7 @@ const PricingSection = () => {
                 )}
 
                 {plan.hint && (
-                  <p className="text-[10px] text-muted-foreground/60 text-center mb-4 italic">{plan.hint}</p>
+                  <p className="text-[10px] text-muted-foreground text-center mb-4 italic">{plan.hint}</p>
                 )}
                 {!plan.hint && <div className="mb-4" />}
 
