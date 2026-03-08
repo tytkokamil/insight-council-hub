@@ -316,7 +316,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                         {/* Past shading */}
                         <div
                           className="absolute top-0 bottom-0 z-[5] pointer-events-none"
-                          style={{ left: 0, width: `${todayPosition}%`, backgroundColor: "rgba(59,130,246,0.03)" }}
+                          style={{ left: 0, width: `${todayPosition}%`, backgroundColor: "hsl(var(--primary) / 0.03)" }}
                         />
                         {/* Today line */}
                         <div
