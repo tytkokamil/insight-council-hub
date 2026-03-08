@@ -173,7 +173,7 @@ function meetsMinRole(current: OrgRoleKey, min?: OrgRoleKey): boolean {
 }
 
 const PLAN_BADGE: Record<string, string> = {
-  starter: "Starter", pro: "Pro", business: "Business", enterprise: "Enterprise",
+  starter: "Starter", professional: "Professional", business: "Business", enterprise: "Enterprise",
 };
 
 /* ── Section accent colors ── */
