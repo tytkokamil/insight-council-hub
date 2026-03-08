@@ -120,7 +120,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€59/Monat",
   },
   webhooks: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Webhooks & API",
     description: "Integrieren Sie Decivio in Ihre bestehenden Tools und Workflows.",
     bullets: [
