@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import LogoBar from "@/components/landing/LogoBar";
-import ScrollProgress from "@/components/landing/ScrollProgress";
+
 import SectionDivider from "@/components/landing/SectionDivider";
 import Footer from "@/components/landing/Footer";
 import CursorGlow from "@/components/landing/CursorGlow";
