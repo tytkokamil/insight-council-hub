@@ -41,6 +41,7 @@ const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWid
 const AhaMomentOverlay = lazy(() => import("@/components/onboarding/AhaMomentOverlay"));
 const GuidedChecklist = lazy(() => import("@/components/onboarding/GuidedChecklist"));
 const PostDecisionInvitePrompt = lazy(() => import("@/components/invites/PostDecisionInvitePrompt"));
+const NpsModal = lazy(() => import("@/components/shared/NpsModal"));
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
 import ActiveDecisionsTable from "@/components/dashboard/ActiveDecisionsTable";
