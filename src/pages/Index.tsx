@@ -24,7 +24,7 @@ const CTASection = lazy(() => import("@/components/landing/CTASection"));
 const StickyCTA = lazy(() => import("@/components/landing/StickyCTA"));
 const BackToTop = lazy(() => import("@/components/landing/BackToTop"));
 
-const SectionFallback = () => <div className="py-24" />;
+const SectionFallback = () => <div className="py-24" aria-hidden="true" />;
 
 const orgJsonLd = {
   "@context": "https://schema.org",
@@ -32,8 +32,13 @@ const orgJsonLd = {
   "name": "Decivio",
   "url": "https://decivio.com",
   "logo": "https://decivio.com/favicon.png",
+  "description": "Decision Governance Platform für den Mittelstand",
   "sameAs": [],
-  "contactPoint": { "@type": "ContactPoint", "email": "sales@decivio.com", "contactType": "sales" },
+  "contactPoint": { "@type": "ContactPoint", "email": "sales@decivio.com", "contactType": "sales", "availableLanguage": ["German", "English"] },
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "DE"
+  }
 };
 
 const faqJsonLd = {
@@ -64,9 +69,9 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Decivio — Decision Governance Platform</title>
-        <meta name="description" content="Jede offene Entscheidung kostet Geld. Decivio macht Verzögerungskosten sichtbar, automatisiert Governance und liefert KI-gestützte Entscheidungsintelligenz." />
-        <meta name="keywords" content="Decision Management, Cost of Delay, Entscheidungs-Tool, NIS2, Decision Intelligence, Governance, ISO 9001, DSGVO" />
+        <title>Decivio — Decision Governance Platform für den Mittelstand</title>
+        <meta name="description" content="Jede offene Entscheidung kostet Ihr Unternehmen Geld. Decivio macht Verzögerungskosten sichtbar, automatisiert Governance und liefert KI-Entscheidungsintelligenz. 14 Tage kostenlos." />
+        <meta name="keywords" content="Decision Management, Cost of Delay, Entscheidungs-Tool, NIS2, Decision Intelligence, Governance, ISO 9001, DSGVO, Mittelstand" />
         <link rel="canonical" href="https://decivio.com" />
         <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>

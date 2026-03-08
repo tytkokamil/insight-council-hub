@@ -8,9 +8,9 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 const ROTATING_WORDS = [
   { text: "echtes Geld.", color: "text-primary" },
-  { text: "verlorene Zeit.", color: "text-[hsl(200,40%,48%)]" },
-  { text: "Compliance-Risiko.", color: "text-[hsl(250,35%,55%)]" },
-  { text: "verpasste Chancen.", color: "text-[hsl(175,35%,45%)]" },
+  { text: "verlorene Zeit.", color: "text-accent" },
+  { text: "Compliance-Risiko.", color: "text-primary" },
+  { text: "verpasste Chancen.", color: "text-accent" },
 ];
 
 const RotatingWord = () => {
@@ -45,9 +45,7 @@ const RotatingWord = () => {
 /* Animated grid background */
 const GridBackground = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-    {/* Radial gradient overlay */}
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,hsl(220_50%_70%/0.12),transparent_70%)]" />
-    {/* Animated gradient orbs */}
     <motion.div
       animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
       transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
@@ -58,7 +56,6 @@ const GridBackground = () => (
       transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
       className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/[0.05] blur-[120px]"
     />
-    {/* Dot grid */}
     <div className="absolute inset-0 opacity-[0.03]" style={{
       backgroundImage: "radial-gradient(circle, hsl(220 20% 55% / 0.6) 1px, transparent 1px)",
       backgroundSize: "40px 40px",
@@ -80,7 +77,7 @@ const HeroSection = () => {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-24">
+    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-24" aria-label="Hero">
       <motion.div style={{ opacity: bgOpacity }} className="absolute inset-0">
         <GridBackground />
       </motion.div>
@@ -144,11 +141,7 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, hsl(var(--primary)), hsl(220 55% 38%))',
-                boxShadow: '0 4px 24px -6px hsl(var(--primary) / 0.4)',
-              }}
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden bg-primary hover:shadow-[0_4px_24px_-6px_hsl(var(--primary)/0.4)]"
             >
               <motion.div
                 className="absolute inset-0 bg-white/10"
@@ -215,7 +208,6 @@ const HeroSection = () => {
           </motion.div>
         </div>
       </motion.div>
-
 
       <ProductTourModal open={showTour} onOpenChange={setShowTour} />
     </section>
