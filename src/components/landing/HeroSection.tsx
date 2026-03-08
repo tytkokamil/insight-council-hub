@@ -122,8 +122,8 @@ const HeroSection = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg mb-6"
               style={{ background: "hsl(var(--destructive) / 0.08)", border: "1px solid hsl(var(--destructive) / 0.15)" }}
             >
-              <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
-                {industry.label}: <span className="font-semibold" style={{ color: "#EF4444" }}>{industry.painPoint}</span>
+              <span className="text-[12px] text-white/60">
+                {industry.label}: <span className="font-semibold text-destructive">{industry.painPoint}</span>
               </span>
             </motion.div>
           )}
