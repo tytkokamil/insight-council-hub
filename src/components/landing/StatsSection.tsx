@@ -68,10 +68,10 @@ const StatsSection = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border/30" style={{ background: 'hsl(220 20% 92% / 0.3)' }}>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border/30 bg-border/30">
           {metrics.map((stat, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="bg-white/80 text-center p-6">
-              <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display" style={{ color: 'hsl(220 45% 50%)' }}>
+            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.06, duration: 0.5, ease }} className="bg-card/80 text-center p-6">
+              <div className="text-3xl md:text-4xl font-bold tracking-tight mb-1 font-display text-primary">
                 {stat.value}
               </div>
               <div className="text-[11px] text-muted-foreground/50 font-medium">{stat.label}</div>

@@ -84,7 +84,7 @@ const ProblemSection = () => {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08, duration: 0.5, ease }}
                 whileHover={{ x: 4 }}
-                className="flex items-start gap-4 p-5 rounded-xl border border-border/30 bg-white/70 backdrop-blur-sm hover:bg-white/90 hover:border-border/50 transition-all duration-300"
+                className="flex items-start gap-4 p-5 rounded-xl border border-border/30 bg-card/70 backdrop-blur-sm hover:bg-card/90 hover:border-border/50 transition-all duration-300"
               >
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-primary/5">
                   <p.icon className="w-4 h-4 text-primary" />
@@ -106,7 +106,7 @@ const ProblemSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.15, duration: 0.7, ease }}
-            className="rounded-2xl border border-border/40 bg-white overflow-hidden shadow-[0_4px_24px_-8px_hsl(220,20%,50%,0.08)]"
+            className="rounded-2xl border border-border/40 bg-card overflow-hidden shadow-card"
           >
             <div className="px-5 py-3 border-b border-border/30 flex items-center gap-2">
               <div className="flex gap-1.5">

@@ -66,7 +66,7 @@ const CodTickerBadge = ({ collapsed }: CodTickerBadgeProps) => {
   const formatted = displayValue.toLocaleString("de-DE");
 
   const color = isAllDone
-    ? "text-emerald-500"
+    ? "text-success"
     : weeklyCod > 5000
       ? "text-destructive"
       : weeklyCod > 1000
@@ -74,7 +74,7 @@ const CodTickerBadge = ({ collapsed }: CodTickerBadgeProps) => {
         : "text-muted-foreground";
 
   const bgColor = isAllDone
-    ? "bg-emerald-500/10"
+    ? "bg-success/10"
     : weeklyCod > 5000
       ? "bg-destructive/10"
       : weeklyCod > 1000
@@ -104,7 +104,7 @@ const CodTickerBadge = ({ collapsed }: CodTickerBadgeProps) => {
                 className="flex-1 min-w-0"
               >
                 {isAllDone ? (
-                  <p className="text-xs font-semibold text-emerald-500">
+                  <p className="text-xs font-semibold text-success">
                     0€ — Alles entschieden ✓
                   </p>
                 ) : (

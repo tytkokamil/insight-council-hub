@@ -79,7 +79,7 @@ const Navbar = () => {
     >
       <div className={`transition-all duration-500 border-b ${
         scrolled
-          ? "bg-white/80 backdrop-blur-2xl border-border/40 shadow-[0_1px_8px_-3px_hsl(220,20%,50%,0.08)]"
+          ? "bg-background/80 backdrop-blur-2xl border-border/40 shadow-sm"
           : "bg-transparent border-transparent"
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -163,7 +163,7 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -4 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl bg-white/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
+            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
               {navItems.map(item => (
                 <a
                   key={item.label}

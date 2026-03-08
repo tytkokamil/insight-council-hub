@@ -45,7 +45,7 @@ const AIShowcaseSection = () => {
                   <div key={m.label} className="p-2.5 rounded-lg bg-muted/30 border border-border/40">
                     <div className="text-lg font-bold tabular-nums">{m.value}</div>
                     <div className="text-[10px] text-muted-foreground">{m.label}</div>
-                    <div className="text-[10px] font-medium text-emerald-600">{m.change}</div>
+                    <div className="text-[10px] font-medium text-success">{m.change}</div>
                   </div>
                 ))}
               </div>

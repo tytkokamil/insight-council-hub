@@ -13,7 +13,8 @@ const testimonials = [
     initials: "MH",
     metric: "€48K",
     metricLabel: "Exposure sichtbar gemacht",
-    accentColor: "hsl(220 45% 50%)",
+    accentClass: "text-accent-blue",
+    accentBg: "bg-accent-blue/12",
   },
   {
     quote: "Unser nächster ISO-9001-Audit war der erste ohne Nachbesserungen. Der Auditor fragte nach unserem Entscheidungssystem.",
@@ -23,7 +24,8 @@ const testimonials = [
     initials: "SK",
     metric: "0",
     metricLabel: "Audit-Nachbesserungen",
-    accentColor: "hsl(160 40% 45%)",
+    accentClass: "text-accent-teal",
+    accentBg: "bg-accent-teal/12",
   },
   {
     quote: "Der KI Daily Brief ist das erste was ich morgens öffne. In 30 Sekunden weiß ich was heute kritisch ist.",
@@ -33,7 +35,8 @@ const testimonials = [
     initials: "TB",
     metric: "30s",
     metricLabel: "für den Tagesüberblick",
-    accentColor: "hsl(250 35% 55%)",
+    accentClass: "text-accent-violet",
+    accentBg: "bg-accent-violet/12",
   },
   {
     quote: "Decivio hat unsere Entscheidungsprozesse komplett transparent gemacht. Die Compliance-Dokumentation läuft jetzt automatisch.",
@@ -43,7 +46,8 @@ const testimonials = [
     initials: "AL",
     metric: "87%",
     metricLabel: "weniger Dokumentationsaufwand",
-    accentColor: "hsl(200 40% 48%)",
+    accentClass: "text-primary",
+    accentBg: "bg-primary/12",
   },
 ];
 
@@ -97,14 +101,13 @@ const TestimonialsSection = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: direction * -60 }}
               transition={{ duration: 0.45, ease }}
-              className="rounded-2xl border border-border/40 bg-white/80 backdrop-blur-sm p-8 md:p-10"
+              className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-8 md:p-10"
             >
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 {/* Metric highlight */}
                 <div className="flex-shrink-0 text-center md:text-left">
                   <div
-                    className="text-4xl md:text-5xl font-bold tabular-nums font-mono"
-                    style={{ color: t.accentColor }}
+                    className={`text-4xl md:text-5xl font-bold tabular-nums font-mono ${t.accentClass}`}
                   >
                     {t.metric}
                   </div>
@@ -115,7 +118,7 @@ const TestimonialsSection = () => {
                   {/* Stars */}
                   <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, si) => (
-                      <Star key={si} className="w-3.5 h-3.5 fill-[hsl(40,60%,55%)] text-[hsl(40,60%,55%)]" />
+                      <Star key={si} className="w-3.5 h-3.5 fill-accent-amber text-accent-amber" />
                     ))}
                   </div>
 
@@ -126,8 +129,7 @@ const TestimonialsSection = () => {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-                      style={{ background: `${t.accentColor.replace(")", " / 0.12)")}`, color: t.accentColor }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold ${t.accentBg} ${t.accentClass}`}
                     >
                       {t.initials}
                     </div>
@@ -144,14 +146,14 @@ const TestimonialsSection = () => {
           {/* Navigation arrows */}
           <button
             onClick={() => go((active - 1 + testimonials.length) % testimonials.length)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
             aria-label="Vorherige Bewertung"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => go((active + 1) % testimonials.length)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
             aria-label="Nächste Bewertung"
           >
             <ChevronRight className="w-4 h-4" />

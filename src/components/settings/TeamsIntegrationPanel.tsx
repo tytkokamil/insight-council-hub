@@ -202,7 +202,7 @@ const TeamsIntegrationPanel = () => {
             {t("settings.teamsTestButton")}
           </Button>
           {testResult === "success" && (
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <span className="text-xs text-success flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> {t("settings.teamsTestOk")}
             </span>
           )}

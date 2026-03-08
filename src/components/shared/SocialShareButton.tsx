@@ -65,7 +65,7 @@ const SocialShareButton = ({ title, description, url, variant = "ghost", size = 
           onClick={copyLink}
           className="flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-muted transition-colors w-full text-left"
         >
-          {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Link2 className="w-4 h-4" />}
+          {copied ? <Check className="w-4 h-4 text-success" /> : <Link2 className="w-4 h-4" />}
           {copied ? (t("common.copied") || "Kopiert!") : (t("common.copyLink") || "Link kopieren")}
         </button>
       </PopoverContent>
