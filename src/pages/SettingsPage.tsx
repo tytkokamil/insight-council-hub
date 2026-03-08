@@ -37,6 +37,7 @@ import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
 import BrandingPanel from "@/components/settings/BrandingPanel";
+import ApiKeysPanel from "@/components/settings/ApiKeysPanel";
 import DataRetentionPanel from "@/components/settings/DataRetentionPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
@@ -49,7 +50,7 @@ const AI_PROVIDERS = [
   { id: "google", name: "Google Gemini", description: "Gemini 2.5 Pro, Flash", models: ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"], keyPlaceholder: "AIza...", docsUrl: "https://aistudio.google.com/apikey" },
 ];
 
-type SettingsTab = "general" | "notifications" | "ai" | "security" | "sso" | "branding" | "governance" | "integrations" | "billing" | "referral" | "admin";
+type SettingsTab = "general" | "notifications" | "ai" | "security" | "sso" | "branding" | "governance" | "integrations" | "api" | "billing" | "referral" | "admin";
 
 const roleLabels: Record<string, string> = { org_owner: "Org Owner", org_admin: "Org Admin", org_executive: "Executive", org_lead: "Team Lead", org_member: "Mitglied", org_viewer: "Betrachter" };
 
@@ -102,7 +103,7 @@ const SettingsPage = () => {
         if (profileRes.data.org_id) {
           const { data: orgData } = await supabase.from("organizations").select("plan").eq("id", profileRes.data.org_id).maybeSingle();
           if (orgData?.plan) {
-            const planMap: Record<string, string> = { starter: "Free", pro: "Pro", business: "Business", enterprise: "Enterprise" };
+            const planMap: Record<string, string> = { free: "Free", starter: "Starter", professional: "Professional", enterprise: "Enterprise" };
             setOrgPlan(planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1));
           }
         }
@@ -214,6 +215,7 @@ const SettingsPage = () => {
     { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
     { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
     ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),
+    ...(isAdmin ? [{ key: "api" as SettingsTab, label: "API", icon: Server }] : []),
     { key: "billing" as SettingsTab, label: "Abrechnung", icon: CreditCard },
     { key: "referral" as SettingsTab, label: t("settings.referral"), icon: Gift },
     ...(isAdmin ? [{ key: "admin" as SettingsTab, label: t("settings.admin"), icon: Settings2 }] : []),
@@ -770,6 +772,19 @@ const SettingsPage = () => {
               </div>
               <div className="settings-group">
                 <PdfBrandingSection />
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════ API KEYS (admin only) ═══════════════ */}
+          {activeTab === "api" && isAdmin && (
+            <div className="space-y-8">
+              <div className="settings-group">
+                <h2>API-Schlüssel</h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Generiere API Keys um Decivio in externe Systeme zu integrieren (Zapier, Make, Custom Workflows).
+                </p>
+                <ApiKeysPanel />
               </div>
             </div>
           )}

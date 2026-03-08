@@ -79,6 +79,7 @@ const AiDemo = lazy(() => import("./pages/AiDemo"));
 const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
 const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 const RoiReport = lazy(() => import("./pages/RoiReport"));
+const ApiDocsPage = lazy(() => import("./pages/ApiDocsPage"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -301,6 +302,7 @@ export const protectedRoutes = (
     <Route path="/war-room" element={<P><WarRoom /></P>} />
     <Route path="/launch-checklist" element={<P><LaunchChecklist /></P>} />
     <Route path="/integrations" element={<P><IntegrationsPage /></P>} />
+    <Route path="/docs/api" element={<P><ApiDocsPage /></P>} />
     <Route path="/internal-admin" element={<P><PlatformAdminGuard><InternalAdmin /></PlatformAdminGuard></P>} />
   </>
 );
