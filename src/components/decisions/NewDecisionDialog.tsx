@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeamContext } from "@/hooks/useTeamContext";
+import { Switch } from "@/components/ui/switch";
 import {
   evaluateConditionalRules,
   type DecisionTemplate, type RequiredField,
