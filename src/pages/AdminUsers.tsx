@@ -451,6 +451,30 @@ const AdminUsers = () => {
                 <AuditLogList />
               </CardContent>
             </Card>
+
+            {/* Webhook Logs */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold">Webhook-Logs</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">Ausgehende Webhook-Aufrufe und deren Status.</p>
+                <WebhookLogList />
+              </CardContent>
+            </Card>
+
+            {/* Edge Function Errors */}
+            <Card>
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-warning" />
+                  <h3 className="text-sm font-semibold">Backend-Fehler</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">Fehlgeschlagene Backend-Funktionsaufrufe der letzten 7 Tage.</p>
+                <EdgeFunctionErrorList />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ═══════════════ DATA (Export + Demo Data) ═══════════════ */}
