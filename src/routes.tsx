@@ -164,6 +164,7 @@ export const protectedRoutes = (
     <Route path="/process" element={<P><ProcessHub /></P>} />
     <Route path="/upgrade" element={<P><UpgradePage /></P>} />
     <Route path="/war-room" element={<P><WarRoom /></P>} />
+    <Route path="/launch-checklist" element={<P><LaunchChecklist /></P>} />
   </>
 );
 

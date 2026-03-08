@@ -211,6 +211,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       {isMobile && <MobileBottomNav />}
       <QuickCaptureButton />
       <CommandPalette />
+      <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
     </div>
   );

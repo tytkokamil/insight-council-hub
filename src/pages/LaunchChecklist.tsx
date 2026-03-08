@@ -149,7 +149,7 @@ const LaunchChecklist = () => {
         )}
       </AnimatePresence>
 
-      <PageHeader title="Launch Checklist" description="Alles grün bevor der erste Kunde zahlt." />
+      <PageHeader title="Launch Checklist" subtitle="Alles grün bevor der erste Kunde zahlt." role="system" />
 
       {/* Progress overview */}
       <Card className="mb-6">
