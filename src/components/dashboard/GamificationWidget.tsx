@@ -153,6 +153,18 @@ const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
             ))}
           </div>
         </div>
+
+        {/* Milestone Share Cards for notable achievements */}
+        {stats.totalPoints >= 50 && (
+          <div className="space-y-2">
+            {decisions.filter(d => d.status === "implemented").length >= 10 && (
+              <MilestoneShareCard type="decisions_count" value={decisions.filter(d => d.status === "implemented").length} label={t("widgets.decisionsImplemented")} />
+            )}
+            {stats.streakDays >= 7 && (
+              <MilestoneShareCard type="streak" value={stats.streakDays} label={t("widgets.slaStreak")} />
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
