@@ -33,7 +33,7 @@ const statusColors: Record<string, string> = {
 // Priority no longer affects node size — fixed at 140×80
 
 const DecisionNode = ({ data }: { data: any }) => {
-  const borderColor = statusColors[data.status] || "#6b7280";
+  const borderColor = statusColors[data.status] || "hsl(var(--muted-foreground))";
 
   return (
     <div
