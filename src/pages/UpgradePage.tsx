@@ -108,7 +108,7 @@ const PLANS = [
     ],
   },
   {
-    key: "pro",
+    key: "professional",
     name: "Professional",
     price: "€149",
     popular: true,

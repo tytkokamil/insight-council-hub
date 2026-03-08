@@ -173,7 +173,7 @@ function meetsMinRole(current: OrgRoleKey, min?: OrgRoleKey): boolean {
 }
 
 const PLAN_BADGE: Record<string, string> = {
-  starter: "Starter", pro: "Pro", business: "Business", enterprise: "Enterprise",
+  starter: "Starter", professional: "Professional", business: "Business", enterprise: "Enterprise",
 };
 
 /* ── Section accent colors ── */
@@ -202,7 +202,7 @@ const LockedNavItem = ({
   minPlan: string;
 }) => {
   const { t } = useTranslation();
-  const badge = PLAN_BADGE[minPlan] || "Pro";
+  const badge = PLAN_BADGE[minPlan] || "Professional";
   return (
     <button
       onClick={() => onUpgradeClick(item.featureKey || "", t(item.label), minPlan)}
@@ -253,7 +253,7 @@ const SubGroupItem = ({
 
   if (isSubGroupLocked) {
     const minPlan = getMinPlan(subGroupFeatureKey || "");
-    const badge = PLAN_BADGE[minPlan] || "Pro";
+    const badge = PLAN_BADGE[minPlan] || "Professional";
     if (collapsed) return null;
     return (
       <button
@@ -335,7 +335,7 @@ const SubGroupItem = ({
                     <child.icon className="w-3.5 h-3.5 shrink-0 opacity-30 group-hover:opacity-40" />
                     <span className="whitespace-nowrap flex-1 text-left">{t(child.label)}</span>
                     <span className="inline-flex h-3.5 items-center px-1 rounded text-[8px] font-semibold uppercase tracking-wider bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
-                      {PLAN_BADGE[mp] || "Pro"}
+                      {PLAN_BADGE[mp] || "Professional"}
                     </span>
                   </button>
                 );
@@ -375,7 +375,7 @@ const SidebarNav = memo(({
   );
 
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; featureKey: string; label: string; minPlan: string }>({
-    open: false, featureKey: "", label: "", minPlan: "pro",
+    open: false, featureKey: "", label: "", minPlan: "professional",
   });
 
   const openUpgradeModal = (featureKey: string, label: string, minPlan: string) => {
@@ -384,7 +384,7 @@ const SidebarNav = memo(({
 
   const getMinPlan = (featureKey: string): string => {
     const flag = flags.find(f => f.feature_key === featureKey);
-    return flag?.min_plan || "pro";
+    return flag?.min_plan || "professional";
   };
 
   useEffect(() => {

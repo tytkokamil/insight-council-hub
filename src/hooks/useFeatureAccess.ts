@@ -10,7 +10,7 @@ const FEATURE_CONFIG: Record<string, {
   price: string;
 }> = {
   ai_analysis: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "KI-Analyse & Copilot",
     description: "Lassen Sie KI Ihre Entscheidungen analysieren, Risiken erkennen und Handlungsoptionen generieren.",
     bullets: [
@@ -21,7 +21,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   ai_brief: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "KI Daily Brief",
     description: "Täglich automatisch die 3 kritischsten Entscheidungen in Ihrem Postfach.",
     bullets: [
@@ -32,7 +32,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   analytics: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Analytics Hub",
     description: "9 Analytics-Module für datengetriebene Entscheidungsoptimierung.",
     bullets: [
@@ -43,7 +43,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   executive: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Executive Hub",
     description: "Board-Ready KPIs und Portfolio-Übersicht für die Geschäftsleitung.",
     bullets: [
@@ -54,7 +54,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   strategy: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Strategieebene",
     description: "Verknüpfen Sie Entscheidungen mit strategischen Zielen und OKRs.",
     bullets: [
@@ -65,7 +65,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   live_cod: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Echtzeit Cost-of-Delay",
     description: "Sehen Sie in Echtzeit, was verzögerte Entscheidungen Ihr Unternehmen kosten.",
     bullets: [
@@ -120,7 +120,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€59/Monat",
   },
   webhooks: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Webhooks & API",
     description: "Integrieren Sie Decivio in Ihre bestehenden Tools und Workflows.",
     bullets: [
@@ -131,7 +131,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   crypto_audit: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Kryptographischer Audit Trail",
     description: "SHA-256 Hash-Kette für manipulationssichere, lückenlose Nachweisführung.",
     bullets: [
@@ -231,7 +231,7 @@ export const useFeatureAccess = (): FeatureAccessResult => {
     
     const planNames: Record<string, string> = {
       starter: "Starter",
-      pro: "Professional",
+      professional: "Professional",
       enterprise: "Enterprise",
     };
     return `${config.label} ist ab dem ${planNames[config.minPlan] || config.minPlan}-Plan (${config.price}) verfügbar. ${config.description}`;
