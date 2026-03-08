@@ -92,6 +92,7 @@ const Index = () => {
             <ProductShowcase />
             <MetricsShowcase />
             <SectionDivider />
+            <BeforeAfterTimeline />
             <ComparisonSection />
             <AIShowcaseSection />
             <IndustriesSection />
