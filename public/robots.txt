@@ -12,5 +12,16 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /internal-admin
+Disallow: /settings
+Disallow: /decisions
+Disallow: /tasks
+Disallow: /teams
+Disallow: /analytics
+Disallow: /briefing
+Disallow: /war-room
+Disallow: /meeting
+Disallow: /archive
 
 Sitemap: https://decivio.com/sitemap.xml
