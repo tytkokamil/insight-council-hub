@@ -8,7 +8,7 @@ import {
   Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles,
   GitBranch, Trophy, FlaskConical, Plus,
 } from "lucide-react";
-import { useGuidedMode } from "@/hooks/useGuidedMode";
+import { useGuidedMode, LEVEL_1_PATHS, LEVEL_2_PATHS, type ProgressiveLevel } from "@/hooks/useGuidedMode";
 import { useDecisions } from "@/hooks/useDecisions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
@@ -357,7 +357,7 @@ interface SidebarNavProps {
 const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: SidebarNavProps) => {
-  const { decisionCount } = useGuidedMode();
+  const { decisionCount, progressiveLevel } = useGuidedMode();
   const { data: visibleDecisions = [] } = useDecisions();
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
@@ -400,9 +400,30 @@ const SidebarNav = memo(({
     setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // Determine nav groups based on role
+  // Determine nav groups based on role and progressive level
   const isFullRole = userRole === "org_owner" || userRole === "org_admin" || userRole === "org_lead";
-  const navGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
+  const baseGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
+
+  // Apply progressive level filtering
+  const navGroups = useMemo(() => {
+    if (progressiveLevel >= 3) return baseGroups;
+
+    const allowedPaths = progressiveLevel === 1 ? LEVEL_1_PATHS : LEVEL_2_PATHS;
+
+    return baseGroups
+      .map(group => {
+        const filteredItems = group.items.filter(item => {
+          if (isSubGroup(item)) {
+            // Show sub-groups only at level 3 (or if any child path is allowed)
+            return item.children.some(c => allowedPaths.has(c.path));
+          }
+          return allowedPaths.has(item.path);
+        });
+        if (filteredItems.length === 0) return null;
+        return { ...group, items: filteredItems };
+      })
+      .filter(Boolean) as NavGroupDef[];
+  }, [baseGroups, progressiveLevel]);
 
   return (
     <>
@@ -608,6 +629,32 @@ const SidebarNav = memo(({
                   </span>
                 </Link>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Progressive Level Progress Bar */}
+        {progressiveLevel < 3 && !collapsed && (
+          <div className="px-3 py-3">
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+              <p className="text-[11px] font-semibold text-foreground mb-1.5">
+                {progressiveLevel === 1
+                  ? `${decisionCount} von 3 Entscheidungen bis mehr Features`
+                  : `${decisionCount} von 10 Entscheidungen bis Vollzugriff`}
+              </p>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${progressiveLevel === 1
+                      ? Math.min(100, (decisionCount / 3) * 100)
+                      : Math.min(100, (decisionCount / 10) * 100)
+                    }%`,
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
             </div>
           </div>
         )}

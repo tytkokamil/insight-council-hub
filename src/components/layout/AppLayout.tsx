@@ -21,7 +21,8 @@ import MobileHeader from "./MobileHeader";
 import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
-
+import QuickCaptureButton from "@/components/shared/QuickCaptureButton";
+import CodTickerBadge from "@/components/shared/CodTickerBadge";
 /* ── Composed sidebar content ── */
 const SidebarContent = ({
   collapsed,
@@ -56,6 +57,7 @@ const SidebarContent = ({
     <SidebarHeader collapsed={collapsed} theme={theme} toggleTheme={toggleTheme} onCollapse={onCollapse} onNavigate={onNavigate} />
     <TeamSwitcher collapsed={collapsed} />
     <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch} userRole={userRole} />
+    <CodTickerBadge collapsed={collapsed} />
     <SidebarFooter collapsed={collapsed} user={user} avatarUrl={avatarUrl} onSignOut={onSignOut} />
   </>
 );
@@ -204,6 +206,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       </main>
 
       {isMobile && <MobileBottomNav />}
+      <QuickCaptureButton />
       <CommandPalette />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
     </div>
