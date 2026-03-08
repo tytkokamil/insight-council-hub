@@ -29,11 +29,10 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const info = FEATURE_INFO[featureKey];
-  const title = info ? t(info.titleKey, { defaultValue: featureLabel }) : featureLabel;
-  const description = info
-    ? t(info.descKey, { defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` })
-    : t("upgrade.genericDesc", { feature: featureLabel, defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` });
+  const config = FEATURE_CONFIG[featureKey];
+  const title = config?.label || featureLabel;
+  const description = config?.description || `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.`;
+  const bullets = config?.bullets;
 
   const planName = PLAN_DISPLAY[minPlan] || "Professional";
   const planPrice = PLAN_PRICE[minPlan] || "€149";
