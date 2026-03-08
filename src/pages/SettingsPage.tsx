@@ -12,7 +12,7 @@ import {
   User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
   RotateCcw, Clock, Sun, Moon, Globe, Activity, Users, Lock, Zap,
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
-  Server, ChevronRight, Gift, Plug, Scale
+  Server, ChevronRight, Gift, Plug, Scale, CreditCard
 } from "lucide-react";
 import SubNav from "@/components/shared/SubNav";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
