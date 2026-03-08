@@ -2230,8 +2230,11 @@ export type Database = {
           referred_by_code: string | null
           settings: Json
           slug: string
+          subscription_status: string
           support_notes: string | null
           trial_ends_at: string | null
+          trial_final_reminder_sent: boolean
+          trial_reminder_sent: boolean
           updated_at: string
         }
         Insert: {
@@ -2246,8 +2249,11 @@ export type Database = {
           referred_by_code?: string | null
           settings?: Json
           slug: string
+          subscription_status?: string
           support_notes?: string | null
           trial_ends_at?: string | null
+          trial_final_reminder_sent?: boolean
+          trial_reminder_sent?: boolean
           updated_at?: string
         }
         Update: {
@@ -2262,8 +2268,11 @@ export type Database = {
           referred_by_code?: string | null
           settings?: Json
           slug?: string
+          subscription_status?: string
           support_notes?: string | null
           trial_ends_at?: string | null
+          trial_final_reminder_sent?: boolean
+          trial_reminder_sent?: boolean
           updated_at?: string
         }
         Relationships: []
