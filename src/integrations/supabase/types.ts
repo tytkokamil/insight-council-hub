@@ -1565,6 +1565,30 @@ export type Database = {
         }
         Relationships: []
       }
+      founding_customer_slots: {
+        Row: {
+          claimed_slots: number
+          deadline: string
+          id: string
+          total_slots: number
+          updated_at: string
+        }
+        Insert: {
+          claimed_slots?: number
+          deadline?: string
+          id?: string
+          total_slots?: number
+          updated_at?: string
+        }
+        Update: {
+          claimed_slots?: number
+          deadline?: string
+          id?: string
+          total_slots?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gamification_scores: {
         Row: {
           created_at: string
