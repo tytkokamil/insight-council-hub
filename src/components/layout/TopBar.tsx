@@ -31,7 +31,7 @@ const BREADCRUMB_MAP: Record<string, { area: string; areaKey: string }> = {
   "/template-editor": { area: "system", areaKey: "nav.system" },
   "/strategy": { area: "system", areaKey: "nav.system" },
   "/archive": { area: "system", areaKey: "nav.system" },
-  "/knowledge": { area: "system", areaKey: "nav.system" },
+  "/knowledge-base": { area: "system", areaKey: "nav.system" },
   "/search": { area: "workspace", areaKey: "nav.workspace" },
   "/admin/users": { area: "system", areaKey: "nav.system" },
 };
