@@ -272,7 +272,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           return `${baseRisk}% → ${result.avgRiskIncrease}%`;
                         })()}
                       </div>
-                      <p className="mt-1" style={{ fontSize: "11px", color: "#64748B" }}>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
                         {t("scenarioEngine.riskDelayContext", { weeks: delayWeeks, defaultValue: `bei ${delayWeeks} Wochen Verzögerung` })}
                       </p>
                     </CardContent>
