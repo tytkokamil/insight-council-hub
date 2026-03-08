@@ -228,6 +228,9 @@ const HeroSection = () => {
             ))}
           </motion.div>
 
+          {/* Live CoD Ticker */}
+          <CodTicker />
+
           {/* Stats row */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
