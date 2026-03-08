@@ -47,7 +47,7 @@ const Auth = () => {
   }, []);
 
   // Parse invite context from URL
-  const inviteContext = (() => {
+  const [inviteContext] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("invite") || params.get("decision")) {
@@ -59,7 +59,7 @@ const Auth = () => {
       }
     } catch {}
     return null;
-  })();
+  });
 
   useEffect(() => {
     if (user) {

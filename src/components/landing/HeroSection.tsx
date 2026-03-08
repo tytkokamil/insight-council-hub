@@ -190,7 +190,7 @@ const HeroSection = () => {
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{
           height: "120px",
-          background: "linear-gradient(to bottom, transparent, #F8FAFC)",
+          background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
         }}
       />
     </section>

@@ -83,7 +83,7 @@ const Index = () => {
       </Helmet>
       <div className="landing-page min-h-screen relative">
         <CursorGlow />
-        <ScrollProgress />
+        
         <Navbar />
         <main>
           <HeroSection />
