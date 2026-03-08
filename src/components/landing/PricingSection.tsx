@@ -218,7 +218,7 @@ const PricingSection = () => {
 
         {/* Toggle */}
         <div className="flex items-center justify-center mb-12">
-          <div className="relative inline-flex items-center rounded-xl border border-border/60 bg-white/60 backdrop-blur-sm p-1">
+          <div className="relative inline-flex items-center rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm p-1">
             <button
               onClick={() => setAnnual(false)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
