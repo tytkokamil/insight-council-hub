@@ -21,7 +21,8 @@ import MobileHeader from "./MobileHeader";
 import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
-
+import QuickCaptureButton from "@/components/shared/QuickCaptureButton";
+import CodTickerBadge from "@/components/shared/CodTickerBadge";
 /* ── Composed sidebar content ── */
 const SidebarContent = ({
   collapsed,
