@@ -92,7 +92,111 @@ const L = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<PageLoadingFallback />}>{children}</Suspense>
 );
 
-// ── Route definitions ──────────────────────────────────
+/*
+ * ══════════════════════════════════════════════════════════
+ *  ROUTE OVERVIEW (Stand: 2026-03-08)
+ * ══════════════════════════════════════════════════════════
+ *
+ *  PUBLIC ROUTES (no auth required):
+ *  ─────────────────────────────────
+ *  /                         Landing Page
+ *  /auth, /login             Authentication (Email, Google, Magic Link)
+ *  /reset-password           Password reset form
+ *  /privacy                  Datenschutzerklärung
+ *  /terms                    AGB / Terms of Service
+ *  /imprint                  Impressum
+ *  /dpa                      Auftragsverarbeitungsvertrag (AVV)
+ *  /ai-data-policy           KI-Datenrichtlinie
+ *  /sub-processors           Sub-Processors Liste
+ *  /changelog                Changelog
+ *  /roadmap                  Product Roadmap
+ *  /contact                  Kontaktseite
+ *  /docs                     Help Center
+ *  /demo                     Demo Mode (read-only)
+ *  /founding                 Founding Customer Programm
+ *  /leaderboard              Branchenreport (öffentlich, keine Nutzerdaten)
+ *  /ai-demo                  KI-Analyse Demo
+ *  /badge/:token             Badge-Verifizierung (öffentlich, token-basiert)
+ *  /widget/cod-calculator    Einbettbares CoD-Widget
+ *  /vs/:slug                 Vergleichsseiten (monday, jira, excel, sap, kissflow)
+ *  /branchen/:slug           Branchenspezifische Landing Pages
+ *  /action                   E-Mail One-Click Actions
+ *  /approve/:token           E-Mail Approval
+ *  /reject/:token            E-Mail Rejection
+ *  /review/external          Externes Review
+ *  /review/:token            Externes Review (token)
+ *
+ *  PROTECTED ROUTES (auth required):
+ *  ──────────────────────────────────
+ *  /welcome                  Onboarding Wizard (5 Schritte)
+ *  /dashboard                Haupt-Dashboard
+ *  /decisions                Entscheidungsliste
+ *  /decisions/:id            Entscheidungs-Detail
+ *  /teams                    Teams-Übersicht
+ *  /teams/:teamId            Team-Detail
+ *  /tasks                    Aufgaben-Übersicht
+ *  /tasks/:id                Aufgaben-Detail
+ *  /executive                Executive Hub
+ *  /briefing                 KI Daily Brief
+ *  /decision-graph           Entscheidungsgraph
+ *  /strategy                 Strategische Ziele
+ *  /settings                 Einstellungen
+ *  /admin/users              Benutzerverwaltung
+ *  /audit-trail              Audit Trail
+ *  /calendar                 Entscheidungskalender
+ *  /templates                Template Editor
+ *  /knowledge-base           Wissensdatenbank
+ *  /automation-rules         Automatisierungsregeln
+ *  /archive                  Archiv
+ *  /risks                    Risikoregister
+ *  /search                   Globale Suche
+ *  /meeting                  Meeting-Modus
+ *  /process                  Process Hub
+ *  /upgrade                  Upgrade-Seite
+ *  /war-room                 War Room
+ *  /launch-checklist         Launch Checklist
+ *  /unified-timeline         Unified Timeline
+ *  /engine                   Escalation Engine
+ *  /pilot                    Pilot / Feature Management
+ *  /internal-admin           Plattform-Admin (Guard)
+ *
+ *  ANALYTICS (nested under /analytics):
+ *  ─────────────────────────────────────
+ *  /analytics                Analytics Hub Übersicht
+ *  /analytics/bottleneck-intelligence
+ *  /analytics/opportunity-cost-radar
+ *  /analytics/predictive-timeline
+ *  /analytics/friction-map
+ *  /analytics/health-heatmap
+ *  /analytics/decision-dna
+ *  /analytics/decision-benchmarking
+ *  /analytics/scenario-engine
+ *  /analytics/pattern-engine
+ *  /analytics/team-performance
+ *
+ *  REDIRECTS (legacy → canonical):
+ *  ────────────────────────────────
+ *  /avv → /dpa
+ *  /ai-policy → /ai-data-policy
+ *  /graph → /decision-graph
+ *  /audit → /audit-trail
+ *  /knowledge → /knowledge-base
+ *  /automations → /automation-rules
+ *  /onboarding/pain → /welcome
+ *  /executive-dashboard → /executive
+ *  /bottlenecks → /analytics/bottleneck-intelligence
+ *  /costs → /analytics/opportunity-cost-radar
+ *  /timeline → /analytics/predictive-timeline
+ *  /friction → /analytics/friction-map
+ *  /health → /analytics/health-heatmap
+ *  /dna → /analytics/decision-dna
+ *  /benchmarking → /analytics/decision-benchmarking
+ *  /scenarios → /analytics/scenario-engine
+ *  /patterns → /analytics/pattern-engine
+ *  /team-performance → /analytics/team-performance
+ * ══════════════════════════════════════════════════════════
+ */
+
 
 export const publicRoutes = (
   <>
