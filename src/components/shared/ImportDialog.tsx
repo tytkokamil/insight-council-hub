@@ -74,6 +74,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext === "csv" || ext === "txt") return await file.text();
     if (ext === "xlsx" || ext === "xls") {
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];

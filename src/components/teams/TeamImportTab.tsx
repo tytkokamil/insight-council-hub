@@ -80,6 +80,7 @@ const TeamImportTab = ({ teamId }: Props) => {
     }
 
     if (ext === "xlsx" || ext === "xls") {
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
