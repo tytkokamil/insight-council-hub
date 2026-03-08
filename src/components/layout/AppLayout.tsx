@@ -28,6 +28,7 @@ import PastDueBanner from "@/components/upgrade/PastDueBanner";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import QuickCaptureButton from "@/components/shared/QuickCaptureButton";
 import CodTickerBadge from "@/components/shared/CodTickerBadge";
+import ImpersonationBanner from "@/components/internal-admin/ImpersonationBanner";
 /* ── Composed sidebar content ── */
 const SidebarContent = ({
   collapsed,
