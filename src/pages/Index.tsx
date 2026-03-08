@@ -38,7 +38,7 @@ const orgJsonLd = {
   "logo": "https://decivio.com/favicon.png",
   "description": "Decision Governance Platform für den Mittelstand",
   "sameAs": [],
-  "contactPoint": { "@type": "ContactPoint", "email": "sales@decivio.com", "contactType": "sales", "availableLanguage": ["German", "English"] },
+  "contactPoint": { "@type": "ContactPoint", "email": "hallo@decivio.com", "contactType": "sales", "availableLanguage": ["German", "English"] },
   "address": {
     "@type": "PostalAddress",
     "addressCountry": "DE"

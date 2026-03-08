@@ -31,9 +31,9 @@ function findAnswer(input: string): string {
     return "Sie können Decivio 14 Tage kostenlos testen — keine Kreditkarte nötig. Registrieren Sie sich unter /auth.";
   }
   if (lower.includes("support") || lower.includes("hilf") || lower.includes("help")) {
-    return "Unser Support-Team erreichen Sie unter support@decivio.com oder im Help Center unter /docs.";
+    return "Unser Support-Team erreichen Sie unter hallo@decivio.com oder im Help Center unter /docs.";
   }
-  return "Gute Frage! Für eine detaillierte Antwort empfehle ich unser Help Center (/docs) oder einen kurzen Call mit unserem Team: demo@decivio.com";
+  return "Gute Frage! Für eine detaillierte Antwort empfehle ich unser Help Center (/docs) oder einen kurzen Call mit unserem Team: hallo@decivio.com";
 }
 
 const SalesChatbot = () => {

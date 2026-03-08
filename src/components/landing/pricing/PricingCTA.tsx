@@ -50,7 +50,7 @@ const PricingCTA = () => {
               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
             </Button>
           </Link>
-          <a href="mailto:demo@decivio.com">
+          <a href="mailto:hallo@decivio.com">
             <Button variant="outline" size="xl">
               {t("landing.pricing.ctaDemo")}
             </Button>
