@@ -19,7 +19,7 @@ const UseCasesSection = () => {
       <div className="absolute inset-0 bg-muted/20" />
       <div id="use-cases" className="container mx-auto px-4 relative z-10">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.7, ease }} className="text-center max-w-xl mx-auto mb-16">
-          <p className="text-[11px] font-medium text-muted-foreground/60 mb-4 tracking-[0.2em] uppercase">{t("landing.useCases.label")}</p>
+          <p className="text-[11px] font-medium text-muted-foreground mb-4 tracking-[0.2em] uppercase">{t("landing.useCases.label")}</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
             {t("landing.useCases.title")}{" "}
             <span className="text-muted-foreground font-normal">{t("landing.useCases.titleHighlight")}</span>
@@ -35,11 +35,11 @@ const UseCasesSection = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-[15px] font-semibold mb-0.5">{uc.title}</h3>
-                  <p className="text-[11px] text-muted-foreground/50 mb-3">{uc.subtitle}</p>
+                  <p className="text-[11px] text-muted-foreground mb-3">{uc.subtitle}</p>
                   <p className="text-sm text-muted-foreground/70 leading-relaxed mb-4">{uc.description}</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold text-primary font-display">{uc.stat}</span>
-                    <span className="text-[11px] text-muted-foreground/50">{uc.statLabel}</span>
+                    <span className="text-[11px] text-muted-foreground">{uc.statLabel}</span>
                   </div>
                 </div>
               </div>
