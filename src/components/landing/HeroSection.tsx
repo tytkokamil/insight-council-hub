@@ -92,8 +92,7 @@ const HeroSection = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, ease }}
-                  className="inline-block"
-                  style={{ color: "#EF4444" }}
+                  className="inline-block text-destructive"
                 >
                   {ROTATING_WORDS[wordIndex]}
                 </motion.span>
