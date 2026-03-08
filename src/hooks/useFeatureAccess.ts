@@ -10,7 +10,7 @@ const FEATURE_CONFIG: Record<string, {
   price: string;
 }> = {
   ai_analysis: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "KI-Analyse & Copilot",
     description: "Lassen Sie KI Ihre Entscheidungen analysieren, Risiken erkennen und Handlungsoptionen generieren.",
     bullets: [
