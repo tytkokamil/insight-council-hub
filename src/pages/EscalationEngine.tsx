@@ -356,7 +356,7 @@ const EscalationEngine = () => {
                   <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className={`font-display text-xl font-bold tabular-nums`} style={kpi.highlight === "cost" ? { color: "#EF4444" } : kpi.highlight === "governance" ? { color: "#3B82F6" } : undefined}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.highlight === "cost" ? "text-destructive" : kpi.highlight === "governance" ? "text-primary" : ""}`}>{kpi.value}</span>
                   {kpi.trend !== null && kpi.trend !== 0 && (
                     <span className={`text-[10px] font-medium flex items-center gap-0.5 mb-0.5 ${kpi.trend > 0 ? "text-destructive" : "text-success"}`}>
                       {kpi.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
