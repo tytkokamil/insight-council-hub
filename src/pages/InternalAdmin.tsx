@@ -2,19 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings } from "lucide-react";
+import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings, MessageSquare } from "lucide-react";
 import AdminOverviewTab from "@/components/internal-admin/AdminOverviewTab";
 import AdminOrgsTab from "@/components/internal-admin/AdminOrgsTab";
 import AdminUsersTab from "@/components/internal-admin/AdminUsersTab";
 import AdminFeatureFlagsTab from "@/components/internal-admin/AdminFeatureFlagsTab";
 import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
 import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
+import AdminFeedbackTab from "@/components/internal-admin/AdminFeedbackTab";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "overview", label: "Übersicht", icon: BarChart3 },
   { id: "orgs", label: "Organisationen", icon: Building2 },
   { id: "users", label: "Nutzer", icon: Users },
+  { id: "feedback", label: "Feedback", icon: MessageSquare },
   { id: "flags", label: "Feature Flags", icon: Flag },
   { id: "pilots", label: "Pilot-Kunden", icon: Rocket },
   { id: "system", label: "System", icon: Settings },
@@ -105,6 +107,7 @@ const InternalAdmin = () => {
           {activeTab === "overview" && <AdminOverviewTab />}
           {activeTab === "orgs" && <AdminOrgsTab />}
           {activeTab === "users" && <AdminUsersTab />}
+          {activeTab === "feedback" && <AdminFeedbackTab />}
           {activeTab === "flags" && <AdminFeatureFlagsTab />}
           {activeTab === "pilots" && <AdminPilotsTab />}
           {activeTab === "system" && <AdminSystemTab />}
