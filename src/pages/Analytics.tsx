@@ -525,7 +525,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                {[
                  { label: t("analytics.created"), color: COLORS.primary },
                  { label: t("analytics.implemented"), color: COLORS.success },
-                 { label: t("analytics.breakeven", "Break-even"), color: "#94A3B8" },
+                 { label: t("analytics.breakeven", "Break-even"), color: "hsl(var(--muted-foreground))" },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
