@@ -430,7 +430,12 @@
     "or": "or",
     "saveFailed": "Save failed",
     "tryAgainLater": "Please try again.",
-    "noData": "No data"
+    "noData": "No data",
+    "more": "More",
+    "share": "Share",
+    "linkCopied": "Link copied!",
+    "copied": "Copied!",
+    "copyLink": "Copy link"
   },
   "audit": {
     "reasonTitle": "Reason Required",
