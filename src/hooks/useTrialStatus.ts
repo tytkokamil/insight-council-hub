@@ -29,7 +29,7 @@ export const useTrialStatus = (): TrialStatus => {
       if (!profile?.org_id) return null;
       const { data: org } = await supabase
         .from("organizations")
-        .select("plan, trial_ends_at, subscription_status")
+        .select("plan, trial_ends_at, subscription_status, payment_failed_at")
         .eq("id", profile.org_id)
         .single();
       return org;
