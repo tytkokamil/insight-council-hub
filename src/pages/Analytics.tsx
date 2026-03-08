@@ -428,7 +428,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
             <Card
               key={i}
               className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2" : ""}`}
-              style={isCod ? { backgroundColor: "#FEF2F2" } : undefined}
+              className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2 bg-destructive/[0.04]" : ""}`}
             >
               <CardContent className="p-3">
                 <div className="flex items-center gap-1.5 mb-1.5">
