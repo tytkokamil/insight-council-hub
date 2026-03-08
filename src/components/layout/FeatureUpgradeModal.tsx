@@ -58,9 +58,9 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
         </DialogHeader>
 
         {/* Bullet points if available */}
-        {info?.bullets && (
+        {bullets && (
           <ul className="space-y-2 py-2">
-            {info.bullets.map((bullet, i) => (
+            {bullets.map((bullet, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
                 <span className="text-muted-foreground">{bullet}</span>
