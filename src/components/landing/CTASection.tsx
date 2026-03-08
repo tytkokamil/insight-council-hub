@@ -1,5 +1,5 @@
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useRef } from "react";
 
@@ -13,18 +13,12 @@ const CTASection = () => {
 
   return (
     <section ref={ref} className="py-28 relative overflow-hidden" aria-label="Jetzt starten">
-      {/* Soft ambient orbs */}
+      {/* Aurora CTA background */}
+      <div className="aurora-bg" />
+
       <motion.div style={{ y: orbY, scale: orbScale }} className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/[0.05] blur-[150px]" />
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-accent/[0.04] blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[350px] h-[350px] rounded-full bg-accent/[0.03] blur-[80px]" />
       </motion.div>
-
-      {/* Subtle dot grid */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: "radial-gradient(circle, hsl(220 30% 55% / 0.3) 1px, transparent 1px)",
-        backgroundSize: "48px 48px",
-      }} />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10 text-center">
         <motion.div
@@ -39,7 +33,7 @@ const CTASection = () => {
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.5, ease }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/15 bg-background/70 backdrop-blur-md mb-10 shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-ultra mb-10 shadow-sm"
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-semibold text-primary">14 Tage kostenlos · Keine Kreditkarte</span>
@@ -59,7 +53,7 @@ const CTASection = () => {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground px-9 py-4 rounded-xl transition-all duration-300 overflow-hidden bg-primary hover:shadow-[0_4px_24px_-6px_hsl(var(--primary)/0.4)]"
+              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground px-9 py-4 rounded-xl transition-all duration-300 overflow-hidden bg-primary hover:shadow-[0_8px_30px_-6px_hsl(var(--primary)/0.5)]"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -67,13 +61,13 @@ const CTASection = () => {
             </Link>
             <a
               href="mailto:demo@decivio.com"
-              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium border border-border/50 hover:border-border/80 bg-background/60 backdrop-blur-sm px-7 py-3.5 rounded-xl transition-all hover:shadow-sm text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-3.5 rounded-xl transition-all hover:shadow-md text-muted-foreground hover:text-foreground"
             >
               Demo buchen
             </a>
           </div>
 
-          {/* Social proof + trust */}
+          {/* Social proof */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}

@@ -6,6 +6,7 @@ import LogoBar from "@/components/landing/LogoBar";
 import ScrollProgress from "@/components/landing/ScrollProgress";
 import SectionDivider from "@/components/landing/SectionDivider";
 import Footer from "@/components/landing/Footer";
+import CursorGlow from "@/components/landing/CursorGlow";
 
 // Lazy load below-fold sections for better initial load
 const ProblemSection = lazy(() => import("@/components/landing/ProblemSection"));
@@ -78,7 +79,8 @@ const Index = () => {
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
       </Helmet>
-      <div className="landing-page min-h-screen">
+      <div className="landing-page min-h-screen relative">
+        <CursorGlow />
         <ScrollProgress />
         <Navbar />
         <main>
