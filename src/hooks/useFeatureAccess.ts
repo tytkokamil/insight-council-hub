@@ -231,7 +231,7 @@ export const useFeatureAccess = (): FeatureAccessResult => {
     
     const planNames: Record<string, string> = {
       starter: "Starter",
-      pro: "Professional",
+      professional: "Professional",
       enterprise: "Enterprise",
     };
     return `${config.label} ist ab dem ${planNames[config.minPlan] || config.minPlan}-Plan (${config.price}) verfügbar. ${config.description}`;

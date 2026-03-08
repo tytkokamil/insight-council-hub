@@ -82,15 +82,15 @@ serve(async (req) => {
       const { data: prof } = await adminClient.from("profiles").select("org_id").eq("user_id", userId).single();
       if (prof?.org_id) {
         const { data: orgRow } = await adminClient.from("organizations").select("plan, subscription_status").eq("id", prof.org_id).single();
-        const effPlan = orgRow?.subscription_status === "trialing" ? "pro"
+        const effPlan = orgRow?.subscription_status === "trialing" ? "professional"
           : orgRow?.subscription_status === "suspended" ? "free"
           : orgRow?.plan || "free";
-        if (!["pro", "enterprise"].includes(effPlan)) {
+        if (!["professional", "enterprise"].includes(effPlan)) {
           return new Response(JSON.stringify({
             error: "upgrade_required",
             feature: "ai_analysis",
             message: "KI-Copilot ist ab dem Professional-Plan verfügbar.",
-            min_plan: "pro",
+            min_plan: "professional",
           }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       }

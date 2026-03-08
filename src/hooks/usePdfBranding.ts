@@ -33,8 +33,8 @@ export const usePdfBranding = (): PdfBrandingOptions => {
   // Free plan: always show branding
   if (isFree) return { showBranding: true };
 
-  // Starter/Pro: respect setting
-  if (plan === "starter" || plan === "pro" || plan === "business") {
+  // Starter/Professional: respect setting
+  if (plan === "starter" || plan === "professional" || plan === "business") {
     return { showBranding: !brandingDisabled };
   }
 

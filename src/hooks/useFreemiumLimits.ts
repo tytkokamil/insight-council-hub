@@ -153,7 +153,7 @@ export const useFreemiumLimits = (): FreemiumLimits => {
     plan,
     isFree: plan === "free",
     isStarter: plan === "starter",
-    isPro: plan === "pro",
+    isPro: plan === "professional",
     isEnterprise: plan === "enterprise",
     decisionCount: userDecisionCount,
     maxDecisions: limits.maxDecisions,

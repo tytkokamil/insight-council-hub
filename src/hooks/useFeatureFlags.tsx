@@ -13,7 +13,7 @@ interface FeatureFlag {
 
 const PLAN_ORDER: Record<string, number> = {
   starter: 0,
-  pro: 1,
+  professional: 1,
   business: 2,
   enterprise: 3,
 };

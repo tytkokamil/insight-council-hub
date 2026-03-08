@@ -384,7 +384,7 @@ const SidebarNav = memo(({
 
   const getMinPlan = (featureKey: string): string => {
     const flag = flags.find(f => f.feature_key === featureKey);
-    return flag?.min_plan || "pro";
+    return flag?.min_plan || "professional";
   };
 
   useEffect(() => {
