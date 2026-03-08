@@ -133,7 +133,7 @@ const ComparisonSection = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.04, duration: 0.4, ease }}
-              className={`grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-5 py-3.5 group ${
+              className={`grid grid-cols-[140px_repeat(6,56px)] sm:grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-3 sm:px-5 py-3.5 group min-w-[480px] ${
                 i < criteria.length - 1 ? "border-b border-border/15" : ""
               } hover:bg-primary/[0.02] transition-colors`}
             >
