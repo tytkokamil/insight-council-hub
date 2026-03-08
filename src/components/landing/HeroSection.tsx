@@ -21,58 +21,20 @@ const RotatingWord = () => {
   }, []);
 
   return (
-    <span className="inline-block relative overflow-hidden align-bottom w-full sm:w-auto" style={{ height: "1.2em" }}>
+    <span className="block text-center">
       <AnimatePresence mode="wait">
         <motion.span
           key={index}
-          initial={{ y: "100%", opacity: 0 }}
+          initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: "-100%", opacity: 0 }}
+          exit={{ y: -30, opacity: 0 }}
           transition={{ duration: 0.4, ease }}
-          className={`absolute left-0 top-0 whitespace-nowrap ${ROTATING_WORDS[index].color}`}
+          className={`inline-block ${ROTATING_WORDS[index].color}`}
         >
           {ROTATING_WORDS[index].text}
         </motion.span>
       </AnimatePresence>
     </span>
-  );
-};
-
-/** Minimal inline CoD ticker — no orbits, just the number */
-const InlineTicker = () => {
-  const [cents, setCents] = useState(0);
-  const costPerSecond = 47000 / 30 / 24 / 3600;
-
-  useEffect(() => {
-    const start = performance.now();
-    let raf: number;
-    const tick = () => {
-      setCents(((performance.now() - start) / 1000) * costPerSecond);
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.2, duration: 0.6, ease }}
-      className="mt-12 flex items-center justify-center gap-3"
-    >
-      <motion.div
-        animate={{ opacity: [1, 0.3, 1] }}
-        transition={{ duration: 1.2, repeat: Infinity }}
-        className="w-2 h-2 rounded-full bg-destructive"
-      />
-      <span className="text-xs font-mono uppercase tracking-[0.15em] text-muted-foreground">
-        Kosten seit Sie hier sind
-      </span>
-      <span className="text-lg font-mono font-bold tabular-nums text-destructive">
-        €{cents.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </span>
-    </motion.div>
   );
 };
 
@@ -86,7 +48,6 @@ const HeroSection = () => {
     <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-16" aria-label="Hero">
       <motion.div style={{ opacity: bgOpacity }} className="aurora-bg" />
 
-      {/* Subtle grid */}
       <div className="absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: "radial-gradient(circle, hsl(var(--foreground) / 0.4) 1px, transparent 1px)",
         backgroundSize: "48px 48px",
@@ -94,7 +55,6 @@ const HeroSection = () => {
 
       <motion.div style={{ y: contentY }} className="container relative z-10 mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
-          {/* Badge — minimal */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -107,21 +67,18 @@ const HeroSection = () => {
             </span>
           </motion.div>
 
-          {/* Headline — one thought, no fluff */}
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
             className="text-[clamp(2rem,5vw,3.8rem)] font-semibold tracking-[-0.02em] leading-[1.15] mb-6"
           >
-            Jede offene Entscheidung{" "}
-            <br className="hidden sm:block" />
-            kostet Ihr Unternehmen{" "}
-            <br className="block sm:hidden" />
+            Jede offene Entscheidung
+            <br />
+            kostet Ihr Unternehmen
             <RotatingWord />
           </motion.h1>
 
-          {/* Subline — one sentence */}
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -131,7 +88,6 @@ const HeroSection = () => {
             Decivio macht die unsichtbaren Kosten sichtbar — und sorgt dafür, dass Entscheidungen fallen.
           </motion.p>
 
-          {/* One primary CTA + one secondary */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -160,9 +116,6 @@ const HeroSection = () => {
             </Link>
           </motion.div>
 
-          {/* Trust signals */}
-
-          {/* Trust signals — minimal, earned */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
