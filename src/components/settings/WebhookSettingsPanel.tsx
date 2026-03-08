@@ -331,16 +331,24 @@ const PayloadInfoCollapsible = ({ t }: { t: any }) => {
       {open && (
         <div className="mt-2 p-3 rounded-lg border border-border/60 bg-muted/30">
           <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap">{`{
-  "event": "decision.created",
-  "timestamp": "2026-03-01T12:00:00Z",
-  "organization_id": "uuid",
-  "decision": {
-    "id", "title", "category",
-    "approved_by", "cost_of_delay_total",
-    "duration_days"
+  "event": "decision.approved",
+  "timestamp": "2026-03-08T10:30:00Z",
+  "org_id": "...",
+  "data": {
+    "decision": {
+      "id": "...",
+      "title": "...",
+      "status": "approved",
+      "priority": "high",
+      "cost_of_delay": 12500,
+      "approved_by": "...",
+      "approved_at": "..."
+    }
   }
 }`}</pre>
-          <p className="text-[9px] text-muted-foreground mt-1.5 italic">{t("settings.webhookHmacInfo")}</p>
+          <p className="text-[9px] text-muted-foreground mt-1.5">
+            <strong>Header:</strong> X-Decivio-Signature: sha256=HMAC · X-Decivio-Event: decision.approved
+          </p>
         </div>
       )}
     </div>
