@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Users, Flame, X } from "lucide-react";
-
-/** Prompt 34 — Scarcity / Urgency UI elements */
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 const LAUNCH_DATE = new Date("2026-04-01T00:00:00+02:00");
+const FALLBACK_CLAIMED = 17;
+const TOTAL_SLOTS = 20;
 
 function getTimeLeft() {
   const diff = Math.max(0, LAUNCH_DATE.getTime() - Date.now());
@@ -16,7 +18,6 @@ function getTimeLeft() {
 }
 
 function fakeViewers() {
-  // Deterministic-ish based on minute to avoid jumps
   const base = 14;
   const minute = new Date().getMinutes();
   return base + (minute % 7);
@@ -27,7 +28,38 @@ const ScarcityBar = () => {
   const [viewers] = useState(fakeViewers);
   const [dismissed, setDismissed] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [claimed, setClaimed] = useState<number>(FALLBACK_CLAIMED);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Fetch live slot data
+  useEffect(() => {
+    const fetchSlots = async () => {
+      const { data } = await supabase
+        .from("founding_customer_slots")
+        .select("claimed_slots, total_slots")
+        .limit(1)
+        .single();
+      if (data) {
+        setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
+      }
+    };
+    fetchSlots();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel("founding_slots_realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "founding_customer_slots" },
+        (payload) => {
+          const newClaimed = (payload.new as any)?.claimed_slots;
+          if (typeof newClaimed === "number") setClaimed(newClaimed);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setVisible(window.scrollY > 400);
@@ -39,6 +71,9 @@ const ScarcityBar = () => {
     timerRef.current = setInterval(() => setTime(getTimeLeft()), 1000);
     return () => clearInterval(timerRef.current);
   }, []);
+
+  const remaining = TOTAL_SLOTS - claimed;
+  const soldOut = remaining <= 0;
 
   if (dismissed || time.total <= 0) return null;
 
@@ -55,34 +90,51 @@ const ScarcityBar = () => {
           <div
             className="flex items-center justify-center gap-6 py-2 px-4 text-[12px] font-medium"
             style={{
-              background: "linear-gradient(90deg, hsl(0 84% 60%), hsl(0 84% 50%))",
+              background: soldOut
+                ? "linear-gradient(90deg, hsl(220 15% 30%), hsl(220 15% 22%))"
+                : "linear-gradient(90deg, hsl(0 84% 60%), hsl(0 84% 50%))",
               color: "white",
             }}
           >
-            {/* Countdown */}
-            <span className="inline-flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
-              Early-Access endet in{" "}
-              <span className="font-mono font-bold tabular-nums">
-                {time.d}T {String(time.h).padStart(2, "0")}:{String(time.m).padStart(2, "0")}:{String(time.s).padStart(2, "0")}
-              </span>
-            </span>
+            {soldOut ? (
+              <>
+                <span className="inline-flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" />
+                  Founding Program ausgebucht
+                </span>
+                <span className="w-px h-3.5 bg-white/30" />
+                <Link to="/founding" className="underline underline-offset-2 hover:text-white/80 transition-colors">
+                  Warteliste beitreten →
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Countdown */}
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Early-Access endet in{" "}
+                  <span className="font-mono font-bold tabular-nums">
+                    {time.d}T {String(time.h).padStart(2, "0")}:{String(time.m).padStart(2, "0")}:{String(time.s).padStart(2, "0")}
+                  </span>
+                </span>
 
-            <span className="w-px h-3.5 bg-white/30" />
+                <span className="w-px h-3.5 bg-white/30" />
 
-            {/* Live viewers */}
-            <span className="inline-flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              <span className="font-bold">{viewers}</span> sehen sich gerade Decivio an
-            </span>
+                {/* Live viewers */}
+                <span className="inline-flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5" />
+                  <span className="font-bold">{viewers}</span> sehen sich gerade Decivio an
+                </span>
 
-            <span className="w-px h-3.5 bg-white/30" />
+                <span className="w-px h-3.5 bg-white/30" />
 
-            {/* Limited spots */}
-            <span className="inline-flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5" />
-              Nur noch <span className="font-bold">20 von 20</span> Founding-Plätze frei
-            </span>
+                {/* Limited spots — live from DB */}
+                <span className="inline-flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" />
+                  Nur noch <span className="font-bold">{remaining} von {TOTAL_SLOTS}</span> Founding-Plätze frei
+                </span>
+              </>
+            )}
 
             <button
               onClick={() => setDismissed(true)}
