@@ -6,7 +6,7 @@ import { useIndustryPersonalization } from "@/hooks/useIndustryPersonalization";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const COST_PER_MS = 47000 / 30 / 24 / 3600 / 1000; // ~€0.018/ms → €47k/mo
+const ROTATING_WORDS = ["Geld.", "Zeit.", "Wachstum.", "Vertrauen.", "Wettbewerb."];
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -14,18 +14,14 @@ const HeroSection = () => {
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const industry = useIndustryPersonalization();
 
-  // Inline CoD counter
-  const [cost, setCost] = useState(0);
-  const startRef = useRef(Date.now());
+  const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setCost((Date.now() - startRef.current) * COST_PER_MS);
-    }, 80);
+      setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2500);
     return () => clearInterval(id);
   }, []);
-
-  const formattedCost = `€${cost.toLocaleString("de-DE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   return (
     <section
@@ -89,16 +85,21 @@ const HeroSection = () => {
             <br />
             kostet Ihr Unternehmen
             <br />
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.7, ease }}
-              className="inline-block tabular-nums font-mono"
-              style={{ color: "#EF4444" }}
-            >
-              {formattedCost}
-            </motion.span>
-            <span style={{ color: "rgba(255,255,255,0.95)" }}>.</span>
+            <span className="inline-block relative" style={{ minWidth: "4ch" }}>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={wordIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease }}
+                  className="inline-block"
+                  style={{ color: "#EF4444" }}
+                >
+                  {ROTATING_WORDS[wordIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.h1>
 
           {/* Subtext — personalized if industry detected */}
