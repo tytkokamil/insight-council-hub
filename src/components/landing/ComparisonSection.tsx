@@ -22,7 +22,10 @@ type Score = true | false | "partial";
 
 const tools: { name: string; scores: Score[]; highlighted?: boolean }[] = [
   { name: "Excel / E-Mail", scores: [false, false, false, false, false, false, false, false, false, false] },
-  { name: "Jira / Monday", scores: [false, false, false, true, false, "partial", false, false, "partial", false] },
+  { name: "Jira / ClickUp", scores: [false, false, false, true, false, "partial", false, false, "partial", false] },
+  { name: "SAP / ERP", scores: [false, "partial", false, true, "partial", false, false, false, "partial", false] },
+  { name: "Kissflow", scores: [false, false, false, "partial", "partial", "partial", false, false, false, false] },
+  { name: "Consulting", scores: [false, false, "partial", false, true, false, "partial", false, false, false] },
   { name: "Decivio", scores: [true, true, true, true, true, true, true, true, true, true], highlighted: true },
 ];
 

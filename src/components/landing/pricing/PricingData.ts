@@ -103,7 +103,7 @@ export const getPlans = (t: TFunction): Plan[] => [
   },
   {
     name: "Enterprise",
-    monthlyPrice: 499,
+    monthlyPrice: null,
     annualPrice: null,
     description: t("landing.pricing.enterpriseDesc", { defaultValue: "Für Unternehmen mit komplexen Anforderungen und 25+ Nutzern." }),
     features: [
