@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, AlertCircle, Shield, Zap, Timer } from "lucide-react";
+import { Mail, Lock, User, AlertCircle, Shield, Zap, Timer, Building2 } from "lucide-react";
 import decivioLogo from "@/assets/decivio-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
