@@ -65,7 +65,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   live_cod: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Echtzeit Cost-of-Delay",
     description: "Sehen Sie in Echtzeit, was verzögerte Entscheidungen Ihr Unternehmen kosten.",
     bullets: [
