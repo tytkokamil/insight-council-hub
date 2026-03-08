@@ -5,96 +5,104 @@ import { Factory, Pill, Car, Landmark, Monitor, HardHat, Zap, HeartPulse, ArrowR
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+type AccentKey = "blue" | "violet" | "teal" | "amber" | "rose" | "primary";
+
+const accentStyles: Record<AccentKey, { iconBg: string; iconText: string }> = {
+  blue: { iconBg: "bg-accent-blue/10", iconText: "text-accent-blue" },
+  violet: { iconBg: "bg-accent-violet/10", iconText: "text-accent-violet" },
+  teal: { iconBg: "bg-accent-teal/10", iconText: "text-accent-teal" },
+  amber: { iconBg: "bg-accent-amber/10", iconText: "text-accent-amber" },
+  rose: { iconBg: "bg-accent-rose/10", iconText: "text-accent-rose" },
+  primary: { iconBg: "bg-primary/10", iconText: "text-primary" },
+};
+
 const industries = [
-  // Primär (Erstfokus)
   {
-    icon: Factory, name: "Maschinenbau", color: "hsl(220 45% 50%)", priority: "primary",
+    icon: Factory, name: "Maschinenbau", accent: "primary" as AccentKey, priority: "primary",
     desc: "ECOs, Investitionsfreigaben, Projektmittel",
     useCases: ["Engineering Change Orders", "Investitionsfreigabe CNC-Maschine", "Projektmeilenstein-Freigaben"],
     compliance: ["ISO 9001", "ISO 13849", "VDI 2221"],
   },
-  // Sekundär
   {
-    icon: Car, name: "Automotive", color: "hsl(200 45% 50%)", priority: "secondary",
+    icon: Car, name: "Automotive", accent: "blue" as AccentKey, priority: "secondary",
     desc: "PPAP, 8D-Reports, Änderungsmanagement",
     useCases: ["PPAP-Dokumentation", "8D-Problemlösung", "APQP-Prozesse", "FMEA-Management"],
     compliance: ["IATF 16949", "VDA 6.3"],
   },
   {
-    icon: Pill, name: "Pharma & Life Sciences", color: "hsl(280 40% 55%)", priority: "secondary",
+    icon: Pill, name: "Pharma & Life Sciences", accent: "violet" as AccentKey, priority: "secondary",
     desc: "Change Control, Deviations, CAPA",
     useCases: ["Change-Control-Prozesse", "CAPA-Management", "Batch-Record-Freigaben", "Deviation-Handling"],
     compliance: ["GMP", "FDA 21 CFR Part 11", "EU-GMP"],
   },
-  // Tertiär
   {
-    icon: Landmark, name: "Finanzdienstleister", color: "hsl(160 35% 45%)", priority: "tertiary",
+    icon: Landmark, name: "Finanzdienstleister", accent: "teal" as AccentKey, priority: "tertiary",
     desc: "Kreditentscheidungen, Risikoakzeptanz",
     useCases: ["Kreditvergabe-Prozesse", "Risikobewertungen", "Vier-Augen-Prinzip"],
     compliance: ["MaRisk", "BaFin", "DSGVO"],
   },
   {
-    icon: Monitor, name: "IT & Software", color: "hsl(250 40% 55%)", priority: "tertiary",
+    icon: Monitor, name: "IT & Software", accent: "violet" as AccentKey, priority: "tertiary",
     desc: "RFC, Security Review, Go/No-Go",
     useCases: ["Architecture Decision Records", "Release-Management", "Security-Reviews"],
     compliance: ["NIS2", "ISO 27001", "BSI IT-Grundschutz"],
   },
   {
-    icon: HardHat, name: "Bau & Industrie", color: "hsl(30 50% 50%)", priority: "tertiary",
+    icon: HardHat, name: "Bau & Industrie", accent: "amber" as AccentKey, priority: "tertiary",
     desc: "Auftragsvergabe, Partnerwahl, Abnahmen",
     useCases: ["Nachtragsmanagement", "Subunternehmer-Freigaben", "Bauabnahmen"],
     compliance: ["VOB/B", "HOAI", "VgV"],
   },
   {
-    icon: HeartPulse, name: "Healthcare", color: "hsl(350 45% 55%)", priority: "tertiary",
+    icon: HeartPulse, name: "Healthcare", accent: "rose" as AccentKey, priority: "tertiary",
     desc: "Medizinprodukte, Behandlungsprotokolle",
     useCases: ["Medizinprodukt-Bewertungen", "Klinische Protokolländerungen", "Investitionsentscheidungen"],
     compliance: ["MDR", "ISO 13485"],
   },
   {
-    icon: Zap, name: "Energie", color: "hsl(45 60% 48%)", priority: "tertiary",
+    icon: Zap, name: "Energie", accent: "amber" as AccentKey, priority: "tertiary",
     desc: "Netzinvestitionen, KRITIS, NIS2",
     useCases: ["Netzausbau-Entscheidungen", "KRITIS-Compliance", "Investitionsfreigaben"],
     compliance: ["NIS2", "EnWG"],
   },
   {
-    icon: ShoppingCart, name: "Handel", color: "hsl(170 40% 45%)", priority: "tertiary",
+    icon: ShoppingCart, name: "Handel", accent: "teal" as AccentKey, priority: "tertiary",
     desc: "Lieferantenwahl, Sortiment, Compliance",
     useCases: ["Lieferantenauswahl", "Sortimentsentscheidungen", "Standortentscheidungen"],
     compliance: ["DSGVO", "Lieferkettensorgfalt"],
   },
   {
-    icon: Shield, name: "Versicherung", color: "hsl(210 40% 50%)", priority: "tertiary",
+    icon: Shield, name: "Versicherung", accent: "blue" as AccentKey, priority: "tertiary",
     desc: "Policenfreigabe, Schadenregulierung",
     useCases: ["Policenfreigabe-Prozesse", "Schadenregulierung", "Risikoakzeptanz"],
     compliance: ["VAG", "Solvency II"],
   },
   {
-    icon: Truck, name: "Logistik", color: "hsl(195 45% 45%)", priority: "tertiary",
+    icon: Truck, name: "Logistik", accent: "blue" as AccentKey, priority: "tertiary",
     desc: "Routenoptimierung, Fahrzeugkauf",
     useCases: ["Routenoptimierung", "Fahrzeugbeschaffung", "Lagerstandort-Entscheidungen"],
     compliance: ["ADR", "ISO 28000"],
   },
   {
-    icon: UtensilsCrossed, name: "Lebensmittel", color: "hsl(25 55% 50%)", priority: "tertiary",
+    icon: UtensilsCrossed, name: "Lebensmittel", accent: "amber" as AccentKey, priority: "tertiary",
     desc: "Rezeptur, Lieferant, Qualitätskontrolle",
     useCases: ["Rezepturänderungen", "Lieferantenfreigabe", "Qualitätskontrolle"],
     compliance: ["HACCP", "IFS", "BRC"],
   },
   {
-    icon: Heart, name: "Non-Profit", color: "hsl(340 40% 55%)", priority: "tertiary",
+    icon: Heart, name: "Non-Profit", accent: "rose" as AccentKey, priority: "tertiary",
     desc: "Mittelverwendung, Vorstandsbeschlüsse",
     useCases: ["Mittelverwendung", "Vorstandsbeschlüsse", "Förderentscheidungen"],
     compliance: ["Gemeinnützigkeitsrecht"],
   },
   {
-    icon: GraduationCap, name: "Bildung", color: "hsl(260 35% 50%)", priority: "tertiary",
+    icon: GraduationCap, name: "Bildung", accent: "violet" as AccentKey, priority: "tertiary",
     desc: "Lehrplan, Beschaffung, Gremien",
     useCases: ["Lehrplanänderungen", "Beschaffungsentscheidungen", "Gremienentscheidungen"],
     compliance: ["Schulrecht"],
   },
   {
-    icon: Building2, name: "Öffentlicher Sektor", color: "hsl(180 30% 45%)", priority: "tertiary",
+    icon: Building2, name: "Öffentlicher Sektor", accent: "teal" as AccentKey, priority: "tertiary",
     desc: "Vergabe, Haushaltsbeschluss, Gremien",
     useCases: ["Vergabeentscheidungen", "Haushaltsbeschlüsse", "Genehmigungsverfahren"],
     compliance: ["VOL/A", "UVgO"],
@@ -130,6 +138,7 @@ const IndustriesSection = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {displayedIndustries.map((ind, i) => {
             const isActive = activeIndex === i;
+            const styles = accentStyles[ind.accent];
             return (
               <motion.button
                 key={ind.name}
@@ -141,16 +150,13 @@ const IndustriesSection = () => {
                 onClick={() => setActiveIndex(isActive ? null : i)}
                 className={`p-5 rounded-xl border text-left transition-all duration-300 ${
                   isActive
-                    ? "border-primary/30 bg-primary/[0.03] shadow-[0_8px_30px_-10px_hsl(var(--primary)/0.15)]"
+                    ? "border-primary/30 bg-primary/[0.03] shadow-card-hover"
                     : "border-border/30 bg-background/60 backdrop-blur-sm hover:border-border/50 hover:shadow-md"
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-300"
-                    style={{ background: `${ind.color.replace(")", " / 0.08)")}` }}
-                  >
-                    <ind.icon className="w-4.5 h-4.5" style={{ color: ind.color }} />
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-300 ${styles.iconBg}`}>
+                    <ind.icon className={`w-4.5 h-4.5 ${styles.iconText}`} />
                   </div>
                   {ind.priority === "primary" && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">Fokus</span>

@@ -332,7 +332,7 @@ const ProductShowcase = () => {
                 <TiltCard>
                   <motion.div
                     style={{ rotateX: perspective }}
-                    className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[0_20px_60px_-15px_hsl(220_30%_30%/0.15)]"
+                    className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-elevated"
                   >
                     {/* Reflection effect */}
                     <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none z-10" />
