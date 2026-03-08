@@ -578,7 +578,7 @@ const Tasks = () => {
                           </td>
                           <td className="p-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span> : <span style={{ fontSize: "11px", color: "#94A3B8" }}>{t("tasksPage.unassigned", "Nicht zugewiesen")}</span>}</span>
+                              <span className="text-xs text-muted-foreground">{task.assignee_id ? profileMap[task.assignee_id] || <span className="text-[11px] text-muted-foreground">{t("tasksPage.unassigned", "Nicht zugewiesen")}</span> : <span className="text-[11px] text-muted-foreground">{t("tasksPage.unassigned", "Nicht zugewiesen")}</span>}</span>
                               {task.assignee_id && (
                                 <QuickMessageButton
                                   teamId={task.team_id}
