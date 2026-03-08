@@ -171,7 +171,8 @@ export const protectedRoutes = (
     <Route path="/pilot" element={<P><PilotSettings /></P>} />
     <Route path="/feature-management" element={<P><PilotSettings /></P>} />
     <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
-    <Route path="/patterns" element={<P><PatternEngine /></P>} />
+    <Route path="/analytics/pattern-engine" element={<P><PatternEngine /></P>} />
+    <Route path="/patterns" element={<Navigate to="/analytics/pattern-engine" replace />} />
     <Route path="/templates" element={<P><TemplateEditor /></P>} />
     <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
     <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
@@ -181,7 +182,8 @@ export const protectedRoutes = (
     <Route path="/automations" element={<Navigate to="/automation-rules" replace />} />
     <Route path="/archive" element={<P><ArchivePage /></P>} />
     <Route path="/risks" element={<P><RiskRegister /></P>} />
-    <Route path="/team-performance" element={<P><TeamPerformance /></P>} />
+    <Route path="/analytics/team-performance" element={<P><TeamPerformance /></P>} />
+    <Route path="/team-performance" element={<Navigate to="/analytics/team-performance" replace />} />
     <Route path="/search" element={<P><GlobalSearch /></P>} />
     <Route path="/meeting" element={<P><MeetingMode /></P>} />
     <Route path="/process" element={<P><ProcessHub /></P>} />

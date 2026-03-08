@@ -36,18 +36,18 @@ const CommandPalette = () => {
     { label: t("nav.decisions"), path: "/decisions", icon: FileText },
     { label: "Briefing", path: "/briefing", icon: Sun },
     { label: "Graph", path: "/decision-graph", icon: GitBranch },
-    { label: "Bottlenecks", path: "/bottlenecks", icon: Radar },
     { label: t("nav.analyticsHub"), path: "/analytics", icon: TrendingUp },
-    { label: "DNA", path: "/dna", icon: Dna },
-    { label: t("nav.escalationCenter"), path: "/engine", icon: Zap },
-    { label: t("nav.benchmarking"), path: "/benchmarking", icon: Trophy },
-    { label: t("nav.scenarios"), path: "/scenarios", icon: FlaskConical },
+    { label: "DNA", path: "/analytics/decision-dna", icon: Dna },
+    { label: "Bottlenecks", path: "/analytics/bottleneck-intelligence", icon: Radar },
+    { label: t("nav.benchmarking"), path: "/analytics/decision-benchmarking", icon: Trophy },
+    { label: t("nav.scenarios"), path: "/analytics/scenario-engine", icon: FlaskConical },
     { label: t("nav.strategy"), path: "/strategy", icon: Crosshair },
     { label: t("nav.teamsNav"), path: "/teams", icon: Users },
     { label: t("nav.calendar"), path: "/calendar", icon: Calendar },
     { label: t("nav.tasks"), path: "/tasks", icon: ListTodo },
     { label: t("nav.settings"), path: "/settings", icon: Settings },
     { label: t("nav.users"), path: "/admin/users", icon: Shield },
+    { label: t("nav.escalationCenter"), path: "/engine", icon: Zap },
   ], [t]);
 
   const quickActions = useMemo(() => [
