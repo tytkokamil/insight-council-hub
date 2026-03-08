@@ -27,6 +27,7 @@ import WhatsAppSettingsPanel from "@/components/settings/WhatsAppSettingsPanel";
 import InboundEmailPanel from "@/components/settings/InboundEmailPanel";
 import TeamsIntegrationPanel from "@/components/settings/TeamsIntegrationPanel";
 import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
+import CalendarSyncPanel from "@/components/settings/CalendarSyncPanel";
 import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
@@ -751,6 +752,10 @@ const SettingsPage = () => {
               <div className="settings-group">
                 <h2>Webhooks & API</h2>
                 <WebhookSettingsPanel />
+              </div>
+              <div className="settings-group">
+                <h2>Kalender-Synchronisierung</h2>
+                <CalendarSyncPanel />
               </div>
               <div className="settings-group">
                 <PdfBrandingSection />
