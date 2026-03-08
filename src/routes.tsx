@@ -77,6 +77,7 @@ const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
 const AiDemo = lazy(() => import("./pages/AiDemo"));
 const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
+const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -224,6 +225,7 @@ export const publicRoutes = (
     <Route path="/docs" element={<L><HelpCenter /></L>} />
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/demo" element={<L><DemoMode /></L>} />
+    <Route path="/demo/live" element={<L><LiveDemo /></L>} />
     
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
