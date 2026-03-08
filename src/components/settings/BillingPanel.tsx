@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Crown, CreditCard, Receipt, ArrowRight, Sparkles, Check, Download,
+  Crown, CreditCard, Receipt, ArrowRight, Sparkles,
   Calendar, Users, Brain, Shield, AlertTriangle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -16,16 +16,21 @@ const PLAN_DETAILS: Record<string, { label: string; price: string; color: string
   enterprise: { label: "Enterprise", price: "Individuell", color: "text-primary" },
 };
 
-const MOCK_INVOICES = [
-  { id: "INV-2026-003", date: "01.03.2026", amount: "€149,00", status: "bezahlt" },
-  { id: "INV-2026-002", date: "01.02.2026", amount: "€149,00", status: "bezahlt" },
-  { id: "INV-2026-001", date: "01.01.2026", amount: "€149,00", status: "bezahlt" },
-];
+type Invoice = {
+  id: string;
+  date: string;
+  amount: string;
+  status: string;
+};
 
 const BillingPanel = () => {
   const limits = useFreemiumLimits();
   const navigate = useNavigate();
   const planInfo = PLAN_DETAILS[limits.plan] || PLAN_DETAILS.free;
+
+  // Vorbereitung für Stripe: aktuell keine Live-Abrechnungsdaten angebunden
+  const paymentMethod: { brand: string; last4: string; exp: string } | null = null;
+  const invoices: Invoice[] = [];
 
   const usageItems = [
     {
@@ -36,7 +41,7 @@ const BillingPanel = () => {
     },
     {
       label: "Nutzer",
-      current: 1, // would come from org member count
+      current: 1,
       max: limits.maxUsers,
       icon: Users,
     },
@@ -50,7 +55,6 @@ const BillingPanel = () => {
 
   return (
     <div className="space-y-8">
-      {/* Current Plan */}
       <div className="settings-group">
         <h2>Aktueller Plan</h2>
         <div className="flex items-center justify-between p-4 rounded-lg border bg-muted/30">
@@ -86,16 +90,14 @@ const BillingPanel = () => {
           </Button>
         </div>
 
-        {/* Next billing info */}
         {!limits.isFree && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3 px-1">
             <Calendar className="w-3.5 h-3.5" />
-            <span>Nächste Abrechnung: 01.04.2026 · {planInfo.price}</span>
+            <span>Nächste Abrechnung wird angezeigt, sobald Zahlungsdaten verbunden sind.</span>
           </div>
         )}
       </div>
 
-      {/* Usage */}
       <div className="settings-group">
         <h2>Nutzung</h2>
         <div className="space-y-4">
@@ -132,37 +134,40 @@ const BillingPanel = () => {
         </div>
       </div>
 
-      {/* Payment Method */}
       <div className="settings-group">
         <h2>Zahlungsmethode</h2>
         {limits.isFree ? (
           <p className="text-sm text-muted-foreground">
             Im Free-Plan ist keine Zahlungsmethode erforderlich.
           </p>
-        ) : (
+        ) : paymentMethod ? (
           <div className="flex items-center justify-between p-3 rounded-lg border">
             <div className="flex items-center gap-3">
               <CreditCard className="w-5 h-5 text-muted-foreground" />
               <div>
-                <p className="text-sm font-medium">•••• •••• •••• 4242</p>
-                <p className="text-xs text-muted-foreground">Visa · Läuft ab 12/2027</p>
+                <p className="text-sm font-medium">•••• •••• •••• {paymentMethod.last4}</p>
+                <p className="text-xs text-muted-foreground">{paymentMethod.brand} · Läuft ab {paymentMethod.exp}</p>
               </div>
             </div>
             <Button variant="ghost" size="sm" className="text-xs text-primary">
               Ändern
             </Button>
           </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-4 bg-muted/20">
+            <p className="text-sm font-medium">Noch keine Zahlungsmethode hinterlegt</p>
+            <p className="text-xs text-muted-foreground mt-1">Die Zahlungsdaten erscheinen hier automatisch, sobald die Abrechnung angebunden ist.</p>
+          </div>
         )}
       </div>
 
-      {/* Invoices */}
       <div className="settings-group">
         <h2>Rechnungen</h2>
         {limits.isFree ? (
           <p className="text-sm text-muted-foreground">
             Keine Rechnungen im Free-Plan vorhanden.
           </p>
-        ) : (
+        ) : invoices.length > 0 ? (
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -171,35 +176,31 @@ const BillingPanel = () => {
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Datum</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Betrag</th>
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground">Status</th>
-                  <th className="px-4 py-2"></th>
                 </tr>
               </thead>
               <tbody>
-                {MOCK_INVOICES.map((inv) => (
+                {invoices.map((inv) => (
                   <tr key={inv.id} className="border-b last:border-0">
                     <td className="px-4 py-2.5 font-medium">{inv.id}</td>
                     <td className="px-4 py-2.5 text-muted-foreground">{inv.date}</td>
                     <td className="px-4 py-2.5 tabular-nums">{inv.amount}</td>
-                    <td className="px-4 py-2.5">
-                      <Badge variant="secondary" className="text-[10px] bg-success/10 text-success border-success/20">
-                        <Check className="w-3 h-3 mr-1" />
-                        {inv.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-                        <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                      </Button>
-                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{inv.status}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-4 bg-muted/20 flex items-start gap-3">
+            <Receipt className="w-4 h-4 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">Noch keine Rechnungen vorhanden</p>
+              <p className="text-xs text-muted-foreground mt-1">Sobald Abrechnungen erstellt werden, kannst du sie hier einsehen und herunterladen.</p>
+            </div>
+          </div>
         )}
       </div>
 
-      {/* Plan comparison teaser */}
       <div className="flex items-center justify-between p-4 rounded-lg border border-dashed border-primary/30 bg-primary/5">
         <div>
           <p className="text-sm font-medium">Alle Pläne vergleichen</p>
