@@ -54,7 +54,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   strategy: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Strategieebene",
     description: "Verknüpfen Sie Entscheidungen mit strategischen Zielen und OKRs.",
     bullets: [
