@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { QualityScoreBadge } from "./DecisionQualityScore";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import LiveCodCounter from "@/components/shared/LiveCodCounter";
