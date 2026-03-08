@@ -21,6 +21,7 @@ const TABS = [
   { id: "flags", label: "Feature Flags", icon: Flag },
   { id: "pilots", label: "Pilot-Kunden", icon: Rocket },
   { id: "system", label: "System", icon: Settings },
+  { id: "roadmap", label: "Roadmap", icon: Map },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
