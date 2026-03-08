@@ -158,7 +158,8 @@ export const protectedRoutes = (
     <Route path="/executive" element={<P><ExecutiveHub /></P>} />
     <Route path="/settings" element={<P><SettingsPage /></P>} />
     <Route path="/admin/users" element={<P><AdminUsers /></P>} />
-    <Route path="/audit" element={<P><AuditTrail /></P>} />
+    <Route path="/audit-trail" element={<P><AuditTrail /></P>} />
+    <Route path="/audit" element={<Navigate to="/audit-trail" replace />} />
     <Route path="/pilot" element={<P><PilotSettings /></P>} />
     <Route path="/feature-management" element={<P><PilotSettings /></P>} />
     <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
