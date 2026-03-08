@@ -6,9 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Shield, Smartphone, Mail, CheckCircle2, Loader2, QrCode, Copy, AlertTriangle } from "lucide-react";
+import { Shield, Smartphone, Mail, CheckCircle2, Loader2, QrCode, Copy, AlertTriangle, Download } from "lucide-react";
 
 type MfaMethod = "none" | "totp" | "email" | "both";
 
@@ -20,9 +21,11 @@ const MfaSettingsPanel = () => {
   const [totpEnabled, setTotpEnabled] = useState(false);
   const [emailOtpEnabled, setEmailOtpEnabled] = useState(false);
   const [preferredMethod, setPreferredMethod] = useState<MfaMethod>("none");
-  const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [showBackupCodes, setShowBackupCodes] = useState(false);
+  const [backupCodesCount, setBackupCodesCount] = useState(0);
+  const [showBackupCodesDialog, setShowBackupCodesDialog] = useState(false);
+  const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
   const [generatingCodes, setGeneratingCodes] = useState(false);
+  const [codesConfirmed, setCodesConfirmed] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [enrolling, setEnrolling] = useState(false);
@@ -47,7 +50,11 @@ const MfaSettingsPanel = () => {
       setTotpEnabled(data.totp_enabled);
       setEmailOtpEnabled(data.email_otp_enabled);
       setPreferredMethod(data.preferred_method as MfaMethod);
-      setBackupCodes((data.backup_codes as string[]) || []);
+    }
+    // Get backup codes count from edge function
+    const { data: statusData } = await supabase.functions.invoke("manage-backup-codes", { body: { action: "status" } });
+    if (statusData) {
+      setBackupCodesCount(statusData.count || 0);
     }
     const { data: factors } = await supabase.auth.mfa.listFactors();
     if (factors?.totp && factors.totp.length > 0) {
@@ -136,13 +143,36 @@ const MfaSettingsPanel = () => {
   const generateBackupCodes = async () => {
     if (!user) return;
     setGeneratingCodes(true);
-    const codes = Array.from({ length: 8 }, () =>
-      Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase()
-    );
-    await supabase.from("mfa_settings").upsert({ user_id: user.id, backup_codes: codes }, { onConflict: "user_id" });
-    setBackupCodes(codes);
-    setShowBackupCodes(true);
+    setCodesConfirmed(false);
+    const { data, error } = await supabase.functions.invoke("manage-backup-codes", {
+      body: { action: "generate" },
+    });
+    if (error || !data?.codes) {
+      toast({ title: "Fehler", description: "Backup Codes konnten nicht generiert werden.", variant: "destructive" });
+      setGeneratingCodes(false);
+      return;
+    }
+    setGeneratedCodes(data.codes);
+    setBackupCodesCount(8);
+    setShowBackupCodesDialog(true);
     setGeneratingCodes(false);
+  };
+
+  const downloadCodes = () => {
+    const text = `Decivio MFA Backup Codes\nGeneriert: ${new Date().toLocaleString("de-DE")}\n\n${generatedCodes.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n\n⚠️ Jeden Code nur einmal verwenden. Sicher aufbewahren!`;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "decivio-backup-codes.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleCloseBackupDialog = () => {
+    if (!codesConfirmed) return; // Can't close without confirming
+    setShowBackupCodesDialog(false);
+    setGeneratedCodes([]); // Clear plaintext from memory
     toast({ title: t("mfa.backupCodesGenerated") });
   };
 
@@ -237,39 +267,79 @@ const MfaSettingsPanel = () => {
               </div>
               <div>
                 <p className="text-sm font-medium">{t("mfa.backupCodes")}</p>
-                <p className="text-xs text-muted-foreground">{t("mfa.backupCodesDesc")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {backupCodesCount > 0
+                    ? `${backupCodesCount} Backup Codes verfügbar`
+                    : t("mfa.backupCodesDesc")}
+                </p>
               </div>
             </div>
             <Button size="sm" variant="outline" onClick={generateBackupCodes} disabled={generatingCodes}>
               {generatingCodes ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
-              {backupCodes.length > 0 ? t("mfa.regenerate") : t("mfa.generate")}
+              {backupCodesCount > 0 ? t("mfa.regenerate") : t("mfa.generate")}
             </Button>
           </div>
-          {showBackupCodes && backupCodes.length > 0 && (
-            <div className="mt-3 p-3 rounded-md bg-muted">
-              <div className="grid grid-cols-2 gap-1.5">
-                {backupCodes.map((code, i) => (
-                  <code key={i} className="text-xs font-mono">{code}</code>
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-xs gap-1"
-                  onClick={() => {
-                    navigator.clipboard.writeText(backupCodes.join("\n"));
-                    toast({ title: t("mfa.copied") });
-                  }}
-                >
-                  <Copy className="w-3 h-3" /> {t("mfa.copyAll")}
-                </Button>
-                <p className="text-[10px] text-warning">{t("mfa.backupCodesWarning")}</p>
-              </div>
-            </div>
-          )}
         </div>
       )}
+
+      {/* Backup Codes One-Time Display Dialog */}
+      <Dialog open={showBackupCodesDialog} onOpenChange={(o) => { if (!o && codesConfirmed) handleCloseBackupDialog(); }}>
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => { if (!codesConfirmed) e.preventDefault(); }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-destructive" /> Backup Codes
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Warning Banner */}
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-sm text-destructive flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>Diese Codes werden nur jetzt angezeigt. Speichere sie an einem sicheren Ort.</span>
+          </div>
+
+          {/* Codes Grid */}
+          <div className="p-4 rounded-lg bg-muted border border-border/60">
+            <div className="grid grid-cols-2 gap-2">
+              {generatedCodes.map((code, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
+                  <code className="text-sm font-mono font-medium">{code}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+              navigator.clipboard.writeText(generatedCodes.join("\n"));
+              toast({ title: t("mfa.copied") });
+            }}>
+              <Copy className="w-3.5 h-3.5" /> Kopieren
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={downloadCodes}>
+              <Download className="w-3.5 h-3.5" /> Herunterladen (.txt)
+            </Button>
+          </div>
+
+          {/* Confirmation Checkbox */}
+          <div className="flex items-start gap-2 pt-2 border-t border-border/60">
+            <Checkbox
+              id="confirm-codes"
+              checked={codesConfirmed}
+              onCheckedChange={(v) => setCodesConfirmed(!!v)}
+              className="mt-0.5"
+            />
+            <label htmlFor="confirm-codes" className="text-sm cursor-pointer leading-snug">
+              Ich habe die Codes gesichert und verstehe, dass sie nicht erneut angezeigt werden.
+            </label>
+          </div>
+
+          <Button className="w-full" disabled={!codesConfirmed} onClick={handleCloseBackupDialog}>
+            Fertig
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* TOTP Enrollment Dialog */}
       <Dialog open={enrolling} onOpenChange={(o) => { if (!o) setEnrolling(false); }}>

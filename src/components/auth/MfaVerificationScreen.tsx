@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Shield, Smartphone, Mail, Loader2, AlertCircle } from "lucide-react";
+import { Shield, Smartphone, Mail, Loader2, AlertCircle, KeyRound } from "lucide-react";
 import decivioLogo from "@/assets/decivio-logo.png";
 
 interface MfaVerificationScreenProps {
@@ -14,10 +15,11 @@ interface MfaVerificationScreenProps {
 }
 
 const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificationScreenProps) => {
-  const [activeMethod, setActiveMethod] = useState<"totp" | "email">(
+  const [activeMethod, setActiveMethod] = useState<"totp" | "email" | "backup">(
     mfaMethod === "email" ? "email" : "totp"
   );
   const [code, setCode] = useState("");
+  const [backupCode, setBackupCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -45,13 +47,15 @@ const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificat
   };
 
   const handleVerify = async () => {
+    if (activeMethod === "backup") {
+      return handleBackupCodeVerify();
+    }
     if (code.length !== 6) return;
     setLoading(true);
     setError("");
 
     try {
       if (activeMethod === "totp") {
-        // Verify via Supabase MFA
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const totpFactor = factors?.totp?.find(f => f.status === "verified");
         if (!totpFactor) {
@@ -82,7 +86,6 @@ const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificat
 
         onVerified();
       } else {
-        // Verify via edge function
         const { data, error: fnError } = await supabase.functions.invoke("send-mfa-otp", {
           body: { action: "verify", code },
         });
@@ -93,6 +96,28 @@ const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificat
         }
         onVerified();
       }
+    } catch (err: any) {
+      setError(err.message || "Verifizierung fehlgeschlagen.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackupCodeVerify = async () => {
+    const trimmed = backupCode.trim();
+    if (!trimmed) return;
+    setLoading(true);
+    setError("");
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("manage-backup-codes", {
+        body: { action: "verify", code: trimmed },
+      });
+      if (fnError || !data?.verified) {
+        setError("Ungültiger Backup Code.");
+        setLoading(false);
+        return;
+      }
+      onVerified();
     } catch (err: any) {
       setError(err.message || "Verifizierung fehlgeschlagen.");
     } finally {
@@ -112,14 +137,16 @@ const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificat
           </div>
           <h1 className="font-display text-xl font-bold">Zwei-Faktor-Verifizierung</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Gib den 6-stelligen Code ein, um fortzufahren.
+            {activeMethod === "backup"
+              ? "Gib einen deiner Backup Codes ein."
+              : "Gib den 6-stelligen Code ein, um fortzufahren."}
           </p>
         </div>
 
         <Card className="border-border/50 shadow-glow">
           <CardContent className="p-6">
-            {/* Method switcher (only if both available) */}
-            {mfaMethod === "both" && (
+            {/* Method switcher */}
+            {mfaMethod === "both" && activeMethod !== "backup" && (
               <div className="flex bg-muted rounded-lg p-1 mb-6">
                 <button
                   onClick={() => { setActiveMethod("totp"); setCode(""); setError(""); }}
@@ -140,62 +167,115 @@ const MfaVerificationScreen = ({ mfaMethod, onVerified, onCancel }: MfaVerificat
               </div>
             )}
 
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                {activeMethod === "totp" ? <Smartphone className="w-4 h-4 text-primary" /> : <Mail className="w-4 h-4 text-primary" />}
-              </div>
-              <div>
-                <p className="text-sm font-medium">
-                  {activeMethod === "totp" ? "Authenticator-Code" : "E-Mail-Code"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {activeMethod === "totp"
-                    ? "Code aus deiner Authenticator-App"
-                    : emailSent ? "Code wurde gesendet" : "Code wird gesendet…"}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-center">
-                <InputOTP maxLength={6} value={code} onChange={(v) => { setCode(v); setError(""); }}>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                    <InputOTPSlot index={1} />
-                    <InputOTPSlot index={2} />
-                    <InputOTPSlot index={3} />
-                    <InputOTPSlot index={4} />
-                    <InputOTPSlot index={5} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </div>
-
-              {error && (
-                <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{error}</span>
+            {activeMethod === "backup" ? (
+              /* Backup Code Input */
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <KeyRound className="w-4 h-4 text-warning" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Backup Code</p>
+                    <p className="text-xs text-muted-foreground">Format: XXXX-XXXX</p>
+                  </div>
                 </div>
-              )}
 
-              <Button className="w-full" onClick={handleVerify} disabled={code.length !== 6 || loading}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
-                Verifizieren
-              </Button>
+                <Input
+                  placeholder="XXXX-XXXX"
+                  value={backupCode}
+                  onChange={(e) => { setBackupCode(e.target.value); setError(""); }}
+                  className="text-center font-mono text-lg tracking-wider"
+                  maxLength={9}
+                />
 
-              {activeMethod === "email" && (
+                {error && (
+                  <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <Button className="w-full" onClick={handleBackupCodeVerify} disabled={!backupCode.trim() || loading}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
+                  Verifizieren
+                </Button>
+
                 <button
-                  onClick={sendEmailOtp}
-                  disabled={sendingEmail}
+                  onClick={() => { setActiveMethod(mfaMethod === "email" ? "email" : "totp"); setError(""); setBackupCode(""); }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
                 >
-                  {sendingEmail ? "Wird gesendet…" : "Code erneut senden"}
+                  Zurück zur Code-Eingabe
                 </button>
-              )}
+              </div>
+            ) : (
+              /* Normal OTP Input */
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    {activeMethod === "totp" ? <Smartphone className="w-4 h-4 text-primary" /> : <Mail className="w-4 h-4 text-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">
+                      {activeMethod === "totp" ? "Authenticator-Code" : "E-Mail-Code"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activeMethod === "totp"
+                        ? "Code aus deiner Authenticator-App"
+                        : emailSent ? "Code wurde gesendet" : "Code wird gesendet…"}
+                    </p>
+                  </div>
+                </div>
 
-              <button onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center">
-                Zurück zum Login
-              </button>
-            </div>
+                <div className="space-y-4">
+                  <div className="flex justify-center">
+                    <InputOTP maxLength={6} value={code} onChange={(v) => { setCode(v); setError(""); }}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  <Button className="w-full" onClick={handleVerify} disabled={code.length !== 6 || loading}>
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Shield className="w-4 h-4 mr-2" />}
+                    Verifizieren
+                  </Button>
+
+                  {activeMethod === "email" && (
+                    <button
+                      onClick={sendEmailOtp}
+                      disabled={sendingEmail}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"
+                    >
+                      {sendingEmail ? "Wird gesendet…" : "Code erneut senden"}
+                    </button>
+                  )}
+
+                  {/* Backup code link */}
+                  <button
+                    onClick={() => { setActiveMethod("backup"); setError(""); setCode(""); }}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center flex items-center justify-center gap-1"
+                  >
+                    <KeyRound className="w-3 h-3" /> Backup Code verwenden
+                  </button>
+
+                  <button onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center">
+                    Zurück zum Login
+                  </button>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </motion.div>
