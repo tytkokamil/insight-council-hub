@@ -131,7 +131,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   crypto_audit: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Kryptographischer Audit Trail",
     description: "SHA-256 Hash-Kette für manipulationssichere, lückenlose Nachweisführung.",
     bullets: [
