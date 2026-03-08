@@ -12,6 +12,7 @@ const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const industry = useIndustryPersonalization();
 
   // Inline CoD counter
   const [cost, setCost] = useState(0);
