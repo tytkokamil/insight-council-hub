@@ -377,7 +377,7 @@ const SidebarNav = memo(({
   };
 
   useEffect(() => {
-    import("@/integrations/supabase/client").then(({ supabase }) => {
+    import("@/integrations/supabase/client").then(async ({ supabase }) => {
       supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1)
         .then(({ data }) => setHasActiveMeeting((data?.length ?? 0) > 0));
       // Fetch open decision count for badge — only user's own
