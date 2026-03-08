@@ -252,7 +252,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               <div className="p-3 rounded-lg bg-muted/30 border border-border cursor-default">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
                 <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>
+                <p className="text-[10px] mt-0.5 text-muted-foreground">
                   {t("predictive.confidenceGrowHint", "Steigt automatisch mit mehr abgeschlossenen Entscheidungen.")}
                 </p>
               </div>
