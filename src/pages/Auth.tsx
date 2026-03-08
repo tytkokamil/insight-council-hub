@@ -26,6 +26,11 @@ const Auth = () => {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaMethod, setMfaMethod] = useState<"totp" | "email" | "both">("totp");
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [showPasswordLogin, setShowPasswordLogin] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
 
