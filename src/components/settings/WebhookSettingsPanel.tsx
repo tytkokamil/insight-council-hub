@@ -287,6 +287,7 @@ const WebhookSettingsPanel = () => {
                     onCheckedChange={() => toggleEvent(ev.key)}
                   />
                   <code className="text-[10px] font-mono">{ev.key}</code>
+                  <span className="text-muted-foreground text-[10px]">— {ev.label}</span>
                 </label>
               ))}
             </div>
