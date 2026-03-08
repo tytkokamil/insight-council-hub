@@ -74,7 +74,7 @@ const TestimonialsSection = () => (
         <Link
           to="/auth"
           className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-semibold text-white transition-all duration-300 hover:opacity-90"
-          style={{ background: "#1E3A5F" }}
+          style={{ background: "hsl(var(--primary))" }}
         >
           Gründerpreis sichern <ArrowRight className="w-4 h-4" />
         </Link>

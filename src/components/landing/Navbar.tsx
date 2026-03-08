@@ -183,7 +183,7 @@ const Navbar = () => {
           <div
             className="h-[2px] origin-left will-change-transform transition-transform duration-150"
             style={{
-              background: isDark ? "rgba(239,68,68,0.4)" : "hsl(var(--primary) / 0.3)",
+              background: "hsl(var(--primary) / 0.3)",
               transform: `scaleX(${scrollProgress})`,
             }}
             role="progressbar"
