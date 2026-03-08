@@ -29,7 +29,7 @@ export const usePrefetchOnHover = () => {
         qc.prefetchQuery({
           queryKey: TEAMS_KEY,
           queryFn: fetchTeams,
-          staleTime: 60_000,
+          staleTime: 5 * 60_000,
         });
       }
 
