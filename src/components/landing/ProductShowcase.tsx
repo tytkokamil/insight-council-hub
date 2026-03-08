@@ -344,7 +344,7 @@ const ProductShowcase = () => {
                         <div className="w-2.5 h-2.5 rounded-full bg-success/30" />
                       </div>
                       <div className="flex-1 mx-3 h-6 rounded-md bg-muted/50 flex items-center px-3">
-                        <span className="text-[10px] text-muted-foreground/50 font-mono">app.decivio.com</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">app.decivio.com</span>
                       </div>
                     </div>
                     <div className="relative z-20">
