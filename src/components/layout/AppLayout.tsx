@@ -219,6 +219,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       <CommandPalette />
       <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
+      <TrialExpiredModal open={isTrialExpired && !trialModalDismissed} onDismiss={() => setTrialModalDismissed(true)} />
     </div>
   );
 };
