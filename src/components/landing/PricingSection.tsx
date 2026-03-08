@@ -452,7 +452,7 @@ const PricingSection = () => {
                                 {val === true ? (
                                   <Check className="w-4 h-4 text-success mx-auto" />
                                 ) : val === false ? (
-                                  <Minus className="w-4 h-4 text-muted-foreground/25 mx-auto" />
+                                  <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
                                 ) : (
                                   <span className="text-[13px] text-foreground">{val}</span>
                                 )}
