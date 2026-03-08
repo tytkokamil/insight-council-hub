@@ -18,7 +18,7 @@ const FAQ: Record<string, string> = {
   "compliance": "Decivio unterstützt NIS2, ISO 9001, IATF 16949, GMP, MaRisk, DSGVO, VOB/VgV, Solvency II und den EU AI Act.",
   "ki": "Decivio nutzt KI für tägliche Briefings, Entscheidungsanalysen, CoPilot-Vorschläge, Anomalie-Erkennung und What-If-Simulationen.",
   "integration": "Webhooks, Microsoft Teams, E-Mail-Workflows (One-Click Approval), WhatsApp-Benachrichtigungen und eine REST API.",
-  "demo": "Besuchen Sie /demo für eine interaktive Live-Demo oder schreiben Sie an demo@decivio.com für einen persönlichen Termin.",
+  "demo": "Besuchen Sie /demo für eine interaktive Live-Demo oder schreiben Sie an hallo@decivio.com für einen persönlichen Termin.",
   "founding": "Als einer der ersten 20 Founding Customers erhalten Sie lebenslang −40% auf den Professional-Plan. Mehr unter /founding.",
 };
 
