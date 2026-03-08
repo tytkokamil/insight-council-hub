@@ -67,7 +67,7 @@ const HeroSection = () => {
               border: "1px solid hsl(var(--destructive) / 0.3)",
             }}
           >
-            <span style={{ color: "#EF4444", fontSize: "11px", letterSpacing: "0.12em", fontWeight: 600 }}>
+            <span className="text-destructive" style={{ fontSize: "11px", letterSpacing: "0.12em", fontWeight: 600 }}>
               ⚡ ENTSCHEIDUNGSPLATTFORM FÜR DEN MITTELSTAND
             </span>
           </motion.div>
