@@ -11,21 +11,80 @@ const corsHeaders = {
  *   1 = Approve pending review
  *   2 = Reject pending review
  *   3 = Reply with decision link
+ *
+ * Security: Validates Twilio X-Twilio-Signature (HMAC-SHA1)
  */
+
+// --- Twilio Signature Validation ---
+async function validateTwilioSignature(
+  authToken: string,
+  url: string,
+  params: URLSearchParams,
+  signature: string
+): Promise<boolean> {
+  // Build data string: URL + sorted params key+value concatenated
+  const sortedParams = [...params.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}${v}`)
+    .join("");
+
+  const data = url + sortedParams;
+
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(authToken),
+    { name: "HMAC", hash: "SHA-1" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(data));
+  const expectedSignature = btoa(String.fromCharCode(...new Uint8Array(sig)));
+
+  // Constant-time comparison
+  const a = encoder.encode(signature);
+  const b = encoder.encode(expectedSignature);
+  if (a.length !== b.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < a.length; i++) {
+    mismatch |= a[i] ^ b[i];
+  }
+  return mismatch === 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // --- Step 1: Validate Twilio signature ---
+    const twilioSignature = req.headers.get("X-Twilio-Signature");
+    const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+    const webhookUrl = Deno.env.get("WHATSAPP_WEBHOOK_URL");
+
+    if (!twilioSignature || !authToken || !webhookUrl) {
+      console.error("WhatsApp webhook: Missing signature, auth token, or webhook URL");
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    // Read body as text for signature validation, then parse as URLSearchParams
+    const bodyText = await req.text();
+    const params = new URLSearchParams(bodyText);
+
+    const isValid = await validateTwilioSignature(authToken, webhookUrl, params, twilioSignature);
+    if (!isValid) {
+      console.error("WhatsApp webhook: Invalid Twilio signature");
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // --- Step 2: Process verified request ---
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    // Twilio sends form-urlencoded data
-    const formData = await req.formData();
-    const from = (formData.get("From") as string || "").replace("whatsapp:", "");
-    const body = (formData.get("Body") as string || "").trim();
+    const from = (params.get("From") || "").replace("whatsapp:", "");
+    const body = (params.get("Body") || "").trim();
 
     if (!from || !body) {
       return new Response("<Response></Response>", {
