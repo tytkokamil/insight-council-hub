@@ -65,7 +65,7 @@ const InternalAdmin = lazy(() => import("./pages/InternalAdmin"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
-
+const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
