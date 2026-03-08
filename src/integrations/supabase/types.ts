@@ -2954,6 +2954,59 @@ export type Database = {
         }
         Relationships: []
       }
+      sso_configurations: {
+        Row: {
+          attribute_mapping: Json | null
+          certificate: string
+          created_at: string | null
+          domain_hint: string | null
+          entity_id: string
+          id: string
+          is_active: boolean | null
+          org_id: string
+          provider_name: string
+          sso_url: string
+          test_passed: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          attribute_mapping?: Json | null
+          certificate: string
+          created_at?: string | null
+          domain_hint?: string | null
+          entity_id: string
+          id?: string
+          is_active?: boolean | null
+          org_id: string
+          provider_name: string
+          sso_url: string
+          test_passed?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          attribute_mapping?: Json | null
+          certificate?: string
+          created_at?: string | null
+          domain_hint?: string | null
+          entity_id?: string
+          id?: string
+          is_active?: boolean | null
+          org_id?: string
+          provider_name?: string
+          sso_url?: string
+          test_passed?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sso_configurations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stakeholder_positions: {
         Row: {
           concerns: string | null
@@ -3787,6 +3840,15 @@ export type Database = {
       get_org_role: { Args: { _user_id: string }; Returns: string }
       get_plan_max_decisions: { Args: { _plan: string }; Returns: number }
       get_plan_max_users: { Args: { _plan: string }; Returns: number }
+      get_sso_config_by_domain: {
+        Args: { _domain: string }
+        Returns: {
+          entity_id: string
+          org_id: string
+          provider_name: string
+          sso_url: string
+        }[]
+      }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       get_velocity_score: {
         Args: { _org_id?: string; _user_id?: string }
