@@ -2672,7 +2672,10 @@ export type Database = {
           delegator_id: string
           end_date: string
           id: string
+          org_id: string | null
           reason: string | null
+          scope: string
+          scope_value: string | null
           start_date: string
           updated_at: string
         }
@@ -2683,7 +2686,10 @@ export type Database = {
           delegator_id: string
           end_date: string
           id?: string
+          org_id?: string | null
           reason?: string | null
+          scope?: string
+          scope_value?: string | null
           start_date: string
           updated_at?: string
         }
@@ -2694,11 +2700,22 @@ export type Database = {
           delegator_id?: string
           end_date?: string
           id?: string
+          org_id?: string | null
           reason?: string | null
+          scope?: string
+          scope_value?: string | null
           start_date?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "review_delegations_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       risk_decision_links: {
         Row: {

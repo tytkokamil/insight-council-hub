@@ -36,12 +36,23 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
     const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("review_delegations")
-      .select("delegator_id")
+      .select("delegator_id, scope, scope_value")
       .eq("delegate_id", user.id)
       .eq("active", true)
       .lte("start_date", today)
       .gte("end_date", today);
-    if (data) setDelegationsForMe(data.map(d => d.delegator_id));
+    if (data) {
+      // Filter by scope: match all, or category/team if applicable
+      const validDelegatorIds = data
+        .filter(d => {
+          if (d.scope === "all") return true;
+          if (d.scope === "category" && decision.category === d.scope_value) return true;
+          if (d.scope === "team" && decision.team_id === d.scope_value) return true;
+          return false;
+        })
+        .map(d => d.delegator_id);
+      setDelegationsForMe(validDelegatorIds);
+    }
   };
 
   const fetchExternalReviews = async () => {
@@ -70,7 +81,7 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
       step_order: nextOrder,
     }).select().single();
 
-    // Trigger email notification with one-click action tokens
+    // Trigger email notification
     if (newReview) {
       supabase.functions.invoke("review-notify", {
         body: {
@@ -78,7 +89,57 @@ const ReviewPanel = ({ decision, onUpdated }: { decision: any; onUpdated: () => 
           reviewer_id: selectedReviewer,
           review_id: newReview.id,
         },
-      }).catch(() => {}); // fire-and-forget
+      }).catch(() => {});
+    }
+
+    // Check if reviewer has an active delegation — add delegate as additional reviewer
+    const today = new Date().toISOString().split("T")[0];
+    const { data: activeDelegation } = await supabase
+      .from("review_delegations")
+      .select("delegate_id, scope, scope_value")
+      .eq("delegator_id", selectedReviewer)
+      .eq("active", true)
+      .lte("start_date", today)
+      .gte("end_date", today)
+      .limit(1)
+      .maybeSingle();
+
+    if (activeDelegation) {
+      // Check scope
+      const scopeMatch =
+        activeDelegation.scope === "all" ||
+        (activeDelegation.scope === "category" && decision.category === activeDelegation.scope_value) ||
+        (activeDelegation.scope === "team" && decision.team_id === activeDelegation.scope_value);
+
+      if (scopeMatch) {
+        // Add delegate as additional reviewer
+        await supabase.from("decision_reviews").insert({
+          decision_id: decision.id,
+          reviewer_id: activeDelegation.delegate_id,
+          step_order: nextOrder,
+        });
+
+        // Notify delegate
+        supabase.functions.invoke("review-notify", {
+          body: {
+            decision_id: decision.id,
+            reviewer_id: activeDelegation.delegate_id,
+            review_id: newReview?.id,
+          },
+        }).catch(() => {});
+
+        // Audit trail
+        const reviewerName = profiles.find(p => p.user_id === selectedReviewer)?.full_name || "Unbekannt";
+        const delegateName = profiles.find(p => p.user_id === activeDelegation.delegate_id)?.full_name || "Unbekannt";
+        await supabase.from("audit_logs").insert({
+          decision_id: decision.id,
+          user_id: user!.id,
+          action: "review_delegated",
+          field_name: "reviewer",
+          old_value: reviewerName,
+          new_value: `Delegiert an ${delegateName} (Vertretung aktiv)`,
+        });
+      }
     }
 
     setSelectedReviewer("");
