@@ -115,6 +115,7 @@ export const publicRoutes = (
 
 export const protectedRoutes = (
   <>
+    <Route path="/onboarding/pain" element={<P><PainOnboarding /></P>} />
     <Route path="/welcome" element={<P><Welcome /></P>} />
     <Route path="/dashboard" element={<P><Dashboard /></P>} />
     <Route path="/decisions" element={<P><Decisions /></P>} />

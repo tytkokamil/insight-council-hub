@@ -35,8 +35,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!user) return <Navigate to="/auth" replace />;
 
-  // Redirect to /welcome if onboarding not completed (but not if already on /welcome)
-  if (needsOnboarding && location.pathname !== "/welcome") {
+  // Redirect to pain onboarding first, then /welcome
+  const onboardingPaths = ["/welcome", "/onboarding/pain"];
+  if (needsOnboarding && !onboardingPaths.includes(location.pathname)) {
+    // Check if pain onboarding is already done
+    const painDone = localStorage.getItem("pain_hourly_rate");
+    if (!painDone) {
+      return <Navigate to="/onboarding/pain" replace />;
+    }
     return <Navigate to="/welcome" replace />;
   }
 
