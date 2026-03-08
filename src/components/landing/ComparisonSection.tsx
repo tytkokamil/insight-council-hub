@@ -102,7 +102,7 @@ const ComparisonSection = () => {
           className="rounded-2xl border border-border/40 bg-background/80 backdrop-blur-sm overflow-hidden shadow-sm"
         >
           {/* Header */}
-          <div className="grid grid-cols-[1fr_repeat(3,90px)] md:grid-cols-[1fr_repeat(3,140px)] items-center border-b border-border/30 px-5 py-4 bg-muted/30">
+          <div className="grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center border-b border-border/30 px-5 py-4 bg-muted/30">
             <div className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider">Funktion</div>
             {tools.map((tool, ti) => (
               <div key={tool.name} className="text-center">
