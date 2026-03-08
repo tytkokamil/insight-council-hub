@@ -159,8 +159,7 @@ const HeroSection = () => {
             </Link>
           </motion.div>
 
-          {/* Live cost ticker — inline, no fluff */}
-          <InlineTicker />
+          {/* Trust signals */}
 
           {/* Trust signals — minimal, earned */}
           <motion.div
