@@ -75,6 +75,27 @@ serve(async (req) => {
   try {
     const body = await req.json();
     const userId = await extractUserId(req);
+    
+    // ── Plan guard: AI copilot requires Pro or Enterprise ──
+    if (userId) {
+      const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      const { data: prof } = await adminClient.from("profiles").select("org_id").eq("user_id", userId).single();
+      if (prof?.org_id) {
+        const { data: orgRow } = await adminClient.from("organizations").select("plan, subscription_status").eq("id", prof.org_id).single();
+        const effPlan = orgRow?.subscription_status === "trialing" ? "pro"
+          : orgRow?.subscription_status === "suspended" ? "free"
+          : orgRow?.plan || "free";
+        if (!["pro", "enterprise"].includes(effPlan)) {
+          return new Response(JSON.stringify({
+            error: "upgrade_required",
+            feature: "ai_analysis",
+            message: "KI-Copilot ist ab dem Professional-Plan verfügbar.",
+            min_plan: "pro",
+          }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+    }
+    
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
     // Thread summary mode
