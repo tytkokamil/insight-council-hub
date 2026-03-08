@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { SortField, SortDir } from "@/components/decisions/DecisionTable";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "@/components/ui/pagination";
 import DecisionsPageSkeleton from "@/components/decisions/DecisionsPageSkeleton";
 import { Plus, Download, FileText, FileUp } from "lucide-react";
 import QueryErrorRetry from "@/components/shared/QueryErrorRetry";
@@ -108,6 +109,8 @@ const Decisions = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   // ── Dialog state ──
   const [showNewDialog, setShowNewDialog] = useState(false);
@@ -195,6 +198,12 @@ const Decisions = () => {
     }
     return result;
   }, [decisions, debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip, decisionMeta, sortField, sortDir]);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedDecisions = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   // ── Actions ──
   const clearAllFilters = () => {
@@ -311,7 +320,7 @@ const Decisions = () => {
           </AnimatePresence>
 
           <DecisionTableWithPredictions
-            filtered={filtered}
+            filtered={paginatedDecisions}
             decisionMeta={decisionMeta}
             profileMap={profileMap}
             selectedIds={selectedIds}
@@ -331,6 +340,50 @@ const Decisions = () => {
             allDecisions={decisions}
             allReviews={allReviews}
           />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xs text-muted-foreground">
+                {t("decisions.showingRange", {
+                  from: (currentPage - 1) * PAGE_SIZE + 1,
+                  to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                  total: filtered.length,
+                  defaultValue: `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} von ${filtered.length}`,
+                })}
+              </p>
+              <Pagination>
+                <PaginationContent>
+                  {currentPage > 1 && (
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => setCurrentPage(p => p - 1)} className="cursor-pointer" />
+                    </PaginationItem>
+                  )}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((p, idx, arr) => {
+                      const prev = arr[idx - 1];
+                      const showEllipsis = prev && p - prev > 1;
+                      return (
+                        <span key={p} className="contents">
+                          {showEllipsis && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                          <PaginationItem>
+                            <PaginationLink isActive={p === currentPage} onClick={() => setCurrentPage(p)} className="cursor-pointer">
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </span>
+                      );
+                    })}
+                  {currentPage < totalPages && (
+                    <PaginationItem>
+                      <PaginationNext onClick={() => setCurrentPage(p => p + 1)} className="cursor-pointer" />
+                    </PaginationItem>
+                  )}
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </>
       )}
 
