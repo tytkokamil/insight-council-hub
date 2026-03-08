@@ -24,6 +24,7 @@ import TopBar from "./TopBar";
 import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
 import TrialBanner from "@/components/upgrade/TrialBanner";
 import TrialExpiredModal from "@/components/upgrade/TrialExpiredModal";
+import PastDueBanner from "@/components/upgrade/PastDueBanner";
 import { useTrialStatus } from "@/hooks/useTrialStatus";
 import QuickCaptureButton from "@/components/shared/QuickCaptureButton";
 import CodTickerBadge from "@/components/shared/CodTickerBadge";
