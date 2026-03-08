@@ -614,7 +614,6 @@ const AutomationRules = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs gap-1 shrink-0"
                         className="h-7 text-xs gap-1 shrink-0 text-primary border-primary hover:bg-primary/10"
                         onClick={async (e) => {
                           e.stopPropagation();

@@ -555,7 +555,6 @@ const Tasks = () => {
                               <Link
                                 to={`/decisions/${taskDecisionMap[task.id].decisionId}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1 mt-0.5 hover:underline"
                                 className="flex items-center gap-1 mt-0.5 hover:underline text-[11px] text-muted-foreground"
                               >
                                 <LinkIcon className="w-3 h-3 text-muted-foreground" />

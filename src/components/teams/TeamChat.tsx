@@ -587,7 +587,6 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             onClick={handleSend}
             disabled={(!newMessage.trim() && !selectedFile && !linkedDecisionId) || sending}
             size="icon"
-            className="h-10 w-10 shrink-0"
             className="h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Send className="w-4 h-4" />

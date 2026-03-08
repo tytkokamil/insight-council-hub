@@ -710,7 +710,6 @@ const ProcessHub = () => {
                       </div>
                       {relatedDecision && (
                         <div
-                          className="flex items-center gap-1 mb-0.5 cursor-pointer hover:underline"
                           className="flex items-center gap-1 mb-0.5 cursor-pointer hover:underline text-[11px] text-muted-foreground"
                           onClick={(e) => { e.stopPropagation(); navigate(`/decisions/${relatedDecision.id}`); }}
                         >
