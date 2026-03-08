@@ -147,6 +147,7 @@ const AdminOrgsTab = () => {
                           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 text-neutral-300" onClick={() => handleAction("extend_trial", org, { days: 14 })}>Trial +14 Tage</button>
                           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 text-neutral-300" onClick={() => handleAction("toggle_pilot", org)}>Pilot-Modus</button>
                           <div className="border-t my-1" style={{ borderColor: "#1e293b" }} />
+                          <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 text-neutral-300" onClick={() => { setActionMenu(null); window.open(`/roi-report`, '_blank'); }}>ROI Report generieren</button>
                           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-500/10 text-red-400" onClick={() => handleAction("deactivate", org)}>Org deaktivieren</button>
                           <button className="w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 text-neutral-300" onClick={() => handleAction("export_org", org)}>Daten exportieren</button>
                         </div>
