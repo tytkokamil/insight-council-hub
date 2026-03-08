@@ -13,7 +13,8 @@ const testimonials = [
     initials: "MH",
     metric: "€48K",
     metricLabel: "Exposure sichtbar gemacht",
-    accentColor: "hsl(220 45% 50%)",
+    accentClass: "text-accent-blue",
+    accentBg: "bg-accent-blue/12",
   },
   {
     quote: "Unser nächster ISO-9001-Audit war der erste ohne Nachbesserungen. Der Auditor fragte nach unserem Entscheidungssystem.",
