@@ -1,5 +1,6 @@
 import { Component, ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import * as Sentry from "@sentry/react";
 import i18n from "@/i18n";
 
 interface Props {
@@ -26,6 +27,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
     console.error("[GlobalErrorBoundary] Unhandled error:", error);
     console.error("[GlobalErrorBoundary] Component stack:", info.componentStack);
     this.setState({ errorInfo: info.componentStack || null });
+    Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack || "" } } });
   }
 
   handleRetry = () => {
