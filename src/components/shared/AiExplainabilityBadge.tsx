@@ -10,6 +10,7 @@ interface AiExplainabilityBadgeProps {
   dataPoints?: number | null;
   sourceType?: AiSourceType;
   explanation?: string | null;
+  modelUsed?: string | null;
   className?: string;
 }
 
