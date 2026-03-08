@@ -62,7 +62,7 @@ const Footer = () => (
           {/* Newsletter signup hint */}
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <Mail className="w-3.5 h-3.5" />
-            <a href="mailto:info@decivio.com" className="hover:text-foreground transition-colors">info@decivio.com</a>
+            <a href="mailto:hallo@decivio.com" className="hover:text-foreground transition-colors">hallo@decivio.com</a>
           </div>
         </div>
 

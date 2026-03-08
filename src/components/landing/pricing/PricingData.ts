@@ -119,7 +119,7 @@ export const getPlans = (t: TFunction): Plan[] => [
       { label: t("landing.pricing.featPrioritySupport", { defaultValue: "Prioritäts-Support (< 4h)" }), included: true },
     ],
     cta: t("landing.pricing.enterpriseCta", { defaultValue: "Gespräch vereinbaren" }),
-    ctaLink: "mailto:sales@decivio.com",
+    ctaLink: "mailto:hallo@decivio.com",
     ctaVariant: "outline",
     highlighted: false,
     idealFor: t("landing.pricing.enterpriseIdeal", { defaultValue: "Ideal für Unternehmen mit 100+ Mitarbeitern." }),

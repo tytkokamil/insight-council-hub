@@ -77,7 +77,7 @@ const CTASection = () => {
               </span>
             </Link>
             <a
-              href="mailto:demo@decivio.com"
+              href="mailto:hallo@decivio.com"
               className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-3.5 rounded-xl hover:shadow-md text-muted-foreground hover:text-foreground transition-all"
             >
               Demo buchen

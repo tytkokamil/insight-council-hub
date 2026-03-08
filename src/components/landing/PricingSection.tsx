@@ -106,7 +106,7 @@ const plans: Plan[] = [
     desc: "Für Unternehmen mit komplexen Anforderungen und 25+ Nutzern.",
     highlighted: false,
     cta: "Gespräch vereinbaren",
-    ctaLink: "mailto:sales@decivio.com",
+    ctaLink: "mailto:hallo@decivio.com",
     features: [
       { label: "Unbegrenzte Nutzer", included: true },
       { label: "Alles aus Professional", included: true },

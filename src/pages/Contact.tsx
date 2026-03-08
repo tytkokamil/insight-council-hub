@@ -150,7 +150,7 @@ const Contact = () => {
 
                   <p className="text-[11px] text-muted-foreground text-center">
                     Alternativ erreichst du uns unter{" "}
-                    <a href="mailto:support@decivio.com" className="text-primary hover:underline">support@decivio.com</a>
+                    <a href="mailto:hallo@decivio.com" className="text-primary hover:underline">hallo@decivio.com</a>
                   </p>
                 </form>
               </>
