@@ -102,7 +102,7 @@ const SettingsPage = () => {
         if (profileRes.data.org_id) {
           const { data: orgData } = await supabase.from("organizations").select("plan").eq("id", profileRes.data.org_id).maybeSingle();
           if (orgData?.plan) {
-            const planMap: Record<string, string> = { starter: "Free", pro: "Pro", business: "Business", enterprise: "Enterprise" };
+            const planMap: Record<string, string> = { free: "Free", starter: "Starter", professional: "Professional", enterprise: "Enterprise" };
             setOrgPlan(planMap[orgData.plan] || orgData.plan.charAt(0).toUpperCase() + orgData.plan.slice(1));
           }
         }
