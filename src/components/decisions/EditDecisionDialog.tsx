@@ -37,6 +37,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
   const [dueDate, setDueDate] = useState("");
   const [changeReason, setChangeReason] = useState("");
   const [confidential, setConfidential] = useState(false);
+  const [confidentialViewerIds, setConfidentialViewerIds] = useState<string[]>([]);
 
   const CATEGORY_OPTIONS: { value: DecisionCategory; label: string }[] = [
     { value: "strategic", label: t("decisions.edit.strategic") },
@@ -72,6 +73,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       setPriority(decision.priority || "medium");
       setDueDate(decision.due_date || "");
       setConfidential(decision.confidential || false);
+      setConfidentialViewerIds(decision.confidential_viewer_ids || []);
       setOwnerId(decision.owner_id || decision.created_by || "");
       setChangeReason("");
     }
@@ -125,6 +127,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
         priority,
         due_date: dueDate || null,
         confidential,
+        confidential_viewer_ids: confidential ? confidentialViewerIds : [],
         owner_id: ownerId || undefined,
       } as any)
       .eq("id", decision.id);
@@ -220,6 +223,37 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
             </div>
             <Switch checked={confidential} onCheckedChange={setConfidential} />
           </div>
+          {confidential && (
+            <div className="space-y-2 p-3 rounded-lg bg-warning/5 border border-warning/20">
+              <div className="flex items-start gap-2">
+                <Lock className="w-3.5 h-3.5 text-warning mt-0.5 shrink-0" />
+                <p className="text-xs text-warning">{t("decisions.confidentialWarning")}</p>
+              </div>
+              <label className="text-xs font-medium text-muted-foreground">{t("decisions.confidentialViewers")}</label>
+              <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                {profiles.map(p => {
+                  const isSelected = confidentialViewerIds.includes(p.user_id);
+                  return (
+                    <button
+                      key={p.user_id}
+                      type="button"
+                      onClick={() => setConfidentialViewerIds(prev =>
+                        isSelected ? prev.filter(id => id !== p.user_id) : [...prev, p.user_id]
+                      )}
+                      className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                        isSelected
+                          ? "bg-primary/15 border-primary/30 text-primary font-medium"
+                          : "bg-muted/30 border-border text-muted-foreground hover:border-primary/20"
+                      }`}
+                    >
+                      {p.full_name || p.user_id.slice(0, 8)}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-muted-foreground">{t("decisions.confidentialAdminNote")}</p>
+            </div>
+          )}
           <div className="border-t border-border pt-4">
             <label className="form-label text-foreground">{t("decisions.edit.changeReasonLabel")}</label>
             <Textarea

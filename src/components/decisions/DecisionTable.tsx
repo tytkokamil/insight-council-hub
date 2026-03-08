@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { MoreHorizontal, Eye, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, ArrowRightLeft } from "lucide-react";
+import { MoreHorizontal, Eye, Pencil, Trash2, ArrowUp, ArrowDown, ArrowUpDown, ArrowRightLeft, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
@@ -190,6 +190,14 @@ const DecisionTable = ({
                     <td className="p-3">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <QualityScoreBadge decision={decision} />
+                        {decision.confidential && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Lock className="w-3.5 h-3.5 text-destructive/70 shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">{t("decisions.confidentialLabel")}</TooltipContent>
+                          </Tooltip>
+                        )}
                         <p className="text-sm font-medium">{decision.title}</p>
                         <DecisionBadges meta={meta} t={t} />
                         <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />

@@ -1080,6 +1080,7 @@ export type Database = {
           cancelled_at: string | null
           category: Database["public"]["Enums"]["decision_category"]
           confidential: boolean
+          confidential_viewer_ids: string[] | null
           context: string | null
           cost_per_day: number | null
           created_at: string
@@ -1124,6 +1125,7 @@ export type Database = {
           cancelled_at?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
+          confidential_viewer_ids?: string[] | null
           context?: string | null
           cost_per_day?: number | null
           created_at?: string
@@ -1168,6 +1170,7 @@ export type Database = {
           cancelled_at?: string | null
           category?: Database["public"]["Enums"]["decision_category"]
           confidential?: boolean
+          confidential_viewer_ids?: string[] | null
           context?: string | null
           cost_per_day?: number | null
           created_at?: string
