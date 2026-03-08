@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import PlatformAdminGuard from "@/components/layout/PlatformAdminGuard";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 
