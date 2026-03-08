@@ -433,8 +433,8 @@ const PricingSection = () => {
                   </thead>
                   <tbody>
                     {comparisonCategories.map((cat) => (
-                      <>
-                        <tr key={`cat-${cat.category}`}>
+                      <React.Fragment key={`cat-${cat.category}`}>
+                        <tr>
                           <td
                             colSpan={5}
                             className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider"
