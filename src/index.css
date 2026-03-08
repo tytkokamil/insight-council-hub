@@ -525,3 +525,53 @@ html {
   0%, 100% { transform: translateY(0); opacity: 0.15; }
   50% { transform: translateY(-18px); opacity: 0.35; }
 }
+
+/* ── Micro-interaction animations ── */
+
+/* CoD pulse — subtle red glow when cost increases */
+@keyframes cod-pulse {
+  0% { box-shadow: 0 0 0 0 hsl(0 84% 60% / 0.4); }
+  70% { box-shadow: 0 0 0 6px hsl(0 84% 60% / 0); }
+  100% { box-shadow: 0 0 0 0 hsl(0 84% 60% / 0); }
+}
+
+.cod-pulse {
+  animation: cod-pulse 1s ease-out;
+}
+
+/* Save success flash */
+@keyframes save-flash {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.save-flash {
+  animation: save-flash 0.4s ease-out forwards;
+}
+
+/* Score fill animation */
+@keyframes score-fill {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: var(--score-offset, 0); }
+}
+
+.score-animate {
+  animation: score-fill 1s ease-out forwards;
+}
+
+/* Sticky action footer */
+.sticky-action-footer {
+  @apply sticky bottom-0 z-10 bg-background/95 backdrop-blur-sm border-t border-border px-4 py-3 flex items-center justify-end gap-2;
+}
+
+/* Number tick animation for CoD */
+@keyframes number-tick {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-2px); }
+  50% { transform: translateY(0); }
+}
+
+.number-tick {
+  animation: number-tick 0.3s ease-out;
+}

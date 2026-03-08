@@ -48,8 +48,10 @@ const LiveCodCounter = ({
 }: LiveCodCounterProps) => {
   const { t } = useTranslation();
   const [currentCost, setCurrentCost] = useState(baseCost);
+  const [shouldPulse, setShouldPulse] = useState(false);
   const startTimeRef = useRef(Date.now());
   const baseRef = useRef(baseCost);
+  const prevCostRef = useRef(baseCost);
 
   useEffect(() => {
     baseRef.current = baseCost;
@@ -61,7 +63,15 @@ const LiveCodCounter = ({
 
     const interval = setInterval(() => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000;
-      setCurrentCost(baseRef.current + elapsed * costPerSecond);
+      const newCost = baseRef.current + elapsed * costPerSecond;
+      
+      // Trigger pulse when cost crosses a whole euro threshold
+      if (Math.floor(newCost) > Math.floor(prevCostRef.current)) {
+        setShouldPulse(true);
+        setTimeout(() => setShouldPulse(false), 1000);
+      }
+      prevCostRef.current = newCost;
+      setCurrentCost(newCost);
     }, 1000);
 
     return () => clearInterval(interval);
@@ -70,11 +80,12 @@ const LiveCodCounter = ({
   const colorClass = getColorClass(currentCost);
   const formattedCost = formatCurrency(Math.round(currentCost));
   const formattedDaily = dailyCost ? formatCurrency(Math.round(dailyCost)) : null;
+  const pulseClass = shouldPulse ? "cod-pulse number-tick" : "";
 
   const counter = (
-    <span className={`inline-flex items-center gap-1 tabular-nums ${sizeClasses[size]} ${colorClass} transition-colors duration-300`}>
+    <span className={`inline-flex items-center gap-1 tabular-nums ${sizeClasses[size]} ${colorClass} ${pulseClass} transition-colors duration-300`}>
       {showIcon && (
-        <Timer className={`shrink-0 animate-pulse ${size === "hero" ? "w-7 h-7" : size === "lg" ? "w-5 h-5" : size === "md" ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
+        <Timer className={`shrink-0 ${costPerSecond > 0 ? "animate-pulse" : ""} ${size === "hero" ? "w-7 h-7" : size === "lg" ? "w-5 h-5" : size === "md" ? "w-3.5 h-3.5" : "w-3 h-3"}`} />
       )}
       {formattedCost}
     </span>
