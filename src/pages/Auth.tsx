@@ -31,6 +31,7 @@ const Auth = () => {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [ssoLoading, setSsoLoading] = useState(false);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
 
