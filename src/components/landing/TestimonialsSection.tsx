@@ -97,7 +97,7 @@ const TestimonialsSection = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: direction * -60 }}
               transition={{ duration: 0.45, ease }}
-              className="rounded-2xl border border-border/40 bg-white/80 backdrop-blur-sm p-8 md:p-10"
+              className="rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-8 md:p-10"
             >
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 {/* Metric highlight */}
