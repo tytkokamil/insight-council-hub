@@ -161,6 +161,7 @@ export const useFreemiumLimits = (): FreemiumLimits => {
     maxUsers: limits.maxUsers,
     maxTeams: limits.maxTeams,
     maxAutomationRules: limits.maxAutomationRules,
+    maxTemplates: limits.maxTemplates,
     maxComplianceFrameworks: limits.maxComplianceFrameworks,
     teamsAvailable: limits.teams,
     aiBriefAvailable: limits.aiBrief,
