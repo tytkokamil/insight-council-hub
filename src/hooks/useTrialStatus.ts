@@ -9,6 +9,9 @@ interface TrialStatus {
   trialEndsAt: string | null;
   subscriptionStatus: string;
   plan: string;
+  isPastDue: boolean;
+  isSuspended: boolean;
+  pastDueDaysLeft: number;
 }
 
 export const useTrialStatus = (): TrialStatus => {
