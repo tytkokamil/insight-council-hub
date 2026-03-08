@@ -2221,6 +2221,7 @@ export type Database = {
         Row: {
           branding: Json | null
           created_at: string
+          data_retention_config: Json
           dunning_last_sent_at: string | null
           dunning_step: number
           id: string
@@ -2244,6 +2245,7 @@ export type Database = {
         Insert: {
           branding?: Json | null
           created_at?: string
+          data_retention_config?: Json
           dunning_last_sent_at?: string | null
           dunning_step?: number
           id?: string
@@ -2267,6 +2269,7 @@ export type Database = {
         Update: {
           branding?: Json | null
           created_at?: string
+          data_retention_config?: Json
           dunning_last_sent_at?: string | null
           dunning_step?: number
           id?: string
