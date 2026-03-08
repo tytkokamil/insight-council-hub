@@ -284,18 +284,20 @@ const Dashboard = () => {
         {/* ═══ MAIN DASHBOARD ═══ */}
         {!isLoading && (
           <>
+            {/* ═══ AHA MOMENT OVERLAY ═══ */}
+            {showAha && ahaData && (
+              <Suspense fallback={null}>
+                <AhaMomentOverlay
+                  costPerDay={ahaData.costPerDay}
+                  decisionTitle={ahaData.decisionTitle}
+                  onDismiss={() => setShowAha(false)}
+                />
+              </Suspense>
+            )}
+
             {/* ═══ GUIDED MODE for new users (< 3 decisions) ═══ */}
             {isGuidedMode && (
               <div className="space-y-6">
-                <WelcomeBanner firstName={firstName} />
-
-                <OnboardingChecklist
-                  hasTeam={teams.length > 0}
-                  hasDecision={decisions.length > 0}
-                  hasReview={contextReviews.length > 0}
-                  hasTemplate={decisions.some(d => !!d.template_used)}
-                />
-
                 <CodPreviewWidget />
               </div>
             )}
