@@ -85,7 +85,7 @@ const TiltCard = ({ children }: { children: React.ReactNode }) => {
         <motion.div
           className="absolute inset-0 rounded-2xl pointer-events-none z-10"
           style={{
-            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(220 60% 90% / 0.12), transparent 60%)`,
+            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(var(--primary) / 0.08), transparent 60%)`,
           }}
         />
       </motion.div>
