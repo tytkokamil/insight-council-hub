@@ -219,7 +219,7 @@ const AuditMockup = () => (
               <div className="text-[11px] text-foreground/70">{entry.action}</div>
               <div className="text-[9px] font-mono text-muted-foreground">{entry.hash}</div>
             </div>
-            <span className="text-[10px] text-muted-foreground/50">{entry.time}</span>
+            <span className="text-[10px] text-muted-foreground">{entry.time}</span>
           </motion.div>
         ))}
       </div>

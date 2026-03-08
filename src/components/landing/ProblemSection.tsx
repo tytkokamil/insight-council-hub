@@ -149,7 +149,7 @@ const ProblemSection = () => {
             </div>
 
             <div className="px-5 py-3 border-t border-border/30 flex items-center justify-between bg-muted/10">
-              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Total Economic Exposure</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground">Total Economic Exposure</span>
               <motion.span
                 className="text-base font-bold tabular-nums font-mono text-destructive"
                 initial={{ opacity: 0 }}

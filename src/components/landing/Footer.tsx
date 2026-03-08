@@ -51,7 +51,7 @@ const Footer = () => (
             Decision Governance Platform für den Mittelstand. Machen Sie jede Entscheidung sichtbar, messbar und compliant.
           </p>
           {/* Newsletter signup hint */}
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground/40">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <Mail className="w-3.5 h-3.5" />
             <a href="mailto:info@decivio.com" className="hover:text-foreground transition-colors">info@decivio.com</a>
           </div>

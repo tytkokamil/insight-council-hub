@@ -60,7 +60,7 @@ const ComplianceSection = () => (
               {fw.badge}
             </span>
             <h3 className="text-[15px] font-semibold mb-2">{fw.name}</h3>
-            <p className="text-[13px] leading-relaxed">{fw.desc}</p>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{fw.desc}</p>
           </motion.div>
         ))}
       </div>

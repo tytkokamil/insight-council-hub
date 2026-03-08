@@ -174,7 +174,7 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground/35 italic">
+        <p className="text-center text-[10px] text-muted-foreground italic">
           * Repräsentative Nutzungsszenarien basierend auf Produkttests
         </p>
       </div>

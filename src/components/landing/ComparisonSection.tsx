@@ -162,7 +162,7 @@ const ComparisonSection = () => {
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: 0.3 + ti * 0.1 }}
-                  className={`text-lg font-bold ${tool.highlighted ? "text-primary" : "text-muted-foreground/50"}`}
+                  className={`text-lg font-bold ${tool.highlighted ? "text-primary" : "text-muted-foreground"}`}
                 >
                   {totals[ti]}/{criteria.length}
                 </motion.span>

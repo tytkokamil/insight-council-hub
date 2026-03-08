@@ -365,7 +365,7 @@ const PricingSection = () => {
                         {f.included ? (
                           <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                         ) : (
-                          <Minus className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
+                          <Minus className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
                         )}
                         <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/60"}>
                           {f.label}

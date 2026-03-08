@@ -75,7 +75,7 @@ const SolutionSection = () => (
               className="w-2 h-2 rounded-full bg-destructive"
             />
             <span className="font-mono text-lg font-bold tabular-nums text-destructive">€12.847</span>
-            <span className="text-[10px] text-muted-foreground/50 ml-1">/ heute</span>
+            <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
           </motion.div>
         </div>
       </motion.div>
