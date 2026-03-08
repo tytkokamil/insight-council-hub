@@ -144,7 +144,7 @@ const TestimonialsSection = () => {
           {/* Navigation arrows */}
           <button
             onClick={() => go((active - 1 + testimonials.length) % testimonials.length)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-white/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-6 w-9 h-9 rounded-full border border-border/40 bg-card/80 backdrop-blur-sm flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-border transition-all shadow-sm"
             aria-label="Vorherige Bewertung"
           >
             <ChevronLeft className="w-4 h-4" />
