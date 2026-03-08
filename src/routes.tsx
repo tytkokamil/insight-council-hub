@@ -142,7 +142,8 @@ export const protectedRoutes = (
     <Route path="/tasks/:id" element={<P><TaskDetail /></P>} />
     <Route path="/analytics" element={<P><AnalyticsHub /></P>} />
     <Route path="/briefing" element={<P><Briefing /></P>} />
-    <Route path="/graph" element={<P><DecisionGraph /></P>} />
+    <Route path="/decision-graph" element={<P><DecisionGraph /></P>} />
+    <Route path="/graph" element={<Navigate to="/decision-graph" replace />} />
     <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
     <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
     <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
