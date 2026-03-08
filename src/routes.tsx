@@ -65,7 +65,7 @@ const InternalAdmin = lazy(() => import("./pages/InternalAdmin"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
-
+const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -105,6 +105,7 @@ export const publicRoutes = (
     <Route path="/review/:token" element={<L><ExternalReview /></L>} />
     <Route path="/contact" element={<L><Contact /></L>} />
     <Route path="/docs" element={<L><HelpCenter /></L>} />
+    <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
   </>
 );
