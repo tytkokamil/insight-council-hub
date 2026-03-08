@@ -103,7 +103,7 @@ const SETTINGS_GROUP: NavGroupDef = {
         { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
         { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
         { icon: Archive, label: "nav.archive", path: "/archive" },
-        { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
+        { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge-base", minRole: "org_member" },
       ],
     } as NavSubGroup,
     { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
