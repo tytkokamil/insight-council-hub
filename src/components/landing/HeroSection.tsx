@@ -26,16 +26,15 @@ const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden"
+      className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-[hsl(222,47%,4%)]"
       aria-label="Hero"
-      style={{ background: "#030712" }}
     >
       {/* Animated grid overlay */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(59,130,246,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.06) 1px, transparent 1px)",
+            "linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px)",
           backgroundSize: "60px 60px",
           animation: "gridMove 20s linear infinite",
         }}
@@ -50,7 +49,7 @@ const HeroSection = () => {
           transform: "translateX(-50%)",
           width: "800px",
           height: "600px",
-          background: "radial-gradient(ellipse, rgba(239,68,68,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse, hsl(var(--destructive) / 0.12) 0%, transparent 70%)",
         }}
       />
 
@@ -64,11 +63,11 @@ const HeroSection = () => {
             transition={{ delay: 0.2, duration: 0.6, ease }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-10"
             style={{
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
+              background: "hsl(var(--destructive) / 0.1)",
+              border: "1px solid hsl(var(--destructive) / 0.3)",
             }}
           >
-            <span style={{ color: "#EF4444", fontSize: "11px", letterSpacing: "0.12em", fontWeight: 600 }}>
+            <span className="text-destructive" style={{ fontSize: "11px", letterSpacing: "0.12em", fontWeight: 600 }}>
               ⚡ ENTSCHEIDUNGSPLATTFORM FÜR DEN MITTELSTAND
             </span>
           </motion.div>
@@ -93,8 +92,7 @@ const HeroSection = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, ease }}
-                  className="inline-block"
-                  style={{ color: "#EF4444" }}
+                  className="inline-block text-destructive"
                 >
                   {ROTATING_WORDS[wordIndex]}
                 </motion.span>
@@ -122,10 +120,10 @@ const HeroSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.85, duration: 0.5, ease }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg mb-6"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
+              style={{ background: "hsl(var(--destructive) / 0.08)", border: "1px solid hsl(var(--destructive) / 0.15)" }}
             >
-              <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
-                {industry.label}: <span className="font-semibold" style={{ color: "#EF4444" }}>{industry.painPoint}</span>
+              <span className="text-[12px] text-white/60">
+                {industry.label}: <span className="font-semibold text-destructive">{industry.painPoint}</span>
               </span>
             </motion.div>
           )}
@@ -153,8 +151,7 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-white px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden hover:opacity-90"
-              style={{ background: "#EF4444" }}
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-white px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden hover:opacity-90 bg-destructive"
             >
               <span className="relative z-10 flex items-center gap-2">
                 14 Tage kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -193,7 +190,7 @@ const HeroSection = () => {
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{
           height: "120px",
-          background: "linear-gradient(to bottom, transparent, #F8FAFC)",
+          background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
         }}
       />
     </section>
