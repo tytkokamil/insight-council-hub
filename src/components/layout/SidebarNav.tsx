@@ -409,17 +409,27 @@ const SidebarNav = memo(({
   const isFullRole = userRole === "org_owner" || userRole === "org_admin" || userRole === "org_lead";
   const baseGroups = isFullRole ? FULL_GROUPS : getGroupsForRole(userRole);
 
+  // Owner/Admin bypass progressive gating entirely
+  const effectiveLevel = isFullRole ? 3 : progressiveLevel;
+
+  // Auto-unlock intelligence for Owner/Admin
+  useEffect(() => {
+    if (isFullRole && !intelligenceUnlocked) {
+      localStorage.setItem("intelligence-unlocked", "true");
+      setIntelligenceUnlocked(true);
+    }
+  }, [isFullRole, intelligenceUnlocked]);
+
   // Apply progressive level filtering
   const navGroups = useMemo(() => {
-    if (progressiveLevel >= 3) return baseGroups;
+    if (effectiveLevel >= 3) return baseGroups;
 
-    const allowedPaths = progressiveLevel === 1 ? LEVEL_1_PATHS : LEVEL_2_PATHS;
+    const allowedPaths = effectiveLevel === 1 ? LEVEL_1_PATHS : LEVEL_2_PATHS;
 
     return baseGroups
       .map(group => {
         const filteredItems = group.items.filter(item => {
           if (isSubGroup(item)) {
-            // Show sub-groups only at level 3 (or if any child path is allowed)
             return item.children.some(c => allowedPaths.has(c.path));
           }
           return allowedPaths.has(item.path);
@@ -428,7 +438,7 @@ const SidebarNav = memo(({
         return { ...group, items: filteredItems };
       })
       .filter(Boolean) as NavGroupDef[];
-  }, [baseGroups, progressiveLevel]);
+  }, [baseGroups, effectiveLevel]);
 
   return (
     <>
