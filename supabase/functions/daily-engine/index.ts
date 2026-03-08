@@ -36,6 +36,186 @@ Deno.serve(async (req) => {
   const results: { org_id: string; status: string; error?: string }[] = [];
 
   try {
+    // ═══════════════════════════════════════════════════════
+    // TRIAL MANAGEMENT (runs before org loop)
+    // ═══════════════════════════════════════════════════════
+
+    // TRIAL STEP 1: Send first reminder (3 days before expiry)
+    const { data: trialReminder1 } = await supabase
+      .from("organizations")
+      .select("id, name, trial_ends_at")
+      .eq("subscription_status", "trialing")
+      .eq("trial_reminder_sent", false)
+      .lte("trial_ends_at", new Date(Date.now() + 3 * 86400000).toISOString())
+      .gt("trial_ends_at", new Date().toISOString());
+
+    if (trialReminder1) {
+      for (const org of trialReminder1) {
+        const daysLeft = Math.ceil((new Date(org.trial_ends_at!).getTime() - Date.now()) / 86400000);
+        // Get org owner
+        const { data: ownerRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("org_id", org.id)
+          .eq("role", "org_owner")
+          .limit(1)
+          .single();
+
+        if (ownerRole) {
+          // Call trial-reminder edge function
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/trial-reminder`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${serviceKey}`,
+              },
+              body: JSON.stringify({
+                org_id: org.id,
+                org_name: org.name,
+                user_id: ownerRole.user_id,
+                days_left: daysLeft,
+                reminder_type: "first",
+              }),
+            });
+          } catch (e) {
+            console.error("Trial reminder failed:", e);
+          }
+
+          // Send in-app notification
+          await supabase.from("notifications").insert({
+            user_id: ownerRole.user_id,
+            org_id: org.id,
+            type: "trial_warning",
+            title: `Testphase endet in ${daysLeft} Tagen`,
+            message: `Ihre kostenlose Testphase endet in ${daysLeft} Tagen. Upgraden Sie jetzt um alle Features zu behalten.`,
+          });
+        }
+
+        await supabase
+          .from("organizations")
+          .update({ trial_reminder_sent: true })
+          .eq("id", org.id);
+      }
+    }
+
+    // TRIAL STEP 2: Send final reminder (1 day before expiry)
+    const { data: trialReminder2 } = await supabase
+      .from("organizations")
+      .select("id, name, trial_ends_at")
+      .eq("subscription_status", "trialing")
+      .eq("trial_final_reminder_sent", false)
+      .lte("trial_ends_at", new Date(Date.now() + 1 * 86400000).toISOString())
+      .gt("trial_ends_at", new Date().toISOString());
+
+    if (trialReminder2) {
+      for (const org of trialReminder2) {
+        const { data: ownerRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("org_id", org.id)
+          .eq("role", "org_owner")
+          .limit(1)
+          .single();
+
+        if (ownerRole) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/trial-reminder`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${serviceKey}`,
+              },
+              body: JSON.stringify({
+                org_id: org.id,
+                org_name: org.name,
+                user_id: ownerRole.user_id,
+                days_left: 1,
+                reminder_type: "final",
+              }),
+            });
+          } catch (e) {
+            console.error("Final trial reminder failed:", e);
+          }
+
+          await supabase.from("notifications").insert({
+            user_id: ownerRole.user_id,
+            org_id: org.id,
+            type: "trial_warning",
+            title: "Testphase endet morgen!",
+            message: "Ihre Testphase endet morgen. Upgraden Sie jetzt um Ihre Features nicht zu verlieren.",
+          });
+        }
+
+        await supabase
+          .from("organizations")
+          .update({ trial_final_reminder_sent: true })
+          .eq("id", org.id);
+      }
+    }
+
+    // TRIAL STEP 3: Expire trials that have ended
+    const { data: expiredTrials } = await supabase
+      .from("organizations")
+      .select("id, name")
+      .eq("subscription_status", "trialing")
+      .lte("trial_ends_at", new Date().toISOString());
+
+    if (expiredTrials) {
+      for (const org of expiredTrials) {
+        // Downgrade to free
+        await supabase
+          .from("organizations")
+          .update({
+            plan: "free",
+            subscription_status: "trial_expired",
+          })
+          .eq("id", org.id);
+
+        // Notify org owner
+        const { data: ownerRole } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("org_id", org.id)
+          .eq("role", "org_owner")
+          .limit(1)
+          .single();
+
+        if (ownerRole) {
+          await supabase.from("notifications").insert({
+            user_id: ownerRole.user_id,
+            org_id: org.id,
+            type: "trial_expired",
+            title: "Testphase abgelaufen",
+            message: "Ihre kostenlose Testphase ist abgelaufen. Upgraden Sie jetzt um alle Premium-Features wieder freizuschalten.",
+          });
+
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/trial-reminder`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${serviceKey}`,
+              },
+              body: JSON.stringify({
+                org_id: org.id,
+                org_name: org.name,
+                user_id: ownerRole.user_id,
+                days_left: 0,
+                reminder_type: "expired",
+              }),
+            });
+          } catch (e) {
+            console.error("Trial expired email failed:", e);
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // EXISTING ORG LOOP
+    // ═══════════════════════════════════════════════════════
+
     // Fetch all active organizations
     const { data: orgs, error: orgErr } = await supabase
       .from("organizations")
@@ -62,7 +242,6 @@ Deno.serve(async (req) => {
           .is("archived_at", null);
 
         if (openDecisions && openDecisions.length > 0) {
-          // Fetch team COD configs
           const teamIds = [...new Set(openDecisions.map((d) => d.team_id).filter(Boolean))];
           let teamConfigMap: Record<string, { hourlyRate: number; persons: number; overhead: number }> = {};
 
@@ -89,7 +268,6 @@ Deno.serve(async (req) => {
             const daysOpen = (Date.now() - new Date(d.created_at).getTime()) / (1000 * 60 * 60 * 24);
             const cfg = d.team_id && teamConfigMap[d.team_id] ? teamConfigMap[d.team_id] : defaultConfig;
             const dailyCost = Math.round(cfg.hourlyRate * 8 * cfg.persons * cfg.overhead);
-            const totalCost = Math.round(daysOpen * dailyCost);
 
             await supabase
               .from("decisions")
@@ -210,7 +388,6 @@ Deno.serve(async (req) => {
               else if (rule.condition_operator === "lt") matches = Number(fieldValue) < Number(rule.condition_value);
 
               if (matches) {
-                // Log the rule execution
                 await supabase.from("automation_rule_logs").insert({
                   rule_id: rule.id,
                   decision_id: d.id,
@@ -218,7 +395,6 @@ Deno.serve(async (req) => {
                   details: `Auto-triggered by daily engine: ${rule.name}`,
                 });
 
-                // Execute action
                 if (rule.action_type === "set_priority") {
                   await supabase.from("decisions").update({ priority: rule.action_value }).eq("id", d.id);
                 } else if (rule.action_type === "notify") {

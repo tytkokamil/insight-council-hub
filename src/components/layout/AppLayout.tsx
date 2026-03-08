@@ -22,6 +22,9 @@ import MobileHeader from "./MobileHeader";
 import MobileBottomNav from "./MobileBottomNav";
 import TopBar from "./TopBar";
 import FreemiumWarningBar from "@/components/upgrade/FreemiumWarningBar";
+import TrialBanner from "@/components/upgrade/TrialBanner";
+import TrialExpiredModal from "@/components/upgrade/TrialExpiredModal";
+import { useTrialStatus } from "@/hooks/useTrialStatus";
 import QuickCaptureButton from "@/components/shared/QuickCaptureButton";
 import CodTickerBadge from "@/components/shared/CodTickerBadge";
 /* ── Composed sidebar content ── */
@@ -74,10 +77,12 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const prefetch = usePrefetchOnHover();
   const { role: userRole, isAdmin } = usePermissions();
   const { shortcutsOpen, setShortcutsOpen } = useKeyboardShortcuts();
+  const { isTrialing, isTrialExpired, trialDaysLeft } = useTrialStatus();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [trialModalDismissed, setTrialModalDismissed] = useState(false);
 
   useEffect(() => {
     if (user && !localStorage.getItem(`onboarding_done_${user.id}`)) {
@@ -191,6 +196,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14 pb-20" : ""}`} role="main">
         {!isMobile && <TopBar collapsed={collapsed} />}
+        {isTrialing && <TrialBanner daysLeft={trialDaysLeft} />}
         <FreemiumWarningBar />
         <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
           <AnimatePresence mode="wait">
@@ -213,6 +219,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
       <CommandPalette />
       <KeyboardShortcutsModal open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
+      <TrialExpiredModal open={isTrialExpired && !trialModalDismissed} onDismiss={() => setTrialModalDismissed(true)} />
     </div>
   );
 };
