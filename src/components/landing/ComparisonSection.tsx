@@ -103,7 +103,7 @@ const ComparisonSection = () => {
         >
           {/* Header */}
             <div className="grid grid-cols-[140px_repeat(6,56px)] sm:grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center border-b border-border/30 px-3 sm:px-5 py-4 bg-muted/30 min-w-[480px]">
-            <div className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-wider">Funktion</div>
+            <div className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Funktion</div>
             {tools.map((tool, ti) => (
               <div key={tool.name} className="text-center">
                 <span className={`text-xs font-semibold ${tool.highlighted ? "text-primary" : "text-muted-foreground/70"}`}>
