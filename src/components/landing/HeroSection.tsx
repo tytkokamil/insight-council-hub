@@ -101,7 +101,7 @@ const HeroSection = () => {
             <span style={{ color: "rgba(255,255,255,0.95)" }}>.</span>
           </motion.h1>
 
-          {/* Subtext */}
+          {/* Subtext — personalized if industry detected */}
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -109,8 +109,25 @@ const HeroSection = () => {
             className="text-[15px] md:text-[17px] max-w-md mx-auto leading-relaxed mb-8"
             style={{ color: "rgba(255,255,255,0.5)" }}
           >
-            Decivio macht die unsichtbaren Kosten sichtbar — und sorgt dafür, dass Entscheidungen fallen.
+            {industry
+              ? industry.heroSub
+              : "Decivio macht die unsichtbaren Kosten sichtbar — und sorgt dafür, dass Entscheidungen fallen."}
           </motion.p>
+
+          {/* Industry-specific pain point badge */}
+          {industry && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.85, duration: 0.5, ease }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg mb-6"
+              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
+            >
+              <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
+                {industry.label}: <span className="font-semibold" style={{ color: "#EF4444" }}>{industry.painPoint}</span>
+              </span>
+            </motion.div>
+          )}
 
           {/* Trust badges */}
           <motion.div

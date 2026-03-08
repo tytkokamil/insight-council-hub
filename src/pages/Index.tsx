@@ -111,6 +111,7 @@ const Index = () => {
         </main>
         <Footer />
         <Suspense fallback={null}>
+          <ScarcityBar />
           <StickyCTA />
           <BackToTop />
         </Suspense>

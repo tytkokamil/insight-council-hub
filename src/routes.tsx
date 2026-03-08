@@ -120,6 +120,7 @@ export const publicRoutes = (
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
     <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
     <Route path="/vs/:slug" element={<L><CompetitorComparison /></L>} />
+    <Route path="/founding" element={<L><FoundingProgram /></L>} />
   </>
 );
 
