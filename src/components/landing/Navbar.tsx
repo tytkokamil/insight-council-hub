@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -63,17 +63,13 @@ const Navbar = () => {
 
   return (
     <nav
-      className="sticky z-50 transition-all duration-500"
-      style={{
-        top: "44px",
-        background: scrolled ? "rgba(3,8,16,0.95)" : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : "none",
-      }}
+      className={`sticky z-50 transition-all duration-500 dark ${scrolled ? "glass-ultra" : ""}`}
+      style={{ top: "44px" }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <span style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFFFF", fontSize: "22px" }}>
+            <span className="text-[22px] font-bold text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
               Decivio
             </span>
           </Link>
@@ -86,11 +82,7 @@ const Navbar = () => {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className="text-sm px-3.5 py-1.5 rounded-lg transition-colors duration-200"
-                  style={{
-                    color: isActive ? "#F1F5F9" : "#94A3B8",
-                    fontWeight: isActive ? 500 : 400,
-                  }}
+                  className={`text-sm px-3.5 py-1.5 rounded-lg transition-colors duration-200 ${isActive ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {item.label}
                 </a>
@@ -101,22 +93,20 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             <Link
               to="/login"
-              className="text-sm px-4 py-2 rounded-lg transition-all duration-200"
-              style={{ color: "#F1F5F9", border: "1px solid #1E293B" }}
+              className="text-sm px-4 py-2 rounded-lg transition-all duration-200 text-foreground border border-border hover:border-destructive/40"
             >
               Einloggen
             </Link>
             <Link
               to="/auth"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-200 shadow-lg"
-              style={{ background: "#EF4444", boxShadow: "0 4px 14px rgba(239,68,68,0.2)" }}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-destructive-foreground px-5 py-2.5 rounded-lg transition-all duration-200 bg-destructive hover:bg-destructive/90 shadow-lg shadow-destructive/20"
             >
               Kostenlos starten <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
           <button
-            className="md:hidden p-2 text-white"
+            className="md:hidden p-2 text-foreground"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Menü"
           >
@@ -128,8 +118,8 @@ const Navbar = () => {
       {/* Scroll progress */}
       {scrolled && (
         <div
-          className="h-[2px] origin-left transition-transform duration-150"
-          style={{ background: "#EF4444", transform: `scaleX(${scrollProgress})` }}
+          className="h-[2px] origin-left transition-transform duration-150 bg-destructive"
+          style={{ transform: `scaleX(${scrollProgress})` }}
         />
       )}
 
@@ -140,8 +130,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "100vh" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden fixed inset-0 top-[108px] z-50"
-            style={{ background: "#030810" }}
+            className="md:hidden fixed inset-0 top-[108px] z-50 bg-background"
           >
             <div className="p-6 space-y-2">
               {navItems.map(item => (
@@ -149,15 +138,14 @@ const Navbar = () => {
                   key={item.label}
                   href={item.href}
                   onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className="block text-lg py-3 border-b"
-                  style={{ color: "#F1F5F9", borderColor: "#1E293B" }}
+                  className="block text-lg py-3 border-b border-border text-foreground"
                 >
                   {item.label}
                 </a>
               ))}
               <div className="pt-6 space-y-3">
-                <Link to="/login" className="block text-center py-3 rounded-lg" style={{ color: "#F1F5F9", border: "1px solid #1E293B" }}>Einloggen</Link>
-                <Link to="/auth" className="block text-center py-3 rounded-lg font-semibold text-white" style={{ background: "#EF4444" }}>Kostenlos starten →</Link>
+                <Link to="/login" className="block text-center py-3 rounded-lg text-foreground border border-border">Einloggen</Link>
+                <Link to="/auth" className="block text-center py-3 rounded-lg font-semibold text-destructive-foreground bg-destructive">Kostenlos starten →</Link>
               </div>
             </div>
           </motion.div>

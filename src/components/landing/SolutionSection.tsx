@@ -14,45 +14,52 @@ const features = [
 const CoDTicker = () => {
   const [val, setVal] = useState(0);
   useEffect(() => { const id = setInterval(() => setVal(v => v + 0.14), 1000); return () => clearInterval(id); }, []);
-  return <span className="text-3xl font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#EF4444" }}>€{val.toFixed(2).replace(".", ",")}</span>;
+  return <span className="text-3xl font-bold tabular-nums text-destructive" style={{ fontFamily: "var(--font-mono)" }}>€{val.toFixed(2).replace(".", ",")}</span>;
 };
 
 const SolutionSection = () => (
-  <section id="solution" className="py-24" style={{ background: "#FFFFFF" }}>
+  <section id="solution" className="py-24 bg-background">
     <div className="max-w-6xl mx-auto px-4">
       <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="text-center mb-16">
-        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-semibold mb-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#0F172A" }}>Decision Governance. So wie sie sein sollte.</h2>
-        <p className="text-lg" style={{ color: "#64748B" }}>Fünf Kernfunktionen. Alle implementiert. Sofort einsatzbereit.</p>
+        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold mb-4 text-foreground">Decision Governance. So wie sie sein sollte.</h2>
+        <p className="text-lg text-muted-foreground">Fünf Kernfunktionen. Alle implementiert. Sofort einsatzbereit.</p>
       </motion.div>
-      <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
-        className="rounded-xl p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6" style={{ background: "#0F1729", border: "1px solid rgba(239,68,68,0.3)" }}>
-        <div>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-xl">⏱</span>
-            <h3 className="text-xl font-semibold" style={{ color: "#F1F5F9" }}>Echtzeit Cost-of-Delay</h3>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: "#EF4444" }}><span className="w-2 h-2 rounded-full bg-[#EF4444] animate-pulse" /> LIVE</span>
+
+      {/* Hero feature - dark card */}
+      <div className="dark">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
+          className="rounded-xl p-8 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-card border border-destructive/30 glass-ultra">
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-xl">⏱</span>
+              <h3 className="text-xl font-semibold text-foreground">Echtzeit Cost-of-Delay</h3>
+              <span className="flex items-center gap-1.5 text-xs text-destructive"><span className="w-2 h-2 rounded-full bg-destructive animate-pulse" /> LIVE</span>
+            </div>
+            <p className="text-sm leading-relaxed max-w-lg text-muted-foreground">Jede offene Entscheidung zeigt täglich wachsende Verzögerungskosten — berechnet aus Stundensatz × Beteiligte × Tage offen.</p>
           </div>
-          <p className="text-sm leading-relaxed max-w-lg" style={{ color: "#94A3B8" }}>Jede offene Entscheidung zeigt täglich wachsende Verzögerungskosten — berechnet aus Stundensatz × Beteiligte × Tage offen.</p>
-        </div>
-        <CoDTicker />
-      </motion.div>
+          <CoDTicker />
+        </motion.div>
+      </div>
+
       <div className="grid md:grid-cols-3 gap-6">
         {features.slice(0, 3).map((f, i) => (
-          <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="rounded-xl p-6" style={{ border: "1px solid #E2E8F0" }}>
+          <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
+            className="rounded-xl p-6 border border-border bg-card magnetic-card">
             <div className="text-2xl mb-3">{f.icon}</div>
-            <h3 className="text-base font-semibold mb-2" style={{ color: "#0F172A" }}>{f.title}</h3>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: "#64748B" }}>{f.text}</p>
-            <span className="inline-block px-2 py-0.5 rounded text-xs" style={{ background: "#F1F5F9", color: "#64748B" }}>{f.badge}</span>
+            <h3 className="text-base font-semibold mb-2 text-foreground">{f.title}</h3>
+            <p className="text-sm leading-relaxed mb-4 text-muted-foreground">{f.text}</p>
+            <span className="inline-block px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">{f.badge}</span>
           </motion.div>
         ))}
       </div>
       <div className="grid md:grid-cols-2 gap-6 mt-6">
         {features.slice(3).map((f, i) => (
-          <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="rounded-xl p-6" style={{ border: "1px solid #E2E8F0" }}>
+          <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
+            className="rounded-xl p-6 border border-border bg-card magnetic-card">
             <div className="text-2xl mb-3">{f.icon}</div>
-            <h3 className="text-base font-semibold mb-2" style={{ color: "#0F172A" }}>{f.title}</h3>
-            <p className="text-sm leading-relaxed mb-4" style={{ color: "#64748B" }}>{f.text}</p>
-            <span className="inline-block px-2 py-0.5 rounded text-xs" style={{ background: "#F1F5F9", color: "#64748B" }}>{f.badge}</span>
+            <h3 className="text-base font-semibold mb-2 text-foreground">{f.title}</h3>
+            <p className="text-sm leading-relaxed mb-4 text-muted-foreground">{f.text}</p>
+            <span className="inline-block px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">{f.badge}</span>
           </motion.div>
         ))}
       </div>

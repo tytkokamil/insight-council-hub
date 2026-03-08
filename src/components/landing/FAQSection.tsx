@@ -23,23 +23,23 @@ const FAQSection = () => {
   ];
 
   return (
-    <section id="faq" className="py-24" style={{ background: "#F8FAFC" }}>
+    <section id="faq" className="py-24 bg-muted/30">
       <div className="max-w-3xl mx-auto px-4">
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="text-center mb-12">
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-semibold" style={{ fontFamily: "'DM Serif Display', serif", color: "#0F172A" }}>Häufige Fragen.</h2>
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold text-foreground">Häufige Fragen.</h2>
         </motion.div>
         <div className="space-y-3">
           {faqs.map((faq, i) => (
             <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
-              className="rounded-xl overflow-hidden" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+              className="rounded-xl overflow-hidden bg-card border border-border magnetic-card">
               <button onClick={() => setOpenIndex(openIndex === i ? null : i)} className="w-full flex items-center justify-between p-5 text-left">
-                <span className="text-sm font-semibold pr-4" style={{ color: "#0F172A" }}>{faq.q}</span>
-                <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform duration-200" style={{ color: "#94A3B8", transform: openIndex === i ? "rotate(180deg)" : "rotate(0)" }} />
+                <span className="text-sm font-semibold pr-4 text-foreground">{faq.q}</span>
+                <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 text-muted-foreground ${openIndex === i ? "rotate-180" : ""}`} />
               </button>
               <AnimatePresence>
                 {openIndex === i && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                    <p className="px-5 pb-5 text-sm leading-relaxed" style={{ color: "#64748B" }}>{faq.a}</p>
+                    <p className="px-5 pb-5 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

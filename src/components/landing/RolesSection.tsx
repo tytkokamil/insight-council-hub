@@ -37,41 +37,39 @@ const roles = [
 ];
 
 const RolesSection = () => (
-  <section id="rollen" className="py-24" style={{ background: "#F8FAFC" }}>
+  <section id="rollen" className="py-24 bg-muted/30">
     <div className="max-w-6xl mx-auto px-4">
       <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="text-center mb-16">
-        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-semibold mb-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#0F172A" }}>
+        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold mb-4 text-foreground">
           Für jede Rolle die richtige Ansicht.
         </h2>
-        <p className="text-lg" style={{ color: "#64748B" }}>Decivio passt sich an — vom Geschäftsführer bis zum externen Reviewer.</p>
+        <p className="text-lg text-muted-foreground">Decivio passt sich an — vom Geschäftsführer bis zum externen Reviewer.</p>
       </motion.div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {roles.map((r, i) => (
           <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
-            className="bg-white rounded-xl p-6"
-            style={{ border: r.highlight ? "1px solid rgba(239,68,68,0.4)" : "1px solid #E2E8F0" }}>
+            className={`bg-card rounded-xl p-6 magnetic-card ${r.highlight ? "border border-destructive/40" : "border border-border"}`}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{r.icon}</span>
-                <h3 className="text-sm font-semibold" style={{ color: "#0F172A" }}>{r.title}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{r.title}</h3>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold"
-                style={r.highlight ? { background: "#FEE2E2", color: "#EF4444" } : { background: "#F1F5F9", color: "#64748B" }}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${r.highlight ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
                 {r.badge}
               </span>
             </div>
-            {r.subtext && <p className="text-xs mb-3" style={{ color: "#64748B" }}>{r.subtext}</p>}
+            {r.subtext && <p className="text-xs mb-3 text-muted-foreground">{r.subtext}</p>}
             <div className="mb-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#94A3B8" }}>Sieht:</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 text-muted-foreground">Sieht:</p>
               <ul className="space-y-1">
-                {r.sees.map((s, j) => <li key={j} className="text-xs" style={{ color: "#64748B" }}>• {s}</li>)}
+                {r.sees.map((s, j) => <li key={j} className="text-xs text-muted-foreground">• {s}</li>)}
               </ul>
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#94A3B8" }}>Tut:</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1.5 text-muted-foreground">Tut:</p>
               <ul className="space-y-1">
-                {r.does.map((d, j) => <li key={j} className="text-xs" style={{ color: "#64748B" }}>• {d}</li>)}
+                {r.does.map((d, j) => <li key={j} className="text-xs text-muted-foreground">• {d}</li>)}
               </ul>
             </div>
           </motion.div>

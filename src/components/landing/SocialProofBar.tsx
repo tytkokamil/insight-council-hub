@@ -7,11 +7,11 @@ const items = [
 ];
 
 const SocialProofBar = () => (
-  <div className="py-4" style={{ background: "#FFFFFF", borderTop: "1px solid #F1F5F9", borderBottom: "1px solid #F1F5F9" }}>
+  <div className="py-4 bg-card border-y border-border">
     <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
       {items.map((item, i) => (
-        <span key={i} className="flex items-center gap-1.5 text-[13px] font-medium" style={{ color: "#64748B" }}>
-          {i > 0 && <span className="hidden sm:inline mr-4" style={{ color: "#E2E8F0" }}>|</span>}
+        <span key={i} className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground">
+          {i > 0 && <span className="hidden sm:inline mr-4 text-border">|</span>}
           {item.icon} {item.text}
         </span>
       ))}

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
@@ -42,12 +41,11 @@ const ScarcityBar = () => {
   };
 
   const remaining = TOTAL_SLOTS - claimed;
-
   if (dismissed) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] h-[44px] flex items-center justify-center px-4" style={{ background: "#EF4444" }}>
-      <div className="flex items-center gap-2 text-white text-xs sm:text-sm font-medium">
+    <div className="fixed top-0 left-0 right-0 z-[60] h-[44px] flex items-center justify-center px-4 bg-destructive">
+      <div className="flex items-center gap-2 text-destructive-foreground text-xs sm:text-sm font-medium">
         <Zap className="w-3.5 h-3.5 flex-shrink-0" />
         <span className="hidden sm:inline">
           Founding Program: Noch {remaining} von {TOTAL_SLOTS} Plätzen — Professional €89/Mo statt €149, lebenslang fixiert
@@ -57,14 +55,14 @@ const ScarcityBar = () => {
         </span>
         <Link
           to="/auth?founding=true"
-          className="ml-2 px-3 py-1 bg-white text-[#EF4444] text-xs font-semibold rounded-md hover:bg-white/90 transition-colors"
+          className="ml-2 px-3 py-1 bg-white text-destructive text-xs font-semibold rounded-md hover:bg-white/90 transition-colors"
         >
           Platz sichern →
         </Link>
       </div>
       <button
         onClick={handleDismiss}
-        className="absolute right-3 p-1 text-white/80 hover:text-white transition-colors"
+        className="absolute right-3 p-1 text-destructive-foreground/80 hover:text-destructive-foreground transition-colors"
         aria-label="Schließen"
       >
         <X className="w-4 h-4" />

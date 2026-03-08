@@ -11,11 +11,11 @@ const capabilities = [
 ];
 
 const AIShowcaseSection = () => (
-  <section className="py-24" style={{ background: "#F8FAFC" }}>
+  <section className="py-24 bg-muted/30">
     <div className="max-w-6xl mx-auto px-4">
       <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="text-center mb-16">
-        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-semibold mb-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#0F172A" }}>Entscheidungsintelligenz die mitdenkt.</h2>
-        <p className="text-lg" style={{ color: "#64748B" }}>KI nicht als Feature-Checkbox — sondern als täglicher Arbeitsassistent.</p>
+        <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-bold mb-4 text-foreground">Entscheidungsintelligenz die mitdenkt.</h2>
+        <p className="text-lg text-muted-foreground">KI nicht als Feature-Checkbox — sondern als täglicher Arbeitsassistent.</p>
       </motion.div>
       <div className="grid md:grid-cols-2 gap-10">
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="space-y-6">
@@ -24,20 +24,20 @@ const AIShowcaseSection = () => (
             { label: "⚡ KI Daily Brief", value: "Täglich um 07:30 Uhr", sub: "3 kritischste Entscheidungen · SLA-Warnungen · Economic Exposure" },
             { label: "🤖 Modell", value: "Gemini 2.5 Pro / Flash", sub: "Konfidenz-Badge bei jeder KI-Ausgabe sichtbar" },
           ].map((s, i) => (
-            <div key={i} className="p-5 rounded-xl" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
-              <p className="text-sm mb-1" style={{ color: "#64748B" }}>{s.label}</p>
-              <p className="text-lg font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#0F172A" }}>{s.value}</p>
-              <p className="text-xs" style={{ color: "#94A3B8" }}>{s.sub}</p>
+            <div key={i} className="p-5 rounded-xl bg-card border border-border magnetic-card">
+              <p className="text-sm mb-1 text-muted-foreground">{s.label}</p>
+              <p className="text-lg font-bold text-foreground" style={{ fontFamily: "var(--font-mono)" }}>{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.sub}</p>
             </div>
           ))}
         </motion.div>
         <div className="grid grid-cols-2 gap-4">
           {capabilities.map((c, i) => (
             <motion.div key={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}
-              className="p-4 rounded-xl" style={{ background: "#FFFFFF", border: "1px solid #E2E8F0" }}>
+              className="p-4 rounded-xl bg-card border border-border magnetic-card">
               <span className="text-xl block mb-2">{c.icon}</span>
-              <h3 className="text-sm font-semibold mb-1" style={{ color: "#0F172A" }}>{c.title}</h3>
-              <p className="text-xs" style={{ color: "#64748B" }}>{c.desc}</p>
+              <h3 className="text-sm font-semibold mb-1 text-foreground">{c.title}</h3>
+              <p className="text-xs text-muted-foreground">{c.desc}</p>
             </motion.div>
           ))}
         </div>

@@ -68,7 +68,7 @@ const Index = () => {
         <script type="application/ld+json">{JSON.stringify(softwareJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
       </Helmet>
-      <div className="min-h-screen" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="landing-page min-h-screen">
         <ScarcityBar />
         <Navbar />
         <main>

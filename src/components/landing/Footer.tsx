@@ -35,44 +35,45 @@ const footerLinks = {
 };
 
 const FooterLink = ({ item }: { item: { label: string; to?: string; href?: string } }) => {
-  const cls = "text-[13px] hover:text-white transition-colors duration-200";
-  const style = { color: "#64748B" };
-  if (item.to) return <Link to={item.to} className={cls} style={style}>{item.label}</Link>;
-  return <a href={item.href} className={cls} style={style}>{item.label}</a>;
+  const cls = "text-[13px] text-muted-foreground hover:text-foreground transition-colors duration-200";
+  if (item.to) return <Link to={item.to} className={cls}>{item.label}</Link>;
+  return <a href={item.href} className={cls}>{item.label}</a>;
 };
 
 const Footer = () => (
-  <footer className="py-16" style={{ background: "#030810", borderTop: "1px solid #1E293B" }}>
-    <div className="max-w-6xl mx-auto px-4">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-        {/* Brand */}
-        <div className="col-span-2 md:col-span-1">
-          <Link to="/" className="text-xl font-semibold block mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFFFF" }}>
-            Decivio
-          </Link>
-          <p className="text-[13px] leading-relaxed mb-4" style={{ color: "#64748B" }}>
-            Decision Governance Platform für den Mittelstand.
-          </p>
-          <a href="mailto:hallo@decivio.com" className="text-[13px] hover:text-white transition-colors" style={{ color: "#64748B" }}>
-            hallo@decivio.com
-          </a>
+  <footer className="dark">
+    <div className="py-16 bg-background border-t border-border">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+          {/* Brand */}
+          <div className="col-span-2 md:col-span-1">
+            <Link to="/" className="text-xl font-bold block mb-3 text-foreground" style={{ fontFamily: "'Syne', sans-serif" }}>
+              Decivio
+            </Link>
+            <p className="text-[13px] leading-relaxed mb-4 text-muted-foreground">
+              Decision Governance Platform für den Mittelstand.
+            </p>
+            <a href="mailto:hallo@decivio.com" className="text-[13px] text-muted-foreground hover:text-foreground transition-colors">
+              hallo@decivio.com
+            </a>
+          </div>
+
+          {(["produkt", "unternehmen", "compliance", "vergleiche"] as const).map(section => (
+            <nav key={section} aria-label={section}>
+              <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-4 text-muted-foreground">
+                {section.charAt(0).toUpperCase() + section.slice(1)}
+              </h4>
+              <ul className="space-y-2.5">
+                {footerLinks[section].map(l => <li key={l.label}><FooterLink item={l} /></li>)}
+              </ul>
+            </nav>
+          ))}
         </div>
 
-        {(["produkt", "unternehmen", "compliance", "vergleiche"] as const).map(section => (
-          <nav key={section} aria-label={section}>
-            <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-4" style={{ color: "#94A3B8" }}>
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </h4>
-            <ul className="space-y-2.5">
-              {footerLinks[section].map(l => <li key={l.label}><FooterLink item={l} /></li>)}
-            </ul>
-          </nav>
-        ))}
-      </div>
-
-      <div className="flex flex-col sm:flex-row items-center justify-between pt-6 gap-3" style={{ borderTop: "1px solid #1E293B" }}>
-        <p className="text-[11px]" style={{ color: "#475569" }}>© 2026 Decivio GmbH · Made with precision in Germany 🇩🇪</p>
-        <p className="text-[11px]" style={{ color: "#475569" }}>hallo@decivio.com</p>
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-6 gap-3 border-t border-border">
+          <p className="text-[11px] text-muted-foreground">© 2026 Decivio GmbH · Made with precision in Germany 🇩🇪</p>
+          <p className="text-[11px] text-muted-foreground">hallo@decivio.com</p>
+        </div>
       </div>
     </div>
   </footer>
