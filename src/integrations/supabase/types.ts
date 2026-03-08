@@ -3413,20 +3413,31 @@ export type Database = {
       user_roles: {
         Row: {
           id: string
+          org_id: string
           role: Database["public"]["Enums"]["org_role"]
           user_id: string
         }
         Insert: {
           id?: string
+          org_id: string
           role?: Database["public"]["Enums"]["org_role"]
           user_id: string
         }
         Update: {
           id?: string
+          org_id?: string
           role?: Database["public"]["Enums"]["org_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_deliveries: {
         Row: {
