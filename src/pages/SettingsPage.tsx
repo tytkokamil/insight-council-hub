@@ -502,6 +502,25 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ SSO ═══════════════ */}
+          {activeTab === "sso" && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold">Single Sign-On (SAML 2.0)</h2>
+                  <p className="text-xs text-muted-foreground">Konfigurieren Sie SSO für Ihre Organisation</p>
+                </div>
+              </div>
+              <SsoSettingsPanel
+                isEnterprise={orgPlan.toLowerCase() === "enterprise"}
+                onUpgrade={() => window.location.href = "/upgrade"}
+              />
+            </div>
+          )}
+
           {/* ═══════════════ GOVERNANCE ═══════════════ */}
           {activeTab === "governance" && (
             <div className="space-y-8">
