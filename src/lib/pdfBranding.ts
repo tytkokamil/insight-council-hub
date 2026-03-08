@@ -76,7 +76,7 @@ export interface PdfBrandingOptions {
  * 
  * Branding behavior:
  * - Free plan: always shown, prominent
- * - Starter/Pro: shown by default, can be disabled via settings
+ * - Starter/Professional: shown by default, can be disabled via settings
  * - Enterprise: fully removable
  */
 export function addPdfFooter(doc: any, optionsOrText?: string | PdfBrandingOptions) {
