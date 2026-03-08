@@ -64,9 +64,9 @@ const DecisionNode = ({ data }: { data: any }) => {
 const nodeTypes = { decision: DecisionNode };
 
 const edgeTypeStyles: Record<string, any> = {
-  blocks: { stroke: "#ef4444", strokeWidth: 2, animated: true },
-  influences: { stroke: "#f59e0b", strokeWidth: 1.5 },
-  requires: { stroke: "#1e3a5f", strokeWidth: 1.5 },
+  blocks: { stroke: "hsl(var(--destructive))", strokeWidth: 2, animated: true },
+  influences: { stroke: "hsl(var(--warning))", strokeWidth: 1.5 },
+  requires: { stroke: "hsl(var(--primary))", strokeWidth: 1.5 },
 };
 
 const DecisionGraph = () => {
