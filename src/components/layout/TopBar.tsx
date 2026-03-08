@@ -16,7 +16,7 @@ const BREADCRUMB_MAP: Record<string, { area: string; areaKey: string }> = {
   "/analytics": { area: "intelligence", areaKey: "nav.intelligence" },
   "/process": { area: "intelligence", areaKey: "nav.intelligence" },
   "/dna": { area: "intelligence", areaKey: "nav.intelligence" },
-  "/graph": { area: "intelligence", areaKey: "nav.intelligence" },
+  "/decision-graph": { area: "intelligence", areaKey: "nav.intelligence" },
   "/health": { area: "intelligence", areaKey: "nav.intelligence" },
   "/timeline": { area: "intelligence", areaKey: "nav.intelligence" },
   "/scenarios": { area: "intelligence", areaKey: "nav.intelligence" },
