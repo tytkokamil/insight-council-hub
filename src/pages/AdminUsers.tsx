@@ -193,7 +193,7 @@ const AdminUsers = () => {
                       placeholder={t("admin.invitePlaceholder")} required
                       className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
-                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10" style={{ backgroundColor: "#1E3A5F" }}>
+                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10 bg-primary text-primary-foreground hover:bg-primary/90">
                     <UserPlus className="w-4 h-4" />{inviting ? t("admin.inviteSending") : t("admin.invite")}
                   </Button>
                 </form>
