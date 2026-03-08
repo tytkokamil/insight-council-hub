@@ -1,203 +1,73 @@
-import { useState, useMemo } from "react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Calculator, TrendingDown, ArrowRight, Factory, Landmark, Pill, Monitor } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useState, memo, useCallback } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
+const PRESETS: Record<string, number> = { Maschinenbau: 85, Automotive: 95, Pharma: 90, Finanzwesen: 100 };
 
-const presets = [
-  { label: "Maschinenbau", icon: Factory, hourlyRate: 85, persons: 3, decisions: 5, delayDays: 8 },
-  { label: "Finanzwesen", icon: Landmark, hourlyRate: 110, persons: 3, decisions: 6, delayDays: 5 },
-  { label: "Pharma", icon: Pill, hourlyRate: 95, persons: 4, decisions: 4, delayDays: 9 },
-  { label: "IT-Dienstleistung", icon: Monitor, hourlyRate: 90, persons: 3, decisions: 5, delayDays: 6 },
-];
-
-const AnimatedNumber = ({ value }: { value: number }) => {
-  const ref = useRef<HTMLSpanElement>(null);
-  const motionVal = useMotionValue(0);
-  const display = useTransform(motionVal, v => `€${Math.round(v).toLocaleString("de-DE")}`);
-
-  useEffect(() => {
-    const controls = animate(motionVal, value, { duration: 0.6, ease: [0.16, 1, 0.3, 1] });
-    return controls.stop;
-  }, [value, motionVal]);
-
-  useEffect(() => {
-    return display.on("change", v => {
-      if (ref.current) ref.current.textContent = v;
-    });
-  }, [display]);
-
-  return <span ref={ref}>€0</span>;
-};
-
-const SliderInput = ({ label, value, onChange, min, max, step = 1, suffix = "" }: {
-  label: string; value: number; onChange: (v: number) => void; min: number; max: number; step?: number; suffix?: string;
-}) => {
-  const pct = ((value - min) / (max - min)) * 100;
-  return (
-    <div>
-      <div className="flex justify-between items-baseline mb-2">
-        <label className="text-[12px] text-muted-foreground font-medium">{label}</label>
-        <span className="text-[13px] font-bold tabular-nums text-foreground">{value}{suffix}</span>
-      </div>
-      <div className="relative h-6 flex items-center">
-        <div className="absolute inset-x-0 h-1.5 rounded-full bg-muted/60" />
-        <div className="absolute left-0 h-1.5 rounded-full bg-primary/50" style={{ width: `${pct}%` }} />
-        <input
-          type="range" min={min} max={max} step={step} value={value}
-          onChange={e => onChange(Number(e.target.value))}
-          className="absolute inset-x-0 w-full h-6 opacity-0 cursor-pointer z-10"
-        />
-        <div
-          className="absolute w-4 h-4 rounded-full bg-primary border-2 border-background shadow-md pointer-events-none transition-[left] duration-100"
-          style={{ left: `calc(${pct}% - 8px)` }}
-        />
-      </div>
-    </div>
-  );
-};
-
-const ROICalculatorSection = () => {
-  const [hourlyRate, setHourlyRate] = useState(90);
-  const [persons, setPersons] = useState(3);
+const ROICalculatorSection = memo(() => {
+  const [tab, setTab] = useState("Maschinenbau");
+  const [rate, setRate] = useState(85);
+  const [people, setPeople] = useState(4);
   const [decisions, setDecisions] = useState(5);
-  const [delayDays, setDelayDays] = useState(7);
-  const [activePreset, setActivePreset] = useState<number | null>(null);
+  const [delay, setDelay] = useState(5);
+  const [showFormula, setShowFormula] = useState(false);
 
-  // Brutto-Verzögerungskosten: Stundensatz × 8h × Personen × Entscheidungen × Tage
-  const grossCost = useMemo(
-    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays),
-    [hourlyRate, persons, decisions, delayDays]
-  );
-  // 55% Effizienzfaktor — nicht alle Zeit ist produktiv verloren
-  const monthlyCost = useMemo(() => Math.round(grossCost * 0.55), [grossCost]);
-  // 73% Reduktion durch schnellere Approvals mit Decivio
-  const savings = useMemo(() => Math.round(monthlyCost * 0.73), [monthlyCost]);
-  const roiMultiple = useMemo(() => savings > 0 ? Math.round(savings / 149) : 0, [savings]);
-
-  const applyPreset = (i: number) => {
-    const p = presets[i];
-    setHourlyRate(p.hourlyRate);
-    setPersons(p.persons);
-    setDecisions(p.decisions);
-    setDelayDays(p.delayDays);
-    setActivePreset(i);
-  };
+  const selectTab = useCallback((t: string) => { setTab(t); setRate(PRESETS[t]); }, []);
+  const monthlyCost = rate * 8 * people * decisions * delay;
+  const breakeven = 149 / (rate * 8 * people);
 
   return (
-    <section id="roi" className="py-24 relative">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
-          className="text-center max-w-2xl mx-auto mb-12"
-        >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-muted/30 mb-6">
-            <Calculator className="w-3 h-3 text-primary" />
-            <span className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase">ROI-Rechner</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-            Was kostet Entscheidungsverzögerung?
-          </h2>
-          <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto">
-            Berechnen Sie Ihre unsichtbaren Kosten — und wie viel Sie mit Decivio einsparen.
-          </p>
+    <section id="roi" className="py-24" style={{ background: "#0F1729" }}>
+      <div className="max-w-5xl mx-auto px-4">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="text-center mb-12">
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-semibold mb-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F5F9" }}>Was kostet Entscheidungsverzögerung bei Ihnen?</h2>
+          <p className="text-lg" style={{ color: "#94A3B8" }}>Berechnen Sie es selbst. Mit Ihren Zahlen.</p>
         </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1, duration: 0.6, ease }}
-          className="max-w-[680px] mx-auto"
-        >
-          {/* Presets */}
-          <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {presets.map((p, i) => (
-              <button
-                key={i}
-                onClick={() => applyPreset(i)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[12px] font-medium transition-all duration-200 border ${
-                  activePreset === i
-                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                    : "bg-card border-border/50 text-muted-foreground hover:text-foreground hover:border-border"
-                }`}
-              >
-                <p.icon className="w-3.5 h-3.5" />
-                {p.label}
-              </button>
+        <div className="flex flex-wrap justify-center gap-2 mb-10">
+          {Object.keys(PRESETS).map(t => (
+            <button key={t} onClick={() => selectTab(t)} className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+              style={tab === t ? { background: "#EF4444", color: "#fff" } : { background: "#1E293B", color: "#94A3B8", border: "1px solid #334155" }}>{t}</button>
+          ))}
+        </div>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            {[
+              { label: "Stundensatz (€)", value: rate, set: setRate, min: 40, max: 200, step: 5, fmt: (v: number) => `€${v}` },
+              { label: "Personen pro Entscheidung", value: people, set: setPeople, min: 1, max: 15, step: 1, fmt: (v: number) => `${v}` },
+              { label: "Offene Entscheidungen", value: decisions, set: setDecisions, min: 1, max: 20, step: 1, fmt: (v: number) => `${v}` },
+              { label: "Verzögerung (Tage)", value: delay, set: setDelay, min: 1, max: 20, step: 1, fmt: (v: number) => `${v} Tage` },
+            ].map(s => (
+              <div key={s.label}>
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm" style={{ color: "#94A3B8" }}>{s.label}</span>
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: "#F1F5F9", fontFamily: "'JetBrains Mono', monospace" }}>{s.fmt(s.value)}</span>
+                </div>
+                <input type="range" min={s.min} max={s.max} step={s.step} value={s.value} onChange={e => s.set(Number(e.target.value))}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer" style={{ accentColor: "#EF4444", background: "#1E293B" }} />
+              </div>
             ))}
+            <button onClick={() => setShowFormula(!showFormula)} className="text-xs underline" style={{ color: "#64748B" }}>{showFormula ? "Ausblenden" : "Wie wird das berechnet?"}</button>
+            {showFormula && <p className="text-xs p-3 rounded-lg" style={{ background: "#1E293B", color: "#94A3B8" }}>Stundensatz × 8h × Personen × Entscheidungen × Tage = Kosten/Monat</p>}
           </div>
-
-          <div className="rounded-2xl border border-border/40 bg-card p-7 space-y-6">
-            {/* Sliders */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-              <SliderInput label="Stundensatz" value={hourlyRate} onChange={v => { setHourlyRate(v); setActivePreset(null); }} min={40} max={200} step={5} suffix=" €/h" />
-              <SliderInput label="Betroffene Personen" value={persons} onChange={v => { setPersons(v); setActivePreset(null); }} min={1} max={15} suffix="" />
-              <SliderInput label="Offene Entscheidungen" value={decisions} onChange={v => { setDecisions(v); setActivePreset(null); }} min={1} max={20} suffix="" />
-              <SliderInput label="Ø Verzögerung" value={delayDays} onChange={v => { setDelayDays(v); setActivePreset(null); }} min={1} max={20} suffix=" Tage" />
-            </div>
-
-            {/* Results */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div className="rounded-xl border border-destructive/15 bg-destructive/[0.04] p-5 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <TrendingDown className="w-3.5 h-3.5 text-destructive/70" />
-                  <span className="text-[11px] text-muted-foreground">Bereinigte Verzögerungskosten</span>
-                </div>
-                <div className="text-2xl md:text-3xl font-bold tabular-nums text-destructive">
-                  <AnimatedNumber value={monthlyCost} />
-                </div>
-                <span className="text-[10px] text-destructive/60">/Monat (55% Effizienzfaktor)</span>
-              </div>
-
-              <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5 text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[11px] text-muted-foreground">Einsparung mit Decivio</span>
-                </div>
-                <div className="text-2xl md:text-3xl font-bold tabular-nums text-primary">
-                  <AnimatedNumber value={savings} />
-                </div>
-                <span className="text-[10px] text-primary/60">/Monat (73% schnellere Approvals)</span>
-              </div>
-            </div>
-
-            {/* Calculation tooltip */}
-            <div className="rounded-lg bg-muted/30 border border-border/30 p-3 space-y-1.5">
-              <p className="text-[11px] font-semibold text-muted-foreground">So berechnen wir:</p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                <span className="font-medium">1.</span> Brutto-Kosten: {hourlyRate}€/h × 8h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage = <span className="font-semibold text-foreground/70">€{grossCost.toLocaleString("de-DE")}</span>
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                <span className="font-medium">2.</span> Effizienzfaktor 55% (nicht alle Zeit ist verloren): <span className="font-semibold text-destructive/80">€{monthlyCost.toLocaleString("de-DE")}/Mo</span>
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                <span className="font-medium">3.</span> Decivio reduziert Verzögerungen um 73%: Einsparung <span className="font-semibold text-primary">€{savings.toLocaleString("de-DE")}/Mo</span>
-              </p>
-            </div>
-
-            {/* ROI Badge */}
-            <motion.div
-              key={roiMultiple}
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, ease }}
-              className="text-center pt-1"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border/30">
-                <span className="text-[12px] text-muted-foreground">{roiMultiple}× Return bei €149/Mo</span>
-                <ArrowRight className="w-3 h-3 text-primary" />
-              </div>
+          <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }} className="rounded-xl p-8" style={{ background: "#0A0F1E", border: "1px solid #1E293B" }}>
+            <p className="text-sm mb-2" style={{ color: "#94A3B8" }}>💸 Verzögerungskosten/Monat:</p>
+            <motion.div key={monthlyCost} initial={{ scale: 0.95, opacity: 0.5 }} animate={{ scale: 1, opacity: 1 }}>
+              <span className="text-[42px] font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#EF4444" }}>€{monthlyCost.toLocaleString("de-DE")}</span>
             </motion.div>
-          </div>
-        </motion.div>
+            <div className="my-6 pt-6" style={{ borderTop: "1px solid #1E293B" }}>
+              <div className="flex justify-between text-sm"><span style={{ color: "#94A3B8" }}>Decivio Professional:</span><span className="font-semibold" style={{ color: "#F1F5F9" }}>€149/Mo</span></div>
+            </div>
+            <div className="p-4 rounded-lg" style={{ background: "#1E293B" }}>
+              <p className="text-sm" style={{ color: "#F1F5F9" }}>💡 Wenn Decivio eine Entscheidung um <span className="font-bold" style={{ color: "#EF4444", fontFamily: "'JetBrains Mono', monospace" }}>{breakeven.toFixed(1)}</span> Tage beschleunigt — ist es bezahlt.</p>
+            </div>
+            <Link to="/auth" className="mt-6 w-full inline-flex items-center justify-center text-sm font-semibold text-white px-6 py-3 rounded-lg min-h-[48px] shadow-lg"
+              style={{ background: "#EF4444" }}>Diese Einsparung realisieren →</Link>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
-};
-
+});
+ROICalculatorSection.displayName = "ROICalculatorSection";
 export default ROICalculatorSection;
