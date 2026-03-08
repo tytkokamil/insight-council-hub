@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { RefreshCw, CheckCircle2, AlertTriangle, Loader2, Brain, AlertCircle } from "lucide-react";
+import { RefreshCw, CheckCircle2, Loader2, Brain, AlertCircle, Clock, Play, Power } from "lucide-react";
 import { adminCard, adminCardStyle, adminBtnGhost, adminSectionTitle, adminTableRow, adminTableRowStyle } from "./adminStyles";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { format, subDays } from "date-fns";
+import { Button } from "@/components/ui/button";
 
 const SECURITY_CHECKS = [
   { id: "crypto_random", label: "Math.random() durch crypto.getRandomValues() ersetzt", checked: "2026-03-08" },
@@ -15,26 +16,42 @@ const SECURITY_CHECKS = [
   { id: "otp_no_logs", label: "OTP nicht mehr in Logs", checked: "2026-03-08" },
 ];
 
+interface CronJob {
+  jobid: number;
+  jobname: string;
+  schedule: string;
+  active: boolean;
+  command: string;
+}
+
 const AdminSystemTab = () => {
   const [dbHealth, setDbHealth] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [auditErrors, setAuditErrors] = useState<any[]>([]);
   const [aiCostData, setAiCostData] = useState<{ date: string; count: number }[]>([]);
+  const [cronJobs, setCronJobs] = useState<CronJob[]>([]);
+  const [cronLoading, setCronLoading] = useState<Record<string, boolean>>({});
+
+  const invokeAdmin = async (action: string, payload: Record<string, any> = {}) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.functions.invoke("admin-actions", {
+      body: { action, ...payload },
+      headers: { Authorization: `Bearer ${session?.access_token}` },
+    });
+    if (error) throw error;
+    return data;
+  };
 
   const fetchSystemData = async () => {
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data } = await supabase.functions.invoke("admin-actions", {
-        body: { action: "get_system_health" },
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      });
+      const data = await invokeAdmin("get_system_health");
       if (data) setDbHealth(data);
     } catch (e: any) {
       toast.error(e.message);
     }
 
-    // Load recent error-like audit logs
+    // Load error audit logs
     const { data: errors } = await supabase
       .from("audit_logs")
       .select("id, action, field_name, new_value, created_at, user_id")
@@ -43,7 +60,7 @@ const AdminSystemTab = () => {
       .limit(50);
     if (errors) setAuditErrors(errors);
 
-    // Build AI usage chart from audit logs with ai-related actions (last 30 days)
+    // AI usage chart (30 days)
     const since = subDays(new Date(), 30).toISOString();
     const { data: aiLogs } = await supabase
       .from("audit_logs")
@@ -61,12 +78,41 @@ const AdminSystemTab = () => {
       setAiCostData(Object.entries(dayMap).map(([date, count]) => ({ date, count })));
     }
 
+    // Cron jobs
+    try {
+      const cronData = await invokeAdmin("get_cron_jobs");
+      if (cronData?.jobs) setCronJobs(cronData.jobs);
+    } catch { /* ignore */ }
+
     setLoading(false);
   };
 
   useEffect(() => { fetchSystemData(); }, []);
 
   const totalAiCalls = useMemo(() => aiCostData.reduce((s, d) => s + d.count, 0), [aiCostData]);
+
+  const handleRunJob = async (jobName: string) => {
+    setCronLoading(p => ({ ...p, [jobName]: true }));
+    try {
+      await invokeAdmin("run_cron_job", { jobName });
+      toast.success(`Job "${jobName}" manuell gestartet`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+    setCronLoading(p => ({ ...p, [jobName]: false }));
+  };
+
+  const handleToggleJob = async (jobName: string, currentActive: boolean) => {
+    setCronLoading(p => ({ ...p, [jobName]: true }));
+    try {
+      await invokeAdmin("toggle_cron_job", { jobName, active: !currentActive });
+      setCronJobs(prev => prev.map(j => j.jobname === jobName ? { ...j, active: !currentActive } : j));
+      toast.success(`Job "${jobName}" ${!currentActive ? "aktiviert" : "deaktiviert"}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+    setCronLoading(p => ({ ...p, [jobName]: false }));
+  };
 
   return (
     <div className="space-y-6">
@@ -75,6 +121,60 @@ const AdminSystemTab = () => {
         <button onClick={fetchSystemData} disabled={loading} className={adminBtnGhost}>
           <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} /> Aktualisieren
         </button>
+      </div>
+
+      {/* Cron Jobs Panel */}
+      <div className={adminCard} style={adminCardStyle}>
+        <h3 className={adminSectionTitle}><Clock className="w-4 h-4" /> Cron Jobs (pg_cron)</h3>
+        {cronJobs.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b" style={{ borderColor: "#1e293b" }}>
+                  {["Job-Name", "Schedule", "Status", "Aktionen"].map(h => (
+                    <th key={h} className="text-left py-2 px-2 text-neutral-500 font-medium text-xs">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {cronJobs.map((job) => (
+                  <tr key={job.jobid} className={adminTableRow} style={adminTableRowStyle}>
+                    <td className="py-2 px-2 text-white font-mono text-xs">{job.jobname}</td>
+                    <td className="py-2 px-2 text-neutral-300 font-mono text-xs">{job.schedule}</td>
+                    <td className="py-2 px-2">
+                      <span className={`inline-flex items-center gap-1 text-xs ${job.active ? "text-green-400" : "text-red-400"}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${job.active ? "bg-green-500" : "bg-red-500"}`} />
+                        {job.active ? "Aktiv" : "Inaktiv"}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-6 text-[10px] px-2 text-neutral-400 hover:text-white"
+                        disabled={!!cronLoading[job.jobname]}
+                        onClick={() => handleRunJob(job.jobname)}
+                      >
+                        <Play className="w-3 h-3 mr-1" /> Ausführen
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className={`h-6 text-[10px] px-2 ${job.active ? "text-red-400 hover:text-red-300" : "text-green-400 hover:text-green-300"}`}
+                        disabled={!!cronLoading[job.jobname]}
+                        onClick={() => handleToggleJob(job.jobname, job.active)}
+                      >
+                        <Power className="w-3 h-3 mr-1" /> {job.active ? "Deaktivieren" : "Aktivieren"}
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-xs text-neutral-500 py-4 text-center">{loading ? "Lade…" : "Keine Cron Jobs gefunden"}</p>
+        )}
       </div>
 
       {/* AI Costs Panel */}
@@ -111,7 +211,7 @@ const AdminSystemTab = () => {
                 </tr>
               </thead>
               <tbody>
-                {auditErrors.map((e, i) => (
+                {auditErrors.map((e) => (
                   <tr key={e.id} className={adminTableRow} style={adminTableRowStyle}>
                     <td className="py-2 px-2 text-neutral-400 text-xs tabular-nums whitespace-nowrap">
                       {format(new Date(e.created_at), "dd.MM HH:mm:ss")}
