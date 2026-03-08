@@ -114,6 +114,7 @@ export const publicRoutes = (
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
+  </>
 );
 
 export const protectedRoutes = (
