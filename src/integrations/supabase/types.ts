@@ -1241,6 +1241,114 @@ export type Database = {
         }
         Relationships: []
       }
+      escalation_log: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string | null
+          decision_id: string
+          escalated_to: string | null
+          id: string
+          org_id: string | null
+          rule_id: string | null
+          status: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          decision_id: string
+          escalated_to?: string | null
+          id?: string
+          org_id?: string | null
+          rule_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          decision_id?: string
+          escalated_to?: string | null
+          id?: string
+          org_id?: string | null
+          rule_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_log_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "escalation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_rules: {
+        Row: {
+          condition_type: string
+          condition_value: number
+          created_at: string | null
+          created_by: string
+          description: string | null
+          enabled: boolean | null
+          escalate_to: string
+          id: string
+          name: string
+          notify_channels: string[] | null
+          org_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          enabled?: boolean | null
+          escalate_to?: string
+          id?: string
+          name: string
+          notify_channels?: string[] | null
+          org_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          enabled?: boolean | null
+          escalate_to?: string
+          id?: string
+          name?: string
+          notify_channels?: string[] | null
+          org_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_review_tokens: {
         Row: {
           acted_at: string | null
@@ -1736,6 +1844,53 @@ export type Database = {
             foreignKeyName: "notifications_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_badges: {
+        Row: {
+          badge_token: string | null
+          decisions_count: number | null
+          expires_at: string | null
+          id: string
+          is_public: boolean | null
+          issued_at: string | null
+          org_id: string | null
+          quality_score: number | null
+          tier: string
+          velocity_score: number | null
+        }
+        Insert: {
+          badge_token?: string | null
+          decisions_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          issued_at?: string | null
+          org_id?: string | null
+          quality_score?: number | null
+          tier?: string
+          velocity_score?: number | null
+        }
+        Update: {
+          badge_token?: string | null
+          decisions_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          issued_at?: string | null
+          org_id?: string | null
+          quality_score?: number | null
+          tier?: string
+          velocity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_badges_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
