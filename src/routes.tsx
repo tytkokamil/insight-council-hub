@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import PlatformAdminGuard from "@/components/layout/PlatformAdminGuard";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
@@ -102,8 +102,10 @@ export const publicRoutes = (
     <Route path="/privacy" element={<L><PrivacyPolicy /></L>} />
     <Route path="/terms" element={<L><TermsOfService /></L>} />
     <Route path="/imprint" element={<L><Imprint /></L>} />
-    <Route path="/avv" element={<L><DataProcessingAgreement /></L>} />
-    <Route path="/ai-policy" element={<L><AiDataPolicy /></L>} />
+    <Route path="/dpa" element={<L><DataProcessingAgreement /></L>} />
+    <Route path="/ai-data-policy" element={<L><AiDataPolicy /></L>} />
+    <Route path="/avv" element={<Navigate to="/dpa" replace />} />
+    <Route path="/ai-policy" element={<Navigate to="/ai-data-policy" replace />} />
     <Route path="/sub-processors" element={<L><SubProcessors /></L>} />
     <Route path="/changelog" element={<L><Changelog /></L>} />
     <Route path="/roadmap" element={<L><Roadmap /></L>} />
@@ -140,7 +142,8 @@ export const protectedRoutes = (
     <Route path="/tasks/:id" element={<P><TaskDetail /></P>} />
     <Route path="/analytics" element={<P><AnalyticsHub /></P>} />
     <Route path="/briefing" element={<P><Briefing /></P>} />
-    <Route path="/graph" element={<P><DecisionGraph /></P>} />
+    <Route path="/decision-graph" element={<P><DecisionGraph /></P>} />
+    <Route path="/graph" element={<Navigate to="/decision-graph" replace />} />
     <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
     <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
     <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
@@ -155,7 +158,8 @@ export const protectedRoutes = (
     <Route path="/executive" element={<P><ExecutiveHub /></P>} />
     <Route path="/settings" element={<P><SettingsPage /></P>} />
     <Route path="/admin/users" element={<P><AdminUsers /></P>} />
-    <Route path="/audit" element={<P><AuditTrail /></P>} />
+    <Route path="/audit-trail" element={<P><AuditTrail /></P>} />
+    <Route path="/audit" element={<Navigate to="/audit-trail" replace />} />
     <Route path="/pilot" element={<P><PilotSettings /></P>} />
     <Route path="/feature-management" element={<P><PilotSettings /></P>} />
     <Route path="/calendar" element={<P><DecisionCalendar /></P>} />
@@ -163,8 +167,10 @@ export const protectedRoutes = (
     <Route path="/templates" element={<P><TemplateEditor /></P>} />
     <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
     <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
-    <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />
-    <Route path="/automations" element={<P><AutomationRules /></P>} />
+    <Route path="/knowledge-base" element={<P><KnowledgeBase /></P>} />
+    <Route path="/knowledge" element={<Navigate to="/knowledge-base" replace />} />
+    <Route path="/automation-rules" element={<P><AutomationRules /></P>} />
+    <Route path="/automations" element={<Navigate to="/automation-rules" replace />} />
     <Route path="/archive" element={<P><ArchivePage /></P>} />
     <Route path="/risks" element={<P><RiskRegister /></P>} />
     <Route path="/team-performance" element={<P><TeamPerformance /></P>} />

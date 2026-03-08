@@ -35,7 +35,7 @@ const CommandPalette = () => {
     { label: t("nav.dashboard"), path: "/dashboard", icon: BarChart3 },
     { label: t("nav.decisions"), path: "/decisions", icon: FileText },
     { label: "Briefing", path: "/briefing", icon: Sun },
-    { label: "Graph", path: "/graph", icon: GitBranch },
+    { label: "Graph", path: "/decision-graph", icon: GitBranch },
     { label: "Bottlenecks", path: "/bottlenecks", icon: Radar },
     { label: t("nav.analyticsHub"), path: "/analytics", icon: TrendingUp },
     { label: "DNA", path: "/dna", icon: Dna },

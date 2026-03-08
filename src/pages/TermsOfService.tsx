@@ -182,8 +182,8 @@ const TermsOfService = () => (
             <p className="text-xs text-muted-foreground/60">
               Verwandte Dokumente:{" "}
               <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link> ·{" "}
-              <Link to="/avv" className="text-primary hover:underline">AVV</Link> ·{" "}
-              <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> ·{" "}
+              <Link to="/dpa" className="text-primary hover:underline">AVV</Link> ·{" "}
+              <Link to="/ai-data-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> ·{" "}
               <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link>
             </p>
           </section>

@@ -68,7 +68,7 @@ const INTELLIGENCE_GROUP: NavGroupDef = {
     {
       icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics", minRole: "org_executive",
       children: [
-        { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
+        { icon: GitBranch, label: "nav.decisionGraph", path: "/decision-graph" },
         { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
         { icon: Activity, label: "nav.healthHeatmap", path: "/health" },
         { icon: Clock, label: "nav.predictiveTimeline", path: "/timeline" },
@@ -86,8 +86,8 @@ const GOVERNANCE_GROUP: NavGroupDef = {
       children: [
         { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
         { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
-        { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
-        { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_lead" },
+        { icon: Zap, label: "nav.automations", path: "/automation-rules", minRole: "org_admin" },
+        { icon: History, label: "nav.auditTrail", path: "/audit-trail", featureKey: "audit", minRole: "org_lead" },
       ],
     } as NavSubGroup,
   ],
@@ -103,7 +103,7 @@ const SETTINGS_GROUP: NavGroupDef = {
         { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
         { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
         { icon: Archive, label: "nav.archive", path: "/archive" },
-        { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
+        { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge-base", minRole: "org_member" },
       ],
     } as NavSubGroup,
     { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
@@ -131,7 +131,7 @@ function getGroupsForRole(role: OrgRoleKey): NavGroupDef[] {
             { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
             { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
             { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
-            { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+            { icon: History, label: "nav.auditTrail", path: "/audit-trail", featureKey: "audit" },
           ],
         },
       ];
