@@ -74,11 +74,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext === "csv" || ext === "txt") return await file.text();
     if (ext === "xlsx" || ext === "xls") {
-      const XLSX = await import("xlsx");
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      return XLSX.utils.sheet_to_csv(sheet);
+      throw new Error("Excel-Import wird nicht mehr unterstützt. Bitte als CSV speichern und erneut importieren.");
     }
     if (ext === "pdf") return await parsePdf(file);
     try { return await file.text(); } catch { throw new Error(t("import.formatNotSupported")); }
