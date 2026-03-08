@@ -245,12 +245,33 @@ const IndustriesSection = () => {
                         </motion.span>
                       ))}
                     </div>
-                    <a
-                      href="/auth"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary mt-4 hover:gap-2.5 transition-all"
-                    >
-                      Template für {active.name} testen <ArrowRight className="w-3 h-3" />
-                    </a>
+                    {["maschinenbau", "automotive", "pharma-medizin", "it-software", "bau-industrie"].includes(
+                      active.name === "Maschinenbau" ? "maschinenbau" :
+                      active.name === "Automotive" ? "automotive" :
+                      active.name === "Pharma & Life Sciences" ? "pharma-medizin" :
+                      active.name === "IT & Software" ? "it-software" :
+                      active.name === "Bau & Industrie" ? "bau-industrie" : ""
+                    ) ? (
+                      <Link
+                        to={`/branchen/${
+                          active.name === "Maschinenbau" ? "maschinenbau" :
+                          active.name === "Automotive" ? "automotive" :
+                          active.name === "Pharma & Life Sciences" ? "pharma-medizin" :
+                          active.name === "IT & Software" ? "it-software" :
+                          "bau-industrie"
+                        }`}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary mt-4 hover:gap-2.5 transition-all"
+                      >
+                        Mehr über Decivio für {active.name} <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    ) : (
+                      <a
+                        href="/auth"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary mt-4 hover:gap-2.5 transition-all"
+                      >
+                        Template für {active.name} testen <ArrowRight className="w-3 h-3" />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
