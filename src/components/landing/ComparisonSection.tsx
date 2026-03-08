@@ -59,7 +59,7 @@ const ScoreIcon = ({ score, highlighted }: { score: Score; highlighted?: boolean
     );
   }
   return (
-    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-muted/50 text-muted-foreground/20">
+    <div className="w-7 h-7 rounded-full flex items-center justify-center bg-muted/50 text-muted-foreground/50">
       <X className="w-3.5 h-3.5" />
     </div>
   );
