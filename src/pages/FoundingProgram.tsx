@@ -258,7 +258,6 @@ const FoundingProgram = () => {
               <p className="text-[12px] mb-6" style={{ color: "rgba(255,255,255,0.3)" }}>
                 Jahresplan: €74/Mo statt €124
               </p>
-              </p>
 
               <ul className="text-left max-w-sm mx-auto space-y-2 mb-8">
                 {[
