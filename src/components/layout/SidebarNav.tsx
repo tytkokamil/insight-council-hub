@@ -80,10 +80,15 @@ const INTELLIGENCE_GROUP: NavGroupDef = {
 const GOVERNANCE_GROUP: NavGroupDef = {
   labelKey: "governance",
   items: [
-    { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
-    { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
-    { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
-    { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_lead" },
+    {
+      icon: Shield, label: "nav.governanceHub", featureKey: "engine", minRole: "org_member",
+      children: [
+        { icon: Shield, label: "nav.escalationCenter", path: "/engine", featureKey: "engine", minRole: "org_member" },
+        { icon: AlertTriangle, label: "nav.riskRegister", path: "/risks", minRole: "org_member" },
+        { icon: Zap, label: "nav.automations", path: "/automations", minRole: "org_admin" },
+        { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit", minRole: "org_lead" },
+      ],
+    } as NavSubGroup,
   ],
 };
 
@@ -91,10 +96,15 @@ const SETTINGS_GROUP: NavGroupDef = {
   labelKey: "system",
   items: [
     { icon: Settings, label: "nav.settings", path: "/settings" },
-    { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
-    { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
-    { icon: Archive, label: "nav.archive", path: "/archive" },
-    { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
+    {
+      icon: Settings2, label: "nav.moreTools", minRole: "org_member",
+      children: [
+        { icon: Settings2, label: "nav.templates", path: "/template-editor", minRole: "org_member" },
+        { icon: Target, label: "nav.strategy", path: "/strategy", minRole: "org_member" },
+        { icon: Archive, label: "nav.archive", path: "/archive" },
+        { icon: BookOpen, label: "nav.knowledgeBase", path: "/knowledge", minRole: "org_member" },
+      ],
+    } as NavSubGroup,
     { icon: UserCog, label: "nav.users", path: "/admin/users", adminOnly: true },
   ],
 };
