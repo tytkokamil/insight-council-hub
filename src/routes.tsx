@@ -117,6 +117,8 @@ export const publicRoutes = (
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
+    <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
+    <Route path="/vs/:slug" element={<L><CompetitorComparison /></L>} />
   </>
 );
 

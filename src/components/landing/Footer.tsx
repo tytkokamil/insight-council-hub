@@ -47,7 +47,7 @@ const Footer = () => (
     <div className="absolute inset-0 bg-gradient-to-b from-muted/20 to-muted/40 pointer-events-none" />
 
     <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
         {/* Brand column — spans 2 cols */}
         <div className="col-span-2">
           <Link to="/" className="flex items-center gap-2.5 mb-4 group">
