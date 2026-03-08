@@ -99,7 +99,7 @@ const AiBriefingWidget = () => {
 
   if (isLoading) {
     return (
-      <div className="border border-primary/20 bg-primary/[0.02] rounded-lg p-5 space-y-3">
+      <div className="border-l-4 border-l-primary bg-primary/[0.04] rounded-lg p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
           <Skeleton className="h-4 w-32" />
