@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
-import { ArrowRight, Play, ChevronDown, Shield, Zap, BarChart3 } from "lucide-react";
+import { ArrowRight, Play, Shield, Zap, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ProductTourModal from "./ProductTourModal";
 
