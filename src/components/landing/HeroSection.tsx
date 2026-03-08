@@ -63,6 +63,53 @@ const GridBackground = () => (
   </div>
 );
 
+/** Live ticking CoD counter — taximeter style */
+const CodTicker = () => {
+  const [cents, setCents] = useState(0);
+  const costPerSecond = 47000 / 30 / 24 / 3600; // €47k/month → per second
+
+  useEffect(() => {
+    const start = performance.now();
+    let raf: number;
+    const tick = () => {
+      const elapsed = (performance.now() - start) / 1000;
+      setCents(elapsed * costPerSecond);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const formatted = cents.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 1.3, duration: 0.7, ease }}
+      className="mt-12 flex flex-col items-center"
+    >
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 font-semibold">
+        Kosten offener Entscheidungen seit Seitenbesuch
+      </p>
+      <div className="relative inline-flex items-baseline gap-1 px-6 py-3 rounded-2xl border border-destructive/20 bg-destructive/[0.04] backdrop-blur-sm">
+        <span className="text-[10px] font-semibold text-destructive/70 mr-1">€</span>
+        <span className="text-3xl md:text-4xl font-mono font-bold tabular-nums text-destructive tracking-tight">
+          {formatted}
+        </span>
+        <motion.span
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1, repeat: Infinity }}
+          className="w-2 h-2 rounded-full bg-destructive ml-2 mb-1"
+        />
+      </div>
+      <p className="text-[10px] text-muted-foreground/50 mt-1.5">
+        Basierend auf Ø €47.000/Monat bei mittleren Unternehmen
+      </p>
+    </motion.div>
+  );
+};
+
 const STATS = [
   { value: "4,2", suffix: " Tage", label: "Ø Entscheidungsdauer", icon: Zap },
   { value: "€47k", suffix: "/Mo", label: "Ø unsichtbare Kosten", icon: BarChart3 },
@@ -180,6 +227,9 @@ const HeroSection = () => {
               </motion.span>
             ))}
           </motion.div>
+
+          {/* Live CoD Ticker */}
+          <CodTicker />
 
           {/* Stats row */}
           <motion.div
