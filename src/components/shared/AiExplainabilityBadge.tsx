@@ -112,8 +112,17 @@ const AiExplainabilityBadge = ({ confidence, factors, dataPoints, sourceType, ex
           </TooltipTrigger>
           <TooltipContent side="bottom" className="max-w-xs">
             <p className="text-xs">{t(source.descKey)}</p>
+            {modelUsed && <p className="text-xs mt-1 opacity-70">{t("shared.aiCreatedWith", "Erstellt mit")} {MODEL_LABELS[modelUsed] || modelUsed}</p>}
           </TooltipContent>
         </Tooltip>
+      )}
+
+      {/* Model badge (when no source type but model is known) */}
+      {!source && modelUsed && (
+        <div className="inline-flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full bg-background/50 border border-current/10">
+          <Brain className="w-3 h-3" />
+          <span className="font-medium">{MODEL_LABELS[modelUsed] || modelUsed}</span>
+        </div>
       )}
 
       {/* Explanation text */}
