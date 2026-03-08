@@ -23,11 +23,11 @@ import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 import { useTranslatedLabels } from "@/lib/labels";
 
 const statusColors: Record<string, string> = {
-  draft: "#6b7280",
-  review: "#eab308",
-  approved: "#22c55e",
-  implemented: "#3b82f6",
-  rejected: "#ef4444",
+  draft: "hsl(var(--muted-foreground))",
+  review: "hsl(var(--warning))",
+  approved: "hsl(var(--success))",
+  implemented: "hsl(var(--primary))",
+  rejected: "hsl(var(--destructive))",
 };
 
 // Priority no longer affects node size — fixed at 140×80
