@@ -1,50 +1,33 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import {
-  Users, Building2, TrendingUp, Clock, RefreshCw, ShieldCheck,
-  Target, Zap, Brain, DollarSign, BarChart3, UserMinus, Loader2,
-  ArrowRight, AlertTriangle
-} from "lucide-react";
-import OutboundEmailEngine from "@/components/settings/OutboundEmailEngine";
+import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings } from "lucide-react";
+import AdminOverviewTab from "@/components/internal-admin/AdminOverviewTab";
+import AdminOrgsTab from "@/components/internal-admin/AdminOrgsTab";
+import AdminUsersTab from "@/components/internal-admin/AdminUsersTab";
+import AdminFeatureFlagsTab from "@/components/internal-admin/AdminFeatureFlagsTab";
+import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
+import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
+import { cn } from "@/lib/utils";
 
-interface AdminMetrics {
-  registrations: { today: number; week: number; month: number; total: number };
-  activeOrgs: number;
-  totalOrgs: number;
-  churn: { count: number; total: number; rate: number };
-  timeToFirstDecision: number | null;
-  week1Retention: number | null;
-  teamExpansionRate: number | null;
-  decisionCompletionRate: number | null;
-  briefingOpenRate: number | null;
-  planDistribution: Record<string, number>;
-  mrr: number;
-  arr: number;
-  totalDecisions: number;
-  timestamp: string;
-}
+const TABS = [
+  { id: "overview", label: "Übersicht", icon: BarChart3 },
+  { id: "orgs", label: "Organisationen", icon: Building2 },
+  { id: "users", label: "Nutzer", icon: Users },
+  { id: "flags", label: "Feature Flags", icon: Flag },
+  { id: "pilots", label: "Pilot-Kunden", icon: Rocket },
+  { id: "system", label: "System", icon: Settings },
+] as const;
 
-const PLAN_COLORS: Record<string, string> = {
-  free: "bg-muted text-muted-foreground",
-  starter: "bg-primary/10 text-primary",
-  professional: "bg-accent/20 text-accent-foreground",
-  enterprise: "bg-chart-4/20 text-foreground",
-};
+type TabId = (typeof TABS)[number]["id"];
 
 const InternalAdmin = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
-  const [loadingMetrics, setLoadingMetrics] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
 
-  // Check platform admin status
   useEffect(() => {
     if (!user) { setIsAdmin(null); return; }
     supabase
@@ -52,295 +35,80 @@ const InternalAdmin = () => {
       .select("id")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
-
-  const fetchMetrics = async () => {
-    setLoadingMetrics(true);
-    setError(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const { data, error: fnErr } = await supabase.functions.invoke("admin-analytics", {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+      .then(({ data }) => {
+        const admin = !!data;
+        setIsAdmin(admin);
+        if (!admin) navigate("/dashboard", { replace: true });
       });
-      if (fnErr) throw fnErr;
-      if (data?.error) throw new Error(data.error);
-      setMetrics(data);
-    } catch (e: any) {
-      setError(e.message || "Failed to load metrics");
-    }
-    setLoadingMetrics(false);
-  };
+  }, [user, navigate]);
 
-  useEffect(() => {
-    if (isAdmin) fetchMetrics();
-  }, [isAdmin]);
-
-  if (authLoading) {
+  if (authLoading || isAdmin === null) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#030810" }}>
+        <Loader2 className="w-6 h-6 animate-spin text-neutral-500" />
       </div>
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardContent className="p-6 text-center space-y-3">
-            <ShieldCheck className="w-10 h-10 mx-auto text-muted-foreground" />
-            <h1 className="text-lg font-bold">Internal Admin</h1>
-            <p className="text-sm text-muted-foreground">Please log in to access the internal dashboard.</p>
-            <Button onClick={() => window.location.href = "/auth"} className="w-full gap-2">
-              <ArrowRight className="w-4 h-4" /> Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (isAdmin === null) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-sm">
-          <CardContent className="p-6 text-center space-y-3">
-            <AlertTriangle className="w-10 h-10 mx-auto text-destructive" />
-            <h1 className="text-lg font-bold">Access Denied</h1>
-            <p className="text-sm text-muted-foreground">You are not authorized to view this dashboard.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const goalIndicator = (value: number | null, target: number, unit = "%") => {
-    if (value === null) return <span className="text-xs text-muted-foreground">—</span>;
-    const met = unit === "min" ? value <= target : value >= target;
-    return (
-      <div className="flex items-center gap-1.5 mt-1">
-        <Progress value={unit === "min" ? Math.max(0, 100 - (value / target) * 100) : Math.min(100, (value / target) * 100)} className="h-1.5 flex-1" />
-        <Badge variant="outline" className={`text-[9px] ${met ? "text-success border-success/30" : "text-warning border-warning/30"}`}>
-          Ziel: {target}{unit}
-        </Badge>
-      </div>
-    );
-  };
+  if (!user || !isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 py-8 section-gap-lg">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <h1 className="text-xl font-bold tracking-tight">Decivio Internal Analytics</h1>
-              <Badge variant="outline" className="text-[9px]">SUPER ADMIN</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Platform-wide metrics — {metrics?.timestamp ? new Date(metrics.timestamp).toLocaleString("de-DE") : "—"}
-            </p>
-          </div>
-          <Button size="sm" variant="outline" onClick={fetchMetrics} disabled={loadingMetrics} className="gap-1.5">
-            <RefreshCw className={`w-3 h-3 ${loadingMetrics ? "animate-spin" : ""}`} />
-            Aktualisieren
-          </Button>
+    <div className="min-h-screen" style={{ background: "#030810", color: "#e2e8f0" }}>
+      {/* Header */}
+      <header
+        className="sticky top-0 z-50 flex items-center justify-between px-5 h-12 border-b"
+        style={{ background: "#0A0F1A", borderColor: "#1e293b", borderLeft: "4px solid #EF4444" }}
+      >
+        <div className="flex items-center gap-3">
+          <ShieldAlert className="w-4 h-4 text-red-500" />
+          <span className="text-sm font-semibold tracking-tight text-white">Decivio Internal Admin</span>
+          <span
+            className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded"
+            style={{ background: "#EF4444", color: "#fff" }}
+          >
+            ⚠ INTERN
+          </span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-neutral-400 tabular-nums">{user.email}</span>
+        </div>
+      </header>
 
-        {error && (
-          <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
-            <p className="text-xs text-destructive">{error}</p>
-          </div>
-        )}
+      <div className="flex">
+        {/* Sidebar */}
+        <aside
+          className="sticky top-12 h-[calc(100vh-48px)] flex-shrink-0 border-r flex flex-col gap-0.5 p-2"
+          style={{ width: 200, background: "#0A0F1A", borderColor: "#1e293b" }}
+        >
+          {TABS.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-md text-sm transition-colors",
+                  active
+                    ? "bg-red-500/10 text-red-400 font-medium"
+                    : "text-neutral-400 hover:text-neutral-200 hover:bg-white/5"
+                )}
+              >
+                <tab.icon className="w-4 h-4 flex-shrink-0" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </aside>
 
-        {!metrics && loadingMetrics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Card key={i}><CardContent className="p-5 space-y-3"><Skeleton className="h-3 w-24" /><Skeleton className="h-8 w-16" /><Skeleton className="h-2 w-32" /></CardContent></Card>
-            ))}
-          </div>
-        )}
-
-        {metrics && (
-          <>
-            {/* Revenue Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="border-primary/20">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <DollarSign className="w-4 h-4 text-primary" />
-                    <span className="text-xs text-muted-foreground font-medium uppercase">MRR</span>
-                  </div>
-                  <p className="text-2xl font-bold">€{metrics.mrr.toLocaleString("de-DE")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Monthly Recurring Revenue</p>
-                </CardContent>
-              </Card>
-              <Card className="border-primary/20">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    <span className="text-xs text-muted-foreground font-medium uppercase">ARR</span>
-                  </div>
-                  <p className="text-2xl font-bold">€{metrics.arr.toLocaleString("de-DE")}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">Annual Recurring Revenue</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground font-medium uppercase">Plan-Verteilung</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {Object.entries(metrics.planDistribution).map(([plan, count]) => (
-                      <Badge key={plan} variant="outline" className={`text-xs ${PLAN_COLORS[plan] || ""}`}>
-                        {plan}: {count}
-                      </Badge>
-                    ))}
-                    {Object.keys(metrics.planDistribution).length === 0 && (
-                      <span className="text-xs text-muted-foreground">Keine Organisationen</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Registrations Row */}
-            <div>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Registrierungen</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Heute", value: metrics.registrations.today, icon: Users },
-                { label: "Diese Woche", value: metrics.registrations.week, icon: Users },
-                { label: "Dieser Monat", value: metrics.registrations.month, icon: Users },
-                { label: "Gesamt", value: metrics.registrations.total, icon: Users },
-              ].map(m => (
-                <Card key={m.label}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <m.icon className="w-3.5 h-3.5 text-muted-foreground" />
-                      <span className="text-[10px] text-muted-foreground uppercase">{m.label}</span>
-                    </div>
-                    <p className="text-xl font-bold">{m.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            </div>
-
-            {/* Engagement Metrics */}
-            <div>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Engagement & Retention</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Aktive Organisationen (7d)</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.activeOrgs} <span className="text-xs font-normal text-muted-foreground">/ {metrics.totalOrgs}</span></p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <UserMinus className="w-3.5 h-3.5 text-destructive/70" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Churn (30d kein Login)</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.churn.count} <span className="text-xs font-normal text-muted-foreground">({metrics.churn.rate}%)</span></p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Time to First Decision</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.timeToFirstDecision ?? "—"} <span className="text-xs font-normal text-muted-foreground">min</span></p>
-                  {goalIndicator(metrics.timeToFirstDecision, 5, "min")}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Target className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Week 1 Retention</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.week1Retention ?? "—"}%</p>
-                  {goalIndicator(metrics.week1Retention, 60)}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Zap className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Team Expansion Rate</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.teamExpansionRate ?? "—"}%</p>
-                  {goalIndicator(metrics.teamExpansionRate, 50)}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Decision Completion Rate</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.decisionCompletionRate ?? "—"}%</p>
-                  {goalIndicator(metrics.decisionCompletionRate, 70)}
-                </CardContent>
-              </Card>
-            </div>
-            </div>
-
-            {/* Product Metrics */}
-            <div>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Produkt</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Brain className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">KI Daily Brief Open Rate</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.briefingOpenRate ?? "—"}%</p>
-                  {goalIndicator(metrics.briefingOpenRate, 45)}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <BarChart3 className="w-3.5 h-3.5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase">Entscheidungen gesamt</span>
-                  </div>
-                  <p className="text-xl font-bold">{metrics.totalDecisions.toLocaleString("de-DE")}</p>
-                </CardContent>
-              </Card>
-            </div>
-            </div>
-
-            {/* Outbound Email Engine */}
-            <div className="mt-10 pt-8 border-t border-border/40">
-              <OutboundEmailEngine />
-            </div>
-          </>
-        )}
+        {/* Main */}
+        <main className="flex-1 min-w-0 p-6 overflow-auto" style={{ maxHeight: "calc(100vh - 48px)" }}>
+          {activeTab === "overview" && <AdminOverviewTab />}
+          {activeTab === "orgs" && <AdminOrgsTab />}
+          {activeTab === "users" && <AdminUsersTab />}
+          {activeTab === "flags" && <AdminFeatureFlagsTab />}
+          {activeTab === "pilots" && <AdminPilotsTab />}
+          {activeTab === "system" && <AdminSystemTab />}
+        </main>
       </div>
     </div>
   );
