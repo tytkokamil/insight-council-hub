@@ -254,6 +254,12 @@ const Dashboard = () => {
           subtitle={t("dashboard.whatNeedsAttention")}
           role="execution"
           help={{ title: isExecutive ? t("dashboard.helpTitleExecutive", { defaultValue: "Executive Dashboard" }) : t("dashboard.helpTitleOperational", { defaultValue: "Operational Dashboard" }), description: isExecutive ? t("dashboard.helpDescExecutive", { defaultValue: "Board-Ready Control Center: DQI, Economic Risk, Portfolio-Übersicht und KI-gestütztes Executive Briefing auf einen Blick." }) : t("dashboard.helpDescOperational", { defaultValue: "Dein tägliches Cockpit: Offene Aufgaben, Eskalationen, Deadlines und Team-KPIs für schnelle operative Steuerung." }) }}
+          primaryAction={
+            <Button size="sm" className="gap-1.5 bg-[hsl(210,50%,24%)] hover:bg-[hsl(210,50%,20%)] text-white" onClick={() => navigate("/decisions?create=true")}>
+              <Plus className="w-3.5 h-3.5" />
+              {t("decisions.newDecision", { defaultValue: "+Neue Entscheidung" })}
+            </Button>
+          }
           secondaryActions={
             <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
               <button
