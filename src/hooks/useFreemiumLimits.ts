@@ -132,10 +132,13 @@ export const useFreemiumLimits = (): FreemiumLimits => {
     staleTime: 5 * 60_000,
   });
 
-  // During trial, grant Professional-level access
+  // During trial, grant Professional-level access; suspended forces free
   const rawPlan = orgData?.plan || "free";
   const subscriptionStatus = orgData?.subscription_status || "active";
-  const plan = subscriptionStatus === "trialing" ? "pro" : rawPlan;
+  const plan = subscriptionStatus === "trialing" ? "pro"
+    : subscriptionStatus === "past_due" ? rawPlan
+    : subscriptionStatus === "suspended" ? "free"
+    : rawPlan;
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 
   const userDecisionCount = useMemo(() => {

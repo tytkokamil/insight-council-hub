@@ -9,6 +9,9 @@ interface TrialStatus {
   trialEndsAt: string | null;
   subscriptionStatus: string;
   plan: string;
+  isPastDue: boolean;
+  isSuspended: boolean;
+  pastDueDaysLeft: number;
 }
 
 export const useTrialStatus = (): TrialStatus => {
@@ -26,7 +29,7 @@ export const useTrialStatus = (): TrialStatus => {
       if (!profile?.org_id) return null;
       const { data: org } = await supabase
         .from("organizations")
-        .select("plan, trial_ends_at, subscription_status")
+        .select("plan, trial_ends_at, subscription_status, payment_failed_at")
         .eq("id", profile.org_id)
         .single();
       return org;
@@ -41,10 +44,20 @@ export const useTrialStatus = (): TrialStatus => {
 
   const isTrialing = subscriptionStatus === "trialing";
   const isTrialExpired = subscriptionStatus === "trial_expired";
+  const isPastDue = subscriptionStatus === "past_due";
+  const isSuspended = subscriptionStatus === "suspended";
 
   let trialDaysLeft = 999;
   if (trialEndsAt) {
     trialDaysLeft = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
+  }
+
+  // Calculate days left before suspension (10 day grace period from payment_failed_at)
+  let pastDueDaysLeft = 10;
+  const paymentFailedAt = (data as any)?.payment_failed_at;
+  if (isPastDue && paymentFailedAt) {
+    const daysSinceFailure = Math.floor((Date.now() - new Date(paymentFailedAt).getTime()) / 86400000);
+    pastDueDaysLeft = Math.max(0, 10 - daysSinceFailure);
   }
 
   return {
@@ -54,5 +67,8 @@ export const useTrialStatus = (): TrialStatus => {
     trialEndsAt,
     subscriptionStatus,
     plan,
+    isPastDue,
+    isSuspended,
+    pastDueDaysLeft,
   };
 };

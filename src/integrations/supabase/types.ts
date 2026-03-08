@@ -2220,9 +2220,12 @@ export type Database = {
       organizations: {
         Row: {
           created_at: string
+          dunning_last_sent_at: string | null
+          dunning_step: number
           id: string
           is_active: boolean | null
           name: string
+          payment_failed_at: string | null
           pilot_customer: boolean | null
           plan: string
           referral_code: string | null
@@ -2239,9 +2242,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dunning_last_sent_at?: string | null
+          dunning_step?: number
           id?: string
           is_active?: boolean | null
           name: string
+          payment_failed_at?: string | null
           pilot_customer?: boolean | null
           plan?: string
           referral_code?: string | null
@@ -2258,9 +2264,12 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dunning_last_sent_at?: string | null
+          dunning_step?: number
           id?: string
           is_active?: boolean | null
           name?: string
+          payment_failed_at?: string | null
           pilot_customer?: boolean | null
           plan?: string
           referral_code?: string | null

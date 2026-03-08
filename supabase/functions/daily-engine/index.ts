@@ -213,6 +213,114 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════
+    // DUNNING MANAGEMENT (past_due orgs)
+    // ═══════════════════════════════════════════════════════
+    const { data: pastDueOrgs } = await supabase
+      .from("organizations")
+      .select("id, name, payment_failed_at, dunning_step, dunning_last_sent_at")
+      .eq("subscription_status", "past_due")
+      .not("payment_failed_at", "is", null);
+
+    if (pastDueOrgs) {
+      for (const org of pastDueOrgs) {
+        const daysSinceFailure = Math.floor(
+          (Date.now() - new Date(org.payment_failed_at!).getTime()) / 86400000
+        );
+
+        let nextStep = 0;
+        if (daysSinceFailure >= 10) nextStep = 4; // suspend
+        else if (daysSinceFailure >= 7) nextStep = 3; // final warning
+        else if (daysSinceFailure >= 3) nextStep = 2; // reminder
+        else nextStep = 1; // already sent on day 0
+
+        const currentStep = org.dunning_step || 0;
+
+        if (nextStep > currentStep) {
+          // Get org owner
+          const { data: ownerRole } = await supabase
+            .from("user_roles")
+            .select("user_id")
+            .eq("org_id", org.id)
+            .eq("role", "org_owner")
+            .limit(1)
+            .single();
+
+          if (ownerRole) {
+            if (nextStep === 4) {
+              // Day 10: Suspend — downgrade to free
+              await supabase
+                .from("organizations")
+                .update({
+                  plan: "free",
+                  subscription_status: "suspended",
+                  dunning_step: 4,
+                  dunning_last_sent_at: new Date().toISOString(),
+                })
+                .eq("id", org.id);
+
+              await supabase.from("notifications").insert({
+                user_id: ownerRole.user_id,
+                org_id: org.id,
+                type: "payment_suspended",
+                title: "Zugang eingeschränkt",
+                message: "Ihr Zugang wurde auf den Free-Plan zurückgestuft. Aktualisieren Sie Ihre Zahlungsmethode um wieder vollen Zugang zu erhalten.",
+              });
+            } else {
+              await supabase
+                .from("organizations")
+                .update({
+                  dunning_step: nextStep,
+                  dunning_last_sent_at: new Date().toISOString(),
+                })
+                .eq("id", org.id);
+
+              // Notification messages per step
+              const notifMessages: Record<number, { title: string; message: string }> = {
+                2: {
+                  title: "Erinnerung: Zahlung ausstehend",
+                  message: "Ihre Zahlung ist weiterhin ausstehend. Bitte aktualisieren Sie Ihre Zahlungsmethode.",
+                },
+                3: {
+                  title: "Letzte Warnung: Zugang wird in 3 Tagen eingeschränkt",
+                  message: "Ohne Zahlungsaktualisierung wird Ihr Plan in 3 Tagen auf Free zurückgestuft.",
+                },
+              };
+
+              if (notifMessages[nextStep]) {
+                await supabase.from("notifications").insert({
+                  user_id: ownerRole.user_id,
+                  org_id: org.id,
+                  type: "payment_warning",
+                  title: notifMessages[nextStep].title,
+                  message: notifMessages[nextStep].message,
+                });
+              }
+            }
+
+            // Send dunning email
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/dunning-email`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${serviceKey}`,
+                },
+                body: JSON.stringify({
+                  org_id: org.id,
+                  org_name: org.name,
+                  user_id: ownerRole.user_id,
+                  dunning_step: nextStep,
+                }),
+              });
+            } catch (e) {
+              console.error("Dunning email failed:", e);
+            }
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
     // EXISTING ORG LOOP
     // ═══════════════════════════════════════════════════════
 
