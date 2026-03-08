@@ -38,13 +38,18 @@ async function getUserAiSettings(userId: string): Promise<AiSettings> {
   return data || { provider: "lovable", api_key: null, model: null };
 }
 
-function extractUserIdFromAuth(req: Request): string | null {
+async function extractUserIdFromAuth(req: Request): Promise<string | null> {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) return null;
   const token = authHeader.replace("Bearer ", "");
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.sub || null;
+    const anonClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!
+    );
+    const { data: { user }, error } = await anonClient.auth.getUser(token);
+    if (error || !user) return null;
+    return user.id;
   } catch {
     return null;
   }
