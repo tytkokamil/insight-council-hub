@@ -203,6 +203,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </div>
       </main>
 
+      {isMobile && <MobileBottomNav />}
       <CommandPalette />
       <OnboardingTour open={showOnboarding} onComplete={completeOnboarding} />
     </div>
