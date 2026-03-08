@@ -21,7 +21,7 @@ const RotatingWord = () => {
   }, []);
 
   return (
-    <span className="inline-flex relative overflow-hidden align-bottom" style={{ minWidth: "6ch", height: "1.15em" }}>
+    <span className="inline-block relative overflow-hidden align-bottom w-full sm:w-auto" style={{ height: "1.2em" }}>
       <AnimatePresence mode="wait">
         <motion.span
           key={index}
