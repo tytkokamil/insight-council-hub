@@ -56,6 +56,7 @@ import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
 import DeadDecisionDetector from "@/components/dashboard/DeadDecisionDetector";
 import RoiProofWidget from "@/components/dashboard/RoiProofWidget";
 import WelcomeBackBanner from "@/components/dashboard/WelcomeBackBanner";
+import GoLiveProgressWidget from "@/components/dashboard/GoLiveProgressWidget";
 import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 
 type DashboardMode = "operational" | "executive" | "admin";
