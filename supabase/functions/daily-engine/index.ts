@@ -339,7 +339,24 @@ Deno.serve(async (req) => {
         const { data: authUser } = await supabase.auth.admin.getUserById(profile.user_id);
         if (!authUser?.user?.email) continue;
 
-        const unsubscribeUrl = `${supabasePublicUrl}/functions/v1/reengagement-optout?uid=${profile.user_id}`;
+        // Generate a secure opt-out token for the unsubscribe link
+        let unsubscribeUrl = `${supabasePublicUrl}/functions/v1/reengagement-optout?uid=${profile.user_id}`;
+        try {
+          const optoutToken = crypto.randomUUID() + "-" + crypto.randomUUID();
+          // Use a dummy decision_id and review_id since reengagement tokens don't relate to a decision
+          const dummyId = "00000000-0000-0000-0000-000000000000";
+          await supabase.from("email_action_tokens").insert({
+            token: optoutToken,
+            action_type: "reengagement_optout",
+            user_id: profile.user_id,
+            decision_id: dummyId,
+            review_id: dummyId,
+            expires_at: new Date(Date.now() + 365 * 86400000).toISOString(),
+          });
+          unsubscribeUrl = `${supabasePublicUrl}/functions/v1/reengagement-optout?token=${optoutToken}`;
+        } catch (e) {
+          console.error("Failed to generate optout token, using legacy URL:", e);
+        }
         const appUrl = "https://app.decivio.com";
 
         // Day 7 re-engagement
