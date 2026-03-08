@@ -243,7 +243,7 @@ const Strategy = () => {
         role="system"
         help={{ title: t("strategy.title"), description: t("strategy.help") }}
         primaryAction={
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2" style={{ backgroundColor: "#1E3A5F" }}>
+          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="w-4 h-4" /> {t("strategy.newGoal")}
           </Button>
         }
