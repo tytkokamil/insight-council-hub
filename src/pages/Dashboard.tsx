@@ -41,6 +41,7 @@ const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWid
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
+import ActiveDecisionsTable from "@/components/dashboard/ActiveDecisionsTable";
 import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
