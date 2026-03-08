@@ -775,6 +775,19 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ API KEYS (admin only) ═══════════════ */}
+          {activeTab === "api" && isAdmin && (
+            <div className="space-y-8">
+              <div className="settings-group">
+                <h2>API-Schlüssel</h2>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Generiere API Keys um Decivio in externe Systeme zu integrieren (Zapier, Make, Custom Workflows).
+                </p>
+                <ApiKeysPanel />
+              </div>
+            </div>
+          )}
+
           {/* ═══════════════ BILLING ═══════════════ */}
           {activeTab === "billing" && <BillingPanel />}
 
