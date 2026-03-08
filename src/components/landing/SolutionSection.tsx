@@ -43,7 +43,7 @@ const SolutionSection = () => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease }}
-        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-white/80 backdrop-blur-sm hover:bg-white hover:border-accent-amber/30 hover:shadow-[0_12px_40px_-12px_hsl(var(--accent-amber)/0.12)] transition-all duration-500 mb-4"
+        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm hover:bg-card hover:border-accent-amber/30 hover:shadow-card-hover transition-all duration-500 mb-4"
       >
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="relative flex flex-col md:flex-row items-start gap-6">
