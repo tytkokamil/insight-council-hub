@@ -227,6 +227,7 @@ export const publicRoutes = (
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/demo" element={<L><DemoMode /></L>} />
     <Route path="/demo/live" element={<L><LiveDemo /></L>} />
+    <Route path="/roi-report" element={<P><RoiReport /></P>} />
     
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
