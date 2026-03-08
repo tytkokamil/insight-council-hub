@@ -47,6 +47,7 @@ import PostImplementationReview from "@/components/decisions/PostImplementationR
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import ArchiveSummaryBox from "@/components/decisions/ArchiveSummaryBox";
 import InviteExternalReviewerDialog from "@/components/decisions/InviteExternalReviewerDialog";
+import DecisionAttachmentsPanel from "@/components/decisions/DecisionAttachmentsPanel";
 const statusOptions = ["draft", "proposed", "review", "approved", "rejected", "implemented", "cancelled", "superseded", "archived"] as const;
 
 const statusStyles: Record<string, string> = {
@@ -822,6 +823,17 @@ const DecisionDetail = () => {
                 </Button>
               </div>
               <ReviewPanel decision={decision} onUpdated={invalidate} />
+            </CardContent>
+          </Card>
+
+          {/* ═══ ATTACHMENTS ═══ */}
+          <Card>
+            <CardContent className="p-4">
+              <DecisionAttachmentsPanel
+                decisionId={decision.id}
+                orgId={decision.org_id}
+                profileMap={profileMap}
+              />
             </CardContent>
           </Card>
 
