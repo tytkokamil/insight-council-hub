@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Trash2, Loader2, Gift, ArrowLeft, ArrowRight, Heart, Shield, Database } from "lucide-react";
+import { AlertTriangle, Trash2, Loader2, Gift, ArrowLeft, ArrowRight, Heart, Shield, Database, Download, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-/** Prompt 36 — Multi-step Rage-Quit prevention flow */
+/** GDPR Art. 17 — Right to Erasure + Art. 20 — Data Portability */
 
 type Step = "reason" | "data-loss" | "offer" | "confirm";
 
@@ -27,33 +27,75 @@ const AccountDeletionPanel = () => {
   const [step, setStep] = useState<Step>("reason");
   const [reason, setReason] = useState("");
   const [confirmText, setConfirmText] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [understood, setUnderstood] = useState(false);
-  const [offerAccepted, setOfferAccepted] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const reset = () => {
     setStep("reason");
     setReason("");
     setConfirmText("");
+    setPassword("");
+    setShowPassword(false);
     setUnderstood(false);
-    setOfferAccepted(false);
     setOpen(false);
   };
 
+  const handleExportData = async () => {
+    if (!user) return;
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-user-data");
+      if (error) throw error;
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `decivio-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Export erfolgreich", description: "Ihre Daten wurden als JSON-Datei heruntergeladen." });
+    } catch (err: any) {
+      toast({ title: "Export fehlgeschlagen", description: err?.message || "Unbekannter Fehler", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleDelete = async () => {
-    if (!user || confirmText !== "DELETE") return;
+    if (!user || confirmText !== "LÖSCHEN" || !password) return;
     setDeleting(true);
     try {
       const { data, error } = await supabase.functions.invoke("delete-account", {
-        body: { confirmation: "DELETE", cancel_reason: reason },
+        body: { confirmation: "DELETE", password, cancel_reason: reason },
       });
-      if (error || !data?.success) {
-        toast({ title: "Fehler", description: (data as any)?.error || error?.message || "Account konnte nicht gelöscht werden.", variant: "destructive" });
+
+      if (error) {
+        const errorData = error as any;
+        toast({ title: "Fehler", description: errorData?.message || error?.message || "Account konnte nicht gelöscht werden.", variant: "destructive" });
         setDeleting(false);
         return;
       }
+
+      if (data && !data.success) {
+        const msg = data.error === "ownership_transfer_required"
+          ? data.message
+          : data.error === "invalid_password"
+            ? "Falsches Passwort. Bitte versuchen Sie es erneut."
+            : data.message || "Account konnte nicht gelöscht werden.";
+        toast({ title: "Fehler", description: msg, variant: "destructive" });
+        setDeleting(false);
+        return;
+      }
+
       await supabase.auth.signOut();
-      window.location.href = "/";
+      window.location.href = "/?deleted=1";
     } catch (err: any) {
       toast({ title: "Fehler", description: err?.message || "Unbekannter Fehler", variant: "destructive" });
       setDeleting(false);
@@ -64,12 +106,31 @@ const AccountDeletionPanel = () => {
 
   return (
     <section className="mt-12 pt-8" style={{ borderTop: "1px dashed hsl(0 86% 82%)" }}>
+      {/* Data Export (GDPR Art. 20) */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <Download className="w-4 h-4 text-primary" />
+          <h2 className="text-sm font-medium text-foreground">Datenexport (DSGVO Art. 20)</h2>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">
+          Laden Sie alle Ihre persönlichen Daten als JSON-Datei herunter. Enthält: Profil, Entscheidungen, Kommentare, Aufgaben, Risiken und Aktivitäten.
+        </p>
+        <Button variant="outline" size="sm" className="gap-2" onClick={handleExportData} disabled={exporting}>
+          {exporting ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Wird exportiert…</>
+          ) : (
+            <><Download className="w-3.5 h-3.5" /> Meine Daten exportieren</>
+          )}
+        </Button>
+      </div>
+
+      {/* Danger Zone */}
       <div className="flex items-center gap-2 mb-2">
         <AlertTriangle className="w-4 h-4 text-destructive" />
         <h2 className="text-sm font-medium text-destructive">Danger Zone</h2>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Die Löschung deines Accounts ist unwiderruflich. Alle Daten werden permanent gelöscht (DSGVO Art. 17).
+        Die Löschung Ihres Accounts ist unwiderruflich. Alle Daten werden permanent gelöscht (DSGVO Art. 17).
       </p>
 
       <Button variant="destructive" size="sm" className="gap-2" onClick={() => setOpen(true)}>
@@ -149,7 +210,7 @@ const AccountDeletionPanel = () => {
                         <Database className="w-5 h-5 text-destructive" /> Folgende Daten gehen verloren
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4">Unwiderruflich. Kein Backup möglich.</p>
-                      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 mb-6">
+                      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 mb-4">
                         <ul className="space-y-2 text-sm text-muted-foreground">
                           {[
                             "Alle Entscheidungen & Aufgaben",
@@ -166,6 +227,11 @@ const AccountDeletionPanel = () => {
                           ))}
                         </ul>
                       </div>
+                      <p className="text-xs text-muted-foreground mb-6">
+                        💡 Tipp: <button onClick={handleExportData} className="text-primary underline underline-offset-2" disabled={exporting}>
+                          Exportieren Sie zuerst Ihre Daten
+                        </button> bevor Sie fortfahren.
+                      </p>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => setStep("reason")} className="gap-1">
                           <ArrowLeft className="w-3.5 h-3.5" /> Zurück
@@ -184,17 +250,14 @@ const AccountDeletionPanel = () => {
                         <Gift className="w-5 h-5 text-primary" /> Bevor Sie gehen…
                       </h3>
                       <p className="text-sm text-muted-foreground mb-5">
-                        {reason === "Zu teuer"
-                          ? "Wir möchten Ihnen entgegenkommen."
-                          : "Vielleicht können wir noch etwas tun."}
+                        {reason === "Zu teuer" ? "Wir möchten Ihnen entgegenkommen." : "Vielleicht können wir noch etwas tun."}
                       </p>
-
                       <div className="space-y-3 mb-6">
                         {reason === "Zu teuer" && (
                           <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
                             <p className="text-sm font-semibold mb-1">50% Rabatt für 3 Monate</p>
                             <p className="text-xs text-muted-foreground">Professional für €74,50/Monat. Sofort aktiv.</p>
-                            <Button size="sm" className="mt-3 gap-1" onClick={() => { setOfferAccepted(true); reset(); }}>
+                            <Button size="sm" className="mt-3 gap-1" onClick={() => { reset(); }}>
                               <Gift className="w-3.5 h-3.5" /> Angebot annehmen
                             </Button>
                           </div>
@@ -225,7 +288,6 @@ const AccountDeletionPanel = () => {
                           </Button>
                         </div>
                       </div>
-
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => setStep("data-loss")} className="gap-1">
                           <ArrowLeft className="w-3.5 h-3.5" /> Zurück
@@ -237,14 +299,14 @@ const AccountDeletionPanel = () => {
                     </motion.div>
                   )}
 
-                  {/* Step 4: Final confirmation */}
+                  {/* Step 4: Final confirmation with password */}
                   {step === "confirm" && (
                     <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <h3 className="text-lg font-semibold mb-1 flex items-center gap-2 text-destructive">
                         <Trash2 className="w-5 h-5" /> Letzte Warnung
                       </h3>
                       <p className="text-sm text-muted-foreground mb-5">
-                        Diese Aktion kann nicht rückgängig gemacht werden. Tippen Sie <span className="font-mono font-bold text-destructive">DELETE</span> zur Bestätigung.
+                        Diese Aktion kann nicht rückgängig gemacht werden.
                       </p>
 
                       <label className="flex items-start gap-2 mb-4 cursor-pointer">
@@ -254,23 +316,53 @@ const AccountDeletionPanel = () => {
                         </span>
                       </label>
 
-                      <input
-                        type="text"
-                        value={confirmText}
-                        onChange={(e) => setConfirmText(e.target.value)}
-                        placeholder="DELETE"
-                        className={inputClass}
-                        autoComplete="off"
-                      />
+                      {/* Password confirmation */}
+                      <div className="mb-4">
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Passwort zur Bestätigung
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Ihr aktuelles Passwort"
+                            className={inputClass}
+                            autoComplete="current-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
 
-                      <div className="flex gap-2 mt-5">
+                      {/* Type LÖSCHEN */}
+                      <div className="mb-5">
+                        <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                          Tippen Sie <span className="font-mono font-bold text-destructive">LÖSCHEN</span> zur Bestätigung
+                        </label>
+                        <input
+                          type="text"
+                          value={confirmText}
+                          onChange={(e) => setConfirmText(e.target.value)}
+                          placeholder="LÖSCHEN"
+                          className={inputClass}
+                          autoComplete="off"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={() => setStep("offer")} className="gap-1">
                           <ArrowLeft className="w-3.5 h-3.5" /> Zurück
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
-                          disabled={confirmText !== "DELETE" || !understood || deleting}
+                          disabled={confirmText !== "LÖSCHEN" || !understood || !password || deleting}
                           onClick={handleDelete}
                           className="gap-1"
                         >
