@@ -296,6 +296,7 @@ export const protectedRoutes = (
     <Route path="/upgrade" element={<P><UpgradePage /></P>} />
     <Route path="/war-room" element={<P><WarRoom /></P>} />
     <Route path="/launch-checklist" element={<P><LaunchChecklist /></P>} />
+    <Route path="/integrations" element={<P><IntegrationsPage /></P>} />
     <Route path="/internal-admin" element={<P><PlatformAdminGuard><InternalAdmin /></PlatformAdminGuard></P>} />
   </>
 );
