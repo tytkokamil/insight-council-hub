@@ -86,6 +86,23 @@ const Dashboard = () => {
   });
   const [showDeepDive, setShowDeepDive] = useState(false);
   const [prevDecisionCount, setPrevDecisionCount] = useState<number | null>(null);
+  const [showNps, setShowNps] = useState(false);
+
+  // NPS trigger: 7+ days active, 3+ decisions, no previous NPS
+  useEffect(() => {
+    if (!user) return;
+    const checkNps = async () => {
+      const { data: profile } = await supabase.from("profiles").select("created_at, decision_count, nps_last_shown").eq("user_id", user.id).single();
+      if (!profile) return;
+      const daysSinceCreation = differenceInDays(new Date(), new Date(profile.created_at));
+      const hasEnoughDecisions = (profile.decision_count || 0) >= 3;
+      const neverShown = !profile.nps_last_shown;
+      if (daysSinceCreation >= 7 && hasEnoughDecisions && neverShown) {
+        setTimeout(() => setShowNps(true), 5000); // slight delay for UX
+      }
+    };
+    checkNps();
+  }, [user]);
 
   // Guided mode: simplified dashboard for new users
   const isGuidedMode = decisionCount < 3;
