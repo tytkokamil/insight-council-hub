@@ -54,6 +54,8 @@ const AdminRoadmapTab = () => {
   const save = async () => {
     if (!editItem?.title?.trim()) { toast.error("Titel erforderlich"); return; }
     setSaving(true);
+    const wasReleased = editItem.id ? items.find(i => i.id === editItem.id)?.status : null;
+    const isNowReleased = editItem.status === "released";
     const payload = {
       title: editItem.title.trim(),
       description: editItem.description?.trim() || null,
@@ -68,6 +70,19 @@ const AdminRoadmapTab = () => {
     } else {
       await supabase.from("roadmap_items" as any).insert(payload as any);
     }
+
+    // Trigger release notification if status just changed to "released"
+    if (editItem.id && isNowReleased && wasReleased !== "released") {
+      invokeWithTimeout("roadmap-release-notify", { item_id: editItem.id })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Release notify error:", error);
+          } else {
+            toast.info(`${(data as any)?.voters_notified || 0} Voter benachrichtigt`);
+          }
+        });
+    }
+
     toast.success("Gespeichert");
     setEditItem(null);
     setSaving(false);
