@@ -732,6 +732,30 @@ const SettingsPage = () => {
                 </div>
               </div>
 
+              {/* Org-level model preference (admin only) */}
+              {(userRole === "org_admin" || userRole === "org_owner") && (
+                <div className="settings-group">
+                  <h2>{t("settings.aiOrgModel")}</h2>
+                  <p className="text-xs text-muted-foreground mb-3">{t("settings.aiOrgModelDesc")}</p>
+                  <select
+                    value={orgModelPref}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      setOrgModelPref(val);
+                      if (orgId) {
+                        await supabase.from("organizations").update({ ai_model_preference: val } as any).eq("id", orgId);
+                        toast({ title: t("settings.saved") });
+                      }
+                    }}
+                    className={inputClass}
+                  >
+                    <option value="auto">{t("settings.aiModelAuto")}</option>
+                    <option value="flash">{t("settings.aiModelFlash")}</option>
+                    <option value="pro">{t("settings.aiModelPro")}</option>
+                  </select>
+                </div>
+              )}
+
               <div className="settings-group">
                 <h2>{t("settings.aiGovernanceScope")}</h2>
                 <p className="text-xs text-muted-foreground mb-3">{t("settings.aiGovernanceScopeDesc")}</p>

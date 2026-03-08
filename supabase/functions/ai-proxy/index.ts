@@ -77,12 +77,28 @@ async function extractUserIdFromAuth(req: Request): Promise<string | null> {
   }
 }
 
-async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: any) {
+async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: any, orgModelPref?: string, taskType?: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+  // Resolve model based on org preference
+  let model = "google/gemini-3-flash-preview";
+  if (orgModelPref === "flash") {
+    model = "google/gemini-2.5-flash";
+  } else if (orgModelPref === "pro") {
+    model = "google/gemini-2.5-pro";
+  } else if (orgModelPref === "auto") {
+    // Auto: use pro for heavy analysis, flash for everything else
+    const heavyTasks = ["analyze-decision", "daily-brief", "ceo-briefing", "intelligence-analyze"];
+    if (taskType && heavyTasks.includes(taskType)) {
+      model = "google/gemini-2.5-pro";
+    } else {
+      model = "google/gemini-2.5-flash";
+    }
+  }
+
   const body: any = {
-    model: "google/gemini-3-flash-preview",
+    model,
     messages,
   };
   if (tools) body.tools = tools;
@@ -97,7 +113,7 @@ async function callLovableGateway(messages: any[], tools?: any[], toolChoice?: a
     body: JSON.stringify(body),
   });
 
-  return response;
+  return { response, modelUsed: model };
 }
 
 async function callOpenAI(apiKey: string, model: string, messages: any[], tools?: any[], toolChoice?: any) {
