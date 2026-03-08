@@ -3737,6 +3737,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_decision: {
+        Args: { _decision_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_plan_limit: {
         Args: { _limit_type: string; _user_id: string }
         Returns: Json
