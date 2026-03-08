@@ -109,6 +109,8 @@ const Decisions = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   // ── Dialog state ──
   const [showNewDialog, setShowNewDialog] = useState(false);
