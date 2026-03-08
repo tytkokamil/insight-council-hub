@@ -826,6 +826,17 @@ const DecisionDetail = () => {
             </CardContent>
           </Card>
 
+          {/* ═══ ATTACHMENTS ═══ */}
+          <Card>
+            <CardContent className="p-4">
+              <DecisionAttachmentsPanel
+                decisionId={decision.id}
+                orgId={decision.org_id}
+                profileMap={profileMap}
+              />
+            </CardContent>
+          </Card>
+
           {/* Meta info */}
           <Card>
             <CardContent className="p-4">
