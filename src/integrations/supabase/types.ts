@@ -3488,6 +3488,8 @@ export type Database = {
         Row: {
           channel_name: string | null
           created_at: string
+          daily_brief_enabled: boolean | null
+          daily_brief_time: string | null
           enabled: boolean
           id: string
           notify_escalation: boolean
@@ -3501,6 +3503,8 @@ export type Database = {
         Insert: {
           channel_name?: string | null
           created_at?: string
+          daily_brief_enabled?: boolean | null
+          daily_brief_time?: string | null
           enabled?: boolean
           id?: string
           notify_escalation?: boolean
@@ -3514,6 +3518,8 @@ export type Database = {
         Update: {
           channel_name?: string | null
           created_at?: string
+          daily_brief_enabled?: boolean | null
+          daily_brief_time?: string | null
           enabled?: boolean
           id?: string
           notify_escalation?: boolean
