@@ -717,6 +717,9 @@ const SettingsPage = () => {
             </div>
           )}
 
+          {/* ═══════════════ BILLING ═══════════════ */}
+          {activeTab === "billing" && <BillingPanel />}
+
           {/* ═══════════════ REFERRAL ═══════════════ */}
           {activeTab === "referral" && (
             <div className="space-y-6">
