@@ -78,7 +78,7 @@ const AIShowcaseSection = () => {
                     <cap.icon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors duration-300" />
                   </div>
                   <h4 className="font-semibold text-sm mb-1.5">{cap.title}</h4>
-                  <p className="text-xs text-muted-foreground/70 leading-relaxed">{cap.description}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{cap.description}</p>
                 </div>
               </motion.div>
             ))}
