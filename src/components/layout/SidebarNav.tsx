@@ -335,7 +335,7 @@ const SubGroupItem = ({
                     <child.icon className="w-3.5 h-3.5 shrink-0 opacity-30 group-hover:opacity-40" />
                     <span className="whitespace-nowrap flex-1 text-left">{t(child.label)}</span>
                     <span className="inline-flex h-3.5 items-center px-1 rounded text-[8px] font-semibold uppercase tracking-wider bg-accent-amber/10 text-accent-amber border border-accent-amber/20">
-                      {PLAN_BADGE[mp] || "Pro"}
+                      {PLAN_BADGE[mp] || "Professional"}
                     </span>
                   </button>
                 );
