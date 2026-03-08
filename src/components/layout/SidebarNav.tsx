@@ -380,11 +380,15 @@ const SidebarNav = memo(({
     import("@/integrations/supabase/client").then(({ supabase }) => {
       supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1)
         .then(({ data }) => setHasActiveMeeting((data?.length ?? 0) > 0));
-      // Fetch open decision count for badge
-      supabase.from("decisions").select("id", { count: "exact", head: true })
-        .in("status", ["draft", "proposed", "review"])
-        .is("deleted_at", null)
-        .then(({ count }) => setOpenDecisionCount(count || 0));
+      // Fetch open decision count for badge — only user's own
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (userId) {
+        supabase.from("decisions").select("id", { count: "exact", head: true })
+          .in("status", ["draft", "proposed", "review"])
+          .is("deleted_at", null)
+          .or(`created_by.eq.${userId},owner_id.eq.${userId},assignee_id.eq.${userId}`)
+          .then(({ count }) => setOpenDecisionCount(count || 0));
+      }
     });
   }, [pathname]);
 
