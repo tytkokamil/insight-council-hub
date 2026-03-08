@@ -200,12 +200,12 @@ const HeroSection = () => {
                 Kostenlos 14 Tage testen <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
-            <button
-              onClick={() => setShowTour(true)}
+            <Link
+              to="/demo"
               className="group inline-flex items-center justify-center gap-2 text-[14px] font-medium border border-border/50 hover:border-border bg-background/60 backdrop-blur-sm px-7 py-4 rounded-xl transition-all duration-200 text-muted-foreground hover:text-foreground hover:shadow-md"
             >
-              <Play className="w-3.5 h-3.5" /> Demo ansehen
-            </button>
+              <Play className="w-3.5 h-3.5" /> Interaktive Demo
+            </Link>
           </motion.div>
 
           {/* Trust bar */}
