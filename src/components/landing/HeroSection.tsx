@@ -151,8 +151,7 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-white px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden hover:opacity-90"
-              style={{ background: "#EF4444" }}
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-white px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden hover:opacity-90 bg-destructive"
             >
               <span className="relative z-10 flex items-center gap-2">
                 14 Tage kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
