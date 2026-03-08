@@ -152,7 +152,7 @@ const Navbar = () => {
                 to="/auth"
                 className="text-[13px] px-3 py-1.5 transition-colors"
                 style={{
-                  color: isDark ? "rgba(255,255,255,0.6)" : "hsl(var(--muted-foreground) / 0.7)",
+                  color: isDark ? "hsl(var(--primary-foreground) / 0.6)" : "hsl(var(--muted-foreground) / 0.7)",
                 }}
               >
                 Einloggen
