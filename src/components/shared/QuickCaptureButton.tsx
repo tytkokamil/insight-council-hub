@@ -225,7 +225,7 @@ const QuickCaptureButton = ({ className }: QuickCaptureButtonProps) => {
                     Als Entwurf speichern
                   </Button>
                   <Button
-                    className="flex-1 h-12 bg-[#1E3A5F] hover:bg-[#162D4A]"
+                    className="flex-1 h-12"
                     onClick={() => handleSubmit(false)}
                     disabled={saving || !title.trim()}
                   >
