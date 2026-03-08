@@ -116,7 +116,7 @@ const ProblemSection = () => {
                 <div className="w-2 h-2 rounded-full bg-warning/50" />
                 <div className="w-2 h-2 rounded-full bg-success/50" />
               </div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/50 mx-auto">
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground mx-auto">
                 Mission Control — Offene Entscheidungen
               </span>
               <motion.div
