@@ -16,6 +16,7 @@ const TABS = [
   { id: "overview", label: "Übersicht", icon: BarChart3 },
   { id: "orgs", label: "Organisationen", icon: Building2 },
   { id: "users", label: "Nutzer", icon: Users },
+  { id: "feedback", label: "Feedback", icon: MessageSquare },
   { id: "flags", label: "Feature Flags", icon: Flag },
   { id: "pilots", label: "Pilot-Kunden", icon: Rocket },
   { id: "system", label: "System", icon: Settings },
