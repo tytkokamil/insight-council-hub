@@ -119,7 +119,7 @@ const QuickCaptureButton = ({ className }: QuickCaptureButtonProps) => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           whileHover={{ scale: 1.08 }}
-          className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#1E3A5F] text-white shadow-[0_4px_14px_rgba(30,58,95,0.4)] flex items-center justify-center cursor-pointer hover:shadow-[0_6px_20px_rgba(30,58,95,0.5)] transition-shadow md:bottom-6 bottom-20 ${className || ""}`}
+          className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-glow flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-all md:bottom-6 bottom-20 ${className || ""}`}
           onClick={() => setOpen(true)}
           title="Schnell erfassen (N)"
         >
