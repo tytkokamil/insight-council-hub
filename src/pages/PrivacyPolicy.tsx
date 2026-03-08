@@ -180,7 +180,14 @@ const PrivacyPolicy = () => (
             <p>Wir behalten uns vor, diese Datenschutzerklärung anzupassen, wenn sich rechtliche Anforderungen oder unser Angebot ändern. Die jeweils aktuelle Version ist unter https://decivio.com/datenschutz abrufbar. Über wesentliche Änderungen informieren wir registrierte Nutzer per E-Mail.</p>
           </section>
 
-          <section className="mt-8 pt-6 border-t border-border">
+          <section className="mt-8 pt-6 border-t border-border space-y-4">
+            <div>
+              <h2 className="text-foreground text-lg font-semibold mb-2">Cookie-Einstellungen</h2>
+              <p className="text-sm text-muted-foreground mb-3">
+                Sie können Ihre Cookie-Einstellungen jederzeit anpassen. Notwendige Cookies können nicht deaktiviert werden.
+              </p>
+              <CookieSettingsButton />
+            </div>
             <p className="text-xs text-muted-foreground/60">
               Verwandte Dokumente:{" "}
               <Link to="/dpa" className="text-primary hover:underline">AVV</Link> ·{" "}
