@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { confirmation } = await req.json();
+    const { confirmation, password, cancel_reason } = await req.json();
     if (confirmation !== "DELETE") {
       return new Response(JSON.stringify({ error: "Confirmation required" }), {
         status: 400,
@@ -39,21 +39,115 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── Re-authenticate with password ───
+    if (!password) {
+      return new Response(JSON.stringify({ error: "password_required", message: "Passwort zur Bestätigung erforderlich." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const anonClient = createClient(supabaseUrl, anonKey);
+    const { error: signInError } = await anonClient.auth.signInWithPassword({
+      email: user.email!,
+      password,
+    });
+    if (signInError) {
+      return new Response(JSON.stringify({ error: "invalid_password", message: "Falsches Passwort." }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const uid = user.id;
 
-    // ─── 1. Delete all decision-related data ───
-    const { data: userDecisions } = await supabase.from("decisions").select("id").or(`created_by.eq.${uid},owner_id.eq.${uid}`);
+    // ─── Pre-flight checks ───
+
+    // 1. Get user's org
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("org_id, full_name")
+      .eq("user_id", uid)
+      .single();
+    const orgId = profile?.org_id;
+
+    // 2. Check if org_owner with other members
+    const { data: userRole } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .single();
+
+    if (userRole?.role === "org_owner" && orgId) {
+      const { count: memberCount } = await supabase
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .neq("user_id", uid);
+
+      if (memberCount && memberCount > 0) {
+        return new Response(JSON.stringify({
+          error: "ownership_transfer_required",
+          message: "Bitte zuerst Eigentumsrechte übertragen oder alle Mitglieder entfernen, bevor Sie den Account löschen.",
+        }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // 3. Check for active Stripe subscription
+      const { data: org } = await supabase
+        .from("organizations")
+        .select("stripe_subscription_id, subscription_status")
+        .eq("id", orgId)
+        .single();
+
+      if (org?.stripe_subscription_id && org.subscription_status === "active") {
+        // Cancel Stripe subscription via Stripe API if key available
+        const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+        if (stripeKey) {
+          try {
+            const res = await fetch(
+              `https://api.stripe.com/v1/subscriptions/${org.stripe_subscription_id}`,
+              {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${stripeKey}` },
+              }
+            );
+            if (!res.ok) {
+              console.error("Stripe cancel failed:", await res.text());
+            }
+          } catch (e) {
+            console.error("Stripe cancel error:", e);
+          }
+        }
+      }
+    }
+
+    // ─── Data Deletion / Anonymization ───
+
+    // Decisions: anonymize for audit trail integrity instead of deleting
+    await supabase
+      .from("decisions")
+      .update({ created_by: uid, owner_id: uid } as any) // keep refs for now
+      .or(`created_by.eq.${uid},owner_id.eq.${uid}`);
+
+    // Get user's decision IDs for related data cleanup
+    const { data: userDecisions } = await supabase
+      .from("decisions")
+      .select("id")
+      .or(`created_by.eq.${uid},owner_id.eq.${uid}`);
     const decIds = (userDecisions || []).map((d: any) => d.id);
 
     if (decIds.length > 0) {
-      // Delete in dependency order
+      // Delete decision-related personal data in dependency order
       await supabase.from("automation_rule_logs").delete().in("decision_id", decIds);
       await supabase.from("decision_attachments").delete().in("decision_id", decIds);
       await supabase.from("decision_dependencies").delete().or(`source_decision_id.in.(${decIds.join(",")}),target_decision_id.in.(${decIds.join(",")})`);
       await supabase.from("decision_reviews").delete().in("decision_id", decIds);
       await supabase.from("email_action_tokens").delete().in("decision_id", decIds);
       await supabase.from("external_review_tokens").delete().in("decision_id", decIds);
-      await supabase.from("comments").delete().in("decision_id", decIds);
       await supabase.from("decision_votes").delete().in("decision_id", decIds);
       await supabase.from("decision_shares").delete().in("decision_id", decIds);
       await supabase.from("decision_tags").delete().in("decision_id", decIds);
@@ -65,22 +159,21 @@ Deno.serve(async (req) => {
       await supabase.from("risk_decision_links").delete().in("decision_id", decIds);
       await supabase.from("decision_watchlist").delete().in("decision_id", decIds);
       await supabase.from("compliance_events").delete().in("decision_id", decIds);
-    }
 
-    // Audit logs — these are immutable, but for GDPR Art. 17 we must delete
-    // We need to temporarily disable the immutability trigger
-    // Since we can't alter triggers from edge functions, we delete via service role
-    // which bypasses RLS but not triggers. We'll handle this gracefully.
-    // Note: audit_logs have DELETE trigger that raises exception.
-    // For full GDPR compliance, we anonymize instead of delete.
-    if (decIds.length > 0) {
+      // Anonymize audit logs (immutable — cannot delete, so anonymize)
       await supabase.from("audit_logs").update({
         user_id: "00000000-0000-0000-0000-000000000000",
-        change_reason: "GDPR Art. 17 — Account gelöscht"
+        change_reason: "GDPR Art. 17 — Account gelöscht",
       } as any).in("decision_id", decIds);
     }
 
-    // ─── 2. Delete tasks ───
+    // Anonymize comments (keep content reference for audit, but remove personal data)
+    await supabase
+      .from("comments")
+      .update({ user_id: "00000000-0000-0000-0000-000000000000", content: "[gelöscht]" } as any)
+      .eq("user_id", uid);
+
+    // Delete tasks
     const { data: userTasks } = await supabase.from("tasks").select("id").or(`created_by.eq.${uid},assignee_id.eq.${uid}`);
     const taskIds = (userTasks || []).map((t: any) => t.id);
     if (taskIds.length > 0) {
@@ -89,10 +182,10 @@ Deno.serve(async (req) => {
     }
     await supabase.from("tasks").delete().eq("created_by", uid);
 
-    // ─── 3. Delete decisions ───
+    // Delete decisions (after dependencies are cleaned)
     await supabase.from("decisions").delete().or(`created_by.eq.${uid},owner_id.eq.${uid}`);
 
-    // ─── 4. Delete risks ───
+    // Delete risks
     const { data: userRisks } = await supabase.from("risks").select("id").eq("created_by", uid);
     const riskIds = (userRisks || []).map((r: any) => r.id);
     if (riskIds.length > 0) {
@@ -101,10 +194,10 @@ Deno.serve(async (req) => {
     }
     await supabase.from("risks").delete().eq("created_by", uid);
 
-    // ─── 5. Delete strategic goals ───
+    // Delete strategic goals
     await supabase.from("strategic_goals").delete().eq("created_by", uid);
 
-    // ─── 6. Delete team data ───
+    // Delete team data
     const { data: userTeams } = await supabase.from("teams").select("id").eq("created_by", uid);
     const teamIds = (userTeams || []).map((t: any) => t.id);
     if (teamIds.length > 0) {
@@ -115,10 +208,9 @@ Deno.serve(async (req) => {
       await supabase.from("automation_rules").delete().in("team_id", teamIds);
       await supabase.from("teams").delete().in("id", teamIds);
     }
-    // Remove from other teams
     await supabase.from("team_members").delete().eq("user_id", uid);
 
-    // ─── 7. Delete user-specific data ───
+    // Delete user-specific data
     await supabase.from("saved_views").delete().eq("user_id", uid);
     await supabase.from("notifications").delete().eq("user_id", uid);
     await supabase.from("briefings").delete().eq("user_id", uid);
@@ -131,25 +223,50 @@ Deno.serve(async (req) => {
     await supabase.from("referral_codes").delete().eq("user_id", uid);
     await supabase.from("referral_conversions").delete().eq("referrer_id", uid);
 
-    // ─── 8. Delete user role & profile ───
+    // If last user in org: delete the entire organization (CASCADE will handle related data)
+    if (orgId && userRole?.role === "org_owner") {
+      const { count: remainingMembers } = await supabase
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .neq("user_id", uid);
+
+      if (!remainingMembers || remainingMembers === 0) {
+        // Clean up org-level data
+        await supabase.from("daily_briefs").delete().eq("org_id", orgId);
+        await supabase.from("compliance_config").delete().eq("org_id", orgId);
+        await supabase.from("escalation_rules").delete().eq("org_id", orgId);
+        await supabase.from("escalation_log").delete().eq("org_id", orgId);
+        await supabase.from("churn_risk_log").delete().eq("org_id", orgId);
+        await supabase.from("api_keys").delete().eq("org_id", orgId);
+        await supabase.from("organizations").delete().eq("id", orgId);
+      }
+    }
+
+    // Delete user role & profile
     await supabase.from("user_roles").delete().eq("user_id", uid);
     await supabase.from("profiles").delete().eq("user_id", uid);
 
-    // ─── 9. Delete avatar from storage ───
+    // Delete avatar from storage
     const { data: avatarFiles } = await supabase.storage.from("avatars").list(uid);
     if (avatarFiles?.length) {
       await supabase.storage.from("avatars").remove(avatarFiles.map((f: any) => `${uid}/${f.name}`));
     }
 
-    // ─── 10. Delete the auth user (permanent) ───
+    // Delete the auth user (permanent)
     const { error: deleteError } = await supabase.auth.admin.deleteUser(uid);
     if (deleteError) {
       console.error("Auth user deletion failed:", deleteError);
-      return new Response(JSON.stringify({ error: "Datenlöschung abgeschlossen, aber Auth-Account konnte nicht entfernt werden. Bitte Support kontaktieren." }), {
+      return new Response(JSON.stringify({
+        error: "partial_deletion",
+        message: "Datenlöschung abgeschlossen, aber Auth-Account konnte nicht entfernt werden. Bitte Support kontaktieren.",
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log(`Account deleted: ${uid}, reason: ${cancel_reason || "not specified"}`);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

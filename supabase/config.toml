@@ -98,3 +98,9 @@ verify_jwt = false
 
 [functions.manage-backup-codes]
 verify_jwt = false
+
+[functions.export-user-data]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
