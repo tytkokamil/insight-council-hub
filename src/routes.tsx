@@ -122,6 +122,7 @@ export const publicRoutes = (
     <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
     <Route path="/vs/:slug" element={<L><CompetitorComparison /></L>} />
     <Route path="/founding" element={<L><FoundingProgram /></L>} />
+    <Route path="/ai-demo" element={<L><AiDemo /></L>} />
   </>
 );
 
