@@ -78,9 +78,9 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                   style={{
                     transformOrigin: "left",
                     ...(isDone && !(isTerminal && i === currentIdx)
-                      ? { backgroundColor: "#10B981" }
+                      ? { backgroundColor: "hsl(var(--success))" }
                       : !isDone
-                        ? { backgroundImage: "repeating-linear-gradient(90deg, #94A3B8 0, #94A3B8 6px, transparent 6px, transparent 12px)", opacity: 0.4 }
+                        ? { backgroundImage: "repeating-linear-gradient(90deg, hsl(var(--muted-foreground)) 0, hsl(var(--muted-foreground)) 6px, transparent 6px, transparent 12px)", opacity: 0.4 }
                         : {}),
                   }}
                   initial={{ scaleX: 0 }}
