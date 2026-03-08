@@ -73,6 +73,8 @@ const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
+const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
+const AiDemo = lazy(() => import("./pages/AiDemo"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -119,6 +121,8 @@ export const publicRoutes = (
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
     <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
     <Route path="/vs/:slug" element={<L><CompetitorComparison /></L>} />
+    <Route path="/founding" element={<L><FoundingProgram /></L>} />
+    <Route path="/ai-demo" element={<L><AiDemo /></L>} />
   </>
 );
 

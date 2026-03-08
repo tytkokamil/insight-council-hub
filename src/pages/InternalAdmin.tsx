@@ -11,6 +11,7 @@ import {
   Target, Zap, Brain, DollarSign, BarChart3, UserMinus, Loader2,
   ArrowRight, AlertTriangle
 } from "lucide-react";
+import OutboundEmailEngine from "@/components/settings/OutboundEmailEngine";
 
 interface AdminMetrics {
   registrations: { today: number; week: number; month: number; total: number };
@@ -332,6 +333,11 @@ const InternalAdmin = () => {
                 </CardContent>
               </Card>
             </div>
+            </div>
+
+            {/* Outbound Email Engine */}
+            <div className="mt-10 pt-8 border-t border-border/40">
+              <OutboundEmailEngine />
             </div>
           </>
         )}

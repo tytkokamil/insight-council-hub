@@ -13,6 +13,8 @@ const footerLinks = {
     { label: "Help Center", to: "/docs" },
     { label: "Changelog", to: "/changelog" },
     { label: "Roadmap", to: "/roadmap" },
+    { label: "Founding Program", to: "/founding" },
+    { label: "KI-Demo", to: "/ai-demo" },
   ],
   unternehmen: [
     { label: "Datenschutz", to: "/privacy" },
