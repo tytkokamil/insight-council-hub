@@ -27,7 +27,7 @@ const SubProcessors = () => (
         </div>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-          <p className="text-sm">Anlage 1 zum <Link to="/avv" className="text-primary hover:underline">Auftragsverarbeitungsvertrag (AVV)</Link></p>
+          <p className="text-sm">Anlage 1 zum <Link to="/dpa" className="text-primary hover:underline">Auftragsverarbeitungsvertrag (AVV)</Link></p>
           <p>Gemäß Art. 28 Abs. 3 lit. d DSGVO informieren wir über alle eingesetzten Unterauftragsverarbeiter, die im Rahmen der Decivio-Plattform personenbezogene Daten verarbeiten können.</p>
 
           <div className="overflow-x-auto">
