@@ -1529,6 +1529,55 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flag_overrides: {
+        Row: {
+          created_at: string | null
+          enabled: boolean
+          flag_id: string
+          id: string
+          org_id: string
+          set_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled: boolean
+          flag_id: string
+          id?: string
+          org_id: string
+          set_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean
+          flag_id?: string
+          id?: string
+          org_id?: string
+          set_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flag_overrides_flag_id_fkey"
+            columns: ["flag_id"]
+            isOneToOne: false
+            referencedRelation: "feature_flags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_flag_overrides_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feature_flag_overrides_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           category: string
@@ -2172,40 +2221,157 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean | null
           name: string
+          pilot_customer: boolean | null
           plan: string
           referral_code: string | null
           referral_credits_eur: number | null
           referred_by_code: string | null
           settings: Json
           slug: string
+          support_notes: string | null
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean | null
           name: string
+          pilot_customer?: boolean | null
           plan?: string
           referral_code?: string | null
           referral_credits_eur?: number | null
           referred_by_code?: string | null
           settings?: Json
           slug: string
+          support_notes?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean | null
           name?: string
+          pilot_customer?: boolean | null
           plan?: string
           referral_code?: string | null
           referral_credits_eur?: number | null
           referred_by_code?: string | null
           settings?: Json
           slug?: string
+          support_notes?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      pilot_customers: {
+        Row: {
+          contact_name: string | null
+          created_at: string | null
+          created_by: string | null
+          enabled_features: string[] | null
+          end_date: string | null
+          id: string
+          industry: string | null
+          notes: string | null
+          org_id: string
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          enabled_features?: string[] | null
+          end_date?: string | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          org_id: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          enabled_features?: string[] | null
+          end_date?: string | null
+          id?: string
+          industry?: string | null
+          notes?: string | null
+          org_id?: string
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_customers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "pilot_customers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_admin_logs: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          created_at: string | null
+          details: Json | null
+          id: string
+          target_org_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_org_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          target_org_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_admin_logs_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "platform_admin_logs_target_org_id_fkey"
+            columns: ["target_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       platform_admins: {
         Row: {
@@ -2234,6 +2400,7 @@ export type Database = {
           hide_pdf_branding: boolean
           id: string
           industry: string | null
+          last_seen: string | null
           nps_last_shown: string | null
           nps_score: number | null
           nps_shown_count: number | null
@@ -2253,6 +2420,7 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          last_seen?: string | null
           nps_last_shown?: string | null
           nps_score?: number | null
           nps_shown_count?: number | null
@@ -2272,6 +2440,7 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          last_seen?: string | null
           nps_last_shown?: string | null
           nps_score?: number | null
           nps_shown_count?: number | null
