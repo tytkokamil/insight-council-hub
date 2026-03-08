@@ -478,7 +478,7 @@ const KnowledgeBase = () => {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p className="text-[11px] mt-0.5 cursor-help" style={{ color: "#94A3B8" }}>{kpi.benchmark}</p>
+                          <p className="text-[11px] mt-0.5 cursor-help text-muted-foreground">{kpi.benchmark}</p>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs text-xs">
                           <p>Basiert auf Decivio-Nutzerdaten aus vergleichbaren Organisationen.</p>
