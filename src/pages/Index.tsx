@@ -79,7 +79,8 @@ const Index = () => {
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
       </Helmet>
-      <div className="landing-page min-h-screen">
+      <div className="landing-page min-h-screen relative">
+        <CursorGlow />
         <ScrollProgress />
         <Navbar />
         <main>
