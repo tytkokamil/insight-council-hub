@@ -35,6 +35,7 @@ import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPan
 import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
+import BrandingPanel from "@/components/settings/BrandingPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
