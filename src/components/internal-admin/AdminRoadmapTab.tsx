@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Pencil, Trash2, Download, ThumbsUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { kpiCard, kpiCardStyle, kpiLabel, kpiValue } from "./adminStyles";
 
 interface RoadmapItem {
   id: string;
@@ -33,12 +34,21 @@ const statusLabels: Record<string, string> = {
   rejected: "Abgelehnt",
 };
 
+const statusColors: Record<string, string> = {
+  considering: "#94A3B8",
+  planned: "#3B82F6",
+  in_progress: "#EAB308",
+  released: "#22C55E",
+  rejected: "#EF4444",
+};
+
 const AdminRoadmapTab = () => {
   const [items, setItems] = useState<RoadmapItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editItem, setEditItem] = useState<Partial<RoadmapItem> | null>(null);
   const [saving, setSaving] = useState(false);
   const [voterEmails, setVoterEmails] = useState<{ item_id: string; emails: string[] } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const load = async () => {
     const { data } = await supabase
@@ -50,6 +60,16 @@ const AdminRoadmapTab = () => {
   };
 
   useEffect(() => { load(); }, []);
+
+  // Status summary counts
+  const statusCounts = {
+    planned: items.filter(i => i.status === "planned").length,
+    in_progress: items.filter(i => i.status === "in_progress").length,
+    released: items.filter(i => i.status === "released").length,
+    total: items.length,
+  };
+
+  const filteredItems = statusFilter === "all" ? items : items.filter(i => i.status === statusFilter);
 
   const save = async () => {
     if (!editItem?.title?.trim()) { toast.error("Titel erforderlich"); return; }
@@ -71,15 +91,11 @@ const AdminRoadmapTab = () => {
       await supabase.from("roadmap_items" as any).insert(payload as any);
     }
 
-    // Trigger release notification if status just changed to "released"
     if (editItem.id && isNowReleased && wasReleased !== "released") {
       invokeWithTimeout("roadmap-release-notify", { item_id: editItem.id })
         .then(({ data, error }) => {
-          if (error) {
-            console.error("Release notify error:", error);
-          } else {
-            toast.info(`${(data as any)?.voters_notified || 0} Voter benachrichtigt`);
-          }
+          if (error) console.error("Release notify error:", error);
+          else toast.info(`${(data as any)?.voters_notified || 0} Voter benachrichtigt`);
         });
     }
 
@@ -131,13 +147,43 @@ const AdminRoadmapTab = () => {
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {items.map(item => (
-          <div
-            key={item.id}
-            className="flex items-center gap-3 p-3 rounded-lg border"
-            style={{ borderColor: "#1e293b", background: "#0A0F1A" }}
+      {/* Status Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className={kpiCard} style={kpiCardStyle}>
+          <div className={kpiLabel}>Gesamt</div>
+          <div className={kpiValue}>{statusCounts.total}</div>
+        </div>
+        <div className={kpiCard} style={kpiCardStyle}>
+          <div className={kpiLabel}>Geplant</div>
+          <div className={kpiValue} style={{ color: "#3B82F6" }}>{statusCounts.planned}</div>
+        </div>
+        <div className={kpiCard} style={kpiCardStyle}>
+          <div className={kpiLabel}>In Entwicklung</div>
+          <div className={kpiValue} style={{ color: "#EAB308" }}>{statusCounts.in_progress}</div>
+        </div>
+        <div className={kpiCard} style={kpiCardStyle}>
+          <div className={kpiLabel}>Released</div>
+          <div className={kpiValue} style={{ color: "#22C55E" }}>{statusCounts.released}</div>
+        </div>
+      </div>
+
+      {/* Status Filter */}
+      <div className="flex gap-1 mb-4">
+        {["all", ...STATUSES].map(s => (
+          <button
+            key={s}
+            onClick={() => setStatusFilter(s)}
+            className={`px-2 py-1 rounded text-[10px] font-medium transition-colors ${statusFilter === s ? "bg-red-500/20 text-red-400" : "text-neutral-500 hover:text-neutral-300"}`}
           >
+            {s === "all" ? "Alle" : statusLabels[s]}
+          </button>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        {filteredItems.map(item => (
+          <div key={item.id} className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: "#1e293b", background: "#0A0F1A" }}>
+            <div className="w-1.5 h-8 rounded-full shrink-0" style={{ background: statusColors[item.status] || "#94A3B8" }} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="text-sm font-medium text-white truncate">{item.title}</span>
@@ -146,10 +192,7 @@ const AdminRoadmapTab = () => {
               </div>
               {item.planned_quarter && <span className="text-[10px] text-neutral-500">{item.planned_quarter}</span>}
             </div>
-            <button
-              onClick={() => loadVoters(item.id)}
-              className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white transition-colors"
-            >
+            <button onClick={() => loadVoters(item.id)} className="flex items-center gap-1 text-xs text-neutral-400 hover:text-white transition-colors">
               <ThumbsUp className="w-3 h-3" /> {item.vote_count}
             </button>
             <Button variant="ghost" size="sm" onClick={() => setEditItem(item)} className="text-neutral-400 hover:text-white h-7 w-7 p-0">
@@ -160,6 +203,9 @@ const AdminRoadmapTab = () => {
             </Button>
           </div>
         ))}
+        {filteredItems.length === 0 && (
+          <p className="text-xs text-neutral-500 py-8 text-center">Keine Items in dieser Kategorie</p>
+        )}
       </div>
 
       {/* Edit/Create Dialog */}
@@ -169,36 +215,19 @@ const AdminRoadmapTab = () => {
             <DialogTitle>{editItem?.id ? "Item bearbeiten" : "Neues Roadmap-Item"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input
-              placeholder="Titel"
-              value={editItem?.title || ""}
-              onChange={e => setEditItem(prev => prev ? { ...prev, title: e.target.value } : prev)}
-            />
-            <Textarea
-              placeholder="Beschreibung"
-              rows={3}
-              value={editItem?.description || ""}
-              onChange={e => setEditItem(prev => prev ? { ...prev, description: e.target.value } : prev)}
-            />
+            <Input placeholder="Titel" value={editItem?.title || ""} onChange={e => setEditItem(prev => prev ? { ...prev, title: e.target.value } : prev)} />
+            <Textarea placeholder="Beschreibung" rows={3} value={editItem?.description || ""} onChange={e => setEditItem(prev => prev ? { ...prev, description: e.target.value } : prev)} />
             <div className="grid grid-cols-2 gap-3">
               <Select value={editItem?.status || "planned"} onValueChange={v => setEditItem(prev => prev ? { ...prev, status: v } : prev)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map(s => <SelectItem key={s} value={s}>{statusLabels[s]}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{statusLabels[s]}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={editItem?.category || "feature"} onValueChange={v => setEditItem(prev => prev ? { ...prev, category: v } : prev)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <Input
-              placeholder="Quartal (z.B. Q2 2026)"
-              value={editItem?.planned_quarter || ""}
-              onChange={e => setEditItem(prev => prev ? { ...prev, planned_quarter: e.target.value } : prev)}
-            />
+            <Input placeholder="Quartal (z.B. Q2 2026)" value={editItem?.planned_quarter || ""} onChange={e => setEditItem(prev => prev ? { ...prev, planned_quarter: e.target.value } : prev)} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditItem(null)}>Abbrechen</Button>
@@ -217,9 +246,7 @@ const AdminRoadmapTab = () => {
             <p className="text-sm text-muted-foreground py-4">Noch keine Stimmen.</p>
           ) : (
             <div className="max-h-60 overflow-auto space-y-1">
-              {voterEmails?.emails.map((e, i) => (
-                <p key={i} className="text-xs text-muted-foreground font-mono">{e}</p>
-              ))}
+              {voterEmails?.emails.map((e, i) => <p key={i} className="text-xs text-muted-foreground font-mono">{e}</p>)}
             </div>
           )}
           {(voterEmails?.emails.length || 0) > 0 && (
