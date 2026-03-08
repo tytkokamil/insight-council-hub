@@ -18,8 +18,8 @@ export const useDecisions = () => {
   return useQuery({
     queryKey: [...DECISIONS_KEY, selectedTeamId],
     queryFn: () => fetchDecisions(selectedTeamId),
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 };
 
