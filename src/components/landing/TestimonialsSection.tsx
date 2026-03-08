@@ -135,7 +135,7 @@ const TestimonialsSection = () => {
                     </div>
                     <div>
                       <div className="text-[14px] font-semibold">{t.name}</div>
-                      <div className="text-[12px] text-muted-foreground/60">{t.role} · {t.company}</div>
+                      <div className="text-[12px] text-muted-foreground">{t.role} · {t.company}</div>
                     </div>
                   </div>
                 </div>
