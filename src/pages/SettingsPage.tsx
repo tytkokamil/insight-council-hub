@@ -12,7 +12,7 @@ import {
   User, Shield, Bell, CheckCircle2, Brain, Eye, EyeOff, Sparkles, Camera, Loader2,
   RotateCcw, Clock, Sun, Moon, Globe, Activity, Users, Lock, Zap,
   AlertTriangle, ShieldCheck, FileText, Settings2, Palette, Building2, KeyRound,
-  Server, ChevronRight, Gift, Plug, Scale, CreditCard
+  Server, ChevronRight, Gift, Plug, Scale, CreditCard, Database
 } from "lucide-react";
 import SubNav from "@/components/shared/SubNav";
 import PageHeader from "@/components/shared/PageHeader";
@@ -37,6 +37,7 @@ import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
 import BrandingPanel from "@/components/settings/BrandingPanel";
+import DataRetentionPanel from "@/components/settings/DataRetentionPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
@@ -611,6 +612,16 @@ const SettingsPage = () => {
                 <h2>{t("settings.delegation")}</h2>
                 <p className="text-xs text-muted-foreground mb-4">{t("settings.delegationDesc")}</p>
                 <DelegationPanel />
+              </div>
+
+              {/* Data Retention Card */}
+              <div className="settings-group">
+                <h2 className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-muted-foreground" />
+                  Datenspeicherung & Aufbewahrung
+                </h2>
+                <p className="text-xs text-muted-foreground mb-4">DSGVO-konforme Aufbewahrungsfristen und automatische Datenbereinigung konfigurieren.</p>
+                <DataRetentionPanel />
               </div>
 
               {/* Compliance & Audit Card */}
