@@ -91,11 +91,10 @@ const DataProcessingAgreement = () => (
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Supabase Inc.</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Datenbankinfrastruktur, Authentifizierung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Stripe Inc.</td><td className="px-3 py-2 border-b border-border/50">USA (EU-Entity vorhanden)</td><td className="px-3 py-2 border-b border-border/50">Zahlungsabwicklung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Resend Inc.</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Transaktionale E-Mail-Zustellung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Anthropic PBC</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">KI-Verarbeitung (anonymisiert)</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2">Vercel Inc.</td><td className="px-3 py-2">USA (EU PoP)</td><td className="px-3 py-2">Frontend-Hosting, CDN</td><td className="px-3 py-2">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Lovable Technologies</td><td className="px-3 py-2 border-b border-border/50">EU</td><td className="px-3 py-2 border-b border-border/50">Plattform-Infrastruktur, Hosting, Datenbank &amp; Authentifizierung (via Lovable Cloud)</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, DPA</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Stripe Inc.</td><td className="px-3 py-2 border-b border-border/50">USA (EU-Entity)</td><td className="px-3 py-2 border-b border-border/50">Zahlungsabwicklung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Google LLC</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">KI-Verarbeitung (Gemini) — nur bei Nutzung von KI-Features</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2">OpenAI LLC</td><td className="px-3 py-2">USA</td><td className="px-3 py-2">KI-Verarbeitung (GPT) — optional, nur bei Nutzung</td><td className="px-3 py-2">Art. 28 DSGVO, SCCs</td></tr>
                 </tbody>
               </table>
             </div>
