@@ -144,17 +144,25 @@ export const protectedRoutes = (
     <Route path="/briefing" element={<P><Briefing /></P>} />
     <Route path="/decision-graph" element={<P><DecisionGraph /></P>} />
     <Route path="/graph" element={<Navigate to="/decision-graph" replace />} />
-    <Route path="/bottlenecks" element={<P><BottleneckIntelligence /></P>} />
-    <Route path="/costs" element={<P><OpportunityCostRadar /></P>} />
-    <Route path="/timeline" element={<P><PredictiveTimeline /></P>} />
+    <Route path="/analytics/bottleneck-intelligence" element={<P><BottleneckIntelligence /></P>} />
+    <Route path="/bottlenecks" element={<Navigate to="/analytics/bottleneck-intelligence" replace />} />
+    <Route path="/analytics/opportunity-cost-radar" element={<P><OpportunityCostRadar /></P>} />
+    <Route path="/costs" element={<Navigate to="/analytics/opportunity-cost-radar" replace />} />
+    <Route path="/analytics/predictive-timeline" element={<P><PredictiveTimeline /></P>} />
+    <Route path="/timeline" element={<Navigate to="/analytics/predictive-timeline" replace />} />
     <Route path="/strategy" element={<P><Strategy /></P>} />
-    <Route path="/friction" element={<P><FrictionMap /></P>} />
-    <Route path="/health" element={<P><HealthHeatmap /></P>} />
-    <Route path="/dna" element={<P><DecisionDNA /></P>} />
+    <Route path="/analytics/friction-map" element={<P><FrictionMap /></P>} />
+    <Route path="/friction" element={<Navigate to="/analytics/friction-map" replace />} />
+    <Route path="/analytics/health-heatmap" element={<P><HealthHeatmap /></P>} />
+    <Route path="/health" element={<Navigate to="/analytics/health-heatmap" replace />} />
+    <Route path="/analytics/decision-dna" element={<P><DecisionDNA /></P>} />
+    <Route path="/dna" element={<Navigate to="/analytics/decision-dna" replace />} />
     <Route path="/engine" element={<P><EscalationEngine /></P>} />
     <Route path="/governance" element={<P><EscalationEngine /></P>} />
-    <Route path="/benchmarking" element={<P><DecisionBenchmarking /></P>} />
-    <Route path="/scenarios" element={<P><ScenarioEngine /></P>} />
+    <Route path="/analytics/decision-benchmarking" element={<P><DecisionBenchmarking /></P>} />
+    <Route path="/benchmarking" element={<Navigate to="/analytics/decision-benchmarking" replace />} />
+    <Route path="/analytics/scenario-engine" element={<P><ScenarioEngine /></P>} />
+    <Route path="/scenarios" element={<Navigate to="/analytics/scenario-engine" replace />} />
     <Route path="/executive" element={<P><ExecutiveHub /></P>} />
     <Route path="/settings" element={<P><SettingsPage /></P>} />
     <Route path="/admin/users" element={<P><AdminUsers /></P>} />
