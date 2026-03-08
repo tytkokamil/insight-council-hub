@@ -9,10 +9,34 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Allow internal secret OR authenticated platform admin
     const secret = req.headers.get("x-internal-secret");
     const expectedSecret = Deno.env.get("INTERNAL_FUNCTIONS_SECRET");
-    if (!secret || secret !== expectedSecret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    const hasInternalSecret = secret && secret === expectedSecret;
+
+    if (!hasInternalSecret) {
+      // Check if caller is an authenticated platform admin
+      const authHeader = req.headers.get("authorization")?.replace("Bearer ", "");
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
+      const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
+      const { data: admin } = await supabaseAdmin
+        .from("platform_admins")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+      if (!admin) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
     }
 
     const { item_id } = await req.json();
@@ -20,10 +44,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "item_id required" }), { status: 400, headers: corsHeaders });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // Get roadmap item (reuse supabaseAdmin from above)
 
     // Get roadmap item
     const { data: item } = await supabaseAdmin
