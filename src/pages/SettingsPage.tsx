@@ -624,9 +624,9 @@ const SettingsPage = () => {
               </div>
 
               {/* Data Residency — moved above provider selection for trust-first */}
-              <div className="p-4 rounded-lg border-l-4" style={{ backgroundColor: "hsl(214 100% 97%)", borderLeftColor: "hsl(217 91% 60%)" }}>
+              <div className="p-4 rounded-lg border-l-4 border-l-accent-blue bg-accent-blue/[0.06]">
                 <div className="flex items-center gap-2 mb-1">
-                  <Shield className="w-4 h-4" style={{ color: "hsl(217 91% 60%)" }} />
+                  <Shield className="w-4 h-4 text-accent-blue" />
                   <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
