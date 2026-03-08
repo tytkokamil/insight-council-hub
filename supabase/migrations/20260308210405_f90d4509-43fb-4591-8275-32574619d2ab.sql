@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS ai_model_preference text NOT NULL DEFAULT 'auto';
