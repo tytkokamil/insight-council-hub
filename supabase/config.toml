@@ -95,3 +95,6 @@ verify_jwt = false
 
 [functions.admin-analytics]
 verify_jwt = false
+
+[functions.manage-backup-codes]
+verify_jwt = false

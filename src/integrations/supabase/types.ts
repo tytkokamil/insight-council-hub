@@ -1888,6 +1888,10 @@ export type Database = {
       mfa_settings: {
         Row: {
           backup_codes: string[] | null
+          backup_codes_count: number | null
+          backup_codes_hash: string[] | null
+          backup_codes_reset_needed: boolean | null
+          backup_codes_salt: string[] | null
           created_at: string
           email_otp_enabled: boolean
           id: string
@@ -1898,6 +1902,10 @@ export type Database = {
         }
         Insert: {
           backup_codes?: string[] | null
+          backup_codes_count?: number | null
+          backup_codes_hash?: string[] | null
+          backup_codes_reset_needed?: boolean | null
+          backup_codes_salt?: string[] | null
           created_at?: string
           email_otp_enabled?: boolean
           id?: string
@@ -1908,6 +1916,10 @@ export type Database = {
         }
         Update: {
           backup_codes?: string[] | null
+          backup_codes_count?: number | null
+          backup_codes_hash?: string[] | null
+          backup_codes_reset_needed?: boolean | null
+          backup_codes_salt?: string[] | null
           created_at?: string
           email_otp_enabled?: boolean
           id?: string
