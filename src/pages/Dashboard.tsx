@@ -298,6 +298,7 @@ const Dashboard = () => {
       />
 
       <WelcomeBackBanner />
+      <GoLiveProgressWidget />
       <div className="section-gap-lg">
 
         {/* ═══ LOADING SKELETON ═══ */}
