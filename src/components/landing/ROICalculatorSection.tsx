@@ -146,12 +146,12 @@ const ROICalculatorSection = () => {
               <div className="rounded-xl border border-destructive/15 bg-destructive/[0.04] p-5 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <TrendingDown className="w-3.5 h-3.5 text-destructive/70" />
-                  <span className="text-[11px] text-muted-foreground">Aktuelle Kosten</span>
+                  <span className="text-[11px] text-muted-foreground">Bereinigte Verzögerungskosten</span>
                 </div>
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-destructive">
                   <AnimatedNumber value={monthlyCost} />
                 </div>
-                <span className="text-[10px] text-destructive/60">/Monat</span>
+                <span className="text-[10px] text-destructive/60">/Monat (55% Effizienzfaktor)</span>
               </div>
 
               <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5 text-center">
@@ -162,7 +162,7 @@ const ROICalculatorSection = () => {
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-primary">
                   <AnimatedNumber value={savings} />
                 </div>
-                <span className="text-[10px] text-primary/60">/Monat (55% Reduktion)</span>
+                <span className="text-[10px] text-primary/60">/Monat (73% schnellere Approvals)</span>
               </div>
             </div>
 
