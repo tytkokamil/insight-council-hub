@@ -165,7 +165,7 @@ const GlobalSearch = () => {
             type: "lessons", id: l.id, title: l.key_takeaway,
             subtitle: [l.what_went_well, l.what_went_wrong].filter(Boolean).join(" | ")?.slice(0, 120) || null,
             meta: "Lesson Learned",
-            link: "/knowledge",
+            link: "/knowledge-base",
           });
         }
       });

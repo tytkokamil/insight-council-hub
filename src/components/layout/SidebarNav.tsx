@@ -131,7 +131,7 @@ function getGroupsForRole(role: OrgRoleKey): NavGroupDef[] {
             { icon: Brain, label: "nav.executiveHub", path: "/executive", featureKey: "executive" },
             { icon: BarChart3, label: "nav.analyticsHub", path: "/analytics", featureKey: "analytics" },
             { icon: FileText, label: "nav.decisions", path: "/decisions", featureKey: "decisions" },
-            { icon: History, label: "nav.auditTrail", path: "/audit", featureKey: "audit" },
+            { icon: History, label: "nav.auditTrail", path: "/audit-trail", featureKey: "audit" },
           ],
         },
       ];

@@ -167,8 +167,10 @@ export const protectedRoutes = (
     <Route path="/templates" element={<P><TemplateEditor /></P>} />
     <Route path="/template-editor" element={<P><TemplateEditor /></P>} />
     <Route path="/unified-timeline" element={<P><TimelinePage /></P>} />
-    <Route path="/knowledge" element={<P><KnowledgeBase /></P>} />
-    <Route path="/automations" element={<P><AutomationRules /></P>} />
+    <Route path="/knowledge-base" element={<P><KnowledgeBase /></P>} />
+    <Route path="/knowledge" element={<Navigate to="/knowledge-base" replace />} />
+    <Route path="/automation-rules" element={<P><AutomationRules /></P>} />
+    <Route path="/automations" element={<Navigate to="/automation-rules" replace />} />
     <Route path="/archive" element={<P><ArchivePage /></P>} />
     <Route path="/risks" element={<P><RiskRegister /></P>} />
     <Route path="/team-performance" element={<P><TeamPerformance /></P>} />

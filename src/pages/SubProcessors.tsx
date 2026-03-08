@@ -61,7 +61,7 @@ const SubProcessors = () => (
           </section>
 
           <section className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground/60">Verwandte Dokumente: <Link to="/avv" className="text-primary hover:underline">AVV</Link> · <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> · <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link></p>
+            <p className="text-xs text-muted-foreground/60">Verwandte Dokumente: <Link to="/dpa" className="text-primary hover:underline">AVV</Link> · <Link to="/ai-data-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> · <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link></p>
           </section>
         </div>
       </div>

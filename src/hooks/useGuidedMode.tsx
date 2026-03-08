@@ -111,7 +111,7 @@ export const BASIC_MODE_PATHS = new Set([
   "/teams",
   "/meeting",
   "/analytics",
-  "/knowledge",
+  "/knowledge-base",
   "/archive",
   "/settings",
 ]);

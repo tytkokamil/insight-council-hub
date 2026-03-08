@@ -155,7 +155,7 @@ const AiDataPolicy = () => (
           </section>
 
           <section className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground/60">Verwandte Dokumente: <Link to="/avv" className="text-primary hover:underline">Auftragsverarbeitungsvertrag (AVV)</Link> · <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> · <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link></p>
+            <p className="text-xs text-muted-foreground/60">Verwandte Dokumente: <Link to="/dpa" className="text-primary hover:underline">Auftragsverarbeitungsvertrag (AVV)</Link> · <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> · <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link></p>
           </section>
         </div>
       </div>

@@ -24,7 +24,7 @@ const footerLinks = {
     { label: "Kontakt", to: "/contact" },
   ],
   compliance: [
-    { label: "KI-Richtlinie", to: "/ai-policy" },
+    { label: "KI-Richtlinie", to: "/ai-data-policy" },
     { label: "Frameworks", href: "#compliance" },
     { label: "Sub-Processors", to: "/sub-processors" },
   ],

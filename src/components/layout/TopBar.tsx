@@ -61,7 +61,7 @@ const PAGE_TITLE_MAP: Record<string, string> = {
   "/template-editor": "nav.templates",
   "/strategy": "nav.strategy",
   "/archive": "nav.archive",
-  "/knowledge": "nav.knowledgeBase",
+  "/knowledge-base": "nav.knowledgeBase",
   "/search": "nav.search",
   "/admin/users": "nav.users",
 };

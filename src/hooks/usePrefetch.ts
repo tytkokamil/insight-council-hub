@@ -15,7 +15,7 @@ export const usePrefetchOnHover = () => {
 
   return useCallback(
     (path: string) => {
-      const decisionRoutes = ["/dashboard", "/decisions", "/graph", "/analytics", "/calendar", "/health", "/dna", "/engine", "/benchmarking", "/scenarios", "/timeline", "/strategy", "/patterns", "/bottlenecks", "/costs", "/friction", "/executive", "/briefing"];
+      const decisionRoutes = ["/dashboard", "/decisions", "/decision-graph", "/analytics", "/calendar", "/health", "/dna", "/engine", "/benchmarking", "/scenarios", "/timeline", "/strategy", "/patterns", "/bottlenecks", "/costs", "/friction", "/executive", "/briefing"];
 
       if (decisionRoutes.some((r) => path.startsWith(r))) {
         qc.prefetchQuery({
