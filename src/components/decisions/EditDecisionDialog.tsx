@@ -73,6 +73,7 @@ const EditDecisionDialog = ({ decision, open, onOpenChange, onUpdated }: Props) 
       setPriority(decision.priority || "medium");
       setDueDate(decision.due_date || "");
       setConfidential(decision.confidential || false);
+      setConfidentialViewerIds(decision.confidential_viewer_ids || []);
       setOwnerId(decision.owner_id || decision.created_by || "");
       setChangeReason("");
     }
