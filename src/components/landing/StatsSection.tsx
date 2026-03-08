@@ -60,7 +60,7 @@ const StatsSection = () => {
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-medium mb-6">{t("landing.stats.socialProof")}</p>
           <div className="flex items-center justify-center gap-8 md:gap-12 flex-wrap">
             {industries.map((ind, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5, ease }} className="flex items-center gap-2 text-muted-foreground/25 hover:text-muted-foreground/45 transition-colors duration-300">
+              <motion.div key={i} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5, ease }} className="flex items-center gap-2 text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-300">
                 <ind.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{ind.label}</span>
               </motion.div>
