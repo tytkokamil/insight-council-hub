@@ -39,7 +39,7 @@ const UseCasesSection = () => {
                   <p className="text-sm text-muted-foreground/70 leading-relaxed mb-4">{uc.description}</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold text-primary font-display">{uc.stat}</span>
-                    <span className="text-[11px] text-muted-foreground/50">{uc.statLabel}</span>
+                    <span className="text-[11px] text-muted-foreground">{uc.statLabel}</span>
                   </div>
                 </div>
               </div>
