@@ -171,7 +171,7 @@ const Navbar = () => {
 
             <button
               className="md:hidden p-2"
-              style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+              style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
