@@ -49,6 +49,8 @@ Deno.serve(async (req) => {
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
 
+    // If user exists and teamId provided, add to team
+
     if (existingUser) {
       // Check if already a member
       const { data: membership } = await supabase
