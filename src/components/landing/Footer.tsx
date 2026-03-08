@@ -20,7 +20,7 @@ const footerLinks = {
     { label: "Datenschutz", to: "/privacy" },
     { label: "Impressum", to: "/imprint" },
     { label: "AGB", to: "/terms" },
-    { label: "AVV", to: "/avv" },
+    { label: "AVV", to: "/dpa" },
     { label: "Kontakt", to: "/contact" },
   ],
   compliance: [
