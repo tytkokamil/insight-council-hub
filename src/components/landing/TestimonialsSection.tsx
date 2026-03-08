@@ -46,7 +46,8 @@ const testimonials = [
     initials: "AL",
     metric: "87%",
     metricLabel: "weniger Dokumentationsaufwand",
-    accentColor: "hsl(200 40% 48%)",
+    accentClass: "text-primary",
+    accentBg: "bg-primary/12",
   },
 ];
 
