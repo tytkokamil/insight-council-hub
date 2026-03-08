@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     // If user exists and teamId provided, add to team
 
-    if (existingUser) {
+    if (existingUser && teamId) {
       // Check if already a member
       const { data: membership } = await supabase
         .from("team_members")
@@ -75,6 +75,17 @@ Deno.serve(async (req) => {
         .update({ status: "accepted", accepted_at: new Date().toISOString() })
         .eq("team_id", teamId)
         .eq("email", email);
+
+      // If there's a decision context, send notification to existing user
+      if (contextDecisionId) {
+        await supabase.from("notifications").insert({
+          user_id: existingUser.id,
+          title: `${inviterName} bittet um Ihre Genehmigung`,
+          message: `"${decisionTitle || "Entscheidung"}" — bitte prüfen Sie die Details.`,
+          type: "review_request",
+          decision_id: contextDecisionId,
+        });
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "Benutzer wurde direkt zum Team hinzugefügt" }),
