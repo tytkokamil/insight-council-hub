@@ -437,7 +437,7 @@ const PricingSection = () => {
                         <tr>
                           <td
                             colSpan={5}
-                            className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider"
+                            className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
                           >
                             {cat.category}
                           </td>
