@@ -50,6 +50,56 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_hash: string
+          key_preview: string | null
+          last_used_at: string | null
+          name: string
+          org_id: string | null
+          permissions: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash: string
+          key_preview?: string | null
+          last_used_at?: string | null
+          name: string
+          org_id?: string | null
+          permissions?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash?: string
+          key_preview?: string | null
+          last_used_at?: string | null
+          name?: string
+          org_id?: string | null
+          permissions?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -257,6 +307,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      churn_risk_log: {
+        Row: {
+          calculated_at: string | null
+          id: string
+          intervention_reason: string | null
+          intervention_sent: boolean | null
+          intervention_type: string | null
+          notes: string | null
+          org_id: string | null
+          risk_factors: string[] | null
+          risk_level: string
+          score: number
+        }
+        Insert: {
+          calculated_at?: string | null
+          id?: string
+          intervention_reason?: string | null
+          intervention_sent?: boolean | null
+          intervention_type?: string | null
+          notes?: string | null
+          org_id?: string | null
+          risk_factors?: string[] | null
+          risk_level?: string
+          score?: number
+        }
+        Update: {
+          calculated_at?: string | null
+          id?: string
+          intervention_reason?: string | null
+          intervention_sent?: boolean | null
+          intervention_type?: string | null
+          notes?: string | null
+          org_id?: string | null
+          risk_factors?: string[] | null
+          risk_level?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "churn_risk_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comments: {
         Row: {
@@ -1402,6 +1499,36 @@ export type Database = {
           },
         ]
       }
+      feature_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          feature: string
+          id: string
+          rating: number | null
+          sentiment: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          feature: string
+          id?: string
+          rating?: number | null
+          sentiment?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          feature?: string
+          id?: string
+          rating?: number | null
+          sentiment?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           category: string
@@ -1616,6 +1743,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      launch_checklist: {
+        Row: {
+          completed_at: string | null
+          completed_items: string[] | null
+          org_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_items?: string[] | null
+          org_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_items?: string[] | null
+          org_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "launch_checklist_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lessons_learned: {
         Row: {
@@ -1849,6 +2005,39 @@ export type Database = {
           },
         ]
       }
+      nps_responses: {
+        Row: {
+          callback_requested: boolean | null
+          callback_status: string | null
+          comment: string | null
+          created_at: string | null
+          id: string
+          phone: string | null
+          score: number
+          user_id: string
+        }
+        Insert: {
+          callback_requested?: boolean | null
+          callback_status?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          score: number
+          user_id: string
+        }
+        Update: {
+          callback_requested?: boolean | null
+          callback_status?: string | null
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       org_badges: {
         Row: {
           badge_token: string | null
@@ -1949,6 +2138,9 @@ export type Database = {
           id: string
           name: string
           plan: string
+          referral_code: string | null
+          referral_credits_eur: number | null
+          referred_by_code: string | null
           settings: Json
           slug: string
           updated_at: string
@@ -1958,6 +2150,9 @@ export type Database = {
           id?: string
           name: string
           plan?: string
+          referral_code?: string | null
+          referral_credits_eur?: number | null
+          referred_by_code?: string | null
           settings?: Json
           slug: string
           updated_at?: string
@@ -1967,6 +2162,9 @@ export type Database = {
           id?: string
           name?: string
           plan?: string
+          referral_code?: string | null
+          referral_credits_eur?: number | null
+          referred_by_code?: string | null
           settings?: Json
           slug?: string
           updated_at?: string
@@ -2000,8 +2198,12 @@ export type Database = {
           hide_pdf_branding: boolean
           id: string
           industry: string | null
+          nps_last_shown: string | null
+          nps_score: number | null
+          nps_shown_count: number | null
           onboarding_completed: boolean
           org_id: string | null
+          preferred_login: string | null
           progressive_override: boolean | null
           updated_at: string
           user_id: string
@@ -2015,8 +2217,12 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          nps_last_shown?: string | null
+          nps_score?: number | null
+          nps_shown_count?: number | null
           onboarding_completed?: boolean
           org_id?: string | null
+          preferred_login?: string | null
           progressive_override?: boolean | null
           updated_at?: string
           user_id: string
@@ -2030,8 +2236,12 @@ export type Database = {
           hide_pdf_branding?: boolean
           id?: string
           industry?: string | null
+          nps_last_shown?: string | null
+          nps_score?: number | null
+          nps_shown_count?: number | null
           onboarding_completed?: boolean
           org_id?: string | null
+          preferred_login?: string | null
           progressive_override?: boolean | null
           updated_at?: string
           user_id?: string
@@ -2148,6 +2358,70 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          referral_code: string | null
+          referred_email: string
+          referred_org_id: string | null
+          referrer_org_id: string | null
+          referrer_profile_id: string | null
+          reward_granted: boolean | null
+          reward_type: string | null
+          status: string
+        }
+        Insert: {
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string | null
+          referred_email: string
+          referred_org_id?: string | null
+          referrer_org_id?: string | null
+          referrer_profile_id?: string | null
+          reward_granted?: boolean | null
+          reward_type?: string | null
+          status?: string
+        }
+        Update: {
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          referral_code?: string | null
+          referred_email?: string
+          referred_org_id?: string | null
+          referrer_org_id?: string | null
+          referrer_profile_id?: string | null
+          reward_granted?: boolean | null
+          reward_type?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referred_org_id_fkey"
+            columns: ["referred_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_org_id_fkey"
+            columns: ["referrer_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_profile_id_fkey"
+            columns: ["referrer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       review_delegations: {
         Row: {
