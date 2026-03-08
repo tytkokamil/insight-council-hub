@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import TeamSwitcher from "./TeamSwitcher";
 import CommandPalette from "./CommandPalette";
+import KeyboardShortcutsModal, { useKeyboardShortcuts } from "./KeyboardShortcutsModal";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePrefetchOnHover } from "@/hooks/usePrefetch";
