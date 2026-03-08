@@ -44,7 +44,7 @@ const ScoreIcon = ({ score, highlighted }: { score: Score; highlighted?: boolean
         viewport={{ once: true }}
         transition={{ type: "spring", stiffness: 400, damping: 15 }}
         className={`w-7 h-7 rounded-full flex items-center justify-center ${
-          highlighted ? "bg-primary/10 text-primary" : "bg-emerald-500/10 text-emerald-600"
+          highlighted ? "bg-primary/10 text-primary" : "bg-success/10 text-success"
         }`}
       >
         <Check className="w-4 h-4" strokeWidth={2.5} />
