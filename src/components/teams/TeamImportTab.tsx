@@ -80,11 +80,7 @@ const TeamImportTab = ({ teamId }: Props) => {
     }
 
     if (ext === "xlsx" || ext === "xls") {
-      const XLSX = await import("xlsx");
-      const buffer = await file.arrayBuffer();
-      const workbook = XLSX.read(buffer, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      return XLSX.utils.sheet_to_csv(sheet);
+      throw new Error("Excel-Import wird nicht mehr unterstützt. Bitte als CSV speichern und erneut importieren.");
     }
 
     if (ext === "pdf") {
