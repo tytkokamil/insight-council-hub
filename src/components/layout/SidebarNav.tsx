@@ -611,6 +611,32 @@ const SidebarNav = memo(({
             </div>
           </div>
         )}
+
+        {/* Progressive Level Progress Bar */}
+        {progressiveLevel < 3 && !collapsed && (
+          <div className="px-3 py-3">
+            <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
+              <p className="text-[11px] font-semibold text-foreground mb-1.5">
+                {progressiveLevel === 1
+                  ? `${decisionCount} von 3 Entscheidungen bis mehr Features`
+                  : `${decisionCount} von 10 Entscheidungen bis Vollzugriff`}
+              </p>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${progressiveLevel === 1
+                      ? Math.min(100, (decisionCount / 3) * 100)
+                      : Math.min(100, (decisionCount / 10) * 100)
+                    }%`,
+                  }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <FeatureUpgradeModal
