@@ -193,7 +193,7 @@ const AdminUsers = () => {
                       placeholder={t("admin.invitePlaceholder")} required
                       className="w-full h-10 px-3 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
-                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10" style={{ backgroundColor: "#1E3A5F" }}>
+                  <Button type="submit" disabled={inviting || !inviteEmail.trim()} className="gap-2 h-10 bg-primary text-primary-foreground hover:bg-primary/90">
                     <UserPlus className="w-4 h-4" />{inviting ? t("admin.inviteSending") : t("admin.invite")}
                   </Button>
                 </form>
@@ -256,7 +256,7 @@ const AdminUsers = () => {
             {currentUserRole === "org_owner" && (
                 <>
                   <div className="mt-12" />
-                  <div className="border-t border-dashed" style={{ borderColor: "#FCA5A5" }} />
+                  <div className="border-t border-dashed border-destructive/40" />
                   <p className="text-xs font-semibold text-destructive uppercase tracking-wider mt-3 mb-2">Gefahrenbereich</p>
                   <Card className="border-destructive/30">
                     <CardContent className="p-5">

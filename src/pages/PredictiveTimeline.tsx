@@ -252,7 +252,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               <div className="p-3 rounded-lg bg-muted/30 border border-border cursor-default">
                 <p className="text-[10px] text-muted-foreground mb-1">{t("predictive.avgConfidence")}</p>
                 <p className={`text-xl font-bold tabular-nums ${confidenceColor(avgConfidence)}`}>{avgConfidence}%</p>
-                <p className="text-[10px] mt-0.5" style={{ color: "#64748B" }}>
+                <p className="text-[10px] mt-0.5 text-muted-foreground">
                   {t("predictive.confidenceGrowHint", "Steigt automatisch mit mehr abgeschlossenen Entscheidungen.")}
                 </p>
               </div>
@@ -316,16 +316,16 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                         {/* Past shading */}
                         <div
                           className="absolute top-0 bottom-0 z-[5] pointer-events-none"
-                          style={{ left: 0, width: `${todayPosition}%`, backgroundColor: "rgba(59,130,246,0.03)" }}
+                          style={{ left: 0, width: `${todayPosition}%`, backgroundColor: "hsl(var(--primary) / 0.03)" }}
                         />
                         {/* Today line */}
                         <div
                           className="absolute top-0 bottom-0 z-10"
-                          style={{ left: `${todayPosition}%`, width: "2px", backgroundColor: "#3B82F6" }}
+                          style={{ left: `${todayPosition}%`, width: "2px", backgroundColor: "hsl(var(--primary))" }}
                         />
                         <span
                           className="absolute z-10 font-bold"
-                          style={{ left: `${todayPosition}%`, top: "-2px", transform: "translateX(-50%)", fontSize: "11px", color: "#3B82F6" }}
+                          style={{ left: `${todayPosition}%`, top: "-2px", transform: "translateX(-50%)", fontSize: "11px", color: "hsl(var(--primary))" }}
                         >
                           {t("predictive.legendToday", "Heute")}
                         </span>
@@ -381,7 +381,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
               <div className="flex items-center gap-4 px-4 py-2 border-t border-border bg-muted/20 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-80 rounded" /> {t("predictive.legendElapsed")}</span>
                 <span className="flex items-center gap-1"><div className="w-3 h-1.5 bg-primary opacity-30 rounded" /> {t("predictive.legendForecast")}</span>
-                <span className="flex items-center gap-1"><div className="h-3" style={{ width: "2px", backgroundColor: "#3B82F6" }} /> {t("predictive.legendToday")}</span>
+                <span className="flex items-center gap-1"><div className="h-3" style={{ width: "2px", backgroundColor: "hsl(var(--primary))" }} /> {t("predictive.legendToday")}</span>
                 <span className="flex items-center gap-1"><div className="w-1 h-3 bg-warning rounded" /> {t("predictive.legendWarning")}</span>
               </div>
             </div>

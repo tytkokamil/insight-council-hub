@@ -461,8 +461,7 @@ const ArchivePage = () => {
           </div>
           <Button
             size="sm"
-            className="gap-1.5 shrink-0"
-            style={nlpFilters ? undefined : { backgroundColor: "#1E3A5F" }}
+            className={`gap-1.5 shrink-0 ${!nlpFilters ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""}`}
             variant={nlpFilters ? "default" : undefined}
             disabled={nlpSearching || search.length < 5}
             onClick={async () => {
@@ -548,7 +547,7 @@ const ArchivePage = () => {
                     : "border-border hover:border-border/80"
                 }`}
                 style={{ backgroundColor: selectedIds.has(d.id) ? undefined : undefined }}
-                onMouseEnter={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "#F8FAFC"; }}
+                onMouseEnter={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = "hsl(var(--muted) / 0.3)"; }}
                 onMouseLeave={e => { if (!selectedIds.has(d.id)) (e.currentTarget as HTMLElement).style.backgroundColor = ""; }}
                 onClick={() => { setSelectedDecision(d); loadAuditLogs(d.id); }}
               >

@@ -192,7 +192,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
           {traits.map((trait) => {
             const noData = isInsufficientData(trait);
             return (
-              <Card key={trait.id} className={`border ${noData ? "border-border" : sentimentBg(trait.sentiment)}`} style={noData ? { backgroundColor: "#F8FAFC" } : undefined}>
+              <Card key={trait.id} className={`border ${noData ? "border-border bg-muted/30" : sentimentBg(trait.sentiment)}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 mb-2">
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-muted/30 ${noData ? "text-muted-foreground" : sentimentColor(trait.sentiment)}`}><trait.icon className="w-4 h-4" /></div>
@@ -204,7 +204,7 @@ const DecisionDNA = ({ embedded }: { embedded?: boolean }) => {
                   </div>
                   {noData ? (
                     <div className="space-y-1.5">
-                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium" style={{ color: "#94A3B8", backgroundColor: "hsl(215 20% 65% / 0.12)" }}>
+                      <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-medium text-muted-foreground bg-muted/50">
                         {t("decisionDna.moreDataNeeded", "Mehr Daten nötig")}
                       </span>
                       <a href="/decisions" className="flex items-center gap-1 text-[11px] text-primary hover:underline" onClick={(e) => { e.preventDefault(); window.location.href = "/decisions"; }}>

@@ -68,8 +68,8 @@ interface LessonRow {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 const TAG_COLORS = [
-  "#6366f1", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
-  "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#14b8a6",
+  "hsl(var(--primary))", "hsl(var(--warning))", "hsl(var(--success))", "hsl(var(--destructive))", "hsl(var(--accent-violet))",
+  "hsl(var(--accent-rose))", "hsl(var(--accent-teal))", "hsl(var(--accent-amber))", "hsl(var(--accent-blue))", "hsl(var(--accent-teal))",
 ];
 
 const Highlight = ({ text, query }: { text: string; query: string }) => {
@@ -450,7 +450,7 @@ const KnowledgeBase = () => {
           role="knowledge"
           help={{ title: t("knowledge.title"), description: t("knowledge.help") }}
           primaryAction={
-            <Button size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5" style={{ backgroundColor: "#1E3A5F" }}>
+            <Button size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
               <Download className="w-4 h-4" /> {t("knowledge.executiveReport")}
             </Button>
           }
@@ -478,7 +478,7 @@ const KnowledgeBase = () => {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <p className="text-[11px] mt-0.5 cursor-help" style={{ color: "#94A3B8" }}>{kpi.benchmark}</p>
+                          <p className="text-[11px] mt-0.5 cursor-help text-muted-foreground">{kpi.benchmark}</p>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs text-xs">
                           <p>Basiert auf Decivio-Nutzerdaten aus vergleichbaren Organisationen.</p>
@@ -928,7 +928,7 @@ const KnowledgeBase = () => {
 
                     <Dialog open={lessonOpen} onOpenChange={setLessonOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant={selectedLessons.length === 0 ? "default" : "outline"} className="w-full" style={selectedLessons.length === 0 ? { backgroundColor: "#1E3A5F" } : undefined}>
+                        <Button size="sm" variant={selectedLessons.length === 0 ? "default" : "outline"} className="w-full">
                           <Plus className="w-4 h-4 mr-1" /> {t("knowledge.addLesson")}
                         </Button>
                       </DialogTrigger>

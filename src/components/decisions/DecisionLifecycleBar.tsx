@@ -155,7 +155,7 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                 <TooltipContent side="bottom" className="text-xs">
                   <p className="font-semibold">{stage.label}</p>
                   {isDone && <p className="text-muted-foreground">{t("lifecycle.completed")}</p>}
-                  {isCurrent && !isTerminal && <p style={{ color: "#3B82F6" }}>{t("lifecycle.currentStatus")}</p>}
+                  {isCurrent && !isTerminal && <p className="text-primary">{t("lifecycle.currentStatus")}</p>}
                   {isStopPoint && isCancelled && <p className="text-muted-foreground">{decision.cancelled_at ? t("lifecycle.cancelledAt", { date: format(new Date(decision.cancelled_at), "dd.MM.yy", { locale: dateFnsLocale }) }) : t("lifecycle.cancelled")}</p>}
                   {isStopPoint && isRejected && <p className="text-destructive">{t("lifecycle.rejected")}</p>}
                   {isStopPoint && isSuperseded && <p className="text-accent-foreground">{t("lifecycle.superseded")}</p>}
@@ -179,7 +179,7 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                 isDone ? "font-medium" : isCurrent ? (isTerminal ? "text-muted-foreground font-semibold" : "font-semibold") : "font-medium"
               }`}
               style={
-                isDone ? { color: "#10B981" } : isCurrent && !isTerminal ? { color: "#3B82F6", fontWeight: 600 } : isFuture ? { opacity: 0.5, color: "#94A3B8" } : undefined
+                isDone ? { color: "hsl(var(--success))" } : isCurrent && !isTerminal ? { color: "hsl(var(--primary))", fontWeight: 600 } : isFuture ? { opacity: 0.5, color: "hsl(var(--muted-foreground))" } : undefined
               }>
                 {stage.label}
               </p>

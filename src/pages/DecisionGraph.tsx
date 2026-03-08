@@ -23,17 +23,17 @@ import { useDecisions, useDependencies, useTeams } from "@/hooks/useDecisions";
 import { useTranslatedLabels } from "@/lib/labels";
 
 const statusColors: Record<string, string> = {
-  draft: "#6b7280",
-  review: "#eab308",
-  approved: "#22c55e",
-  implemented: "#3b82f6",
-  rejected: "#ef4444",
+  draft: "hsl(var(--muted-foreground))",
+  review: "hsl(var(--warning))",
+  approved: "hsl(var(--success))",
+  implemented: "hsl(var(--primary))",
+  rejected: "hsl(var(--destructive))",
 };
 
 // Priority no longer affects node size — fixed at 140×80
 
 const DecisionNode = ({ data }: { data: any }) => {
-  const borderColor = statusColors[data.status] || "#6b7280";
+  const borderColor = statusColors[data.status] || "hsl(var(--muted-foreground))";
 
   return (
     <div
@@ -64,9 +64,9 @@ const DecisionNode = ({ data }: { data: any }) => {
 const nodeTypes = { decision: DecisionNode };
 
 const edgeTypeStyles: Record<string, any> = {
-  blocks: { stroke: "#ef4444", strokeWidth: 2, animated: true },
-  influences: { stroke: "#f59e0b", strokeWidth: 1.5 },
-  requires: { stroke: "#1e3a5f", strokeWidth: 1.5 },
+  blocks: { stroke: "hsl(var(--destructive))", strokeWidth: 2, animated: true },
+  influences: { stroke: "hsl(var(--warning))", strokeWidth: 1.5 },
+  requires: { stroke: "hsl(var(--primary))", strokeWidth: 1.5 },
 };
 
 const DecisionGraph = () => {
@@ -162,9 +162,9 @@ const DecisionGraph = () => {
       type: "default",
       animated: dep.dependency_type === "blocks",
       label: edgeLabelMap[dep.dependency_type] || dep.dependency_type,
-      labelStyle: { fontSize: 10, fill: "#9ca3af" },
+      labelStyle: { fontSize: 10, fill: "hsl(var(--muted-foreground))" },
       style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
-      markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308" },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "hsl(var(--warning))" },
     }));
 
     console.log("[DecisionGraph] graphNodes:", graphNodes.length, "graphEdges:", graphEdges.length, "sample edge:", graphEdges[0]);
@@ -243,7 +243,7 @@ const DecisionGraph = () => {
           >
             <Background color="hsl(var(--border))" gap={24} size={1} />
             <Controls className="!bg-card !border-border !rounded-lg !shadow-lg" style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any} />
-            <MiniMap className="!bg-card/80 !border-border !rounded-lg" nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"} maskColor="hsl(var(--background) / 0.8)" />
+            <MiniMap className="!bg-card/80 !border-border !rounded-lg" nodeColor={(n) => statusColors[n.data?.status as string] || "hsl(var(--muted-foreground))"} maskColor="hsl(var(--background) / 0.8)" />
 
             {selectedNode && (
               <Panel position="top-right">
@@ -312,7 +312,7 @@ const DecisionGraph = () => {
                   <span className="text-muted-foreground">{t("graph.influencesLabel")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-0.5 rounded" style={{ background: "#1e3a5f" }} />
+                  <div className="w-6 h-0.5 bg-primary rounded" />
                   <span className="text-muted-foreground">{t("graph.requiresLabel")}</span>
                 </div>
               </div>

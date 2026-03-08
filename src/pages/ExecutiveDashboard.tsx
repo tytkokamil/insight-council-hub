@@ -81,7 +81,7 @@ const HeroCodCounter = ({ totalCost, openCount, openDecisions, teams, t }: {
   return (
     <Card className="border-destructive/20 bg-destructive/[0.03]">
       <CardContent className="p-6 text-center">
-        <p className="text-5xl font-bold tabular-nums font-display" style={{ color: "#EF4444" }}>
+        <p className="text-5xl font-bold tabular-nums font-display text-destructive">
           {Math.round(liveCost).toLocaleString("de-DE")} €
         </p>
         <p className="text-sm text-muted-foreground mt-2">
@@ -91,7 +91,7 @@ const HeroCodCounter = ({ totalCost, openCount, openDecisions, teams, t }: {
           })}
         </p>
         {sessionAccrued > 0.5 && (
-          <p className="text-xs mt-1.5" style={{ color: "#EF4444" }}>
+          <p className="text-xs mt-1.5 text-destructive">
             ↑ {sessionAccrued.toFixed(2)}€ in dieser Sitzung
           </p>
         )}

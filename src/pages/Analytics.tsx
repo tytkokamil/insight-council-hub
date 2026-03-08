@@ -427,8 +427,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
           return (
             <Card
               key={i}
-              className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2" : ""}`}
-              style={isCod ? { backgroundColor: "#FEF2F2" } : undefined}
+              className={`card-interactive border-border/60 ${isCod ? "sm:col-span-2 lg:col-span-2 bg-destructive/[0.04]" : ""}`}
             >
               <CardContent className="p-3">
                 <div className="flex items-center gap-1.5 mb-1.5">
@@ -451,7 +450,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                   )}
                 </div>
                 {isCod && (
-                  <p className="text-[11px] font-medium mt-0.5" style={{ color: "#EF4444" }}>
+                  <p className="text-[11px] font-medium mt-0.5 text-destructive">
                     {t("analytics.costsToday", "Kosten heute")}
                   </p>
                 )}
@@ -516,7 +515,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                       ? Math.round(d.weekData.reduce((sum: number, w: any) => sum + (w[createdKey] || 0), 0) / d.weekData.length)
                       : 0;
                     return avgCreated > 0 ? (
-                      <Line type="monotone" dataKey={() => avgCreated} stroke="#94A3B8" strokeWidth={1} strokeDasharray="6 4" dot={false} name={t("analytics.breakeven", "Break-even")} />
+                      <Line type="monotone" dataKey={() => avgCreated} stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="6 4" dot={false} name={t("analytics.breakeven", "Break-even")} />
                     ) : null;
                   })()}
                 </AreaChart>
@@ -526,7 +525,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                {[
                  { label: t("analytics.created"), color: COLORS.primary },
                  { label: t("analytics.implemented"), color: COLORS.success },
-                 { label: t("analytics.breakeven", "Break-even"), color: "#94A3B8" },
+                 { label: t("analytics.breakeven", "Break-even"), color: "hsl(var(--muted-foreground))" },
               ].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <span className="w-2 h-2 rounded-full" style={{ background: l.color }} />
@@ -851,7 +850,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                         <Badge
                           variant="outline"
                           className={`text-[10px] px-1.5 py-0 shrink-0 ${healthBg}`}
-                          style={hasNoData ? { color: "#94A3B8", borderColor: "#94A3B8" } : undefined}
+                          style={hasNoData ? { color: "hsl(var(--muted-foreground))", borderColor: "hsl(var(--muted-foreground))" } : undefined}
                         >
                           {healthLabel}
                         </Badge>

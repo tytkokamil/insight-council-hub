@@ -227,9 +227,7 @@ const TeamCommandCenter = ({ teamId }: Props) => {
                           <span className={cn(
                             "text-xs font-semibold",
                             d.ai_risk_score >= 60 ? "text-destructive" : d.ai_risk_score >= 31 ? "text-warning" : "text-success"
-                          )} style={{
-                            color: d.ai_risk_score >= 60 ? "#EF4444" : d.ai_risk_score >= 31 ? "#F59E0B" : "#10B981"
-                          }}>{d.ai_risk_score}%</span>
+                          )}>{d.ai_risk_score}%</span>
                         </TooltipTrigger>
                         <TooltipContent className="text-xs">{t("teamCmd.riskScore")}</TooltipContent>
                       </Tooltip>

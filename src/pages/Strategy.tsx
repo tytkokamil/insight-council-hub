@@ -243,7 +243,7 @@ const Strategy = () => {
         role="system"
         help={{ title: t("strategy.title"), description: t("strategy.help") }}
         primaryAction={
-          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2" style={{ backgroundColor: "#1E3A5F" }}>
+          <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="w-4 h-4" /> {t("strategy.newGoal")}
           </Button>
         }
@@ -322,8 +322,7 @@ const Strategy = () => {
         <div className="mb-8">
           <button
             onClick={() => setShowCreate(true)}
-            className="text-xs hover:underline transition-colors"
-            style={{ color: "#64748B", fontSize: "12px" }}
+            className="text-xs hover:underline transition-colors text-muted-foreground"
           >
             ＋ Weiteres Ziel-Template übernehmen
           </button>
