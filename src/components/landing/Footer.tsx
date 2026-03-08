@@ -26,6 +26,13 @@ const footerLinks = {
     { label: "Frameworks", href: "#compliance" },
     { label: "Sub-Processors", to: "/sub-processors" },
   ],
+  vergleiche: [
+    { label: "Decivio vs. Monday", to: "/vs/monday" },
+    { label: "Decivio vs. Jira", to: "/vs/jira" },
+    { label: "Decivio vs. Excel", to: "/vs/excel" },
+    { label: "Decivio vs. SAP", to: "/vs/sap" },
+    { label: "Decivio vs. Kissflow", to: "/vs/kissflow" },
+  ],
 };
 
 const FooterLink = ({ item }: { item: { label: string; to?: string; href?: string } }) => {
