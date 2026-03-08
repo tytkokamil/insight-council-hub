@@ -109,7 +109,12 @@ serve(async (req) => {
   try {
     const { title, description, category, priority, context, mode } = await req.json();
     const userId = await extractUserId(req);
-    const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const settings = await getUserAiSettings(userId);
 
     const isAutopilot = mode === "autopilot";
 
