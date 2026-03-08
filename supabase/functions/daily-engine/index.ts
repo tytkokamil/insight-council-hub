@@ -321,6 +321,130 @@ Deno.serve(async (req) => {
     }
 
     // ═══════════════════════════════════════════════════════
+    // RE-ENGAGEMENT EMAILS
+    // ═══════════════════════════════════════════════════════
+    const supabasePublicUrl = supabaseUrl.replace("/auth/v1", "").replace(/\/+$/, "");
+
+    const { data: inactiveProfiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, last_seen_at, email_reengagement_opt_out, reengagement_7d_sent, reengagement_14d_sent, reengagement_30d_sent, org_id")
+      .eq("email_reengagement_opt_out", false);
+
+    if (inactiveProfiles) {
+      for (const profile of inactiveProfiles) {
+        if (!profile.last_seen_at) continue;
+        const daysSinceSeen = Math.floor((Date.now() - new Date(profile.last_seen_at).getTime()) / 86400000);
+
+        // Get user email via auth admin
+        const { data: authUser } = await supabase.auth.admin.getUserById(profile.user_id);
+        if (!authUser?.user?.email) continue;
+
+        const unsubscribeUrl = `${supabasePublicUrl}/functions/v1/reengagement-optout?uid=${profile.user_id}`;
+        const appUrl = "https://app.decivio.com";
+
+        // Day 7 re-engagement
+        if (daysSinceSeen >= 7 && daysSinceSeen < 14 && !profile.reengagement_7d_sent) {
+          // Find last open decision
+          const { data: lastDec } = await supabase
+            .from("decisions")
+            .select("id, title, cost_per_day")
+            .eq("created_by", profile.user_id)
+            .in("status", ["draft", "review"])
+            .is("deleted_at", null)
+            .order("updated_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (lastDec) {
+            const totalCod = (lastDec.cost_per_day || 85) * daysSinceSeen;
+            try {
+              const { reengagementDay7Email } = await import("../_shared/email-templates.ts");
+              const email = reengagementDay7Email({
+                userName: profile.full_name || "dort",
+                lastDecisionTitle: lastDec.title,
+                costOfDelay: totalCod,
+                decisionUrl: `${appUrl}/decisions/${lastDec.id}`,
+                unsubscribeUrl,
+              });
+
+              await fetch(`${supabaseUrl}/functions/v1/review-notify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+                body: JSON.stringify({ to: authUser.user.email, subject: email.subject, html: email.html }),
+              });
+            } catch (e) { console.error("Reengagement day 7 email failed:", e); }
+
+            await supabase.from("profiles").update({ reengagement_7d_sent: true }).eq("user_id", profile.user_id);
+          }
+        }
+
+        // Day 14 re-engagement
+        if (daysSinceSeen >= 14 && daysSinceSeen < 30 && !profile.reengagement_14d_sent) {
+          const { data: openDecs, count } = await supabase
+            .from("decisions")
+            .select("cost_per_day", { count: "exact" })
+            .eq("created_by", profile.user_id)
+            .in("status", ["draft", "review"])
+            .is("deleted_at", null);
+
+          const totalCod = (openDecs || []).reduce((s, d) => s + (d.cost_per_day || 0), 0) * daysSinceSeen;
+
+          try {
+            const { reengagementDay14Email } = await import("../_shared/email-templates.ts");
+            const email = reengagementDay14Email({
+              userName: profile.full_name || "dort",
+              openDecisionCount: count || 0,
+              totalCod,
+              appUrl,
+              unsubscribeUrl,
+            });
+
+            await fetch(`${supabaseUrl}/functions/v1/review-notify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+              body: JSON.stringify({ to: authUser.user.email, subject: email.subject, html: email.html }),
+            });
+          } catch (e) { console.error("Reengagement day 14 email failed:", e); }
+
+          await supabase.from("profiles").update({ reengagement_14d_sent: true }).eq("user_id", profile.user_id);
+        }
+
+        // Day 30 re-engagement (only free/trial)
+        if (daysSinceSeen >= 30 && !profile.reengagement_30d_sent && profile.org_id) {
+          const { data: org } = await supabase
+            .from("organizations")
+            .select("subscription_status, plan")
+            .eq("id", profile.org_id)
+            .single();
+
+          if (org && (org.subscription_status === "trialing" || org.plan === "free" || org.subscription_status === "trial_expired")) {
+            try {
+              const { reengagementDay30Email } = await import("../_shared/email-templates.ts");
+              const email = reengagementDay30Email({
+                userName: profile.full_name || "dort",
+                features: [
+                  "KI-gestützter Decision Copilot für schnellere Analysen",
+                  "Automatische Eskalationsregeln mit SLA-Tracking",
+                  "Executive Dashboard mit Portfolio-Risikoübersicht",
+                ],
+                appUrl,
+                unsubscribeUrl,
+              });
+
+              await fetch(`${supabaseUrl}/functions/v1/review-notify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+                body: JSON.stringify({ to: authUser.user.email, subject: email.subject, html: email.html }),
+              });
+            } catch (e) { console.error("Reengagement day 30 email failed:", e); }
+
+            await supabase.from("profiles").update({ reengagement_30d_sent: true }).eq("user_id", profile.user_id);
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
     // EXISTING ORG LOOP
     // ═══════════════════════════════════════════════════════
 

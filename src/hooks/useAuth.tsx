@@ -28,6 +28,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Sentry user context — ID only, no PII
         if (session?.user) {
           Sentry.setUser({ id: session.user.id });
+          // Update last_seen_at for re-engagement tracking
+          supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("user_id", session.user.id).then(() => {});
         } else {
           Sentry.setUser(null);
         }
