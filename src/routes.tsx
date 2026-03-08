@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Route } from "react-router-dom";
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import PlatformAdminGuard from "@/components/layout/PlatformAdminGuard";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
 import PageLoadingFallback from "@/components/shared/PageLoadingFallback";
 
@@ -116,7 +117,7 @@ export const publicRoutes = (
     <Route path="/docs" element={<L><HelpCenter /></L>} />
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/demo" element={<L><DemoMode /></L>} />
-    <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
+    
     <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
     <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
     <Route path="/leaderboard" element={<L><Leaderboard /></L>} />
@@ -173,6 +174,7 @@ export const protectedRoutes = (
     <Route path="/upgrade" element={<P><UpgradePage /></P>} />
     <Route path="/war-room" element={<P><WarRoom /></P>} />
     <Route path="/launch-checklist" element={<P><LaunchChecklist /></P>} />
+    <Route path="/internal-admin" element={<P><PlatformAdminGuard><InternalAdmin /></PlatformAdminGuard></P>} />
   </>
 );
 
