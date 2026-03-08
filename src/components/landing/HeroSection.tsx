@@ -49,7 +49,7 @@ const HeroSection = () => {
           transform: "translateX(-50%)",
           width: "800px",
           height: "600px",
-          background: "radial-gradient(ellipse, rgba(239,68,68,0.12) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse, hsl(var(--destructive) / 0.12) 0%, transparent 70%)",
         }}
       />
 
