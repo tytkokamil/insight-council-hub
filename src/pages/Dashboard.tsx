@@ -526,6 +526,17 @@ const Dashboard = () => {
           </>
         )}
       </div>
+
+      {/* Floating Guided Checklist */}
+      <Suspense fallback={null}>
+        <GuidedChecklist
+          hasDecision={decisions.length > 0}
+          hasTeamMember={teams.length > 0}
+          hasSla={decisions.some(d => !!d.due_date)}
+          hasCompliance={false}
+          hasBrief={false}
+        />
+      </Suspense>
     </AppLayout>
   );
 };
