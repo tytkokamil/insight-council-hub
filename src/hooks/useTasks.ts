@@ -30,12 +30,11 @@ export const useTasks = () => {
       let query = supabase
         .from("tasks")
         .select("*")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (selectedTeamId) {
         query = query.eq("team_id", selectedTeamId);
-      } else {
-        query = query.is("team_id", null);
       }
 
       const { data, error } = await query;
@@ -55,6 +54,7 @@ export const useTeamTasks = (teamId: string) => {
         .from("tasks")
         .select("*")
         .eq("team_id", teamId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Task[];
