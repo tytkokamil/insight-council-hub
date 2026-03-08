@@ -16,14 +16,18 @@ import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 
 const AVAILABLE_EVENTS = [
-  { key: "decision.created", label: "webhookEventCreated" },
-  { key: "decision.approved", label: "webhookEventApproved" },
-  { key: "decision.rejected", label: "webhookEventRejected" },
-  { key: "decision.escalated", label: "webhookEventEscalated" },
-  { key: "decision.sla_violated", label: "webhookEventSlaViolated" },
-  { key: "reviewer.assigned", label: "webhookEventReviewerAssigned" },
-  { key: "reviewer.overdue", label: "webhookEventReviewerOverdue" },
-  { key: "daily.brief.generated", label: "webhookEventDailyBrief" },
+  { key: "decision.created", label: "Entscheidung erstellt" },
+  { key: "decision.approved", label: "Entscheidung genehmigt" },
+  { key: "decision.rejected", label: "Entscheidung abgelehnt" },
+  { key: "decision.overdue", label: "Entscheidung überfällig" },
+  { key: "decision.escalated", label: "Entscheidung eskaliert" },
+  { key: "decision.sla_violated", label: "SLA verletzt" },
+  { key: "task.created", label: "Aufgabe erstellt" },
+  { key: "task.completed", label: "Aufgabe abgeschlossen" },
+  { key: "review.requested", label: "Review angefordert" },
+  { key: "escalation.triggered", label: "Eskalation ausgelöst" },
+  { key: "reviewer.assigned", label: "Reviewer zugewiesen" },
+  { key: "daily.brief.generated", label: "Daily Brief generiert" },
 ];
 
 interface WebhookEndpoint {
