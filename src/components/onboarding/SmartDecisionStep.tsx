@@ -57,14 +57,15 @@ const SmartDecisionStep = ({ onCreateDecision, loading, slideAnim }: Props) => {
     setAiLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("decision-suggestions", {
-        body: { title: text, type: "classify" },
+        body: { title: text },
       });
       if (!error && data) {
+        const riskMap: Record<string, number> = { low: 20, medium: 50, high: 80 };
         const s: AiSuggestion = {
-          category: data.category || "operational",
-          priority: data.priority || "medium",
-          sla_days: data.sla_days || 7,
-          risk_score: data.risk_score || 30,
+          category: data.suggestedCategory || "operational",
+          priority: data.suggestedPriority || "medium",
+          sla_days: data.suggestedSlaDays || 7,
+          risk_score: riskMap[data.riskLevel] || 30,
         };
         setSuggestion(s);
         setCategory(s.category);
