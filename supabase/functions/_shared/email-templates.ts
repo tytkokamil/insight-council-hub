@@ -426,3 +426,88 @@ export function dunningEmail({ userName, orgName, dunningStep, billingUrl }: Dun
     ${ctaButton(tpl.ctaLabel, billingUrl)}`;
   return { subject: tpl.subject, html: layout(content, tpl.headline) };
 }
+
+// ─── 10. Re-engagement Emails ───────────────────────────────────────
+
+function unsubscribeBlock(unsubscribeUrl: string): string {
+  return `<div style="text-align:center;margin:24px 0 0;padding:16px 0 0;border-top:1px solid #E2E8F0;">
+    <a href="${unsubscribeUrl}" style="font-size:12px;color:#94A3B8;text-decoration:underline;">Diese E-Mails abbestellen</a>
+  </div>`;
+}
+
+export interface ReengagementDay7Params {
+  userName: string;
+  lastDecisionTitle: string;
+  costOfDelay: number;
+  decisionUrl: string;
+  unsubscribeUrl: string;
+}
+
+export function reengagementDay7Email(p: ReengagementDay7Params): { subject: string; html: string } {
+  const subject = `Was ist aus „${p.lastDecisionTitle}" geworden?`;
+  const content = `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#0F172A;">Ihre Entscheidung wartet</h1>
+    <p style="margin:0 0 8px;">Hallo ${escapeHtml(p.userName)},</p>
+    <p style="margin:0 0 24px;">
+      Seit einer Woche ist Ihre Entscheidung <strong>„${escapeHtml(p.lastDecisionTitle)}"</strong> offen — und die Kosten laufen weiter.
+    </p>
+    <div style="background-color:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:16px 20px;margin:0 0 24px;text-align:center;">
+      <p style="margin:0 0 4px;font-size:12px;color:#92400E;">Aktuelle Verzögerungskosten</p>
+      <p style="margin:0;font-size:28px;font-weight:700;color:#92400E;">${Number(p.costOfDelay).toLocaleString("de-DE")} €</p>
+    </div>
+    ${ctaButton("Entscheidung fortsetzen →", p.decisionUrl)}
+    ${unsubscribeBlock(p.unsubscribeUrl)}`;
+  return { subject, html: layout(content, `${p.lastDecisionTitle} wartet auf Sie`) };
+}
+
+export interface ReengagementDay14Params {
+  userName: string;
+  openDecisionCount: number;
+  totalCod: number;
+  appUrl: string;
+  unsubscribeUrl: string;
+}
+
+export function reengagementDay14Email(p: ReengagementDay14Params): { subject: string; html: string } {
+  const subject = "Ihre offenen Entscheidungen kosten weiter Geld";
+  const content = `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#0F172A;">Ihre offenen Entscheidungen</h1>
+    <p style="margin:0 0 8px;">Hallo ${escapeHtml(p.userName)},</p>
+    <p style="margin:0 0 24px;">
+      Sie haben <strong>${p.openDecisionCount} offene Entscheidungen</strong>, die täglich Geld kosten.
+    </p>
+    <div style="background-color:#FEE2E2;border:1px solid #FECACA;border-radius:8px;padding:16px 20px;margin:0 0 24px;text-align:center;">
+      <p style="margin:0 0 4px;font-size:12px;color:#991B1B;">Gesamte Verzögerungskosten</p>
+      <p style="margin:0;font-size:28px;font-weight:700;color:#DC2626;">${Number(p.totalCod).toLocaleString("de-DE")} €</p>
+    </div>
+    ${ctaButton("Zurück zu Decivio →", p.appUrl)}
+    ${unsubscribeBlock(p.unsubscribeUrl)}`;
+  return { subject, html: layout(content, `${p.openDecisionCount} offene Entscheidungen kosten ${Number(p.totalCod).toLocaleString("de-DE")} €`) };
+}
+
+export interface ReengagementDay30Params {
+  userName: string;
+  features: string[];
+  appUrl: string;
+  unsubscribeUrl: string;
+}
+
+export function reengagementDay30Email(p: ReengagementDay30Params): { subject: string; html: string } {
+  const subject = "Decivio hat sich weiterentwickelt — was gibt es Neues";
+  const featureList = p.features.map(f => `<li style="padding:4px 0;">${escapeHtml(f)}</li>`).join("");
+  const content = `
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#0F172A;">Was gibt es Neues?</h1>
+    <p style="margin:0 0 8px;">Hallo ${escapeHtml(p.userName)},</p>
+    <p style="margin:0 0 24px;">
+      Seit Ihrem letzten Besuch hat sich einiges getan. Hier sind die neuesten Verbesserungen:
+    </p>
+    <div style="background-color:#F0F9FF;border:1px solid #BAE6FD;border-radius:8px;padding:20px;margin:0 0 24px;">
+      <p style="margin:0 0 12px;font-size:14px;font-weight:600;color:#0C4A6E;">Neue Features:</p>
+      <ul style="margin:0;padding-left:20px;font-size:14px;color:#075985;line-height:1.8;">
+        ${featureList}
+      </ul>
+    </div>
+    ${ctaButton("Jetzt anschauen →", p.appUrl)}
+    ${unsubscribeBlock(p.unsubscribeUrl)}`;
+  return { subject, html: layout(content, "Neue Features bei Decivio") };
+}
