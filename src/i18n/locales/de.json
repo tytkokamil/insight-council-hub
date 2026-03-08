@@ -876,6 +876,8 @@
     "speedStar": "Speed Star",
     "speedStarDesc": "Ø < 5 Tage Umsetzung",
     "notUnlocked": "Noch nicht freigeschaltet",
+    "decisionsImplemented": "Entscheidungen umgesetzt",
+    "slaStreak": "Tage SLA-Streak",
     "delayCost": "Verzögerungskosten",
     "delayCostDesc": "Detaillierte Verzögerungskosten aller offenen Entscheidungen (Draft/Review), berechnet mit Team- bzw. Org-spezifischen Parametern.",
     "formulaLabel": "Formel",

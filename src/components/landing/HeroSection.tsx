@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, Shield, Zap, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
-import ProductTourModal from "./ProductTourModal";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -117,7 +117,7 @@ const STATS = [
 ];
 
 const HeroSection = () => {
-  const [showTour, setShowTour] = useState(false);
+  const { isEnabled } = useFeatureFlags();
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 80]);
@@ -259,7 +259,7 @@ const HeroSection = () => {
         </div>
       </motion.div>
 
-      <ProductTourModal open={showTour} onOpenChange={setShowTour} />
+      {/* A/B test: secondary CTA variant controlled by feature flag "hero_cta_variant" */}
     </section>
   );
 };

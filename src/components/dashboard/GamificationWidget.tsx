@@ -3,6 +3,7 @@ import { Flame, Trophy, Zap, Target, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import MilestoneShareCard from "@/components/shared/MilestoneShareCard";
 import { differenceInCalendarDays, differenceInDays, startOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -152,6 +153,18 @@ const GamificationWidget = ({ decisions, tasks, teams }: Props) => {
             ))}
           </div>
         </div>
+
+        {/* Milestone Share Cards for notable achievements */}
+        {stats.totalPoints >= 50 && (
+          <div className="space-y-2">
+            {decisions.filter(d => d.status === "implemented").length >= 10 && (
+              <MilestoneShareCard type="decisions_count" value={decisions.filter(d => d.status === "implemented").length} label={t("widgets.decisionsImplemented")} />
+            )}
+            {stats.streakDays >= 7 && (
+              <MilestoneShareCard type="streak" value={stats.streakDays} label={t("widgets.slaStreak")} />
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

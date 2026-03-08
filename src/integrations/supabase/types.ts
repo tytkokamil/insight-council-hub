@@ -1883,6 +1883,45 @@ export type Database = {
           },
         ]
       }
+      public_dashboard_links: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          filters: Json | null
+          id: string
+          is_active: boolean
+          title: string
+          token: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          filters?: Json | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          token?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          filters?: Json | null
+          id?: string
+          is_active?: boolean
+          title?: string
+          token?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       referral_codes: {
         Row: {
           code: string

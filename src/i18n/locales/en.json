@@ -876,6 +876,8 @@
     "speedStar": "Speed Star",
     "speedStarDesc": "Avg < 5 days implementation",
     "notUnlocked": "Not yet unlocked",
+    "decisionsImplemented": "Decisions implemented",
+    "slaStreak": "Days SLA streak",
     "delayCost": "Delay Cost",
     "delayCostDesc": "Detailed delay costs of all open decisions (Draft/Review), calculated with team- or org-specific parameters.",
     "formulaLabel": "Formula",

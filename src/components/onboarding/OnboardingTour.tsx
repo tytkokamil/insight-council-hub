@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OnboardingTourProps {
   open: boolean;
@@ -15,6 +17,7 @@ interface OnboardingTourProps {
 
 const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [phase, setPhase] = useState<"context" | "tour">("context");
   const [contextStep, setContextStep] = useState(0);
   const [tourStep, setTourStep] = useState(0);
@@ -86,6 +89,12 @@ const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
     try { localStorage.setItem("onboarding_context", JSON.stringify(newAnswers)); } catch {}
+    
+    // Persist industry to profile
+    if (questionId === "industry" && user) {
+      supabase.from("profiles").update({ industry: value }).eq("user_id", user.id).then(() => {});
+    }
+    
     if (contextStep < contextQuestions.length - 1) setContextStep(contextStep + 1);
     else setPhase("tour");
   };

@@ -29,6 +29,7 @@ import WebhookSettingsPanel from "@/components/settings/WebhookSettingsPanel";
 import AuditIntegrityPanel from "@/components/settings/AuditIntegrityPanel";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
 import ReferralPanel from "@/components/settings/ReferralPanel";
+import PublicDashboardLinks from "@/components/dashboard/PublicDashboardLinks";
 import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPanel";
 import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import { useToast } from "@/hooks/use-toast";
@@ -718,6 +719,7 @@ const SettingsPage = () => {
           {activeTab === "referral" && (
             <div className="space-y-6">
               <ReferralPanel />
+              <PublicDashboardLinks />
             </div>
           )}
 
