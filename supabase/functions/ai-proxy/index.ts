@@ -288,8 +288,16 @@ serve(async (req) => {
   try {
     const userId = await extractUserIdFromAuth(req);
 
+    // Require authentication — block unauthenticated callers
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Server-side rate limiting
-    if (userId && !checkRateLimit(userId)) {
+    if (!checkRateLimit(userId)) {
       return new Response(
         JSON.stringify({ error: "Rate limit erreicht. Bitte warte eine Minute." }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
