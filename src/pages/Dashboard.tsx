@@ -53,6 +53,7 @@ import AnomalyCards from "@/components/shared/AnomalyCards";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
 import DeadDecisionDetector from "@/components/dashboard/DeadDecisionDetector";
+import RoiProofWidget from "@/components/dashboard/RoiProofWidget";
 import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 
 type DashboardMode = "operational" | "executive" | "admin";
