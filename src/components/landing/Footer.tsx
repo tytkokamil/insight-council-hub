@@ -99,13 +99,13 @@ const Footer = () => (
 
       {/* Bottom bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/20 gap-3">
-        <p className="text-[11px] text-muted-foreground/35">
+        <p className="text-[11px] text-muted-foreground/60">
           © {new Date().getFullYear()} Decivio · Made with precision in Germany 🇩🇪
         </p>
         <div className="flex items-center gap-6">
-          <Link to="/privacy" className="text-[11px] text-muted-foreground/35 hover:text-foreground transition-colors">Datenschutz</Link>
-          <Link to="/imprint" className="text-[11px] text-muted-foreground/35 hover:text-foreground transition-colors">Impressum</Link>
-          <Link to="/terms" className="text-[11px] text-muted-foreground/35 hover:text-foreground transition-colors">AGB</Link>
+          <Link to="/privacy" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">Datenschutz</Link>
+          <Link to="/imprint" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">Impressum</Link>
+          <Link to="/terms" className="text-[11px] text-muted-foreground/60 hover:text-foreground transition-colors">AGB</Link>
         </div>
       </div>
     </div>
