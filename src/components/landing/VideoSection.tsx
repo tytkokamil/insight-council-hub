@@ -24,9 +24,8 @@ const VideoSection = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <div
-            className="relative rounded-2xl border border-border/40 overflow-hidden group cursor-pointer bg-card"
+            className="relative rounded-2xl border border-border/40 overflow-hidden group cursor-pointer bg-card shadow-elevated"
             onClick={togglePlay}
-            style={{ boxShadow: '0 8px 40px -12px hsl(220 25% 50% / 0.1)' }}
           >
             <video
               ref={videoRef}
@@ -38,12 +37,11 @@ const VideoSection = () => {
               className="w-full aspect-video object-cover"
             />
             <div
-              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 bg-foreground/[0.06] ${
                 playing ? "opacity-0 group-hover:opacity-100" : "opacity-100"
               }`}
-              style={{ background: 'hsl(220 20% 10% / 0.08)' }}
             >
-              <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <div className="w-14 h-14 rounded-full bg-card/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
                 {playing ? (
                   <Pause className="w-5 h-5 text-foreground" />
                 ) : (
