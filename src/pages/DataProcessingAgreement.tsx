@@ -20,19 +20,26 @@ const DataProcessingAgreement = () => (
         </div>
 
         <div className="prose prose-sm dark:prose-invert max-w-none space-y-6 text-muted-foreground">
-          <p className="text-sm font-medium text-foreground">gemäß Art. 28 Datenschutz-Grundverordnung (DSGVO)</p>
-          <p className="text-xs">Gilt für alle Decivio-Pläne (Starter, Professional, Enterprise)</p>
+          <p className="text-sm font-medium text-foreground">Gemäß Art. 28 DSGVO (AVV / DPA)</p>
+          <p className="text-xs">Stand: März 2026 · Version 1.0</p>
 
+          {/* Präambel */}
           <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 1 Gegenstand und Dauer</h2>
-            <p>(1) Dieser Auftragsverarbeitungsvertrag (nachfolgend "AVV") regelt die Rechte und Pflichten des Auftraggebers als Verantwortlicher und des Auftragnehmers als Auftragsverarbeiter im Sinne des Art. 28 DSGVO.</p>
-            <p>(2) Gegenstand der Auftragsverarbeitung ist die Bereitstellung der Software-as-a-Service-Lösung "Decivio" — eine Decision Management Platform — gemäß dem zwischen den Parteien geschlossenen Hauptvertrag (Nutzungsvertrag / Subscription Agreement).</p>
-            <p>(3) Dieser AVV gilt für die Dauer des Hauptvertrags. Er endet automatisch mit dem Ende des Hauptvertrags, unbeschadet etwaiger Pflichten zur Datenlöschung oder -rückgabe.</p>
+            <h2 className="text-foreground text-lg font-semibold">Präambel</h2>
+            <p>Der Auftraggeber (nachfolgend "Verantwortlicher") nutzt die Dienstleistungen des Auftragnehmers (nachfolgend "Auftragsverarbeiter"). Im Rahmen dieser Dienstleistungen verarbeitet der Auftragsverarbeiter im Auftrag des Verantwortlichen personenbezogene Daten. Die Parteien schließen daher diesen Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO.</p>
           </section>
 
+          {/* § 1 */}
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">§ 1 Gegenstand und Dauer der Auftragsverarbeitung</h2>
+            <p>(1) Gegenstand: Der Auftragsverarbeiter erbringt für den Verantwortlichen die in den AGB beschriebenen Leistungen (Betrieb der Decivio-Plattform).</p>
+            <p>(2) Dauer: Die Auftragsverarbeitung beginnt mit dem Inkrafttreten des Hauptvertrages und endet mit dessen Beendigung.</p>
+          </section>
+
+          {/* § 2 */}
           <section>
             <h2 className="text-foreground text-lg font-semibold">§ 2 Art und Zweck der Verarbeitung</h2>
-            <p>(1) Der Auftragnehmer verarbeitet personenbezogene Daten ausschließlich im Rahmen der Bereitstellung der Decivio-Plattform und auf dokumentierte Weisung des Auftraggebers.</p>
+            <p>Der Auftragsverarbeiter verarbeitet personenbezogene Daten ausschließlich im Rahmen der Bereitstellung der Decivio-Plattform und auf dokumentierte Weisung des Verantwortlichen.</p>
 
             <h3 className="text-foreground text-base font-semibold mt-4">Art der verarbeiteten Daten</h3>
             <ul className="list-disc pl-5 space-y-1">
@@ -53,96 +60,136 @@ const DataProcessingAgreement = () => (
             <p>Bereitstellung der Decivio-Plattform inklusive aller Funktionen (Dashboard, Entscheidungsmanagement, Task-Verwaltung, Analysen, KI-gestützte Auswertungen) sowie technischer Support und Betrieb der Infrastruktur.</p>
           </section>
 
+          {/* § 3 */}
           <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 3 Pflichten des Auftragnehmers</h2>
-            <p>(1) Der Auftragnehmer verarbeitet personenbezogene Daten ausschließlich auf dokumentierte Weisung des Auftraggebers, es sei denn, er ist nach dem Recht der Europäischen Union oder der Mitgliedstaaten, dem er unterliegt, zur Verarbeitung verpflichtet.</p>
-            <p>(2) Der Auftragnehmer stellt sicher, dass sich die zur Verarbeitung personenbezogener Daten befugten Personen zur Vertraulichkeit verpflichtet haben oder einer angemessenen gesetzlichen Verschwiegenheitspflicht unterliegen.</p>
-            <p>(3) Der Auftragnehmer ergreift alle erforderlichen Maßnahmen gemäß Art. 32 DSGVO. Dies umfasst insbesondere:</p>
+            <h2 className="text-foreground text-lg font-semibold">§ 3 Pflichten des Auftragsverarbeiters</h2>
+            <p>Der Auftragsverarbeiter verpflichtet sich gegenüber dem Verantwortlichen:</p>
+            <ol className="list-decimal pl-5 space-y-2">
+              <li>Daten ausschließlich auf dokumentierte Weisung des Verantwortlichen zu verarbeiten;</li>
+              <li>Sicherzustellen, dass die zur Verarbeitung befugten Personen zur Vertraulichkeit verpflichtet sind oder einer angemessenen gesetzlichen Verschwiegenheitspflicht unterliegen;</li>
+              <li>Alle erforderlichen Maßnahmen gemäß Art. 32 DSGVO zur Sicherheit der Verarbeitung zu ergreifen;</li>
+              <li>Die in § 4 genannten Bedingungen für die Inanspruchnahme von Unterauftragsverarbeitern einzuhalten;</li>
+              <li>Unter Berücksichtigung der Art der Verarbeitung den Verantwortlichen so weit wie möglich dabei zu unterstützen, seiner Pflicht zur Beantwortung von Anträgen auf Wahrnehmung der Rechte betroffener Personen nachzukommen;</li>
+              <li>Den Verantwortlichen unter Berücksichtigung der Art der Verarbeitung und der ihm zur Verfügung stehenden Informationen bei der Einhaltung der Pflichten gemäß Art. 32-36 DSGVO zu unterstützen;</li>
+              <li>Nach Beendigung der Verarbeitungsleistungen alle personenbezogenen Daten zu löschen oder zurückzugeben und bestehende Kopien zu löschen, sofern nicht eine Verpflichtung zur Speicherung nach Unionsrecht oder dem Recht der Mitgliedstaaten besteht;</li>
+              <li>Dem Verantwortlichen alle erforderlichen Informationen zum Nachweis der Einhaltung der in Art. 28 DSGVO niedergelegten Pflichten zur Verfügung zu stellen und Überprüfungen durch den Verantwortlichen zu ermöglichen.</li>
+            </ol>
+          </section>
+
+          {/* § 4 */}
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">§ 4 Unterauftragsverarbeiter</h2>
+            <p>(1) Folgende Unterauftragsverarbeiter werden vom Auftragsverarbeiter eingesetzt:</p>
+            <div className="overflow-x-auto my-4">
+              <table className="min-w-full text-sm border border-border">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="text-left px-3 py-2 border-b border-border font-medium text-foreground">Unterauftragsverarbeiter</th>
+                    <th className="text-left px-3 py-2 border-b border-border font-medium text-foreground">Sitz</th>
+                    <th className="text-left px-3 py-2 border-b border-border font-medium text-foreground">Zweck</th>
+                    <th className="text-left px-3 py-2 border-b border-border font-medium text-foreground">Rechtsgrundlage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Supabase Inc.</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Datenbankinfrastruktur, Authentifizierung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Stripe Inc.</td><td className="px-3 py-2 border-b border-border/50">USA (EU-Entity vorhanden)</td><td className="px-3 py-2 border-b border-border/50">Zahlungsabwicklung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Resend Inc.</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Transaktionale E-Mail-Zustellung</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Anthropic PBC</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">KI-Verarbeitung (anonymisiert)</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2">Vercel Inc.</td><td className="px-3 py-2">USA (EU PoP)</td><td className="px-3 py-2">Frontend-Hosting, CDN</td><td className="px-3 py-2">Art. 28 DSGVO, SCCs</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>(2) Der Auftragsverarbeiter informiert den Verantwortlichen über geplante Änderungen hinsichtlich der Hinzuziehung oder Ersetzung von Unterauftragsverarbeitern. Der Verantwortliche hat das Recht, gegen solche Änderungen Einspruch zu erheben. Der Einspruch muss schriftlich innerhalb von 14 Tagen nach der Mitteilung erfolgen.</p>
+          </section>
+
+          {/* § 5 */}
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">§ 5 Weisungsrecht</h2>
+            <p>(1) Der Verantwortliche erteilt seine Weisungen zur Datenverarbeitung in der Regel durch die Nutzung der Plattform gemäß dem Vertrag. Darüber hinaus kann der Verantwortliche jederzeit schriftliche Weisungen per E-Mail an hallo@decivio.com erteilen.</p>
+            <p>(2) Der Auftragsverarbeiter informiert den Verantwortlichen unverzüglich, wenn eine Weisung nach seiner Einschätzung gegen datenschutzrechtliche Vorschriften verstößt.</p>
+          </section>
+
+          {/* § 6 */}
+          <section>
+            <h2 className="text-foreground text-lg font-semibold">§ 6 Technische und organisatorische Maßnahmen (TOM)</h2>
+            <p>Der Auftragsverarbeiter hat folgende technische und organisatorische Maßnahmen zur Sicherheit der Verarbeitung implementiert:</p>
+
+            <h3 className="text-foreground text-base font-semibold mt-4">Zutrittskontrolle</h3>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Verschlüsselung der Daten bei der Übertragung (TLS/HTTPS) und im Ruhezustand (AES-256)</li>
-              <li>Pseudonymisierung wo technisch sinnvoll und möglich</li>
-              <li>Maßnahmen zur Sicherstellung der dauerhaften Vertraulichkeit, Integrität und Verfügbarkeit</li>
-              <li>Row-Level Security (RLS) zur mandantengetrennten Datenhaltung</li>
-              <li>Multi-Faktor-Authentifizierung (MFA) als Option für alle Nutzer</li>
-              <li>Regelmäßige Datensicherungen</li>
-              <li>Zugriffsprotokollierung über den vollständigen Audit Trail</li>
+              <li>Keine physischen Serverräume (Cloud-Infrastruktur bei zertifizierten Rechenzentren)</li>
+              <li>Zugang zu Verwaltungstools nur für berechtigte Administratoren</li>
             </ul>
-            <p>(4) Der Auftragnehmer unterstützt den Auftraggeber bei der Einhaltung der in den Art. 32 bis 36 DSGVO genannten Pflichten.</p>
-            <p>(5) Der Auftragnehmer löscht nach Wahl des Auftraggebers alle personenbezogenen Daten nach Abschluss der Erbringung der Verarbeitungsleistungen oder gibt sie zurück, sofern nicht nach dem Unionsrecht oder dem Recht der Mitgliedstaaten eine Verpflichtung zur Speicherung besteht.</p>
-          </section>
 
-          <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 4 Weisungsrecht des Auftraggebers</h2>
-            <p>(1) Der Auftraggeber hat das Recht, dem Auftragnehmer Weisungen bezüglich der Verarbeitung personenbezogener Daten zu erteilen. Weisungen sind schriftlich (einschließlich E-Mail) zu erteilen.</p>
-            <p>(2) Hält der Auftragnehmer eine Weisung für rechtswidrig, teilt er dies dem Auftraggeber unverzüglich mit. Er ist berechtigt, die Ausführung der entsprechenden Weisung auszusetzen, bis der Auftraggeber die Weisung bestätigt oder ändert.</p>
-          </section>
-
-          <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 5 Unterauftragsverarbeiter (Sub-Processor)</h2>
-            <p>(1) Der Auftragnehmer ist berechtigt, Unterauftragsverarbeiter einzusetzen. Er informiert den Auftraggeber über beabsichtigte Änderungen hinsichtlich der Hinzuziehung oder des Austauschs von Unterauftragsverarbeitern, wobei dem Auftraggeber die Möglichkeit gegeben wird, diesen Änderungen zu widersprechen.</p>
-            <p>(2) Die zum Zeitpunkt des Vertragsschlusses eingesetzten Unterauftragsverarbeiter sind in der <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> aufgeführt und vom Auftraggeber genehmigt.</p>
-            <p>(3) Der Auftragnehmer schließt mit jedem Unterauftragsverarbeiter einen Vertrag, der diesem die gleichen Datenschutzpflichten auferlegt wie dieser AVV dem Auftragnehmer.</p>
-          </section>
-
-          <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 6 KI-Verarbeitung — Besondere Regelungen</h2>
-            <p>(1) Die Decivio-Plattform bietet optionale KI-gestützte Funktionen (nachfolgend "KI-Features"), die den Einsatz externer KI-Dienste von Drittanbietern erfordern. Eine vollständige Liste der eingesetzten KI-Dienste ist in der <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> enthalten.</p>
-            <p>(2) Die Nutzung der KI-Features durch den Auftraggeber gilt als ausdrückliche Einwilligung zur Übermittlung der für die jeweilige Funktion erforderlichen Daten an die genannten KI-Drittanbieter. Der Auftraggeber kann KI-Features in den Einstellungen deaktivieren.</p>
-            <p>(3) Der Auftragnehmer stellt sicher, dass:</p>
+            <h3 className="text-foreground text-base font-semibold mt-4">Zugangskontrolle</h3>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Nur die für die jeweilige KI-Funktion notwendigen Daten übermittelt werden (Datensparsamkeit)</li>
-              <li>Die Übermittlung auf Basis der Standardvertragsklauseln (SCCs) der EU-Kommission erfolgt</li>
-              <li>Die KI-Drittanbieter vertraglich verpflichtet sind, die Daten nicht für das Training ihrer Modelle zu verwenden</li>
-              <li>Keine besonderen Kategorien personenbezogener Daten gemäß Art. 9 DSGVO an KI-Dienste übermittelt werden</li>
+              <li>Authentifizierung via Supabase Auth (E-Mail + Passwort / OAuth)</li>
+              <li>Optionale Zwei-Faktor-Authentifizierung für Nutzer</li>
+              <li>Automatischer Session-Timeout</li>
             </ul>
-            <p>(4) Der Auftragnehmer empfiehlt dem Auftraggeber, keine besonders sensiblen Informationen (z.B. personenbezogene Gesundheitsdaten, politische Meinungen) in Entscheidungsbeschreibungen zu erfassen, die für KI-Analysen genutzt werden.</p>
-            <p>Weitere Details finden Sie in unserer <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link>.</p>
-          </section>
 
-          <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 7 Rechte betroffener Personen</h2>
-            <p>(1) Der Auftragnehmer unterstützt den Auftraggeber soweit möglich durch geeignete technische und organisatorische Maßnahmen dabei, seiner Pflicht zur Beantwortung von Anfragen betroffener Personen zur Wahrnehmung ihrer Rechte gemäß Kapitel III DSGVO nachzukommen.</p>
-            <p>(2) Soweit betroffene Personen ihre Rechte (Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch) direkt beim Auftragnehmer geltend machen, leitet dieser die Anfragen unverzüglich an den Auftraggeber weiter.</p>
-            <p>(3) Der Auftragnehmer stellt technische Mittel bereit, die dem Auftraggeber die Wahrnehmung seiner Pflichten ermöglichen, insbesondere den vollständigen Daten-Export (JSON) sowie die Datenlöschung über die Plattform-Einstellungen.</p>
-          </section>
-
-          <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 8 Meldung von Datenschutzverletzungen</h2>
-            <p>(1) Der Auftragnehmer meldet dem Auftraggeber Verletzungen des Schutzes personenbezogener Daten unverzüglich, spätestens jedoch innerhalb von 48 Stunden nach Bekanntwerden.</p>
-            <p>(2) Die Meldung enthält mindestens:</p>
+            <h3 className="text-foreground text-base font-semibold mt-4">Zugriffskontrolle</h3>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Art der Verletzung und betroffene Datenkategorien</li>
-              <li>Ungefähre Anzahl betroffener Personen und Datensätze</li>
-              <li>Wahrscheinliche Folgen der Verletzung</li>
-              <li>Ergriffene oder vorgeschlagene Maßnahmen</li>
-              <li>Kontaktdaten des Datenschutzbeauftragten oder Ansprechpartners</li>
+              <li>Row-Level Security (RLS) auf Datenbankebene — jeder Nutzer sieht nur Daten seiner Organisation</li>
+              <li>Rollen-basiertes Berechtigungskonzept (Owner, Admin, Executive, Team Lead, Member, Viewer)</li>
+              <li>Protokollierung aller privilegierten Zugriffe im Audit Trail</li>
             </ul>
-            <p>(3) Meldungen erfolgen per E-Mail an die vom Auftraggeber benannte Kontaktadresse sowie über das Decivio-Support-System.</p>
+
+            <h3 className="text-foreground text-base font-semibold mt-4">Trennungskontrolle</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Mandantentrennung auf Datenbankebene via org_id und RLS</li>
+              <li>Keine Vermischung von Kundendaten verschiedener Organisationen</li>
+            </ul>
+
+            <h3 className="text-foreground text-base font-semibold mt-4">Integrität</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Kryptographischer Audit Trail mit SHA-256 Hash-Kette (unveränderliche Protokollierung)</li>
+              <li>HTTPS/TLS für alle Datenübertragungen</li>
+              <li>Datenbankintegrität via Foreign Key Constraints und Check Constraints</li>
+            </ul>
+
+            <h3 className="text-foreground text-base font-semibold mt-4">Verfügbarkeit</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Automatische tägliche Backups mit 7-Tage-Retention</li>
+              <li>Redundante Cloud-Infrastruktur über Supabase (AWS Frankfurt)</li>
+            </ul>
+
+            <h3 className="text-foreground text-base font-semibold mt-4">Wiederherstellung</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Backup-Restore innerhalb von 4 Stunden (Supabase Standard)</li>
+              <li>Point-in-Time-Recovery über Supabase Pro-Features</li>
+            </ul>
           </section>
 
+          {/* § 7 */}
           <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 9 Kontrollrechte des Auftraggebers</h2>
-            <p>(1) Der Auftraggeber hat das Recht, die Einhaltung der Vorschriften über den Datenschutz und die vertraglichen Vereinbarungen beim Auftragnehmer zu kontrollieren.</p>
-            <p>(2) Der Auftragnehmer stellt dem Auftraggeber auf Anfrage alle erforderlichen Informationen zum Nachweis der Einhaltung der in Art. 28 DSGVO niedergelegten Pflichten zur Verfügung.</p>
-            <p>(3) Der Auftragnehmer ist berechtigt, anstelle einer direkten Prüfung durch den Auftraggeber, einen Nachweis durch Vorlage eines aktuellen Prüfberichts eines unabhängigen sachkundigen Prüfers zu erbringen.</p>
+            <h2 className="text-foreground text-lg font-semibold">§ 7 Meldepflichten bei Datenpannen</h2>
+            <p>(1) Der Auftragsverarbeiter unterrichtet den Verantwortlichen unverzüglich und nach Möglichkeit innerhalb von 24 Stunden, nachdem ihm eine Verletzung des Schutzes personenbezogener Daten bekannt geworden ist.</p>
           </section>
 
+          {/* § 8 */}
           <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 10 Datenlöschung und -rückgabe</h2>
-            <p>(1) Nach Beendigung des Hauptvertrags löscht der Auftragnehmer alle personenbezogenen Daten des Auftraggebers innerhalb von 30 Tagen, sofern keine gesetzliche Aufbewahrungspflicht besteht.</p>
-            <p>(2) Auf Anfrage stellt der Auftragnehmer vor der Löschung einen vollständigen Datenexport im JSON-Format bereit. Diese Möglichkeit besteht für 30 Tage nach Vertragsende.</p>
-            <p>(3) Die erfolgte Löschung wird dem Auftraggeber schriftlich bestätigt.</p>
+            <h2 className="text-foreground text-lg font-semibold">§ 8 Löschung und Rückgabe</h2>
+            <p>(1) Nach Beendigung des Hauptvertrages stellt der Auftragsverarbeiter dem Verantwortlichen für 30 Tage eine Exportfunktion zur Verfügung, mit der alle Inhaltsdaten heruntergeladen werden können.</p>
+            <p>(2) Nach Ablauf der 30-tägigen Exportperiode werden alle personenbezogenen Daten des Verantwortlichen aus den Systemen des Auftragsverarbeiters gelöscht. Eine Bestätigung der Löschung wird auf Anfrage ausgestellt.</p>
+            <p>(3) Von der Löschverpflichtung ausgenommen sind Daten, für die gesetzliche Aufbewahrungspflichten bestehen (insbesondere steuerrelevante Daten für 10 Jahre gemäß § 147 AO).</p>
           </section>
 
+          {/* § 9 */}
           <section>
-            <h2 className="text-foreground text-lg font-semibold">§ 11 Schlussbestimmungen</h2>
-            <p>(1) Sollten einzelne Bestimmungen dieses AVV unwirksam sein oder werden, berührt dies die Gültigkeit des AVV im Übrigen nicht.</p>
-            <p>(2) Änderungen und Ergänzungen dieses AVV bedürfen der Schriftform.</p>
-            <p>(3) Es gilt das Recht der Bundesrepublik Deutschland.</p>
+            <h2 className="text-foreground text-lg font-semibold">§ 9 Schlussbestimmungen</h2>
+            <p>(1) Für diesen AVV gilt deutsches Recht.</p>
+            <p>(2) Bei Widersprüchen zwischen diesem AVV und den AGB haben im Hinblick auf datenschutzrechtliche Fragen die Bestimmungen dieses AVV Vorrang.</p>
+            <p>(3) Dieser AVV wird durch die Annahme der AGB bei der Registrierung oder dem Upgrade auf einen kostenpflichtigen Tarif geschlossen. Einer gesonderten Unterschrift bedarf es nicht.</p>
           </section>
 
           <section className="mt-8 pt-6 border-t border-border">
-            <p className="text-xs text-muted-foreground/60">Verwandte Dokumente: <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> · <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> · <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link> · <Link to="/terms" className="text-primary hover:underline">AGB</Link></p>
+            <p className="text-xs text-muted-foreground/60">
+              Verwandte Dokumente:{" "}
+              <Link to="/ai-policy" className="text-primary hover:underline">KI-Datenverarbeitungsrichtlinie</Link> ·{" "}
+              <Link to="/sub-processors" className="text-primary hover:underline">Sub-Processor Liste</Link> ·{" "}
+              <Link to="/privacy" className="text-primary hover:underline">Datenschutzerklärung</Link> ·{" "}
+              <Link to="/terms" className="text-primary hover:underline">AGB</Link>
+            </p>
           </section>
         </div>
       </div>
