@@ -36,7 +36,16 @@ const SOURCE_CONFIG: Record<AiSourceType, { icon: typeof BarChart3; labelKey: st
   llm: { icon: Brain, labelKey: "shared.aiSourceLlm", descKey: "shared.aiSourceLlmDesc" },
 };
 
-const AiExplainabilityBadge = ({ confidence, factors, dataPoints, sourceType, explanation, className = "" }: AiExplainabilityBadgeProps) => {
+const MODEL_LABELS: Record<string, string> = {
+  "google/gemini-2.5-pro": "Gemini 2.5 Pro",
+  "google/gemini-2.5-flash": "Gemini 2.5 Flash",
+  "google/gemini-3-flash-preview": "Gemini 3 Flash",
+  "google/gemini-2.5-flash-lite": "Gemini 2.5 Flash Lite",
+  "openai/gpt-5": "GPT-5",
+  "openai/gpt-5-mini": "GPT-5 Mini",
+};
+
+const AiExplainabilityBadge = ({ confidence, factors, dataPoints, sourceType, explanation, modelUsed, className = "" }: AiExplainabilityBadgeProps) => {
   const { t } = useTranslation();
 
   const level = getLevel(confidence);

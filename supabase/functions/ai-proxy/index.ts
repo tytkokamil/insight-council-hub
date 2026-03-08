@@ -255,7 +255,8 @@ export async function callAI(
   messages: any[],
   tools?: any[],
   toolChoice?: any,
-): Promise<{ data: any; response: Response | null }> {
+  taskType?: string,
+): Promise<{ data: any; response: Response | null; modelUsed?: string }> {
   const userId = await extractUserIdFromAuth(req);
   const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
@@ -264,6 +265,7 @@ export async function callAI(
   const apiKey = settings.api_key || "";
 
   let response: Response;
+  let modelUsed = model;
 
   switch (provider) {
     case "openai":
@@ -278,8 +280,12 @@ export async function callAI(
       if (!apiKey) throw new Error("Google API-Key nicht konfiguriert. Bitte in Settings eingeben.");
       response = await callGoogle(apiKey, model, messages, tools, toolChoice);
       break;
-    default:
-      response = await callLovableGateway(messages, tools, toolChoice);
+    default: {
+      // Get org model preference
+      const orgPref = userId ? await getOrgModelPreference(userId) : "auto";
+      const result = await callLovableGateway(messages, tools, toolChoice, orgPref, taskType);
+      response = result.response;
+      modelUsed = result.modelUsed;
       if (response.status === 429) {
         return {
           data: null,
@@ -297,10 +303,15 @@ export async function callAI(
         };
       }
       break;
+    }
   }
 
   const data = await normalizeResponse(provider, response);
-  return { data, response: null };
+  // Attach model info to response data
+  if (data && typeof data === "object") {
+    data._model_used = modelUsed;
+  }
+  return { data, response: null, modelUsed };
 }
 
 // Simple in-memory rate limiter
