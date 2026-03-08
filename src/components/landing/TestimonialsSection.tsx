@@ -24,7 +24,8 @@ const testimonials = [
     initials: "SK",
     metric: "0",
     metricLabel: "Audit-Nachbesserungen",
-    accentColor: "hsl(160 40% 45%)",
+    accentClass: "text-accent-teal",
+    accentBg: "bg-accent-teal/12",
   },
   {
     quote: "Der KI Daily Brief ist das erste was ich morgens öffne. In 30 Sekunden weiß ich was heute kritisch ist.",
