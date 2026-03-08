@@ -21,8 +21,8 @@ const LogoBar = () => (
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease }}
       >
-        <p className="text-center text-[10px] text-muted-foreground/40 uppercase tracking-[0.2em] mb-6 font-medium">
-          Vertraut von über <span className="text-muted-foreground/60 font-semibold">120+</span> Unternehmen aus dem Mittelstand
+        <p className="text-center text-[10px] text-muted-foreground/70 uppercase tracking-[0.2em] mb-6 font-medium">
+          Vertraut von über <span className="text-muted-foreground font-semibold">120+</span> Unternehmen aus dem Mittelstand
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
           {logos.map((logo, i) => (
