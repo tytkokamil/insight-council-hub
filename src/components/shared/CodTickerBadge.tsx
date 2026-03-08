@@ -66,7 +66,7 @@ const CodTickerBadge = ({ collapsed }: CodTickerBadgeProps) => {
   const formatted = displayValue.toLocaleString("de-DE");
 
   const color = isAllDone
-    ? "text-emerald-500"
+    ? "text-success"
     : weeklyCod > 5000
       ? "text-destructive"
       : weeklyCod > 1000
