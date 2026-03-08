@@ -12,7 +12,7 @@ import {
   Download, Loader2, AlertTriangle, Trash2, Plus, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+// XLSX loaded dynamically to reduce bundle size (~1MB)
 import { useTranslation } from "react-i18next";
 
 interface ExtractedItem {
