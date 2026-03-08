@@ -93,29 +93,46 @@ Deno.serve(async (req) => {
       );
     }
 
-    // User doesn't exist — create invitation record
-    const { error: inviteError } = await supabase
-      .from("team_invitations")
-      .upsert(
-        { team_id: teamId, email, invited_by: user.id, status: "pending" },
-        { onConflict: "team_id,email" }
-      );
-
-    if (inviteError) throw inviteError;
+    // User doesn't exist — create invitation record if teamId provided
+    if (teamId) {
+      const { error: inviteError } = await supabase
+        .from("team_invitations")
+        .upsert(
+          { team_id: teamId, email, invited_by: user.id, status: "pending" },
+          { onConflict: "team_id,email" }
+        );
+      if (inviteError) throw inviteError;
+    }
 
     const APP_URL = Deno.env.get("APP_URL") || "https://app.decivio.com";
+
+    // Build contextual accept URL
+    const acceptParams = new URLSearchParams();
+    if (contextDecisionId) {
+      acceptParams.set("invite", "context");
+      acceptParams.set("decision", contextDecisionId);
+      acceptParams.set("from", inviterName);
+    }
+    const acceptUrl = acceptParams.toString()
+      ? `${APP_URL}/auth?${acceptParams.toString()}`
+      : `${APP_URL}/auth`;
 
     // Generate email template
     const { subject } = teamInviteEmail({
       inviterName,
       teamName: teamName || "ein Team",
-      acceptUrl: `${APP_URL}/auth`,
+      acceptUrl,
+      decisionTitle,
+      costPerDay: costPerDay || undefined,
     });
 
     // Send invite email via Supabase Auth
     const { error: signupError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { invited_to_team: teamName || "ein Team" },
-      redirectTo: `${APP_URL}/auth`,
+      data: {
+        invited_to_team: teamName || "ein Team",
+        ...(contextDecisionId && { context_decision_id: contextDecisionId }),
+      },
+      redirectTo: acceptUrl,
     });
 
     if (signupError) {
