@@ -515,7 +515,7 @@ const Analytics = ({ embedded, timeRange = "30" }: { embedded?: boolean; timeRan
                       ? Math.round(d.weekData.reduce((sum: number, w: any) => sum + (w[createdKey] || 0), 0) / d.weekData.length)
                       : 0;
                     return avgCreated > 0 ? (
-                      <Line type="monotone" dataKey={() => avgCreated} stroke="#94A3B8" strokeWidth={1} strokeDasharray="6 4" dot={false} name={t("analytics.breakeven", "Break-even")} />
+                      <Line type="monotone" dataKey={() => avgCreated} stroke="hsl(var(--muted-foreground))" strokeWidth={1} strokeDasharray="6 4" dot={false} name={t("analytics.breakeven", "Break-even")} />
                     ) : null;
                   })()}
                 </AreaChart>
