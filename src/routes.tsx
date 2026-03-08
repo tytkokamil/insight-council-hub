@@ -79,6 +79,7 @@ const AiDemo = lazy(() => import("./pages/AiDemo"));
 const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
 const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 const RoiReport = lazy(() => import("./pages/RoiReport"));
+const ApiDocsPage = lazy(() => import("./pages/ApiDocsPage"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
