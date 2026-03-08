@@ -1,240 +1,150 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Mail, Clock, AlertTriangle, FileX, ArrowRight, Zap, Shield, Bot, CheckCircle2 } from "lucide-react";
+import { Mail, Clock, AlertTriangle, FileX, ArrowRight, Zap, Bot, CheckCircle2, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const beforeSteps = [
-  {
-    icon: Mail,
-    title: "E-Mail an 5 Personen",
-    desc: "Entscheidung wird per E-Mail kommuniziert",
-    time: "Tag 1",
-    pain: "Kein Tracking, kein SLA",
-  },
-  {
-    icon: Clock,
-    title: "Warten auf Feedback",
-    desc: "2 von 5 antworten nach 3 Tagen",
-    time: "Tag 4",
-    pain: "€2.400 unsichtbare Kosten",
-  },
-  {
-    icon: AlertTriangle,
-    title: "Erinnerung per Chat",
-    desc: "Follow-up über Slack & Teams",
-    time: "Tag 7",
-    pain: "Kontext geht verloren",
-  },
-  {
-    icon: FileX,
-    title: "Audit? Keine Dokumentation",
-    desc: "Entscheidung irgendwo im Posteingang",
-    time: "Tag 12",
-    pain: "Compliance-Risiko",
-  },
+  { icon: Mail, title: "E-Mail an 5 Personen", time: "Tag 1", pain: "Kein Tracking" },
+  { icon: Clock, title: "Warten auf Feedback", time: "Tag 4", pain: "€2.400 verbrannt" },
+  { icon: AlertTriangle, title: "Follow-up per Chat", time: "Tag 7", pain: "Kontext verloren" },
+  { icon: FileX, title: "Audit? Keine Doku", time: "Tag 12", pain: "Compliance-Risiko" },
 ];
 
 const afterSteps = [
-  {
-    icon: Zap,
-    title: "Entscheidung angelegt",
-    desc: "Template gewählt, Reviewer zugewiesen",
-    time: "Minute 1",
-    win: "SLA startet automatisch",
-  },
-  {
-    icon: Bot,
-    title: "KI-Analyse & Briefing",
-    desc: "Risikoeinschätzung, Optionen, Empfehlung",
-    time: "Minute 2",
-    win: "Datenbasierte Grundlage",
-  },
-  {
-    icon: CheckCircle2,
-    title: "One-Click Approval",
-    desc: "Reviewer genehmigen direkt aus der E-Mail",
-    time: "Tag 1",
-    win: "73% schnellere Freigabe",
-  },
-  {
-    icon: Shield,
-    title: "Audit-ready dokumentiert",
-    desc: "SHA-256 Hash-Kette, lückenloser Trail",
-    time: "Automatisch",
-    win: "100% Compliance",
-  },
+  { icon: Zap, title: "Entscheidung angelegt", time: "Min 1", win: "SLA läuft" },
+  { icon: Bot, title: "KI-Analyse", time: "Min 2", win: "Datenbasiert" },
+  { icon: CheckCircle2, title: "One-Click Approval", time: "Tag 1", win: "73% schneller" },
+  { icon: Shield, title: "Audit-ready", time: "Auto", win: "100% dokumentiert" },
 ];
 
 const BeforeAfterTimeline = () => {
-  const [activeView, setActiveView] = useState<"before" | "after">("before");
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
-  const lineProgress = useTransform(scrollYProgress, [0.1, 0.6], [0, 1]);
-
-  const steps = activeView === "before" ? beforeSteps : afterSteps;
-  const isBefore = activeView === "before";
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const lineProgress = useTransform(scrollYProgress, [0.15, 0.65], [0, 1]);
 
   return (
-    <section ref={sectionRef} id="before-after" className="py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/10 to-transparent" />
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10">
+    <section ref={ref} id="before-after" className="py-24 relative overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease }}
-          className="text-center max-w-2xl mx-auto mb-12"
+          className="text-center max-w-2xl mx-auto mb-16"
         >
-          <p className="text-[11px] font-medium tracking-[0.2em] uppercase mb-4 text-primary">
-            Der Unterschied
-          </p>
+          <p className="text-[11px] font-medium tracking-[0.2em] uppercase mb-4 text-primary">Der Unterschied</p>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Eine Entscheidung. Zwei Realitäten.
           </h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Sehen Sie den Unterschied — Schritt für Schritt.
-          </p>
         </motion.div>
 
-        {/* Toggle */}
-        <div className="flex justify-center mb-14">
-          <div className="inline-flex rounded-xl border border-border/50 bg-card p-1 shadow-sm">
-            <button
-              onClick={() => setActiveView("before")}
-              className={`relative px-6 py-2.5 rounded-lg text-[13px] font-semibold transition-all duration-300 ${
-                isBefore
-                  ? "text-destructive"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {isBefore && (
-                <motion.div
-                  layoutId="timeline-toggle"
-                  className="absolute inset-0 rounded-lg bg-destructive/8 border border-destructive/20"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">❌ Ohne Decivio</span>
-            </button>
-            <button
-              onClick={() => setActiveView("after")}
-              className={`relative px-6 py-2.5 rounded-lg text-[13px] font-semibold transition-all duration-300 ${
-                !isBefore
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {!isBefore && (
-                <motion.div
-                  layoutId="timeline-toggle"
-                  className="absolute inset-0 rounded-lg bg-primary/8 border border-primary/20"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">✅ Mit Decivio</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="relative">
-          {/* Vertical line */}
-          <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px md:-translate-x-px">
-            <div className={`absolute inset-0 ${isBefore ? "bg-destructive/10" : "bg-primary/10"}`} />
+        {/* Side by side — no toggle, show the truth simultaneously */}
+        <div className="grid md:grid-cols-2 gap-6 md:gap-4">
+          {/* BEFORE column */}
+          <div>
             <motion.div
-              className={`absolute top-0 left-0 w-full origin-top ${isBefore ? "bg-destructive/30" : "bg-primary/30"}`}
-              style={{ scaleY: lineProgress }}
-            />
-          </div>
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-2 mb-6"
+            >
+              <div className="w-2 h-2 rounded-full bg-destructive/60" />
+              <span className="text-xs font-bold uppercase tracking-[0.15em] text-destructive/80">Ohne Decivio</span>
+            </motion.div>
 
-          <div className="space-y-6 md:space-y-0">
-            {steps.map((step, i) => {
-              const isLeft = i % 2 === 0;
-              return (
+            <div className="relative space-y-3">
+              {/* Vertical line */}
+              <div className="absolute left-[18px] top-2 bottom-2 w-px bg-destructive/10">
+                <motion.div className="absolute inset-x-0 top-0 bg-destructive/25 origin-top" style={{ scaleY: lineProgress }} />
+              </div>
+
+              {beforeSteps.map((step, i) => (
                 <motion.div
-                  key={`${activeView}-${i}`}
-                  initial={{ opacity: 0, y: 24, x: isLeft ? -20 : 20 }}
-                  whileInView={{ opacity: 1, y: 0, x: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ delay: i * 0.1, duration: 0.6, ease }}
-                  className={`relative md:flex md:items-center md:gap-8 pl-20 md:pl-0 pb-8 md:pb-16 ${
-                    isLeft ? "md:flex-row" : "md:flex-row-reverse"
-                  }`}
+                  key={i}
+                  initial={{ opacity: 0, x: -12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08, duration: 0.5, ease }}
+                  className="relative flex items-start gap-4 pl-10"
                 >
-                  {/* Content card */}
-                  <div className={`flex-1 ${isLeft ? "md:text-right" : "md:text-left"}`}>
-                    <motion.div
-                      whileHover={{ y: -4, scale: 1.01 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                      className={`inline-block p-5 rounded-2xl border transition-all duration-300 ${
-                        isBefore
-                          ? "border-destructive/15 bg-card hover:border-destructive/30 hover:shadow-[0_8px_30px_-12px_hsl(0_60%_50%/0.1)]"
-                          : "border-primary/15 bg-card hover:border-primary/30 hover:shadow-[0_8px_30px_-12px_hsl(220_50%_50%/0.1)]"
-                      }`}
-                    >
-                      <div className={`flex items-center gap-2 mb-2 ${isLeft ? "md:justify-end" : ""}`}>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isBefore ? "bg-destructive/8 text-destructive" : "bg-primary/8 text-primary"
-                        }`}>
-                          {step.time}
-                        </span>
-                      </div>
-                      <h3 className="text-[15px] font-semibold mb-1 text-foreground">{step.title}</h3>
-                      <p className="text-[13px] text-muted-foreground mb-2">{step.desc}</p>
-                      <p className={`text-[11px] font-medium ${
-                        isBefore ? "text-destructive/70" : "text-primary/80"
-                      }`}>
-                        {isBefore ? `⚠ ${(step as typeof beforeSteps[0]).pain}` : `✓ ${(step as typeof afterSteps[0]).win}`}
-                      </p>
-                    </motion.div>
+                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-destructive/20 bg-card flex items-center justify-center">
+                    <step.icon className="w-3.5 h-3.5 text-destructive/70" />
                   </div>
-
-                  {/* Center node */}
-                  <div className="absolute left-8 md:left-1/2 top-5 md:top-1/2 -translate-x-1/2 md:-translate-y-1/2 z-10">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 + 0.2, type: "spring", stiffness: 300, damping: 15 }}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                        isBefore
-                          ? "border-destructive/30 bg-card text-destructive"
-                          : "border-primary/30 bg-card text-primary"
-                      }`}
-                    >
-                      <step.icon className="w-4 h-4" />
-                    </motion.div>
+                  <div className="flex-1 p-4 rounded-xl border border-destructive/10 bg-card/80">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-[13px] font-semibold">{step.title}</h3>
+                      <span className="text-[10px] font-mono font-bold text-destructive/60">{step.time}</span>
+                    </div>
+                    <p className="text-[11px] text-destructive/60">⚠ {step.pain}</p>
                   </div>
-
-                  {/* Spacer for other side */}
-                  <div className="flex-1 hidden md:block" />
                 </motion.div>
-              );
-            })}
+              ))}
+
+              {/* Result */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="ml-10 mt-4 px-4 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.04]"
+              >
+                <span className="text-[12px] font-bold text-destructive">12 Tage · €4.800 verloren · 0% Doku</span>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Result badge */}
-          <motion.div
-            key={activeView}
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-            className="relative flex justify-center mt-4"
-          >
-            <div className={`px-6 py-3 rounded-2xl border shadow-sm ${
-              isBefore
-                ? "border-destructive/20 bg-destructive/5"
-                : "border-primary/20 bg-primary/5"
-            }`}>
-              <span className={`text-sm font-bold ${isBefore ? "text-destructive" : "text-primary"}`}>
-                {isBefore ? "12 Tage · €4.800 verloren · 0% Dokumentation" : "1 Tag · €0 Verzögerungskosten · 100% Audit-ready"}
-              </span>
+          {/* AFTER column */}
+          <div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-2 mb-6"
+            >
+              <div className="w-2 h-2 rounded-full bg-primary/60" />
+              <span className="text-xs font-bold uppercase tracking-[0.15em] text-primary/80">Mit Decivio</span>
+            </motion.div>
+
+            <div className="relative space-y-3">
+              <div className="absolute left-[18px] top-2 bottom-2 w-px bg-primary/10">
+                <motion.div className="absolute inset-x-0 top-0 bg-primary/25 origin-top" style={{ scaleY: lineProgress }} />
+              </div>
+
+              {afterSteps.map((step, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: 12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 + 0.1, duration: 0.5, ease }}
+                  className="relative flex items-start gap-4 pl-10"
+                >
+                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-primary/20 bg-card flex items-center justify-center">
+                    <step.icon className="w-3.5 h-3.5 text-primary/70" />
+                  </div>
+                  <div className="flex-1 p-4 rounded-xl border border-primary/10 bg-card/80">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-[13px] font-semibold">{step.title}</h3>
+                      <span className="text-[10px] font-mono font-bold text-primary/60">{step.time}</span>
+                    </div>
+                    <p className="text-[11px] text-primary/70">✓ {step.win}</p>
+                  </div>
+                </motion.div>
+              ))}
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                className="ml-10 mt-4 px-4 py-3 rounded-xl border border-primary/15 bg-primary/[0.04]"
+              >
+                <span className="text-[12px] font-bold text-primary">1 Tag · €0 Kosten · 100% Audit-ready</span>
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* CTA */}
@@ -243,7 +153,7 @@ const BeforeAfterTimeline = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.6, duration: 0.6 }}
-          className="text-center mt-12"
+          className="text-center mt-14"
         >
           <Link
             to="/auth"
