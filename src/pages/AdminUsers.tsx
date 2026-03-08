@@ -613,8 +613,14 @@ const ResetDataButton = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="gap-2">Abbrechen</AlertDialogCancel>
-            <AlertDialogAction className="bg-transparent border border-destructive text-destructive hover:bg-destructive/10" onClick={() => {
-              toast.success("Daten-Reset angefordert");
+            <AlertDialogAction className="bg-transparent border border-destructive text-destructive hover:bg-destructive/10" onClick={async () => {
+              try {
+                const { error } = await supabase.functions.invoke("reset-user-data");
+                if (error) throw error;
+                toast.success("Daten-Reset erfolgreich");
+              } catch (err: any) {
+                toast.error("Reset fehlgeschlagen: " + (err.message || "Unbekannter Fehler"));
+              }
               setShowConfirm(false);
             }}>
               Trotzdem löschen
@@ -623,6 +629,145 @@ const ResetDataButton = () => {
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+};
+
+const DeleteOrgButton = () => {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const { signOut } = useAuth();
+
+  return (
+    <>
+      <div className="space-y-3">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">Tippe "LÖSCHEN" zur Bestätigung:</label>
+          <input
+            type="text"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="LÖSCHEN"
+            className="w-full max-w-xs h-8 px-3 rounded-md bg-background border border-input text-sm focus:border-destructive focus:outline-none"
+          />
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5"
+          disabled={confirmText !== "LÖSCHEN"}
+          onClick={() => setShowConfirm(true)}
+        >
+          <AlertTriangle className="w-3.5 h-3.5" />
+          Organisation endgültig löschen
+        </Button>
+      </div>
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              Organisation unwiderruflich löschen?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle Daten, Entscheidungen, Teams und Mitgliedschaften werden permanent gelöscht. Diese Aktion kann NICHT rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  const { error } = await supabase.functions.invoke("delete-account");
+                  if (error) throw error;
+                  toast.success("Organisation gelöscht");
+                  await signOut();
+                } catch (err: any) {
+                  toast.error("Löschung fehlgeschlagen: " + (err.message || "Unbekannter Fehler"));
+                  setDeleting(false);
+                }
+              }}
+            >
+              {deleting ? "Wird gelöscht…" : "Endgültig löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
+const WebhookLogList = () => {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from("webhook_logs" as any).select("*").order("executed_at", { ascending: false }).limit(20)
+      .then(({ data, error }) => {
+        setLogs(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-8 w-full" />)}</div>;
+  if (logs.length === 0) return (
+    <div className="text-center py-6">
+      <Info className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+      <p className="text-xs text-muted-foreground">Keine Webhook-Logs vorhanden. Logs erscheinen sobald Webhooks konfiguriert und ausgelöst werden.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-1 max-h-[300px] overflow-y-auto">
+      {logs.map((log: any) => (
+        <div key={log.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
+          <span className="text-muted-foreground w-28 shrink-0">{new Date(log.executed_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+          <Badge variant="outline" className={`text-[10px] shrink-0 ${log.response_status >= 200 && log.response_status < 300 ? "text-success border-success/30" : "text-destructive border-destructive/30"}`}>
+            {log.response_status || "—"}
+          </Badge>
+          <span className="text-muted-foreground truncate">{log.url || log.webhook_url || "—"}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const EdgeFunctionErrorList = () => {
+  const [errors, setErrors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Query automation_rule_logs for errors as a proxy for system-level logs
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    supabase.from("automation_rule_logs").select("*").gte("executed_at", sevenDaysAgo)
+      .ilike("details", "%fehler%").order("executed_at", { ascending: false }).limit(20)
+      .then(({ data }) => {
+        setErrors(data || []);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-8 w-full" />)}</div>;
+  if (errors.length === 0) return (
+    <div className="text-center py-6">
+      <Badge variant="outline" className="text-success border-success/30 mb-2">✓ Keine Fehler</Badge>
+      <p className="text-xs text-muted-foreground">Keine Backend-Fehler in den letzten 7 Tagen.</p>
+    </div>
+  );
+
+  return (
+    <div className="space-y-1 max-h-[300px] overflow-y-auto">
+      {errors.map((err: any) => (
+        <div key={err.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/20 text-xs">
+          <span className="text-muted-foreground w-28 shrink-0">{new Date(err.executed_at).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
+          <Badge variant="outline" className="text-[10px] text-destructive border-destructive/30 shrink-0">Fehler</Badge>
+          <span className="text-muted-foreground truncate">{err.details || err.action_taken}</span>
+        </div>
+      ))}
+    </div>
   );
 };
 

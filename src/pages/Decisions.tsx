@@ -340,6 +340,50 @@ const Decisions = () => {
             allDecisions={decisions}
             allReviews={allReviews}
           />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-xs text-muted-foreground">
+                {t("decisions.showingRange", {
+                  from: (currentPage - 1) * PAGE_SIZE + 1,
+                  to: Math.min(currentPage * PAGE_SIZE, filtered.length),
+                  total: filtered.length,
+                  defaultValue: `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, filtered.length)} von ${filtered.length}`,
+                })}
+              </p>
+              <Pagination>
+                <PaginationContent>
+                  {currentPage > 1 && (
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => setCurrentPage(p => p - 1)} className="cursor-pointer" />
+                    </PaginationItem>
+                  )}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                    .map((p, idx, arr) => {
+                      const prev = arr[idx - 1];
+                      const showEllipsis = prev && p - prev > 1;
+                      return (
+                        <span key={p} className="contents">
+                          {showEllipsis && <PaginationItem><PaginationEllipsis /></PaginationItem>}
+                          <PaginationItem>
+                            <PaginationLink isActive={p === currentPage} onClick={() => setCurrentPage(p)} className="cursor-pointer">
+                              {p}
+                            </PaginationLink>
+                          </PaginationItem>
+                        </span>
+                      );
+                    })}
+                  {currentPage < totalPages && (
+                    <PaginationItem>
+                      <PaginationNext onClick={() => setCurrentPage(p => p + 1)} className="cursor-pointer" />
+                    </PaginationItem>
+                  )}
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </>
       )}
 
