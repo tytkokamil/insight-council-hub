@@ -754,6 +754,10 @@ const SettingsPage = () => {
                 <WebhookSettingsPanel />
               </div>
               <div className="settings-group">
+                <h2>Kalender-Synchronisierung</h2>
+                <CalendarSyncPanel />
+              </div>
+              <div className="settings-group">
                 <PdfBrandingSection />
               </div>
             </div>
