@@ -24,10 +24,15 @@ async function getUserAiSettings(userId: string): Promise<AiSettings> {
   return data || { provider: "lovable", api_key: null, model: null };
 }
 
-function extractUserId(req: Request): string | null {
+async function extractUserId(req: Request): Promise<string | null> {
   const auth = req.headers.get("authorization");
   if (!auth) return null;
-  try { return JSON.parse(atob(auth.replace("Bearer ", "").split(".")[1])).sub; } catch { return null; }
+  try {
+    const anonClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: { user }, error } = await anonClient.auth.getUser(auth.replace("Bearer ", ""));
+    if (error || !user) return null;
+    return user.id;
+  } catch { return null; }
 }
 
 async function callProvider(settings: AiSettings, messages: any[], tools: any[], toolChoice: any): Promise<any> {
@@ -99,7 +104,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const userId = extractUserId(req);
+    const userId = await extractUserId(req);
     if (!userId) {
       return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
