@@ -112,11 +112,12 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            className="text-[clamp(2.2rem,5.5vw,4.5rem)] font-bold tracking-[-0.03em] leading-[1.08] mb-6"
+            className="text-[clamp(2rem,5vw,3.8rem)] font-semibold tracking-[-0.02em] leading-[1.15] mb-6"
           >
             Jede offene Entscheidung{" "}
             <br className="hidden sm:block" />
             kostet Ihr Unternehmen{" "}
+            <br className="block sm:hidden" />
             <RotatingWord />
           </motion.h1>
 
