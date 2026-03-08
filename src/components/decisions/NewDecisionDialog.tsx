@@ -381,6 +381,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
       template_used: selectedTemplate?.name || null,
       template_version: selectedTemplate?.version || null,
       template_snapshot: templateSnapshot,
+      confidential,
+      confidential_viewer_ids: confidential ? confidentialViewerIds : [],
     } as any]).select().single();
 
     if (err) {
