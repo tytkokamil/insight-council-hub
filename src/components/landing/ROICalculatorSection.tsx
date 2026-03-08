@@ -65,13 +65,15 @@ const ROICalculatorSection = () => {
   const [delayDays, setDelayDays] = useState(7);
   const [activePreset, setActivePreset] = useState<number | null>(null);
 
-  // Corrected formula: hourlyRate * 8h * persons * decisions * days / 4.3 weeks
-  const monthlyCost = useMemo(
-    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays / 4.3),
+  // Brutto-Verzögerungskosten: Stundensatz × 8h × Personen × Entscheidungen × Tage
+  const grossCost = useMemo(
+    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays),
     [hourlyRate, persons, decisions, delayDays]
   );
-  // 55% reduction — conservative, credible
-  const savings = useMemo(() => Math.round(monthlyCost * 0.55), [monthlyCost]);
+  // 55% Effizienzfaktor — nicht alle Zeit ist produktiv verloren
+  const monthlyCost = useMemo(() => Math.round(grossCost * 0.55), [grossCost]);
+  // 73% Reduktion durch schnellere Approvals mit Decivio
+  const savings = useMemo(() => Math.round(monthlyCost * 0.73), [monthlyCost]);
   const roiMultiple = useMemo(() => savings > 0 ? Math.round(savings / 149) : 0, [savings]);
 
   const applyPreset = (i: number) => {
@@ -144,12 +146,12 @@ const ROICalculatorSection = () => {
               <div className="rounded-xl border border-destructive/15 bg-destructive/[0.04] p-5 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <TrendingDown className="w-3.5 h-3.5 text-destructive/70" />
-                  <span className="text-[11px] text-muted-foreground">Aktuelle Kosten</span>
+                  <span className="text-[11px] text-muted-foreground">Bereinigte Verzögerungskosten</span>
                 </div>
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-destructive">
                   <AnimatedNumber value={monthlyCost} />
                 </div>
-                <span className="text-[10px] text-destructive/60">/Monat</span>
+                <span className="text-[10px] text-destructive/60">/Monat (55% Effizienzfaktor)</span>
               </div>
 
               <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5 text-center">
@@ -160,14 +162,23 @@ const ROICalculatorSection = () => {
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-primary">
                   <AnimatedNumber value={savings} />
                 </div>
-                <span className="text-[10px] text-primary/60">/Monat (55% Reduktion)</span>
+                <span className="text-[10px] text-primary/60">/Monat (73% schnellere Approvals)</span>
               </div>
             </div>
 
-            {/* Calculation breakdown */}
-            <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-              Berechnung: {hourlyRate}€/h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage / 4,3 Wochen
-            </p>
+            {/* Calculation tooltip */}
+            <div className="rounded-lg bg-muted/30 border border-border/30 p-3 space-y-1.5">
+              <p className="text-[11px] font-semibold text-muted-foreground">So berechnen wir:</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">1.</span> Brutto-Kosten: {hourlyRate}€/h × 8h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage = <span className="font-semibold text-foreground/70">€{grossCost.toLocaleString("de-DE")}</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">2.</span> Effizienzfaktor 55% (nicht alle Zeit ist verloren): <span className="font-semibold text-destructive/80">€{monthlyCost.toLocaleString("de-DE")}/Mo</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">3.</span> Decivio reduziert Verzögerungen um 73%: Einsparung <span className="font-semibold text-primary">€{savings.toLocaleString("de-DE")}/Mo</span>
+              </p>
+            </div>
 
             {/* ROI Badge */}
             <motion.div
