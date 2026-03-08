@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Loader2, CheckCircle2, AlertTriangle, Info, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Info, ExternalLink, Video, Send } from "lucide-react";
 import { toast } from "sonner";
 
 const TeamsIntegrationPanel = () => {
@@ -19,6 +19,8 @@ const TeamsIntegrationPanel = () => {
   const [notifySla, setNotifySla] = useState(true);
   const [notifyEscalation, setNotifyEscalation] = useState(true);
   const [notifyReview, setNotifyReview] = useState(true);
+  const [dailyBriefEnabled, setDailyBriefEnabled] = useState(false);
+  const [dailyBriefTime, setDailyBriefTime] = useState("07:30");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -54,6 +56,8 @@ const TeamsIntegrationPanel = () => {
         setNotifySla(config.notify_sla_violation);
         setNotifyEscalation(config.notify_escalation);
         setNotifyReview(config.notify_review_request);
+        setDailyBriefEnabled((config as any).daily_brief_enabled ?? false);
+        setDailyBriefTime((config as any).daily_brief_time ?? "07:30");
       }
     }
     setLoading(false);
@@ -81,6 +85,8 @@ const TeamsIntegrationPanel = () => {
         notify_sla_violation: notifySla,
         notify_escalation: notifyEscalation,
         notify_review_request: notifyReview,
+        daily_brief_enabled: dailyBriefEnabled,
+        daily_brief_time: dailyBriefTime,
         updated_at: new Date().toISOString(),
       };
 
@@ -118,7 +124,7 @@ const TeamsIntegrationPanel = () => {
               version: "1.4",
               body: [
                 { type: "TextBlock", text: "✅ Decivio Testbenachrichtigung", weight: "Bolder", size: "Medium" },
-                { type: "TextBlock", text: "Die Microsoft Teams Integration funktioniert! Adaptive Cards werden hier erscheinen.", wrap: true },
+                { type: "TextBlock", text: "Die Microsoft Teams Integration funktioniert! Approve/Reject-Buttons und Daily Briefs sind aktiv.", wrap: true },
               ],
             },
           }],
@@ -154,7 +160,7 @@ const TeamsIntegrationPanel = () => {
       <div className="flex items-center gap-2 mb-1">
         <TeamsIcon />
         <h2 className="text-sm font-medium">{t("settings.teamsTitle")}</h2>
-        <Badge variant="outline" className="text-[10px]">v1</Badge>
+        <Badge variant="outline" className="text-[10px]">v2</Badge>
       </div>
       <p className="text-xs text-muted-foreground mb-4">{t("settings.teamsDesc")}</p>
 
@@ -198,7 +204,7 @@ const TeamsIntegrationPanel = () => {
             disabled={testing || !webhookUrl.trim()}
             className="gap-1.5"
           >
-            {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <ExternalLink className="w-3 h-3" />}
+            {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
             {t("settings.teamsTestButton")}
           </Button>
           {testResult === "success" && (
@@ -230,31 +236,59 @@ const TeamsIntegrationPanel = () => {
           <div className="space-y-2">
             {[
               { key: "new", label: t("settings.teamsNotifyNew"), checked: notifyNew, set: setNotifyNew },
-              { key: "review", label: t("settings.teamsNotifyReview"), checked: notifyReview, set: setNotifyReview },
+              { key: "review", label: t("settings.teamsNotifyReview"), checked: notifyReview, set: setNotifyReview, badge: "2-Wege" },
               { key: "sla", label: t("settings.teamsNotifySla"), checked: notifySla, set: setNotifySla },
               { key: "escalation", label: t("settings.teamsNotifyEscalation"), checked: notifyEscalation, set: setNotifyEscalation },
-            ].map(({ key, label, checked, set }) => (
+            ].map(({ key, label, checked, set, badge }) => (
               <div key={key} className="flex items-center justify-between py-1">
-                <span className="text-xs">{label}</span>
+                <span className="text-xs flex items-center gap-1.5">
+                  {label}
+                  {badge && <Badge variant="secondary" className="text-[9px] px-1 py-0">{badge}</Badge>}
+                </span>
                 <Switch checked={checked} onCheckedChange={set} />
               </div>
             ))}
           </div>
         </div>
 
-        {/* Adaptive Card preview info */}
-        <div className="p-3 rounded-lg border border-border/60 bg-muted/30">
+        {/* Daily Brief in Teams */}
+        <div className="p-3 rounded-lg border border-border/60 bg-muted/20">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Send className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium">Daily Brief in Teams</span>
+              <Badge variant="outline" className="text-[9px]">Neu</Badge>
+            </div>
+            <Switch checked={dailyBriefEnabled} onCheckedChange={setDailyBriefEnabled} />
+          </div>
+          {dailyBriefEnabled && (
+            <div className="mt-2">
+              <label className="text-[10px] text-muted-foreground mb-1 block">Sendezeit</label>
+              <Input
+                type="time"
+                value={dailyBriefTime}
+                onChange={(e) => setDailyBriefTime(e.target.value)}
+                className="w-32 text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Tägliche Zusammenfassung mit Top-3-Entscheidungen und Cost-of-Delay als Adaptive Card.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* V2 Features info */}
+        <div className="p-3 rounded-lg border border-primary/20 bg-primary/5">
           <div className="flex items-start gap-2">
-            <Info className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
             <div className="text-[11px] text-muted-foreground space-y-1">
-              <p>{t("settings.teamsCardInfo")}</p>
+              <p className="font-medium text-foreground">2-Wege-Integration aktiv</p>
               <ul className="list-disc list-inside space-y-0.5">
-                <li>{t("settings.teamsCardNew")}</li>
-                <li>{t("settings.teamsCardSla")}</li>
-                <li>{t("settings.teamsCardEscalation")}</li>
-                <li>{t("settings.teamsCardReview")}</li>
+                <li>Approve/Reject direkt aus Teams Adaptive Cards</li>
+                <li>Kommentare bei Ablehnung direkt eingeben</li>
+                <li>Daily Brief als Teams-Nachricht</li>
+                <li>Teams Meeting Link im Decision Room</li>
               </ul>
-              <p className="italic mt-1">{t("settings.teamsV2Note")}</p>
             </div>
           </div>
         </div>

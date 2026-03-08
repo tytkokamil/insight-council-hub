@@ -314,6 +314,10 @@ function buildEscalationCard(decision: any, url: string) {
 }
 
 function buildReviewRequestCard(decision: any, creatorName: string, url: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const actionUrl = `${supabaseUrl}/functions/v1/teams-action`;
+  const costPerDay = decision?.cost_per_day || 0;
+
   return wrapInTeamsPayload({
     $schema: "http://adaptivecards.io/schemas/adaptive-card.json",
     type: "AdaptiveCard",
@@ -343,21 +347,49 @@ function buildReviewRequestCard(decision: any, creatorName: string, url: string)
         facts: [
           { title: "Angefordert von", value: creatorName },
           { title: "Priorität", value: `${priorityEmoji[decision?.priority] || ""} ${decision?.priority || "–"}` },
+          ...(costPerDay > 0 ? [{ title: "Cost-of-Delay", value: `€${costPerDay.toLocaleString("de-DE")}/Tag` }] : []),
           ...(decision?.due_date ? [{ title: "Deadline", value: new Date(decision.due_date).toLocaleDateString("de-DE") }] : []),
         ],
       },
       {
-        type: "TextBlock",
-        text: "Genehmigen/Ablehnen-Buttons folgen in Version 2.",
-        wrap: true,
-        size: "Small",
-        isSubtle: true,
+        type: "Input.Text",
+        id: "comment",
+        placeholder: "Kommentar (optional)",
+        isMultiline: false,
       },
     ],
     actions: [
       {
+        type: "Action.Http",
+        title: "✓ Genehmigen",
+        method: "POST",
+        url: actionUrl,
+        headers: [{ name: "Content-Type", value: "application/json" }],
+        body: JSON.stringify({
+          action: "approve",
+          decision_id: decision?.id,
+          user_email: "{{userEmail}}",
+          comment: "{{comment.value}}",
+        }),
+        style: "positive",
+      },
+      {
+        type: "Action.Http",
+        title: "✗ Ablehnen",
+        method: "POST",
+        url: actionUrl,
+        headers: [{ name: "Content-Type", value: "application/json" }],
+        body: JSON.stringify({
+          action: "reject",
+          decision_id: decision?.id,
+          user_email: "{{userEmail}}",
+          comment: "{{comment.value}}",
+        }),
+        style: "destructive",
+      },
+      {
         type: "Action.OpenUrl",
-        title: "Review in Decivio öffnen",
+        title: "Details ansehen",
         url,
       },
     ],

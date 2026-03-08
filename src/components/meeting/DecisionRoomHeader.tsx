@@ -53,6 +53,19 @@ const DecisionRoomHeader = ({
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={() => {
+              const subject = encodeURIComponent("Decision Room – " + format(new Date(), "dd.MM.yyyy"));
+              window.open(`https://teams.microsoft.com/l/meeting/new?subject=${subject}`, "_blank");
+              toast.success("Teams Meeting Link wird erstellt…");
+            }}
+          >
+            <Video className="w-3.5 h-3.5" />
+            Teams Meeting
+          </Button>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border border-border/60">
             <Timer className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm font-mono font-medium">{formatTime(elapsed)}</span>
