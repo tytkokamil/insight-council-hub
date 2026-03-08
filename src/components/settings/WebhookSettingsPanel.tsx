@@ -149,7 +149,7 @@ const WebhookSettingsPanel = () => {
       .select("id, event, response_status, status, attempt, duration_ms, error_message, created_at")
       .eq("webhook_id", webhookId)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(50);
     setDeliveries(prev => ({ ...prev, [webhookId]: (data as DeliveryLog[]) || [] }));
   };
 
