@@ -23,8 +23,8 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { email, teamId, teamName } = await req.json();
-    if (!email || !teamId) throw new Error("Missing email or teamId");
+    const { email, teamId, teamName, contextDecisionId, contextDecisionTitle, costPerDay, inviteUrl } = await req.json();
+    if (!email) throw new Error("Missing email");
 
     // Get inviter name
     const { data: inviterProfile } = await supabase
@@ -33,6 +33,17 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .single();
     const inviterName = inviterProfile?.full_name || user.email || "Ein Teammitglied";
+
+    // Get decision title if contextDecisionId provided
+    let decisionTitle = contextDecisionTitle || undefined;
+    if (contextDecisionId && !decisionTitle) {
+      const { data: decision } = await supabase
+        .from("decisions")
+        .select("title")
+        .eq("id", contextDecisionId)
+        .single();
+      decisionTitle = decision?.title;
+    }
 
     // Check if user with this email already exists in auth
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
