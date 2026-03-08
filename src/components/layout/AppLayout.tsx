@@ -57,6 +57,7 @@ const SidebarContent = ({
     <SidebarHeader collapsed={collapsed} theme={theme} toggleTheme={toggleTheme} onCollapse={onCollapse} onNavigate={onNavigate} />
     <TeamSwitcher collapsed={collapsed} />
     <SidebarNav collapsed={collapsed} isAdmin={isAdmin} isFeatureEnabled={isFeatureEnabled} pathname={pathname} onNavigate={onNavigate} onPrefetch={onPrefetch} userRole={userRole} />
+    <CodTickerBadge collapsed={collapsed} />
     <SidebarFooter collapsed={collapsed} user={user} avatarUrl={avatarUrl} onSignOut={onSignOut} />
   </>
 );
