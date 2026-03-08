@@ -319,15 +319,7 @@ const Dashboard = () => {
             {/* ═══ 2. KPI ROW – mode-dependent ═══ */}
             {isExecutive ? <CoreKpiGrid /> : <KpiOverviewWidget />}
 
-            {/* ═══ ONBOARDING CHECKLIST ═══ */}
-            {decisions.length < 10 && (
-              <OnboardingChecklist
-                hasTeam={teams.length > 0}
-                hasDecision={decisions.length > 0}
-                hasReview={contextReviews.length > 0}
-                hasTemplate={decisions.some(d => !!d.template_used)}
-              />
-            )}
+            {/* Guided Checklist removed — replaced by floating GuidedChecklist */}
 
             {/* ═══ KEYBOARD SHORTCUT HINT ═══ */}
             {decisions.length < 5 && !localStorage.getItem("shortcut-hint-dismissed") && (
