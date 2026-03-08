@@ -107,8 +107,7 @@ const TestimonialsSection = () => {
                 {/* Metric highlight */}
                 <div className="flex-shrink-0 text-center md:text-left">
                   <div
-                    className="text-4xl md:text-5xl font-bold tabular-nums font-mono"
-                    style={{ color: t.accentColor }}
+                    className={`text-4xl md:text-5xl font-bold tabular-nums font-mono ${t.accentClass}`}
                   >
                     {t.metric}
                   </div>
