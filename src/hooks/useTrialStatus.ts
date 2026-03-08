@@ -44,10 +44,20 @@ export const useTrialStatus = (): TrialStatus => {
 
   const isTrialing = subscriptionStatus === "trialing";
   const isTrialExpired = subscriptionStatus === "trial_expired";
+  const isPastDue = subscriptionStatus === "past_due";
+  const isSuspended = subscriptionStatus === "suspended";
 
   let trialDaysLeft = 999;
   if (trialEndsAt) {
     trialDaysLeft = Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86400000));
+  }
+
+  // Calculate days left before suspension (10 day grace period from payment_failed_at)
+  let pastDueDaysLeft = 10;
+  const paymentFailedAt = (data as any)?.payment_failed_at;
+  if (isPastDue && paymentFailedAt) {
+    const daysSinceFailure = Math.floor((Date.now() - new Date(paymentFailedAt).getTime()) / 86400000);
+    pastDueDaysLeft = Math.max(0, 10 - daysSinceFailure);
   }
 
   return {
@@ -57,5 +67,8 @@ export const useTrialStatus = (): TrialStatus => {
     trialEndsAt,
     subscriptionStatus,
     plan,
+    isPastDue,
+    isSuspended,
+    pastDueDaysLeft,
   };
 };
