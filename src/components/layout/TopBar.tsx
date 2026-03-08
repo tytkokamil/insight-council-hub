@@ -125,8 +125,20 @@ const TopBar = memo(({ collapsed }: TopBarProps) => {
 
   return (
     <header className="sticky top-0 z-30 h-12 bg-background/80 backdrop-blur-md border-b border-border/30 flex items-center justify-between px-6 shrink-0">
-      {/* Left: spacer */}
-      <div className="flex items-center gap-1 min-w-0" />
+      {/* Left: Breadcrumb */}
+      <div className="flex items-center gap-1.5 min-w-0 text-[13px]">
+        {breadcrumb && (
+          <>
+            <span className="text-muted-foreground/50 capitalize">{t(breadcrumb.areaKey, { defaultValue: breadcrumb.area })}</span>
+            {pageTitle && (
+              <>
+                <span className="text-muted-foreground/30">/</span>
+                <span className="font-medium text-foreground truncate">{t(pageTitle)}</span>
+              </>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Right: Search + Notifications + Action */}
       <div className="flex items-center gap-2">
