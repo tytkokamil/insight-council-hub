@@ -138,7 +138,7 @@ const Navbar = () => {
                       <motion.div
                         layoutId="nav-active"
                         className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full"
-                        style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
+                        style={{ background: "hsl(var(--primary))" }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
