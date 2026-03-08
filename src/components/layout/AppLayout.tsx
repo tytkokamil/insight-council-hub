@@ -73,6 +73,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
   const isMobile = useIsMobile();
   const prefetch = usePrefetchOnHover();
   const { role: userRole, isAdmin } = usePermissions();
+  const { shortcutsOpen, setShortcutsOpen } = useKeyboardShortcuts();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
