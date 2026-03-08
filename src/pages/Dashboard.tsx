@@ -52,6 +52,7 @@ import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanne
 import AnomalyCards from "@/components/shared/AnomalyCards";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
+import DeadDecisionDetector from "@/components/dashboard/DeadDecisionDetector";
 import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 
 type DashboardMode = "operational" | "executive" | "admin";
