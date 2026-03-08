@@ -9,6 +9,7 @@ import UserAvatar from "@/components/shared/UserAvatar";
 import { UserPlus, Trash2, Mail, Clock, Check, Users, Shield, Eye, UserCog, Lock, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import BulkInvitePanel from "@/components/invites/BulkInvitePanel";
 
 interface Props {
   teamId: string;
