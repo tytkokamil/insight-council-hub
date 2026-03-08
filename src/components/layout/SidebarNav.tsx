@@ -375,7 +375,7 @@ const SidebarNav = memo(({
   );
 
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; featureKey: string; label: string; minPlan: string }>({
-    open: false, featureKey: "", label: "", minPlan: "pro",
+    open: false, featureKey: "", label: "", minPlan: "professional",
   });
 
   const openUpgradeModal = (featureKey: string, label: string, minPlan: string) => {
