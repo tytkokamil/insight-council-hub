@@ -430,7 +430,12 @@
     "or": "oder",
     "saveFailed": "Speichern fehlgeschlagen",
     "tryAgainLater": "Bitte versuchen Sie es erneut.",
-    "noData": "Keine Daten"
+    "noData": "Keine Daten",
+    "more": "Mehr",
+    "share": "Teilen",
+    "linkCopied": "Link kopiert!",
+    "copied": "Kopiert!",
+    "copyLink": "Link kopieren"
   },
   "audit": {
     "reasonTitle": "Begründung erforderlich",
