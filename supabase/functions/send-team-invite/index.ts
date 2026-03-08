@@ -80,9 +80,10 @@ serve(async (req) => {
     if (inviteError) throw inviteError;
 
     // Send invite email via Supabase Auth (invite user)
+    const APP_URL = Deno.env.get("APP_URL") || Deno.env.get("SUPABASE_URL")!;
     const { error: signupError } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: { invited_to_team: teamName || "ein Team" },
-      redirectTo: `${req.headers.get("origin") || supabaseUrl}/auth`,
+      redirectTo: `${APP_URL}/auth`,
     });
 
     if (signupError) {
