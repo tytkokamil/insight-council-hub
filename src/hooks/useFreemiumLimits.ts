@@ -22,6 +22,8 @@ interface FreemiumLimits {
   maxTeams: number | null;
   /** Max automation rules (null = unlimited) */
   maxAutomationRules: number | null;
+  /** Max templates (null = unlimited) */
+  maxTemplates: number | null;
   /** Max compliance frameworks (null = unlimited) */
   maxComplianceFrameworks: number | null;
   /** Whether teams feature is available */
