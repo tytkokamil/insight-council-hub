@@ -383,7 +383,7 @@ const PricingSection = () => {
         <div className="flex flex-wrap items-center justify-center gap-6 mt-10 mb-6">
           {["🔒 Keine versteckten Kosten", "↕ Jederzeit kündigen", "🇩🇪 Server in Deutschland"].map(
             (t, i) => (
-              <span key={i} className="text-[12px] text-muted-foreground/60">
+              <span key={i} className="text-[12px] text-muted-foreground">
                 {t}
               </span>
             )
