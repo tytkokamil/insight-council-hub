@@ -35,7 +35,7 @@ const UseCasesSection = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-[15px] font-semibold mb-0.5">{uc.title}</h3>
-                  <p className="text-[11px] text-muted-foreground/50 mb-3">{uc.subtitle}</p>
+                  <p className="text-[11px] text-muted-foreground mb-3">{uc.subtitle}</p>
                   <p className="text-sm text-muted-foreground/70 leading-relaxed mb-4">{uc.description}</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-bold text-primary font-display">{uc.stat}</span>
