@@ -614,6 +614,16 @@ const SettingsPage = () => {
                 <DelegationPanel />
               </div>
 
+              {/* Data Retention Card */}
+              <div className="settings-group">
+                <h2 className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-muted-foreground" />
+                  Datenspeicherung & Aufbewahrung
+                </h2>
+                <p className="text-xs text-muted-foreground mb-4">DSGVO-konforme Aufbewahrungsfristen und automatische Datenbereinigung konfigurieren.</p>
+                <DataRetentionPanel />
+              </div>
+
               {/* Compliance & Audit Card */}
               <div className="settings-group">
                 <h2>{t("settings.compliance")}</h2>
