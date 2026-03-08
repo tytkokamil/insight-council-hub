@@ -357,7 +357,7 @@ const Dashboard = () => {
             />
 
             <IndustryReminderBanner />
-            {!isExecutive && <AnomalyCards bannersOnly className="mb-2" />}
+            {!isExecutive && decisions.length > 0 && <AnomalyCards bannersOnly={false} className="mb-2" />}
 
             {/* ═══ EXECUTIVE MODE ═══ */}
             {isExecutive && (
