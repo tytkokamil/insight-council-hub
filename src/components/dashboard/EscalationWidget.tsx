@@ -34,6 +34,7 @@ const EscalationWidget = () => {
         .from("decisions")
         .select("id, title, priority, due_date, escalation_level")
         .in("status", ["draft", "review", "approved"])
+        .is("deleted_at", null)
         .not("due_date", "is", null)
         .lt("due_date", new Date().toISOString().split("T")[0]);
 
