@@ -320,7 +320,7 @@ const Decisions = () => {
           </AnimatePresence>
 
           <DecisionTableWithPredictions
-            filtered={filtered}
+            filtered={paginatedDecisions}
             decisionMeta={decisionMeta}
             profileMap={profileMap}
             selectedIds={selectedIds}
