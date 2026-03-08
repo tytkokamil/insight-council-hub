@@ -8,7 +8,7 @@ import {
   Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles,
   GitBranch, Trophy, FlaskConical, Plus,
 } from "lucide-react";
-import { useGuidedMode } from "@/hooks/useGuidedMode";
+import { useGuidedMode, LEVEL_1_PATHS, LEVEL_2_PATHS, type ProgressiveLevel } from "@/hooks/useGuidedMode";
 import { useDecisions } from "@/hooks/useDecisions";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslation } from "react-i18next";
