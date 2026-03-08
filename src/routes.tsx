@@ -76,6 +76,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
 const AiDemo = lazy(() => import("./pages/AiDemo"));
+const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -295,6 +296,7 @@ export const protectedRoutes = (
     <Route path="/upgrade" element={<P><UpgradePage /></P>} />
     <Route path="/war-room" element={<P><WarRoom /></P>} />
     <Route path="/launch-checklist" element={<P><LaunchChecklist /></P>} />
+    <Route path="/integrations" element={<P><IntegrationsPage /></P>} />
     <Route path="/internal-admin" element={<P><PlatformAdminGuard><InternalAdmin /></PlatformAdminGuard></P>} />
   </>
 );

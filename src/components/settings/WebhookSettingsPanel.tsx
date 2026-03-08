@@ -16,14 +16,18 @@ import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 
 const AVAILABLE_EVENTS = [
-  { key: "decision.created", label: "webhookEventCreated" },
-  { key: "decision.approved", label: "webhookEventApproved" },
-  { key: "decision.rejected", label: "webhookEventRejected" },
-  { key: "decision.escalated", label: "webhookEventEscalated" },
-  { key: "decision.sla_violated", label: "webhookEventSlaViolated" },
-  { key: "reviewer.assigned", label: "webhookEventReviewerAssigned" },
-  { key: "reviewer.overdue", label: "webhookEventReviewerOverdue" },
-  { key: "daily.brief.generated", label: "webhookEventDailyBrief" },
+  { key: "decision.created", label: "Entscheidung erstellt" },
+  { key: "decision.approved", label: "Entscheidung genehmigt" },
+  { key: "decision.rejected", label: "Entscheidung abgelehnt" },
+  { key: "decision.overdue", label: "Entscheidung überfällig" },
+  { key: "decision.escalated", label: "Entscheidung eskaliert" },
+  { key: "decision.sla_violated", label: "SLA verletzt" },
+  { key: "task.created", label: "Aufgabe erstellt" },
+  { key: "task.completed", label: "Aufgabe abgeschlossen" },
+  { key: "review.requested", label: "Review angefordert" },
+  { key: "escalation.triggered", label: "Eskalation ausgelöst" },
+  { key: "reviewer.assigned", label: "Reviewer zugewiesen" },
+  { key: "daily.brief.generated", label: "Daily Brief generiert" },
 ];
 
 interface WebhookEndpoint {
@@ -145,7 +149,7 @@ const WebhookSettingsPanel = () => {
       .select("id, event, response_status, status, attempt, duration_ms, error_message, created_at")
       .eq("webhook_id", webhookId)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(50);
     setDeliveries(prev => ({ ...prev, [webhookId]: (data as DeliveryLog[]) || [] }));
   };
 
@@ -283,6 +287,7 @@ const WebhookSettingsPanel = () => {
                     onCheckedChange={() => toggleEvent(ev.key)}
                   />
                   <code className="text-[10px] font-mono">{ev.key}</code>
+                  <span className="text-muted-foreground text-[10px]">— {ev.label}</span>
                 </label>
               ))}
             </div>
@@ -326,16 +331,24 @@ const PayloadInfoCollapsible = ({ t }: { t: any }) => {
       {open && (
         <div className="mt-2 p-3 rounded-lg border border-border/60 bg-muted/30">
           <pre className="text-[9px] font-mono text-muted-foreground whitespace-pre-wrap">{`{
-  "event": "decision.created",
-  "timestamp": "2026-03-01T12:00:00Z",
-  "organization_id": "uuid",
-  "decision": {
-    "id", "title", "category",
-    "approved_by", "cost_of_delay_total",
-    "duration_days"
+  "event": "decision.approved",
+  "timestamp": "2026-03-08T10:30:00Z",
+  "org_id": "...",
+  "data": {
+    "decision": {
+      "id": "...",
+      "title": "...",
+      "status": "approved",
+      "priority": "high",
+      "cost_of_delay": 12500,
+      "approved_by": "...",
+      "approved_at": "..."
+    }
   }
 }`}</pre>
-          <p className="text-[9px] text-muted-foreground mt-1.5 italic">{t("settings.webhookHmacInfo")}</p>
+          <p className="text-[9px] text-muted-foreground mt-1.5">
+            <strong>Header:</strong> X-Decivio-Signature: sha256=HMAC · X-Decivio-Event: decision.approved
+          </p>
         </div>
       )}
     </div>
