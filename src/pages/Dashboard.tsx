@@ -296,6 +296,7 @@ const Dashboard = () => {
         }
       />
 
+      <WelcomeBackBanner />
       <div className="section-gap-lg">
 
         {/* ═══ LOADING SKELETON ═══ */}
