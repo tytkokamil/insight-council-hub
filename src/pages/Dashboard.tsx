@@ -439,6 +439,11 @@ const Dashboard = () => {
                   </div>
                 </div>
 
+                {/* ═══ ROI PROOF ═══ */}
+                <WidgetErrorBoundary label="ROI">
+                  <RoiProofWidget />
+                </WidgetErrorBoundary>
+
                 {/* ═══ DEEP DIVE ═══ */}
                 <div className="border-t border-border pt-4">
                   <button
