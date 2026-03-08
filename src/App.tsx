@@ -81,9 +81,9 @@ const App = () => (
             </GuidedModeProvider>
             </PermissionsProvider>
             </FeatureFlagsProvider>
+            <CookieBanner />
           </AuthProvider>
           <OfflineIndicator />
-          <CookieBanner />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
