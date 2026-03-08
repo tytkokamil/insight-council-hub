@@ -21,7 +21,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   ai_brief: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "KI Daily Brief",
     description: "Täglich automatisch die 3 kritischsten Entscheidungen in Ihrem Postfach.",
     bullets: [
