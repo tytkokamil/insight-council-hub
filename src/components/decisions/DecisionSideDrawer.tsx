@@ -1,4 +1,5 @@
-import { Brain, AlertCircle, Eye, ChevronRight } from "lucide-react";
+import { Brain, AlertCircle, Eye, ChevronRight, Info } from "lucide-react";
+import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
