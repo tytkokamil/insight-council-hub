@@ -11,7 +11,7 @@ import Footer from "@/components/landing/Footer";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const TOTAL_SPOTS = 20;
-const TAKEN_SPOTS = 13;
+const TAKEN_SPOTS = 0;
 const REMAINING = TOTAL_SPOTS - TAKEN_SPOTS;
 
 const benefits = [
