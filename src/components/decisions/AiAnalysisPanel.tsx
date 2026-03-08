@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import AiFeedbackButton from "@/components/shared/AiFeedbackButton";
+import AiExplainabilityBadge from "@/components/shared/AiExplainabilityBadge";
+import type { AiSourceType } from "@/components/shared/AiExplainabilityBadge";
 import { useTranslation } from "react-i18next";
 
 interface WeightedFactor {
