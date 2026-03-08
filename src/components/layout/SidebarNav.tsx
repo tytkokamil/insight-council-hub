@@ -6,7 +6,7 @@ import {
   Dna, Zap, Target, LayoutDashboard, UserCog, History, Brain,
   ListTodo, ChevronDown, ChevronRight, Cpu, AlertTriangle, BookOpen, Clock,
   Archive, Search as SearchIcon, Settings2, Compass, Video, Lock, Sparkles,
-  GitBranch, Trophy, FlaskConical, Plus,
+  GitBranch, Trophy, FlaskConical, Plus, Radar,
 } from "lucide-react";
 import { useGuidedMode, LEVEL_1_PATHS, LEVEL_2_PATHS, type ProgressiveLevel } from "@/hooks/useGuidedMode";
 import { useDecisions } from "@/hooks/useDecisions";
