@@ -209,9 +209,20 @@ const Auth = () => {
             <img src={decivioLogo} alt="Decivio" className="w-full h-full" />
           </div>
           <h1 className="font-display text-2xl font-bold">Decivio</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLogin ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
-          </p>
+          {inviteContext ? (
+            <div className="mt-2 p-3 rounded-lg bg-primary/[0.05] border border-primary/10">
+              <p className="text-sm font-medium text-foreground">
+                {inviteContext.from ? `${inviteContext.from} wartet auf Ihre Genehmigung` : "Sie wurden zu einer Entscheidung eingeladen"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Erstellen Sie ein Konto, um direkt zur Entscheidung zu gelangen.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">
+              {isLogin ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
+            </p>
+          )}
         </div>
 
         <Card className="border-border/50 shadow-glow">
