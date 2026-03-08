@@ -160,7 +160,7 @@ const Navbar = () => {
               <Link
                 to="/auth"
                 className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-300 overflow-hidden"
-                style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
+                style={{ background: "hsl(var(--primary))" }}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Kostenlos starten
