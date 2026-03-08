@@ -112,6 +112,7 @@ const Footer = () => (
             ))}
           </ul>
         </nav>
+      </div>
 
       {/* Bottom bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/20 gap-3">
