@@ -852,8 +852,7 @@ const DecisionDetail = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="sticky bottom-0 z-10 mt-8 -mx-4 px-6 py-3 bg-background border-t flex items-center gap-2 flex-wrap"
-          style={{ borderTopColor: "#E2E8F0" }}
+          className="sticky bottom-0 z-10 mt-8 -mx-4 px-6 py-3 bg-background border-t border-border flex items-center gap-2 flex-wrap"
         >
           {decision.status === "draft" && (
             <Button size="sm" className="gap-1.5 text-xs" onClick={() => handleStatusChange("review")}>

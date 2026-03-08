@@ -334,7 +334,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
-                        <p className="text-center mt-1" style={{ fontSize: "11px", color: "#94A3B8" }}>
+                        <p className="text-center mt-1 text-[11px] text-muted-foreground/60">
                           {t("scenarioEngine.chartExplanation", "Linke Achse: kumulative Kosten in € | Rechte Achse: Risikoniveau in %")}
                         </p>
                       </CardContent>
