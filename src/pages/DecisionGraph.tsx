@@ -243,7 +243,7 @@ const DecisionGraph = () => {
           >
             <Background color="hsl(var(--border))" gap={24} size={1} />
             <Controls className="!bg-card !border-border !rounded-lg !shadow-lg" style={{ button: { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderColor: "hsl(var(--border))" } } as any} />
-            <MiniMap className="!bg-card/80 !border-border !rounded-lg" nodeColor={(n) => statusColors[n.data?.status as string] || "#6b7280"} maskColor="hsl(var(--background) / 0.8)" />
+            <MiniMap className="!bg-card/80 !border-border !rounded-lg" nodeColor={(n) => statusColors[n.data?.status as string] || "hsl(var(--muted-foreground))"} maskColor="hsl(var(--background) / 0.8)" />
 
             {selectedNode && (
               <Panel position="top-right">
