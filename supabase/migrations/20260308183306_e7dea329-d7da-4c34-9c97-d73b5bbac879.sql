@@ -1,0 +1,1 @@
+ALTER TABLE public.organizations ADD COLUMN IF NOT EXISTS branding jsonb DEFAULT '{"primaryColor": "#EF4444", "logoUrl": null, "companyName": null, "customDomain": null, "favicon": null, "emailFromName": null}'::jsonb;
