@@ -357,7 +357,7 @@ interface SidebarNavProps {
 const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: SidebarNavProps) => {
-  const { decisionCount } = useGuidedMode();
+  const { decisionCount, progressiveLevel } = useGuidedMode();
   const { data: visibleDecisions = [] } = useDecisions();
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
