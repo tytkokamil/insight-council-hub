@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings, MessageSquare } from "lucide-react";
+import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings, MessageSquare, Map } from "lucide-react";
 import AdminOverviewTab from "@/components/internal-admin/AdminOverviewTab";
 import AdminOrgsTab from "@/components/internal-admin/AdminOrgsTab";
 import AdminUsersTab from "@/components/internal-admin/AdminUsersTab";
@@ -10,6 +10,7 @@ import AdminFeatureFlagsTab from "@/components/internal-admin/AdminFeatureFlagsT
 import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
 import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
 import AdminFeedbackTab from "@/components/internal-admin/AdminFeedbackTab";
+import AdminRoadmapTab from "@/components/internal-admin/AdminRoadmapTab";
 import { cn } from "@/lib/utils";
 
 const TABS = [
