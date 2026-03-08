@@ -52,7 +52,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      const verifyCode = String(arr[0] % 1000000).padStart(6, "0");
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
       // Store verification code
