@@ -214,6 +214,7 @@ const SettingsPage = () => {
     { key: "governance" as SettingsTab, label: "Governance", icon: Scale },
     { key: "ai" as SettingsTab, label: t("settings.ai"), icon: Brain },
     ...(isAdmin ? [{ key: "integrations" as SettingsTab, label: "Integrationen", icon: Plug }] : []),
+    ...(isAdmin ? [{ key: "api" as SettingsTab, label: "API", icon: Server }] : []),
     { key: "billing" as SettingsTab, label: "Abrechnung", icon: CreditCard },
     { key: "referral" as SettingsTab, label: t("settings.referral"), icon: Gift },
     ...(isAdmin ? [{ key: "admin" as SettingsTab, label: t("settings.admin"), icon: Settings2 }] : []),
