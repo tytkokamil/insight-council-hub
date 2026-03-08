@@ -6,10 +6,10 @@ import { useEffect, useRef } from "react";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const presets = [
-  { label: "Maschinenbau", icon: Factory, hourlyRate: 130, persons: 4, decisions: 6, delayDays: 8 },
-  { label: "Finanzwesen", icon: Landmark, hourlyRate: 160, persons: 3, decisions: 8, delayDays: 5 },
-  { label: "Pharma", icon: Pill, hourlyRate: 150, persons: 5, decisions: 4, delayDays: 10 },
-  { label: "IT-Dienstleistung", icon: Monitor, hourlyRate: 120, persons: 3, decisions: 5, delayDays: 7 },
+  { label: "Maschinenbau", icon: Factory, hourlyRate: 85, persons: 3, decisions: 5, delayDays: 8 },
+  { label: "Finanzwesen", icon: Landmark, hourlyRate: 110, persons: 3, decisions: 6, delayDays: 5 },
+  { label: "Pharma", icon: Pill, hourlyRate: 95, persons: 4, decisions: 4, delayDays: 9 },
+  { label: "IT-Dienstleistung", icon: Monitor, hourlyRate: 90, persons: 3, decisions: 5, delayDays: 6 },
 ];
 
 const AnimatedNumber = ({ value }: { value: number }) => {
@@ -59,15 +59,20 @@ const SliderInput = ({ label, value, onChange, min, max, step = 1, suffix = "" }
 };
 
 const ROICalculatorSection = () => {
-  const [hourlyRate, setHourlyRate] = useState(120);
+  const [hourlyRate, setHourlyRate] = useState(90);
   const [persons, setPersons] = useState(3);
   const [decisions, setDecisions] = useState(5);
   const [delayDays, setDelayDays] = useState(7);
   const [activePreset, setActivePreset] = useState<number | null>(null);
 
-  const monthlyCost = useMemo(() => hourlyRate * 8 * persons * decisions * delayDays, [hourlyRate, persons, decisions, delayDays]);
-  const savedWithDecivio = useMemo(() => Math.round(monthlyCost * 0.73), [monthlyCost]);
-  const roiMultiple = useMemo(() => savedWithDecivio > 0 ? Math.round(savedWithDecivio / 149) : 0, [savedWithDecivio]);
+  // Corrected formula: hourlyRate * 8h * persons * decisions * days / 4.3 weeks
+  const monthlyCost = useMemo(
+    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays / 4.3),
+    [hourlyRate, persons, decisions, delayDays]
+  );
+  // 55% reduction — conservative, credible
+  const savings = useMemo(() => Math.round(monthlyCost * 0.55), [monthlyCost]);
+  const roiMultiple = useMemo(() => savings > 0 ? Math.round(savings / 149) : 0, [savings]);
 
   const applyPreset = (i: number) => {
     const p = presets[i];
@@ -128,10 +133,10 @@ const ROICalculatorSection = () => {
           <div className="rounded-2xl border border-border/40 bg-card p-7 space-y-6">
             {/* Sliders */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-              <SliderInput label="Stundensatz" value={hourlyRate} onChange={v => { setHourlyRate(v); setActivePreset(null); }} min={50} max={300} step={10} suffix=" €/h" />
-              <SliderInput label="Betroffene Personen" value={persons} onChange={v => { setPersons(v); setActivePreset(null); }} min={1} max={20} suffix="" />
-              <SliderInput label="Offene Entscheidungen" value={decisions} onChange={v => { setDecisions(v); setActivePreset(null); }} min={1} max={30} suffix="" />
-              <SliderInput label="Ø Verzögerung" value={delayDays} onChange={v => { setDelayDays(v); setActivePreset(null); }} min={1} max={30} suffix=" Tage" />
+              <SliderInput label="Stundensatz" value={hourlyRate} onChange={v => { setHourlyRate(v); setActivePreset(null); }} min={40} max={200} step={5} suffix=" €/h" />
+              <SliderInput label="Betroffene Personen" value={persons} onChange={v => { setPersons(v); setActivePreset(null); }} min={1} max={15} suffix="" />
+              <SliderInput label="Offene Entscheidungen" value={decisions} onChange={v => { setDecisions(v); setActivePreset(null); }} min={1} max={20} suffix="" />
+              <SliderInput label="Ø Verzögerung" value={delayDays} onChange={v => { setDelayDays(v); setActivePreset(null); }} min={1} max={20} suffix=" Tage" />
             </div>
 
             {/* Results */}
@@ -139,23 +144,30 @@ const ROICalculatorSection = () => {
               <div className="rounded-xl border border-destructive/15 bg-destructive/[0.04] p-5 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <TrendingDown className="w-3.5 h-3.5 text-destructive/70" />
-                  <span className="text-[11px] text-muted-foreground">Monatliche Verzögerungskosten</span>
+                  <span className="text-[11px] text-muted-foreground">Aktuelle Kosten</span>
                 </div>
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-destructive">
                   <AnimatedNumber value={monthlyCost} />
                 </div>
+                <span className="text-[10px] text-destructive/60">/Monat</span>
               </div>
 
               <div className="rounded-xl border border-primary/15 bg-primary/[0.04] p-5 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="text-[11px] text-muted-foreground">Ersparnis mit Decivio (73%)</span>
+                  <span className="text-[11px] text-muted-foreground">Einsparung mit Decivio</span>
                 </div>
                 <div className="text-2xl md:text-3xl font-bold tabular-nums text-primary">
-                  <AnimatedNumber value={savedWithDecivio} />
+                  <AnimatedNumber value={savings} />
                 </div>
+                <span className="text-[10px] text-primary/60">/Monat (55% Reduktion)</span>
               </div>
             </div>
+
+            {/* Calculation breakdown */}
+            <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+              Berechnung: {hourlyRate}€/h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage / 4,3 Wochen
+            </p>
 
             {/* ROI Badge */}
             <motion.div
@@ -166,8 +178,7 @@ const ROICalculatorSection = () => {
               className="text-center pt-1"
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/40 border border-border/30">
-                <span className="text-[12px] text-muted-foreground">ROI bei €149/Mo:</span>
-                <span className="text-[13px] font-bold text-foreground">{roiMultiple}× Return</span>
+                <span className="text-[12px] text-muted-foreground">{roiMultiple}× Return bei €149/Mo</span>
                 <ArrowRight className="w-3 h-3 text-primary" />
               </div>
             </motion.div>
