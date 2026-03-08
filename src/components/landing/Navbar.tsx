@@ -84,9 +84,9 @@ const Navbar = () => {
         style={
           isDark
             ? {
-                background: scrolled ? "rgba(3,7,18,0.8)" : "transparent",
+                background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
                 backdropFilter: scrolled ? "blur(12px)" : "none",
-                borderColor: scrolled ? "rgba(255,255,255,0.06)" : "transparent",
+                borderColor: scrolled ? "hsl(var(--border) / 0.06)" : "transparent",
               }
             : {
                 background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
