@@ -40,6 +40,7 @@ import {
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
 const AhaMomentOverlay = lazy(() => import("@/components/onboarding/AhaMomentOverlay"));
 const GuidedChecklist = lazy(() => import("@/components/onboarding/GuidedChecklist"));
+const PostDecisionInvitePrompt = lazy(() => import("@/components/invites/PostDecisionInvitePrompt"));
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
 import ActiveDecisionsTable from "@/components/dashboard/ActiveDecisionsTable";
@@ -291,6 +292,18 @@ const Dashboard = () => {
                   costPerDay={ahaData.costPerDay}
                   decisionTitle={ahaData.decisionTitle}
                   onDismiss={() => setShowAha(false)}
+                />
+              </Suspense>
+            )}
+
+            {/* ═══ POST-DECISION INVITE PROMPT ═══ */}
+            {decisions.length > 0 && decisions.length <= 2 && teams.length === 0 && (
+              <Suspense fallback={null}>
+                <PostDecisionInvitePrompt
+                  decisionId={decisions[0]?.id}
+                  decisionTitle={decisions[0]?.title}
+                  costPerDay={decisions[0]?.cost_per_day}
+                  isFirstDecision={decisions.length === 1}
                 />
               </Suspense>
             )}

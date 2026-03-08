@@ -9,6 +9,7 @@ import UserAvatar from "@/components/shared/UserAvatar";
 import { UserPlus, Trash2, Mail, Clock, Check, Users, Shield, Eye, UserCog, Lock, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { useFreemiumLimits } from "@/hooks/useFreemiumLimits";
+import BulkInvitePanel from "@/components/invites/BulkInvitePanel";
 
 interface Props {
   teamId: string;
@@ -181,25 +182,31 @@ const TeamOverviewTab = ({ teamId, teamName }: Props) => {
 
       {/* Invite */}
       {isLeadOrAdmin && (
-        <div className="rounded-lg border border-border/60 p-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <Mail className="w-4 h-4 text-muted-foreground" />
-            {t("team.inviteByEmail")}
-          </h3>
-          <form onSubmit={sendInvite} className="flex gap-2">
-            <input
-              type="email"
-              value={inviteEmail}
-              onChange={(e) => setInviteEmail(e.target.value)}
-              placeholder={t("team.emailPlaceholder")}
-              className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
-              required
-            />
-            <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
-              <UserPlus className="w-3.5 h-3.5" />
-              {inviting ? "..." : t("team.invite")}
-            </Button>
-          </form>
+        <div className="space-y-6">
+          {/* Single invite */}
+          <div className="rounded-lg border border-border/60 p-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              {t("team.inviteByEmail")}
+            </h3>
+            <form onSubmit={sendInvite} className="flex gap-2">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder={t("team.emailPlaceholder")}
+                className="flex-1 h-9 px-3 rounded-lg bg-muted/50 border border-border/60 focus:border-foreground/30 focus:outline-none focus:ring-1 focus:ring-foreground/20 transition-all text-sm"
+                required
+              />
+              <Button type="submit" size="sm" disabled={inviting || !inviteEmail.trim()} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+                <UserPlus className="w-3.5 h-3.5" />
+                {inviting ? "..." : t("team.invite")}
+              </Button>
+            </form>
+          </div>
+
+          {/* Bulk invite */}
+          <BulkInvitePanel teamId={teamId} teamName={teamName} />
         </div>
       )}
 

@@ -23,8 +23,8 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { email, teamId, teamName } = await req.json();
-    if (!email || !teamId) throw new Error("Missing email or teamId");
+    const { email, teamId, teamName, contextDecisionId, contextDecisionTitle, costPerDay, inviteUrl } = await req.json();
+    if (!email) throw new Error("Missing email");
 
     // Get inviter name
     const { data: inviterProfile } = await supabase
@@ -34,11 +34,24 @@ Deno.serve(async (req) => {
       .single();
     const inviterName = inviterProfile?.full_name || user.email || "Ein Teammitglied";
 
+    // Get decision title if contextDecisionId provided
+    let decisionTitle = contextDecisionTitle || undefined;
+    if (contextDecisionId && !decisionTitle) {
+      const { data: decision } = await supabase
+        .from("decisions")
+        .select("title")
+        .eq("id", contextDecisionId)
+        .single();
+      decisionTitle = decision?.title;
+    }
+
     // Check if user with this email already exists in auth
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
 
-    if (existingUser) {
+    // If user exists and teamId provided, add to team
+
+    if (existingUser && teamId) {
       // Check if already a member
       const { data: membership } = await supabase
         .from("team_members")
@@ -63,35 +76,63 @@ Deno.serve(async (req) => {
         .eq("team_id", teamId)
         .eq("email", email);
 
+      // If there's a decision context, send notification to existing user
+      if (contextDecisionId) {
+        await supabase.from("notifications").insert({
+          user_id: existingUser.id,
+          title: `${inviterName} bittet um Ihre Genehmigung`,
+          message: `"${decisionTitle || "Entscheidung"}" — bitte prüfen Sie die Details.`,
+          type: "review_request",
+          decision_id: contextDecisionId,
+        });
+      }
+
       return new Response(
         JSON.stringify({ success: true, message: "Benutzer wurde direkt zum Team hinzugefügt" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // User doesn't exist — create invitation record
-    const { error: inviteError } = await supabase
-      .from("team_invitations")
-      .upsert(
-        { team_id: teamId, email, invited_by: user.id, status: "pending" },
-        { onConflict: "team_id,email" }
-      );
-
-    if (inviteError) throw inviteError;
+    // User doesn't exist — create invitation record if teamId provided
+    if (teamId) {
+      const { error: inviteError } = await supabase
+        .from("team_invitations")
+        .upsert(
+          { team_id: teamId, email, invited_by: user.id, status: "pending" },
+          { onConflict: "team_id,email" }
+        );
+      if (inviteError) throw inviteError;
+    }
 
     const APP_URL = Deno.env.get("APP_URL") || "https://app.decivio.com";
+
+    // Build contextual accept URL
+    const acceptParams = new URLSearchParams();
+    if (contextDecisionId) {
+      acceptParams.set("invite", "context");
+      acceptParams.set("decision", contextDecisionId);
+      acceptParams.set("from", inviterName);
+    }
+    const acceptUrl = acceptParams.toString()
+      ? `${APP_URL}/auth?${acceptParams.toString()}`
+      : `${APP_URL}/auth`;
 
     // Generate email template
     const { subject } = teamInviteEmail({
       inviterName,
       teamName: teamName || "ein Team",
-      acceptUrl: `${APP_URL}/auth`,
+      acceptUrl,
+      decisionTitle,
+      costPerDay: costPerDay || undefined,
     });
 
     // Send invite email via Supabase Auth
     const { error: signupError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      data: { invited_to_team: teamName || "ein Team" },
-      redirectTo: `${APP_URL}/auth`,
+      data: {
+        invited_to_team: teamName || "ein Team",
+        ...(contextDecisionId && { context_decision_id: contextDecisionId }),
+      },
+      redirectTo: acceptUrl,
     });
 
     if (signupError) {

@@ -45,9 +45,31 @@ const Auth = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Parse invite context from URL
+  const inviteContext = (() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("invite") || params.get("decision")) {
+        return {
+          decisionId: params.get("decision"),
+          org: params.get("org"),
+          from: params.get("from"),
+        };
+      }
+    } catch {}
+    return null;
+  })();
+
   useEffect(() => {
-    if (user) navigate("/dashboard");
-  }, [user, navigate]);
+    if (user) {
+      // If there's an invite context with a decision, redirect there
+      if (inviteContext?.decisionId) {
+        navigate(`/decisions/${inviteContext.decisionId}`);
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [user, navigate, inviteContext]);
 
   const loginSchema = z.object({
     email: z.string().email(t("auth.invalidEmail")),
@@ -187,9 +209,20 @@ const Auth = () => {
             <img src={decivioLogo} alt="Decivio" className="w-full h-full" />
           </div>
           <h1 className="font-display text-2xl font-bold">Decivio</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {isLogin ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
-          </p>
+          {inviteContext ? (
+            <div className="mt-2 p-3 rounded-lg bg-primary/[0.05] border border-primary/10">
+              <p className="text-sm font-medium text-foreground">
+                {inviteContext.from ? `${inviteContext.from} wartet auf Ihre Genehmigung` : "Sie wurden zu einer Entscheidung eingeladen"}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Erstellen Sie ein Konto, um direkt zur Entscheidung zu gelangen.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-1">
+              {isLogin ? t("auth.signInSubtitle") : t("auth.signUpSubtitle")}
+            </p>
+          )}
         </div>
 
         <Card className="border-border/50 shadow-glow">

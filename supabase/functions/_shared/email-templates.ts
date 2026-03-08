@@ -172,32 +172,59 @@ export interface TeamInviteEmailParams {
   inviterName: string;
   teamName: string;
   acceptUrl: string;
+  decisionTitle?: string;
+  costPerDay?: number;
 }
 
-export function teamInviteEmail({ inviterName, teamName, acceptUrl }: TeamInviteEmailParams): { subject: string; html: string } {
-  const subject = `${inviterName} hat Sie zu Decivio eingeladen`;
+export function teamInviteEmail({ inviterName, teamName, acceptUrl, decisionTitle, costPerDay }: TeamInviteEmailParams): { subject: string; html: string } {
+  const subject = decisionTitle
+    ? `${inviterName} wartet auf Ihre Genehmigung`
+    : `${inviterName} hat Sie zu Decivio eingeladen`;
+
+  const costBlock = costPerDay && costPerDay > 0
+    ? `<div style="background-color:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:12px 16px;margin:0 0 16px;">
+        <p style="margin:0;font-size:14px;font-weight:600;color:#92400E;">
+          ⏱ Verzögerungskosten: ${Number(costPerDay).toLocaleString("de-DE")} € / Tag
+        </p>
+      </div>`
+    : "";
+
+  const decisionBlock = decisionTitle
+    ? `<div style="background-color:#F8FAFC;border-radius:8px;padding:20px;margin:0 0 16px;">
+        <p style="margin:0 0 4px;font-size:12px;color:#64748B;">Entscheidung:</p>
+        <p style="margin:0;font-size:16px;font-weight:700;color:#0F172A;">${escapeHtml(decisionTitle)}</p>
+      </div>`
+    : "";
+
   const content = `
-    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#0F172A;">Team-Einladung</h1>
+    <h1 style="margin:0 0 16px;font-size:24px;font-weight:700;color:#0F172A;">
+      ${decisionTitle ? "Ihre Genehmigung wird benötigt" : "Team-Einladung"}
+    </h1>
     <p style="margin:0 0 24px;">
-      <strong>${escapeHtml(inviterName)}</strong> hat Sie eingeladen, dem Team <strong>${escapeHtml(teamName)}</strong> auf Decivio beizutreten.
+      <strong>${escapeHtml(inviterName)}</strong> ${decisionTitle
+        ? `wartet auf Ihre Genehmigung bei <strong>${escapeHtml(teamName)}</strong>.`
+        : `hat Sie eingeladen, dem Team <strong>${escapeHtml(teamName)}</strong> auf Decivio beizutreten.`}
     </p>
-    <div style="background-color:#F8FAFC;border-radius:8px;padding:20px;margin:0 0 24px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-          <td style="padding:4px 0;font-size:14px;color:#64748B;">Eingeladen von:</td>
-          <td style="padding:4px 0;font-size:14px;color:#0F172A;font-weight:600;text-align:right;">${escapeHtml(inviterName)}</td>
-        </tr>
-        <tr>
-          <td style="padding:4px 0;font-size:14px;color:#64748B;">Team:</td>
-          <td style="padding:4px 0;font-size:14px;color:#0F172A;font-weight:600;text-align:right;">${escapeHtml(teamName)}</td>
-        </tr>
-      </table>
-    </div>
-    ${ctaButton("Einladung annehmen", acceptUrl)}
-    <p style="margin:0;font-size:13px;color:#64748B;text-align:center;">
+    ${decisionBlock}
+    ${costBlock}
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:4px 0;font-size:14px;color:#64748B;">Eingeladen von:</td>
+        <td style="padding:4px 0;font-size:14px;color:#0F172A;font-weight:600;text-align:right;">${escapeHtml(inviterName)}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;font-size:14px;color:#64748B;">Team:</td>
+        <td style="padding:4px 0;font-size:14px;color:#0F172A;font-weight:600;text-align:right;">${escapeHtml(teamName)}</td>
+      </tr>
+    </table>
+    ${ctaButton(decisionTitle ? "Jetzt ansehen →" : "Einladung annehmen", acceptUrl)}
+    <p style="margin:16px 0 0;font-size:13px;color:#64748B;text-align:center;">
       Diese Einladung ist <strong>7 Tage</strong> gültig.
+    </p>
+    <p style="margin:12px 0 0;font-size:12px;color:#94A3B8;text-align:center;">
+      ${escapeHtml(inviterName)} nutzt Decivio um Entscheidungen schneller und transparenter zu treffen.
     </p>`;
-  return { subject, html: layout(content, `${inviterName} hat Sie zu ${teamName} eingeladen.`) };
+  return { subject, html: layout(content, decisionTitle ? `${inviterName} wartet auf Ihre Genehmigung` : `${inviterName} hat Sie zu ${teamName} eingeladen.`) };
 }
 
 // ─── 5. Review Request (One-Click Approval) ─────────────────────────
