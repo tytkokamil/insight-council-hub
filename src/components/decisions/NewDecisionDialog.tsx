@@ -83,7 +83,8 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
   const [pinnedLessons, setPinnedLessons] = useState<any[]>([]);
   const [templateBrowserOpen, setTemplateBrowserOpen] = useState(false);
   const [ownerId, setOwnerId] = useState("");
-
+  const [confidential, setConfidential] = useState(false);
+  const [confidentialViewerIds, setConfidentialViewerIds] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [reviewFlowId, setReviewFlowId] = useState<string>(() => suggestReviewFlow("operational", "medium"));
   const [selectedReviewFlow, setSelectedReviewFlow] = useState<ReviewFlowTemplate | null>(null);
