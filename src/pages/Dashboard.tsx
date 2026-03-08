@@ -248,44 +248,42 @@ const Dashboard = () => {
       )}
 
       {/* ═══ HEADER with Executive Mode Toggle ═══ */}
-      <div className="flex items-start sm:items-center justify-between gap-3 mb-8">
-        <PageHeader
-          title={dashboardTitle}
-          subtitle={t("dashboard.whatNeedsAttention")}
-          role="execution"
-          help={{ title: isExecutive ? t("dashboard.helpTitleExecutive", { defaultValue: "Executive Dashboard" }) : t("dashboard.helpTitleOperational", { defaultValue: "Operational Dashboard" }), description: isExecutive ? t("dashboard.helpDescExecutive", { defaultValue: "Board-Ready Control Center: DQI, Economic Risk, Portfolio-Übersicht und KI-gestütztes Executive Briefing auf einen Blick." }) : t("dashboard.helpDescOperational", { defaultValue: "Dein tägliches Cockpit: Offene Aufgaben, Eskalationen, Deadlines und Team-KPIs für schnelle operative Steuerung." }) }}
-          primaryAction={
-            <Button size="sm" className="gap-1.5 bg-[hsl(210,50%,24%)] hover:bg-[hsl(210,50%,20%)] text-white" onClick={() => navigate("/decisions?create=true")}>
-              <Plus className="w-3.5 h-3.5" />
-              {t("decisions.newDecision", { defaultValue: "+Neue Entscheidung" })}
-            </Button>
-          }
-          secondaryActions={
-            <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
-              <button
-                onClick={() => toggleDashboardMode("operational")}
-                className={cn(
-                  "flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-md transition-colors",
-                  !isExecutive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                Operational
-              </button>
-              <button
-                onClick={() => toggleDashboardMode("executive")}
-                className={cn(
-                  "flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-md transition-colors",
-                  isExecutive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Crown className="w-3.5 h-3.5" />
-                Executive
-              </button>
-            </div>
-          }
-        />
-      </div>
+      <PageHeader
+        title={dashboardTitle}
+        subtitle={t("dashboard.whatNeedsAttention")}
+        role="execution"
+        help={{ title: isExecutive ? t("dashboard.helpTitleExecutive", { defaultValue: "Executive Dashboard" }) : t("dashboard.helpTitleOperational", { defaultValue: "Operational Dashboard" }), description: isExecutive ? t("dashboard.helpDescExecutive", { defaultValue: "Board-Ready Control Center: DQI, Economic Risk, Portfolio-Übersicht und KI-gestütztes Executive Briefing auf einen Blick." }) : t("dashboard.helpDescOperational", { defaultValue: "Dein tägliches Cockpit: Offene Aufgaben, Eskalationen, Deadlines und Team-KPIs für schnelle operative Steuerung." }) }}
+        primaryAction={
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={() => navigate("/decisions?create=true")}>
+            <Plus className="w-3.5 h-3.5" />
+            {t("decisions.newDecision", { defaultValue: "+Neue Entscheidung" })}
+          </Button>
+        }
+        secondaryActions={
+          <div className="flex gap-0.5 bg-muted/50 rounded-lg p-0.5">
+            <button
+              onClick={() => toggleDashboardMode("operational")}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+                !isExecutive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <LayoutDashboard className="w-3.5 h-3.5" />
+              Operational
+            </button>
+            <button
+              onClick={() => toggleDashboardMode("executive")}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium py-1.5 px-3 rounded-md transition-all",
+                isExecutive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Crown className="w-3.5 h-3.5" />
+              Executive
+            </button>
+          </div>
+        }
+      />
 
       <div className="section-gap-lg">
 

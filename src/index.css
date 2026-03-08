@@ -319,6 +319,36 @@ html {
   .section-gap-sm { @apply space-y-4; }
   .section-gap-lg { @apply space-y-8; }
 
+  /* Page content wrapper – consistent max-width and spacing */
+  .page-content {
+    @apply space-y-6;
+  }
+
+  /* KPI card – consistent sizing across all pages */
+  .kpi-card {
+    @apply p-4 rounded-xl border border-border/60 bg-card min-h-[90px] flex flex-col justify-center transition-all duration-200;
+  }
+  .kpi-card:hover {
+    border-color: hsl(var(--foreground) / 0.12);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .kpi-card .kpi-label {
+    @apply flex items-center gap-1.5 mb-1.5;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+  .kpi-card .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    @apply text-2xl font-bold;
+  }
+  .kpi-card .kpi-trend {
+    @apply text-[10px] mt-1;
+  }
+
   /* Widget grid – consistent dashboard/bento layouts (12px gap) */
   .widget-grid {
     @apply grid gap-3;
@@ -361,13 +391,17 @@ html {
 
   /* Settings group card – wraps related sections */
   .settings-group {
-    @apply bg-card rounded-xl border border-border/60 p-6;
+    @apply bg-card rounded-xl border border-border/50 p-6;
+    box-shadow: var(--shadow-card);
   }
   .settings-group + .settings-group {
     @apply mt-4;
   }
   .settings-group h2 {
-    @apply text-sm font-semibold mb-4;
+    @apply text-sm font-semibold mb-4 tracking-tight;
+  }
+  .settings-group h2:first-child {
+    @apply flex items-center gap-2;
   }
 
   /* Section divider – softer than hr */

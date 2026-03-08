@@ -130,7 +130,7 @@ const ActiveSessionsPanel = () => {
                       {session.device_info || parseUserAgent(session.user_agent)}
                     </p>
                     {session.is_current ? (
-                      <Badge className="text-[9px]" style={{ backgroundColor: "hsl(160 84% 39% / 0.1)", color: "hsl(160 84% 39%)", borderColor: "hsl(160 84% 39% / 0.2)" }}>
+                      <Badge className="text-[9px] bg-success/10 text-success border-success/20">
                         {t("settings.currentSession", "Diese Sitzung")}
                       </Badge>
                     ) : (

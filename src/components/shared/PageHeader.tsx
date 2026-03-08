@@ -3,6 +3,14 @@ import PageHelpButton from "./PageHelpButton";
 
 export type PageRole = "intelligence" | "execution" | "governance" | "knowledge" | "system";
 
+const roleAccent: Record<PageRole, string> = {
+  intelligence: "border-l-accent-teal",
+  execution: "border-l-primary",
+  governance: "border-l-accent-rose",
+  knowledge: "border-l-accent-blue",
+  system: "border-l-accent-amber",
+};
+
 const PageHeader = ({
   title,
   subtitle,
@@ -20,8 +28,8 @@ const PageHeader = ({
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2.5 mb-1 flex-wrap">
+      <div className={`flex-1 min-w-0 border-l-[3px] ${roleAccent[role]} pl-3`}>
+        <div className="flex items-center gap-2.5 mb-0.5 flex-wrap">
           <h1 className="text-lg sm:text-xl font-bold tracking-tight">{title}</h1>
           {help && <PageHelpButton title={help.title} description={help.description} />}
         </div>

@@ -15,6 +15,7 @@ import {
   Server, ChevronRight, Gift, Plug, Scale, CreditCard
 } from "lucide-react";
 import SubNav from "@/components/shared/SubNav";
+import PageHeader from "@/components/shared/PageHeader";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
@@ -215,10 +216,11 @@ const SettingsPage = () => {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-xl font-bold tracking-tight">{t("settings.pageTitle")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("settings.pageSubtitle")}</p>
-        </div>
+        <PageHeader
+          title={t("settings.pageTitle")}
+          subtitle={t("settings.pageSubtitle")}
+          role="system"
+        />
 
         <SubNav<SettingsTab> items={tabs} active={activeTab} onChange={setActiveTab} layoutId="settings-tab" />
 
@@ -265,7 +267,7 @@ const SettingsPage = () => {
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.emailLabel")}</label>
                       <input type="email" value={user?.email || ""} disabled className={`${inputClass} opacity-50 cursor-not-allowed`} />
                     </div>
-                    <Button size="sm" onClick={handleSave} disabled={saving} className="w-fit gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                    <Button size="sm" onClick={handleSave} disabled={saving} className="w-fit gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground">
                       {saved && <CheckCircle2 className="w-3 h-3" />}{saving ? t("settings.saving") : saved ? t("settings.saved") : t("settings.save")}
                     </Button>
                   </div>
@@ -490,7 +492,7 @@ const SettingsPage = () => {
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.confirmPassword")}</label>
                     <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("settings.confirmPasswordPlaceholder")} className={inputClass} />
                   </div>
-                  <Button size="sm" onClick={handlePasswordChange} disabled={changingPassword || !newPassword} style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                  <Button size="sm" onClick={handlePasswordChange} disabled={changingPassword || !newPassword} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {changingPassword ? t("settings.updating") : t("settings.changePassword")}
                   </Button>
                 </div>
@@ -622,9 +624,9 @@ const SettingsPage = () => {
               </div>
 
               {/* Data Residency — moved above provider selection for trust-first */}
-              <div className="p-4 rounded-lg border-l-4" style={{ backgroundColor: "hsl(214 100% 97%)", borderLeftColor: "hsl(217 91% 60%)" }}>
+              <div className="p-4 rounded-lg border-l-4 border-l-accent-blue bg-accent-blue/[0.06]">
                 <div className="flex items-center gap-2 mb-1">
-                  <Shield className="w-4 h-4" style={{ color: "hsl(217 91% 60%)" }} />
+                  <Shield className="w-4 h-4 text-accent-blue" />
                   <h3 className="text-sm font-medium">{t("settings.aiDataResidency")}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground">{t("settings.aiDataResidencyInfo")}</p>
@@ -667,7 +669,7 @@ const SettingsPage = () => {
                   </div>
                 )}
                 <div className="mt-4">
-                  <Button size="sm" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                  <Button size="sm" onClick={handleSaveAi} disabled={savingAi} className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground">
                     {savedAi && <CheckCircle2 className="w-3 h-3" />}{savingAi ? t("settings.saving") : savedAi ? t("settings.saved") : t("settings.save")}
                   </Button>
                 </div>

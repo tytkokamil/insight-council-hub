@@ -95,11 +95,11 @@ const OrgCodDefaultsPanel = () => {
         </div>
       </div>
 
-      <div className="p-3 rounded-lg border" style={{ backgroundColor: "hsl(214 100% 97%)", borderColor: "hsl(217 91% 60% / 0.2)" }}>
+      <div className="p-3 rounded-lg border border-accent-blue/20 bg-accent-blue/[0.06]">
         <div className="flex items-start gap-2">
-          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "hsl(217 91% 60%)" }} />
+          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-accent-blue" />
           <div className="text-[11px] text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground" style={{ color: "hsl(217 91% 60%)" }}>
+            <p className="font-medium text-accent-blue">
               {t("cod.example", "Beispiel")}:
             </p>
             <p>
