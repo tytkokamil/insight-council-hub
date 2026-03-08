@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useIndustryPersonalization } from "@/hooks/useIndustryPersonalization";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
