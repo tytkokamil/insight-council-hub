@@ -34,6 +34,7 @@ import PublicDashboardLinks from "@/components/dashboard/PublicDashboardLinks";
 import NotificationMatrixPanel from "@/components/settings/NotificationMatrixPanel";
 import AccountDeletionPanel from "@/components/settings/AccountDeletionPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
+import SsoSettingsPanel from "@/components/settings/SsoSettingsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
