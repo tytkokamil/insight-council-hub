@@ -185,7 +185,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
         </aside>
       )}
 
-      <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14" : ""}`} role="main">
+      <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14 pb-20" : ""}`} role="main">
         {!isMobile && <TopBar collapsed={collapsed} />}
         <FreemiumWarningBar />
         <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
