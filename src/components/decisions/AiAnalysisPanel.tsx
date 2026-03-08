@@ -257,6 +257,12 @@ const AiAnalysisPanel = ({ decision, onUpdated }: { decision: any; onUpdated: ()
             </div>
           )}
 
+          <AiExplainabilityBadge
+            confidence={confidence || (analysis.risk_score > 60 ? "low" : analysis.risk_score > 30 ? "medium" : "high")}
+            factors={(analysis.risk_factors || []).slice(0, 3).map((f: any) => typeof f === "string" ? f : f.factor)}
+            sourceType={options.length > 0 ? "llm" as AiSourceType : "data" as AiSourceType}
+            explanation={riskExplanation || confidenceReason || null}
+          />
           <AiFeedbackButton context={options.length > 0 ? "autopilot" : "risk-analysis"} />
         </div>
       ) : (

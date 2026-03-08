@@ -91,6 +91,13 @@ const DecisionSideDrawer = ({
                   <p className="font-bold text-lg">{decision.ai_impact_score || 0}%</p>
                 </div>
               </div>
+              <AiExplainabilityBadge
+                confidence={decision.ai_risk_score > 60 ? "low" : decision.ai_risk_score > 30 ? "medium" : "high"}
+                sourceType="data"
+                dataPoints={decision.ai_risk_factors?.length || 0}
+                factors={decision.ai_risk_factors?.slice(0, 2)}
+                className="mt-2"
+              />
             </div>
           )}
 
