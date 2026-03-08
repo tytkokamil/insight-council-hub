@@ -86,7 +86,17 @@ const Welcome = () => {
   const handleTeamSizeSelect = async (id: string) => {
     setSelectedTeamSize(id);
     if (user) {
+      // Save industry to profile
       await supabase.from("profiles").update({ industry: selectedIndustry } as any).eq("user_id", user.id);
+      // Save team_size to org settings
+      const { data: profile } = await supabase.from("profiles").select("org_id").eq("user_id", user.id).single();
+      if (profile?.org_id) {
+        const { data: org } = await supabase.from("organizations").select("settings").eq("id", profile.org_id).single();
+        const currentSettings = (org?.settings as Record<string, any>) || {};
+        await supabase.from("organizations").update({
+          settings: { ...currentSettings, team_size: id, industry: selectedIndustry },
+        }).eq("id", profile.org_id);
+      }
     }
     setTimeout(() => setStep(4), 300);
   };
