@@ -55,7 +55,6 @@ const PainOnboarding = () => {
 
   const handleCTA = useCallback(async () => {
     if (!user) return;
-    // Save values to org settings
     const { data: profile } = await supabase
       .from("profiles")
       .select("org_id")
@@ -80,11 +79,8 @@ const PainOnboarding = () => {
       }).eq("id", profile.org_id);
     }
 
-    // Store in localStorage for immediate use
     localStorage.setItem("pain_hourly_rate", String(hourlyRate));
     localStorage.setItem("pain_decision_count", String(decisions));
-
-    // Mark pain onboarding done, go to main onboarding
     navigate("/welcome", { replace: true });
   }, [user, hourlyRate, decisions, navigate]);
 
@@ -92,24 +88,24 @@ const PainOnboarding = () => {
   const formattedTicker = Math.floor(tickerValue).toLocaleString("de-DE");
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center">
+    <div className="min-h-screen bg-background flex flex-col items-center">
       {/* Logo */}
       <div className="mt-12 mb-8 flex items-center gap-2">
         <img src={decivioLogo} alt="Decivio" className="w-7 h-7 rounded-lg" />
-        <span className="text-[#1E3A5F] font-semibold text-xl">Decivio</span>
+        <span className="text-primary font-semibold text-xl">Decivio</span>
       </div>
 
       {/* Question */}
-      <h1 className="text-4xl font-bold text-[#1E3A5F] text-center mb-10 px-4">
+      <h1 className="text-4xl font-bold text-primary text-center mb-10 px-4">
         Eine Frage bevor wir starten.
       </h1>
 
       {/* Slider Card */}
       <div className="w-full max-w-[640px] mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-lg p-10 space-y-8">
+        <div className="bg-card rounded-2xl shadow-lg border border-border/50 p-10 space-y-8">
           {/* First Slider */}
           <div className="space-y-6">
-            <p className="text-lg text-[#64748B] text-center">
+            <p className="text-lg text-muted-foreground text-center">
               Wie viele Entscheidungen, Freigaben oder Genehmigungen hat Ihr Unternehmen gerade offen?
             </p>
             <Slider
@@ -118,11 +114,11 @@ const PainOnboarding = () => {
               min={1}
               max={50}
               step={1}
-              className="[&_[role=slider]]:w-7 [&_[role=slider]]:h-7 [&_[role=slider]]:bg-[#1E3A5F] [&_[role=slider]]:border-0 [&>span:first-child]:h-2 [&>span:first-child>span]:bg-[#1E3A5F]"
+              className="[&_[role=slider]]:w-7 [&_[role=slider]]:h-7 [&_[role=slider]]:bg-primary [&_[role=slider]]:border-0 [&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary"
             />
             <p className="text-center">
-              <span className="text-5xl font-extrabold text-[#1E3A5F] tabular-nums">{decisions}</span>
-              <span className="text-lg text-[#64748B] ml-2">offene Entscheidungen</span>
+              <span className="text-5xl font-extrabold text-primary tabular-nums">{decisions}</span>
+              <span className="text-lg text-muted-foreground ml-2">offene Entscheidungen</span>
             </p>
           </div>
 
@@ -135,7 +131,7 @@ const PainOnboarding = () => {
                 transition={{ duration: 0.5 }}
                 className="space-y-6 overflow-hidden"
               >
-                <p className="text-lg text-[#64748B] text-center">
+                <p className="text-lg text-muted-foreground text-center">
                   Wie hoch ist der durchschnittliche Stundensatz Ihrer Entscheider?
                 </p>
                 <Slider
@@ -144,11 +140,11 @@ const PainOnboarding = () => {
                   min={40}
                   max={300}
                   step={5}
-                  className="[&_[role=slider]]:w-7 [&_[role=slider]]:h-7 [&_[role=slider]]:bg-[#1E3A5F] [&_[role=slider]]:border-0 [&>span:first-child]:h-2 [&>span:first-child>span]:bg-[#1E3A5F]"
+                  className="[&_[role=slider]]:w-7 [&_[role=slider]]:h-7 [&_[role=slider]]:bg-primary [&_[role=slider]]:border-0 [&>span:first-child]:h-2 [&>span:first-child>span]:bg-primary"
                 />
                 <p className="text-center">
-                  <span className="text-5xl font-extrabold text-[#1E3A5F] tabular-nums">{hourlyRate}</span>
-                  <span className="text-lg text-[#64748B] ml-2">€/Stunde</span>
+                  <span className="text-5xl font-extrabold text-primary tabular-nums">{hourlyRate}</span>
+                  <span className="text-lg text-muted-foreground ml-2">€/Stunde</span>
                 </p>
               </motion.div>
             )}
@@ -161,23 +157,20 @@ const PainOnboarding = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="pt-6 border-t border-[#E2E8F0] space-y-3"
+                className="pt-6 border-t border-border space-y-3"
               >
-                <p className="text-sm uppercase tracking-wider text-[#94A3B8] text-center">
+                <p className="text-sm uppercase tracking-wider text-muted-foreground/60 text-center">
                   Diese offenen Entscheidungen kosten Sie gerade:
                 </p>
                 <p className="text-center">
-                  <span
-                    className="text-7xl font-extrabold text-[#EF4444] tabular-nums transition-colors duration-300"
-                    style={{ textShadow: "0 0 20px rgba(239, 68, 68, 0.15)" }}
-                  >
+                  <span className="text-7xl font-extrabold text-destructive tabular-nums transition-colors duration-300">
                     {formattedTicker} €
                   </span>
                 </p>
-                <p className="text-base text-[#64748B] text-center">
+                <p className="text-base text-muted-foreground text-center">
                   pro Woche — und der Zähler läuft.
                 </p>
-                <p className="text-xs text-[#94A3B8] italic text-center">
+                <p className="text-xs text-muted-foreground/50 italic text-center">
                   Basierend auf Ihren Angaben und durchschnittlichen Verzögerungszeiten im deutschen Mittelstand.
                 </p>
               </motion.div>
@@ -188,12 +181,12 @@ const PainOnboarding = () => {
         {/* CTA */}
         <button
           onClick={handleCTA}
-          className="w-full h-14 mt-8 rounded-xl bg-[#1E3A5F] hover:bg-[#162D4A] text-white text-lg font-bold transition-colors duration-200 cursor-pointer"
+          className="w-full h-14 mt-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-lg font-bold transition-colors duration-200 cursor-pointer"
         >
           Meine echten Zahlen sehen →
         </button>
 
-        <p className="text-sm text-[#94A3B8] text-center mt-4 mb-12">
+        <p className="text-sm text-muted-foreground/50 text-center mt-4 mb-12">
           Keine Kreditkarte · Kostenlos starten · Jederzeit kündbar
         </p>
       </div>
