@@ -6,7 +6,7 @@ import { useIndustryPersonalization } from "@/hooks/useIndustryPersonalization";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const COST_PER_MS = 47000 / 30 / 24 / 3600 / 1000; // ~€0.018/ms → €47k/mo
+const ROTATING_WORDS = ["Geld.", "Zeit.", "Wachstum.", "Vertrauen.", "Wettbewerb."];
 
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -14,18 +14,14 @@ const HeroSection = () => {
   const contentY = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const industry = useIndustryPersonalization();
 
-  // Inline CoD counter
-  const [cost, setCost] = useState(0);
-  const startRef = useRef(Date.now());
+  const [wordIndex, setWordIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setCost((Date.now() - startRef.current) * COST_PER_MS);
-    }, 80);
+      setWordIndex((prev) => (prev + 1) % ROTATING_WORDS.length);
+    }, 2500);
     return () => clearInterval(id);
   }, []);
-
-  const formattedCost = `€${cost.toLocaleString("de-DE", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   return (
     <section
