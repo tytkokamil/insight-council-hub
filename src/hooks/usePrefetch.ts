@@ -21,7 +21,7 @@ export const usePrefetchOnHover = () => {
         qc.prefetchQuery({
           queryKey: [...DECISIONS_KEY, selectedTeamId],
           queryFn: () => fetchDecisions(selectedTeamId),
-          staleTime: 30_000,
+          staleTime: 5 * 60_000,
         });
       }
 
