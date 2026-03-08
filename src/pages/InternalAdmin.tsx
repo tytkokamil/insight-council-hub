@@ -9,6 +9,7 @@ import AdminUsersTab from "@/components/internal-admin/AdminUsersTab";
 import AdminFeatureFlagsTab from "@/components/internal-admin/AdminFeatureFlagsTab";
 import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
 import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
+import AdminFeedbackTab from "@/components/internal-admin/AdminFeedbackTab";
 import { cn } from "@/lib/utils";
 
 const TABS = [
