@@ -38,7 +38,8 @@ import {
 } from "recharts";
 
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
-const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
+const AhaMomentOverlay = lazy(() => import("@/components/onboarding/AhaMomentOverlay"));
+const GuidedChecklist = lazy(() => import("@/components/onboarding/GuidedChecklist"));
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
 import ActiveDecisionsTable from "@/components/dashboard/ActiveDecisionsTable";
