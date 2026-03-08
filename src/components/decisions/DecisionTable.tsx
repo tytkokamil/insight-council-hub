@@ -178,7 +178,7 @@ const DecisionTable = ({
                   <tr
                     key={decision.id}
                     className={`border-b border-border/20 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors duration-100 ${isSelected ? "bg-primary/[0.04]" : ""}`}
-                    style={meta.isOverdue ? { borderLeft: "3px solid rgba(239, 68, 68, 0.6)" } : undefined}
+                    style={meta.isOverdue ? { borderLeft: "3px solid hsl(var(--destructive) / 0.6)" } : undefined}
                     onClick={() => onPreview(decision)}
                   >
                     <td className="p-3" onClick={(e) => e.stopPropagation()}>
@@ -255,7 +255,7 @@ const DecisionTable = ({
                           {decision.due_date ? format(new Date(decision.due_date), "dd.MM.yy", { locale: de }) : "—"}
                         </span>
                         {meta.cost > 0 && (
-                          <span className="text-[11px] font-medium" style={{ color: "#EF4444" }}>
+                          <span className="text-[11px] font-medium text-destructive">
                             ⏱ {meta.cost >= 1000 ? `${(meta.cost / 1000).toFixed(1)}k` : Math.round(meta.cost)}€/Wo
                           </span>
                         )}

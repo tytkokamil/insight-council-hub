@@ -349,14 +349,14 @@ const EscalationEngine = () => {
             { label: t("escalationEngine.governanceScore"), value: govSnapshot.governanceScore, trend: govSnapshot.governanceScoreTrend, icon: Gauge, color: govSnapshot.governanceScore >= 70 ? "text-success" : govSnapshot.governanceScore >= 40 ? "text-warning" : "text-destructive", isScore: true, highlight: "governance" as const },
             { label: t("escalationEngine.costOfDelay"), value: formatCost(totalCostOfDelay), trend: null, icon: DollarSign, color: totalCostOfDelay > 0 ? "text-destructive" : "text-success", isCurrency: true, highlight: "cost" as const },
           ].map((kpi: any) => (
-            <Card key={kpi.label} className={`relative overflow-hidden ${kpi.highlight === "cost" ? "lg:col-span-1" : ""}`} style={kpi.highlight === "cost" ? { backgroundColor: "#FEF2F2" } : kpi.highlight === "governance" ? { backgroundColor: "#EFF6FF" } : undefined}>
+            <Card key={kpi.label} className={`relative overflow-hidden ${kpi.highlight === "cost" ? "lg:col-span-1 bg-destructive/[0.04] border-destructive/20" : kpi.highlight === "governance" ? "bg-primary/[0.04] border-primary/20" : ""}`}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <kpi.icon className={`w-3.5 h-3.5 ${kpi.color}`} />
                   <span className="text-[10px] text-muted-foreground leading-tight">{kpi.label}</span>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <span className={`font-display text-xl font-bold tabular-nums`} style={kpi.highlight === "cost" ? { color: "#EF4444" } : kpi.highlight === "governance" ? { color: "#3B82F6" } : undefined}>{kpi.value}</span>
+                  <span className={`font-display text-xl font-bold tabular-nums ${kpi.highlight === "cost" ? "text-destructive" : kpi.highlight === "governance" ? "text-primary" : ""}`}>{kpi.value}</span>
                   {kpi.trend !== null && kpi.trend !== 0 && (
                     <span className={`text-[10px] font-medium flex items-center gap-0.5 mb-0.5 ${kpi.trend > 0 ? "text-destructive" : "text-success"}`}>
                       {kpi.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}

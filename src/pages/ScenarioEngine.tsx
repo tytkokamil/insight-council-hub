@@ -272,7 +272,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                           return `${baseRisk}% → ${result.avgRiskIncrease}%`;
                         })()}
                       </div>
-                      <p className="mt-1" style={{ fontSize: "11px", color: "#64748B" }}>
+                      <p className="mt-1 text-[11px] text-muted-foreground">
                         {t("scenarioEngine.riskDelayContext", { weeks: delayWeeks, defaultValue: `bei ${delayWeeks} Wochen Verzögerung` })}
                       </p>
                     </CardContent>
@@ -294,11 +294,11 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                 </div>
 
                 {result.aiInsights && (
-                  <div className="rounded-lg p-4" style={{ borderLeft: "4px solid #3B82F6", backgroundColor: "#EFF6FF" }}>
+                  <div className="rounded-lg p-4 border-l-4 border-l-primary bg-primary/[0.04]">
                     <div className="flex items-start gap-3">
-                      <Sparkles className="w-5 h-5 mt-0.5 shrink-0" style={{ color: "#3B82F6" }} />
+                      <Sparkles className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
                       <div>
-                        <p className="text-sm font-bold mb-1" style={{ color: "#3B82F6" }}>{t("scenarioEngine.aiRecommendation")}</p>
+                        <p className="text-sm font-bold mb-1 text-primary">{t("scenarioEngine.aiRecommendation")}</p>
                         <p className="text-sm text-muted-foreground">{result.aiInsights}</p>
                       </div>
                     </div>
@@ -334,7 +334,7 @@ const ScenarioEngine = ({ embedded }: { embedded?: boolean }) => {
                             </LineChart>
                           </ResponsiveContainer>
                         </div>
-                        <p className="text-center mt-1" style={{ fontSize: "11px", color: "#94A3B8" }}>
+                        <p className="text-center mt-1 text-[11px] text-muted-foreground/60">
                           {t("scenarioEngine.chartExplanation", "Linke Achse: kumulative Kosten in € | Rechte Achse: Risikoniveau in %")}
                         </p>
                       </CardContent>
