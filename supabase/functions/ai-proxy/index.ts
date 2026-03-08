@@ -38,6 +38,28 @@ async function getUserAiSettings(userId: string): Promise<AiSettings> {
   return data || { provider: "lovable", api_key: null, model: null };
 }
 
+async function getOrgModelPreference(userId: string): Promise<string> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const client = createClient(supabaseUrl, serviceKey);
+  
+  const { data: profile } = await client
+    .from("profiles")
+    .select("org_id")
+    .eq("user_id", userId)
+    .single();
+  
+  if (!profile?.org_id) return "auto";
+  
+  const { data: org } = await client
+    .from("organizations")
+    .select("ai_model_preference")
+    .eq("id", profile.org_id)
+    .single();
+  
+  return (org as any)?.ai_model_preference || "auto";
+}
+
 async function extractUserIdFromAuth(req: Request): Promise<string | null> {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) return null;
