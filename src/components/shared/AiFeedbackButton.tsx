@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AiFeedbackButtonProps {
   context: string;
@@ -12,26 +14,38 @@ interface AiFeedbackButtonProps {
 
 const AiFeedbackButton = ({ context, className = "" }: AiFeedbackButtonProps) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [feedback, setFeedback] = useState<"helpful" | "unhelpful" | null>(null);
   const [showComment, setShowComment] = useState(false);
   const [comment, setComment] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleFeedback = (value: "helpful" | "unhelpful") => {
+  const persistFeedback = async (sentiment: string, feedbackComment?: string) => {
+    if (!user) return;
+    await supabase.from("feature_feedback").insert({
+      user_id: user.id,
+      feature: context,
+      sentiment,
+      comment: feedbackComment || null,
+    });
+  };
+
+  const handleFeedback = async (value: "helpful" | "unhelpful") => {
     setFeedback(value);
     if (value === "unhelpful") {
       setShowComment(true);
     } else {
+      await persistFeedback("positive");
       setSubmitted(true);
       toast.success(t("shared.aiFeedbackThanks"));
     }
   };
 
-  const submitComment = () => {
+  const submitComment = async () => {
+    await persistFeedback("negative", comment);
     setSubmitted(true);
     setShowComment(false);
     toast.success(t("shared.aiFeedbackSent"));
-    console.log("[AI Feedback]", { context, feedback, comment });
   };
 
   if (submitted) {

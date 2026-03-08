@@ -568,6 +568,11 @@ const Dashboard = () => {
           hasBrief={false}
         />
       </Suspense>
+
+      {/* NPS Survey */}
+      <Suspense fallback={null}>
+        {showNps && <NpsModal open={showNps} onClose={() => setShowNps(false)} />}
+      </Suspense>
     </AppLayout>
   );
 };
