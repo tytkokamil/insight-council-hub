@@ -203,8 +203,77 @@ const Auth = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
+            {/* Magic Link Section (primary for login) */}
+            {isLogin && (
+              <>
+                <div className="space-y-4 mb-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">{t("auth.email")}</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <input type="email" placeholder={t("auth.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-[52px] pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" autoFocus />
+                    </div>
+                  </div>
+
+                  {error && !showPasswordLogin && (
+                    <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span>
+                    </div>
+                  )}
+
+                  <Button size="lg" className="w-full h-[52px] gap-2" onClick={handleMagicLink} disabled={magicLinkLoading || lockoutSeconds > 0}>
+                    {magicLinkLoading ? t("auth.loading") : "✉️ Magic Link senden"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center">Wir senden Ihnen einen sicheren Login-Link — kein Passwort nötig.</p>
+                </div>
+
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
+                  <div className="relative flex justify-center text-xs uppercase"><span className="bg-card px-2 text-muted-foreground">{t("auth.or")}</span></div>
+                </div>
+
+                <button onClick={() => setShowPasswordLogin(!showPasswordLogin)} className="text-sm text-muted-foreground hover:text-foreground w-full text-center mb-3 transition-colors">
+                  {showPasswordLogin ? "Passwort-Login ausblenden" : "Mit Passwort anmelden"}
+                </button>
+
+                {showPasswordLogin && (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium">{t("auth.password")}</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <input type="password" placeholder={t("auth.passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
+                      </div>
+                    </div>
+
+                    {error && showPasswordLogin && (
+                      <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span>
+                      </div>
+                    )}
+
+                    {lockoutSeconds > 0 && (
+                      <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                        <Timer className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>{t("auth.lockedTimer", { minutes: Math.ceil(lockoutSeconds / 60), seconds: lockoutSeconds % 60 })}</span>
+                      </div>
+                    )}
+
+                    <Button type="submit" size="lg" className="w-full" disabled={loading || lockoutSeconds > 0}>
+                      {loading ? t("auth.loading") : t("auth.signIn")}
+                    </Button>
+
+                    <button type="button" onClick={() => navigate("/reset-password")} className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center">
+                      {t("auth.forgotPassword")}
+                    </button>
+                  </form>
+                )}
+              </>
+            )}
+
+            {/* Sign Up Form (unchanged) */}
+            {!isLogin && (
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium">{t("auth.name")}</label>
                   <div className="relative">
@@ -212,56 +281,40 @@ const Auth = () => {
                     <input type="text" placeholder={t("auth.fullNamePlaceholder")} value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
                   </div>
                 </div>
-              )}
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">{t("auth.email")}</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="email" placeholder={t("auth.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">{t("auth.email")}</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input type="email" placeholder={t("auth.emailPlaceholder")} value={email} onChange={(e) => setEmail(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">{t("auth.password")}</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="password" placeholder={t("auth.passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">{t("auth.password")}</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <input type="password" placeholder={t("auth.passwordPlaceholder")} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-10 pl-10 pr-4 rounded-lg bg-background border border-input text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all" />
+                  </div>
+                  <PasswordStrengthIndicator password={password} />
                 </div>
-                
-                {!isLogin && <PasswordStrengthIndicator password={password} />}
-              </div>
 
-              {error && (
-                <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-              {success && (
-                <div className="flex items-start gap-2 text-accent-teal text-sm bg-accent-teal/10 border border-accent-teal/20 p-3 rounded-lg">
-                  <Zap className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{success}</span>
-                </div>
-              )}
+                {error && (
+                  <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /><span>{error}</span>
+                  </div>
+                )}
+                {success && (
+                  <div className="flex items-start gap-2 text-accent-teal text-sm bg-accent-teal/10 border border-accent-teal/20 p-3 rounded-lg">
+                    <Zap className="w-4 h-4 shrink-0 mt-0.5" /><span>{success}</span>
+                  </div>
+                )}
 
-              {lockoutSeconds > 0 && (
-                <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 border border-destructive/20 p-3 rounded-lg">
-                  <Timer className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span>{t("auth.lockedTimer", { minutes: Math.ceil(lockoutSeconds / 60), seconds: lockoutSeconds % 60 })}</span>
-                </div>
-              )}
-
-              <Button type="submit" size="lg" className="w-full" disabled={loading || lockoutSeconds > 0}>
-                {loading ? t("auth.loading") : lockoutSeconds > 0 ? t("auth.locked") : isLogin ? t("auth.signIn") : t("auth.signUp")}
-              </Button>
-
-              {isLogin && (
-                <button type="button" onClick={() => navigate("/reset-password")} className="text-sm text-muted-foreground hover:text-primary transition-colors w-full text-center">
-                  {t("auth.forgotPassword")}
-                </button>
-              )}
-            </form>
+                <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                  {loading ? t("auth.loading") : t("auth.signUp")}
+                </Button>
+              </form>
+            )}
 
             <div className="relative my-5">
               <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
