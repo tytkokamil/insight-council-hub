@@ -111,7 +111,7 @@ const TestimonialsSection = () => {
                   >
                     {t.metric}
                   </div>
-                  <div className="text-[11px] text-muted-foreground/60 mt-1">{t.metricLabel}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{t.metricLabel}</div>
                 </div>
 
                 <div className="flex-1">
