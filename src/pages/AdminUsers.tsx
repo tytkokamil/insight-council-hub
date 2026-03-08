@@ -500,15 +500,29 @@ const AdminUsers = () => {
 
             <DemoDataPanel />
 
-            {/* Danger Zone - Reset */}
+            {/* Danger Zone */}
             <div className="mt-8">
               <div className="border-t border-dashed" style={{ borderColor: "#FCA5A5" }} />
               <p className="text-xs font-semibold text-destructive uppercase tracking-wider mt-3 mb-2">Gefahrenbereich</p>
               <Card className="border-destructive/30">
-                <CardContent className="p-5">
-                  <h3 className="text-sm font-semibold mb-1">Alle Daten zurücksetzen</h3>
-                  <p className="text-xs text-muted-foreground mb-4">Setzt alle Entscheidungen, Tasks, Lessons und Konfigurationen auf den Ausgangszustand zurück.</p>
-                  <ResetDataButton />
+                <CardContent className="p-5 space-y-6">
+                  <div>
+                    <h3 className="text-sm font-semibold mb-1">Alle Daten zurücksetzen</h3>
+                    <p className="text-xs text-muted-foreground mb-4">Setzt alle Entscheidungen, Tasks, Lessons und Konfigurationen auf den Ausgangszustand zurück.</p>
+                    <ResetDataButton />
+                  </div>
+                  {currentUserRole === "org_owner" && (
+                    <div className="border-t border-destructive/20 pt-5">
+                      <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-destructive" />
+                        Organisation löschen
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Löscht die Organisation und alle zugehörigen Daten unwiderruflich. Alle Mitglieder verlieren den Zugang.
+                      </p>
+                      <DeleteOrgButton />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
