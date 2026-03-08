@@ -31,8 +31,8 @@ const tools: { name: string; scores: Score[]; highlighted?: boolean }[] = [
 
 const categoryColors: Record<string, string> = {
   intelligence: "hsl(var(--primary))",
-  governance: "hsl(350 45% 55%)",
-  execution: "hsl(250 40% 55%)",
+  governance: "hsl(var(--accent-rose))",
+  execution: "hsl(var(--accent-violet))",
 };
 
 const ScoreIcon = ({ score, highlighted }: { score: Score; highlighted?: boolean }) => {

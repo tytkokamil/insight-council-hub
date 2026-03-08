@@ -84,9 +84,9 @@ const Navbar = () => {
         style={
           isDark
             ? {
-                background: scrolled ? "rgba(3,7,18,0.8)" : "transparent",
+                background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
                 backdropFilter: scrolled ? "blur(12px)" : "none",
-                borderColor: scrolled ? "rgba(255,255,255,0.06)" : "transparent",
+                borderColor: scrolled ? "hsl(var(--border) / 0.06)" : "transparent",
               }
             : {
                 background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
@@ -111,7 +111,7 @@ const Navbar = () => {
               />
               <span
                 className="font-semibold text-[15px] tracking-tight"
-                style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+                style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
               >
                 Decivio
               </span>
@@ -128,7 +128,7 @@ const Navbar = () => {
                     className="relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200"
                     style={{
                       color: isDark
-                        ? isActive ? "#fff" : "rgba(255,255,255,0.6)"
+                        ? isActive ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.6)"
                         : isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.7)",
                       fontWeight: isActive ? 500 : 400,
                     }}
@@ -138,7 +138,7 @@ const Navbar = () => {
                       <motion.div
                         layoutId="nav-active"
                         className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full"
-                        style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
+                        style={{ background: "hsl(var(--primary))" }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
@@ -152,7 +152,7 @@ const Navbar = () => {
                 to="/auth"
                 className="text-[13px] px-3 py-1.5 transition-colors"
                 style={{
-                  color: isDark ? "rgba(255,255,255,0.6)" : "hsl(var(--muted-foreground) / 0.7)",
+                  color: isDark ? "hsl(var(--primary-foreground) / 0.6)" : "hsl(var(--muted-foreground) / 0.7)",
                 }}
               >
                 Einloggen
@@ -160,7 +160,7 @@ const Navbar = () => {
               <Link
                 to="/auth"
                 className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-300 overflow-hidden"
-                style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}
+                style={{ background: "hsl(var(--primary))" }}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Kostenlos starten
@@ -171,7 +171,7 @@ const Navbar = () => {
 
             <button
               className="md:hidden p-2"
-              style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+              style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -183,7 +183,7 @@ const Navbar = () => {
           <div
             className="h-[2px] origin-left will-change-transform transition-transform duration-150"
             style={{
-              background: isDark ? "rgba(239,68,68,0.4)" : "hsl(var(--primary) / 0.3)",
+              background: "hsl(var(--primary) / 0.3)",
               transform: `scaleX(${scrollProgress})`,
             }}
             role="progressbar"
@@ -206,9 +206,9 @@ const Navbar = () => {
             <div
               className="rounded-2xl p-5 space-y-1 shadow-lg"
               style={{
-                background: isDark ? "rgba(3,7,18,0.95)" : "hsl(var(--background) / 0.95)",
+                background: isDark ? "hsl(var(--background) / 0.95)" : "hsl(var(--background) / 0.95)",
                 backdropFilter: "blur(16px)",
-                border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}`,
+                border: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}`,
               }}
             >
               {navItems.map(item => (
@@ -219,16 +219,16 @@ const Navbar = () => {
                   className="block text-sm px-4 py-2.5 rounded-lg transition-colors"
                   style={{
                     color: isDark
-                      ? activeSection === item.href ? "#fff" : "rgba(255,255,255,0.6)"
+                      ? activeSection === item.href ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.6)"
                       : activeSection === item.href ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                   }}
                 >
                   {item.label}
                 </a>
               ))}
-              <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}` }}>
-                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}>Einloggen</Link>
-                <Link to="/auth" className="block text-center text-sm font-medium text-white py-2.5 rounded-lg" style={{ background: isDark ? "#EF4444" : "hsl(var(--primary))" }}>Kostenlos starten</Link>
+              <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}` }}>
+                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}>Einloggen</Link>
+                <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground py-2.5 rounded-lg" style={{ background: "hsl(var(--primary))" }}>Kostenlos starten</Link>
               </div>
             </div>
           </motion.div>
