@@ -68,6 +68,8 @@ const WarRoom = lazy(() => import("./pages/WarRoom"));
 const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
 const DemoMode = lazy(() => import("./pages/DemoMode"));
 const PainOnboarding = lazy(() => import("./pages/PainOnboarding"));
+const CodCalculatorWidget = lazy(() => import("./pages/CodCalculatorWidget"));
+const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
