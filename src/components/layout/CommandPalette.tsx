@@ -45,7 +45,7 @@ const CommandPalette = () => {
 
       {showNewDecision && (
         <Suspense fallback={null}>
-          <NewDecisionDialog open={showNewDecision} onOpenChange={setShowNewDecision} />
+          <NewDecisionDialog open={showNewDecision} onOpenChange={setShowNewDecision} onCreated={() => setShowNewDecision(false)} />
         </Suspense>
       )}
     </>
