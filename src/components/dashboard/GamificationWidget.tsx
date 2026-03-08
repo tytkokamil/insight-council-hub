@@ -3,6 +3,7 @@ import { Flame, Trophy, Zap, Target, Star } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import MilestoneShareCard from "@/components/shared/MilestoneShareCard";
 import { differenceInCalendarDays, differenceInDays, startOfDay } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
