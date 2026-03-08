@@ -27,6 +27,7 @@ class GlobalErrorBoundary extends Component<Props, State> {
     console.error("[GlobalErrorBoundary] Unhandled error:", error);
     console.error("[GlobalErrorBoundary] Component stack:", info.componentStack);
     this.setState({ errorInfo: info.componentStack || null });
+    Sentry.captureException(error, { contexts: { react: { componentStack: info.componentStack || "" } } });
   }
 
   handleRetry = () => {
