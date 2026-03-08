@@ -65,13 +65,15 @@ const ROICalculatorSection = () => {
   const [delayDays, setDelayDays] = useState(7);
   const [activePreset, setActivePreset] = useState<number | null>(null);
 
-  // Corrected formula: hourlyRate * 8h * persons * decisions * days / 4.3 weeks
-  const monthlyCost = useMemo(
-    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays / 4.3),
+  // Brutto-Verzögerungskosten: Stundensatz × 8h × Personen × Entscheidungen × Tage
+  const grossCost = useMemo(
+    () => Math.round(hourlyRate * 8 * persons * decisions * delayDays),
     [hourlyRate, persons, decisions, delayDays]
   );
-  // 55% reduction — conservative, credible
-  const savings = useMemo(() => Math.round(monthlyCost * 0.55), [monthlyCost]);
+  // 55% Effizienzfaktor — nicht alle Zeit ist produktiv verloren
+  const monthlyCost = useMemo(() => Math.round(grossCost * 0.55), [grossCost]);
+  // 73% Reduktion durch schnellere Approvals mit Decivio
+  const savings = useMemo(() => Math.round(monthlyCost * 0.73), [monthlyCost]);
   const roiMultiple = useMemo(() => savings > 0 ? Math.round(savings / 149) : 0, [savings]);
 
   const applyPreset = (i: number) => {
