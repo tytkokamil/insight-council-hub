@@ -15,6 +15,7 @@ import {
   Server, ChevronRight, Gift, Plug, Scale, CreditCard
 } from "lucide-react";
 import SubNav from "@/components/shared/SubNav";
+import PageHeader from "@/components/shared/PageHeader";
 import SlaConfigPanel from "@/components/settings/SlaConfigPanel";
 import DelegationPanel from "@/components/settings/DelegationPanel";
 import MfaSettingsPanel from "@/components/settings/MfaSettingsPanel";
