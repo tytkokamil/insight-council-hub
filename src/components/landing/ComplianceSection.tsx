@@ -5,12 +5,12 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const pills = ["NIS2", "ISO 9001", "IATF 16949", "GMP / FDA", "MaRisk", "DSGVO", "VOB/VgV", "Solvency II", "EU AI Act"];
 
 const frameworks = [
-  { name: "NIS2", desc: "Dokumentierte Entscheidungsprozesse für kritische Infrastrukturen.", badge: "Kritisch", badgeColor: "text-[hsl(0,40%,55%)] bg-[hsl(0,40%,55%,0.08)]" },
-  { name: "ISO 9001", desc: "Qualitätsmanagement-Entscheidungen vollständig dokumentiert.", badge: "Qualität", badgeColor: "text-[hsl(250,35%,55%)] bg-[hsl(250,35%,55%,0.08)]" },
-  { name: "IATF 16949", desc: "PPAP-Freigaben und Änderungsmanagement mit Audit Trail.", badge: "Automotive", badgeColor: "text-[hsl(220,45%,50%)] bg-[hsl(220,45%,50%,0.08)]" },
-  { name: "GMP", desc: "Batch-Freigaben und Change Control FDA-konform dokumentiert.", badge: "Pharma", badgeColor: "text-[hsl(160,35%,45%)] bg-[hsl(160,35%,45%,0.08)]" },
-  { name: "MaRisk", desc: "Kreditentscheidungen und Risikoakzeptanz revisionssicher.", badge: "Finanzen", badgeColor: "text-[hsl(35,45%,48%)] bg-[hsl(35,45%,48%,0.08)]" },
-  { name: "DSGVO", desc: "Datenverarbeitungs-Entscheidungen rechtskonform protokollieren.", badge: "Datenschutz", badgeColor: "text-[hsl(175,35%,42%)] bg-[hsl(175,35%,42%,0.08)]" },
+  { name: "NIS2", desc: "Dokumentierte Entscheidungsprozesse für kritische Infrastrukturen.", badge: "Kritisch", badgeColor: "text-destructive bg-destructive/10" },
+  { name: "ISO 9001", desc: "Qualitätsmanagement-Entscheidungen vollständig dokumentiert.", badge: "Qualität", badgeColor: "text-accent-violet bg-accent-violet/10" },
+  { name: "IATF 16949", desc: "PPAP-Freigaben und Änderungsmanagement mit Audit Trail.", badge: "Automotive", badgeColor: "text-accent-blue bg-accent-blue/10" },
+  { name: "GMP", desc: "Batch-Freigaben und Change Control FDA-konform dokumentiert.", badge: "Pharma", badgeColor: "text-accent-teal bg-accent-teal/10" },
+  { name: "MaRisk", desc: "Kreditentscheidungen und Risikoakzeptanz revisionssicher.", badge: "Finanzen", badgeColor: "text-accent-amber bg-accent-amber/10" },
+  { name: "DSGVO", desc: "Datenverarbeitungs-Entscheidungen rechtskonform protokollieren.", badge: "Datenschutz", badgeColor: "text-accent-teal bg-accent-teal/10" },
 ];
 
 const ComplianceSection = () => (
