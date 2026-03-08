@@ -289,7 +289,7 @@ const WebhookSettingsPanel = () => {
           </div>
 
           <div className="flex gap-2">
-            <Button onClick={createEndpoint} disabled={saving || !formUrl.trim()} className="gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+            <Button onClick={createEndpoint} disabled={saving || !formUrl.trim()} className="gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground">
               {saving && <Loader2 className="w-3 h-3 animate-spin" />}
               {t("settings.webhookCreate")}
             </Button>

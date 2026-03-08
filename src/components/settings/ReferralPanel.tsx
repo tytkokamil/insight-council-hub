@@ -86,7 +86,7 @@ const ReferralPanel = () => {
           <code className="flex-1 text-xs font-mono bg-background px-3 py-2 rounded-md border border-border/60 truncate">
             {isLoading ? "..." : referralLink}
           </code>
-          <Button size="sm" className="gap-1.5 shrink-0" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }} onClick={copyLink} disabled={!referralCode}>
+          <Button size="sm" className="gap-1.5 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground" onClick={copyLink} disabled={!referralCode}>
             {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? t("settings.referralCopied") : t("settings.referralCopy")}
           </Button>
