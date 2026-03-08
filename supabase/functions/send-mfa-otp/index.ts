@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { mfaOtpEmail } from "../_shared/email-templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +30,6 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Verify the user via their token
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -41,25 +41,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Parse body once at the top to avoid double-parse bug
     const body = await req.json();
     const { action, code } = body;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     if (action === "send") {
-      // Generate OTP
       const otpCode = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-      // Invalidate previous unused codes
       await adminClient
         .from("email_otp_codes")
         .update({ used: true })
         .eq("user_id", user.id)
         .eq("used", false);
 
-      // Insert new code
       const { error: insertError } = await adminClient
         .from("email_otp_codes")
         .insert({ user_id: user.id, code: otpCode, expires_at: expiresAt });
@@ -71,8 +67,19 @@ Deno.serve(async (req) => {
         });
       }
 
-      // TODO: Integrate with a transactional email provider (SendGrid, Resend, Postmark)
-      // to deliver the OTP code to user.email. Never log OTP values.
+      // Get user name for email template
+      const { data: profile } = await adminClient
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .single();
+
+      const userName = profile?.full_name || user.email || "";
+      const { subject } = mfaOtpEmail({ userName, code: otpCode });
+
+      // TODO: Send via transactional email provider (SendGrid, Resend, Postmark)
+      // using the `html` from mfaOtpEmail() and `subject`
+      console.log(`MFA OTP email generated for ${user.email}. Subject: ${subject}`);
 
       return new Response(
         JSON.stringify({ success: true, message: "OTP sent", email: user.email }),
@@ -106,7 +113,6 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Mark as used
       await adminClient
         .from("email_otp_codes")
         .update({ used: true })

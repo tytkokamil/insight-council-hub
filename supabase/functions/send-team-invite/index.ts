@@ -1,12 +1,12 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { teamInviteEmail } from "../_shared/email-templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -26,19 +26,20 @@ serve(async (req) => {
     const { email, teamId, teamName } = await req.json();
     if (!email || !teamId) throw new Error("Missing email or teamId");
 
-    // Check if user is already a member
-    const { data: existingProfile } = await supabase
+    // Get inviter name
+    const { data: inviterProfile } = await supabase
       .from("profiles")
-      .select("user_id")
-      .eq("user_id", (await supabase.from("profiles").select("user_id").ilike("full_name", email)).data?.[0]?.user_id || "no-match")
-      .maybeSingle();
+      .select("full_name")
+      .eq("user_id", user.id)
+      .single();
+    const inviterName = inviterProfile?.full_name || user.email || "Ein Teammitglied";
 
     // Check if user with this email already exists in auth
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     const existingUser = existingUsers?.users?.find(u => u.email === email);
 
     if (existingUser) {
-      // User exists - check if already a member
+      // Check if already a member
       const { data: membership } = await supabase
         .from("team_members")
         .select("id")
@@ -56,7 +57,6 @@ serve(async (req) => {
       // Add directly to team
       await supabase.from("team_members").insert({ team_id: teamId, user_id: existingUser.id });
 
-      // Update invitation if exists
       await supabase
         .from("team_invitations")
         .update({ status: "accepted", accepted_at: new Date().toISOString() })
@@ -69,7 +69,7 @@ serve(async (req) => {
       );
     }
 
-    // User doesn't exist - create invitation record
+    // User doesn't exist — create invitation record
     const { error: inviteError } = await supabase
       .from("team_invitations")
       .upsert(
@@ -79,19 +79,28 @@ serve(async (req) => {
 
     if (inviteError) throw inviteError;
 
-    // Send invite email via Supabase Auth (invite user)
-    const APP_URL = Deno.env.get("APP_URL") || Deno.env.get("SUPABASE_URL")!;
+    const APP_URL = Deno.env.get("APP_URL") || "https://app.decivio.com";
+
+    // Generate email template
+    const { subject } = teamInviteEmail({
+      inviterName,
+      teamName: teamName || "ein Team",
+      acceptUrl: `${APP_URL}/auth`,
+    });
+
+    // Send invite email via Supabase Auth
     const { error: signupError } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: { invited_to_team: teamName || "ein Team" },
       redirectTo: `${APP_URL}/auth`,
     });
 
     if (signupError) {
-      // If user already invited but not signed up, still ok
       if (!signupError.message.includes("already")) {
         throw signupError;
       }
     }
+
+    console.log(`Team invite sent to ${email} for team ${teamName}. Subject: ${subject}`);
 
     return new Response(
       JSON.stringify({ success: true, message: "Einladung wurde per E-Mail gesendet" }),
