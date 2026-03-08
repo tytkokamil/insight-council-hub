@@ -3768,7 +3768,10 @@ export type Database = {
         Args: { _team_id?: string; _user_id: string }
         Returns: Json
       }
+      get_org_plan: { Args: { _org_id: string }; Returns: string }
       get_org_role: { Args: { _user_id: string }; Returns: string }
+      get_plan_max_decisions: { Args: { _plan: string }; Returns: number }
+      get_plan_max_users: { Args: { _plan: string }; Returns: number }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       get_velocity_score: {
         Args: { _org_id?: string; _user_id?: string }
@@ -3801,6 +3804,10 @@ export type Database = {
           _team_id: string
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_feature_allowed: {
+        Args: { _feature: string; _plan: string }
         Returns: boolean
       }
       is_org_admin_or_owner: { Args: { _user_id: string }; Returns: boolean }

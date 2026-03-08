@@ -3,84 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Crown, Sparkles, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
-/** Feature descriptions with bullet points for the upgrade modal */
-const FEATURE_INFO: Record<string, {
-  titleKey: string;
-  descKey: string;
-  bullets?: string[];
-  priceHint?: string;
-  addonHint?: string;
-}> = {
-  executive: {
-    titleKey: "upgrade.executiveTitle",
-    descKey: "upgrade.executiveDesc",
-    bullets: ["Board-Ready KPIs auf einen Blick", "Portfolio Risk Übersicht", "KI-gestütztes Executive Briefing"],
-  },
-  analytics: {
-    titleKey: "upgrade.analyticsTitle",
-    descKey: "upgrade.analyticsDesc",
-    bullets: ["9 Analytics-Module", "Health Heatmap & Friction Map", "Decision DNA & Pattern Engine"],
-  },
-  bottlenecks: {
-    titleKey: "upgrade.bottlenecksTitle",
-    descKey: "upgrade.bottlenecksDesc",
-    bullets: ["Engpässe automatisch erkennen", "Prozess-Optimierung", "Echtzeit-Monitoring"],
-  },
-  audit: {
-    titleKey: "upgrade.auditTitle",
-    descKey: "upgrade.auditDesc",
-    bullets: ["SHA-256 kryptographische Sicherung", "Lückenlose Hash-Kette", "Unbegrenzte Aufbewahrung"],
-  },
-  engine: {
-    titleKey: "upgrade.engineTitle",
-    descKey: "upgrade.engineDesc",
-  },
-  calendar: {
-    titleKey: "upgrade.calendarTitle",
-    descKey: "upgrade.calendarDesc",
-  },
-  risks: {
-    titleKey: "upgrade.risksTitle",
-    descKey: "upgrade.risksDesc",
-  },
-  teams: {
-    titleKey: "upgrade.teamsTitle",
-    descKey: "upgrade.teamsDesc",
-  },
-  dashboard: {
-    titleKey: "upgrade.dashboardTitle",
-    descKey: "upgrade.dashboardDesc",
-  },
-  decisions: {
-    titleKey: "upgrade.decisionsTitle",
-    descKey: "upgrade.decisionsDesc",
-  },
-  tasks: {
-    titleKey: "upgrade.tasksTitle",
-    descKey: "upgrade.tasksDesc",
-  },
-  aiBrief: {
-    titleKey: "upgrade.aiBriefTitle",
-    descKey: "upgrade.aiBriefDesc",
-    bullets: [
-      "Die 3 kritischsten offenen Entscheidungen",
-      "Aktuelle Verzögerungskosten (Cost-of-Delay)",
-      "Konkrete Handlungsempfehlung",
-    ],
-    priceHint: "Ab €149/Monat",
-  },
-  compliance: {
-    titleKey: "upgrade.complianceTitle",
-    descKey: "upgrade.complianceDesc",
-    bullets: [
-      "Alle Frameworks: NIS2, ISO 9001, IATF, GMP, MaRisk",
-      "Automatische Compliance-Termine",
-      "Audit-Vorbereitung",
-    ],
-    addonHint: "Oder: Zusätzliches Framework für €19/Monat hinzubuchen",
-  },
-};
+import { FEATURE_CONFIG } from "@/hooks/useFeatureAccess";
 
 const PLAN_DISPLAY: Record<string, string> = {
   starter: "Starter",
@@ -106,11 +29,10 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const info = FEATURE_INFO[featureKey];
-  const title = info ? t(info.titleKey, { defaultValue: featureLabel }) : featureLabel;
-  const description = info
-    ? t(info.descKey, { defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` })
-    : t("upgrade.genericDesc", { feature: featureLabel, defaultValue: `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.` });
+  const config = FEATURE_CONFIG[featureKey];
+  const title = config?.label || featureLabel;
+  const description = config?.description || `${featureLabel} ist in deinem aktuellen Plan nicht enthalten.`;
+  const bullets = config?.bullets;
 
   const planName = PLAN_DISPLAY[minPlan] || "Professional";
   const planPrice = PLAN_PRICE[minPlan] || "€149";
@@ -136,9 +58,9 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
         </DialogHeader>
 
         {/* Bullet points if available */}
-        {info?.bullets && (
+        {bullets && (
           <ul className="space-y-2 py-2">
-            {info.bullets.map((bullet, i) => (
+            {bullets.map((bullet, i) => (
               <li key={i} className="flex items-start gap-2.5 text-sm">
                 <Check className="w-4 h-4 text-success shrink-0 mt-0.5" />
                 <span className="text-muted-foreground">{bullet}</span>
@@ -175,9 +97,9 @@ const FeatureUpgradeModal = ({ open, onOpenChange, featureKey, featureLabel, min
             <ArrowRight className="w-3 h-3 ml-1" />
           </Button>
 
-          {info?.addonHint && (
+          {featureKey === "compliance" && (
             <p className="text-[11px] text-muted-foreground/60 text-center pt-1">
-              {info.addonHint}
+              Oder: Zusätzliches Framework für €19/Monat hinzubuchen
             </p>
           )}
 
