@@ -162,9 +162,9 @@ const DecisionGraph = () => {
       type: "default",
       animated: dep.dependency_type === "blocks",
       label: edgeLabelMap[dep.dependency_type] || dep.dependency_type,
-      labelStyle: { fontSize: 10, fill: "#9ca3af" },
+      labelStyle: { fontSize: 10, fill: "hsl(var(--muted-foreground))" },
       style: edgeTypeStyles[dep.dependency_type] || edgeTypeStyles.influences,
-      markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "#eab308" },
+      markerEnd: { type: MarkerType.ArrowClosed, color: edgeTypeStyles[dep.dependency_type]?.stroke || "hsl(var(--warning))" },
     }));
 
     console.log("[DecisionGraph] graphNodes:", graphNodes.length, "graphEdges:", graphEdges.length, "sample edge:", graphEdges[0]);
