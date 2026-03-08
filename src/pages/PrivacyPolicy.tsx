@@ -101,11 +101,10 @@ const PrivacyPolicy = () => (
                   </tr>
                 </thead>
                 <tbody>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Supabase Inc.</td><td className="px-3 py-2 border-b border-border/50">Datenbankhosting, Authentifizierung (EU-Region Frankfurt)</td><td className="px-3 py-2 border-b border-border/50">USA / EU</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Lovable Technologies</td><td className="px-3 py-2 border-b border-border/50">Plattform-Infrastruktur, Hosting, Datenbank &amp; Authentifizierung (via Lovable Cloud, EU-Region Frankfurt)</td><td className="px-3 py-2 border-b border-border/50">EU</td><td className="px-3 py-2 border-b border-border/50">Art. 28 DSGVO, DPA</td></tr>
                   <tr><td className="px-3 py-2 border-b border-border/50">Stripe Inc.</td><td className="px-3 py-2 border-b border-border/50">Zahlungsabwicklung</td><td className="px-3 py-2 border-b border-border/50">USA / EU</td><td className="px-3 py-2 border-b border-border/50">Art. 6 Abs. 1 lit. b DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Resend Inc.</td><td className="px-3 py-2 border-b border-border/50">E-Mail-Versand (Benachrichtigungen)</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Art. 6 Abs. 1 lit. b DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2 border-b border-border/50">Anthropic PBC</td><td className="px-3 py-2 border-b border-border/50">KI-Funktionen (Daily Brief, KI-Vorschläge)</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Art. 6 Abs. 1 lit. f DSGVO, SCCs</td></tr>
-                  <tr><td className="px-3 py-2">Vercel Inc.</td><td className="px-3 py-2">Website-Hosting und CDN</td><td className="px-3 py-2">USA / EU</td><td className="px-3 py-2">Art. 6 Abs. 1 lit. f DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2 border-b border-border/50">Google LLC</td><td className="px-3 py-2 border-b border-border/50">KI-Verarbeitung (Gemini) — nur bei Nutzung von KI-Features</td><td className="px-3 py-2 border-b border-border/50">USA</td><td className="px-3 py-2 border-b border-border/50">Art. 6 Abs. 1 lit. f DSGVO, SCCs</td></tr>
+                  <tr><td className="px-3 py-2">OpenAI LLC</td><td className="px-3 py-2">KI-Verarbeitung (GPT) — optional, nur bei Nutzung</td><td className="px-3 py-2">USA</td><td className="px-3 py-2">Art. 6 Abs. 1 lit. f DSGVO, SCCs</td></tr>
                 </tbody>
               </table>
             </div>

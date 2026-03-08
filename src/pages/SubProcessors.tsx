@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Link2 } from "lucide-react";
 
 const subProcessors = [
-  { name: "Supabase Inc.", purpose: "Datenbankhosting, Authentifizierung, Edge Functions, Row-Level Security", location: "USA (Daten in EU-Region Frankfurt)", transfer: "Ja (EU→US)", legal: "SCCs + DPA" },
-  { name: "Lovable Technologies", purpose: "Plattform-Infrastruktur und Hosting", location: "EU", transfer: "Nein", legal: "DPA" },
-  { name: "Google LLC", purpose: "KI-Verarbeitung (Gemini 2.5 Flash / Pro) — nur bei Nutzung von KI-Features", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + Google API DPA" },
-  { name: "OpenAI LLC", purpose: "KI-Verarbeitung (GPT-5 / GPT-5 Mini) — optional, nur bei Nutzung", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + OpenAI DPA" },
+  { name: "Lovable Technologies", purpose: "Plattform-Infrastruktur, Hosting, Datenbank, Authentifizierung & Edge Functions (via Lovable Cloud, EU-Region Frankfurt)", location: "EU", transfer: "Nein", legal: "DPA" },
+  { name: "Stripe Inc.", purpose: "Zahlungsabwicklung (Kreditkarte, SEPA-Lastschrift)", location: "USA (EU-Entity vorhanden)", transfer: "Ja (EU→US)", legal: "SCCs + Stripe DPA" },
+  { name: "Google LLC", purpose: "KI-Verarbeitung (Gemini) — nur bei Nutzung von KI-Features", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + Google API DPA" },
+  { name: "OpenAI LLC", purpose: "KI-Verarbeitung (GPT) — optional, nur bei Nutzung", location: "USA", transfer: "Ja (EU→US)", legal: "SCCs + OpenAI DPA" },
 ];
 
 const SubProcessors = () => (
