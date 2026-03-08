@@ -1,104 +1,30 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
-const ease = [0.16, 1, 0.3, 1] as const;
-const COST_PER_SECOND = 47000 / 30 / 24 / 3600;
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
+const DARK_TEXTURE = `radial-gradient(ellipse at 20% 50%, rgba(239,68,68,0.08) 0%, transparent 60%), url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
 
-const CTASection = () => {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const orbY = useTransform(scrollYProgress, [0, 1], [40, -40]);
-
-  const [pageCost, setPageCost] = useState(0);
-  const pageStart = useRef(Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setPageCost(((Date.now() - pageStart.current) / 1000) * COST_PER_SECOND);
-    }, 80);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <section ref={ref} className="py-28 relative overflow-hidden" aria-label="Jetzt starten">
-      <div className="aurora-bg" />
-
-      <motion.div style={{ y: orbY }} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px]" />
+const CTASection = () => (
+  <section className="py-24" style={{ background: "#030810", backgroundImage: DARK_TEXTURE }}>
+    <div className="max-w-3xl mx-auto px-4 text-center">
+      <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }}>
+        <h2 className="text-[clamp(1.75rem,4vw,3rem)] font-semibold mb-6 leading-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F5F9" }}>
+          Erste Entscheidung in 3 Minuten.<br />Keine Kreditkarte. Kein IT-Projekt.
+        </h2>
+        <p className="text-lg mb-10" style={{ color: "#94A3B8" }}>Starten Sie heute. Ihr nächster Audit-Prüfer wird es Ihnen danken.</p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/auth" className="inline-flex items-center justify-center gap-2 text-sm font-semibold text-white px-8 py-4 rounded-lg min-h-[48px] shadow-lg"
+            style={{ background: "#EF4444" }}>Kostenlos starten <ArrowRight className="w-4 h-4" /></Link>
+          <a href="mailto:hallo@decivio.com" className="inline-flex items-center justify-center text-sm px-8 py-4 rounded-lg min-h-[48px]"
+            style={{ color: "#F1F5F9", border: "1px solid #1E293B" }}>Demo buchen</a>
+        </div>
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-10">
+          {["🇩🇪 Server in Deutschland", "🔒 DSGVO", "📋 AVV inklusive", "↕ Jederzeit kündbar"].map(t => <span key={t} className="text-sm" style={{ color: "#64748B" }}>{t}</span>)}
+        </div>
       </motion.div>
-
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 relative z-10 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
-        >
-          {/* Live cost — since page visit */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1, duration: 0.5, ease }}
-            className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full glass-ultra mb-10"
-          >
-            <motion.div
-              animate={{ opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.2, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-destructive"
-            />
-            <span className="text-[12px] text-muted-foreground">
-              Seit Ihrem Seitenbesuch:{" "}
-              <span className="font-mono font-bold text-destructive tabular-nums">
-                €{pageCost.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </span>
-          </motion.div>
-
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]">
-            Starten Sie jetzt.
-            <br />
-            <span className="text-primary">Erste Entscheidung in 3 Minuten.</span>
-          </h2>
-
-          <p className="mb-10 text-[15px] text-muted-foreground max-w-md mx-auto">
-            Keine Installation. Kein IT-Projekt. Registrieren, Branche wählen, loslegen.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground px-9 py-4 rounded-xl bg-primary hover:shadow-[0_8px_30px_-6px_hsl(var(--primary)/0.5)] transition-all duration-300 overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                Kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </span>
-            </Link>
-            <a
-              href="mailto:hallo@decivio.com"
-              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-3.5 rounded-xl hover:shadow-md text-muted-foreground hover:text-foreground transition-all"
-            >
-              Demo buchen
-            </a>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
-          >
-            {["🇩🇪 Server in DE", "🔒 ISO 27001", "📋 AVV inklusive", "🛡️ DSGVO"].map((item, i) => (
-              <span key={i} className="text-[11px] font-medium text-muted-foreground">{item}</span>
-            ))}
-          </motion.div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
 export default CTASection;
