@@ -321,7 +321,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                         {/* Today line */}
                         <div
                           className="absolute top-0 bottom-0 z-10"
-                          style={{ left: `${todayPosition}%`, width: "2px", backgroundColor: "#3B82F6" }}
+                          style={{ left: `${todayPosition}%`, width: "2px", backgroundColor: "hsl(var(--primary))" }}
                         />
                         <span
                           className="absolute z-10 font-bold"
