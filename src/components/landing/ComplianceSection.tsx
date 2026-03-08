@@ -54,7 +54,7 @@ const ComplianceSection = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.06, duration: 0.5, ease }}
-            className="p-6 rounded-2xl border border-border/30 bg-white/60 backdrop-blur-sm hover:border-border/50 hover:shadow-[0_4px_16px_-6px_hsl(220,20%,50%,0.06)] transition-all duration-200"
+            className="p-6 rounded-2xl border border-border/30 bg-card/60 backdrop-blur-sm hover:border-border/50 hover:shadow-card-hover transition-all duration-200"
           >
             <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mb-4 tracking-wide uppercase ${fw.badgeColor}`}>
               {fw.badge}

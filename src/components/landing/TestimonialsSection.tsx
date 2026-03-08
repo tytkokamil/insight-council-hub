@@ -129,8 +129,7 @@ const TestimonialsSection = () => {
 
                   <div className="flex items-center gap-3">
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold"
-                      style={{ background: `${t.accentColor.replace(")", " / 0.12)")}`, color: t.accentColor }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-bold ${t.accentBg} ${t.accentClass}`}
                     >
                       {t.initials}
                     </div>

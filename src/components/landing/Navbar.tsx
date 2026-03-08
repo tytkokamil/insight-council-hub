@@ -163,7 +163,7 @@ const Navbar = () => {
             exit={{ opacity: 0, y: -4 }}
             className="md:hidden mx-4 mt-2"
           >
-            <div className="rounded-2xl bg-white/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
+            <div className="rounded-2xl bg-card/95 backdrop-blur-2xl border border-border/40 p-5 space-y-1 shadow-lg">
               {navItems.map(item => (
                 <a
                   key={item.label}
