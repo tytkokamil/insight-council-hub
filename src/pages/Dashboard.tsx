@@ -99,25 +99,15 @@ const Dashboard = () => {
   const isLoading = loadingDec || loadingTasks;
   const hasError = errorDec || errorTasks;
 
-  // Onboarding tour
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [autoSeeded, setAutoSeeded] = useState(false);
-  
-  // Auto-seed disabled — let users see the empty dashboard with widgets
-  // Users can seed demo data from Decisions or Tasks pages
-
-  useEffect(() => {
-    const seen = localStorage.getItem("onboarding-completed");
-    if (!seen && !isLoading && allDecisions.length === 0 && tasks.length === 0) {
-      const timer = setTimeout(() => setShowOnboarding(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, allDecisions.length, tasks.length]);
-
-  const completeOnboarding = useCallback(() => {
-    setShowOnboarding(false);
-    localStorage.setItem("onboarding-completed", "true");
-  }, []);
+  // Aha-moment overlay
+  const [showAha, setShowAha] = useState(() => {
+    const data = localStorage.getItem("aha-moment-data");
+    const seen = localStorage.getItem("aha-moment-seen");
+    return !!data && !seen;
+  });
+  const ahaData = (() => {
+    try { return JSON.parse(localStorage.getItem("aha-moment-data") || "null"); } catch { return null; }
+  })();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
