@@ -266,7 +266,7 @@ const SettingsPage = () => {
                       <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.emailLabel")}</label>
                       <input type="email" value={user?.email || ""} disabled className={`${inputClass} opacity-50 cursor-not-allowed`} />
                     </div>
-                    <Button size="sm" onClick={handleSave} disabled={saving} className="w-fit gap-1.5" style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                    <Button size="sm" onClick={handleSave} disabled={saving} className="w-fit gap-1.5 bg-primary hover:bg-primary/90 text-primary-foreground">
                       {saved && <CheckCircle2 className="w-3 h-3" />}{saving ? t("settings.saving") : saved ? t("settings.saved") : t("settings.save")}
                     </Button>
                   </div>
