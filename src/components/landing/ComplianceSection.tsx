@@ -40,7 +40,7 @@ const ComplianceSection = () => (
         className="flex flex-wrap items-center justify-center gap-2 mb-14"
       >
         {pills.map((pill, i) => (
-          <span key={i} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border/30 bg-white/60" style={{ color: 'hsl(220 10% 50%)' }}>
+          <span key={i} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border/30 bg-card/60 text-muted-foreground">
             ✓ {pill}
           </span>
         ))}
