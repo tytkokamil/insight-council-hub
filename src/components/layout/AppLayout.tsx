@@ -198,6 +198,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 
       <main id="main-content" className={`flex-1 overflow-auto flex flex-col ${isMobile ? "pt-14 pb-20" : ""}`} role="main">
         {!isMobile && <TopBar collapsed={collapsed} />}
+        <ImpersonationBanner />
         {isTrialing && <TrialBanner daysLeft={trialDaysLeft} />}
         {isPastDue && (userRole === "org_owner" || userRole === "org_admin") && (
           <PastDueBanner daysUntilSuspension={pastDueDaysLeft} />
