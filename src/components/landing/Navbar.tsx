@@ -111,7 +111,7 @@ const Navbar = () => {
               />
               <span
                 className="font-semibold text-[15px] tracking-tight"
-                style={{ color: isDark ? "#fff" : "hsl(var(--foreground))" }}
+                style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
               >
                 Decivio
               </span>
