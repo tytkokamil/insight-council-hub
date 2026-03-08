@@ -116,6 +116,7 @@ const InternalAdmin = () => {
           {activeTab === "pilots" && <AdminPilotsTab />}
           {activeTab === "system" && <AdminSystemTab />}
           {activeTab === "roadmap" && <AdminRoadmapTab />}
+          {activeTab === "churn" && <AdminChurnTab />}
         </main>
       </div>
     </div>
