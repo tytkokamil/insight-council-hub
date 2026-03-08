@@ -74,6 +74,7 @@ const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
+const AiDemo = lazy(() => import("./pages/AiDemo"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
