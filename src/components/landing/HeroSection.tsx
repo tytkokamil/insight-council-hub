@@ -170,7 +170,7 @@ const HeroSection = () => {
             className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           >
             {["Keine Kreditkarte", "In 3 Min startklar", "DSGVO-konform", "Server in DE"].map((item, i) => (
-              <span key={i} className="text-[11px] font-medium text-muted-foreground/50">
+              <span key={i} className="text-[11px] font-medium text-muted-foreground">
                 <span className="mr-1 text-success">✓</span>{item}
               </span>
             ))}

@@ -29,7 +29,7 @@ const footerLinks = {
 };
 
 const FooterLink = ({ item }: { item: { label: string; to?: string; href?: string } }) => {
-  const className = "text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors duration-200";
+  const className = "text-[13px] text-muted-foreground/70 hover:text-foreground transition-colors duration-200";
   if (item.to) return <Link to={item.to} className={className}>{item.label}</Link>;
   return <a href={item.href} className={className}>{item.label}</a>;
 };

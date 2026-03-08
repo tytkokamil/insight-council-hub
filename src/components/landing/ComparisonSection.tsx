@@ -153,7 +153,7 @@ const ComparisonSection = () => {
           ))}
 
           {/* Score summary row */}
-          <div className="grid grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-5 py-4 border-t border-border/30 bg-muted/20">
+          <div className="grid grid-cols-[140px_repeat(6,56px)] sm:grid-cols-[1fr_repeat(6,60px)] md:grid-cols-[1fr_repeat(6,100px)] items-center px-3 sm:px-5 py-4 border-t border-border/30 bg-muted/20 min-w-[480px]">
             <span className="text-[12px] font-semibold text-muted-foreground">Abdeckung</span>
             {tools.map((tool, ti) => (
               <div key={ti} className="text-center">

@@ -27,7 +27,7 @@ const ComplianceSection = () => (
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
           Kein Audit mehr ohne Decivio.
         </h2>
-        <p className="leading-relaxed">
+        <p className="leading-relaxed text-muted-foreground">
           Regulatorische Anforderungen sind keine Option. Decivio macht Compliance zur Nebensache.
         </p>
       </motion.div>
