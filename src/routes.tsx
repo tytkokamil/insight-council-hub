@@ -68,7 +68,7 @@ const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
 const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
 const DemoMode = lazy(() => import("./pages/DemoMode"));
-const PainOnboarding = lazy(() => import("./pages/PainOnboarding"));
+
 const CodCalculatorWidget = lazy(() => import("./pages/CodCalculatorWidget"));
 const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 const LaunchChecklist = lazy(() => import("./pages/LaunchChecklist"));
@@ -131,8 +131,9 @@ export const publicRoutes = (
 
 export const protectedRoutes = (
   <>
-    <Route path="/onboarding/pain" element={<P><PainOnboarding /></P>} />
+    <Route path="/onboarding/pain" element={<Navigate to="/welcome" replace />} />
     <Route path="/welcome" element={<P><Welcome /></P>} />
+    <Route path="/executive-dashboard" element={<Navigate to="/executive" replace />} />
     <Route path="/dashboard" element={<P><Dashboard /></P>} />
     <Route path="/decisions" element={<P><Decisions /></P>} />
     <Route path="/decisions/:id" element={<P><DecisionDetail /></P>} />
