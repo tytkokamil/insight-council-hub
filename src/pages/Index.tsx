@@ -25,6 +25,7 @@ const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
 const CTASection = lazy(() => import("@/components/landing/CTASection"));
 const StickyCTA = lazy(() => import("@/components/landing/StickyCTA"));
 const BackToTop = lazy(() => import("@/components/landing/BackToTop"));
+const ScarcityBar = lazy(() => import("@/components/landing/ScarcityBar"));
 
 const SectionFallback = () => <div className="py-24" aria-hidden="true" />;
 
