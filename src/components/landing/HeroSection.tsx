@@ -7,10 +7,10 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const ROTATING_WORDS = [
-  { text: "echtes Geld.", color: "text-primary" },
-  { text: "verlorene Zeit.", color: "text-accent" },
-  { text: "Compliance-Risiko.", color: "text-primary" },
-  { text: "verpasste Chancen.", color: "text-accent" },
+  { text: "echtes Geld.", color: "text-destructive" },
+  { text: "verlorene Zeit.", color: "text-accent-amber" },
+  { text: "Compliance-Risiko.", color: "text-accent-rose" },
+  { text: "verpasste Chancen.", color: "text-accent-violet" },
 ];
 
 const RotatingWord = () => {
@@ -45,7 +45,9 @@ const RotatingWord = () => {
 /* Animated grid background */
 const GridBackground = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-    <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,hsl(220_50%_70%/0.12),transparent_70%)]" />
+    {/* Primary radial gradient */}
+    <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,hsl(var(--primary)/0.08),transparent_70%)]" />
+    {/* Floating ambient orbs */}
     <motion.div
       animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
       transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
@@ -54,11 +56,16 @@ const GridBackground = () => (
     <motion.div
       animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
       transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-      className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent/[0.05] blur-[120px]"
+      className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent-violet/[0.03] blur-[120px]"
     />
-    <div className="absolute inset-0 opacity-[0.03]" style={{
-      backgroundImage: "radial-gradient(circle, hsl(220 20% 55% / 0.6) 1px, transparent 1px)",
+    {/* Dot pattern */}
+    <div className="absolute inset-0 opacity-[0.035]" style={{
+      backgroundImage: "radial-gradient(circle, hsl(var(--foreground) / 0.4) 1px, transparent 1px)",
       backgroundSize: "40px 40px",
+    }} />
+    {/* Noise texture overlay */}
+    <div className="absolute inset-0 opacity-[0.015] mix-blend-overlay" style={{
+      backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
     }} />
   </div>
 );
@@ -66,7 +73,7 @@ const GridBackground = () => (
 /** Live ticking CoD counter — taximeter style */
 const CodTicker = () => {
   const [cents, setCents] = useState(0);
-  const costPerSecond = 47000 / 30 / 24 / 3600; // €47k/month → per second
+  const costPerSecond = 47000 / 30 / 24 / 3600;
 
   useEffect(() => {
     const start = performance.now();
@@ -188,10 +195,10 @@ const HeroSection = () => {
           >
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden bg-primary hover:shadow-[0_4px_24px_-6px_hsl(var(--primary)/0.4)]"
+              className="group relative inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-primary-foreground px-8 py-4 rounded-xl transition-all duration-300 overflow-hidden bg-primary hover:shadow-glow"
             >
               <motion.div
-                className="absolute inset-0 bg-white/10"
+                className="absolute inset-0 bg-primary-foreground/10"
                 initial={{ x: "-100%", skewX: "-15deg" }}
                 whileHover={{ x: "200%" }}
                 transition={{ duration: 0.6, ease }}
@@ -258,8 +265,6 @@ const HeroSection = () => {
           </motion.div>
         </div>
       </motion.div>
-
-      {/* A/B test: secondary CTA variant controlled by feature flag "hero_cta_variant" */}
     </section>
   );
 };
