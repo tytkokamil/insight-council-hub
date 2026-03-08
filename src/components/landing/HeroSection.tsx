@@ -12,6 +12,8 @@ const ROTATING_WORDS = [
   { text: "verpasste Chancen.", color: "text-accent-violet" },
 ];
 
+const COST_PER_SECOND = 47000 / 30 / 24 / 3600; // ~€0.037/s
+
 const RotatingWord = () => {
   const [index, setIndex] = useState(0);
 
@@ -38,6 +40,48 @@ const RotatingWord = () => {
   );
 };
 
+const LiveCodTicker = () => {
+  const [cost, setCost] = useState(0);
+  const startRef = useRef(Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCost(((Date.now() - startRef.current) / 1000) * COST_PER_SECOND);
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.9, duration: 0.6, ease }}
+      className="max-w-[440px] mx-auto mt-8 mb-2"
+    >
+      <div
+        className="flex items-center justify-between gap-4 px-6 py-4 rounded-xl border border-border/40 bg-card shadow-[0_2px_12px_rgba(0,0,0,0.08)]"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <motion.div
+            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-2 h-2 rounded-full bg-destructive shrink-0"
+          />
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Während Sie diese Seite lesen:
+          </span>
+        </div>
+        <span className="text-2xl font-bold font-mono tabular-nums text-destructive shrink-0">
+          €{cost.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
+      </div>
+      <p className="text-[10px] text-muted-foreground italic text-center mt-1.5">
+        Durchschnitt für einen deutschen Mittelständler
+      </p>
+    </motion.div>
+  );
+};
+
 const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end start"] });
@@ -45,7 +89,7 @@ const HeroSection = () => {
   const bgOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
 
   return (
-    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-16" aria-label="Hero">
+    <section ref={sectionRef} className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-20 pb-12" aria-label="Hero">
       <motion.div style={{ opacity: bgOpacity }} className="aurora-bg" />
 
       <div className="absolute inset-0 opacity-[0.02]" style={{
@@ -63,7 +107,7 @@ const HeroSection = () => {
           >
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[11px] font-semibold tracking-wide uppercase text-primary">
-              Decision Governance Platform
+              Entscheidungsplattform für den Mittelstand
             </span>
           </motion.div>
 
@@ -71,7 +115,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.8, ease }}
-            className="text-[clamp(2rem,5vw,3.8rem)] font-semibold tracking-[-0.02em] leading-[1.15] mb-6"
+            className="text-[clamp(2rem,5vw,3.8rem)] font-semibold tracking-[-0.02em] leading-[1.15] mb-4"
           >
             Jede offene Entscheidung
             <br />
@@ -79,11 +123,13 @@ const HeroSection = () => {
             <RotatingWord />
           </motion.h1>
 
+          <LiveCodTicker />
+
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.7, ease }}
-            className="text-[15px] md:text-[17px] max-w-md mx-auto leading-relaxed text-muted-foreground"
+            className="text-[15px] md:text-[17px] max-w-md mx-auto leading-relaxed text-muted-foreground mt-4"
           >
             Decivio macht die unsichtbaren Kosten sichtbar — und sorgt dafür, dass Entscheidungen fallen.
           </motion.p>
@@ -92,7 +138,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.5, ease }}
-            className="flex flex-col sm:flex-row gap-3 justify-center mt-10"
+            className="flex flex-col sm:flex-row gap-3 justify-center mt-8"
           >
             <Link
               to="/auth"
@@ -120,7 +166,7 @@ const HeroSection = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.4, duration: 0.8 }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+            className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           >
             {["Keine Kreditkarte", "In 3 Min startklar", "DSGVO-konform", "Server in DE"].map((item, i) => (
               <span key={i} className="text-[11px] font-medium text-muted-foreground">

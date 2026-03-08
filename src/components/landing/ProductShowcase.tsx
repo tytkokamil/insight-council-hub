@@ -46,7 +46,6 @@ const screens = [
   },
 ];
 
-/* 3D Tilt Card wrapper */
 const TiltCard = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null);
   const mouseX = useMotionValue(0);
@@ -60,82 +59,81 @@ const TiltCard = ({ children }: { children: React.ReactNode }) => {
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    mouseX.set(x);
-    mouseY.set(y);
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
   };
 
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-  };
+  const handleMouseLeave = () => { mouseX.set(0); mouseY.set(0); };
 
   return (
     <div style={{ perspective: 1200 }}>
-      <motion.div
-        ref={ref}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-        className="relative"
-      >
+      <motion.div ref={ref} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} style={{ rotateX, rotateY, transformStyle: "preserve-3d" }} className="relative">
         {children}
-        {/* Glare overlay */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
-          style={{
-            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(var(--primary) / 0.08), transparent 60%)`,
-          }}
-        />
+        <motion.div className="absolute inset-0 rounded-2xl pointer-events-none z-10" style={{ background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(var(--primary) / 0.08), transparent 60%)` }} />
       </motion.div>
     </div>
   );
 };
 
-/* Light-themed stylized mockup for each screen */
+/* Realistic Dashboard Mockup */
 const DashboardMockup = () => (
-  <div className="p-5 space-y-4">
-    <div className="grid grid-cols-3 gap-3">
+  <div className="p-4 space-y-3">
+    {/* KPI row */}
+    <div className="grid grid-cols-3 gap-2">
       {[
-        { label: "Approved", value: "12", color: "text-accent-teal" },
-        { label: "In Review", value: "5", color: "text-primary" },
-        { label: "Risk Score", value: "34%", color: "text-warning" },
+        { label: "Approved", value: "12", color: "text-emerald-600" },
+        { label: "In Review", value: "5", color: "text-amber-600" },
+        { label: "Risk Score", value: "34%", color: "text-amber-600" },
       ].map((kpi) => (
-        <div key={kpi.label} className="rounded-xl border border-border/40 bg-muted/20 p-3">
-          <div className={`text-xl font-bold font-mono ${kpi.color}`}>{kpi.value}</div>
+        <div key={kpi.label} className="rounded-lg border border-border/40 bg-muted/20 p-2.5">
+          <div className={`text-lg font-bold font-mono ${kpi.color}`}>{kpi.value}</div>
           <div className="text-[10px] text-muted-foreground mt-0.5">{kpi.label}</div>
         </div>
       ))}
     </div>
-    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-      <div className="text-[11px] font-semibold text-foreground/70 mb-3">Decision Velocity</div>
-      <div className="flex items-end gap-1.5 h-20">
-        {[40, 65, 50, 80, 70, 95, 60, 85, 75, 90].map((h, i) => (
+
+    {/* Decision Velocity Chart */}
+    <div className="rounded-lg border border-border/40 bg-muted/20 p-3">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-2">Decision Velocity</div>
+      <div className="flex items-end gap-1 h-16 relative">
+        {[35, 42, 38, 55, 62, 68, 72, 78, 85].map((h, i) => (
           <motion.div
             key={i}
-            className="flex-1 rounded-t bg-primary/20"
+            className="flex-1 rounded-t relative"
+            style={{ background: `linear-gradient(to top, hsl(var(--primary) / 0.6), hsl(var(--primary) / 0.25))` }}
             initial={{ height: 0 }}
             whileInView={{ height: `${h}%` }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 + i * 0.05, duration: 0.6, ease }}
-          />
+            transition={{ delay: 0.3 + i * 0.04, duration: 0.5, ease }}
+          >
+            {i === 8 && (
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[8px] font-bold text-primary bg-primary/10 px-1 rounded whitespace-nowrap">+23%</span>
+            )}
+          </motion.div>
         ))}
       </div>
     </div>
-    <div className="rounded-xl border border-border/40 bg-muted/20 p-4 space-y-2">
-      <div className="text-[11px] font-semibold text-foreground/70 mb-2">Decisions</div>
-      {["Approved", "Review", "Draft"].map((status, i) => (
-        <div key={i} className="flex items-center gap-3 py-1.5">
-          <div className="w-2 h-2 rounded-full bg-primary/40" />
-          <div className="flex-1 h-2.5 rounded bg-muted/60" />
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-            status === "Approved" ? "bg-accent-teal/10 text-accent-teal" :
-            status === "Review" ? "bg-primary/10 text-primary" :
-            "bg-muted text-muted-foreground"
-          }`}>{status}</span>
+
+    {/* Decisions list with real text */}
+    <div className="rounded-lg border border-border/40 bg-muted/20 p-3 space-y-1.5">
+      <div className="text-[11px] font-semibold text-foreground/70 mb-1">Decisions</div>
+      {[
+        { title: "Zulieferer-Wechsel Hydraulik", status: "Approved", statusClass: "bg-emerald-500/10 text-emerald-600" },
+        { title: "ERP Update Genehmigung", status: "Review", statusClass: "bg-amber-500/10 text-amber-600" },
+        { title: "IATF Re-Zertifizierung 2024", status: "Draft", statusClass: "bg-muted text-muted-foreground" },
+      ].map((d, i) => (
+        <div key={i} className="flex items-center gap-2 py-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+          <span className="flex-1 text-[11px] text-foreground/70 truncate">{d.title}</span>
+          <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${d.statusClass}`}>{d.status}</span>
         </div>
       ))}
+    </div>
+
+    {/* Alert bar */}
+    <div className="rounded-lg border border-destructive/20 bg-destructive/[0.04] px-3 py-2 flex items-center gap-2">
+      <span className="text-[10px]">🔴</span>
+      <span className="text-[10px] text-destructive font-medium">€28.500 Economic Exposure — 2 SLA-Warnungen</span>
     </div>
   </div>
 );
@@ -266,7 +264,6 @@ const ProductShowcase = () => {
           </h2>
         </motion.div>
 
-        {/* Tab selector */}
         <div className="flex justify-center gap-2 mb-10">
           {screens.map((s, i) => (
             <button
@@ -284,7 +281,6 @@ const ProductShowcase = () => {
           ))}
         </div>
 
-        {/* Content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={active}
@@ -294,7 +290,6 @@ const ProductShowcase = () => {
             transition={{ duration: 0.4, ease }}
           >
             <div className="grid lg:grid-cols-2 gap-8 items-center">
-              {/* Text side */}
               <div className="order-2 lg:order-1">
                 <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-semibold mb-5 ${current.accent}`}>
                   <current.icon className="w-3.5 h-3.5" />
@@ -306,8 +301,6 @@ const ProductShowcase = () => {
                 <p className="text-muted-foreground leading-relaxed mb-8">
                   {current.description}
                 </p>
-
-                {/* Live stats */}
                 <div className="grid grid-cols-3 gap-3">
                   {current.stats.map((stat, i) => (
                     <motion.div
@@ -324,19 +317,13 @@ const ProductShowcase = () => {
                 </div>
               </div>
 
-              {/* 3D Mockup side */}
-              <motion.div
-                style={{ y: imgY }}
-                className="order-1 lg:order-2"
-              >
+              <motion.div style={{ y: imgY }} className="order-1 lg:order-2">
                 <TiltCard>
                   <motion.div
                     style={{ rotateX: perspective }}
                     className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-elevated"
                   >
-                    {/* Reflection effect */}
                     <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none z-10" />
-                    {/* Browser chrome */}
                     <div className="px-4 py-2.5 border-b border-border/40 flex items-center gap-2 bg-muted/30 relative z-20">
                       <div className="flex gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-destructive/30" />

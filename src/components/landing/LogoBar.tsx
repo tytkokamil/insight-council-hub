@@ -1,44 +1,40 @@
 import { motion } from "framer-motion";
-import { Factory, Car, Pill, Landmark, Server, Zap } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const logos = [
-  { name: "Maschinenbau", icon: Factory },
-  { name: "Automotive", icon: Car },
-  { name: "Pharma", icon: Pill },
-  { name: "Finanzwesen", icon: Landmark },
-  { name: "IT-Dienstleister", icon: Server },
-  { name: "Energie", icon: Zap },
+const trustItems = [
+  { emoji: "🔒", label: "DSGVO-konform" },
+  { emoji: "🇩🇪", label: "Server in Deutschland" },
+  { emoji: "🔐", label: "SHA-256 Audit Trail" },
+  { emoji: "✓", label: "ISO 27001" },
+  { emoji: "⚡", label: "Keine Installation" },
 ];
 
 const LogoBar = () => (
-  <section className="py-10 relative" aria-label="Branchen-Vertrauen">
-    <div className="max-w-4xl mx-auto px-4 sm:px-6">
+  <section className="relative" aria-label="Trust-Bar" style={{ background: "#F8FAFC", height: 60 }}>
+    <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease }}
+        className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1"
       >
-        <p className="text-center text-[10px] text-muted-foreground/70 uppercase tracking-[0.2em] mb-6 font-medium">
-          Vertraut von über <span className="text-muted-foreground font-semibold">120+</span> Unternehmen aus dem Mittelstand
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-          {logos.map((logo, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.5, ease }}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-300"
-            >
-              <logo.icon className="w-4 h-4" />
-              <span className="text-[12px] font-medium">{logo.name}</span>
-            </motion.div>
-          ))}
-        </div>
+        {trustItems.map((item, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.06, duration: 0.5, ease }}
+            className="flex items-center gap-1.5"
+            style={{ color: "#64748B", fontSize: 13, letterSpacing: "0.05em", textTransform: "uppercase" as const, fontWeight: 500 }}
+          >
+            <span>{item.emoji}</span>
+            <span>{item.label}</span>
+            {i < trustItems.length - 1 && <span className="ml-2 text-border select-none">|</span>}
+          </motion.span>
+        ))}
       </motion.div>
     </div>
   </section>

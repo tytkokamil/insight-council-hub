@@ -11,7 +11,6 @@ const CTASection = () => {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const orbY = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
-  // Track time on page, not just in this section
   const [pageCost, setPageCost] = useState(0);
   const pageStart = useRef(Date.now());
 
@@ -37,7 +36,7 @@ const CTASection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease }}
         >
-          {/* Live cost — the hook */}
+          {/* Live cost — since page visit */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
@@ -51,11 +50,10 @@ const CTASection = () => {
               className="w-2 h-2 rounded-full bg-destructive"
             />
             <span className="text-[12px] text-muted-foreground">
-              Während Sie diese Seite lesen:{" "}
+              Seit Ihrem Seitenbesuch:{" "}
               <span className="font-mono font-bold text-destructive tabular-nums">
                 €{pageCost.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              {" "}an Entscheidungskosten
             </span>
           </motion.div>
 
@@ -86,7 +84,6 @@ const CTASection = () => {
             </a>
           </div>
 
-          {/* Social proof — compact */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
