@@ -64,7 +64,7 @@ const AIShowcaseSection = () => {
               ].map((metric, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.5 + i * 0.1, ease }}>
                   <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 tabular-nums">{metric.value}</div>
-                  <div className="text-[11px] text-muted-foreground/70 whitespace-pre-line leading-snug">{metric.label}</div>
+                  <div className="text-[11px] text-muted-foreground whitespace-pre-line leading-snug">{metric.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -78,7 +78,7 @@ const AIShowcaseSection = () => {
                     <cap.icon className="w-[18px] h-[18px] text-muted-foreground group-hover:text-foreground transition-colors duration-300" />
                   </div>
                   <h4 className="font-semibold text-sm mb-1.5">{cap.title}</h4>
-                  <p className="text-xs text-muted-foreground/70 leading-relaxed">{cap.description}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{cap.description}</p>
                 </div>
               </motion.div>
             ))}

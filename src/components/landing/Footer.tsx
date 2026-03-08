@@ -51,7 +51,7 @@ const Footer = () => (
             Decision Governance Platform für den Mittelstand. Machen Sie jede Entscheidung sichtbar, messbar und compliant.
           </p>
           {/* Newsletter signup hint */}
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground/40">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
             <Mail className="w-3.5 h-3.5" />
             <a href="mailto:info@decivio.com" className="hover:text-foreground transition-colors">info@decivio.com</a>
           </div>
@@ -59,7 +59,7 @@ const Footer = () => (
 
         {/* Produkt */}
         <nav aria-label="Produkt">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Produkt</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Produkt</h4>
           <ul className="space-y-2.5">
             {footerLinks.produkt.map(l => (
               <li key={l.label}><FooterLink item={l} /></li>
@@ -69,7 +69,7 @@ const Footer = () => (
 
         {/* Company */}
         <nav aria-label="Unternehmen">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Unternehmen</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Unternehmen</h4>
           <ul className="space-y-2.5">
             {footerLinks.unternehmen.map(l => (
               <li key={l.label}><FooterLink item={l} /></li>
@@ -79,7 +79,7 @@ const Footer = () => (
 
         {/* Compliance */}
         <nav aria-label="Compliance">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Compliance</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Compliance</h4>
           <ul className="space-y-2.5">
             {footerLinks.compliance.map(l => (
               <li key={l.label}><FooterLink item={l} /></li>

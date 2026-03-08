@@ -310,7 +310,7 @@ const PricingSection = () => {
                 </div>
 
                 {annual && plan.annual !== null && plan.annual > 0 && (
-                  <p className="text-[11px] text-muted-foreground/60 mb-1">
+                  <p className="text-[11px] text-muted-foreground mb-1">
                     €{plan.annual} / Jahr abgerechnet
                   </p>
                 )}
@@ -343,7 +343,7 @@ const PricingSection = () => {
                 )}
 
                 {plan.hint && (
-                  <p className="text-[10px] text-muted-foreground/60 text-center mb-4 italic">{plan.hint}</p>
+                  <p className="text-[10px] text-muted-foreground text-center mb-4 italic">{plan.hint}</p>
                 )}
                 {!plan.hint && <div className="mb-4" />}
 
@@ -365,9 +365,9 @@ const PricingSection = () => {
                         {f.included ? (
                           <Check className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                         ) : (
-                          <Minus className="w-3.5 h-3.5 text-muted-foreground/30 shrink-0 mt-0.5" />
+                          <Minus className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0 mt-0.5" />
                         )}
-                        <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/40"}>
+                        <span className={f.included ? "text-muted-foreground" : "text-muted-foreground/60"}>
                           {f.label}
                         </span>
                       </li>
@@ -383,7 +383,7 @@ const PricingSection = () => {
         <div className="flex flex-wrap items-center justify-center gap-6 mt-10 mb-6">
           {["🔒 Keine versteckten Kosten", "↕ Jederzeit kündigen", "🇩🇪 Server in Deutschland"].map(
             (t, i) => (
-              <span key={i} className="text-[12px] text-muted-foreground/60">
+              <span key={i} className="text-[12px] text-muted-foreground">
                 {t}
               </span>
             )
@@ -437,7 +437,7 @@ const PricingSection = () => {
                         <tr>
                           <td
                             colSpan={5}
-                            className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider"
+                            className="pt-4 pb-2 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
                           >
                             {cat.category}
                           </td>
@@ -452,7 +452,7 @@ const PricingSection = () => {
                                 {val === true ? (
                                   <Check className="w-4 h-4 text-success mx-auto" />
                                 ) : val === false ? (
-                                  <Minus className="w-4 h-4 text-muted-foreground/25 mx-auto" />
+                                  <Minus className="w-4 h-4 text-muted-foreground/50 mx-auto" />
                                 ) : (
                                   <span className="text-[13px] text-foreground">{val}</span>
                                 )}

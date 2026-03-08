@@ -116,7 +116,7 @@ const ProblemSection = () => {
                 <div className="w-2 h-2 rounded-full bg-warning/50" />
                 <div className="w-2 h-2 rounded-full bg-success/50" />
               </div>
-              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/50 mx-auto">
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground mx-auto">
                 Mission Control — Offene Entscheidungen
               </span>
               <motion.div
@@ -142,14 +142,14 @@ const ProblemSection = () => {
                     <p className={`text-[10px] font-mono tracking-wider uppercase ${item.statusColor}`}>{item.status}</p>
                   </div>
                   <div className="tabular-nums">
-                    {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-muted-foreground/40 text-sm">–</span>}
+                    {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-muted-foreground text-sm">–</span>}
                   </div>
                 </motion.div>
               ))}
             </div>
 
             <div className="px-5 py-3 border-t border-border/30 flex items-center justify-between bg-muted/10">
-              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground/60">Total Economic Exposure</span>
+              <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-muted-foreground">Total Economic Exposure</span>
               <motion.span
                 className="text-base font-bold tabular-nums font-mono text-destructive"
                 initial={{ opacity: 0 }}

@@ -111,7 +111,7 @@ const TestimonialsSection = () => {
                   >
                     {t.metric}
                   </div>
-                  <div className="text-[11px] text-muted-foreground/60 mt-1">{t.metricLabel}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{t.metricLabel}</div>
                 </div>
 
                 <div className="flex-1">
@@ -135,7 +135,7 @@ const TestimonialsSection = () => {
                     </div>
                     <div>
                       <div className="text-[14px] font-semibold">{t.name}</div>
-                      <div className="text-[12px] text-muted-foreground/60">{t.role} · {t.company}</div>
+                      <div className="text-[12px] text-muted-foreground">{t.role} · {t.company}</div>
                     </div>
                   </div>
                 </div>
@@ -174,7 +174,7 @@ const TestimonialsSection = () => {
           ))}
         </div>
 
-        <p className="text-center text-[10px] text-muted-foreground/35 italic">
+        <p className="text-center text-[10px] text-muted-foreground italic">
           * Repräsentative Nutzungsszenarien basierend auf Produkttests
         </p>
       </div>

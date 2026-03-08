@@ -85,7 +85,7 @@ const TiltCard = ({ children }: { children: React.ReactNode }) => {
         <motion.div
           className="absolute inset-0 rounded-2xl pointer-events-none z-10"
           style={{
-            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(220 60% 90% / 0.12), transparent 60%)`,
+            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(var(--primary) / 0.08), transparent 60%)`,
           }}
         />
       </motion.div>
@@ -217,9 +217,9 @@ const AuditMockup = () => (
             <div className="w-1.5 h-1.5 rounded-full bg-accent-teal/50" />
             <div className="flex-1">
               <div className="text-[11px] text-foreground/70">{entry.action}</div>
-              <div className="text-[9px] font-mono text-muted-foreground/50">{entry.hash}</div>
+              <div className="text-[9px] font-mono text-muted-foreground">{entry.hash}</div>
             </div>
-            <span className="text-[10px] text-muted-foreground/50">{entry.time}</span>
+            <span className="text-[10px] text-muted-foreground">{entry.time}</span>
           </motion.div>
         ))}
       </div>
@@ -318,7 +318,7 @@ const ProductShowcase = () => {
                       className="p-3 rounded-xl border border-border/50 bg-card/60"
                     >
                       <div className="text-lg font-bold tabular-nums font-mono text-foreground">{stat.value}</div>
-                      <div className="text-[10px] text-muted-foreground/60 mt-0.5">{stat.label}</div>
+                      <div className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
@@ -344,7 +344,7 @@ const ProductShowcase = () => {
                         <div className="w-2.5 h-2.5 rounded-full bg-success/30" />
                       </div>
                       <div className="flex-1 mx-3 h-6 rounded-md bg-muted/50 flex items-center px-3">
-                        <span className="text-[10px] text-muted-foreground/50 font-mono">app.decivio.com</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">app.decivio.com</span>
                       </div>
                     </div>
                     <div className="relative z-20">

@@ -32,7 +32,7 @@ const LogoBar = () => (
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.06, duration: 0.5, ease }}
-              className="flex items-center gap-2 text-muted-foreground/50 hover:text-muted-foreground transition-colors duration-300"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors duration-300"
             >
               <logo.icon className="w-4 h-4" />
               <span className="text-[12px] font-medium">{logo.name}</span>
