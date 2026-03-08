@@ -450,7 +450,7 @@ const KnowledgeBase = () => {
           role="knowledge"
           help={{ title: t("knowledge.title"), description: t("knowledge.help") }}
           primaryAction={
-            <Button size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5" style={{ backgroundColor: "#1E3A5F" }}>
+            <Button size="sm" onClick={() => generateLessonsReport(decisions, lessons, tags, decisionTags)} disabled={decisions.length === 0} className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
               <Download className="w-4 h-4" /> {t("knowledge.executiveReport")}
             </Button>
           }
