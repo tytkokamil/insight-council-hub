@@ -7,12 +7,99 @@ const corsHeaders = {
 
 /**
  * Inbound Email Webhook
- * Processes incoming emails from providers like SendGrid Inbound Parse, Mailgun, etc.
+ * Processes incoming emails from SendGrid Inbound Parse.
+ * Verifies SendGrid webhook signature (ECDSA P-256) before processing.
  * Creates decisions with AI-extracted metadata.
  */
+
+// ── SendGrid Signature Verification ──
+
+async function importSendGridPublicKey(base64Key: string): Promise<CryptoKey> {
+  const binaryStr = atob(base64Key);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return crypto.subtle.importKey(
+    "spki",
+    bytes.buffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["verify"]
+  );
+}
+
+async function verifySendGridSignature(
+  publicKeyBase64: string,
+  payload: string,
+  signatureBase64: string
+): Promise<boolean> {
+  try {
+    const key = await importSendGridPublicKey(publicKeyBase64);
+    const sigBinaryStr = atob(signatureBase64);
+    const sigBytes = new Uint8Array(sigBinaryStr.length);
+    for (let i = 0; i < sigBinaryStr.length; i++) {
+      sigBytes[i] = sigBinaryStr.charCodeAt(i);
+    }
+    const encoder = new TextEncoder();
+    const data = encoder.encode(payload);
+    return crypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      key,
+      sigBytes.buffer,
+      data
+    );
+  } catch {
+    return false;
+  }
+}
+
+// ── Rate Limiting ──
+
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+function isRateLimited(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(userId, { count: 1, windowStart: now });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Read body once as text (stream can only be read once)
+  const rawBody = await req.text();
+
+  // ── Signature Verification ──
+  const sendGridPublicKey = Deno.env.get("SENDGRID_WEBHOOK_PUBLIC_KEY");
+  if (sendGridPublicKey) {
+    const signature = req.headers.get("X-Twilio-Email-Event-Webhook-Signature") || "";
+    const timestamp = req.headers.get("X-Twilio-Email-Event-Webhook-Timestamp") || "";
+
+    if (!signature || !timestamp) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    // Replay protection: reject timestamps older than 5 minutes
+    const tsSeconds = parseInt(timestamp, 10);
+    if (isNaN(tsSeconds) || Math.abs(Date.now() / 1000 - tsSeconds) > 300) {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    const payload = timestamp + rawBody;
+    const valid = await verifySendGridSignature(sendGridPublicKey, payload, signature);
+    if (!valid) {
+      return new Response("Forbidden", { status: 403 });
+    }
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -20,7 +107,7 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
-    // Support both JSON and form-data (SendGrid sends multipart/form-data)
+    // Parse the cached rawBody based on content type
     let emailData: {
       to: string;
       from: string;
@@ -34,10 +121,15 @@ Deno.serve(async (req) => {
     const contentType = req.headers.get("content-type") || "";
 
     if (contentType.includes("application/json")) {
-      emailData = await req.json();
+      emailData = JSON.parse(rawBody);
     } else if (contentType.includes("multipart/form-data") || contentType.includes("application/x-www-form-urlencoded")) {
-      // SendGrid Inbound Parse format
-      const formData = await req.formData();
+      // Re-create a Request from rawBody to use formData() parser
+      const syntheticReq = new Request("http://localhost", {
+        method: "POST",
+        headers: { "content-type": contentType },
+        body: rawBody,
+      });
+      const formData = await syntheticReq.formData();
       emailData = {
         to: (formData.get("to") as string) || "",
         from: (formData.get("from") as string) || "",
@@ -46,7 +138,6 @@ Deno.serve(async (req) => {
         html: (formData.get("html") as string) || "",
         cc: (formData.get("cc") as string) || "",
       };
-      // Parse attachment info if present
       const attachmentInfo = formData.get("attachment-info");
       if (attachmentInfo) {
         try {
@@ -77,15 +168,13 @@ Deno.serve(async (req) => {
     const toAddress = emailData.to.toLowerCase();
     const toMatch = toAddress.match(/<?\s*([^@>]+)@([^.>]+)\.decivio\.com\s*>?/);
     if (!toMatch) {
-      return new Response(JSON.stringify({ error: "invalid_recipient", message: "Keine gültige Decivio-Adresse." }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Silent reject — don't reveal whether the address format is valid
+      return new Response(null, { status: 200 });
     }
 
     const orgSlugFromEmail = toMatch[2];
 
-    // 2. Find the organization
+    // 2. Find the organization — silent reject if not found (no info leakage)
     const { data: org, error: orgError } = await supabase
       .from("organizations")
       .select("id, slug, name")
@@ -93,10 +182,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (orgError || !org) {
-      return new Response(JSON.stringify({ error: "org_not_found", message: "Organisation nicht gefunden." }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(null, { status: 200 });
     }
 
     // 3. Check inbound email config
@@ -108,10 +194,7 @@ Deno.serve(async (req) => {
 
     if (config && !config.enabled) {
       await logEmail(supabase, org.id, emailData.from, emailData.subject, "rejected", "Inbound email disabled");
-      return new Response(JSON.stringify({ error: "disabled", message: "E-Mail-Eingang ist deaktiviert." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(null, { status: 200 });
     }
 
     // 4. Validate sender domain
@@ -122,33 +205,33 @@ Deno.serve(async (req) => {
       const allowed = config.allowed_domains.map((d: string) => d.toLowerCase());
       if (!allowed.includes(fromDomain)) {
         await logEmail(supabase, org.id, fromEmail, emailData.subject, "rejected", `Domain ${fromDomain} not allowed`);
-        return new Response(JSON.stringify({ error: "domain_not_allowed", message: "Diese E-Mail-Domain ist nicht verifiziert." }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(null, { status: 200 });
       }
     }
 
-    // 5. Find the sender user in the org
+    // 5. Find the sender user in the org — silent reject if not found
     const { data: senderProfile } = await supabase
       .from("profiles")
       .select("user_id, full_name, org_id")
       .eq("org_id", org.id);
 
-    // Try to match by email from auth.users (via service role)
     const { data: authUsers } = await supabase.auth.admin.listUsers();
     const senderAuth = authUsers?.users?.find((u) => u.email?.toLowerCase() === fromEmail.toLowerCase());
     const senderUser = senderProfile?.find((p) => p.user_id === senderAuth?.id);
 
     if (!senderUser) {
       await logEmail(supabase, org.id, fromEmail, emailData.subject, "rejected", "Sender not found in org");
-      return new Response(JSON.stringify({ error: "sender_not_found", message: "Absender ist kein Mitglied dieser Organisation." }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Silent — no hint whether org exists or sender is valid
+      return new Response(null, { status: 200 });
     }
 
-    // 6. AI extraction of priority, deadline, reviewers from email body
+    // 6. Rate limiting: max 10 emails per user per hour
+    if (isRateLimited(senderUser.user_id)) {
+      await logEmail(supabase, org.id, fromEmail, emailData.subject, "rejected", "Rate limit exceeded");
+      return new Response(null, { status: 200 });
+    }
+
+    // 7. AI extraction of priority, deadline, reviewers from email body
     const bodyText = emailData.text || stripHtml(emailData.html || "");
     const ccEmails = extractCcEmails(emailData.cc || "");
     let aiExtraction: any = {};
@@ -160,7 +243,7 @@ Deno.serve(async (req) => {
       aiExtraction = { priority: "medium", category: "operational", due_date: null, reviewers: ccEmails };
     }
 
-    // 7. Create the decision
+    // 8. Create the decision
     const { data: decision, error: decisionError } = await supabase
       .from("decisions")
       .insert({
@@ -179,13 +262,10 @@ Deno.serve(async (req) => {
 
     if (decisionError || !decision) {
       await logEmail(supabase, org.id, fromEmail, emailData.subject, "error", decisionError?.message || "Failed to create decision");
-      return new Response(JSON.stringify({ error: "creation_failed", message: "Entscheidung konnte nicht erstellt werden." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(null, { status: 200 });
     }
 
-    // 8. Add reviewers from CC addresses
+    // 9. Add reviewers from CC addresses
     const reviewerEmails = aiExtraction.reviewers || ccEmails;
     if (reviewerEmails.length > 0 && authUsers?.users) {
       for (const ccEmail of reviewerEmails) {
@@ -204,7 +284,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 9. Handle attachments
+    // 10. Handle attachments
     if (emailData.attachments?.length) {
       for (const att of emailData.attachments) {
         try {
@@ -233,19 +313,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 10. Audit log
+    // 11. Audit log
     await supabase.from("audit_logs").insert({
       decision_id: decision.id,
       user_id: senderUser.user_id,
       action: "decision.created_via_email",
       field_name: "source",
-      new_value: `Erstellt via E-Mail von ${fromEmail}`,
+      new_value: "Erstellt via E-Mail",
     });
 
-    // 11. Log success
+    // 12. Log success
     await logEmail(supabase, org.id, fromEmail, emailData.subject, "processed", null, decision.id, aiExtraction);
 
-    // 12. Send confirmation notification
+    // 13. Send confirmation notification
     await supabase.from("notifications").insert({
       user_id: senderUser.user_id,
       title: "Entscheidung via E-Mail erstellt",
@@ -254,21 +334,10 @@ Deno.serve(async (req) => {
       decision_id: decision.id,
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        decision_id: decision.id,
-        decision_title: decision.title,
-        ai_extraction: aiExtraction,
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(null, { status: 200 });
   } catch (error) {
-    console.error("Inbound email error:", error);
-    return new Response(
-      JSON.stringify({ error: "server_error", message: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.error("Inbound email processing error");
+    return new Response(null, { status: 200 });
   }
 });
 
@@ -378,7 +447,7 @@ Heutiges Datum: ${new Date().toISOString().split("T")[0]}`,
   });
 
   if (!response.ok) {
-    console.error("AI extraction error:", response.status);
+    const _body = await response.text(); // consume body
     return { priority: "medium", category: "operational", due_date: null, reviewers: ccEmails };
   }
 

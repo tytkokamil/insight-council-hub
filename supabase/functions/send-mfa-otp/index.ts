@@ -41,13 +41,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action } = await req.json();
+    // Parse body once at the top to avoid double-parse bug
+    const body = await req.json();
+    const { action, code } = body;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     if (action === "send") {
       // Generate OTP
-      const code = generateOTP();
+      const otpCode = generateOTP();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
 
       // Invalidate previous unused codes
@@ -60,24 +62,17 @@ Deno.serve(async (req) => {
       // Insert new code
       const { error: insertError } = await adminClient
         .from("email_otp_codes")
-        .insert({ user_id: user.id, code, expires_at: expiresAt });
+        .insert({ user_id: user.id, code: otpCode, expires_at: expiresAt });
 
       if (insertError) {
-        console.error("Insert OTP error:", insertError);
         return new Response(JSON.stringify({ error: "Failed to create OTP" }), {
           status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
 
-      // Send email via Supabase Auth admin (magic link workaround not needed - just log for now)
-      // In production, integrate with email service. For now, use Supabase's built-in
-      // We'll use the AI proxy to send a simple email notification
-      console.log(`OTP for ${user.email}: ${code}`);
-
-      // For a real implementation, you'd send an email here.
-      // Since we have LOVABLE_API_KEY, we can use the AI gateway or a dedicated email function.
-      // For now, we store the code and the frontend verifies it.
+      // TODO: Integrate with a transactional email provider (SendGrid, Resend, Postmark)
+      // to deliver the OTP code to user.email. Never log OTP values.
 
       return new Response(
         JSON.stringify({ success: true, message: "OTP sent", email: user.email }),
@@ -86,7 +81,12 @@ Deno.serve(async (req) => {
     }
 
     if (action === "verify") {
-      const { code } = await req.json();
+      if (!code || typeof code !== "string") {
+        return new Response(
+          JSON.stringify({ error: "Code is required" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
 
       const { data: otpRecord, error: fetchError } = await adminClient
         .from("email_otp_codes")
@@ -123,8 +123,7 @@ Deno.serve(async (req) => {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error) {
-    console.error("MFA OTP error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
