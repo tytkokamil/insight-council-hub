@@ -11,6 +11,7 @@ import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
 import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
 import AdminFeedbackTab from "@/components/internal-admin/AdminFeedbackTab";
 import AdminRoadmapTab from "@/components/internal-admin/AdminRoadmapTab";
+import AdminChurnTab from "@/components/internal-admin/AdminChurnTab";
 import { cn } from "@/lib/utils";
 
 const TABS = [

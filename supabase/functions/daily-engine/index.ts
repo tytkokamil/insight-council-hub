@@ -725,6 +725,196 @@ Deno.serve(async (req) => {
           }
         }
 
+        // ───────────────────────────────────────────────
+        // STEP 6: Churn Risk Score Calculation
+        // ───────────────────────────────────────────────
+        try {
+          let churnScore = 0;
+          const riskFactors: string[] = [];
+
+          // Get all org members with their profiles
+          const { data: orgMembers } = await supabase
+            .from("profiles")
+            .select("user_id, last_seen_at, onboarding_completed")
+            .eq("org_id", org.id);
+
+          // Factor 1: No login in 7+ days (+30)
+          const latestSeen = orgMembers?.reduce((latest: string | null, m) => {
+            if (!m.last_seen_at) return latest;
+            if (!latest) return m.last_seen_at;
+            return new Date(m.last_seen_at) > new Date(latest) ? m.last_seen_at : latest;
+          }, null);
+
+          if (!latestSeen || (Date.now() - new Date(latestSeen).getTime()) > 7 * 86400000) {
+            churnScore += 30;
+            const daysSince = latestSeen ? Math.floor((Date.now() - new Date(latestSeen).getTime()) / 86400000) : 999;
+            riskFactors.push(`Kein Login seit ${daysSince} Tagen`);
+          }
+
+          // Factor 2: 0 decisions in last 14 days (+20)
+          const fourteenDaysAgo = new Date(Date.now() - 14 * 86400000).toISOString();
+          const { count: recentDecisions } = await supabase
+            .from("decisions")
+            .select("id", { count: "exact", head: true })
+            .eq("org_id", org.id)
+            .gte("created_at", fourteenDaysAgo)
+            .is("deleted_at", null);
+
+          if ((recentDecisions ?? 0) === 0) {
+            churnScore += 20;
+            riskFactors.push("Keine neuen Entscheidungen in 14 Tagen");
+          }
+
+          // Factor 3: Trial ends in <3 days and no paid subscription (+15)
+          const { data: orgDetails } = await supabase
+            .from("organizations")
+            .select("subscription_status, trial_ends_at, plan")
+            .eq("id", org.id)
+            .single();
+
+          if (orgDetails?.subscription_status === "trialing" && orgDetails.trial_ends_at) {
+            const daysToExpiry = (new Date(orgDetails.trial_ends_at).getTime() - Date.now()) / 86400000;
+            if (daysToExpiry < 3 && daysToExpiry > 0) {
+              churnScore += 15;
+              riskFactors.push(`Trial endet in ${Math.ceil(daysToExpiry)} Tagen`);
+            }
+          }
+
+          // Factor 4: subscription_status = 'past_due' (+15)
+          if (orgDetails?.subscription_status === "past_due") {
+            churnScore += 15;
+            riskFactors.push("Zahlung überfällig (past_due)");
+          }
+
+          // Factor 5: NPS < 6 (+10) — check latest feedback
+          const { data: npsData } = await supabase
+            .from("feature_feedback")
+            .select("rating")
+            .eq("feature", "nps")
+            .in("user_id", (orgMembers || []).map(m => m.user_id))
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (npsData && npsData.length > 0 && npsData[0].rating !== null && npsData[0].rating < 6) {
+            churnScore += 10;
+            riskFactors.push(`NPS Score: ${npsData[0].rating}`);
+          }
+
+          // Factor 6: Onboarding not completed (+10)
+          const anyNotOnboarded = orgMembers?.some(m => !m.onboarding_completed);
+          if (anyNotOnboarded) {
+            churnScore += 10;
+            riskFactors.push("Onboarding nicht abgeschlossen");
+          }
+
+          // Bonus: AI Daily Brief active (-10)
+          const { count: briefCount } = await supabase
+            .from("daily_briefs")
+            .select("id", { count: "exact", head: true })
+            .eq("org_id", org.id)
+            .gte("generated_at", new Date(Date.now() - 7 * 86400000).toISOString());
+
+          if ((briefCount ?? 0) > 0) {
+            churnScore -= 10;
+            riskFactors.push("KI Daily Brief aktiv (-10)");
+          }
+
+          // Bonus: > 3 users invited (-10)
+          if ((orgMembers?.length ?? 0) > 3) {
+            churnScore -= 10;
+            riskFactors.push(`${orgMembers?.length} Nutzer eingeladen (-10)`);
+          }
+
+          // Bonus: Active paid subscription (-20)
+          if (orgDetails?.subscription_status === "active" && orgDetails.plan !== "free") {
+            churnScore -= 20;
+            riskFactors.push("Aktives bezahltes Abo (-20)");
+          }
+
+          // Clamp score
+          churnScore = Math.max(0, Math.min(100, churnScore));
+          const riskLevel = churnScore > 70 ? "critical" : churnScore > 40 ? "medium" : "low";
+
+          // Insert churn risk log
+          await supabase.from("churn_risk_log").insert({
+            org_id: org.id,
+            score: churnScore,
+            risk_level: riskLevel,
+            risk_factors: riskFactors,
+          });
+
+          // Auto-intervention for critical risk
+          if (riskLevel === "critical") {
+            // Check if intervention sent in last 7 days
+            const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+            const { data: recentIntervention } = await supabase
+              .from("churn_risk_log")
+              .select("id")
+              .eq("org_id", org.id)
+              .eq("intervention_sent", true)
+              .gte("calculated_at", sevenDaysAgo)
+              .limit(1);
+
+            if (!recentIntervention || recentIntervention.length === 0) {
+              // Get org owner for re-engagement email
+              const { data: ownerRole } = await supabase
+                .from("user_roles")
+                .select("user_id")
+                .eq("org_id", org.id)
+                .eq("role", "org_owner")
+                .limit(1)
+                .single();
+
+              if (ownerRole) {
+                const { data: authUser } = await supabase.auth.admin.getUserById(ownerRole.user_id);
+
+                if (authUser?.user?.email) {
+                  // Send re-engagement email
+                  try {
+                    await fetch(`${supabaseUrl}/functions/v1/reengagement-optout`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+                      body: JSON.stringify({ user_id: ownerRole.user_id, org_id: org.id, type: "churn_critical" }),
+                    });
+                  } catch (e) { console.error("Churn intervention email failed:", e); }
+
+                  // Update the log entry with intervention
+                  await supabase
+                    .from("churn_risk_log")
+                    .update({
+                      intervention_sent: true,
+                      intervention_type: "reengagement_email",
+                      intervention_reason: `Critical churn risk (Score: ${churnScore})`,
+                    })
+                    .eq("org_id", org.id)
+                    .order("calculated_at", { ascending: false })
+                    .limit(1);
+
+                  // Notify platform admins
+                  const { data: platformAdmins } = await supabase
+                    .from("platform_admins")
+                    .select("user_id");
+
+                  if (platformAdmins) {
+                    for (const admin of platformAdmins) {
+                      await supabase.from("notifications").insert({
+                        user_id: admin.user_id,
+                        type: "churn_alert",
+                        title: `⚠️ Churn Risk: ${org.name}`,
+                        message: `${org.name} hat Churn Risk Score ${churnScore} — ${riskFactors[0] || "Mehrere Risikofaktoren"}`,
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          console.log(`[churn] Org ${org.id}: score=${churnScore}, level=${riskLevel}`);
+        } catch (churnErr: any) {
+          console.error(`[churn] Error for org ${org.id}:`, churnErr.message);
+        }
+
         results.push({ org_id: org.id, status: "success" });
       } catch (orgError: any) {
         results.push({ org_id: org.id, status: "error", error: orgError.message });
