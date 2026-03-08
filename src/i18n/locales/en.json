@@ -2417,7 +2417,13 @@
     "tasks": "Tasks",
     "risks": "Risks",
     "inviteTeam": "Invite Team",
-    "openDashboard": "Open Dashboard"
+    "openDashboard": "Open Dashboard",
+    "contextActions": "Context Actions",
+    "recentActions": "Recent Actions",
+    "decisionActions": "Decisions",
+    "reviews": "Reviews",
+    "teamActions": "Team",
+    "settingsActions": "Settings"
   },
   "teamSwitcher": {
     "personal": "Personal"
