@@ -135,6 +135,46 @@ const Auth = () => {
     );
   }
 
+  const handleMagicLink = async () => {
+    setError("");
+    if (!email) { setError(t("auth.invalidEmail")); return; }
+    setMagicLinkLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    setMagicLinkLoading(false);
+    if (error) { setError(error.message); return; }
+    setMagicLinkSent(true);
+    setMagicLinkEmail(email);
+    setResendTimer(30);
+    const interval = setInterval(() => {
+      setResendTimer(prev => { if (prev <= 1) { clearInterval(interval); return 0; } return prev - 1; });
+    }, 1000);
+  };
+
+  if (magicLinkSent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[420px] text-center">
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ type: "spring" }} className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <Mail className="w-10 h-10 text-primary" />
+          </motion.div>
+          <h2 className="text-2xl font-bold mb-2">Check Ihr Postfach!</h2>
+          <p className="text-muted-foreground text-sm mb-1">Wir haben einen Login-Link an</p>
+          <p className="font-medium text-sm mb-1">{magicLinkEmail}</p>
+          <p className="text-muted-foreground text-sm mb-6">gesendet. Der Link ist 15 Minuten gültig.</p>
+          <Button variant="outline" className="w-full mb-3" disabled={resendTimer > 0} onClick={handleMagicLink}>
+            {resendTimer > 0 ? `Link erneut senden (${resendTimer}s)` : "Link erneut senden"}
+          </Button>
+          <button onClick={() => { setMagicLinkSent(false); setEmail(""); }} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+            Andere E-Mail verwenden
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
