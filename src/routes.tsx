@@ -105,6 +105,7 @@ export const publicRoutes = (
     <Route path="/review/:token" element={<L><ExternalReview /></L>} />
     <Route path="/contact" element={<L><Contact /></L>} />
     <Route path="/docs" element={<L><HelpCenter /></L>} />
+    <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
   </>
 );
