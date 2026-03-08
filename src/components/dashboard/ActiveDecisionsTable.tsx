@@ -156,7 +156,7 @@ const ActiveDecisionsTable = () => {
                     </td>
                     <td className="px-3 py-3 hidden xl:table-cell">
                       {reviewerProfile ? (
-                        <span className="text-xs text-muted-foreground">{reviewerProfile.full_name || "—"}</span>
+                        <span className="text-xs text-muted-foreground">{reviewerProfile || "—"}</span>
                       ) : (
                         <span className="text-xs text-muted-foreground/40">—</span>
                       )}
