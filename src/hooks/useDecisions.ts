@@ -47,8 +47,8 @@ export const useDependencies = () =>
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 30_000,
-    gcTime: 5 * 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
   });
 
 export const useReviews = () =>

@@ -23,8 +23,8 @@ const MAX_MUTATION_RETRIES = 2;
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
-      gcTime: 5 * 60_000,
+      staleTime: 5 * 60_000,       // 5 min — data stays fresh, no refetch on tab switch
+      gcTime: 10 * 60_000,         // 10 min in cache
       refetchOnWindowFocus: false,
       retry: 1,
       refetchOnReconnect: true,
