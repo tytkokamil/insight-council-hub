@@ -138,7 +138,7 @@ export const useFreemiumLimits = (): FreemiumLimits => {
   // During trial, grant Professional-level access; suspended forces free
   const rawPlan = orgData?.plan || "free";
   const subscriptionStatus = orgData?.subscription_status || "active";
-  const plan = subscriptionStatus === "trialing" ? "pro"
+  const plan = subscriptionStatus === "trialing" ? "professional"
     : subscriptionStatus === "past_due" ? rawPlan
     : subscriptionStatus === "suspended" ? "free"
     : rawPlan;
