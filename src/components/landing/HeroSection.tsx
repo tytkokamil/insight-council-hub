@@ -63,8 +63,8 @@ const HeroSection = () => {
             transition={{ delay: 0.2, duration: 0.6, ease }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-10"
             style={{
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
+              background: "hsl(var(--destructive) / 0.1)",
+              border: "1px solid hsl(var(--destructive) / 0.3)",
             }}
           >
             <span style={{ color: "#EF4444", fontSize: "11px", letterSpacing: "0.12em", fontWeight: 600 }}>
