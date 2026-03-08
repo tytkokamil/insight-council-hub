@@ -199,6 +199,12 @@ const Decisions = () => {
     return result;
   }, [decisions, debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip, decisionMeta, sortField, sortDir]);
 
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filterStatus, filterPriority, filterCategory, filterTeam, quickChip]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginatedDecisions = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   // ── Actions ──
   const clearAllFilters = () => {
     setFilterStatus([]); setFilterPriority([]); setFilterCategory([]); setFilterTeam([]); setQuickChip(null);
