@@ -491,7 +491,7 @@ const SettingsPage = () => {
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block">{t("settings.confirmPassword")}</label>
                     <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder={t("settings.confirmPasswordPlaceholder")} className={inputClass} />
                   </div>
-                  <Button size="sm" onClick={handlePasswordChange} disabled={changingPassword || !newPassword} style={{ backgroundColor: "hsl(215 50% 23%)", color: "white" }}>
+                  <Button size="sm" onClick={handlePasswordChange} disabled={changingPassword || !newPassword} className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     {changingPassword ? t("settings.updating") : t("settings.changePassword")}
                   </Button>
                 </div>
