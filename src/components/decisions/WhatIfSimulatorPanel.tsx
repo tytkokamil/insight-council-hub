@@ -168,6 +168,8 @@ const WhatIfSimulatorPanel = ({ decision }: { decision: any }) => {
             confidence={analysisResult.confidence || analysisResult.best_case_probability}
             factors={analysisResult.scenario_results?.slice(0, 2).map((sr: any) => sr.scenario_title)}
             dataPoints={scenarios.length}
+            sourceType="llm"
+            explanation={analysisResult.overall_recommendation?.slice(0, 120) || null}
           />
           <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
             <p className="text-xs font-medium text-primary mb-1">{t("whatIf.recommendation")}</p>
