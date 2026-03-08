@@ -414,7 +414,12 @@ const Dashboard = () => {
             {/* ═══ OPERATIONAL MODE ═══ */}
             {!isExecutive && (
               <>
-                {/* KI-Anomalie-Erkennungs-Box (spec: bg #FFF7ED, left border #F59E0B) */}
+                {/* 🧟 Dead Decision Detector */}
+                <WidgetErrorBoundary label="Dead Decision Detector">
+                  <DeadDecisionDetector decisions={decisions} />
+                </WidgetErrorBoundary>
+
+                {/* KI-Anomalie-Erkennungs-Box */}
                 <AnomalyCards bannersOnly className="mb-2" />
 
                 {/* Active Decisions Table (spec: Titel | Kategorie | Priorität | Status | SLA | CoD/Woche | Reviewer) */}
