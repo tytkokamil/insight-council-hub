@@ -104,7 +104,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const userId = extractUserId(req);
+    const userId = await extractUserId(req);
     if (!userId) {
       return new Response(JSON.stringify({ error: "Nicht authentifiziert" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },

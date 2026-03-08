@@ -105,7 +105,7 @@ serve(async (req) => {
 
   try {
     const { decision, scenarios } = await req.json();
-    const userId = extractUserId(req);
+    const userId = await extractUserId(req);
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
     const prompt = `Analysiere diese Geschäftsentscheidung mit den folgenden Was-Wäre-Wenn-Szenarien.

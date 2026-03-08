@@ -108,7 +108,7 @@ serve(async (req) => {
 
   try {
     const { title, description, category, priority, context, mode } = await req.json();
-    const userId = extractUserId(req);
+    const userId = await extractUserId(req);
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
     const isAutopilot = mode === "autopilot";

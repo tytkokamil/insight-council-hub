@@ -286,7 +286,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const userId = extractUserIdFromAuth(req);
+    const userId = await extractUserIdFromAuth(req);
 
     // Server-side rate limiting
     if (userId && !checkRateLimit(userId)) {

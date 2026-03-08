@@ -34,10 +34,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fetch all audit logs ordered chronologically
+    // Get user's org_id to scope audit logs
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (!profile?.org_id) {
+      return new Response(JSON.stringify({ error: "No organization found" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch audit logs scoped to the user's organization
     const { data: logs, error } = await supabase
       .from("audit_logs")
       .select("id, created_at, user_id, action, old_value, new_value, integrity_hash, previous_hash")
+      .eq("org_id", profile.org_id)
       .order("created_at", { ascending: true })
       .order("id", { ascending: true });
 

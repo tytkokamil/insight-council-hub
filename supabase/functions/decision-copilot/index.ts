@@ -74,7 +74,7 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const userId = extractUserId(req);
+    const userId = await extractUserId(req);
     const settings = userId ? await getUserAiSettings(userId) : { provider: "lovable", api_key: null, model: null };
 
     // Thread summary mode
