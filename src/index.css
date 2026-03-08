@@ -439,7 +439,7 @@ html {
     left: 0;
     right: 0;
     height: 80px;
-    background: linear-gradient(to bottom, hsl(var(--lp-bg, 225 20% 98%)), transparent);
+    background: linear-gradient(to bottom, hsl(var(--background)), transparent);
     pointer-events: none;
     z-index: 1;
   }
