@@ -976,6 +976,8 @@ export type Database = {
           ai_risk_factors: string[] | null
           ai_risk_score: number | null
           ai_success_factors: string[] | null
+          ai_summary: string | null
+          ai_summary_generated_at: string | null
           archived_at: string | null
           assignee_id: string | null
           cancelled_at: string | null
@@ -992,6 +994,7 @@ export type Database = {
           health_score: number | null
           id: string
           implemented_at: string | null
+          last_activity_at: string | null
           last_escalated_at: string | null
           options: Json | null
           org_id: string | null
@@ -1017,6 +1020,8 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
           archived_at?: string | null
           assignee_id?: string | null
           cancelled_at?: string | null
@@ -1033,6 +1038,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
           org_id?: string | null
@@ -1058,6 +1064,8 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
           archived_at?: string | null
           assignee_id?: string | null
           cancelled_at?: string | null
@@ -1074,6 +1082,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
           org_id?: string | null
