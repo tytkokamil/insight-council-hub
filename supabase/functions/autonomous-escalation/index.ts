@@ -13,8 +13,26 @@ const DEFAULT_SLA = {
   reassign_days: 7,
 };
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const enc = new TextEncoder();
+  const ab = enc.encode(a), bb = enc.encode(b);
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) diff |= ab[i] ^ bb[i];
+  return diff === 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Shared-secret auth guard for internal/cron functions
+  const secret = Deno.env.get("INTERNAL_FUNCTIONS_SECRET");
+  const provided = req.headers.get("Authorization")?.replace("Bearer ", "") || "";
+  if (!secret || !timingSafeEqual(provided, secret)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
