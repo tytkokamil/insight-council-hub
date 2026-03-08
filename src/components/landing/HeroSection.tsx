@@ -120,7 +120,7 @@ const HeroSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.85, duration: 0.5, ease }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg mb-6"
-              style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)" }}
+              style={{ background: "hsl(var(--destructive) / 0.08)", border: "1px solid hsl(var(--destructive) / 0.15)" }}
             >
               <span className="text-[12px]" style={{ color: "rgba(255,255,255,0.6)" }}>
                 {industry.label}: <span className="font-semibold" style={{ color: "#EF4444" }}>{industry.painPoint}</span>
