@@ -206,9 +206,9 @@ const Navbar = () => {
             <div
               className="rounded-2xl p-5 space-y-1 shadow-lg"
               style={{
-                background: isDark ? "rgba(3,7,18,0.95)" : "hsl(var(--background) / 0.95)",
+                background: isDark ? "hsl(var(--background) / 0.95)" : "hsl(var(--background) / 0.95)",
                 backdropFilter: "blur(16px)",
-                border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "hsl(var(--border) / 0.3)"}`,
+                border: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}`,
               }}
             >
               {navItems.map(item => (
