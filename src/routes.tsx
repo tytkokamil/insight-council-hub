@@ -66,6 +66,7 @@ const Welcome = lazy(() => import("./pages/Welcome"));
 const UpgradePage = lazy(() => import("./pages/UpgradePage"));
 const WarRoom = lazy(() => import("./pages/WarRoom"));
 const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
+const DemoMode = lazy(() => import("./pages/DemoMode"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -106,6 +107,7 @@ export const publicRoutes = (
     <Route path="/contact" element={<L><Contact /></L>} />
     <Route path="/docs" element={<L><HelpCenter /></L>} />
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
+    <Route path="/demo" element={<L><DemoMode /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
   </>
 );
