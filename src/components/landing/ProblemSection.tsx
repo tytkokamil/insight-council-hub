@@ -142,7 +142,7 @@ const ProblemSection = () => {
                     <p className={`text-[10px] font-mono tracking-wider uppercase ${item.statusColor}`}>{item.status}</p>
                   </div>
                   <div className="tabular-nums">
-                    {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-muted-foreground/40 text-sm">–</span>}
+                    {item.cost !== null ? <LiveCost base={item.cost} live={item.live} /> : <span className="text-muted-foreground text-sm">–</span>}
                   </div>
                 </motion.div>
               ))}
