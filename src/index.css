@@ -395,13 +395,13 @@ html {
     box-shadow: var(--shadow-card);
   }
   .settings-group + .settings-group {
-    @apply mt-4;
+    @apply mt-5;
   }
   .settings-group h2 {
-    @apply text-sm font-semibold mb-4 tracking-tight;
+    @apply text-sm font-semibold mb-4 tracking-tight flex items-center gap-2;
   }
-  .settings-group h2:first-child {
-    @apply flex items-center gap-2;
+  .settings-group h2 svg {
+    @apply w-4 h-4 text-muted-foreground;
   }
 
   /* Section divider – softer than hr */
