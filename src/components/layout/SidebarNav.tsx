@@ -68,7 +68,7 @@ const INTELLIGENCE_GROUP: NavGroupDef = {
     {
       icon: Compass, label: "nav.advancedAnalytics", featureKey: "analytics", minRole: "org_executive",
       children: [
-        { icon: GitBranch, label: "nav.decisionGraph", path: "/graph" },
+        { icon: GitBranch, label: "nav.decisionGraph", path: "/decision-graph" },
         { icon: Trophy, label: "nav.benchmarking", path: "/benchmarking" },
         { icon: Activity, label: "nav.healthHeatmap", path: "/health" },
         { icon: Clock, label: "nav.predictiveTimeline", path: "/timeline" },
