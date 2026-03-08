@@ -12,7 +12,7 @@ import {
   Download, Loader2, AlertTriangle, Trash2, Plus, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+// XLSX loaded dynamically to reduce bundle size (~1MB)
 import { useTranslation } from "react-i18next";
 
 interface ExtractedItem {
@@ -74,6 +74,7 @@ const ImportDialog = ({ open, onOpenChange, mode, onImported }: Props) => {
     const ext = file.name.split(".").pop()?.toLowerCase();
     if (ext === "csv" || ext === "txt") return await file.text();
     if (ext === "xlsx" || ext === "xls") {
+      const XLSX = await import("xlsx");
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
