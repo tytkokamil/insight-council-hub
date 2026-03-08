@@ -53,7 +53,7 @@ const ScoreIcon = ({ score, highlighted }: { score: Score; highlighted?: boolean
   }
   if (score === "partial") {
     return (
-      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-500/10 text-amber-600">
+      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-warning/10 text-warning">
         <Minus className="w-4 h-4" strokeWidth={2.5} />
       </div>
     );
