@@ -85,8 +85,8 @@ Deno.serve(async (req) => {
       },
     ]);
 
-    // Build the action URLs — clean /approve/:token and /reject/:token paths
-    const origin = req.headers.get("origin") || "https://app.decivio.com";
+    // Build the action URLs — use server-side config, never trust Origin header
+    const origin = Deno.env.get("APP_URL") || "https://app.decivio.com";
     const approveUrl = `${origin}/approve/${approveToken}`;
     const rejectUrl = `${origin}/reject/${rejectToken}`;
     const detailUrl = `${origin}/decisions/${decision_id}`;

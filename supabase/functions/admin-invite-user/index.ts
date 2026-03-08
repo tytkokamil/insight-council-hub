@@ -50,8 +50,9 @@ serve(async (req) => {
     }
 
     // Invite user via Supabase Auth
+    const APP_URL = Deno.env.get("APP_URL") || Deno.env.get("SUPABASE_URL")!;
     const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-      redirectTo: `${req.headers.get("origin") || supabaseUrl}/auth`,
+      redirectTo: `${APP_URL}/auth`,
     });
 
     if (inviteError) {
