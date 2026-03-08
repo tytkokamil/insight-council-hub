@@ -77,6 +77,7 @@ const CompetitorComparison = lazy(() => import("./pages/CompetitorComparison"));
 const FoundingProgram = lazy(() => import("./pages/FoundingProgram"));
 const AiDemo = lazy(() => import("./pages/AiDemo"));
 const IntegrationsPage = lazy(() => import("./pages/IntegrationsPage"));
+const LiveDemo = lazy(() => import("./pages/LiveDemo"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
