@@ -166,10 +166,19 @@ const ROICalculatorSection = () => {
               </div>
             </div>
 
-            {/* Calculation breakdown */}
-            <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-              Berechnung: {hourlyRate}€/h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage / 4,3 Wochen
-            </p>
+            {/* Calculation tooltip */}
+            <div className="rounded-lg bg-muted/30 border border-border/30 p-3 space-y-1.5">
+              <p className="text-[11px] font-semibold text-muted-foreground">So berechnen wir:</p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">1.</span> Brutto-Kosten: {hourlyRate}€/h × 8h × {persons} Personen × {decisions} Entscheidungen × {delayDays} Tage = <span className="font-semibold text-foreground/70">€{grossCost.toLocaleString("de-DE")}</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">2.</span> Effizienzfaktor 55% (nicht alle Zeit ist verloren): <span className="font-semibold text-destructive/80">€{monthlyCost.toLocaleString("de-DE")}/Mo</span>
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                <span className="font-medium">3.</span> Decivio reduziert Verzögerungen um 73%: Einsparung <span className="font-semibold text-primary">€{savings.toLocaleString("de-DE")}/Mo</span>
+              </p>
+            </div>
 
             {/* ROI Badge */}
             <motion.div
