@@ -44,10 +44,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "item_id required" }), { status: 400, headers: corsHeaders });
     }
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    // Get roadmap item (reuse supabaseAdmin from above)
 
     // Get roadmap item
     const { data: item } = await supabaseAdmin
