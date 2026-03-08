@@ -976,6 +976,8 @@ export type Database = {
           ai_risk_factors: string[] | null
           ai_risk_score: number | null
           ai_success_factors: string[] | null
+          ai_summary: string | null
+          ai_summary_generated_at: string | null
           archived_at: string | null
           assignee_id: string | null
           cancelled_at: string | null
@@ -992,6 +994,7 @@ export type Database = {
           health_score: number | null
           id: string
           implemented_at: string | null
+          last_activity_at: string | null
           last_escalated_at: string | null
           options: Json | null
           org_id: string | null
@@ -1017,6 +1020,8 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
           archived_at?: string | null
           assignee_id?: string | null
           cancelled_at?: string | null
@@ -1033,6 +1038,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
           org_id?: string | null
@@ -1058,6 +1064,8 @@ export type Database = {
           ai_risk_factors?: string[] | null
           ai_risk_score?: number | null
           ai_success_factors?: string[] | null
+          ai_summary?: string | null
+          ai_summary_generated_at?: string | null
           archived_at?: string | null
           assignee_id?: string | null
           cancelled_at?: string | null
@@ -1074,6 +1082,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
           org_id?: string | null
@@ -1231,6 +1240,114 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      escalation_log: {
+        Row: {
+          acknowledged_at: string | null
+          created_at: string | null
+          decision_id: string
+          escalated_to: string | null
+          id: string
+          org_id: string | null
+          rule_id: string | null
+          status: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          decision_id: string
+          escalated_to?: string | null
+          id?: string
+          org_id?: string | null
+          rule_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          created_at?: string | null
+          decision_id?: string
+          escalated_to?: string | null
+          id?: string
+          org_id?: string | null
+          rule_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_log_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escalation_log_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "escalation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_rules: {
+        Row: {
+          condition_type: string
+          condition_value: number
+          created_at: string | null
+          created_by: string
+          description: string | null
+          enabled: boolean | null
+          escalate_to: string
+          id: string
+          name: string
+          notify_channels: string[] | null
+          org_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          enabled?: boolean | null
+          escalate_to?: string
+          id?: string
+          name: string
+          notify_channels?: string[] | null
+          org_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          condition_type?: string
+          condition_value?: number
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          enabled?: boolean | null
+          escalate_to?: string
+          id?: string
+          name?: string
+          notify_channels?: string[] | null
+          org_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_rules_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       external_review_tokens: {
         Row: {
@@ -1727,6 +1844,53 @@ export type Database = {
             foreignKeyName: "notifications_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_badges: {
+        Row: {
+          badge_token: string | null
+          decisions_count: number | null
+          expires_at: string | null
+          id: string
+          is_public: boolean | null
+          issued_at: string | null
+          org_id: string | null
+          quality_score: number | null
+          tier: string
+          velocity_score: number | null
+        }
+        Insert: {
+          badge_token?: string | null
+          decisions_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          issued_at?: string | null
+          org_id?: string | null
+          quality_score?: number | null
+          tier?: string
+          velocity_score?: number | null
+        }
+        Update: {
+          badge_token?: string | null
+          decisions_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          issued_at?: string | null
+          org_id?: string | null
+          quality_score?: number | null
+          tier?: string
+          velocity_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_badges_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
@@ -3091,6 +3255,16 @@ export type Database = {
       }
       get_org_role: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      get_velocity_score: {
+        Args: { _org_id?: string; _user_id?: string }
+        Returns: {
+          avg_days: number
+          grade: string
+          industry_avg_days: number
+          percentile: number
+          score: number
+        }[]
+      }
       has_min_role: {
         Args: { _min_role: string; _user_id: string }
         Returns: boolean

@@ -68,6 +68,8 @@ const WarRoom = lazy(() => import("./pages/WarRoom"));
 const IndustryLandingPage = lazy(() => import("./pages/IndustryLandingPage"));
 const DemoMode = lazy(() => import("./pages/DemoMode"));
 const PainOnboarding = lazy(() => import("./pages/PainOnboarding"));
+const CodCalculatorWidget = lazy(() => import("./pages/CodCalculatorWidget"));
+const BadgeVerification = lazy(() => import("./pages/BadgeVerification"));
 // ── Wrappers ───────────────────────────────────────────
 
 /** Protected + Suspense + Error Boundary wrapper */
@@ -110,6 +112,8 @@ export const publicRoutes = (
     <Route path="/branchen/:slug" element={<L><IndustryLandingPage /></L>} />
     <Route path="/demo" element={<L><DemoMode /></L>} />
     <Route path="/internal-admin" element={<L><InternalAdmin /></L>} />
+    <Route path="/widget/cod-calculator" element={<L><CodCalculatorWidget /></L>} />
+    <Route path="/badge/:token" element={<L><BadgeVerification /></L>} />
   </>
 );
 

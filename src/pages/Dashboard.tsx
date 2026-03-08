@@ -52,6 +52,8 @@ import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanne
 import AnomalyCards from "@/components/shared/AnomalyCards";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
+import DeadDecisionDetector from "@/components/dashboard/DeadDecisionDetector";
+import RoiProofWidget from "@/components/dashboard/RoiProofWidget";
 import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 
 type DashboardMode = "operational" | "executive" | "admin";
@@ -413,7 +415,12 @@ const Dashboard = () => {
             {/* ═══ OPERATIONAL MODE ═══ */}
             {!isExecutive && (
               <>
-                {/* KI-Anomalie-Erkennungs-Box (spec: bg #FFF7ED, left border #F59E0B) */}
+                {/* 🧟 Dead Decision Detector */}
+                <WidgetErrorBoundary label="Dead Decision Detector">
+                  <DeadDecisionDetector decisions={decisions} />
+                </WidgetErrorBoundary>
+
+                {/* KI-Anomalie-Erkennungs-Box */}
                 <AnomalyCards bannersOnly className="mb-2" />
 
                 {/* Active Decisions Table (spec: Titel | Kategorie | Priorität | Status | SLA | CoD/Woche | Reviewer) */}
@@ -431,6 +438,11 @@ const Dashboard = () => {
                     </WidgetErrorBoundary>
                   </div>
                 </div>
+
+                {/* ═══ ROI PROOF ═══ */}
+                <WidgetErrorBoundary label="ROI">
+                  <RoiProofWidget />
+                </WidgetErrorBoundary>
 
                 {/* ═══ DEEP DIVE ═══ */}
                 <div className="border-t border-border pt-4">

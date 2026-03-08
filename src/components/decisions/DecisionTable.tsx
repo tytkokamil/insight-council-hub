@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { QualityScoreBadge } from "./DecisionQualityScore";
 import QuickMessageButton from "@/components/shared/QuickMessageButton";
 import LiveCodCounter from "@/components/shared/LiveCodCounter";
@@ -193,6 +194,14 @@ const DecisionTable = ({
                         <DecisionBadges meta={meta} t={t} />
                         <PredictiveSlaInlineBadge decisionId={decision.id} predictions={predictions} />
                       </div>
+                      {/* AI Summary (Prompt 16) */}
+                      {decision.ai_summary ? (
+                        <p className="text-[12px] text-muted-foreground/70 italic mt-0.5 truncate max-w-[400px]">
+                          ✦ {decision.ai_summary}
+                        </p>
+                      ) : decision.description && decision.description.length > 50 ? (
+                        <Skeleton className="h-3 w-[60%] mt-1" />
+                      ) : null}
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[11px] text-muted-foreground">{categoryLabels[decision.category]}</span>
                         <Badge variant="outline" className={`text-[9px] h-4 px-1.5 ${priorityBadgeStyles[decision.priority]}`}>
