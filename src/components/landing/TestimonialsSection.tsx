@@ -8,7 +8,7 @@ const cards = [
   {
     emoji: "🔒",
     title: "Gründerpreis für immer",
-    text: "Starter für 29€/Mo statt 59€ — lebenslang fixiert.",
+    text: "Professional für €89/Mo statt €149 — lebenslang fixiert.",
   },
   {
     emoji: "📞",

@@ -252,8 +252,11 @@ const FoundingProgram = () => {
                 <span className="text-4xl font-bold" style={{ color: "rgba(255,255,255,0.95)" }}>€89</span>
                 <span className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>/Monat</span>
               </div>
-              <p className="text-[13px] mb-6" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <p className="text-[13px] mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Professional-Plan. Bis 25 Nutzer. Lebenslang locked.
+              </p>
+              <p className="text-[12px] mb-6" style={{ color: "rgba(255,255,255,0.3)" }}>
+                Jahresplan: €74/Mo statt €124
               </p>
 
               <ul className="text-left max-w-sm mx-auto space-y-2 mb-8">
