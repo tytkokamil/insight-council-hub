@@ -5307,6 +5307,10 @@
     "evt_war_room": "War Room",
     "evt_ai_daily_brief": "KI Daily Brief",
     "evt_weekly_report": "Wochenreport",
-    "evt_new_members": "Neue Mitglieder"
+    "evt_new_members": "Neue Mitglieder",
+    "reengagementLabel": "Re-Engagement E-Mails erhalten",
+    "reengagementDesc": "Erinnerungen bei längerer Inaktivität (Tag 7, 14, 30) mit offenen Entscheidungen und Cost-of-Delay.",
+    "reengagementEnabled": "Re-Engagement E-Mails aktiviert",
+    "reengagementDisabled": "Re-Engagement E-Mails deaktiviert"
   }
 }

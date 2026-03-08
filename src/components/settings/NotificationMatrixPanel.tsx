@@ -195,6 +195,51 @@ const NotificationMatrixPanel = () => {
       </div>
 
       <p className="text-[10px] text-muted-foreground">{t("notifMatrix.pushNote")}</p>
+
+      {/* Re-engagement Email Opt-out */}
+      <ReengagementOptOutToggle userId={user?.id} />
+    </div>
+  );
+};
+
+// ── Re-engagement toggle (extracted sub-component) ─────
+const ReengagementOptOutToggle = ({ userId }: { userId?: string }) => {
+  const { t } = useTranslation();
+  const [enabled, setEnabled] = useState(true);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase
+      .from("profiles")
+      .select("email_reengagement_opt_out")
+      .eq("user_id", userId)
+      .single()
+      .then(({ data }) => {
+        if (data) setEnabled(!data.email_reengagement_opt_out);
+        setLoaded(true);
+      });
+  }, [userId]);
+
+  const toggle = async (checked: boolean) => {
+    setEnabled(checked);
+    if (!userId) return;
+    await supabase
+      .from("profiles")
+      .update({ email_reengagement_opt_out: !checked })
+      .eq("user_id", userId);
+    toast.success(checked ? t("notifMatrix.reengagementEnabled") : t("notifMatrix.reengagementDisabled"));
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-border/60 p-3 mt-2">
+      <div>
+        <p className="text-sm font-medium">{t("notifMatrix.reengagementLabel")}</p>
+        <p className="text-[11px] text-muted-foreground">{t("notifMatrix.reengagementDesc")}</p>
+      </div>
+      <Switch checked={enabled} onCheckedChange={toggle} />
     </div>
   );
 };

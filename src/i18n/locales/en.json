@@ -5301,6 +5301,10 @@
     "evt_war_room": "War Room",
     "evt_ai_daily_brief": "AI Daily Brief",
     "evt_weekly_report": "Weekly report",
-    "evt_new_members": "New members"
+    "evt_new_members": "New members",
+    "reengagementLabel": "Receive re-engagement emails",
+    "reengagementDesc": "Reminders after extended inactivity (day 7, 14, 30) with open decisions and cost-of-delay.",
+    "reengagementEnabled": "Re-engagement emails enabled",
+    "reengagementDisabled": "Re-engagement emails disabled"
   }
 }
