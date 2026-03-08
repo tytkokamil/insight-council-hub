@@ -325,7 +325,7 @@ const PredictiveTimeline = ({ embedded }: { embedded?: boolean }) => {
                         />
                         <span
                           className="absolute z-10 font-bold"
-                          style={{ left: `${todayPosition}%`, top: "-2px", transform: "translateX(-50%)", fontSize: "11px", color: "#3B82F6" }}
+                          style={{ left: `${todayPosition}%`, top: "-2px", transform: "translateX(-50%)", fontSize: "11px", color: "hsl(var(--primary))" }}
                         >
                           {t("predictive.legendToday", "Heute")}
                         </span>
