@@ -128,7 +128,7 @@ const Navbar = () => {
                     className="relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200"
                     style={{
                       color: isDark
-                        ? isActive ? "#fff" : "rgba(255,255,255,0.6)"
+                        ? isActive ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.6)"
                         : isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.7)",
                       fontWeight: isActive ? 500 : 400,
                     }}
