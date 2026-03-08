@@ -409,6 +409,12 @@ const Dashboard = () => {
             {/* ═══ OPERATIONAL MODE ═══ */}
             {!isExecutive && (
               <>
+                {/* KI-Anomalie-Erkennungs-Box (spec: bg #FFF7ED, left border #F59E0B) */}
+                <AnomalyCards bannersOnly className="mb-2" />
+
+                {/* Active Decisions Table (spec: Titel | Kategorie | Priorität | Status | SLA | CoD/Woche | Reviewer) */}
+                <ActiveDecisionsTable />
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
                   <div className="lg:col-span-2">
                     <WidgetErrorBoundary label="Stuck Decision Analyzer">
@@ -419,34 +425,8 @@ const Dashboard = () => {
                     <WidgetErrorBoundary>
                       <EscalationWidget />
                     </WidgetErrorBoundary>
-                    {/* GamificationWidget hidden for now — re-enable later */}
-                    {/* <WidgetErrorBoundary>
-                      <GamificationWidget decisions={decisions} tasks={contextTasks} teams={teams} />
-                    </WidgetErrorBoundary> */}
                   </div>
                 </div>
-
-                {computed.recentlyOpened.length > 0 && (
-                  <section>
-                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">{t("dashboard.recentlyOpened")}</h2>
-                    <div className="border border-border rounded-xl divide-y divide-border overflow-hidden">
-                      {computed.recentlyOpened.map(d => (
-                        <button key={d.id} onClick={() => navigate(`/decisions/${d.id}`)}
-                          className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors text-left">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className={cn("w-2 h-2 rounded-full shrink-0",
-                              d.priority === "critical" ? "bg-destructive" : d.priority === "high" ? "bg-warning" : "bg-primary")} />
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-normal">{tStatusLabels[d.status] || d.status}</Badge>
-                            <span className="text-sm truncate">{d.title}</span>
-                          </div>
-                          <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                            {formatDistanceToNow(new Date(d.updated_at), { locale: dateFnsLocale, addSuffix: true })}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-                )}
 
                 {/* ═══ DEEP DIVE ═══ */}
                 <div className="border-t border-border pt-4">
