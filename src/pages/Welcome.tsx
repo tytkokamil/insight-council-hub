@@ -1,26 +1,14 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
 import decivioLogo from "@/assets/decivio-logo.png";
-import WelcomeStep from "@/components/onboarding/WelcomeStep";
-import IndustryStep from "@/components/onboarding/IndustryStep";
-import TeamSizeStep from "@/components/onboarding/TeamSizeStep";
-import FirstDecisionStep from "@/components/onboarding/FirstDecisionStep";
-import CompletionStep from "@/components/onboarding/CompletionStep";
+import PainPointStep from "@/components/onboarding/PainPointStep";
+import SmartDecisionStep from "@/components/onboarding/SmartDecisionStep";
 
-const TOTAL_STEPS = 5;
-
-const CATEGORY_BY_INDUSTRY: Record<string, string> = {
-  maschinenbau: "operational",
-  automotive: "strategic",
-  pharma: "technical",
-  it: "technical",
-  bau: "operational",
-  allgemein: "operational",
-};
+const TOTAL_STEPS = 2;
 
 const slideAnim = {
   initial: { opacity: 0, x: 50 },
@@ -33,44 +21,10 @@ const Welcome = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [selectedIndustry, setSelectedIndustry] = useState<string | null>(null);
-  const [selectedTeamSize, setSelectedTeamSize] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [costData, setCostData] = useState<{ people: number; rate: number; days: number; monthlyCost: number } | null>(null);
 
-  // Step 4 form
-  const [decisionTitle, setDecisionTitle] = useState("");
-  const [decisionCategory, setDecisionCategory] = useState("operational");
-  const [decisionPriority, setDecisionPriority] = useState("medium");
-  const [usedDemo, setUsedDemo] = useState(false);
-
-  // Live CoD ticker for step 5
-  const [codTick, setCodTick] = useState(0);
-  useEffect(() => {
-    if (step !== 5) return;
-    const iv = setInterval(() => setCodTick(t => t + 1), 1000);
-    return () => clearInterval(iv);
-  }, [step]);
-
-  const liveCod = useMemo(() => {
-    const baseDailyCod = decisionPriority === "critical" ? 2040 : decisionPriority === "high" ? 1530 : 510;
-    return Math.round((baseDailyCod / 86400 * codTick) * 100) / 100;
-  }, [codTick, decisionPriority]);
-
-  const weeklyCod = useMemo(() => {
-    const baseDailyCod = decisionPriority === "critical" ? 2040 : decisionPriority === "high" ? 1530 : 510;
-    return baseDailyCod * 7;
-  }, [decisionPriority]);
-
-  useEffect(() => {
-    if (selectedIndustry) {
-      setDecisionCategory(CATEGORY_BY_INDUSTRY[selectedIndustry] || "operational");
-    }
-  }, [selectedIndustry]);
-
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const progressPercent = (step / TOTAL_STEPS) * 100;
-  const timeRemaining = Math.max(1, TOTAL_STEPS - step + 1) <= 2 ? "< 1 Min." : `~ ${TOTAL_STEPS - step} Min.`;
 
   const handleSkip = async () => {
     if (!user) return;
@@ -78,74 +32,62 @@ const Welcome = () => {
     navigate("/dashboard", { replace: true });
   };
 
-  const handleIndustrySelect = (id: string) => {
-    setSelectedIndustry(id);
-    setTimeout(() => setStep(3), 300);
+  const handlePainPointNext = (data: { people: number; rate: number; days: number; monthlyCost: number }) => {
+    setCostData(data);
+    setStep(2);
   };
 
-  const handleTeamSizeSelect = async (id: string) => {
-    setSelectedTeamSize(id);
-    if (user) {
-      // Save industry to profile
-      await supabase.from("profiles").update({ industry: selectedIndustry } as any).eq("user_id", user.id);
-      // Save team_size to org settings
-      const { data: profile } = await supabase.from("profiles").select("org_id").eq("user_id", user.id).single();
-      if (profile?.org_id) {
-        const { data: org } = await supabase.from("organizations").select("settings").eq("id", profile.org_id).single();
-        const currentSettings = (org?.settings as Record<string, any>) || {};
-        await supabase.from("organizations").update({
-          settings: { ...currentSettings, team_size: id, industry: selectedIndustry },
-        }).eq("id", profile.org_id);
-      }
-    }
-    setTimeout(() => setStep(4), 300);
-  };
-
-  const goToStep5 = () => {
-    setStep(5);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 3000);
-  };
-
-  const handleCreateDecision = async () => {
-    if (!user || !decisionTitle.trim()) return;
+  const handleCreateDecision = async (data: {
+    title: string;
+    category: string;
+    priority: string;
+    sla_days: number;
+    colleagueEmail?: string;
+  }) => {
+    if (!user) return;
     setLoading(true);
     try {
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + data.sla_days);
+
+      // Calculate cost_per_day from pain point data
+      const costPerDay = costData
+        ? Math.round((costData.rate * 8 * costData.people) / 1)
+        : 510;
+
       await supabase.from("decisions").insert({
-        title: decisionTitle.trim(),
-        category: decisionCategory,
-        priority: decisionPriority,
+        title: data.title,
+        category: data.category,
+        priority: data.priority,
         status: "draft",
         created_by: user.id,
         owner_id: user.id,
-      } as any).select("id").single();
-      setUsedDemo(false);
+        due_date: dueDate.toISOString().split("T")[0],
+        cost_per_day: costPerDay,
+      } as any);
+
+      // Store aha-moment data for dashboard overlay
+      localStorage.setItem("aha-moment-data", JSON.stringify({
+        costPerDay,
+        decisionTitle: data.title,
+      }));
+
+      // Mark onboarding complete
+      await supabase.from("profiles").update({ onboarding_completed: true } as any).eq("user_id", user.id);
+
+      // If colleague email provided, send invite
+      if (data.colleagueEmail) {
+        try {
+          await supabase.functions.invoke("send-team-invite", {
+            body: { email: data.colleagueEmail, invitedBy: user.id },
+          });
+        } catch {
+          // Don't block flow
+        }
+      }
     } catch (e) {
       console.error(e);
     }
-    setLoading(false);
-    goToStep5();
-  };
-
-  const handleLoadDemo = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      await supabase.functions.invoke("seed-demo-data", {
-        body: { userId: user.id, industry: selectedIndustry },
-      });
-      setUsedDemo(true);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-    goToStep5();
-  };
-
-  const handleFinish = async () => {
-    if (!user) return;
-    setLoading(true);
-    await supabase.from("profiles").update({ onboarding_completed: true } as any).eq("user_id", user.id);
     setLoading(false);
     navigate("/dashboard", { replace: true });
   };
@@ -177,7 +119,9 @@ const Welcome = () => {
                 />
               ))}
             </div>
-            <span className="text-[10px] text-muted-foreground">{timeRemaining} verbleibend</span>
+            <span className="text-[10px] text-muted-foreground">
+              {step === 1 ? "~ 2 Min." : "~ 1 Min."} verbleibend
+            </span>
           </div>
           <Progress value={progressPercent} className="h-1" />
         </div>
@@ -186,32 +130,13 @@ const Welcome = () => {
       {/* Content */}
       <div className="flex-1 flex items-center justify-center px-4 pb-12">
         <AnimatePresence mode="wait">
-          {step === 1 && <WelcomeStep userName={userName} onNext={() => setStep(2)} slideAnim={slideAnim} />}
-          {step === 2 && <IndustryStep selectedIndustry={selectedIndustry} onSelect={handleIndustrySelect} slideAnim={slideAnim} />}
-          {step === 3 && <TeamSizeStep selectedTeamSize={selectedTeamSize} onSelect={handleTeamSizeSelect} slideAnim={slideAnim} />}
-          {step === 4 && (
-            <FirstDecisionStep
-              decisionTitle={decisionTitle}
-              setDecisionTitle={setDecisionTitle}
-              decisionCategory={decisionCategory}
-              setDecisionCategory={setDecisionCategory}
-              decisionPriority={decisionPriority}
-              setDecisionPriority={setDecisionPriority}
-              loading={loading}
-              onCreateDecision={handleCreateDecision}
-              onLoadDemo={handleLoadDemo}
-              slideAnim={slideAnim}
-            />
+          {step === 1 && (
+            <PainPointStep onNext={handlePainPointNext} slideAnim={slideAnim} />
           )}
-          {step === 5 && (
-            <CompletionStep
-              showConfetti={showConfetti}
-              usedDemo={usedDemo}
-              decisionTitle={decisionTitle}
-              liveCod={liveCod}
-              weeklyCod={weeklyCod}
+          {step === 2 && (
+            <SmartDecisionStep
+              onCreateDecision={handleCreateDecision}
               loading={loading}
-              onFinish={handleFinish}
               slideAnim={slideAnim}
             />
           )}

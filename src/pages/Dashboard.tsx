@@ -38,19 +38,18 @@ import {
 } from "recharts";
 
 const AiBriefingWidget = lazy(() => import("@/components/dashboard/AiBriefingWidget"));
-const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
+const AhaMomentOverlay = lazy(() => import("@/components/onboarding/AhaMomentOverlay"));
+const GuidedChecklist = lazy(() => import("@/components/onboarding/GuidedChecklist"));
 import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
 import StuckDecisionAnalyzer from "@/components/dashboard/StuckDecisionAnalyzer";
 import ActiveDecisionsTable from "@/components/dashboard/ActiveDecisionsTable";
 import PortfolioRiskOverview from "@/components/dashboard/PortfolioRiskOverview";
 import DecisionCostWidget from "@/components/dashboard/DecisionCostWidget";
 import EscalationWidget from "@/components/dashboard/EscalationWidget";
-import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 import GamificationWidget from "@/components/dashboard/GamificationWidget";
 import KpiOverviewWidget from "@/components/dashboard/KpiOverviewWidget";
 import IndustryReminderBanner from "@/components/dashboard/IndustryReminderBanner";
 import AnomalyCards from "@/components/shared/AnomalyCards";
-import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 import CodPreviewWidget from "@/components/dashboard/CodPreviewWidget";
 import DeadDecisionDetector from "@/components/dashboard/DeadDecisionDetector";
 import RoiProofWidget from "@/components/dashboard/RoiProofWidget";
@@ -100,25 +99,15 @@ const Dashboard = () => {
   const isLoading = loadingDec || loadingTasks;
   const hasError = errorDec || errorTasks;
 
-  // Onboarding tour
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [autoSeeded, setAutoSeeded] = useState(false);
-  
-  // Auto-seed disabled — let users see the empty dashboard with widgets
-  // Users can seed demo data from Decisions or Tasks pages
-
-  useEffect(() => {
-    const seen = localStorage.getItem("onboarding-completed");
-    if (!seen && !isLoading && allDecisions.length === 0 && tasks.length === 0) {
-      const timer = setTimeout(() => setShowOnboarding(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, allDecisions.length, tasks.length]);
-
-  const completeOnboarding = useCallback(() => {
-    setShowOnboarding(false);
-    localStorage.setItem("onboarding-completed", "true");
-  }, []);
+  // Aha-moment overlay
+  const [showAha, setShowAha] = useState(() => {
+    const data = localStorage.getItem("aha-moment-data");
+    const seen = localStorage.getItem("aha-moment-seen");
+    return !!data && !seen;
+  });
+  const ahaData = (() => {
+    try { return JSON.parse(localStorage.getItem("aha-moment-data") || "null"); } catch { return null; }
+  })();
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -295,18 +284,20 @@ const Dashboard = () => {
         {/* ═══ MAIN DASHBOARD ═══ */}
         {!isLoading && (
           <>
+            {/* ═══ AHA MOMENT OVERLAY ═══ */}
+            {showAha && ahaData && (
+              <Suspense fallback={null}>
+                <AhaMomentOverlay
+                  costPerDay={ahaData.costPerDay}
+                  decisionTitle={ahaData.decisionTitle}
+                  onDismiss={() => setShowAha(false)}
+                />
+              </Suspense>
+            )}
+
             {/* ═══ GUIDED MODE for new users (< 3 decisions) ═══ */}
             {isGuidedMode && (
               <div className="space-y-6">
-                <WelcomeBanner firstName={firstName} />
-
-                <OnboardingChecklist
-                  hasTeam={teams.length > 0}
-                  hasDecision={decisions.length > 0}
-                  hasReview={contextReviews.length > 0}
-                  hasTemplate={decisions.some(d => !!d.template_used)}
-                />
-
                 <CodPreviewWidget />
               </div>
             )}
@@ -328,15 +319,7 @@ const Dashboard = () => {
             {/* ═══ 2. KPI ROW – mode-dependent ═══ */}
             {isExecutive ? <CoreKpiGrid /> : <KpiOverviewWidget />}
 
-            {/* ═══ ONBOARDING CHECKLIST ═══ */}
-            {decisions.length < 10 && (
-              <OnboardingChecklist
-                hasTeam={teams.length > 0}
-                hasDecision={decisions.length > 0}
-                hasReview={contextReviews.length > 0}
-                hasTemplate={decisions.some(d => !!d.template_used)}
-              />
-            )}
+            {/* Guided Checklist removed — replaced by floating GuidedChecklist */}
 
             {/* ═══ KEYBOARD SHORTCUT HINT ═══ */}
             {decisions.length < 5 && !localStorage.getItem("shortcut-hint-dismissed") && (
@@ -543,6 +526,17 @@ const Dashboard = () => {
           </>
         )}
       </div>
+
+      {/* Floating Guided Checklist */}
+      <Suspense fallback={null}>
+        <GuidedChecklist
+          hasDecision={decisions.length > 0}
+          hasTeamMember={teams.length > 0}
+          hasSla={decisions.some(d => !!d.due_date)}
+          hasCompliance={false}
+          hasBrief={false}
+        />
+      </Suspense>
     </AppLayout>
   );
 };
