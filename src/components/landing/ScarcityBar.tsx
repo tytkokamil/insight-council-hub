@@ -81,7 +81,7 @@ const ScarcityBar = () => {
             {/* Limited spots */}
             <span className="inline-flex items-center gap-1.5">
               <Flame className="w-3.5 h-3.5" />
-              Nur noch <span className="font-bold">7 von 20</span> Founding-Plätze frei
+              Nur noch <span className="font-bold">20 von 20</span> Founding-Plätze frei
             </span>
 
             <button
