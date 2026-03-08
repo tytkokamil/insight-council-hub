@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { escapeHtml } from "../_shared/email-templates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +15,7 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   // Auth guard — internal/cron only
@@ -34,7 +34,6 @@ serve(async (req) => {
   );
 
   try {
-    // 1. Get all organizations with admins
     const { data: orgs } = await supabase.from("organizations").select("id, name").eq("is_active", true);
     if (!orgs || orgs.length === 0) {
       return new Response(JSON.stringify({ message: "No active organizations" }), {
@@ -43,6 +42,11 @@ serve(async (req) => {
     }
 
     let totalDigestsSent = 0;
+    const now = new Date();
+    const DEAD_THRESHOLD = 14;
+    const STUCK_THRESHOLD = 5;
+    const REVIEW_STALE_DAYS = 3;
+    const appUrl = "https://app.decivio.com";
 
     for (const org of orgs) {
       // Find org admins/owners
@@ -54,6 +58,22 @@ serve(async (req) => {
 
       if (!adminRoles || adminRoles.length === 0) continue;
 
+      // Check opt-out: filter admins who have digest enabled
+      const adminIds = adminRoles.map(r => r.user_id);
+      const { data: prefs } = await supabase
+        .from("notification_preferences")
+        .select("user_id, digest_frequency")
+        .in("user_id", adminIds);
+
+      const prefsMap = new Map((prefs || []).map((p: any) => [p.user_id, p.digest_frequency]));
+      const eligibleAdmins = adminIds.filter(id => {
+        const freq = prefsMap.get(id);
+        // Default is opted-in; only skip if explicitly set to "none"
+        return freq !== "none";
+      });
+
+      if (eligibleAdmins.length === 0) continue;
+
       // Get active decisions for this org
       const { data: decisions } = await supabase
         .from("decisions")
@@ -63,14 +83,40 @@ serve(async (req) => {
         .is("archived_at", null)
         .not("status", "in", '("implemented","rejected","archived","cancelled","superseded")');
 
-      if (!decisions || decisions.length === 0) continue;
+      // Get stale reviews (no response > 3 days)
+      const { data: staleReviews } = await supabase
+        .from("decision_reviews")
+        .select("id, decision_id, reviewer_id, created_at")
+        .is("reviewed_at", null)
+        .order("created_at", { ascending: true });
 
-      const now = new Date();
-      const DEAD_THRESHOLD = 14;
-      const STUCK_THRESHOLD = 5;
+      const staleReviewList = (staleReviews || []).filter(r => {
+        const daysPending = Math.floor((now.getTime() - new Date(r.created_at).getTime()) / 86400000);
+        return daysPending >= REVIEW_STALE_DAYS;
+      });
+
+      // Get decision titles for stale reviews
+      const staleDecisionIds = [...new Set(staleReviewList.map(r => r.decision_id))];
+      let staleDecisionTitles: Record<string, string> = {};
+      if (staleDecisionIds.length > 0) {
+        const { data: staleDecisions } = await supabase
+          .from("decisions")
+          .select("id, title")
+          .in("id", staleDecisionIds)
+          .eq("org_id", org.id);
+        staleDecisionTitles = Object.fromEntries((staleDecisions || []).map(d => [d.id, d.title]));
+      }
+      // Filter to only reviews belonging to this org's decisions
+      const orgStaleReviews = staleReviewList.filter(r => staleDecisionTitles[r.decision_id]);
+
+      if (!decisions || decisions.length === 0) {
+        if (orgStaleReviews.length === 0) continue;
+      }
+
+      const decisionList = decisions || [];
 
       // Dead decisions (no activity > 14 days)
-      const deadDecisions = decisions.filter(d => {
+      const deadDecisions = decisionList.filter(d => {
         const lastActivity = d.last_activity_at || d.updated_at;
         const daysInactive = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / 86400000);
         return daysInactive >= DEAD_THRESHOLD;
@@ -80,59 +126,70 @@ serve(async (req) => {
         return { ...d, daysInactive };
       });
 
-      // Stuck decisions (same phase > 5 days with issues)
-      const stuckDecisions = decisions.filter(d => {
+      // Stuck decisions (same phase > 5 days, excluding dead)
+      const deadIds = new Set(deadDecisions.map(d => d.id));
+      const stuckDecisions = decisionList.filter(d => {
+        if (deadIds.has(d.id)) return false;
         const lastActivity = d.last_activity_at || d.updated_at;
         const daysInactive = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / 86400000);
-        const isOverdue = d.due_date && new Date(d.due_date) < now;
-        return daysInactive >= STUCK_THRESHOLD || isOverdue;
-      }).filter(d => !deadDecisions.find(dd => dd.id === d.id)) // exclude already-dead
-        .map(d => {
-          const lastActivity = d.last_activity_at || d.updated_at;
-          const daysStuck = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / 86400000);
-          return { ...d, daysStuck };
-        });
+        return daysInactive >= STUCK_THRESHOLD;
+      }).map(d => {
+        const lastActivity = d.last_activity_at || d.updated_at;
+        const daysStuck = Math.floor((now.getTime() - new Date(lastActivity).getTime()) / 86400000);
+        return { ...d, daysStuck };
+      });
 
-      if (deadDecisions.length === 0 && stuckDecisions.length === 0) continue;
+      // Overdue SLAs
+      const overdueDecisions = decisionList.filter(d => {
+        return d.due_date && new Date(d.due_date) < now && !deadIds.has(d.id);
+      });
 
-      // Build digest message
-      const baseUrl = Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "").replace("https://", "https://") || "";
-      const appUrl = "https://decivio.com"; // Adjust to actual app URL
+      const totalIssues = deadDecisions.length + stuckDecisions.length + overdueDecisions.length + orgStaleReviews.length;
+      if (totalIssues === 0) continue;
 
-      let message = `📋 **Wöchentlicher Cleanup-Digest für ${org.name}**\n\n`;
+      // Economic exposure: sum of cost_per_day for all problematic decisions
+      const allProblematic = [...deadDecisions, ...stuckDecisions, ...overdueDecisions];
+      const uniqueProblematic = [...new Map(allProblematic.map(d => [d.id, d])).values()];
+      const weeklyExposure = uniqueProblematic.reduce((sum, d) => sum + ((d.cost_per_day || 0) * 7), 0);
 
-      if (deadDecisions.length > 0) {
-        message += `💀 **${deadDecisions.length} tote Entscheidung${deadDecisions.length > 1 ? "en" : ""}** (keine Aktivität seit 14+ Tagen):\n`;
-        for (const d of deadDecisions.slice(0, 5)) {
-          const costInfo = d.cost_per_day ? ` — CoD: ${d.cost_per_day}€/Tag` : "";
-          message += `  • "${d.title}" — ${d.daysInactive} Tage inaktiv${costInfo}\n`;
+      // Top 3 most critical (highest CoD)
+      const top3 = uniqueProblematic
+        .sort((a, b) => (b.cost_per_day || 0) - (a.cost_per_day || 0))
+        .slice(0, 3);
+
+      // Build notification message
+      let message = `📋 Wochenbericht für ${org.name}\n\n`;
+      message += `Zusammenfassung: ${deadDecisions.length} tote, ${stuckDecisions.length} feststeckende, ${overdueDecisions.length} überfällige Entscheidungen`;
+      if (orgStaleReviews.length > 0) message += `, ${orgStaleReviews.length} unbeantwortete Reviews`;
+      message += `\n\n`;
+
+      if (top3.length > 0) {
+        message += `🔥 Kritischste Entscheidungen:\n`;
+        for (const d of top3) {
+          const costInfo = d.cost_per_day ? ` (${d.cost_per_day}€/Tag)` : "";
+          message += `  • "${d.title}"${costInfo}\n`;
         }
         message += "\n";
       }
 
-      if (stuckDecisions.length > 0) {
-        message += `⚠️ **${stuckDecisions.length} feststeckende Entscheidung${stuckDecisions.length > 1 ? "en" : ""}**:\n`;
-        for (const d of stuckDecisions.slice(0, 5)) {
-          const overdueInfo = d.due_date && new Date(d.due_date) < now ? " [ÜBERFÄLLIG]" : "";
-          message += `  • "${d.title}" — Phase: ${d.status} — ${d.daysStuck} Tage${overdueInfo}\n`;
-        }
-        message += "\n";
+      if (weeklyExposure > 0) {
+        message += `💰 Economic Exposure diese Woche: ${weeklyExposure.toLocaleString("de-DE")}€\n\n`;
       }
 
-      message += `→ Alle bereinigen: ${appUrl}/decisions?filter=stuck`;
+      message += `→ Alle bereinigen: ${appUrl}/decisions?filter=needs_attention`;
 
-      // Send notification to each admin
-      for (const admin of adminRoles) {
+      // Send notification to each eligible admin
+      for (const adminId of eligibleAdmins) {
         await supabase.from("notifications").insert({
-          user_id: admin.user_id,
+          user_id: adminId,
           org_id: org.id,
           type: "cleanup_digest",
-          title: `${deadDecisions.length} tote + ${stuckDecisions.length} feststeckende Entscheidungen`,
+          title: `Wochenbericht: ${totalIssues} Entscheidung${totalIssues > 1 ? "en" : ""} brauchen Aufmerksamkeit`,
           message,
         });
       }
 
-      totalDigestsSent += adminRoles.length;
+      totalDigestsSent += eligibleAdmins.length;
     }
 
     return new Response(JSON.stringify({
