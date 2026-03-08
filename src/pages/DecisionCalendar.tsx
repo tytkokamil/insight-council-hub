@@ -15,7 +15,7 @@ import {
 } from "date-fns";
 import { de } from "date-fns/locale";
 import { enUS } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, LayoutGrid, Rows3, CalendarRange, Download, CheckSquare, Layers, Users2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -40,6 +40,8 @@ import TaskPill from "@/components/calendar/TaskPill";
 import CalendarSummaryBar from "@/components/calendar/CalendarSummaryBar";
 import { usePredictiveSla, getPredictedViolationDates } from "@/components/decisions/PredictiveSlaWarning";
 import { useReviews } from "@/hooks/useDecisions";
+import CalendarLayerToggles, { type CalendarLayers, DEFAULT_LAYERS } from "@/components/calendar/CalendarLayerToggles";
+import MeetingPlannerDialog from "@/components/calendar/MeetingPlannerDialog";
 
 const DecisionCalendar = () => {
   const { t, i18n } = useTranslation();
@@ -50,6 +52,8 @@ const DecisionCalendar = () => {
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [dragOverDate, setDragOverDate] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [layers, setLayers] = useState<CalendarLayers>(DEFAULT_LAYERS);
+  const [meetingPlannerOpen, setMeetingPlannerOpen] = useState(false);
   const [filters, setFilters] = useState<CalendarFilters>({
     status: new Set(),
     priority: new Set(),
@@ -108,27 +112,40 @@ const DecisionCalendar = () => {
     return map;
   }, [allTasks]);
 
+  // Layer-filtered decisions
   const decisionsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     for (const d of decisions ?? []) {
       if (!d.due_date) continue;
       if (!applyFilters(d)) continue;
+
+      // Layer filtering
+      const isApproved = d.status === "approved" || d.status === "implemented";
+      const isOverdue = d.due_date && new Date(d.due_date) < new Date() && !["implemented", "rejected", "archived"].includes(d.status);
+      
+      // If only showing approved layer, skip non-approved
+      if (!layers.deadlines && !isApproved && !isOverdue) continue;
+      if (!layers.approved && isApproved && !isOverdue) continue;
+
       const key = d.due_date;
       if (!map[key]) map[key] = [];
       map[key].push(d);
     }
     return map;
-  }, [decisions, applyFilters]);
+  }, [decisions, applyFilters, layers]);
 
-  const unscheduledDecisions = useMemo(() => {
-    return (decisions ?? []).filter((d) => !d.due_date && applyFilters(d));
-  }, [decisions, applyFilters]);
+  // SLA events layer
+  const slaByDate = useMemo(() => {
+    if (!layers.sla) return {};
+    // SLA dates come from predictedViolationDates
+    return Object.fromEntries(
+      Array.from(predictedViolationDates).map(d => [d, true])
+    );
+  }, [predictedViolationDates, layers.sla]);
 
-  const unscheduledTasks = useMemo(() => {
-    return allTasks.filter((tk) => !tk.due_date);
-  }, [allTasks]);
-
-  const complianceByDate = useMemo(() => {
+  // Compliance events layer
+  const filteredComplianceByDate = useMemo(() => {
+    if (!layers.compliance) return {};
     const map: Record<string, any[]> = {};
     for (const ev of complianceEvents) {
       if (!ev.event_date) continue;
@@ -137,7 +154,15 @@ const DecisionCalendar = () => {
       map[key].push(ev);
     }
     return map;
-  }, [complianceEvents]);
+  }, [complianceEvents, layers.compliance]);
+
+  const unscheduledDecisions = useMemo(() => {
+    return (decisions ?? []).filter((d) => !d.due_date && applyFilters(d));
+  }, [decisions, applyFilters]);
+
+  const unscheduledTasks = useMemo(() => {
+    return allTasks.filter((tk) => !tk.due_date);
+  }, [allTasks]);
 
   const monthDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentDate), { weekStartsOn: 1 });
@@ -283,7 +308,12 @@ const DecisionCalendar = () => {
           help={{ title: t("calendar.title"), description: t("calendar.help") }}
           secondaryActions={
             <>
+              <CalendarLayerToggles layers={layers} onChange={setLayers} />
               <CalendarFilterBar filters={filters} onToggle={handleFilterToggle} onClear={handleFilterClear} />
+              <Button variant="outline" size="sm" onClick={() => setMeetingPlannerOpen(true)} className="gap-1.5 text-xs">
+                <Users2 className="w-3.5 h-3.5" />
+                Meeting planen
+              </Button>
               <Button variant="outline" size="sm" onClick={handleExportICS} className="gap-1.5 text-xs">
                 <Download className="w-3.5 h-3.5" />
                 {t("calendar.exportCalendar")}
@@ -346,8 +376,8 @@ const DecisionCalendar = () => {
                   currentDate={currentDate}
                   decisionsByDate={decisionsByDate}
                   slaConfigs={slaConfigs}
-                  complianceByDate={complianceByDate}
-                  predictedViolationDates={predictedViolationDates}
+                  complianceByDate={filteredComplianceByDate}
+                  predictedViolationDates={layers.sla ? predictedViolationDates : new Set()}
                   {...sharedDragProps}
                 />
               )}
@@ -414,6 +444,13 @@ const DecisionCalendar = () => {
           onUpdated={() => {}}
         />
       )}
+
+      <MeetingPlannerDialog
+        open={meetingPlannerOpen}
+        onOpenChange={setMeetingPlannerOpen}
+        decisions={decisions ?? []}
+        profileMap={profileMap}
+      />
     </AppLayout>
   );
 };
