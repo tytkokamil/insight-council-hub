@@ -80,6 +80,8 @@ const SettingsPage = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [savingAi, setSavingAi] = useState(false);
   const [savedAi, setSavedAi] = useState(false);
+  const [orgModelPref, setOrgModelPref] = useState("auto");
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   const [userRole, setUserRole] = useState<string>("org_member");
   const [teamMemberships, setTeamMemberships] = useState<any[]>([]);
