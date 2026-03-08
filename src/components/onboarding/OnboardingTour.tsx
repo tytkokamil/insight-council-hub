@@ -17,6 +17,7 @@ interface OnboardingTourProps {
 
 const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [phase, setPhase] = useState<"context" | "tour">("context");
   const [contextStep, setContextStep] = useState(0);
   const [tourStep, setTourStep] = useState(0);
