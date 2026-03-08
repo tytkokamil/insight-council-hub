@@ -358,11 +358,16 @@ const SidebarNav = memo(({
   collapsed, isAdmin, isFeatureEnabled, pathname, onNavigate, onPrefetch, userRole = "org_member",
 }: SidebarNavProps) => {
   const { decisionCount } = useGuidedMode();
+  const { data: visibleDecisions = [] } = useDecisions();
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
   const [intelligenceUnlocked, setIntelligenceUnlocked] = useState(() => localStorage.getItem("intelligence-unlocked") === "true");
   const [hasActiveMeeting, setHasActiveMeeting] = useState(false);
-  const [openDecisionCount, setOpenDecisionCount] = useState(0);
+
+  const openDecisionCount = useMemo(
+    () => visibleDecisions.filter((decision) => ["draft", "proposed", "review"].includes(decision.status)).length,
+    [visibleDecisions]
+  );
 
   const [upgradeModal, setUpgradeModal] = useState<{ open: boolean; featureKey: string; label: string; minPlan: string }>({
     open: false, featureKey: "", label: "", minPlan: "pro",
@@ -378,19 +383,16 @@ const SidebarNav = memo(({
   };
 
   useEffect(() => {
+    let mounted = true;
+
     import("@/integrations/supabase/client").then(async ({ supabase }) => {
-      supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1)
-        .then(({ data }) => setHasActiveMeeting((data?.length ?? 0) > 0));
-      // Fetch open decision count for badge — only user's own
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (userId) {
-        supabase.from("decisions").select("id", { count: "exact", head: true })
-          .in("status", ["draft", "proposed", "review"])
-          .is("deleted_at", null)
-          .or(`created_by.eq.${userId},owner_id.eq.${userId},assignee_id.eq.${userId}`)
-          .then(({ count }) => setOpenDecisionCount(count || 0));
-      }
+      const { data } = await supabase.from("meeting_sessions").select("id").eq("status", "active").limit(1);
+      if (mounted) setHasActiveMeeting((data?.length ?? 0) > 0);
     });
+
+    return () => {
+      mounted = false;
+    };
   }, [pathname]);
 
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
