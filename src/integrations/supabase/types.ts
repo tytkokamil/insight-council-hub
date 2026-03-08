@@ -2844,6 +2844,71 @@ export type Database = {
           },
         ]
       }
+      roadmap_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          planned_quarter: string | null
+          released_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          vote_count: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          planned_quarter?: string | null
+          released_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          planned_quarter?: string | null
+          released_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          vote_count?: number
+        }
+        Relationships: []
+      }
+      roadmap_votes: {
+        Row: {
+          item_id: string
+          voted_at: string
+          voter_email: string
+        }
+        Insert: {
+          item_id: string
+          voted_at?: string
+          voter_email: string
+        }
+        Update: {
+          item_id?: string
+          voted_at?: string
+          voter_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_votes_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
