@@ -43,7 +43,7 @@ const FEATURE_CONFIG: Record<string, {
     price: "€149/Monat",
   },
   executive: {
-    minPlan: "pro",
+    minPlan: "professional",
     label: "Executive Hub",
     description: "Board-Ready KPIs und Portfolio-Übersicht für die Geschäftsleitung.",
     bullets: [
