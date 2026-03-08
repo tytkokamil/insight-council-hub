@@ -219,7 +219,7 @@ const Navbar = () => {
                   className="block text-sm px-4 py-2.5 rounded-lg transition-colors"
                   style={{
                     color: isDark
-                      ? activeSection === item.href ? "#fff" : "rgba(255,255,255,0.6)"
+                      ? activeSection === item.href ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.6)"
                       : activeSection === item.href ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
                   }}
                 >
