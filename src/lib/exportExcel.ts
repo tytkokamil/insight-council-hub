@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import { format } from "date-fns";
 import { de, enUS } from "date-fns/locale";
 import i18n from "@/i18n";
@@ -24,6 +23,35 @@ const getTaskStatusLabels = (): Record<string, string> => ({
 
 const fmtDate = (d: string | null | undefined) =>
   d ? format(new Date(d), "dd.MM.yyyy", { locale: loc() }) : "—";
+
+/** Escape a CSV field: wrap in quotes if it contains comma, quote, or newline */
+function csvField(value: string | number | null | undefined): string {
+  const str = String(value ?? "");
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/** Convert array of objects to CSV string and trigger download */
+function downloadCSV(rows: Record<string, string | number>[], filename: string) {
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  const csvLines = [
+    // BOM for Excel UTF-8 detection + header
+    headers.map(csvField).join(";"),
+    ...rows.map((row) => headers.map((h) => csvField(row[h])).join(";")),
+  ];
+  const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 interface ExcelDecision {
   title: string; status: string; priority: string; category: string;
@@ -58,18 +86,8 @@ export function exportDecisionsExcel(decisions: ExcelDecision[]) {
     [t("exports.impactScore")]: d.ai_impact_score ?? 0,
   }));
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws["!cols"] = [
-    { wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 15 },
-    { wch: 18 }, { wch: 18 }, { wch: 40 }, { wch: 30 }, { wch: 30 },
-    { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 },
-  ];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, t("exports.decisionsSheet"));
-
   const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
-  XLSX.writeFile(wb, `${t("exports.decisionsSheet")}_${dateStr}.xlsx`);
+  downloadCSV(data, `${t("exports.decisionsSheet")}_${dateStr}.csv`);
 }
 
 export function exportTasksExcel(tasks: ExcelTask[]) {
@@ -85,41 +103,17 @@ export function exportTasksExcel(tasks: ExcelTask[]) {
     [t("exports.created")]: fmtDate(task.created_at),
   }));
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 40 }, { wch: 18 }, { wch: 12 }, { wch: 12 }];
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, t("exports.tasksSheet"));
-
   const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
-  XLSX.writeFile(wb, `${t("exports.tasksSheet")}_${dateStr}.xlsx`);
+  downloadCSV(data, `${t("exports.tasksSheet")}_${dateStr}.csv`);
 }
 
 export function exportFullReportExcel(decisions: ExcelDecision[], tasks: ExcelTask[]) {
-  const wb = XLSX.utils.book_new();
   const S = getStatusLabels(); const P = getPriorityLabels(); const C = getCategoryLabels(); const TS = getTaskStatusLabels();
 
-  const implemented = decisions.filter((d) => d.status === "implemented").length;
-  const overdue = decisions.filter((d) => d.due_date && new Date(d.due_date) < new Date() && d.status !== "implemented").length;
-  const highRisk = decisions.filter((d) => (d.ai_risk_score || 0) > 60).length;
-  const openTasks = tasks.filter((task) => task.status !== "done").length;
-
-  const summaryData = [
-    { [t("exports.metric")]: t("exports.totalDecisions"), [t("exports.value")]: decisions.length },
-    { [t("exports.metric")]: t("exports.implemented"), [t("exports.value")]: implemented },
-    { [t("exports.metric")]: t("exports.overdue"), [t("exports.value")]: overdue },
-    { [t("exports.metric")]: t("exports.highRiskPct"), [t("exports.value")]: highRisk },
-    { [t("exports.metric")]: t("exports.totalTasks"), [t("exports.value")]: tasks.length },
-    { [t("exports.metric")]: t("exports.openTasks"), [t("exports.value")]: openTasks },
-    { [t("exports.metric")]: t("exports.created"), [t("exports.value")]: format(new Date(), "dd.MM.yyyy HH:mm", { locale: loc() }) },
-  ];
-
-  const summaryWs = XLSX.utils.json_to_sheet(summaryData);
-  summaryWs["!cols"] = [{ wch: 25 }, { wch: 20 }];
-  XLSX.utils.book_append_sheet(wb, summaryWs, t("exports.summarySheet"));
-
+  // Combined report as single CSV with decisions + tasks
   const decData = decisions.map((d) => ({
     [t("exports.title")]: d.title,
+    Type: "Decision",
     [t("exports.status")]: S[d.status] || d.status,
     [t("exports.priority")]: P[d.priority] || d.priority,
     [t("exports.category")]: C[d.category] || d.category,
@@ -130,22 +124,21 @@ export function exportFullReportExcel(decisions: ExcelDecision[], tasks: ExcelTa
     [t("exports.due")]: fmtDate(d.due_date),
     [t("exports.created")]: fmtDate(d.created_at),
   }));
-  const decWs = XLSX.utils.json_to_sheet(decData);
-  decWs["!cols"] = [{ wch: 35 }, { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 15 }, { wch: 18 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, decWs, t("exports.decisionsSheet"));
 
   const taskData = tasks.map((task) => ({
     [t("exports.title")]: task.title,
+    Type: "Task",
     [t("exports.status")]: TS[task.status] || task.status,
     [t("exports.priority")]: P[task.priority] || task.priority,
+    [t("exports.category")]: C[task.category] || task.category,
+    [t("exports.team")]: "—",
     [t("exports.responsible")]: task.assignee_name || "—",
+    [t("exports.riskScore")]: 0,
+    [t("exports.impactScore")]: 0,
     [t("exports.due")]: fmtDate(task.due_date),
     [t("exports.created")]: fmtDate(task.created_at),
   }));
-  const taskWs = XLSX.utils.json_to_sheet(taskData);
-  taskWs["!cols"] = [{ wch: 35 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 12 }];
-  XLSX.utils.book_append_sheet(wb, taskWs, t("exports.tasksSheet"));
 
   const dateStr = format(new Date(), "yyyy-MM-dd", { locale: loc() });
-  XLSX.writeFile(wb, `Decivio-Report_${dateStr}.xlsx`);
+  downloadCSV([...decData, ...taskData], `Decivio-Report_${dateStr}.csv`);
 }
