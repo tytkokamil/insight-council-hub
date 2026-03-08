@@ -107,13 +107,63 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { title, description, category, priority, context, mode } = await req.json();
+    const body = await req.json();
+    const { type } = body;
+
     const userId = await extractUserId(req);
     if (!userId) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    // ═══ STUCK DIAGNOSIS MODE ═══
+    if (type === "stuck-diagnosis") {
+      const { decision } = body;
+      const settings = await getUserAiSettings(userId);
+      const diagnosisPrompt = `Analysiere warum diese Entscheidung feststeckt und gib eine konkrete Empfehlung in max. 2 Sätzen auf Deutsch.
+
+Entscheidung: "${decision.title}"
+Status: ${decision.status}
+Priorität: ${decision.priority}
+Seit ${decision.daysStuck} Tagen feststeckend
+Blocker: ${decision.blockerDetail}
+Gründe: ${decision.reasons?.join(", ") || "Unbekannt"}
+Geschätzte Verzögerungskosten: ${decision.delayCost}€
+
+Antworte NUR mit dem Tool-Call.`;
+
+      const diagnosisTools = [{
+        type: "function",
+        function: {
+          name: "stuck_diagnosis",
+          description: "Diagnose why a decision is stuck",
+          parameters: {
+            type: "object",
+            properties: {
+              diagnosis: { type: "string", description: "Root cause and recommendation in German, max 2 sentences" },
+            },
+            required: ["diagnosis"],
+            additionalProperties: false,
+          },
+        },
+      }];
+
+      const diagMessages = [
+        { role: "system", content: "Du bist ein KI-Berater für Entscheidungsprozesse. Diagnostiziere Blockaden und empfehle konkrete nächste Schritte. Sei direkt und spezifisch." },
+        { role: "user", content: diagnosisPrompt },
+      ];
+
+      const result = await callProvider(settings, diagMessages, diagnosisTools, { type: "function", function: { name: "stuck_diagnosis" } });
+      const diagnosis = typeof result === "string" ? result : result?.diagnosis || "Analyse konnte nicht erstellt werden.";
+
+      return new Response(JSON.stringify({ diagnosis }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ═══ STANDARD ANALYSIS MODE ═══
+    const { title, description, category, priority, context, mode } = body;
 
     // ── Plan guard: AI analysis requires Pro or Enterprise ──
     const adminClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
