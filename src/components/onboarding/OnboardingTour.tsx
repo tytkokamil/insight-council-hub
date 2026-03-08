@@ -86,6 +86,12 @@ const OnboardingTour = ({ open, onComplete }: OnboardingTourProps) => {
     const newAnswers = { ...answers, [questionId]: value };
     setAnswers(newAnswers);
     try { localStorage.setItem("onboarding_context", JSON.stringify(newAnswers)); } catch {}
+    
+    // Persist industry to profile
+    if (questionId === "industry" && user) {
+      supabase.from("profiles").update({ industry: value }).eq("user_id", user.id).then(() => {});
+    }
+    
     if (contextStep < contextQuestions.length - 1) setContextStep(contextStep + 1);
     else setPhase("tour");
   };

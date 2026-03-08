@@ -719,6 +719,7 @@ const SettingsPage = () => {
           {activeTab === "referral" && (
             <div className="space-y-6">
               <ReferralPanel />
+              <PublicDashboardLinks />
             </div>
           )}
 
