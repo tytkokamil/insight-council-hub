@@ -13,6 +13,7 @@ const SolutionSection = lazy(() => import("@/components/landing/SolutionSection"
 const ProductShowcase = lazy(() => import("@/components/landing/ProductShowcase"));
 const MetricsShowcase = lazy(() => import("@/components/landing/MetricsShowcase"));
 const ComparisonSection = lazy(() => import("@/components/landing/ComparisonSection"));
+const BeforeAfterTimeline = lazy(() => import("@/components/landing/BeforeAfterTimeline"));
 const AIShowcaseSection = lazy(() => import("@/components/landing/AIShowcaseSection"));
 const IndustriesSection = lazy(() => import("@/components/landing/IndustriesSection"));
 const ComplianceSection = lazy(() => import("@/components/landing/ComplianceSection"));
@@ -91,6 +92,7 @@ const Index = () => {
             <ProductShowcase />
             <MetricsShowcase />
             <SectionDivider />
+            <BeforeAfterTimeline />
             <ComparisonSection />
             <AIShowcaseSection />
             <IndustriesSection />

@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { BarChart3, Shield, Brain } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -46,10 +46,56 @@ const screens = [
   },
 ];
 
+/* 3D Tilt Card wrapper */
+const TiltCard = ({ children }: { children: React.ReactNode }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), { stiffness: 150, damping: 20 });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), { stiffness: 150, damping: 20 });
+  const glareX = useSpring(useTransform(mouseX, [-0.5, 0.5], [0, 100]), { stiffness: 150, damping: 20 });
+  const glareY = useSpring(useTransform(mouseY, [-0.5, 0.5], [0, 100]), { stiffness: 150, damping: 20 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  return (
+    <div style={{ perspective: 1200 }}>
+      <motion.div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className="relative"
+      >
+        {children}
+        {/* Glare overlay */}
+        <motion.div
+          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+          style={{
+            background: `radial-gradient(circle at ${glareX}% ${glareY}%, hsl(220 60% 90% / 0.12), transparent 60%)`,
+          }}
+        />
+      </motion.div>
+    </div>
+  );
+};
+
 /* Light-themed stylized mockup for each screen */
 const DashboardMockup = () => (
   <div className="p-5 space-y-4">
-    {/* KPI row */}
     <div className="grid grid-cols-3 gap-3">
       {[
         { label: "Approved", value: "12", color: "text-accent-teal" },
@@ -62,16 +108,21 @@ const DashboardMockup = () => (
         </div>
       ))}
     </div>
-    {/* Chart placeholder */}
     <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
       <div className="text-[11px] font-semibold text-foreground/70 mb-3">Decision Velocity</div>
       <div className="flex items-end gap-1.5 h-20">
         {[40, 65, 50, 80, 70, 95, 60, 85, 75, 90].map((h, i) => (
-          <div key={i} className="flex-1 rounded-t bg-primary/20 transition-all" style={{ height: `${h}%` }} />
+          <motion.div
+            key={i}
+            className="flex-1 rounded-t bg-primary/20"
+            initial={{ height: 0 }}
+            whileInView={{ height: `${h}%` }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 + i * 0.05, duration: 0.6, ease }}
+          />
         ))}
       </div>
     </div>
-    {/* Table rows */}
     <div className="rounded-xl border border-border/40 bg-muted/20 p-4 space-y-2">
       <div className="text-[11px] font-semibold text-foreground/70 mb-2">Decisions</div>
       {["Approved", "Review", "Draft"].map((status, i) => (
@@ -106,14 +157,20 @@ const AnalyticsMockup = () => (
       <div className="text-[11px] font-semibold text-foreground/70 mb-3">Friction Map</div>
       <div className="space-y-2">
         {[
-          { label: "Review Phase", w: "85%" },
-          { label: "Approval", w: "45%" },
-          { label: "Implementation", w: "30%" },
-        ].map((bar) => (
+          { label: "Review Phase", w: 85 },
+          { label: "Approval", w: 45 },
+          { label: "Implementation", w: 30 },
+        ].map((bar, i) => (
           <div key={bar.label} className="space-y-1">
             <div className="text-[10px] text-muted-foreground">{bar.label}</div>
             <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
-              <div className="h-full rounded-full bg-accent-violet/30" style={{ width: bar.w }} />
+              <motion.div
+                className="h-full rounded-full bg-accent-violet/30"
+                initial={{ width: 0 }}
+                whileInView={{ width: `${bar.w}%` }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 + i * 0.1, duration: 0.8, ease }}
+              />
             </div>
           </div>
         ))}
@@ -123,9 +180,16 @@ const AnalyticsMockup = () => (
       <div className="text-[11px] font-semibold text-foreground/70 mb-3">Bottleneck Intelligence</div>
       <div className="flex gap-2">
         {[60, 35, 80, 45, 70].map((v, i) => (
-          <div key={i} className="flex-1 text-center">
+          <motion.div
+            key={i}
+            className="flex-1 text-center"
+            initial={{ scale: 0, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 + i * 0.08, type: "spring", stiffness: 300, damping: 15 }}
+          >
             <div className="mx-auto w-8 h-8 rounded-full border-2 border-accent-violet/20 flex items-center justify-center text-[10px] font-mono text-foreground/60">{v}</div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -142,14 +206,21 @@ const AuditMockup = () => (
           { action: "Review submitted", hash: "7b2e…9f4a", time: "vor 5h" },
           { action: "Status changed", hash: "d1c4…3e7b", time: "vor 1d" },
         ].map((entry, i) => (
-          <div key={i} className="flex items-center gap-3">
+          <motion.div
+            key={i}
+            className="flex items-center gap-3"
+            initial={{ opacity: 0, x: -12 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 + i * 0.1, duration: 0.4, ease }}
+          >
             <div className="w-1.5 h-1.5 rounded-full bg-accent-teal/50" />
             <div className="flex-1">
               <div className="text-[11px] text-foreground/70">{entry.action}</div>
               <div className="text-[9px] font-mono text-muted-foreground/50">{entry.hash}</div>
             </div>
             <span className="text-[10px] text-muted-foreground/50">{entry.time}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
@@ -173,6 +244,7 @@ const ProductShowcase = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start end", "end start"] });
   const imgY = useTransform(scrollYProgress, [0, 1], [40, -40]);
+  const perspective = useTransform(scrollYProgress, [0, 0.3, 0.5], [15, 5, 0]);
   const current = screens[active];
   const MockupComponent = mockups[active];
 
@@ -202,7 +274,7 @@ const ProductShowcase = () => {
               onClick={() => setActive(i)}
               className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 ${
                 i === active
-                  ? "bg-white shadow-[var(--shadow-card)] text-foreground border border-border/60"
+                  ? "bg-card shadow-[var(--shadow-card)] text-foreground border border-border/60"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -243,7 +315,7 @@ const ProductShowcase = () => {
                       initial={{ opacity: 0, y: 12 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + i * 0.1 }}
-                      className="p-3 rounded-xl border border-border/50 bg-white/60"
+                      className="p-3 rounded-xl border border-border/50 bg-card/60"
                     >
                       <div className="text-lg font-bold tabular-nums font-mono text-foreground">{stat.value}</div>
                       <div className="text-[10px] text-muted-foreground/60 mt-0.5">{stat.label}</div>
@@ -252,25 +324,34 @@ const ProductShowcase = () => {
                 </div>
               </div>
 
-              {/* Mockup side */}
+              {/* 3D Mockup side */}
               <motion.div
                 style={{ y: imgY }}
                 className="order-1 lg:order-2"
               >
-                <div className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[var(--shadow-xl)]">
-                  {/* Browser chrome */}
-                  <div className="px-4 py-2.5 border-b border-border/40 flex items-center gap-2 bg-muted/30">
-                    <div className="flex gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-destructive/30" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-warning/30" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-success/30" />
+                <TiltCard>
+                  <motion.div
+                    style={{ rotateX: perspective }}
+                    className="relative rounded-2xl overflow-hidden border border-border/60 bg-card shadow-[0_20px_60px_-15px_hsl(220_30%_30%/0.15)]"
+                  >
+                    {/* Reflection effect */}
+                    <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none z-10" />
+                    {/* Browser chrome */}
+                    <div className="px-4 py-2.5 border-b border-border/40 flex items-center gap-2 bg-muted/30 relative z-20">
+                      <div className="flex gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-destructive/30" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-warning/30" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-success/30" />
+                      </div>
+                      <div className="flex-1 mx-3 h-6 rounded-md bg-muted/50 flex items-center px-3">
+                        <span className="text-[10px] text-muted-foreground/50 font-mono">app.decivio.com</span>
+                      </div>
                     </div>
-                    <div className="flex-1 mx-3 h-6 rounded-md bg-muted/50 flex items-center px-3">
-                      <span className="text-[10px] text-muted-foreground/50 font-mono">app.decivio.com</span>
+                    <div className="relative z-20">
+                      <MockupComponent />
                     </div>
-                  </div>
-                  <MockupComponent />
-                </div>
+                  </motion.div>
+                </TiltCard>
               </motion.div>
             </div>
           </motion.div>
