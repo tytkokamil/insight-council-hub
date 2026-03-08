@@ -361,6 +361,52 @@ Deno.serve(async (req) => {
         return json({ tables, edgeFunctions });
       }
 
+      // ─── LIST CHURN RISKS ─────────────────────────
+      case "list_churn_risks": {
+        const { filter: riskFilter = "critical" } = body;
+
+        // Get latest churn entry per org using a subquery approach
+        let query = supabase
+          .from("churn_risk_log")
+          .select("id, org_id, score, risk_level, risk_factors, calculated_at, intervention_sent, intervention_type")
+          .order("calculated_at", { ascending: false })
+          .limit(500);
+
+        if (riskFilter !== "all") {
+          query = query.eq("risk_level", riskFilter);
+        }
+
+        const { data: churnRows } = await query;
+
+        // Deduplicate: keep only latest per org
+        const seenOrgs = new Set<string>();
+        const uniqueEntries = (churnRows || []).filter(row => {
+          if (seenOrgs.has(row.org_id)) return false;
+          seenOrgs.add(row.org_id);
+          return true;
+        });
+
+        // Get org names
+        const orgIds = uniqueEntries.map(e => e.org_id);
+        const { data: orgNames } = await supabase
+          .from("organizations")
+          .select("id, name")
+          .in("id", orgIds.length > 0 ? orgIds : ["00000000-0000-0000-0000-000000000000"]);
+
+        const nameMap: Record<string, string> = {};
+        (orgNames || []).forEach((o: any) => { nameMap[o.id] = o.name; });
+
+        const entries = uniqueEntries.map(e => ({
+          ...e,
+          org_name: nameMap[e.org_id] || "Unbekannt",
+        }));
+
+        // Sort by score descending
+        entries.sort((a, b) => b.score - a.score);
+
+        return json({ entries });
+      }
+
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings, MessageSquare, Map } from "lucide-react";
+import { Loader2, ShieldAlert, BarChart3, Building2, Users, Flag, Rocket, Settings, MessageSquare, Map, HeartPulse } from "lucide-react";
 import AdminOverviewTab from "@/components/internal-admin/AdminOverviewTab";
 import AdminOrgsTab from "@/components/internal-admin/AdminOrgsTab";
 import AdminUsersTab from "@/components/internal-admin/AdminUsersTab";
@@ -11,6 +11,7 @@ import AdminPilotsTab from "@/components/internal-admin/AdminPilotsTab";
 import AdminSystemTab from "@/components/internal-admin/AdminSystemTab";
 import AdminFeedbackTab from "@/components/internal-admin/AdminFeedbackTab";
 import AdminRoadmapTab from "@/components/internal-admin/AdminRoadmapTab";
+import AdminChurnTab from "@/components/internal-admin/AdminChurnTab";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -22,6 +23,7 @@ const TABS = [
   { id: "pilots", label: "Pilot-Kunden", icon: Rocket },
   { id: "system", label: "System", icon: Settings },
   { id: "roadmap", label: "Roadmap", icon: Map },
+  { id: "churn", label: "Churn Risk", icon: HeartPulse },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -114,6 +116,7 @@ const InternalAdmin = () => {
           {activeTab === "pilots" && <AdminPilotsTab />}
           {activeTab === "system" && <AdminSystemTab />}
           {activeTab === "roadmap" && <AdminRoadmapTab />}
+          {activeTab === "churn" && <AdminChurnTab />}
         </main>
       </div>
     </div>
