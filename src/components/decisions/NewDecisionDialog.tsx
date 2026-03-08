@@ -453,6 +453,7 @@ const NewDecisionDialog = ({ open, onOpenChange, onCreated }: Props) => {
     setExtraFields({}); setValidationErrors([]); setExpandedTemplate(null);
     setReviewFlowId(suggestReviewFlow("operational", "medium")); setSelectedReviewFlow(null);
     setPinnedLessons([]); setShowRecommendations(false); setOwnerId("");
+    setConfidential(false); setConfidentialViewerIds([]);
   };
 
   const renderExtraField = (field: RequiredField, isConditional = false) => {
