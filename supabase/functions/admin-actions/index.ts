@@ -407,6 +407,51 @@ Deno.serve(async (req) => {
         return json({ entries });
       }
 
+      // ─── CRON JOBS ─────────────────────────────
+      case "get_cron_jobs": {
+        const { data: jobs, error: cronErr } = await supabase.rpc("get_cron_jobs");
+        if (cronErr) {
+          // Fallback: return empty if function doesn't exist yet
+          console.error("get_cron_jobs error:", cronErr);
+          return json({ jobs: [] });
+        }
+        return json({ jobs: jobs || [] });
+      }
+
+      case "run_cron_job": {
+        const { jobName } = body;
+        // Manually trigger the function by name mapping
+        const functionMap: Record<string, string> = {
+          "daily-engine-06utc": "daily-engine",
+          "daily-brief-0530": "daily-engine",
+          "check-escalations-every-hour": "check-escalations",
+          "detect-anomalies-08utc": "detect-anomalies",
+          "trial-reminder-09utc": "daily-engine",
+          "weekly-cleanup-digest": "weekly-cleanup-digest",
+        };
+        const fnName = functionMap[jobName];
+        if (fnName) {
+          await fetch(`${supabaseUrl}/functions/v1/${fnName}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+            body: JSON.stringify({}),
+          });
+        }
+        await logAction("run_cron_job", undefined, undefined, { jobName });
+        return json({ ok: true });
+      }
+
+      case "toggle_cron_job": {
+        const { jobName, active } = body;
+        if (active) {
+          await supabase.rpc("enable_cron_job", { job_name: jobName });
+        } else {
+          await supabase.rpc("disable_cron_job", { job_name: jobName });
+        }
+        await logAction("toggle_cron_job", undefined, undefined, { jobName, active });
+        return json({ ok: true });
+      }
+
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
