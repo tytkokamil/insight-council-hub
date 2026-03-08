@@ -85,16 +85,21 @@ const HeroSection = () => {
             <br />
             kostet Ihr Unternehmen
             <br />
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.7, ease }}
-              className="inline-block tabular-nums font-mono"
-              style={{ color: "#EF4444" }}
-            >
-              {formattedCost}
-            </motion.span>
-            <span style={{ color: "rgba(255,255,255,0.95)" }}>.</span>
+            <span className="inline-block relative" style={{ minWidth: "4ch" }}>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={wordIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease }}
+                  className="inline-block"
+                  style={{ color: "#EF4444" }}
+                >
+                  {ROTATING_WORDS[wordIndex]}
+                </motion.span>
+              </AnimatePresence>
+            </span>
           </motion.h1>
 
           {/* Subtext — personalized if industry detected */}
