@@ -46,7 +46,7 @@ const PAGE_TITLE_MAP: Record<string, string> = {
   "/analytics": "nav.analyticsHub",
   "/process": "nav.processHub",
   "/dna": "nav.decisionDna",
-  "/graph": "nav.decisionGraph",
+  "/decision-graph": "nav.decisionGraph",
   "/health": "nav.healthHeatmap",
   "/timeline": "nav.predictiveTimeline",
   "/scenarios": "nav.scenarios",
