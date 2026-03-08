@@ -588,7 +588,7 @@ const TeamChat = ({ teamId, teamName, initialLinkedDecisionId }: TeamChatProps) 
             disabled={(!newMessage.trim() && !selectedFile && !linkedDecisionId) || sending}
             size="icon"
             className="h-10 w-10 shrink-0"
-            style={{ backgroundColor: "#1E3A5F" }}
+            className="h-10 w-10 shrink-0 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Send className="w-4 h-4" />
           </Button>

@@ -16,11 +16,11 @@ interface Props {
 
 const CONFETTI_COLORS = [
   "hsl(var(--primary))",
-  "#F59E0B",
-  "#10B981",
-  "#EF4444",
-  "#8B5CF6",
-  "#06B6D4",
+  "hsl(var(--warning))",
+  "hsl(var(--success))",
+  "hsl(var(--destructive))",
+  "hsl(var(--accent-violet))",
+  "hsl(var(--accent-teal))",
 ];
 
 const CompletionStep = ({

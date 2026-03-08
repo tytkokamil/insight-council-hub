@@ -180,26 +180,26 @@ const WarRoom = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-screen -m-4 md:-m-6 lg:-m-8 p-4 md:p-6 lg:p-8" style={{ background: "#0F172A" }}>
+      <div className="min-h-screen -m-4 md:-m-6 lg:-m-8 p-4 md:p-6 lg:p-8 bg-background dark:bg-[hsl(222_47%_11%)]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-red-500" />
-              <h1 className="text-xl font-bold text-white tracking-tight">WAR ROOM</h1>
+              <Zap className="w-5 h-5 text-destructive" />
+              <h1 className="text-xl font-bold text-foreground tracking-tight">WAR ROOM</h1>
             </div>
-            <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">
+            <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-xs">
               {escalated.length} {escalated.length === 1 ? "Aktive Eskalation" : "Aktive Eskalationen"}
             </Badge>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Verzögerungskosten</p>
-              <p className="text-lg font-bold text-red-400 tabular-nums font-mono">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Verzögerungskosten</p>
+              <p className="text-lg font-bold text-destructive tabular-nums font-mono">
                 {formatCost(Math.round(totalCod))}
               </p>
             </div>
-            <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-xs" onClick={() => navigate(-1)}>
+            <Button size="sm" variant="outline" className="text-xs" onClick={() => navigate(-1)}>
               Zurück
             </Button>
           </div>

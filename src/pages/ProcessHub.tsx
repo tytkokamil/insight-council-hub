@@ -711,7 +711,7 @@ const ProcessHub = () => {
                       {relatedDecision && (
                         <div
                           className="flex items-center gap-1 mb-0.5 cursor-pointer hover:underline"
-                          style={{ fontSize: "11px", color: "#64748B" }}
+                          className="flex items-center gap-1 mb-0.5 cursor-pointer hover:underline text-[11px] text-muted-foreground"
                           onClick={(e) => { e.stopPropagation(); navigate(`/decisions/${relatedDecision.id}`); }}
                         >
                           <ArrowRight className="w-3 h-3" />

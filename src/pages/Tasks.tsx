@@ -591,7 +591,7 @@ const Tasks = () => {
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className={`text-xs ${!isOverdue ? "text-muted-foreground" : ""}`} style={isOverdue ? { color: "#EF4444", fontWeight: 500 } : undefined}>
+                            <span className={`text-xs ${!isOverdue ? "text-muted-foreground" : "text-destructive font-medium"}`}>
                               {task.due_date ? format(new Date(task.due_date), "dd.MM.yy", { locale: dateFnsLocale }) : "—"}
                               {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
                             </span>

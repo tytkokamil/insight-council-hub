@@ -107,11 +107,11 @@ const DecisionLifecycleBar = ({ decision }: DecisionLifecycleBarProps) => {
                     }`}
                     style={
                       isDone
-                        ? { backgroundColor: "#10B981", color: "white" }
+                        ? { backgroundColor: "hsl(var(--success))", color: "hsl(var(--success-foreground))" }
                         : isCurrent && !isTerminal
-                          ? { backgroundColor: "#3B82F6", color: "white" }
+                          ? { backgroundColor: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }
                           : isFuture
-                            ? { borderColor: "#94A3B8", color: "#94A3B8" }
+                            ? { borderColor: "hsl(var(--muted-foreground))", color: "hsl(var(--muted-foreground))" }
                             : undefined
                     }
                     initial={{ scale: 0 }}

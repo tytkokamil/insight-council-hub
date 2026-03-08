@@ -615,7 +615,7 @@ const AutomationRules = () => {
                         size="sm"
                         variant="outline"
                         className="h-7 text-xs gap-1 shrink-0"
-                        style={{ color: "#3B82F6", borderColor: "#3B82F6" }}
+                        className="h-7 text-xs gap-1 shrink-0 text-primary border-primary hover:bg-primary/10"
                         onClick={async (e) => {
                           e.stopPropagation();
                           if (!user) return;
