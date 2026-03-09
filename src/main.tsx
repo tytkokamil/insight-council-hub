@@ -34,4 +34,6 @@ if (dsn) {
   });
 }
 
+console.log("[Decivio] Rendering app...");
 createRoot(document.getElementById("root")!).render(<App />);
+console.log("[Decivio] App rendered");
