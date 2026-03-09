@@ -3,23 +3,20 @@ import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/landing/Navbar";
 import HeroSection from "@/components/landing/HeroSection";
 import LogoBar from "@/components/landing/LogoBar";
-
 import SectionDivider from "@/components/landing/SectionDivider";
 import Footer from "@/components/landing/Footer";
 import CursorGlow from "@/components/landing/CursorGlow";
 
-// Lazy load below-fold sections for better initial load
 const ProblemSection = lazy(() => import("@/components/landing/ProblemSection"));
 const SolutionSection = lazy(() => import("@/components/landing/SolutionSection"));
-const ProductShowcase = lazy(() => import("@/components/landing/ProductShowcase"));
-const MetricsShowcase = lazy(() => import("@/components/landing/MetricsShowcase"));
-const ComparisonSection = lazy(() => import("@/components/landing/ComparisonSection"));
 const BeforeAfterTimeline = lazy(() => import("@/components/landing/BeforeAfterTimeline"));
-const AIShowcaseSection = lazy(() => import("@/components/landing/AIShowcaseSection"));
+const ROICalculatorSection = lazy(() => import("@/components/landing/ROICalculatorSection"));
+const ProductShowcase = lazy(() => import("@/components/landing/ProductShowcase"));
+const RolesSection = lazy(() => import("@/components/landing/RolesSection"));
 const IndustriesSection = lazy(() => import("@/components/landing/IndustriesSection"));
 const ComplianceSection = lazy(() => import("@/components/landing/ComplianceSection"));
-const TestimonialsSection = lazy(() => import("@/components/landing/TestimonialsSection"));
-const ROICalculatorSection = lazy(() => import("@/components/landing/ROICalculatorSection"));
+const ComparisonSection = lazy(() => import("@/components/landing/ComparisonSection"));
+const AIShowcaseSection = lazy(() => import("@/components/landing/AIShowcaseSection"));
 const PricingSection = lazy(() => import("@/components/landing/PricingSection"));
 const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
 const CTASection = lazy(() => import("@/components/landing/CTASection"));
@@ -34,56 +31,63 @@ const orgJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "Decivio",
-  "url": "https://decivio.com",
-  "logo": "https://decivio.com/favicon.png",
-  "description": "Decision Governance Platform für den Mittelstand",
-  "sameAs": [],
+  "url": "https://app.decivio.com",
+  "logo": "https://app.decivio.com/favicon.png",
+  "description": "Decision Governance Platform für den deutschen Mittelstand",
   "contactPoint": { "@type": "ContactPoint", "email": "hallo@decivio.com", "contactType": "sales", "availableLanguage": ["German", "English"] },
-  "address": {
-    "@type": "PostalAddress",
-    "addressCountry": "DE"
-  }
+  "address": { "@type": "PostalAddress", "addressCountry": "DE" }
 };
 
 const faqJsonLd = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    { "@type": "Question", "name": "Was genau ist Decivio?", "acceptedAnswer": { "@type": "Answer", "text": "Decivio ist eine Decision Governance Platform, die alle offenen Entscheidungen in Ihrem Unternehmen sichtbar macht, Verzögerungskosten in Echtzeit berechnet und Compliance-Anforderungen automatisch dokumentiert — mit kryptographischem Audit Trail." } },
-    { "@type": "Question", "name": "Für welche Unternehmensgröße ist Decivio geeignet?", "acceptedAnswer": { "@type": "Answer", "text": "Decivio richtet sich an Unternehmen mit 20 bis 500 Mitarbeitern. Besonders geeignet für Mittelständler aus Maschinenbau, Automotive, Pharma, Finanzdienstleistungen und IT-Dienstleistungen." } },
-    { "@type": "Question", "name": "Wie schnell kann ich starten?", "acceptedAnswer": { "@type": "Answer", "text": "In unter 3 Minuten. Registrieren, Branche wählen, erste Entscheidung anlegen. Kein IT-Projekt, keine Installation, keine Kreditkarte." } },
-    { "@type": "Question", "name": "Ist Decivio DSGVO-konform?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Alle Daten werden auf ISO 27001-zertifizierten Servern in Deutschland gehostet. Ein Auftragsverarbeitungsvertrag (AVV) ist in jedem Plan inklusive. Wir verarbeiten keine Daten außerhalb der EU." } },
-    { "@type": "Question", "name": "Welche Compliance-Frameworks werden unterstützt?", "acceptedAnswer": { "@type": "Answer", "text": "Decivio unterstützt NIS2, ISO 9001, IATF 16949, GMP/FDA 21 CFR Part 11, MaRisk, DSGVO, VOB/VgV, Solvency II und den EU AI Act — mit branchenspezifischen Vorlagen und automatischer Dokumentation." } },
-    { "@type": "Question", "name": "Was kostet Decivio?", "acceptedAnswer": { "@type": "Answer", "text": "Es gibt einen kostenlosen Plan für Einzelpersonen (1 Nutzer, 10 Entscheidungen). Professional kostet €149/Monat für bis zu 25 Nutzer. Enterprise-Pläne sind individuell. Alle Pläne mit 14 Tagen kostenloser Testphase — keine Kreditkarte nötig." } },
-    { "@type": "Question", "name": "Wie funktioniert der KI Daily Brief?", "acceptedAnswer": { "@type": "Answer", "text": "Jeden Morgen analysiert unsere KI Ihre offenen Entscheidungen und erstellt ein Executive Briefing: Die 3 kritischsten Entscheidungen, SLA-Warnungen, Economic Exposure und empfohlene Sofort-Maßnahmen — in 30 Sekunden erfassbar." } },
-    { "@type": "Question", "name": "Kann ich Decivio mit meinen bestehenden Tools verbinden?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Decivio bietet Webhooks, Microsoft Teams-Integration, E-Mail-basierte Workflows (One-Click Approval) und eine API für individuelle Anbindungen." } },
+    { "@type": "Question", "name": "Was ist Decivio — und was unterscheidet es von Monday oder Jira?", "acceptedAnswer": { "@type": "Answer", "text": "Monday.com und Jira sind Projektmanagement-Tools — sie verwalten Tasks, Projekte und Sprints. Decivio löst ein anderes Problem: Wer entscheidet was, wann, warum — und was kostet es wenn die Entscheidung nicht fällt?" } },
+    { "@type": "Question", "name": "Für welche Unternehmensgrößen ist Decivio geeignet?", "acceptedAnswer": { "@type": "Answer", "text": "Starter ist ab 2 Personen sinnvoll. Professional ist optimiert für Teams von 5–25 Personen. Enterprise für Konzerne mit SSO-Pflicht, Custom Branding oder On-Premise-Bedarf." } },
+    { "@type": "Question", "name": "Wie lange dauert der Einstieg wirklich?", "acceptedAnswer": { "@type": "Answer", "text": "Branche auswählen → erste Entscheidung anlegen → Reviewer einladen. Das Onboarding ist auf unter 5 Minuten ausgelegt." } },
+    { "@type": "Question", "name": "Ist Decivio DSGVO-konform? Wo liegen die Daten?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Server in Deutschland (EU-Region Frankfurt). AVV in allen Plänen inklusive. Datenexport nach Art. 20 und Datenlöschung nach Art. 17 direkt verfügbar." } },
+    { "@type": "Question", "name": "Können externe Partner ohne Account genehmigen?", "acceptedAnswer": { "@type": "Answer", "text": "Ja. Externe Reviewer erhalten einen sicheren Token-Link per E-Mail. Keine Registrierung nötig. Alle Aktionen im Audit Trail." } },
+    { "@type": "Question", "name": "Was genau ist der SHA-256 Audit Trail?", "acceptedAnswer": { "@type": "Answer", "text": "Jede Änderung wird als Hash-verketteter Audit-Log-Eintrag gespeichert. Nachträgliche Änderungen sind mathematisch erkennbar." } },
+    { "@type": "Question", "name": "Was kostet das Founding Program?", "acceptedAnswer": { "@type": "Answer", "text": "Professional für €89/Mo statt €149 — lebenslang fixiert. Nur für die ersten 20 Founding Customers." } },
+    { "@type": "Question", "name": "Gibt es eine Mindestlaufzeit oder Kündigungsfrist?", "acceptedAnswer": { "@type": "Answer", "text": "Nein. Monatliche Zahlung jederzeit kündbar. Jährlich spart 17%." } },
   ],
 };
 
-const productJsonLd = {
+const softwareJsonLd = {
   "@context": "https://schema.org",
-  "@type": "Product",
-  "name": "Decivio Decision Governance Platform",
-  "description": "Governance-Plattform für Entscheidungen in Unternehmen. Cost-of-Delay-Tracking, KI Briefings, Compliance Audit Trail.",
-  "brand": { "@type": "Brand", "name": "Decivio" },
-  "offers": { "@type": "AggregateOffer", "priceCurrency": "EUR", "lowPrice": "0", "highPrice": "149", "offerCount": "3" },
+  "@type": "SoftwareApplication",
+  "name": "Decivio",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "Decision Governance Platform für den deutschen Mittelstand",
+  "offers": [
+    { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "name": "Free" },
+    { "@type": "Offer", "price": "59", "priceCurrency": "EUR", "name": "Starter" },
+    { "@type": "Offer", "price": "149", "priceCurrency": "EUR", "name": "Professional" },
+  ],
+  "availableLanguage": ["de", "en"],
+  "featureList": "Cost-of-Delay Tracking, SHA-256 Audit Trail, One-Click Email Approval, KI Daily Brief, 15 Branchen-Templates",
 };
 
 const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Decivio — Decision Governance Platform für den Mittelstand</title>
-        <meta name="description" content="Jede offene Entscheidung kostet Ihr Unternehmen Geld. Decivio macht Verzögerungskosten sichtbar, automatisiert Governance und liefert KI-Entscheidungsintelligenz. 14 Tage kostenlos." />
-        <meta name="keywords" content="Decision Management, Cost of Delay, Entscheidungs-Tool, NIS2, Decision Intelligence, Governance, ISO 9001, DSGVO, Mittelstand" />
-        <link rel="canonical" href="https://decivio.com" />
+        <title>Decivio — Decision Governance Platform für den deutschen Mittelstand</title>
+        <meta name="description" content="Offene Entscheidungen kosten Geld. Decivio macht Verzögerungskosten sichtbar, erzwingt Compliance und dokumentiert jeden Schritt mit SHA-256 Audit Trail. DSGVO-konform. Server in Deutschland." />
+        <meta name="keywords" content="Decision Governance, Entscheidungsmanagement, Mittelstand, ISO 9001, IATF, NIS2, Cost of Delay, Audit Trail, DSGVO, Maschinenbau, Automotive, Pharma" />
+        <link rel="canonical" href="https://app.decivio.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:locale" content="de_DE" />
+        <meta property="og:title" content="Decivio — Decision Governance für den Mittelstand" />
+        <meta property="og:description" content="Verzögerungskosten sichtbar machen, Compliance sichern, Freigaben beschleunigen." />
+        <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-        <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
+        <script type="application/ld+json">{JSON.stringify(softwareJsonLd)}</script>
       </Helmet>
       <div className="landing-page min-h-screen relative">
         <CursorGlow />
-        
         <Navbar />
         <main>
           <HeroSection />
@@ -93,17 +97,16 @@ const Index = () => {
             <ProblemSection />
             <SolutionSection />
             <SectionDivider />
-            <ProductShowcase />
-            <MetricsShowcase />
-            <SectionDivider />
             <BeforeAfterTimeline />
-            <ComparisonSection />
-            <AIShowcaseSection />
+            <ROICalculatorSection />
+            <SectionDivider />
+            <ProductShowcase />
+            <RolesSection />
             <IndustriesSection />
             <ComplianceSection />
             <SectionDivider />
-            <TestimonialsSection />
-            <ROICalculatorSection />
+            <ComparisonSection />
+            <AIShowcaseSection />
             <SectionDivider />
             <PricingSection />
             <FAQSection />
