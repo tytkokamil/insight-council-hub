@@ -1,3 +1,4 @@
+console.log("[Decivio] main.tsx loading...");
 import * as Sentry from "@sentry/react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
@@ -33,4 +34,6 @@ if (dsn) {
   });
 }
 
+console.log("[Decivio] Rendering app...");
 createRoot(document.getElementById("root")!).render(<App />);
+console.log("[Decivio] App rendered");
