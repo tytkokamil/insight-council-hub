@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronUp } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 const BackToTop = () => {
   const [visible, setVisible] = useState(false);
@@ -20,10 +20,10 @@ const BackToTop = () => {
           exit={{ scale: 0, opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-20 md:bottom-6 right-20 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-md transition-colors bg-card border border-border text-foreground hover:border-destructive/40"
+          className="fixed bottom-6 right-6 z-50 hidden md:flex w-10 h-10 items-center justify-center rounded-full bg-card border border-border shadow-md hover:shadow-lg hover:border-primary/20 text-muted-foreground hover:text-foreground transition-all"
           aria-label="Nach oben scrollen"
         >
-          <ChevronUp className="w-5 h-5" />
+          <ArrowUp className="w-4 h-4" />
         </motion.button>
       )}
     </AnimatePresence>

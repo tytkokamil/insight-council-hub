@@ -3931,19 +3931,7 @@ export type Database = {
         Args: { _limit_type: string; _user_id: string }
         Returns: Json
       }
-      disable_cron_job: { Args: { job_name: string }; Returns: undefined }
-      enable_cron_job: { Args: { job_name: string }; Returns: undefined }
       get_active_delegate: { Args: { _user_id: string }; Returns: string }
-      get_cron_jobs: {
-        Args: never
-        Returns: {
-          active: boolean
-          command: string
-          jobid: number
-          jobname: string
-          schedule: string
-        }[]
-      }
       get_dashboard_kpis: {
         Args: { _team_id?: string; _user_id: string }
         Returns: Json

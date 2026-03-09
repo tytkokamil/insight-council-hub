@@ -1,73 +1,151 @@
-import { useState, useEffect } from "react";
-import { X, Zap } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Flame, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
+const FALLBACK_DEADLINE = "2026-04-30T23:59:59+02:00";
 const FALLBACK_CLAIMED = 17;
 const TOTAL_SLOTS = 20;
 
-const ScarcityBar = () => {
-  const [claimed, setClaimed] = useState(FALLBACK_CLAIMED);
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem("scarcity_closed") === "true");
+function getTimeLeft(deadline: Date) {
+  const diff = Math.max(0, deadline.getTime() - Date.now());
+  const d = Math.floor(diff / 86_400_000);
+  const h = Math.floor((diff % 86_400_000) / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1000);
+  return { d, h, m, s, total: diff };
+}
 
+const ScarcityBar = () => {
+  const [deadline, setDeadline] = useState(() => new Date(FALLBACK_DEADLINE));
+  const [time, setTime] = useState(() => getTimeLeft(new Date(FALLBACK_DEADLINE)));
+  const [dismissed, setDismissed] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [claimed, setClaimed] = useState<number>(FALLBACK_CLAIMED);
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const deadlineRef = useRef(deadline);
+
+  // Keep ref in sync
+  useEffect(() => { deadlineRef.current = deadline; }, [deadline]);
+
+  // Fetch live slot data + deadline from DB
   useEffect(() => {
-    if (dismissed) return;
     const fetchSlots = async () => {
-      try {
-        const { data } = await supabase
-          .from("founding_customer_slots")
-          .select("claimed_slots, total_slots")
-          .limit(1)
-          .maybeSingle();
-        if (data) setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
-      } catch {}
+      const { data } = await supabase
+        .from("founding_customer_slots")
+        .select("claimed_slots, total_slots, deadline")
+        .limit(1)
+        .single();
+      if (data) {
+        setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
+        if (data.deadline) {
+          const dbDeadline = new Date(data.deadline);
+          setDeadline(dbDeadline);
+          setTime(getTimeLeft(dbDeadline));
+        }
+      }
     };
     fetchSlots();
 
+    // Realtime subscription
     const channel = supabase
-      .channel("scarcity_bar_rt")
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "founding_customer_slots" }, (payload) => {
-        const row = payload.new as any;
-        if (typeof row?.claimed_slots === "number") setClaimed(row.claimed_slots);
-      })
+      .channel("founding_slots_realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "founding_customer_slots" },
+        (payload) => {
+          const row = payload.new as any;
+          if (typeof row?.claimed_slots === "number") setClaimed(row.claimed_slots);
+          if (row?.deadline) {
+            const dbDeadline = new Date(row.deadline);
+            setDeadline(dbDeadline);
+          }
+        }
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [dismissed]);
+  }, []);
 
-  const handleDismiss = () => {
-    setDismissed(true);
-    localStorage.setItem("scarcity_closed", "true");
-  };
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => setTime(getTimeLeft(deadlineRef.current)), 1000);
+    return () => clearInterval(timerRef.current);
+  }, []);
 
   const remaining = TOTAL_SLOTS - claimed;
-  if (dismissed) return null;
+  const soldOut = remaining <= 0;
+
+  if (dismissed || time.total <= 0) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[60] h-[44px] flex items-center justify-center px-4 bg-destructive">
-      <div className="flex items-center gap-2 text-destructive-foreground text-xs sm:text-sm font-medium">
-        <Zap className="w-3.5 h-3.5 flex-shrink-0" />
-        <span className="hidden sm:inline">
-          Founding Program: Noch {remaining} von {TOTAL_SLOTS} Plätzen — Professional €89/Mo statt €149, lebenslang fixiert
-        </span>
-        <span className="sm:hidden">
-          Noch {remaining}/{TOTAL_SLOTS} Founding-Plätze — €89/Mo
-        </span>
-        <Link
-          to="/auth?founding=true"
-          className="ml-2 px-3 py-1 bg-white text-destructive text-xs font-semibold rounded-md hover:bg-white/90 transition-colors"
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: -48, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -48, opacity: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed top-0 left-0 right-0 z-[60] hidden md:block"
         >
-          Platz sichern →
-        </Link>
-      </div>
-      <button
-        onClick={handleDismiss}
-        className="absolute right-3 p-1 text-destructive-foreground/80 hover:text-destructive-foreground transition-colors"
-        aria-label="Schließen"
-      >
-        <X className="w-4 h-4" />
-      </button>
-    </div>
+          <div
+            className="flex items-center justify-center gap-6 py-2 px-4 text-[12px] font-medium"
+            style={{
+              background: soldOut
+                ? "linear-gradient(90deg, hsl(220 15% 30%), hsl(220 15% 22%))"
+                : "linear-gradient(90deg, hsl(0 84% 60%), hsl(0 84% 50%))",
+              color: "white",
+            }}
+          >
+            {soldOut ? (
+              <>
+                <span className="inline-flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" />
+                  Founding Program ausgebucht
+                </span>
+                <span className="w-px h-3.5 bg-white/30" />
+                <Link to="/founding" className="underline underline-offset-2 hover:text-white/80 transition-colors">
+                  Warteliste beitreten →
+                </Link>
+              </>
+            ) : (
+              <>
+                {/* Countdown — persistent, from DB deadline */}
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" />
+                  Early-Access endet in{" "}
+                  <span className="font-mono font-bold tabular-nums">
+                    {time.d}T {String(time.h).padStart(2, "0")}:{String(time.m).padStart(2, "0")}:{String(time.s).padStart(2, "0")}
+                  </span>
+                </span>
+
+                <span className="w-px h-3.5 bg-white/30" />
+
+                {/* Limited spots — live from DB */}
+                <span className="inline-flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5" />
+                  Nur noch <span className="font-bold">{remaining} von {TOTAL_SLOTS}</span> Founding-Plätze frei
+                </span>
+              </>
+            )}
+
+            <button
+              onClick={() => setDismissed(true)}
+              className="ml-4 p-0.5 rounded hover:bg-white/20 transition-colors"
+              aria-label="Schließen"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

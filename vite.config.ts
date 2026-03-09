@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => ({
           "vendor-query": ["@tanstack/react-query"],
           "vendor-charts": ["recharts"],
           "vendor-supabase": ["@supabase/supabase-js"],
-          
+          "vendor-xlsx": ["xlsx"],
           "vendor-pdf": ["jspdf", "jspdf-autotable"],
         },
       },
