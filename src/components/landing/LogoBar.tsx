@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const trustItems = [
-  { emoji: "🔒", label: "DSGVO-konform" },
-  { emoji: "🇩🇪", label: "Server in Deutschland" },
-  { emoji: "🔐", label: "SHA-256 Audit Trail" },
-  { emoji: "✓", label: "ISO 27001" },
-  { emoji: "⚡", label: "Keine Installation" },
+  { emoji: "🔒", label: "DSGVO-KONFORM" },
+  { emoji: "🇩🇪", label: "SERVER IN DEUTSCHLAND" },
+  { emoji: "🔐", label: "SHA-256 AUDIT TRAIL" },
+  { emoji: "📋", label: "AVV INKLUSIVE" },
+  { emoji: "⚡", label: "SETUP IN 3 MINUTEN" },
 ];
 
 const LogoBar = () => (

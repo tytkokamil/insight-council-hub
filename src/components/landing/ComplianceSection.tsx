@@ -2,15 +2,15 @@ import { motion } from "framer-motion";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const pills = ["NIS2", "ISO 9001", "IATF 16949", "GMP / FDA", "MaRisk", "DSGVO", "VOB/VgV", "Solvency II", "EU AI Act"];
+const pills = ["NIS2", "ISO 9001", "IATF 16949", "GMP/FDA 21 CFR", "MaRisk", "DSGVO", "VOB/B", "Solvency II", "EU AI Act"];
 
 const frameworks = [
-  { name: "NIS2", desc: "Dokumentierte Entscheidungsprozesse für kritische Infrastrukturen.", badge: "Kritisch", badgeColor: "text-destructive bg-destructive/10" },
-  { name: "ISO 9001", desc: "Qualitätsmanagement-Entscheidungen vollständig dokumentiert.", badge: "Qualität", badgeColor: "text-accent-violet bg-accent-violet/10" },
-  { name: "IATF 16949", desc: "PPAP-Freigaben und Änderungsmanagement mit Audit Trail.", badge: "Automotive", badgeColor: "text-accent-blue bg-accent-blue/10" },
-  { name: "GMP", desc: "Batch-Freigaben und Change Control FDA-konform dokumentiert.", badge: "Pharma", badgeColor: "text-accent-teal bg-accent-teal/10" },
-  { name: "MaRisk", desc: "Kreditentscheidungen und Risikoakzeptanz revisionssicher.", badge: "Finanzen", badgeColor: "text-accent-amber bg-accent-amber/10" },
-  { name: "DSGVO", desc: "Datenverarbeitungs-Entscheidungen rechtskonform protokollieren.", badge: "Datenschutz", badgeColor: "text-accent-teal bg-accent-teal/10" },
+  { name: "NIS2", badge: "KRITISCH", badgeColor: "text-destructive bg-destructive/10", title: "NIS2 — Nachweispflicht für Sicherheitsentscheidungen", desc: "NIS2 Art. 21 verlangt dokumentierte Maßnahmen zur Cybersicherheit. Decivio protokolliert alle Sicherheitsentscheidungen im SHA-256 Audit Trail — nachweisbar gegenüber BSI und Behörden." },
+  { name: "ISO 9001:2015", badge: "Qualität", badgeColor: "text-accent-violet bg-accent-violet/10", title: "ISO 9001 — Kapitel 7.5 automatisch erfüllt", desc: "Kapitel 7.5 fordert Lenkung und Aufbewahrung dokumentierter Information. Jede Entscheidung in Decivio ist mit Begründung, Alternativen, Genehmiger und Zeitstempel versehen — exportierbar für jeden Auditor." },
+  { name: "IATF 16949", badge: "Automotive", badgeColor: "text-accent-blue bg-accent-blue/10", title: "IATF 16949 — PPAP und Änderungsmanagement", desc: "Produktionsprozess-Freigaben, PPAP-Level 1–5 und Engineering Change Orders als vorkonfigurierte Workflow-Templates. Lieferanten ohne Account als externe Reviewer." },
+  { name: "GMP / FDA 21 CFR Part 11", badge: "Pharma", badgeColor: "text-accent-teal bg-accent-teal/10", title: "GMP — Elektronische Aufzeichnungen mit Integritätsnachweis", desc: "21 CFR Part 11 verlangt elektronische Signaturen und Audit Trails. Decivios SHA-256 Hash-Chain erfüllt die Integritätsanforderungen. Change Control und Batch-Freigaben als Templates." },
+  { name: "MaRisk (BaFin)", badge: "Finanzen", badgeColor: "text-accent-amber bg-accent-amber/10", title: "MaRisk — Vier-Augen-Prinzip technisch erzwungen", desc: "Sequential Review Workflow erzwingt das Vier-Augen-Prinzip für Kreditentscheidungen und Risikoakzeptanzen. Vollständige BaFin-ready Dokumentation. Revisionssicher." },
+  { name: "DSGVO", badge: "Datenschutz", badgeColor: "text-accent-teal bg-accent-teal/10", title: "DSGVO — AVV inklusive, Art. 17 und 20 umgesetzt", desc: "Auftragsverarbeitungsvertrag in allen Plänen inklusive. Datenexport nach Art. 20 und vollständige Account-Löschung nach Art. 17 auf Knopfdruck. Server in Deutschland (Frankfurt)." },
 ];
 
 const ComplianceSection = () => (
@@ -28,7 +28,7 @@ const ComplianceSection = () => (
           Kein Audit mehr ohne Decivio.
         </h2>
         <p className="leading-relaxed text-muted-foreground">
-          Regulatorische Anforderungen sind keine Option. Decivio macht Compliance zur Nebensache.
+          9 Compliance-Frameworks. Konfigurierbar. Audit-Pakete in einem Klick.
         </p>
       </motion.div>
 
@@ -37,10 +37,10 @@ const ComplianceSection = () => (
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ delay: 0.1, duration: 0.5, ease }}
-        className="flex flex-wrap items-center justify-center gap-2 mb-14"
+        className="flex flex-wrap items-center justify-center gap-2 mb-14 overflow-x-auto"
       >
         {pills.map((pill, i) => (
-          <span key={i} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border/30 bg-card/60 text-muted-foreground">
+          <span key={i} className="text-[12px] font-medium px-3 py-1.5 rounded-full border border-border/30 bg-card/60 text-muted-foreground whitespace-nowrap">
             ✓ {pill}
           </span>
         ))}
@@ -59,7 +59,7 @@ const ComplianceSection = () => (
             <span className={`inline-block text-[10px] font-semibold px-2.5 py-1 rounded-full mb-4 tracking-wide uppercase ${fw.badgeColor}`}>
               {fw.badge}
             </span>
-            <h3 className="text-[15px] font-semibold mb-2">{fw.name}</h3>
+            <h3 className="text-[14px] font-semibold mb-2">{fw.title}</h3>
             <p className="text-[13px] leading-relaxed text-muted-foreground">{fw.desc}</p>
           </motion.div>
         ))}

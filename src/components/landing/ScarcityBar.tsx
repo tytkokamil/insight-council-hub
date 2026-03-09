@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 
 const FALLBACK_DEADLINE = "2026-04-30T23:59:59+02:00";
-const FALLBACK_CLAIMED = 17;
-const TOTAL_SLOTS = 20;
+const FALLBACK_CLAIMED = 3;
+const FALLBACK_TOTAL = 20;
 
 function getTimeLeft(deadline: Date) {
   const diff = Math.max(0, deadline.getTime() - Date.now());
@@ -20,35 +20,38 @@ function getTimeLeft(deadline: Date) {
 const ScarcityBar = () => {
   const [deadline, setDeadline] = useState(() => new Date(FALLBACK_DEADLINE));
   const [time, setTime] = useState(() => getTimeLeft(new Date(FALLBACK_DEADLINE)));
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => localStorage.getItem("scarcity_closed") === "true");
   const [visible, setVisible] = useState(false);
   const [claimed, setClaimed] = useState<number>(FALLBACK_CLAIMED);
+  const [totalSlots, setTotalSlots] = useState<number>(FALLBACK_TOTAL);
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const deadlineRef = useRef(deadline);
 
-  // Keep ref in sync
   useEffect(() => { deadlineRef.current = deadline; }, [deadline]);
 
-  // Fetch live slot data + deadline from DB
   useEffect(() => {
     const fetchSlots = async () => {
-      const { data } = await supabase
-        .from("founding_customer_slots")
-        .select("claimed_slots, total_slots, deadline")
-        .limit(1)
-        .single();
-      if (data) {
-        setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
-        if (data.deadline) {
-          const dbDeadline = new Date(data.deadline);
-          setDeadline(dbDeadline);
-          setTime(getTimeLeft(dbDeadline));
+      try {
+        const { data } = await supabase
+          .from("founding_customer_slots")
+          .select("claimed_slots, total_slots, deadline")
+          .limit(1)
+          .single();
+        if (data) {
+          setClaimed(data.claimed_slots ?? FALLBACK_CLAIMED);
+          setTotalSlots(data.total_slots ?? FALLBACK_TOTAL);
+          if (data.deadline) {
+            const dbDeadline = new Date(data.deadline);
+            setDeadline(dbDeadline);
+            setTime(getTimeLeft(dbDeadline));
+          }
         }
+      } catch {
+        // Use fallback values
       }
     };
     fetchSlots();
 
-    // Realtime subscription
     const channel = supabase
       .channel("founding_slots_realtime")
       .on(
@@ -57,6 +60,7 @@ const ScarcityBar = () => {
         (payload) => {
           const row = payload.new as any;
           if (typeof row?.claimed_slots === "number") setClaimed(row.claimed_slots);
+          if (typeof row?.total_slots === "number") setTotalSlots(row.total_slots);
           if (row?.deadline) {
             const dbDeadline = new Date(row.deadline);
             setDeadline(dbDeadline);
@@ -79,8 +83,13 @@ const ScarcityBar = () => {
     return () => clearInterval(timerRef.current);
   }, []);
 
-  const remaining = TOTAL_SLOTS - claimed;
+  const remaining = totalSlots - claimed;
   const soldOut = remaining <= 0;
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    localStorage.setItem("scarcity_closed", "true");
+  };
 
   if (dismissed || time.total <= 0) return null;
 
@@ -116,27 +125,24 @@ const ScarcityBar = () => {
               </>
             ) : (
               <>
-                {/* Countdown — persistent, from DB deadline */}
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  Early-Access endet in{" "}
-                  <span className="font-mono font-bold tabular-nums">
-                    {time.d}T {String(time.h).padStart(2, "0")}:{String(time.m).padStart(2, "0")}:{String(time.s).padStart(2, "0")}
-                  </span>
+                  <Flame className="w-3.5 h-3.5" />
+                  ⚡ Founding Program: Noch <span className="font-bold">{remaining} von {totalSlots}</span> Plätzen — Professional €89/Mo statt €149, lebenslang fixiert
                 </span>
 
                 <span className="w-px h-3.5 bg-white/30" />
 
-                {/* Limited spots — live from DB */}
-                <span className="inline-flex items-center gap-1.5">
-                  <Flame className="w-3.5 h-3.5" />
-                  Nur noch <span className="font-bold">{remaining} von {TOTAL_SLOTS}</span> Founding-Plätze frei
-                </span>
+                <Link
+                  to="/auth?founding=true"
+                  className="font-bold underline underline-offset-2 hover:text-white/80 transition-colors"
+                >
+                  Platz sichern →
+                </Link>
               </>
             )}
 
             <button
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
               className="ml-4 p-0.5 rounded hover:bg-white/20 transition-colors"
               aria-label="Schließen"
             >
