@@ -1,22 +1,22 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { Mail, Clock, AlertTriangle, FileX, ArrowRight, Zap, Bot, CheckCircle2, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const beforeSteps = [
-  { icon: Mail, title: "E-Mail an 5 Personen", time: "Tag 1", pain: "Kein Tracking" },
-  { icon: Clock, title: "Warten auf Feedback", time: "Tag 4", pain: "€2.400 verbrannt" },
-  { icon: AlertTriangle, title: "Follow-up per Chat", time: "Tag 7", pain: "Kontext verloren" },
-  { icon: FileX, title: "Audit? Keine Doku", time: "Tag 12", pain: "Compliance-Risiko" },
+  { time: "Tag 1", icon: "📧", title: "E-Mail an 5 Personen gesendet", pain: "Kein Tracking. Kein Fälligkeitsdatum." },
+  { time: "Tag 3", icon: "⏳", title: "Kein Feedback eingegangen", pain: "Manuelles Follow-up per WhatsApp nötig. Kontext geht in E-Mail-Threads verloren." },
+  { time: "Tag 6", icon: "✓", title: "Entscheidung irgendwie gefallen", pain: "Begründung nicht dokumentiert. Alternativen nicht festgehalten." },
+  { time: "Audit", icon: "❌", title: "Prüfer fragt nach Dokumentation", pain: "Nicht vorhanden. Nacharbeit erforderlich." },
 ];
 
 const afterSteps = [
-  { icon: Zap, title: "Entscheidung angelegt", time: "Min 1", win: "SLA läuft" },
-  { icon: Bot, title: "KI-Analyse", time: "Min 2", win: "Datenbasiert" },
-  { icon: CheckCircle2, title: "One-Click Approval", time: "Tag 1", win: "73% schneller" },
-  { icon: Shield, title: "Audit-ready", time: "Auto", win: "100% dokumentiert" },
+  { time: "Tag 1", icon: "✅", title: "Entscheidung angelegt, SLA startet", win: "CoD-Ticker läuft. Reviewer per E-Mail automatisch benachrichtigt." },
+  { time: "Tag 1", icon: "✅", title: "Reviewer genehmigt per One-Click", win: "Direkt aus E-Mail. Kein Login nötig. Audit Trail: vollständig, SHA-256." },
+  { time: "Tag 1", icon: "✅", title: "Entscheidung implementiert", win: "Begründung, Alternativen, Genehmigung — alles dokumentiert." },
+  { time: "Audit", icon: "✅", title: "Export als PDF — ein Klick", win: "ISO 9001 Kap. 7.5 erfüllt." },
 ];
 
 const BeforeAfterTimeline = () => {
@@ -38,11 +38,13 @@ const BeforeAfterTimeline = () => {
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
             Eine Entscheidung. Zwei Realitäten.
           </h2>
+          <p className="text-muted-foreground">
+            Lieferantenwechsel. Maschinenbau. 5 Beteiligte.
+          </p>
         </motion.div>
 
-        {/* Side by side — no toggle, show the truth simultaneously */}
         <div className="grid md:grid-cols-2 gap-6 md:gap-4">
-          {/* BEFORE column */}
+          {/* BEFORE */}
           <div>
             <motion.div
               initial={{ opacity: 0 }}
@@ -55,7 +57,6 @@ const BeforeAfterTimeline = () => {
             </motion.div>
 
             <div className="relative space-y-3">
-              {/* Vertical line */}
               <div className="absolute left-[18px] top-2 bottom-2 w-px bg-destructive/10">
                 <motion.div className="absolute inset-x-0 top-0 bg-destructive/25 origin-top" style={{ scaleY: lineProgress }} />
               </div>
@@ -69,8 +70,8 @@ const BeforeAfterTimeline = () => {
                   transition={{ delay: i * 0.08, duration: 0.5, ease }}
                   className="relative flex items-start gap-4 pl-10"
                 >
-                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-destructive/20 bg-card flex items-center justify-center">
-                    <step.icon className="w-3.5 h-3.5 text-destructive/70" />
+                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-destructive/20 bg-card flex items-center justify-center text-sm">
+                    {step.icon}
                   </div>
                   <div className="flex-1 p-4 rounded-xl border border-destructive/10 bg-card/80">
                     <div className="flex items-center justify-between mb-1">
@@ -82,7 +83,6 @@ const BeforeAfterTimeline = () => {
                 </motion.div>
               ))}
 
-              {/* Result */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
@@ -90,12 +90,12 @@ const BeforeAfterTimeline = () => {
                 transition={{ delay: 0.4, duration: 0.5 }}
                 className="ml-10 mt-4 px-4 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.04]"
               >
-                <span className="text-[12px] font-bold text-destructive">12 Tage · €4.800 verloren · 0% Doku</span>
+                <span className="text-[12px] font-bold text-destructive">6 Tage Laufzeit · 0% dokumentiert</span>
               </motion.div>
             </div>
           </div>
 
-          {/* AFTER column */}
+          {/* AFTER */}
           <div>
             <motion.div
               initial={{ opacity: 0 }}
@@ -121,8 +121,8 @@ const BeforeAfterTimeline = () => {
                   transition={{ delay: i * 0.08 + 0.1, duration: 0.5, ease }}
                   className="relative flex items-start gap-4 pl-10"
                 >
-                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-primary/20 bg-card flex items-center justify-center">
-                    <step.icon className="w-3.5 h-3.5 text-primary/70" />
+                  <div className="absolute left-0 top-1 w-9 h-9 rounded-full border border-primary/20 bg-card flex items-center justify-center text-sm">
+                    {step.icon}
                   </div>
                   <div className="flex-1 p-4 rounded-xl border border-primary/10 bg-card/80">
                     <div className="flex items-center justify-between mb-1">
@@ -141,13 +141,12 @@ const BeforeAfterTimeline = () => {
                 transition={{ delay: 0.5, duration: 0.5 }}
                 className="ml-10 mt-4 px-4 py-3 rounded-xl border border-primary/15 bg-primary/[0.04]"
               >
-                <span className="text-[12px] font-bold text-primary">1 Tag · €0 Kosten · 100% Audit-ready</span>
+                <span className="text-[12px] font-bold text-primary">1 Tag Laufzeit · 100% dokumentiert</span>
               </motion.div>
             </div>
           </div>
         </div>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -159,7 +158,7 @@ const BeforeAfterTimeline = () => {
             to="/auth"
             className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
           >
-            Jetzt den Unterschied erleben <ArrowRight className="w-3.5 h-3.5" />
+            Den Unterschied selbst erleben <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </motion.div>
       </div>

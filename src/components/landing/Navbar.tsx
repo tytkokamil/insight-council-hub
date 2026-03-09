@@ -7,9 +7,9 @@ import decivioLogo from "@/assets/decivio-logo.png";
 const navItems = [
   { label: "Problem", href: "#problem" },
   { label: "Lösung", href: "#solution" },
-  { label: "Branchen", href: "#industries" },
-  { label: "Compliance", href: "#compliance" },
-  { label: "Preise", href: "#pricing" },
+  { label: "Preise", href: "#preise" },
+  { label: "Rollen", href: "#rollen" },
+  { label: "Branchen", href: "#branchen" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -69,7 +69,6 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  // Dark navbar styles when in hero
   const isDark = inDarkHero;
 
   return (
@@ -149,7 +148,7 @@ const Navbar = () => {
 
             <div className="hidden md:flex items-center gap-3">
               <Link
-                to="/auth"
+                to="/login"
                 className="text-[13px] px-3 py-1.5 transition-colors"
                 style={{
                   color: isDark ? "hsl(var(--primary-foreground) / 0.6)" : "hsl(var(--muted-foreground) / 0.7)",
@@ -173,6 +172,7 @@ const Navbar = () => {
               className="md:hidden p-2"
               style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}
               onClick={() => setIsOpen(!isOpen)}
+              aria-label="Menü öffnen"
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -227,7 +227,7 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}` }}>
-                <Link to="/auth" className="block text-center text-sm py-2" style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}>Einloggen</Link>
+                <Link to="/login" className="block text-center text-sm py-2" style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}>Einloggen</Link>
                 <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground py-2.5 rounded-lg" style={{ background: "hsl(var(--primary))" }}>Kostenlos starten</Link>
               </div>
             </div>

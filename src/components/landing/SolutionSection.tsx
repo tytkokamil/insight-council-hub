@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Timer, MousePointerClick, Bot, ShieldCheck, LineChart, LayoutTemplate } from "lucide-react";
 
-// €47k/Monat Branchendurchschnitt → pro Tag
 const DAILY_COST = 47000 / 30;
 const PER_SECOND = DAILY_COST / 86400;
 
@@ -12,7 +11,6 @@ const LiveCodTicker = () => {
   useEffect(() => {
     const id = setInterval(() => {
       const elapsed = (Date.now() - start.current) / 1000;
-      // Show accumulated cost "today" starting from a realistic base
       const hoursToday = new Date().getHours() + new Date().getMinutes() / 60;
       const baseCost = (hoursToday / 24) * DAILY_COST;
       setValue(baseCost + elapsed * PER_SECOND);
@@ -41,11 +39,11 @@ const LiveCodTicker = () => {
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const features = [
-  { icon: MousePointerClick, title: "One-Click Approval", desc: "Reviewer genehmigen direkt aus der E-Mail — ohne Login. Ein Klick, dokumentiert.", tag: "Neu", accent: "accent-blue" },
-  { icon: Bot, title: "KI Daily Brief", desc: "Jeden Morgen: Die 3 kritischsten Entscheidungen, SLA-Warnungen und Economic Exposure.", tag: "KI", accent: "accent-teal" },
-  { icon: ShieldCheck, title: "Cryptographic Audit Trail", desc: "Jede Aktion unveränderbar dokumentiert — mit kryptographischer Hash-Kette. Audit-ready.", tag: "Compliance", accent: "accent-violet" },
-  { icon: LineChart, title: "Predictive SLA", desc: "Das System erkennt SLA-Verletzungen bevor sie passieren — basierend auf historischem Verhalten.", tag: "KI", accent: "accent-blue" },
-  { icon: LayoutTemplate, title: "Branchen-Templates", desc: "ECO für Maschinenbau, Change Control für Pharma, PPAP für Automotive — sofort nutzbar.", tag: "15 Branchen", accent: "primary" },
+  { icon: MousePointerClick, title: "One-Click Approval aus E-Mail", desc: "Reviewer genehmigen oder lehnen direkt aus der E-Mail ab. Kein Login, kein Portal-Besuch. Token-basiert, DSGVO-konform. Alle Aktionen landen sofort im Audit Trail.", tag: "Ab Starter Plan", accent: "accent-blue" },
+  { icon: Bot, title: "KI Daily Brief um 07:30 Uhr", desc: "Jeden Morgen: die 3 kritischsten offenen Entscheidungen, aktuelle SLA-Warnungen und die gesamte Economic Exposure der Organisation. Generiert von Gemini 2.5 Pro. In 30 Sekunden erfassbar.", tag: "Ab Professional Plan", accent: "accent-teal" },
+  { icon: ShieldCheck, title: "Kryptographischer Audit Trail", desc: "Jede Änderung, Genehmigung und Ablehnung wird SHA-256-gehasht und unveränderlich verkettet. Kein nachträgliches Bearbeiten möglich. Integritätsverifizierung per Klick.", tag: "Ab Professional Plan", accent: "accent-violet" },
+  { icon: LineChart, title: "Predictive SLA Warning", desc: "KI erkennt drohende SLA-Verletzungen bevor sie eintreten — basierend auf historischen Entscheidungsmustern Ihrer Organisation. Proaktive Eskalation statt reaktiver Feuerwehr.", tag: "Ab Professional Plan", accent: "accent-blue" },
+  { icon: LayoutTemplate, title: "15 Branchen-Templates", desc: "ECO, PPAP, Change Control, CAPA, MaRisk, ADR, VOB, HACCP — sofort einsatzbereit. Compliance-Pflichtfelder und Review-Flows bereits vorkonfiguriert.", tag: "Alle Pläne", accent: "primary" },
 ];
 
 const accentMap: Record<string, { icon: string; bg: string; tag: string }> = {
@@ -70,7 +68,7 @@ const SolutionSection = () => (
           Decision Governance. So wie sie sein sollte.
         </h2>
         <p className="text-muted-foreground leading-relaxed">
-          Decivio macht jede Entscheidung sichtbar, messbar und compliance-konform.
+          Fünf Kernfunktionen. Alle implementiert. Sofort einsatzbereit.
         </p>
       </motion.div>
 
@@ -82,7 +80,6 @@ const SolutionSection = () => (
         transition={{ duration: 0.6, ease }}
         className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm magnetic-card mb-4 overflow-hidden"
       >
-        {/* Ambient gradient on hover */}
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.03] via-transparent to-accent-amber/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         <div className="relative flex flex-col md:flex-row items-start gap-6">
           <div className="w-14 h-14 rounded-2xl bg-accent-amber/8 flex items-center justify-center shrink-0">
@@ -90,17 +87,16 @@ const SolutionSection = () => (
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-3">
-              <h3 className="text-xl font-bold">Echtzeit Cost-of-Delay</h3>
+              <h3 className="text-xl font-bold">⏱ Echtzeit Cost-of-Delay</h3>
               <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full text-accent-amber bg-accent-amber/10 flex items-center gap-1">
                 <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-1 h-1 rounded-full bg-accent-amber inline-block" />
-                Live
+                LIVE
               </span>
             </div>
             <p className="text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
-              Wie ein Taxi-Meter für Ihre Entscheidungen: Sie sehen in Echtzeit wie viel Geld jede offene Entscheidung Ihr Unternehmen kostet — jede Sekunde. Das ändert Prioritäten.
+              Jede offene Entscheidung zeigt täglich wachsende Verzögerungskosten — berechnet aus Stundensatz × Beteiligte × Tage offen. Konfigurierbar pro Team. Sichtbar für alle Stakeholder.
             </p>
           </div>
-          {/* Live ticker — real-time calculation */}
           <LiveCodTicker />
         </div>
       </motion.div>
@@ -118,7 +114,6 @@ const SolutionSection = () => (
               transition={{ delay: i * 0.06, duration: 0.5, ease }}
               className="magnetic-card group relative p-6 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm cursor-default overflow-hidden"
             >
-              {/* Hover gradient */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
                 <div className="flex items-center justify-between mb-4">
