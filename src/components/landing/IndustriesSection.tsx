@@ -14,20 +14,30 @@ const IndustriesSection = () => {
   const active = industries.find(ind => ind.slug === activeSlug);
 
   return (
-    <section id="branchen" className="py-24 relative">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section id="branchen" className="py-28 relative">
+      <div className="absolute inset-0 dot-grid opacity-30 pointer-events-none" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
-          className="text-center max-w-2xl mx-auto mb-14"
+          transition={{ duration: 0.8, ease }}
+          className="text-center max-w-2xl mx-auto mb-16"
         >
-          <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase text-primary">15 Branchen</p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 mb-6"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[11px] font-semibold text-primary tracking-[0.15em] uppercase">15 Branchen</span>
+          </motion.div>
+          <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-[-0.04em] mb-5 leading-[1.1]">
             Für jede Branche die richtige Vorlage.
           </h2>
-          <p className="leading-relaxed text-muted-foreground">
+          <p className="text-[16px] leading-relaxed text-muted-foreground">
             15 spezialisierte Branchen. Compliance-Templates sofort einsatzbereit.
           </p>
         </motion.div>
@@ -39,27 +49,27 @@ const IndustriesSection = () => {
             return (
               <motion.button
                 key={ind.slug}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.04, duration: 0.5, ease }}
-                whileHover={{ y: -3 }}
+                transition={{ delay: i * 0.05, duration: 0.6, ease }}
+                whileHover={{ y: -4, transition: { duration: 0.25 } }}
                 onClick={() => setActiveSlug(isActive ? null : ind.slug)}
-                className={`relative p-5 rounded-xl border text-left transition-all duration-300 cursor-pointer ${
+                className={`relative p-6 rounded-2xl border text-left transition-all duration-300 cursor-pointer ${
                   isActive
                     ? "border-primary/30 bg-primary/[0.03] shadow-card-hover"
                     : "border-border/30 bg-background/60 backdrop-blur-sm hover:border-border/50 hover:shadow-md"
                 }`}
               >
                 {ind.popular && (
-                  <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase tracking-wider">
+                  <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">
                     BELIEBT
                   </span>
                 )}
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-3 bg-primary/10">
-                  <Icon className="w-4.5 h-4.5 text-primary" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-primary/10">
+                  <Icon className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-[13px] font-semibold mb-1">{ind.name}</h3>
+                <h3 className="text-[14px] font-bold mb-1.5">{ind.name}</h3>
                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full border border-border/30 text-muted-foreground">
                   {ind.complianceBadge}
                 </span>
@@ -67,7 +77,7 @@ const IndustriesSection = () => {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
-                    className="h-0.5 bg-primary/30 rounded-full mt-3"
+                    className="h-0.5 bg-primary/30 rounded-full mt-4"
                   />
                 )}
               </motion.button>
@@ -76,10 +86,10 @@ const IndustriesSection = () => {
         </div>
 
         {/* Show more toggle */}
-        <div className="text-center mt-6">
+        <div className="text-center mt-8">
           <button
             onClick={() => { setShowAll(!showAll); if (showAll) setActiveSlug(null); }}
-            className="text-[13px] font-medium text-primary hover:text-primary/80 transition-colors"
+            className="inline-flex items-center gap-2 text-[13px] font-medium text-primary hover:text-primary/80 transition-colors px-5 py-2.5 rounded-xl border border-primary/20 bg-primary/5 hover:bg-primary/10"
           >
             {showAll ? "Weniger anzeigen ▲" : `Weitere ${industries.length - 8} Branchen anzeigen ▼`}
           </button>
@@ -96,27 +106,27 @@ const IndustriesSection = () => {
               transition={{ duration: 0.4, ease }}
               className="overflow-hidden"
             >
-              <div className="mt-6 p-6 rounded-2xl border border-primary/15 bg-background/80 backdrop-blur-sm relative">
+              <div className="mt-8 p-7 rounded-2xl border border-primary/15 bg-background/80 backdrop-blur-sm relative">
                 <button
                   onClick={() => setActiveSlug(null)}
-                  className="absolute top-4 right-4 p-1 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-muted/50 transition-colors"
                   aria-label="Schließen"
                 >
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
 
-                <h4 className="text-lg font-bold mb-6">{active.headline}</h4>
+                <h4 className="text-xl font-bold mb-7">{active.headline}</h4>
 
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
+                <div className="grid md:grid-cols-2 gap-4 mb-7">
                   {active.useCases.map((uc, j) => (
                     <motion.div
                       key={j}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: j * 0.08 }}
-                      className="p-4 rounded-xl border border-border/30 bg-card/60"
+                      className="p-5 rounded-xl border border-border/30 bg-card/60 hover:border-border/50 transition-colors duration-300"
                     >
-                      <h5 className="text-[13px] font-semibold mb-1">{uc.name}</h5>
+                      <h5 className="text-[14px] font-bold mb-1.5">{uc.name}</h5>
                       <p className="text-[12px] text-muted-foreground leading-relaxed">
                         {uc.desc.length > 120 ? uc.desc.slice(0, 120) + "..." : uc.desc}
                       </p>
@@ -124,7 +134,7 @@ const IndustriesSection = () => {
                   ))}
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-7">
                   {active.compliance.map((c, j) => (
                     <span key={j} className="px-3 py-1.5 rounded-lg text-xs font-medium border border-primary/15 bg-primary/[0.04] text-primary">
                       {c}
@@ -133,9 +143,9 @@ const IndustriesSection = () => {
                 </div>
 
                 {/* Template box */}
-                <div className="p-4 rounded-xl bg-muted/20 border-l-3 border-primary/30 mb-6" style={{ borderLeft: "3px solid hsl(var(--primary) / 0.3)" }}>
-                  <p className="text-[13px] font-semibold mb-2">📋 Vorlage: {active.templateName}</p>
-                  <ul className="space-y-1">
+                <div className="p-5 rounded-xl bg-muted/20 mb-7" style={{ borderLeft: "3px solid hsl(var(--primary) / 0.3)" }}>
+                  <p className="text-[14px] font-bold mb-3">📋 Vorlage: {active.templateName}</p>
+                  <ul className="space-y-1.5">
                     {active.templateFields.map((field, j) => (
                       <li key={j} className="flex items-center gap-2 text-[12px] text-muted-foreground">
                         <CheckCircle2 className="w-3.5 h-3.5 text-primary/60 shrink-0" />
@@ -148,13 +158,13 @@ const IndustriesSection = () => {
                 <div className="flex gap-3">
                   <Link
                     to={`/auth?template=${active.slug}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors"
                   >
                     Vorlage verwenden <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <Link
                     to={`/branchen/${active.slug}`}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium border border-border/60 text-foreground hover:bg-muted/50 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium border border-border/60 text-foreground hover:bg-muted/50 transition-colors"
                   >
                     Zur Branchenseite
                   </Link>

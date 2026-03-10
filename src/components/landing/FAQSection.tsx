@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Zap } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -59,27 +59,33 @@ const FAQSection = () => {
   ];
 
   return (
-    <section id="faq" className="py-24 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/10 to-transparent" />
+    <section id="faq" className="py-28 relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/10 to-transparent pointer-events-none" />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
-          className="text-center mb-10"
+          transition={{ duration: 0.8, ease }}
+          className="text-center mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-border bg-muted/30 mb-6">
-            <Zap className="w-3 h-3 text-primary" />
-            <span className="text-[11px] font-medium text-muted-foreground tracking-widest uppercase">FAQ</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 mb-6"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[11px] font-semibold text-primary tracking-[0.15em] uppercase">FAQ</span>
+          </motion.div>
+          <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-[-0.04em]">
             Häufige Fragen.
           </h2>
         </motion.div>
 
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {faqs.map((faq, i) => {
             const isOpen = openItem === i;
             return (
@@ -88,20 +94,20 @@ const FAQSection = () => {
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.03, duration: 0.4, ease }}
+                transition={{ delay: i * 0.04, duration: 0.5, ease }}
               >
                 <div
-                  className={`rounded-xl border px-6 transition-all duration-300 ${
+                  className={`rounded-2xl border px-6 transition-all duration-300 ${
                     isOpen
-                      ? "bg-card border-primary/20 shadow-[0_4px_20px_-8px_hsl(var(--primary)/0.08)]"
+                      ? "bg-card border-primary/20 shadow-card-hover"
                       : "bg-card/70 border-border/30 hover:border-border/60"
                   }`}
                 >
                   <button
                     onClick={() => setOpenItem(isOpen ? null : i)}
-                    className="w-full flex items-center gap-3 py-5 text-left"
+                    className="w-full flex items-center gap-3 py-5.5 text-left"
                   >
-                    <span className="text-[14px] font-semibold text-foreground/90 flex-1">
+                    <span className="text-[15px] font-bold text-foreground/90 flex-1 leading-snug">
                       {faq.q}
                     </span>
                     <motion.div
@@ -121,7 +127,7 @@ const FAQSection = () => {
                         transition={{ duration: 0.3, ease }}
                         className="overflow-hidden"
                       >
-                        <div className="text-[13px] text-muted-foreground leading-[1.75] pb-5">
+                        <div className="text-[14px] text-muted-foreground leading-[1.8] pb-6">
                           {faq.a}
                         </div>
                       </motion.div>
