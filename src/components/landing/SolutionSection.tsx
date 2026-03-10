@@ -19,16 +19,16 @@ const LiveCodTicker = () => {
   }, []);
   return (
     <motion.div
-      className="hidden lg:flex items-center gap-2 px-5 py-3 rounded-xl border border-destructive/15 bg-destructive/[0.03]"
+      className="hidden lg:flex items-center gap-3 px-6 py-4 rounded-2xl border border-destructive/15 bg-destructive/[0.03] backdrop-blur-sm"
       whileHover={{ scale: 1.03 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
     >
       <motion.div
         animate={{ opacity: [1, 0.3, 1] }}
         transition={{ duration: 1, repeat: Infinity }}
-        className="w-2 h-2 rounded-full bg-destructive"
+        className="w-2.5 h-2.5 rounded-full bg-destructive"
       />
-      <span className="font-mono text-lg font-bold tabular-nums text-destructive">
+      <span className="font-mono text-xl font-bold tabular-nums text-destructive" style={{ textShadow: "0 0 20px hsl(var(--destructive) / 0.2)" }}>
         €{value.toLocaleString("de-DE", { maximumFractionDigits: 0 })}
       </span>
       <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
@@ -54,33 +54,44 @@ const accentMap: Record<string, { icon: string; bg: string; tag: string }> = {
 };
 
 const SolutionSection = () => (
-  <section id="solution" className="py-24 relative overflow-hidden">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+  <section id="solution" className="py-28 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/10 to-transparent pointer-events-none" />
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-16"
+        transition={{ duration: 0.8, ease }}
+        className="text-center max-w-2xl mx-auto mb-20"
       >
-        <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase text-primary">Die Lösung</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 mb-6"
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <span className="text-[11px] font-semibold text-primary tracking-[0.15em] uppercase">Die Lösung</span>
+        </motion.div>
+        <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-[-0.04em] mb-5 leading-[1.1]">
           Decision Governance. So wie sie sein sollte.
         </h2>
-        <p className="text-muted-foreground leading-relaxed">
+        <p className="text-[16px] text-muted-foreground leading-relaxed">
           Fünf Kernfunktionen. Alle implementiert. Sofort einsatzbereit.
         </p>
       </motion.div>
 
       {/* Hero feature card — Cost-of-Delay */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.6, ease }}
-        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm magnetic-card mb-4 overflow-hidden"
+        transition={{ duration: 0.7, ease }}
+        whileHover={{ y: -3, transition: { duration: 0.25 } }}
+        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm magnetic-card mb-5 overflow-hidden"
       >
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.03] via-transparent to-accent-amber/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.04] via-transparent to-accent-amber/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         <div className="relative flex flex-col md:flex-row items-start gap-6">
           <div className="w-14 h-14 rounded-2xl bg-accent-amber/8 flex items-center justify-center shrink-0">
             <Timer className="w-7 h-7 text-accent-amber" />
@@ -93,7 +104,7 @@ const SolutionSection = () => (
                 LIVE
               </span>
             </div>
-            <p className="text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
+            <p className="text-[15px] text-muted-foreground leading-[1.7] max-w-2xl">
               Jede offene Entscheidung zeigt täglich wachsende Verzögerungskosten — berechnet aus Stundensatz × Beteiligte × Tage offen. Konfigurierbar pro Team. Sichtbar für alle Stakeholder.
             </p>
           </div>
@@ -108,22 +119,23 @@ const SolutionSection = () => (
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.5, ease }}
-              className="magnetic-card group relative p-6 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm cursor-default overflow-hidden"
+              transition={{ delay: i * 0.08, duration: 0.6, ease }}
+              whileHover={{ y: -4, transition: { duration: 0.25 } }}
+              className="magnetic-card group relative p-7 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm cursor-default overflow-hidden"
             >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`w-10 h-10 rounded-xl ${colors.bg} flex items-center justify-center transition-colors duration-500`}>
-                    <f.icon className={`w-[18px] h-[18px] ${colors.icon} transition-colors duration-500`} />
+                <div className="flex items-center justify-between mb-5">
+                  <div className={`w-11 h-11 rounded-xl ${colors.bg} flex items-center justify-center transition-colors duration-500`}>
+                    <f.icon className={`w-5 h-5 ${colors.icon} transition-colors duration-500`} />
                   </div>
                   <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${colors.tag}`}>{f.tag}</span>
                 </div>
-                <h3 className="text-[15px] font-semibold mb-2">{f.title}</h3>
-                <p className="text-[13px] text-muted-foreground leading-relaxed">{f.desc}</p>
+                <h3 className="text-[16px] font-bold mb-2.5">{f.title}</h3>
+                <p className="text-[13px] text-muted-foreground leading-[1.7]">{f.desc}</p>
               </div>
             </motion.div>
           );

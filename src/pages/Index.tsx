@@ -6,7 +6,9 @@ import LogoBar from "@/components/landing/LogoBar";
 import SectionDivider from "@/components/landing/SectionDivider";
 import Footer from "@/components/landing/Footer";
 import CursorGlow from "@/components/landing/CursorGlow";
+import ScarcityBar from "@/components/landing/ScarcityBar";
 
+const FoundingSection = lazy(() => import("@/components/landing/FoundingSection"));
 const ProblemSection = lazy(() => import("@/components/landing/ProblemSection"));
 const SolutionSection = lazy(() => import("@/components/landing/SolutionSection"));
 const BeforeAfterTimeline = lazy(() => import("@/components/landing/BeforeAfterTimeline"));
@@ -22,7 +24,6 @@ const FAQSection = lazy(() => import("@/components/landing/FAQSection"));
 const CTASection = lazy(() => import("@/components/landing/CTASection"));
 const StickyCTA = lazy(() => import("@/components/landing/StickyCTA"));
 const BackToTop = lazy(() => import("@/components/landing/BackToTop"));
-const ScarcityBar = lazy(() => import("@/components/landing/ScarcityBar"));
 const SalesChatbot = lazy(() => import("@/components/landing/SalesChatbot"));
 
 const SectionFallback = () => <div className="py-24" aria-hidden="true" />;
@@ -88,9 +89,13 @@ const Index = () => {
       </Helmet>
       <div className="landing-page min-h-screen relative">
         <CursorGlow />
+        <ScarcityBar />
         <Navbar />
         <main>
           <HeroSection />
+          <Suspense fallback={<SectionFallback />}>
+            <FoundingSection />
+          </Suspense>
           <LogoBar />
           <SectionDivider />
           <Suspense fallback={<SectionFallback />}>
@@ -115,7 +120,6 @@ const Index = () => {
         </main>
         <Footer />
         <Suspense fallback={null}>
-          <ScarcityBar />
           <SalesChatbot />
           <StickyCTA />
           <BackToTop />

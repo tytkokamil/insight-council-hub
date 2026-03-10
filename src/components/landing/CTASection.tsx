@@ -11,42 +11,47 @@ const CTASection = () => {
   const orbY = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   return (
-    <section ref={ref} className="py-28 relative overflow-hidden" aria-label="Jetzt starten">
+    <section ref={ref} className="py-32 relative overflow-hidden" aria-label="Jetzt starten">
       <div className="aurora-bg" />
+      <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
 
       <motion.div style={{ y: orbY }} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/[0.04] blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-primary/[0.05] blur-[140px]" />
       </motion.div>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 relative z-10 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.7, ease }}
+          transition={{ duration: 0.8, ease }}
         >
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-5 leading-[1.1]">
+          <h2 className="text-3xl md:text-5xl font-bold tracking-[-0.04em] mb-6 leading-[1.08]">
             Erste Entscheidung in 3 Minuten.
             <br />
-            <span className="text-primary">Keine Kreditkarte. Kein IT-Projekt.</span>
+            <span className="gradient-text">Keine Kreditkarte. Kein IT-Projekt.</span>
           </h2>
 
-          <p className="mb-10 text-[15px] text-muted-foreground max-w-md mx-auto">
+          <p className="mb-12 text-[16px] text-muted-foreground max-w-md mx-auto leading-relaxed">
             Starten Sie heute. Ihr nächster Audit-Prüfer wird es Ihnen danken.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
             <Link
               to="/auth"
-              className="group relative inline-flex items-center justify-center gap-2 text-[15px] font-semibold text-primary-foreground px-9 py-4 rounded-xl bg-primary hover:shadow-[0_8px_30px_-6px_hsl(var(--primary)/0.5)] transition-all duration-300 overflow-hidden"
+              className="group relative inline-flex items-center justify-center gap-2.5 text-[15px] font-bold text-primary-foreground px-10 py-4.5 rounded-2xl transition-all duration-300 overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
+                boxShadow: "0 0 40px -8px hsl(var(--primary) / 0.4)",
+              }}
             >
-              <span className="relative z-10 flex items-center gap-2">
-                Kostenlos starten <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <span className="relative z-10 flex items-center gap-2.5">
+                Kostenlos starten <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
             <a
               href="mailto:hallo@decivio.com"
-              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-3.5 rounded-xl hover:shadow-md text-muted-foreground hover:text-foreground transition-all"
+              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-4 rounded-2xl hover:shadow-md text-muted-foreground hover:text-foreground transition-all"
             >
               Demo buchen
             </a>
@@ -57,10 +62,10 @@ const CTASection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+            className="mt-14 flex flex-wrap items-center justify-center gap-x-6 gap-y-2.5"
           >
             {["🇩🇪 Server in Deutschland", "🔒 DSGVO", "📋 AVV inklusive", "↕ Jederzeit kündbar"].map((item, i) => (
-              <span key={i} className="text-[11px] font-medium text-muted-foreground">{item}</span>
+              <span key={i} className="text-[12px] font-medium text-muted-foreground">{item}</span>
             ))}
           </motion.div>
         </motion.div>

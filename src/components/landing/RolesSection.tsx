@@ -109,20 +109,30 @@ const roles = [
 ];
 
 const RolesSection = () => (
-  <section id="rollen" className="py-24 relative">
-    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+  <section id="rollen" className="py-28 relative">
+    <div className="absolute inset-0 bg-gradient-to-b from-muted/10 via-transparent to-muted/10 pointer-events-none" />
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7, ease }}
-        className="text-center max-w-2xl mx-auto mb-14"
+        transition={{ duration: 0.8, ease }}
+        className="text-center max-w-2xl mx-auto mb-16"
       >
-        <p className="text-xs font-semibold mb-4 tracking-[0.2em] uppercase text-primary">Rollen</p>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 mb-6"
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+          <span className="text-[11px] font-semibold text-primary tracking-[0.15em] uppercase">Rollen</span>
+        </motion.div>
+        <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-[-0.04em] mb-5 leading-[1.1]">
           Für jede Rolle die richtige Ansicht.
         </h2>
-        <p className="leading-relaxed text-muted-foreground">
+        <p className="text-[16px] leading-relaxed text-muted-foreground">
           Decivio passt sich an — vom Geschäftsführer bis zum externen Reviewer.
         </p>
       </motion.div>
@@ -131,31 +141,32 @@ const RolesSection = () => (
         {roles.map((role, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: i * 0.06, duration: 0.5, ease }}
-            className={`p-6 rounded-2xl border bg-card/70 backdrop-blur-sm transition-all duration-300 hover:shadow-card-hover ${
+            transition={{ delay: i * 0.08, duration: 0.6, ease }}
+            whileHover={{ y: -4, transition: { duration: 0.25 } }}
+            className={`group p-7 rounded-2xl border bg-card/70 backdrop-blur-sm transition-all duration-300 hover:shadow-card-hover ${
               (role as any).highlighted
                 ? "border-primary/30 bg-primary/[0.02]"
                 : "border-border/30"
             }`}
           >
-            <div className="flex items-start justify-between mb-4">
-              <span className="text-2xl">{role.icon}</span>
+            <div className="flex items-start justify-between mb-5">
+              <span className="text-3xl">{role.icon}</span>
               <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${role.badgeClass}`}>
                 {role.badge}
               </span>
             </div>
-            <h3 className="text-[15px] font-semibold mb-1">{role.name}</h3>
+            <h3 className="text-[16px] font-bold mb-1">{role.name}</h3>
             {(role as any).subtitle && (
-              <p className="text-[11px] text-primary mb-3">{(role as any).subtitle}</p>
+              <p className="text-[12px] text-primary mb-3 font-medium">{(role as any).subtitle}</p>
             )}
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 space-y-4">
               <div>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Sieht:</p>
-                <ul className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Sieht:</p>
+                <ul className="space-y-2">
                   {role.sees.map((item, j) => (
                     <li key={j} className="text-[12px] text-muted-foreground leading-relaxed flex items-start gap-2">
                       <span className="text-primary mt-0.5 shrink-0">•</span>
@@ -165,8 +176,8 @@ const RolesSection = () => (
                 </ul>
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tut:</p>
-                <ul className="space-y-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">Tut:</p>
+                <ul className="space-y-2">
                   {role.does.map((item, j) => (
                     <li key={j} className="text-[12px] text-muted-foreground leading-relaxed flex items-start gap-2">
                       <span className="text-primary mt-0.5 shrink-0">✓</span>
