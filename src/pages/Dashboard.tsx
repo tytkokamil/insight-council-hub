@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import DemoBanner from "@/components/shared/DemoBanner";
 import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
 import PrimaryFocusBanner from "@/components/dashboard/PrimaryFocusBanner";
 import DecisionRadar from "@/components/dashboard/DecisionRadar";
