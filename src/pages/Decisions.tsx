@@ -286,6 +286,7 @@ const Decisions = () => {
         <p className="text-[11px] text-muted-foreground/60 -mt-3 mb-2">{t("common.personalHint")}</p>
       )}
 
+      <DemoBanner />
       {decisions.length === 0 ? (
         <DecisionEmptyState onNewDecision={() => setShowNewDialog(true)} />
       ) : (

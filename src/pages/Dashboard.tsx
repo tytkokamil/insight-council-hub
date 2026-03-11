@@ -243,6 +243,7 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
+      <DemoBanner />
       {/* Progressive Disclosure Banner */}
       {shouldShowAdvanced && mode === "basic" && !dismissedAdvancedHint && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}

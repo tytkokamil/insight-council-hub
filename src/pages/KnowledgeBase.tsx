@@ -425,17 +425,21 @@ const KnowledgeBase = () => {
     return (
       <AppLayout>
         <PageHeader title={t("knowledge.title")} subtitle={t("knowledge.subtitle")} role="knowledge" help={{ title: t("knowledge.title"), description: t("knowledge.help") }} />
-        <EmptyAnalysisState
-          icon={BookOpen}
-          title={t("knowledge.noDataTitle", { defaultValue: "Noch keine Wissensbasis" })}
-          description={t("knowledge.noDataDesc", { defaultValue: "Implementiere Entscheidungen, um Lessons Learned zu dokumentieren und organisationales Wissen aufzubauen." })}
-          hint={t("knowledge.noDataHint", { defaultValue: "Die Wissensbasis wächst automatisch mit jeder abgeschlossenen Entscheidung." })}
-          features={[
-            { icon: Lightbulb, label: t("knowledge.featureLessons", { defaultValue: "Lessons Learned" }), desc: t("knowledge.featureLessonsDesc", { defaultValue: "Erfolge und Fehler systematisch dokumentieren" }) },
-            { icon: Brain, label: t("knowledge.featureAi", { defaultValue: "KI-Matching" }), desc: t("knowledge.featureAiDesc", { defaultValue: "Ähnliche Entscheidungen automatisch verknüpfen" }) },
-            { icon: Repeat, label: t("knowledge.featurePatterns", { defaultValue: "Muster-Erkennung" }), desc: t("knowledge.featurePatternDesc", { defaultValue: "Wiederkehrende Fehler identifizieren" }) },
-          ]}
-        />
+        <div className="flex flex-col items-center justify-center py-20 px-4 text-center max-w-lg mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6">
+            <Archive className="w-8 h-8 text-primary" />
+          </div>
+          <h3 className="text-lg font-semibold mb-3">
+            Hier entsteht das Entscheidungsgedächtnis Ihrer Organisation.
+          </h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            Jede abgeschlossene Entscheidung wird durchsuchbar archiviert — mit Kontext, Begründung und allen Beteiligten.
+          </p>
+          <Button onClick={() => navigate("/decisions/new")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Erste Entscheidung anlegen
+          </Button>
+        </div>
       </AppLayout>
     );
   }
