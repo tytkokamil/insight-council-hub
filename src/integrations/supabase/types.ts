@@ -1092,6 +1092,7 @@ export type Database = {
           health_score: number | null
           id: string
           implemented_at: string | null
+          is_demo: boolean | null
           last_activity_at: string | null
           last_escalated_at: string | null
           options: Json | null
@@ -1137,6 +1138,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          is_demo?: boolean | null
           last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
@@ -1182,6 +1184,7 @@ export type Database = {
           health_score?: number | null
           id?: string
           implemented_at?: string | null
+          is_demo?: boolean | null
           last_activity_at?: string | null
           last_escalated_at?: string | null
           options?: Json | null
