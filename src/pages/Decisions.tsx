@@ -22,6 +22,7 @@ import DecisionTable from "@/components/decisions/DecisionTable";
 import DecisionBulkActions from "@/components/decisions/DecisionBulkActions";
 import DecisionSideDrawer from "@/components/decisions/DecisionSideDrawer";
 import DecisionEmptyState from "@/components/decisions/DecisionEmptyState";
+import DemoBanner from "@/components/shared/DemoBanner";
 import { useDecisions, useTeams, useProfiles, buildProfileMap, useInvalidateDecisions, useDependencies, useReviews } from "@/hooks/useDecisions";
 import { usePredictiveSla } from "@/components/decisions/PredictiveSlaWarning";
 import { useTeamContext } from "@/hooks/useTeamContext";
