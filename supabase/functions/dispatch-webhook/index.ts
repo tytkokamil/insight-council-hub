@@ -27,19 +27,26 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    // Allow internal calls (from daily-engine etc.) without user auth
     const internalSecret = Deno.env.get("INTERNAL_FUNCTIONS_SECRET");
-    let callerOrgVerified = false;
+    const token = authHeader?.replace("Bearer ", "");
 
-    if (authHeader && !authHeader.includes(internalSecret || "__none__")) {
+    // Check if this is an internal service call using the shared secret
+    const isInternalCall = !!(internalSecret && token === internalSecret);
+
+    if (!isInternalCall) {
+      // All non-internal calls must provide a valid JWT
+      if (!authHeader) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
-      const { data: { user }, error: authError } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
+      const { data: { user }, error: authError } = await anonClient.auth.getUser(token!);
       if (authError || !user) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      callerOrgVerified = true;
     }
 
     const { event, org_id, decision_id, task_id, extra, test } = await req.json();
