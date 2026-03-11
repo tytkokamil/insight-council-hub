@@ -21,7 +21,7 @@ import {
   BookOpen, Search, Tag, Plus, Lightbulb, ThumbsUp, ThumbsDown,
   ArrowRight, Clock, Users, X, Sparkles, FileText, ChevronRight, Download, Loader2, Brain,
   Filter, ClipboardCheck, TrendingUp, TrendingDown, AlertTriangle, Shield, Gauge, Info,
-  Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw,
+  Zap, BarChart3, Activity, Target, Repeat, CheckCircle2, RefreshCw, Archive,
 } from "lucide-react";
 import { generateLessonsReport } from "@/lib/generateLessonsReport";
 import EmptyAnalysisState from "@/components/shared/EmptyAnalysisState";
