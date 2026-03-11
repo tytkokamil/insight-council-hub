@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import WidgetErrorBoundary from "@/components/shared/WidgetErrorBoundary";
+import DemoBanner from "@/components/shared/DemoBanner";
 import DecisionQualityIndex from "@/components/dashboard/DecisionQualityIndex";
 import PrimaryFocusBanner from "@/components/dashboard/PrimaryFocusBanner";
 import DecisionRadar from "@/components/dashboard/DecisionRadar";
@@ -242,6 +243,7 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
+      <DemoBanner />
       {/* Progressive Disclosure Banner */}
       {shouldShowAdvanced && mode === "basic" && !dismissedAdvancedHint && (
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}

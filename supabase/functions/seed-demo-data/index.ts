@@ -122,391 +122,318 @@ const teamTemplates = [
       { title: "Pricing-Tabelle für Sales", status: "done", priority: "high", category: "strategic", completedDaysAgo: 5 },
       { title: "SLA-Dokument für Enterprise", status: "in_progress", priority: "high", category: "operational", dueInDays: 5 },
       { title: "Cost-Optimization Report AWS", status: "open", priority: "high", category: "budget", dueInDays: 10 },
-      { title: "Compliance-Checkliste aktualisieren", status: "open", priority: "critical", category: "operational", dueInDays: 7 },
-      { title: "Versicherungspolicen vergleichen", status: "open", priority: "medium", category: "budget", dueInDays: 20 },
-      { title: "Reisekostenrichtlinie Entwurf", status: "open", priority: "low", category: "operational", dueInDays: 21 },
-      { title: "Vendor-Bewertungsmatrix erstellen", status: "in_progress", priority: "medium", category: "operational", dueInDays: 14 },
+      { title: "DPIA Dokumentation erstellen", status: "open", priority: "critical", category: "operational", dueInDays: 4 },
+      { title: "SOC 2 Gap Assessment", status: "in_progress", priority: "critical", category: "operational", dueInDays: 8 },
+      { title: "Vendor-Bewertungsmatrix erstellen", status: "open", priority: "medium", category: "operational", dueInDays: 15 },
     ],
     risks: [
-      { title: "DSGVO-Verstoß durch KI-Module", description: "Unbeabsichtigte Verarbeitung personenbezogener Daten.", likelihood: 2, impact: 5, risk_score: 10, status: "open", mitigation_plan: "DPIA durchführen, Anonymisierung implementieren." },
-      { title: "Budget-Überschreitung Cloud", description: "Unkontrolliertes Wachstum der Cloud-Kosten.", likelihood: 3, impact: 3, risk_score: 9, status: "open", mitigation_plan: "Budget-Alerts und monatliches Review." },
-      { title: "Steuerliche Compliance Multi-Jurisdiktion", description: "Falsche Steuersätze in neuen Märkten.", likelihood: 4, impact: 5, risk_score: 20, status: "open", mitigation_plan: "Externe Steuerberatung pro Markt, automatisierte Tax Engine." },
-      { title: "Währungsrisiko bei Internationalisierung", description: "Wechselkursschwankungen bei EUR/USD Umsatz.", likelihood: 1, impact: 2, risk_score: 2, status: "accepted", mitigation_plan: "Hedging ab >100k Fremdwährungsumsatz." },
+      { title: "Compliance-Verzögerung NIS2", description: "Deadline droht zu reißen.", likelihood: 3, impact: 5, risk_score: 15, status: "open", mitigation_plan: "Prio-1 Compliance-Sprint starten." },
+      { title: "Budget-Überschreitung Cloud", description: "Cloud-Kosten übersteigen Planung um >20%.", likelihood: 3, impact: 3, risk_score: 9, status: "mitigating", mitigation_plan: "Wöchentliches Budget-Monitoring." },
+      { title: "Steuerfrist versäumt", description: "Verspätete Steuererklärung wegen fehlender Belege.", likelihood: 2, impact: 4, risk_score: 8, status: "open", mitigation_plan: "Automatisierte Belegerfassung." },
+      { title: "Datenschutzverstoß Mitarbeiterdaten", description: "Ungeschützte Personalakten in SharePoint.", likelihood: 2, impact: 5, risk_score: 10, status: "mitigating", mitigation_plan: "Zugriffskontrolle und Verschlüsselung." },
     ],
     goals: [
-      { title: "ARR auf €2M steigern", description: "Annual Recurring Revenue.", goal_type: "okr", target_value: 2000000, current_value: 1350000, unit: "€", quarter: "Q4" },
-      { title: "Operative Marge >15%", description: "Operative Effizienz steigern.", goal_type: "kpi", target_value: 15, current_value: 11.5, unit: "%", quarter: "Q4" },
-      { title: "Cash Runway >18 Monate", description: "Finanzielle Sicherheit gewährleisten.", goal_type: "kpi", target_value: 18, current_value: 14, unit: "Monate", quarter: "Q3" },
-    ],
-  },
-  {
-    name: "People & Culture",
-    description: "HR, Employer Branding und Teamkultur",
-    hourly_rate: 75,
-    decisions: [
-      { title: "Employer Branding Kampagne", description: "Arbeitgebermarke stärken über LinkedIn, Glassdoor und Karriereseite.", status: "approved", priority: "high", category: "marketing", dueInDays: 20, createdDaysAgo: 8, ai_risk_score: 15, ai_impact_score: 60 },
-      { title: "Gehaltsstruktur-Überarbeitung", description: "Marktgerechte Vergütung mit transparenten Bändern.", status: "review", priority: "critical", category: "hr", dueInDays: 14, createdDaysAgo: 12, ai_risk_score: 45, ai_impact_score: 80 },
-      { title: "Learning & Development Budget", description: "€2k pro Mitarbeiter für Weiterbildung.", status: "proposed", priority: "medium", category: "budget", dueInDays: 30, createdDaysAgo: 5, ai_risk_score: 10, ai_impact_score: 55 },
-      { title: "Onboarding-Prozess Standardisierung", description: "30-60-90 Tage Plan für alle Neuzugänge.", status: "draft", priority: "high", category: "hr", dueInDays: 21, createdDaysAgo: 3, ai_risk_score: 10, ai_impact_score: 65 },
-      { title: "Diversity & Inclusion Initiative", description: "Workshops, Mentoring und Recruiting-Ziele.", status: "approved", priority: "high", category: "hr", dueInDays: 45, createdDaysAgo: 15, ai_risk_score: 15, ai_impact_score: 70 },
-      { title: "Performance Review Framework", description: "360-Grad-Feedback und OKR-basierte Reviews.", status: "review", priority: "high", category: "hr", dueInDays: 18, createdDaysAgo: 7, ai_risk_score: 20, ai_impact_score: 65 },
-      { title: "Mental Health Programm", description: "Coaching-Zugang, flexible Arbeitszeiten, Wellness-Budget.", status: "proposed", priority: "medium", category: "hr", dueInDays: 28, createdDaysAgo: 4, ai_risk_score: 5, ai_impact_score: 50 },
-      { title: "Team-Offsite Q3 Planung", description: "3-tägiges Offsite für Team Building und Strategie.", status: "draft", priority: "medium", category: "operational", dueInDays: 40, createdDaysAgo: 2, ai_risk_score: 5, ai_impact_score: 35 },
-      { title: "Intern-Programm Sommer 2026", description: "Praktikantenprogramm für 5 Positionen.", status: "proposed", priority: "low", category: "hr", dueInDays: 35, createdDaysAgo: 6, ai_risk_score: 10, ai_impact_score: 40 },
-      { title: "Exit-Interview Prozess", description: "Standardisierte Abgangsgespräche für Insights.", status: "draft", priority: "medium", category: "hr", dueInDays: 15, createdDaysAgo: 3, ai_risk_score: 5, ai_impact_score: 40 },
-      { title: "Mitarbeiter-Zufriedenheitsumfrage Q1", description: "Anonyme Umfrage mit eNPS.", status: "implemented", priority: "high", category: "hr", createdDaysAgo: 30, implementedDaysAgo: 10, ai_risk_score: 5, ai_impact_score: 60, outcome_type: "successful", outcome: "eNPS von 28 auf 45 gestiegen.", actual_impact_score: 65 },
-      { title: "Benefits-Paket Überarbeitung", description: "Neue Benefits: ÖPNV-Ticket, Sport-Zuschuss, Sabbatical.", status: "implemented", priority: "high", category: "hr", createdDaysAgo: 45, implementedDaysAgo: 20, ai_risk_score: 10, ai_impact_score: 55, outcome_type: "successful", outcome: "Bewerbungen +60%, Fluktuation -15%.", actual_impact_score: 65 },
-      { title: "Remote-First Kultur etabliert", description: "Async-first Kommunikation und Tools.", status: "implemented", priority: "medium", category: "operational", createdDaysAgo: 55, implementedDaysAgo: 30, ai_risk_score: 20, ai_impact_score: 50, outcome_type: "successful", outcome: "Produktivität stabil, Zufriedenheit +25%.", actual_impact_score: 55 },
-    ],
-    tasks: [
-      { title: "Gehaltsbänder recherchieren", status: "in_progress", priority: "high", category: "hr", dueInDays: 7 },
-      { title: "Onboarding-Checkliste erstellen", status: "open", priority: "medium", category: "hr", dueInDays: 14 },
-      { title: "D&I Workshop planen", status: "open", priority: "medium", category: "hr", dueInDays: 21 },
-      { title: "Karriereseite aktualisieren", status: "in_progress", priority: "high", category: "marketing", dueInDays: 10 },
-      { title: "Performance Review Template", status: "open", priority: "high", category: "hr", dueInDays: 12 },
-      { title: "Mental Health Partner evaluieren", status: "open", priority: "medium", category: "hr", dueInDays: 20 },
-      { title: "Offsite-Location recherchieren", status: "open", priority: "low", category: "operational", dueInDays: 30 },
-    ],
-    risks: [
-      { title: "Fluktuation Schlüsselpositionen", description: "3 Senior-Rollen offen seit >6 Wochen.", likelihood: 3, impact: 4, risk_score: 12, status: "open", mitigation_plan: "Retention-Bonus und Entwicklungspläne." },
-      { title: "Burnout-Risiko durch Wachstum", description: "Schnelles Wachstum ohne proportionale Einstellungen.", likelihood: 3, impact: 4, risk_score: 12, status: "open", mitigation_plan: "Workload-Monitoring und proaktives Hiring." },
-      { title: "Diskriminierungsklage durch Bias", description: "Unbewusster Bias im Recruiting-Prozess.", likelihood: 1, impact: 5, risk_score: 5, status: "open", mitigation_plan: "Strukturierte Interviews, Blind Screening, D&I Training." },
-    ],
-    goals: [
-      { title: "eNPS über 50", description: "Employee Net Promoter Score.", goal_type: "kpi", target_value: 50, current_value: 45, unit: "Score", quarter: "Q3" },
-      { title: "Time-to-Hire unter 30 Tage", description: "Schnellerer Recruiting-Prozess.", goal_type: "kpi", target_value: 30, current_value: 42, unit: "Tage", quarter: "Q3" },
-      { title: "Retention Rate >92%", description: "Mitarbeiterbindung stärken.", goal_type: "kpi", target_value: 92, current_value: 88, unit: "%", quarter: "Q4" },
-    ],
-  },
-  {
-    name: "Data & Analytics",
-    description: "Business Intelligence, Dateninfrastruktur und Reporting",
-    hourly_rate: 90,
-    decisions: [
-      { title: "Data Warehouse Migration zu Snowflake", description: "Migration von Redshift zu Snowflake für bessere Skalierung.", status: "review", priority: "critical", category: "technical", dueInDays: 14, createdDaysAgo: 10, ai_risk_score: 50, ai_impact_score: 80, cost_per_day: 2000 },
-      { title: "Self-Service BI Tool Auswahl", description: "Metabase vs. Looker vs. PowerBI für nicht-technische Teams.", status: "proposed", priority: "high", category: "technical", dueInDays: 21, createdDaysAgo: 7, ai_risk_score: 25, ai_impact_score: 65 },
-      { title: "Data Governance Framework", description: "Datenqualität, Ownership und Zugriffsrechte definieren.", status: "draft", priority: "high", category: "operational", dueInDays: 30, createdDaysAgo: 4, ai_risk_score: 35, ai_impact_score: 75 },
-      { title: "ML Pipeline für Churn-Prediction", description: "Predictive Analytics für Kundenabwanderung.", status: "approved", priority: "medium", category: "technical", dueInDays: 25, createdDaysAgo: 6, ai_risk_score: 30, ai_impact_score: 70 },
-      { title: "Real-Time Analytics Pipeline", description: "Streaming-Daten für Live-Dashboards.", status: "proposed", priority: "high", category: "technical", dueInDays: 35, createdDaysAgo: 5, ai_risk_score: 40, ai_impact_score: 75 },
-      { title: "Data Retention Policy", description: "Aufbewahrungsfristen und automatische Löschung definieren.", status: "review", priority: "high", category: "operational", dueInDays: 14, createdDaysAgo: 8, ai_risk_score: 30, ai_impact_score: 60 },
-      { title: "Customer 360 View", description: "Vereinheitlichte Kundensicht über alle Touchpoints.", status: "draft", priority: "critical", category: "strategic", dueInDays: 45, createdDaysAgo: 3, ai_risk_score: 35, ai_impact_score: 85 },
-      { title: "Experimentation Platform", description: "A/B Testing Infrastruktur für datengetriebene Entscheidungen.", status: "proposed", priority: "medium", category: "technical", dueInDays: 28, createdDaysAgo: 4, ai_risk_score: 20, ai_impact_score: 55 },
-      { title: "Data Catalog einführen", description: "Zentrale Dokumentation aller Datenquellen und Metriken.", status: "draft", priority: "medium", category: "operational", dueInDays: 25, createdDaysAgo: 2, ai_risk_score: 10, ai_impact_score: 50 },
-      { title: "Revenue Attribution Model", description: "Multi-Touch Attribution für Marketing-Kanäle.", status: "approved", priority: "high", category: "marketing", dueInDays: 18, createdDaysAgo: 9, ai_risk_score: 25, ai_impact_score: 65 },
-      { title: "ETL-Automatisierung", description: "dbt + Airflow für automatisierte Datenpipelines.", status: "implemented", priority: "high", category: "technical", createdDaysAgo: 40, implementedDaysAgo: 15, ai_risk_score: 20, ai_impact_score: 65, outcome_type: "successful", outcome: "Manuelle Datenaufbereitung um 90% reduziert.", actual_impact_score: 75 },
-      { title: "Dashboard-Konsolidierung", description: "Von 25 auf 8 Standard-Dashboards.", status: "implemented", priority: "medium", category: "operational", createdDaysAgo: 35, implementedDaysAgo: 12, ai_risk_score: 10, ai_impact_score: 50, outcome_type: "successful", outcome: "Datengetriebene Entscheidungen +40%.", actual_impact_score: 55 },
-      { title: "Data Lake Architektur", description: "S3-basierter Data Lake für unstrukturierte Daten.", status: "implemented", priority: "high", category: "technical", createdDaysAgo: 50, implementedDaysAgo: 25, ai_risk_score: 30, ai_impact_score: 70, outcome_type: "successful", outcome: "Datensilos aufgelöst, Analysezeit -60%.", actual_impact_score: 65 },
-    ],
-    tasks: [
-      { title: "Snowflake POC aufsetzen", status: "in_progress", priority: "critical", category: "technical", dueInDays: 5 },
-      { title: "BI-Tool Demo Sessions planen", status: "open", priority: "high", category: "technical", dueInDays: 10 },
-      { title: "Data Quality Audit durchführen", status: "open", priority: "high", category: "operational", dueInDays: 14 },
-      { title: "ML-Modell Prototyp trainieren", status: "in_progress", priority: "medium", category: "technical", dueInDays: 18 },
-      { title: "ETL-Monitoring Dashboard", status: "done", priority: "high", category: "technical", completedDaysAgo: 10 },
-      { title: "Data Catalog Tooling evaluieren", status: "open", priority: "medium", category: "operational", dueInDays: 18 },
-      { title: "Attribution-Modell dokumentieren", status: "in_progress", priority: "high", category: "marketing", dueInDays: 12 },
-    ],
-    risks: [
-      { title: "Datenqualität unter Schwellenwert", description: "Inkonsistente Daten in 3 kritischen Tabellen.", likelihood: 4, impact: 3, risk_score: 12, status: "open", mitigation_plan: "Data Quality Checks in Pipeline integrieren." },
-      { title: "Vendor Lock-in Snowflake", description: "Hohe Abhängigkeit von Snowflake-Ökosystem.", likelihood: 2, impact: 4, risk_score: 8, status: "open", mitigation_plan: "Abstraktionsschicht und regelmäßige Evaluation." },
-      { title: "Datenleck durch fehlende Zugriffskontrolle", description: "Zu breite Zugriffsrechte auf sensitive Daten.", likelihood: 4, impact: 5, risk_score: 20, status: "mitigating", mitigation_plan: "RBAC für alle Datenquellen, Audit-Logs aktivieren." },
-    ],
-    goals: [
-      { title: "Data Quality Score >95%", description: "Automatisierte Qualitätsprüfung.", goal_type: "kpi", target_value: 95, current_value: 82, unit: "%", quarter: "Q3" },
-      { title: "Self-Service Adoption >60%", description: "Teams nutzen BI-Tools selbstständig.", goal_type: "kpi", target_value: 60, current_value: 25, unit: "%", quarter: "Q4" },
-      { title: "Report-Latenz <2 Sekunden", description: "Schnelle Dashboard-Ladezeiten.", goal_type: "kpi", target_value: 2, current_value: 3.5, unit: "Sekunden", quarter: "Q3" },
+      { title: "Betriebskosten-Senkung um 15%", description: "Operative Effizienzsteigerung.", goal_type: "kpi", target_value: 15, current_value: 8, unit: "%", quarter: "Q3" },
+      { title: "SOC 2 Zertifizierung erreichen", description: "Type II Zertifizierung.", goal_type: "milestone", target_value: 1, current_value: 0, unit: "Zertifizierung", quarter: "Q4" },
+      { title: "MTTR unter 2 Stunden", description: "Mean Time To Resolve für operative Probleme.", goal_type: "kpi", target_value: 2, current_value: 3.5, unit: "Stunden", quarter: "Q2" },
     ],
   },
 ];
 
+/* ── Quick-start demo data: 3 focused decisions for first-time users ── */
+const quickStartDecisions = [
+  {
+    title: "Lieferantenwechsel: Hydraulikkomponenten Serie 7",
+    description: "Aktueller Lieferant (Müller GmbH) hat Lieferzeit von 4 auf 9 Wochen erhöht. Alternativangebot von Weber Hydraulik liegt vor. Entscheidung blockiert Produktionsplanung Q2.",
+    category: "operational",
+    priority: "high",
+    status: "open",
+    cost_per_day: 1200,
+    createdDaysAgo: 3,
+    dueInDays: 2,
+    options: [
+      { label: "Weber Hydraulik", description: "Lieferzeit 3 Wo, +8% Preis" },
+      { label: "Müller GmbH behalten", description: "Eskalation vereinbaren" },
+      { label: "Dual-Sourcing", description: "Beide Lieferanten parallel" },
+    ],
+    review: { status: "pending" },
+  },
+  {
+    title: "Investitionsfreigabe: CNC-Fräsmaschine Halle 3",
+    description: "Ersatz der DMG Mori NLX 2500 (Baujahr 2009). Angebot liegt vor: €187.000 netto. ROI-Berechnung Controlling: Break-even nach 2,4 Jahren.",
+    category: "budget",
+    priority: "critical",
+    status: "review",
+    cost_per_day: 800,
+    createdDaysAgo: 6,
+    dueInDays: 1,
+    options: [],
+    review: { status: "approved", comment: "ROI-Berechnung plausibel. Finanzierung über KfW-Programm empfohlen.", reviewedDaysAgo: 1 },
+  },
+  {
+    title: "Homeoffice-Regelung 2025 — Betriebsvereinbarung",
+    description: "Neue Regelung: max. 2 Tage/Woche Homeoffice. Betriebsrat zugestimmt.",
+    category: "hr",
+    priority: "medium",
+    status: "approved",
+    cost_per_day: 0,
+    createdDaysAgo: 14,
+    dueInDays: -7,
+    options: [],
+    review: null,
+    implementedDaysAgo: 7,
+  },
+];
+
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey);
 
   try {
+    // Auth
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const { data: { user }, error: authErr } = await anonClient.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (authErr || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { mode } = await req.json().catch(() => ({ mode: undefined }));
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) return new Response(JSON.stringify({ error: "Invalid token" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Get user profile
+    const { data: profile } = await supabase.from("profiles").select("org_id").eq("user_id", user.id).single();
+    if (!profile?.org_id) {
+      return new Response(JSON.stringify({ error: "No org" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const orgId = profile.org_id;
 
-    const userId = user.id;
-    const u = userId;
+    // ── Quick-start mode: lightweight 3-decision seed for first login ──
+    if (mode === "quickstart") {
+      // Check if org already has decisions
+      const { count } = await supabase.from("decisions").select("id", { count: "exact", head: true }).eq("org_id", orgId);
+      if ((count ?? 0) > 0) {
+        return new Response(JSON.stringify({ skipped: true, reason: "Org already has decisions" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
-    // ── Helpers ──
+      const results = [];
+      for (const tpl of quickStartDecisions) {
+        const now = new Date();
+        const createdAt = new Date(now.getTime() - tpl.createdDaysAgo * 86400000);
+        const dueDate = new Date(now.getTime() + tpl.dueInDays * 86400000);
+        const implementedAt = tpl.implementedDaysAgo ? new Date(now.getTime() - tpl.implementedDaysAgo * 86400000) : null;
+
+        const { data: dec, error: decErr } = await supabase.from("decisions").insert({
+          title: tpl.title,
+          description: tpl.description,
+          category: tpl.category,
+          priority: tpl.priority,
+          status: tpl.status,
+          cost_per_day: tpl.cost_per_day,
+          due_date: dueDate.toISOString().split("T")[0],
+          created_at: createdAt.toISOString(),
+          created_by: user.id,
+          owner_id: user.id,
+          org_id: orgId,
+          options: tpl.options.length > 0 ? tpl.options : null,
+          is_demo: true,
+          implemented_at: implementedAt?.toISOString() || null,
+        }).select("id").single();
+
+        if (decErr || !dec) continue;
+        results.push(dec.id);
+
+        // Add review if specified
+        if (tpl.review) {
+          const reviewedAt = tpl.review.status !== "pending" && (tpl.review as any).reviewedDaysAgo
+            ? new Date(now.getTime() - (tpl.review as any).reviewedDaysAgo * 86400000).toISOString()
+            : null;
+          await supabase.from("decision_reviews").insert({
+            decision_id: dec.id,
+            reviewer_id: user.id,
+            status: tpl.review.status === "pending" ? "proposed" : tpl.review.status,
+            feedback: (tpl.review as any).comment || null,
+            reviewed_at: reviewedAt,
+            step_order: 1,
+          });
+        }
+
+        // Add audit log entry
+        await supabase.from("audit_logs").insert({
+          decision_id: dec.id,
+          user_id: user.id,
+          action: "decision.created",
+          new_value: tpl.title,
+          org_id: orgId,
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, mode: "quickstart", decisions_created: results.length }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Full demo mode (existing behavior) ──
+    // Delete existing demo data first
+    await supabase.from("decisions").delete().eq("org_id", orgId).eq("is_demo", true);
+
     const now = new Date();
-    const daysAgo = (d: number) => new Date(now.getTime() - d * 86400000).toISOString();
-    const dueDate = (d: number) => new Date(now.getTime() + d * 86400000).toISOString().split("T")[0];
-    const currentYear = now.getFullYear();
-    const base = { created_by: u, owner_id: u };
 
-    // ── Check if personal data exists ──
-    const { count: personalDecCount } = await supabase.from("decisions").select("id", { count: "exact", head: true }).eq("created_by", u).is("team_id", null);
-    const { count: personalTaskCount } = await supabase.from("tasks").select("id", { count: "exact", head: true }).eq("created_by", u).is("team_id", null);
-    
-    let personalMsg = "";
+    function daysAgo(d: number) {
+      return new Date(now.getTime() - d * 86400000).toISOString();
+    }
+    function daysFromNow(d: number) {
+      return new Date(now.getTime() + d * 86400000).toISOString().split("T")[0];
+    }
 
-    if ((personalDecCount || 0) === 0 && (personalTaskCount || 0) === 0) {
-      // ── Seed personal data (decisions, tasks, risks, goals) ──
-      const personalDecisions = [
-        { title: "Weiterbildung: Leadership-Programm vs. Fachzertifikat", description: "Führungskräfteentwicklung: Internes Leadership-Programm oder externes Product-Management-Zertifikat für das Team.", status: "review", priority: "high", category: "hr", due_date: dueDate(-4), created_at: daysAgo(18), ...base, ai_risk_score: 45, ai_impact_score: 70, cost_per_day: 900 },
-        { title: "Home-Office Setup Upgrade", description: "Ergonomischer Arbeitsplatz: Standing Desk, Monitor-Arm, Noise-Cancelling Headset.", status: "approved", priority: "medium", category: "operational", due_date: dueDate(14), created_at: daysAgo(5), ...base, ai_risk_score: 5, ai_impact_score: 35 },
-        { title: "Quartals-OKRs für persönlichen Bereich definieren", description: "Individuelle Ziele und Key Results für das kommende Quartal festlegen.", status: "proposed", priority: "high", category: "strategic", due_date: dueDate(-2), created_at: daysAgo(12), ...base, ai_risk_score: 35, ai_impact_score: 60, cost_per_day: 600 },
-        { title: "Vendor-Evaluierung: CRM-System Migration", description: "Vergleich von Salesforce, HubSpot und Pipedrive für die Vertriebsabteilung — Kosten, Integrations-Aufwand und Migrationszeitplan.", status: "draft", priority: "medium", category: "strategic", due_date: dueDate(60), created_at: daysAgo(1), ...base, ai_risk_score: 30, ai_impact_score: 45 },
-        { title: "Konferenz-Teilnahme WebSummit 2026", description: "Teilnahme, Reiseplanung und Networking-Strategie.", status: "review", priority: "medium", category: "marketing", due_date: dueDate(45), created_at: daysAgo(4), ...base, ai_risk_score: 10, ai_impact_score: 40 },
-        { title: "Mentoring-Programm starten", description: "Regelmäßiges Mentoring für 2 Junior-Kollegen aufsetzen.", status: "proposed", priority: "medium", category: "hr", due_date: dueDate(-6), created_at: daysAgo(20), ...base, ai_risk_score: 25, ai_impact_score: 55, cost_per_day: 450 },
-        { title: "Business Continuity Plan aktualisieren", description: "Notfallpläne, IT-Disaster-Recovery und Kommunikationsketten für kritische Geschäftsprozesse überprüfen.", status: "draft", priority: "high", category: "budget", due_date: dueDate(5), created_at: daysAgo(8), ...base, ai_risk_score: 40, ai_impact_score: 60, cost_per_day: 750 },
-        { title: "Produktivitäts-Workflow optimiert", description: "GTD-System mit Notion + Kalender-Blocking eingeführt.", status: "implemented", priority: "medium", category: "operational", created_at: daysAgo(40), implemented_at: daysAgo(15), ...base, ai_risk_score: 5, ai_impact_score: 45, outcome_type: "successful", outcome: "Deep-Work-Stunden pro Woche von 8 auf 18 gestiegen.", actual_impact_score: 55 },
-        { title: "Remote-Work Policy überarbeiten", description: "Hybridmodell, Kernzeiten und Home-Office-Ausstattungspauschale für alle Abteilungen definieren.", status: "implemented", priority: "high", category: "operational", created_at: daysAgo(60), implemented_at: daysAgo(30), ...base, ai_risk_score: 5, ai_impact_score: 50, outcome_type: "successful", outcome: "Mitarbeiterzufriedenheit und Produktivität deutlich verbessert.", actual_impact_score: 60 },
-        { title: "Networking-Strategie LinkedIn", description: "Wöchentliches Posting, Kommentar-Routine, 3 Events/Monat.", status: "implemented", priority: "low", category: "marketing", created_at: daysAgo(50), implemented_at: daysAgo(20), ...base, ai_risk_score: 5, ai_impact_score: 35, outcome_type: "successful", outcome: "LinkedIn-Reichweite +300%. 4 Leads über Netzwerk.", actual_impact_score: 45 },
-        { title: "Wissensmanagement Obsidian-Setup", description: "Second Brain mit Zettelkasten-Methode aufgebaut.", status: "implemented", priority: "medium", category: "technical", created_at: daysAgo(45), implemented_at: daysAgo(25), ...base, ai_risk_score: 5, ai_impact_score: 40, outcome_type: "successful", outcome: "Wissen schneller abrufbar. Entscheidungen besser fundiert.", actual_impact_score: 50 },
-        { title: "Delegation Framework", description: "Klare Regeln definiert, welche Aufgaben delegiert werden.", status: "implemented", priority: "high", category: "operational", created_at: daysAgo(35), implemented_at: daysAgo(12), ...base, ai_risk_score: 10, ai_impact_score: 65, outcome_type: "successful", outcome: "20% mehr strategische Zeit pro Woche.", actual_impact_score: 60 },
-      ];
+    const createdDecisions: string[] = [];
+    const createdTasks: string[] = [];
+    const createdRisks: string[] = [];
 
-      const { data: pDecs } = await supabase.from("decisions").insert(personalDecisions as any[]).select("id, status, created_at");
+    for (const template of teamTemplates) {
+      // Create team
+      const { data: team } = await supabase.from("teams").insert({
+        name: template.name,
+        description: template.description,
+        org_id: orgId,
+        created_by: user.id,
+        hourly_rate: template.hourly_rate,
+      }).select("id").single();
 
-      const personalTasks = [
-        { title: "Weiterbildungsbudget Q2 recherchieren", status: "in_progress", priority: "high", category: "hr", due_date: dueDate(7), created_by: u },
-        { title: "Home-Office Ausstattung finalisieren", status: "open", priority: "medium", category: "operational", due_date: dueDate(3), created_by: u },
-        { title: "Quartals-OKRs definieren", status: "open", priority: "medium", category: "strategic", due_date: dueDate(5), created_by: u },
-        { title: "LinkedIn-Artikel schreiben", status: "backlog", priority: "low", category: "marketing", created_by: u },
-        { title: "Konferenz-Teilnahme beantragen", status: "open", priority: "high", category: "budget", due_date: dueDate(14), created_by: u },
-        { title: "Mentoring Kick-off vorbereiten", status: "open", priority: "medium", category: "hr", due_date: dueDate(10), created_by: u },
-        { title: "Obsidian Templates anlegen", status: "done", priority: "medium", category: "technical", created_by: u, completed_at: daysAgo(20) },
-        { title: "Delegations-Matrix erstellen", status: "done", priority: "high", category: "operational", created_by: u, completed_at: daysAgo(10) },
-      ];
-      await supabase.from("tasks").insert(personalTasks as any[]);
+      if (!team) continue;
 
-      await supabase.from("risks").insert([
-        { title: "Burnout-Risiko im Team durch Überarbeitung", description: "Hohe Arbeitslast seit 3 Monaten ohne Entlastung.", likelihood: 3, impact: 4, risk_score: 12, status: "open", created_by: u, mitigation_plan: "Workload-Review, Delegationsmatrix, wöchentlicher Team-Check-in." },
-        { title: "Wissensverlust bei Schlüsselpersonen", description: "Kritisches Wissen nicht dokumentiert.", likelihood: 3, impact: 3, risk_score: 9, status: "open", created_by: u, mitigation_plan: "Knowledge Base pflegen, Cross-Training einführen." },
-      ]);
+      // Add user as team lead
+      await supabase.from("team_members").insert({
+        team_id: team.id,
+        user_id: user.id,
+        role: "lead",
+      });
 
-      await supabase.from("strategic_goals").insert([
-        { title: "50 Deep-Work-Blöcke pro Quartal", description: "Fokussierte Arbeit ohne Unterbrechungen.", goal_type: "kpi", target_value: 50, current_value: 32, unit: "Blöcke", year: currentYear, quarter: "Q2", status: "active", created_by: u },
-        { title: "12 Networking-Events besuchen", description: "Mindestens 1 Event pro Monat.", goal_type: "okr", target_value: 12, current_value: 5, unit: "Events", year: currentYear, quarter: "Q4", status: "active", created_by: u },
-      ]);
+      // Create decisions
+      for (const dec of template.decisions) {
+        const createdAt = daysAgo(dec.createdDaysAgo);
+        const implementedAt = (dec as any).implementedDaysAgo ? daysAgo((dec as any).implementedDaysAgo) : null;
+        const dueDate = (dec as any).dueInDays !== undefined ? daysFromNow((dec as any).dueInDays) : null;
 
-      // Lessons for personal implemented decisions
-      const pImpl = pDecs?.filter(d => d.status === "implemented") || [];
-      const pLessonData = [
-        { key_takeaway: "Persönliche Systeme brauchen 3 Wochen bis sie zur Gewohnheit werden.", what_went_well: "Produktivität messbar gestiegen.", what_went_wrong: "Anfangs zu viel auf einmal geändert.", recommendations: "Eine Gewohnheit nach der anderen einführen." },
-        { key_takeaway: "Delegation erfordert Vertrauen UND Struktur.", what_went_well: "Strategische Zeit gewonnen.", what_went_wrong: "Erste Woche Kontrollverlust-Gefühl.", recommendations: "Check-in-Rhythmus vereinbaren." },
-        { key_takeaway: "Netzwerken ist ein Langzeit-Investment.", what_went_well: "Unerwartete Opportunities.", what_went_wrong: "Konsistenz schwer durchzuhalten.", recommendations: "Feste Slots im Kalender blocken." },
-      ];
-      const pLessons = pImpl.slice(0, 3).map((d, i) => ({ decision_id: d.id, created_by: u, ...pLessonData[i % pLessonData.length] }));
-      if (pLessons.length > 0) await supabase.from("lessons_learned").insert(pLessons);
+        const statusMap: Record<string, string> = { review: "review", proposed: "proposed", draft: "draft", approved: "approved", implemented: "implemented" };
 
-      // Audit logs for personal
-      if (pDecs && pDecs.length > 0) {
-        await supabase.from("audit_logs").insert(pDecs.slice(0, 5).map(d => ({ decision_id: d.id, user_id: u, action: "created", created_at: d.created_at })));
+        const { data: newDec } = await supabase.from("decisions").insert({
+          title: dec.title,
+          description: dec.description,
+          category: dec.category,
+          priority: dec.priority,
+          status: statusMap[dec.status] || dec.status,
+          cost_per_day: dec.cost_per_day || null,
+          due_date: dueDate,
+          created_at: createdAt,
+          created_by: user.id,
+          owner_id: user.id,
+          org_id: orgId,
+          team_id: team.id,
+          escalation_level: (dec as any).escalation_level || null,
+          ai_risk_score: dec.ai_risk_score || null,
+          ai_impact_score: dec.ai_impact_score || null,
+          outcome_type: (dec as any).outcome_type || null,
+          outcome: (dec as any).outcome || null,
+          actual_impact_score: (dec as any).actual_impact_score || null,
+          implemented_at: implementedAt,
+          is_demo: true,
+        }).select("id").single();
 
-        // Personal decision dependencies
-        if (pDecs.length >= 5) {
-          const pIds = pDecs.map(d => d.id);
-          await supabase.from("decision_dependencies").insert([
-            { source_decision_id: pIds[0], target_decision_id: pIds[2], dependency_type: "influences", created_by: u },
-            { source_decision_id: pIds[2], target_decision_id: pIds[3], dependency_type: "requires", created_by: u },
-            { source_decision_id: pIds[6], target_decision_id: pIds[0], dependency_type: "blocks", created_by: u },
-            ...(pIds.length > 5 ? [{ source_decision_id: pIds[4], target_decision_id: pIds[5], dependency_type: "influences", created_by: u }] : []),
-          ]);
+        if (newDec) {
+          createdDecisions.push(newDec.id);
+          // Audit log
+          await supabase.from("audit_logs").insert({
+            decision_id: newDec.id,
+            user_id: user.id,
+            action: "decision.created",
+            new_value: dec.title,
+            org_id: orgId,
+          });
         }
       }
 
-      personalMsg = " + 12 persönliche Entscheidungen, 8 Tasks, 2 Risiken, 2 Ziele";
+      // Create tasks
+      for (const task of template.tasks) {
+        const dueDate = (task as any).dueInDays !== undefined ? daysFromNow((task as any).dueInDays) : null;
+        const completedAt = (task as any).completedDaysAgo ? daysAgo((task as any).completedDaysAgo) : null;
+
+        const { data: newTask } = await supabase.from("tasks").insert({
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          due_date: dueDate,
+          created_by: user.id,
+          assignee_id: user.id,
+          org_id: orgId,
+          team_id: team.id,
+          completed_at: completedAt,
+        }).select("id").single();
+
+        if (newTask) createdTasks.push(newTask.id);
+      }
+
+      // Create risks
+      for (const risk of template.risks) {
+        const { data: newRisk } = await supabase.from("risks").insert({
+          title: risk.title,
+          description: risk.description,
+          likelihood: risk.likelihood,
+          impact: risk.impact,
+          risk_score: risk.risk_score,
+          status: risk.status,
+          mitigation_plan: risk.mitigation_plan,
+          created_by: user.id,
+          org_id: orgId,
+          team_id: team.id,
+        }).select("id").single();
+
+        if (newRisk) createdRisks.push(newRisk.id);
+      }
+
+      // Create goals
+      for (const goal of template.goals) {
+        await supabase.from("strategic_goals").insert({
+          title: goal.title,
+          description: goal.description,
+          goal_type: goal.goal_type,
+          target_value: goal.target_value,
+          current_value: goal.current_value,
+          unit: goal.unit,
+          quarter: goal.quarter,
+          org_id: orgId,
+          created_by: user.id,
+        });
+      }
     }
-
-    // ── Determine which team to create next ──
-    const { data: existingTeams } = await supabase.from("teams").select("name").eq("created_by", userId);
-    const existingNames = new Set((existingTeams || []).map((t: any) => t.name));
-
-    let template = teamTemplates.find(t => !existingNames.has(t.name));
-    if (!template) {
-      const baseTpl = teamTemplates[existingTeams!.length % teamTemplates.length];
-      const count = (existingTeams || []).filter((t: any) => t.name.startsWith(baseTpl.name)).length;
-      template = { ...baseTpl, name: `${baseTpl.name} ${count + 1}` };
-    }
-
-    // ── 1. Create Team ──
-    const { data: newTeam, error: teamErr } = await supabase.from("teams").insert({
-      name: template.name,
-      description: template.description,
-      created_by: userId,
-      hourly_rate: template.hourly_rate,
-    }).select("id, name").single();
-
-    if (teamErr || !newTeam) throw new Error(teamErr?.message || "Team creation failed");
-
-    await supabase.from("team_members").insert({ team_id: newTeam.id, user_id: userId, role: "lead" });
-
-    // ── 2. Create Decisions ──
-    const decisionsToInsert = template.decisions.map(d => {
-      const rec: any = {
-        title: d.title,
-        description: d.description,
-        status: d.status,
-        priority: d.priority,
-        category: d.category,
-        created_at: daysAgo(d.createdDaysAgo),
-        created_by: userId,
-        owner_id: userId,
-        team_id: newTeam.id,
-        ai_risk_score: d.ai_risk_score || 0,
-        ai_impact_score: d.ai_impact_score || 0,
-        cost_per_day: d.cost_per_day || 0,
-        escalation_level: d.escalation_level || 0,
-      };
-      if (d.dueInDays !== undefined) rec.due_date = dueDate(d.dueInDays);
-      if (d.escalation_level) rec.last_escalated_at = daysAgo(1);
-      if (d.implementedDaysAgo) rec.implemented_at = daysAgo(d.implementedDaysAgo);
-      if (d.outcome_type) rec.outcome_type = d.outcome_type;
-      if (d.outcome) rec.outcome = d.outcome;
-      if (d.actual_impact_score) rec.actual_impact_score = d.actual_impact_score;
-      return rec;
-    });
-
-    const { data: insertedDecisions, error: decErr } = await supabase.from("decisions").insert(decisionsToInsert).select("id, title, status, created_at");
-    if (decErr) {
-      console.error("Decision insert error:", JSON.stringify(decErr));
-      throw new Error("Decisions insert failed: " + decErr.message);
-    }
-
-    // ── 3. Create Tasks ──
-    const tasksToInsert = template.tasks.map((t, idx) => {
-      const rec: any = {
-        title: t.title,
-        status: t.status,
-        priority: t.priority,
-        category: t.category,
-        created_by: userId,
-        team_id: newTeam.id,
-        assignee_id: idx % 2 === 0 ? userId : null,
-      };
-      if (t.dueInDays !== undefined) rec.due_date = dueDate(t.dueInDays);
-      if (t.completedDaysAgo) rec.completed_at = daysAgo(t.completedDaysAgo);
-      return rec;
-    });
-    await supabase.from("tasks").insert(tasksToInsert);
-
-    // ── 4. Create Risks ──
-    const { data: insertedRisks } = await supabase.from("risks").insert(template.risks.map(r => ({ ...r, created_by: userId, team_id: newTeam.id }))).select("id");
-
-    // ── 4b. Link risks to decisions ──
-    if (insertedRisks && insertedDecisions && insertedRisks.length > 0 && insertedDecisions.length > 0) {
-      const riskDecLinks = insertedRisks.slice(0, Math.min(insertedRisks.length, 4)).map((r, i) => ({
-        risk_id: r.id,
-        decision_id: insertedDecisions[i % insertedDecisions.length].id,
-        linked_by: userId,
-      }));
-      await supabase.from("risk_decision_links").insert(riskDecLinks);
-    }
-
-    // ── 5. Create Strategic Goals & Link to Decisions ──
-    const { data: insertedGoals } = await supabase.from("strategic_goals").insert(template.goals.map(g => ({ ...g, created_by: userId, team_id: newTeam.id, year: currentYear, status: "active" }))).select("id");
-
-    // Link decisions to goals (2-3 decisions per goal)
-    if (insertedGoals && insertedGoals.length > 0 && insertedDecisions && insertedDecisions.length > 0) {
-      const goalLinks: any[] = [];
-      insertedGoals.forEach((goal, gIdx) => {
-        // Each goal gets 2-3 linked decisions, cycling through available decisions
-        const linksPerGoal = gIdx % 2 === 0 ? 3 : 2;
-        for (let j = 0; j < linksPerGoal && j < insertedDecisions.length; j++) {
-          const decIdx = (gIdx * 3 + j) % insertedDecisions.length;
-          goalLinks.push({
-            goal_id: goal.id,
-            decision_id: insertedDecisions[decIdx].id,
-            impact_weight: [40, 60, 80, 50, 70][j % 5],
-            linked_by: userId,
-          });
-        }
-      });
-      await supabase.from("decision_goal_links").insert(goalLinks);
-    }
-
-    // ── 5b. Archive some older implemented decisions ──
-    const implementedDecs = insertedDecisions?.filter(d => d.status === "implemented") || [];
-    // Archive the oldest 2 implemented decisions (if we have enough)
-    const toArchive = implementedDecs.slice(-2);
-    for (const dec of toArchive) {
-      await supabase.from("decisions").update({
-        status: "archived",
-        archived_at: daysAgo(5),
-      }).eq("id", dec.id);
-    }
-
-    // ── 6. Lessons Learned for implemented decisions ──
-    const lessonTemplates = [
-      { key_takeaway: "Frühzeitige Planung reduziert Risiken signifikant.", what_went_well: "Termingerecht umgesetzt.", what_went_wrong: "Scope anfangs nicht klar definiert.", recommendations: "Scope-Dokument vor Kickoff erstellen." },
-      { key_takeaway: "Automatisierung spart langfristig enorme Ressourcen.", what_went_well: "ROI höher als erwartet.", what_went_wrong: "Einarbeitungszeit unterschätzt.", recommendations: "Training-Budget einplanen." },
-      { key_takeaway: "Cross-funktionale Zusammenarbeit beschleunigt Entscheidungen.", what_went_well: "Team-Alignment verbessert.", what_went_wrong: "Zu viele Stakeholder anfangs.", recommendations: "RACI-Matrix vorab definieren." },
-    ];
-    const lessons = implementedDecs.map((d, i) => ({ decision_id: d.id, created_by: userId, ...lessonTemplates[i % lessonTemplates.length] }));
-    if (lessons.length > 0) await supabase.from("lessons_learned").insert(lessons);
-
-    // ── 7. Reviews ──
-    const reviewDecs = insertedDecisions?.filter(d => d.status === "review" || d.status === "approved") || [];
-    const reviews = reviewDecs.slice(0, 5).map(d => ({
-      decision_id: d.id, reviewer_id: userId, step_order: 1,
-      status: d.status === "approved" ? "approved" : "review",
-      feedback: d.status === "approved" ? "Freigabe erteilt." : null,
-      reviewed_at: d.status === "approved" ? daysAgo(2) : null,
-    }));
-    if (reviews.length > 0) await supabase.from("decision_reviews").insert(reviews as any[]);
-
-    // ── 8. Audit Logs ──
-    if (insertedDecisions && insertedDecisions.length > 0) {
-      const auditLogs = insertedDecisions.slice(0, 6).map(d => ({ decision_id: d.id, user_id: userId, action: "created", created_at: d.created_at }));
-      await supabase.from("audit_logs").insert(auditLogs);
-    }
-
-    // ── 8b. Decision Dependencies (Graph Edges) ──
-    if (insertedDecisions && insertedDecisions.length >= 6) {
-      const ids = insertedDecisions.map(d => d.id);
-      // Create meaningful dependency chains within each team
-      // Pattern: first few decisions form a chain, plus some cross-links
-      const depInserts = [
-        // Chain: 0 blocks 1, 1 requires 2
-        { source_decision_id: ids[0], target_decision_id: ids[1], dependency_type: "blocks", created_by: userId },
-        { source_decision_id: ids[1], target_decision_id: ids[2], dependency_type: "requires", created_by: userId },
-        // 0 influences 3
-        { source_decision_id: ids[0], target_decision_id: ids[3], dependency_type: "influences", created_by: userId },
-        // 2 blocks 4
-        { source_decision_id: ids[2], target_decision_id: ids[4], dependency_type: "blocks", created_by: userId },
-        // 3 requires 5
-        { source_decision_id: ids[3], target_decision_id: ids[5], dependency_type: "requires", created_by: userId },
-        // 5 influences 6 (if exists)
-        ...(ids.length > 6 ? [{ source_decision_id: ids[5], target_decision_id: ids[6], dependency_type: "influences", created_by: userId }] : []),
-        // Cross-link: 4 influences 7 (if exists)
-        ...(ids.length > 7 ? [{ source_decision_id: ids[4], target_decision_id: ids[7], dependency_type: "influences", created_by: userId }] : []),
-        // 6 blocks 8 (if exists)
-        ...(ids.length > 8 ? [{ source_decision_id: ids[6], target_decision_id: ids[8], dependency_type: "blocks", created_by: userId }] : []),
-        // 7 requires 9 (if exists)
-        ...(ids.length > 9 ? [{ source_decision_id: ids[7], target_decision_id: ids[9], dependency_type: "requires", created_by: userId }] : []),
-      ];
-      await supabase.from("decision_dependencies").insert(depInserts);
-    }
-
-    // ── 9. Example Chat Messages ──
-    const chatMessages = [
-      { team_id: newTeam.id, user_id: userId, content: `Willkommen im Team "${newTeam.name}"! 🎉 Hier koordinieren wir unsere Entscheidungen.`, created_at: daysAgo(7) },
-      { team_id: newTeam.id, user_id: userId, content: "Ich habe die offenen Entscheidungen priorisiert. Bitte schaut euch die kritischen Reviews an.", created_at: daysAgo(5) },
-      { team_id: newTeam.id, user_id: userId, content: "Reminder: Deadline für die Cloud-Migration rückt näher. Status-Update im Command Center.", created_at: daysAgo(3) },
-      { team_id: newTeam.id, user_id: userId, content: "Gute Fortschritte diese Woche! 3 Entscheidungen abgeschlossen. 💪", created_at: daysAgo(1) },
-    ];
-    await supabase.from("team_messages").insert(chatMessages);
-
-    const decCount = insertedDecisions?.length || 0;
 
     return new Response(JSON.stringify({
       success: true,
-      message: `Team "${newTeam.name}" erstellt mit ${decCount} Entscheidungen, ${template.tasks.length} Aufgaben, ${template.risks.length} Risiken und ${template.goals.length} Zielen${personalMsg}.`,
-    }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      mode: "full",
+      decisions: createdDecisions.length,
+      tasks: createdTasks.length,
+      risks: createdRisks.length,
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -29,6 +29,12 @@ const Welcome = () => {
   const handleSkip = async () => {
     if (!user) return;
     await supabase.from("profiles").update({ onboarding_completed: true } as any).eq("user_id", user.id);
+    // Seed demo data if org has no decisions yet
+    try {
+      await supabase.functions.invoke("seed-demo-data", { body: { mode: "quickstart" } });
+    } catch {
+      // Don't block navigation
+    }
     navigate("/dashboard", { replace: true });
   };
 
