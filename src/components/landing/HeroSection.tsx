@@ -271,12 +271,12 @@ const HeroSection = () => {
         </motion.div>
       </div>
 
-      {/* Gradient transition to light */}
+      {/* Subtle bottom fade — no color jump, same dark bg continues */}
       <div
         className="absolute bottom-0 left-0 right-0 pointer-events-none"
         style={{
-          height: "160px",
-          background: "linear-gradient(to bottom, transparent, hsl(var(--background)))",
+          height: "80px",
+          background: "linear-gradient(to bottom, transparent, hsl(222 47% 4%))",
         }}
       />
     </section>

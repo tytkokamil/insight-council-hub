@@ -11,8 +11,8 @@ const trustItems = [
 ];
 
 const LogoBar = () => (
-  <section className="relative py-5" aria-label="Trust-Bar" style={{ background: "hsl(var(--muted) / 0.3)" }}>
-    <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-center">
+  <section className="relative pt-8 pb-24 overflow-hidden" aria-label="Trust-Bar" style={{ background: "hsl(222 47% 4%)" }}>
+    <div className="max-w-5xl mx-auto px-4 h-full flex items-center justify-center relative z-10">
       <motion.div
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
@@ -29,7 +29,7 @@ const LogoBar = () => (
             transition={{ delay: i * 0.08, duration: 0.5, ease }}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
             style={{
-              color: "hsl(var(--muted-foreground))",
+              color: "rgba(255,255,255,0.45)",
               fontSize: 12,
               letterSpacing: "0.06em",
               textTransform: "uppercase" as const,
@@ -38,11 +38,20 @@ const LogoBar = () => (
           >
             <span>{item.emoji}</span>
             <span>{item.label}</span>
-            {i < trustItems.length - 1 && <span className="ml-2 text-border select-none hidden md:inline">|</span>}
+            {i < trustItems.length - 1 && <span className="ml-2 select-none hidden md:inline" style={{ color: "rgba(255,255,255,0.12)" }}>|</span>}
           </motion.span>
         ))}
       </motion.div>
     </div>
+
+    {/* Seamless transition from dark zone to content zone */}
+    <div
+      className="absolute bottom-0 left-0 right-0 pointer-events-none"
+      style={{
+        height: "200px",
+        background: "linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)",
+      }}
+    />
   </section>
 );
 
