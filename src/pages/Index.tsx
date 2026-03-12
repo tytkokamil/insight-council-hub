@@ -92,12 +92,14 @@ const Index = () => {
         <ScarcityBar />
         <Navbar />
         <main>
+          {/* ── Dark zone: seamless dark background ── */}
           <HeroSection />
           <Suspense fallback={<SectionFallback />}>
             <FoundingSection />
           </Suspense>
           <LogoBar />
-          <SectionDivider />
+
+          {/* ── Content zone: themed background ── */}
           <Suspense fallback={<SectionFallback />}>
             <ProblemSection />
             <SolutionSection />
