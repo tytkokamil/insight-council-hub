@@ -197,14 +197,6 @@ const FoundingSection = () => {
         </motion.div>
       </div>
 
-      {/* Smooth transition to content sections */}
-      <div
-        className="absolute bottom-0 left-0 right-0 pointer-events-none"
-        style={{
-          height: "200px",
-          background: "linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%)",
-        }}
-      />
     </section>
   );
 };
