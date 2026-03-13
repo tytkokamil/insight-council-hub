@@ -19,7 +19,8 @@ const LiveCodTicker = () => {
   }, []);
   return (
     <motion.div
-      className="hidden lg:flex items-center gap-3 px-6 py-4 rounded-2xl border border-destructive/15 bg-destructive/[0.03] backdrop-blur-sm"
+      className="hidden lg:flex items-center gap-3 px-6 py-4 rounded-2xl border border-destructive/15 bg-destructive/[0.03]"
+      style={{ backdropFilter: "blur(12px)" }}
       whileHover={{ scale: 1.03 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
     >
@@ -28,7 +29,15 @@ const LiveCodTicker = () => {
         transition={{ duration: 1, repeat: Infinity }}
         className="w-2.5 h-2.5 rounded-full bg-destructive"
       />
-      <span className="font-mono text-xl font-bold tabular-nums text-destructive" style={{ textShadow: "0 0 20px hsl(var(--destructive) / 0.2)" }}>
+      <span
+        className="font-mono text-xl font-bold tabular-nums"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--destructive)), hsl(var(--accent-rose)))",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+        }}
+      >
         €{value.toLocaleString("de-DE", { maximumFractionDigits: 0 })}
       </span>
       <span className="text-[10px] text-muted-foreground ml-1">/ heute</span>
@@ -55,7 +64,7 @@ const accentMap: Record<string, { icon: string; bg: string; tag: string }> = {
 
 const SolutionSection = () => (
   <section id="solution" className="py-28 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/10 to-transparent pointer-events-none" />
+    <div className="absolute inset-0 mesh-gradient opacity-20 pointer-events-none" />
     <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -70,6 +79,7 @@ const SolutionSection = () => (
           viewport={{ once: true }}
           transition={{ delay: 0.1, duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-primary/20 bg-primary/5 mb-6"
+          style={{ backdropFilter: "blur(8px)" }}
         >
           <div className="w-1.5 h-1.5 rounded-full bg-primary" />
           <span className="text-[11px] font-semibold text-primary tracking-[0.15em] uppercase">Die Lösung</span>
@@ -89,10 +99,10 @@ const SolutionSection = () => (
         viewport={{ once: true }}
         transition={{ duration: 0.7, ease }}
         whileHover={{ y: -3, transition: { duration: 0.25 } }}
-        className="group relative p-8 md:p-10 rounded-2xl border border-border/30 bg-card/80 backdrop-blur-sm magnetic-card mb-5 overflow-hidden"
+        className="spotlight-card card-shine group relative p-8 md:p-10 rounded-2xl border border-border/20 bg-card/70 mb-5 overflow-hidden"
+        style={{ backdropFilter: "blur(16px)" }}
       >
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent-amber/[0.04] via-transparent to-accent-amber/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-        <div className="relative flex flex-col md:flex-row items-start gap-6">
+        <div className="relative z-10 flex flex-col md:flex-row items-start gap-6">
           <div className="w-14 h-14 rounded-2xl bg-accent-amber/8 flex items-center justify-center shrink-0">
             <Timer className="w-7 h-7 text-accent-amber" />
           </div>
@@ -124,10 +134,10 @@ const SolutionSection = () => (
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.6, ease }}
               whileHover={{ y: -4, transition: { duration: 0.25 } }}
-              className="magnetic-card group relative p-7 rounded-2xl border border-border/30 bg-card/70 backdrop-blur-sm cursor-default overflow-hidden"
+              className="spotlight-card card-shine group relative p-7 rounded-2xl border border-border/20 bg-card/60 cursor-default overflow-hidden"
+              style={{ backdropFilter: "blur(12px)" }}
             >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="relative">
+              <div className="relative z-10">
                 <div className="flex items-center justify-between mb-5">
                   <div className={`w-11 h-11 rounded-xl ${colors.bg} flex items-center justify-center transition-colors duration-500`}>
                     <f.icon className={`w-5 h-5 ${colors.icon} transition-colors duration-500`} />

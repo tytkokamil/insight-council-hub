@@ -34,14 +34,14 @@ const footerLinks = {
 };
 
 const FooterLink = ({ item }: { item: { label: string; to?: string; href?: string } }) => {
-  const className = "text-[13px] text-muted-foreground/70 hover:text-foreground transition-colors duration-200";
+  const className = "text-[13px] text-muted-foreground/60 hover:text-foreground transition-colors duration-300";
   if (item.to) return <Link to={item.to} className={className}>{item.label}</Link>;
   return <a href={item.href} className={className}>{item.label}</a>;
 };
 
 const Footer = () => (
-  <footer className="relative border-t border-border/30 pt-16 pb-8" role="contentinfo">
-    <div className="absolute inset-0 bg-gradient-to-b from-muted/20 to-muted/40 pointer-events-none" />
+  <footer className="relative border-t border-border/20 pt-20 pb-10" role="contentinfo">
+    <div className="absolute inset-0 mesh-gradient opacity-10 pointer-events-none" />
 
     <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-16">
@@ -50,31 +50,31 @@ const Footer = () => (
             <img src={decivioLogo} alt="Decivio Logo" className="w-7 h-7 rounded-md" width={28} height={28} loading="lazy" />
             <span className="font-semibold text-[15px] text-foreground tracking-tight">Decivio</span>
           </Link>
-          <p className="text-[13px] text-muted-foreground leading-relaxed max-w-[260px] mb-6">
+          <p className="text-[13px] text-muted-foreground/60 leading-relaxed max-w-[260px] mb-6">
             Decision Governance Platform für den Mittelstand. Machen Sie jede Entscheidung sichtbar, messbar und compliant.
           </p>
-          <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground/50">
             <Mail className="w-3.5 h-3.5" />
-            <a href="mailto:hallo@decivio.com" className="hover:text-foreground transition-colors">hallo@decivio.com</a>
+            <a href="mailto:hallo@decivio.com" className="hover:text-foreground transition-colors duration-300">hallo@decivio.com</a>
           </div>
         </div>
 
         <nav aria-label="Produkt">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Produkt</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Produkt</h4>
           <ul className="space-y-2.5">
             {footerLinks.produkt.map(l => <li key={l.label}><FooterLink item={l} /></li>)}
           </ul>
         </nav>
 
         <nav aria-label="Unternehmen">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Unternehmen</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Unternehmen</h4>
           <ul className="space-y-2.5">
             {footerLinks.unternehmen.map(l => <li key={l.label}><FooterLink item={l} /></li>)}
           </ul>
         </nav>
 
         <nav aria-label="Compliance">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Compliance</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Compliance</h4>
           <ul className="space-y-2.5">
             {footerLinks.compliance.map(l => <li key={l.label}><FooterLink item={l} /></li>)}
           </ul>
@@ -86,18 +86,18 @@ const Footer = () => (
         </nav>
 
         <nav aria-label="Vergleiche">
-          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-4">Vergleiche</h4>
+          <h4 className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground/40 mb-4">Vergleiche</h4>
           <ul className="space-y-2.5">
             {footerLinks.vergleiche.map(l => <li key={l.label}><FooterLink item={l} /></li>)}
           </ul>
         </nav>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/20 gap-3">
-        <p className="text-[11px] text-muted-foreground/60">
+      <div className="flex flex-col sm:flex-row items-center justify-between pt-6 border-t border-border/10 gap-3">
+        <p className="text-[11px] text-muted-foreground/40">
           © {new Date().getFullYear()} Decivio · Made with precision in Germany 🇩🇪
         </p>
-        <p className="text-[11px] text-muted-foreground/60">
+        <p className="text-[11px] text-muted-foreground/40">
           hallo@decivio.com
         </p>
       </div>

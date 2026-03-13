@@ -16,11 +16,21 @@ const CursorGlow = () => {
     const onMove = (e: MouseEvent) => {
       targetX = e.clientX;
       targetY = e.clientY;
+
+      // Update spotlight cards
+      const cards = document.querySelectorAll(".spotlight-card");
+      cards.forEach((card) => {
+        const rect = (card as HTMLElement).getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        (card as HTMLElement).style.setProperty("--mouse-x", `${x}px`);
+        (card as HTMLElement).style.setProperty("--mouse-y", `${y}px`);
+      });
     };
 
     const animate = () => {
-      currentX += (targetX - currentX) * 0.08;
-      currentY += (targetY - currentY) * 0.08;
+      currentX += (targetX - currentX) * 0.06;
+      currentY += (targetY - currentY) * 0.06;
       el.style.left = `${currentX}px`;
       el.style.top = `${currentY}px`;
       raf = requestAnimationFrame(animate);
@@ -35,7 +45,25 @@ const CursorGlow = () => {
     };
   }, []);
 
-  return <div ref={ref} className="cursor-glow hidden md:block" aria-hidden="true" />;
+  return (
+    <div
+      ref={ref}
+      className="hidden md:block"
+      aria-hidden="true"
+      style={{
+        position: "fixed",
+        width: "700px",
+        height: "700px",
+        borderRadius: "50%",
+        pointerEvents: "none",
+        zIndex: 0,
+        background: "radial-gradient(circle, hsl(var(--primary) / 0.05) 0%, hsl(var(--accent-violet) / 0.02) 40%, transparent 70%)",
+        transform: "translate(-50%, -50%)",
+        willChange: "left, top",
+        filter: "blur(1px)",
+      }}
+    />
+  );
 };
 
 export default CursorGlow;

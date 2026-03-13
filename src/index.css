@@ -41,6 +41,156 @@ html {
   z-index: 1;
 }
 
+/* ── Spotlight hover for cards ── */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  top: var(--mouse-y, 50%);
+  left: var(--mouse-x, 50%);
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.08), transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+.dark .spotlight-card::before {
+  background: radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%);
+}
+
+/* ── Animated gradient border ── */
+@keyframes gradient-border-rotate {
+  0% { --angle: 0deg; }
+  100% { --angle: 360deg; }
+}
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--angle, 0deg), hsl(var(--primary) / 0.3), hsl(var(--accent-violet) / 0.2), hsl(var(--accent-teal) / 0.3), hsl(var(--primary) / 0.3));
+  z-index: -1;
+  animation: gradient-border-rotate 6s linear infinite;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.gradient-border:hover::after {
+  opacity: 1;
+}
+
+/* ── Mesh gradient backgrounds ── */
+@keyframes mesh-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.mesh-gradient {
+  background: 
+    radial-gradient(ellipse at 20% 50%, hsl(var(--primary) / 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, hsl(var(--accent-violet) / 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 80%, hsl(var(--accent-teal) / 0.06) 0%, transparent 50%);
+}
+
+/* ── Beam line animation ── */
+@keyframes beam-slide {
+  0% { transform: translateX(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+
+.beam-line {
+  position: relative;
+  height: 1px;
+  overflow: hidden;
+}
+.beam-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.6), transparent);
+  animation: beam-slide 4s ease-in-out infinite;
+}
+
+/* ── Text reveal shimmer ── */
+@keyframes text-reveal {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.text-shimmer-hover:hover {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--foreground)) 35%,
+    hsl(var(--primary)) 50%,
+    hsl(var(--foreground)) 65%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-reveal 2s linear infinite;
+}
+
+/* ── Floating particles ── */
+@keyframes float-up {
+  0% { transform: translateY(100%) scale(0); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+}
+
+/* ── Modern card shine on hover ── */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    hsl(var(--primary) / 0.03) 45%,
+    hsl(var(--primary) / 0.06) 50%,
+    hsl(var(--primary) / 0.03) 55%,
+    transparent 60%
+  );
+  transform: rotate(45deg) translateY(100%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.card-shine:hover::after {
+  transform: rotate(45deg) translateY(-100%);
+}
+
 /* Modern section fade */
 .section-fade-in {
   animation: sectionReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
