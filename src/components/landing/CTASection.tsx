@@ -12,11 +12,17 @@ const CTASection = () => {
 
   return (
     <section ref={ref} className="py-32 relative overflow-hidden" aria-label="Jetzt starten">
-      <div className="aurora-bg" />
-      <div className="absolute inset-0 dot-grid opacity-20 pointer-events-none" />
+      <div className="absolute inset-0 mesh-gradient opacity-40 pointer-events-none" />
+      <div className="absolute inset-0 noise-overlay pointer-events-none opacity-30" />
 
       <motion.div style={{ y: orbY }} className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-primary/[0.05] blur-[140px]" />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full"
+          style={{
+            background: "radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, transparent 60%)",
+            filter: "blur(40px)",
+          }}
+        />
       </motion.div>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 relative z-10 text-center">
@@ -41,17 +47,28 @@ const CTASection = () => {
               to="/auth"
               className="group relative inline-flex items-center justify-center gap-2.5 text-[15px] font-bold text-primary-foreground px-10 py-4.5 rounded-2xl transition-all duration-300 overflow-hidden"
               style={{
-                background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
-                boxShadow: "0 0 40px -8px hsl(var(--primary) / 0.4)",
+                background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)))",
+                boxShadow: "0 0 50px -10px hsl(var(--primary) / 0.5), 0 0 100px -20px hsl(var(--accent-blue) / 0.3)",
               }}
             >
+              <span
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: "linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)",
+                }}
+              />
               <span className="relative z-10 flex items-center gap-2.5">
                 Kostenlos starten <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
             <a
               href="mailto:hallo@decivio.com"
-              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium glass-ultra px-7 py-4 rounded-2xl hover:shadow-md text-muted-foreground hover:text-foreground transition-all"
+              className="inline-flex items-center justify-center gap-2 text-[14px] font-medium px-7 py-4 rounded-2xl text-muted-foreground hover:text-foreground transition-all"
+              style={{
+                background: "hsl(var(--card) / 0.6)",
+                backdropFilter: "blur(20px) saturate(1.5)",
+                border: "1px solid hsl(var(--border) / 0.3)",
+              }}
             >
               Demo buchen
             </a>

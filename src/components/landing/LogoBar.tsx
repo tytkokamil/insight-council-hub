@@ -18,7 +18,7 @@ const LogoBar = () => (
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ duration: 0.8, ease }}
-        className="flex flex-wrap items-center justify-center gap-x-1 gap-y-1"
+        className="flex flex-wrap items-center justify-center gap-x-2 gap-y-2"
       >
         {trustItems.map((item, i) => (
           <motion.span
@@ -27,18 +27,21 @@ const LogoBar = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.08, duration: 0.5, ease }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+            whileHover={{ y: -2, transition: { duration: 0.2 } }}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full"
             style={{
-              color: "rgba(255,255,255,0.45)",
+              color: "rgba(255,255,255,0.5)",
               fontSize: 12,
               letterSpacing: "0.06em",
               textTransform: "uppercase" as const,
               fontWeight: 500,
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              backdropFilter: "blur(4px)",
             }}
           >
             <span>{item.emoji}</span>
             <span>{item.label}</span>
-            {i < trustItems.length - 1 && <span className="ml-2 select-none hidden md:inline" style={{ color: "rgba(255,255,255,0.12)" }}>|</span>}
           </motion.span>
         ))}
       </motion.div>

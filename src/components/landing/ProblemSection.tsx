@@ -9,7 +9,6 @@ const problems = [
     text: "Operative Entscheidungen im Mittelstand warten durchschnittlich 4–6 Tage auf Freigabe. Jeder Tag Verzögerung hat wirtschaftliche Konsequenzen — die meistens niemand quantifiziert.",
     source: "McKinsey Decision Research",
     accentColor: "hsl(var(--destructive))",
-    gradient: "from-destructive/5 to-transparent",
   },
   {
     icon: "📧",
@@ -17,7 +16,6 @@ const problems = [
     text: "Freigabeprozesse über E-Mail-Chains haben kein zentrales Tracking, kein Fälligkeitsdatum und keine Eskalationslogik. Der Status einer Entscheidung kennt oft nur der Absender.",
     source: "Intern beobachtbar",
     accentColor: "hsl(var(--warning))",
-    gradient: "from-warning/5 to-transparent",
   },
   {
     icon: "📋",
@@ -25,7 +23,6 @@ const problems = [
     text: "ISO 9001 Kapitel 7.5, IATF 16949 und NIS2 fordern nachvollziehbare, dokumentierte Entscheidungsprozesse. Bei den meisten Unternehmen ist diese Dokumentation im Audit-Fall nicht vorhanden.",
     source: "ISO 9001:2015 Kap. 7.5",
     accentColor: "hsl(var(--accent-amber))",
-    gradient: "from-accent-amber/5 to-transparent",
   },
   {
     icon: "💸",
@@ -33,13 +30,12 @@ const problems = [
     text: "Was Verzögerungen wirklich kosten — in Stunden, in gebundenem Kapital, in verpassten Marktfenstern — rechnet kaum jemand aus. Bis jetzt.",
     link: { text: "Eigene Kosten berechnen →", href: "#roi" },
     accentColor: "hsl(var(--destructive))",
-    gradient: "from-destructive/5 to-transparent",
   },
 ];
 
 const ProblemSection = () => (
   <section id="problem" className="py-28 relative">
-    <div className="absolute inset-0 dot-grid opacity-40 pointer-events-none" />
+    <div className="absolute inset-0 mesh-gradient opacity-30 pointer-events-none" />
     <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -54,8 +50,13 @@ const ProblemSection = () => (
           viewport={{ once: true }}
           transition={{ delay: 0.1, duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-destructive/20 bg-destructive/5 mb-6"
+          style={{ backdropFilter: "blur(8px)" }}
         >
-          <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+          <motion.div
+            animate={{ scale: [1, 1.4, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-1.5 h-1.5 rounded-full bg-destructive"
+          />
           <span className="text-[11px] font-semibold text-destructive tracking-[0.15em] uppercase">Das Problem</span>
         </motion.div>
         <h2 className="text-3xl md:text-[2.75rem] font-bold tracking-[-0.04em] mb-5 leading-[1.1]">
@@ -66,7 +67,7 @@ const ProblemSection = () => (
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-5">
+      <div className="grid md:grid-cols-2 gap-4">
         {problems.map((p, i) => (
           <motion.div
             key={i}
@@ -75,11 +76,13 @@ const ProblemSection = () => (
             viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6, ease }}
             whileHover={{ y: -4, transition: { duration: 0.25 } }}
-            className={`group relative p-7 rounded-2xl bg-card border border-border/30 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden`}
-            style={{ borderLeft: `3px solid ${p.accentColor}` }}
+            className="spotlight-card card-shine group relative p-7 rounded-2xl bg-card/80 border border-border/20 transition-all duration-300"
+            style={{
+              backdropFilter: "blur(12px)",
+              borderLeft: `3px solid ${p.accentColor}`,
+            }}
           >
-            <div className={`absolute inset-0 bg-gradient-to-br ${p.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl`} />
-            <div className="relative flex items-start gap-4">
+            <div className="relative z-10 flex items-start gap-4">
               <span className="text-2xl shrink-0 mt-1">{p.icon}</span>
               <div className="flex-1">
                 <h3 className="text-[16px] font-bold mb-3">{p.title}</h3>
