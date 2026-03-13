@@ -79,20 +79,13 @@ const Navbar = () => {
       className="fixed top-0 left-0 right-0 z-50 will-change-transform"
     >
       <div
-        className="transition-all duration-500 border-b"
-        style={
-          isDark
-            ? {
-                background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
-                backdropFilter: scrolled ? "blur(12px)" : "none",
-                borderColor: scrolled ? "hsl(var(--border) / 0.06)" : "transparent",
-              }
-            : {
-                background: scrolled ? "hsl(var(--background) / 0.8)" : "transparent",
-                backdropFilter: scrolled ? "blur(12px)" : "none",
-                borderColor: scrolled ? "hsl(var(--border) / 0.2)" : "transparent",
-              }
-        }
+        className="transition-all duration-500"
+        style={{
+          background: scrolled ? "hsl(var(--background) / 0.7)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px) saturate(1.8)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(1.8)" : "none",
+          borderBottom: scrolled ? "1px solid hsl(var(--border) / 0.08)" : "1px solid transparent",
+        }}
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
@@ -116,7 +109,13 @@ const Navbar = () => {
               </span>
             </Link>
 
-            <div className="hidden md:flex items-center gap-0.5">
+            {/* Desktop nav — pill-style with background indicator */}
+            <div className="hidden md:flex items-center gap-0.5 relative rounded-full px-1 py-1"
+              style={{
+                background: scrolled ? "hsl(var(--muted) / 0.3)" : "rgba(255,255,255,0.04)",
+                border: `1px solid ${scrolled ? "hsl(var(--border) / 0.15)" : "rgba(255,255,255,0.06)"}`,
+              }}
+            >
               {navItems.map(item => {
                 const isActive = activeSection === item.href;
                 return (
@@ -124,23 +123,26 @@ const Navbar = () => {
                     key={item.label}
                     href={item.href}
                     onClick={(e) => handleSmoothScroll(e, item.href)}
-                    className="relative text-[13px] px-3.5 py-1.5 rounded-lg transition-colors duration-200"
+                    className="relative text-[13px] px-3.5 py-1.5 rounded-full transition-colors duration-200 z-10"
                     style={{
                       color: isDark
-                        ? isActive ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.6)"
+                        ? isActive ? "hsl(var(--primary-foreground))" : "hsl(var(--primary-foreground) / 0.5)"
                         : isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground) / 0.7)",
                       fontWeight: isActive ? 500 : 400,
                     }}
                   >
-                    {item.label}
                     {isActive && (
                       <motion.div
-                        layoutId="nav-active"
-                        className="absolute -bottom-[1px] left-3 right-3 h-[2px] rounded-full"
-                        style={{ background: "hsl(var(--primary))" }}
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full"
+                        style={{
+                          background: isDark ? "rgba(255,255,255,0.08)" : "hsl(var(--background))",
+                          boxShadow: isDark ? "none" : "0 1px 3px rgba(0,0,0,0.06)",
+                        }}
                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       />
                     )}
+                    <span className="relative z-10">{item.label}</span>
                   </a>
                 );
               })}
@@ -158,8 +160,11 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/auth"
-                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-lg transition-all duration-300 overflow-hidden"
-                style={{ background: "hsl(var(--primary))" }}
+                className="group/cta relative inline-flex items-center gap-1.5 text-[13px] font-semibold text-white px-5 py-2.5 rounded-full transition-all duration-300 overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)))",
+                  boxShadow: "0 0 20px -4px hsl(var(--primary) / 0.3)",
+                }}
               >
                 <span className="relative z-10 flex items-center gap-1.5">
                   Kostenlos starten
@@ -180,18 +185,16 @@ const Navbar = () => {
         </div>
 
         {scrolled && (
-          <div
-            className="h-[2px] origin-left will-change-transform transition-transform duration-150"
-            style={{
-              background: "hsl(var(--primary) / 0.3)",
-              transform: `scaleX(${scrollProgress})`,
-            }}
-            role="progressbar"
-            aria-valuenow={Math.round(scrollProgress * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Seitenfortschritt"
-          />
+          <div className="h-[1px] origin-left will-change-transform">
+            <div
+              className="h-full transition-transform duration-150"
+              style={{
+                background: "linear-gradient(90deg, hsl(var(--primary) / 0.5), hsl(var(--accent-violet) / 0.3))",
+                transform: `scaleX(${scrollProgress})`,
+                transformOrigin: "left",
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -206,8 +209,8 @@ const Navbar = () => {
             <div
               className="rounded-2xl p-5 space-y-1 shadow-lg"
               style={{
-                background: isDark ? "hsl(var(--background) / 0.95)" : "hsl(var(--background) / 0.95)",
-                backdropFilter: "blur(16px)",
+                background: "hsl(var(--background) / 0.95)",
+                backdropFilter: "blur(20px) saturate(1.8)",
                 border: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}`,
               }}
             >
@@ -228,7 +231,7 @@ const Navbar = () => {
               ))}
               <div className="pt-4 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDark ? "hsl(var(--border) / 0.1)" : "hsl(var(--border) / 0.3)"}` }}>
                 <Link to="/login" className="block text-center text-sm py-2" style={{ color: isDark ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))" }}>Einloggen</Link>
-                <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground py-2.5 rounded-lg" style={{ background: "hsl(var(--primary))" }}>Kostenlos starten</Link>
+                <Link to="/auth" className="block text-center text-sm font-medium text-primary-foreground py-2.5 rounded-full" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent-blue)))" }}>Kostenlos starten</Link>
               </div>
             </div>
           </motion.div>
